@@ -1,0 +1,4 @@
+# .htaccess en la raíz de SIGTUR-IMATUR
+RewriteEngine On
+RewriteRule ^$ public/ [L]
+RewriteRule (.*) public/$1 [L]
