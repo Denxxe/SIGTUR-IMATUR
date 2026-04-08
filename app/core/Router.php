@@ -13,8 +13,9 @@ class Router {
 
         // 1. Verificar si existe el controlador
         if (isset($url[0])) {
-            if (file_exists('../app/controllers/' . ucwords($url[0]) . '.php')) {
-                $this->currentController = ucwords($url[0]);
+            $controllerName = ucwords($url[0]) . 'Controller';
+            if (file_exists('../app/controllers/' . $controllerName . '.php')) {
+                $this->currentController = $controllerName;
                 unset($url[0]);
             }
         }

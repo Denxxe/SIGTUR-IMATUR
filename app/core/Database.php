@@ -10,6 +10,7 @@ class Database {
     private $dbname = DB_NAME;
 
     private $dbh; // Database Handler
+    private $stmt;
     private $error;
 
     public function __construct() {
@@ -33,11 +34,11 @@ class Database {
 
     // Preparar la consulta
     public function query($sql) {
-        return $this->dbh->prepare($sql);
+        $this->stmt = $this->dbh->prepare($sql);
     }
 
     // Vincular valores (bind)
-    public function bind($stmt, $param, $value, $type = null) {
+    public function bind($param, $value, $type = null) {
         if (is_null($type)) {
             switch (true) {
                 case is_int($value):
@@ -53,28 +54,28 @@ class Database {
                     $type = PDO::PARAM_STR;
             }
         }
-        $stmt->bindValue($param, $value, $type);
+        $this->stmt->bindValue($param, $value, $type);
     }
 
     // Ejecutar la consulta preparada
-    public function execute($stmt) {
-        return $stmt->execute();
+    public function execute() {
+        return $this->stmt->execute();
     }
 
     // Obtener el conjunto de resultados como array de objetos
-    public function resultSet($stmt) {
-        $this->execute($stmt);
-        return $stmt->fetchAll();
+    public function resultSet() {
+        $this->execute();
+        return $this->stmt->fetchAll();
     }
 
     // Obtener un único registro
-    public function single($stmt) {
-        $this->execute($stmt);
-        return $stmt->fetch();
+    public function single() {
+        $this->execute();
+        return $this->stmt->fetch();
     }
 
     // Obtener el número de filas
-    public function rowCount($stmt) {
-        return $stmt->rowCount();
+    public function rowCount() {
+        return $this->stmt->rowCount();
     }
 }

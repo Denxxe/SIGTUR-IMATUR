@@ -8,8 +8,17 @@ require_once '../config/config.php';
 
 // Cargar Clases base manualmente (Autoload simple)
 spl_autoload_register(function($className) {
-    if (file_exists('../app/core/' . $className . '.php')) {
-        require_once '../app/core/' . $className . '.php';
+    $paths = [
+        '../app/core/',
+        '../app/controllers/',
+        '../app/models/'
+    ];
+
+    foreach ($paths as $path) {
+        if (file_exists($path . $className . '.php')) {
+            require_once $path . $className . '.php';
+            return;
+        }
     }
 });
 
