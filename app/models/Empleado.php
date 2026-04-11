@@ -100,7 +100,7 @@ class Empleado extends Model {
             $this->db->execute();
 
             if (!$this->id) {
-                $this->id_persona = $this->db->lastInsertId();
+                $this->id_persona = $this->db->lastInsertId('personas_id_seq');
             }
 
             // --- EMPLEADO ---

@@ -4,8 +4,8 @@
  * URL: /controlador/metodo/parametro
  */
 class Router {
-    protected $currentController = 'UsuarioController'; // Default controller
-    protected $currentMethod = 'login'; // Default method
+    protected $currentController = 'DashboardController'; // Default controller
+    protected $currentMethod = 'index'; // Default method
     protected $params = [];
 
     public function __construct() {

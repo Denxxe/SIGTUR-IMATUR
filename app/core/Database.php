@@ -79,9 +79,9 @@ class Database {
         return $this->stmt->rowCount();
     }
 
-    // Obtener el último ID insertado
-    public function lastInsertId() {
-        return $this->dbh->lastInsertId();
+    // Obtener el último ID insertado (PostgreSQL requiere nombre de secuencia)
+    public function lastInsertId($sequence = null) {
+        return $this->dbh->lastInsertId($sequence);
     }
 
     // Transacciones

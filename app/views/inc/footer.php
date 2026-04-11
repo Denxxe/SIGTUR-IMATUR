@@ -1,27 +1,32 @@
     </main>
-    <footer class="footer mt-auto py-3 bg-light border-top fixed-bottom">
-        <div class="container text-center text-muted small">
-            &copy; <?php echo date('Y'); ?> IMATUR - SIGTUR. Todos los derechos reservados.
-        </div>
+    
+    <footer class="py-3 mt-5 text-center text-muted small border-top">
+        &copy; <?php echo date('Y'); ?> IMATUR — SIGTUR v2.0 | Sistema Integral de Gestión Turística y Administrativa
     </footer>
-    
-    <!-- Bootstrap 5 Bundle JS Local -->
-    <script src="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.bundle.min.js"></script>
-    
-    <!-- Scripts globales o personalizados -->
-    <script>
-        // Funciones auxiliares genéricas para CRUD
-        document.addEventListener('DOMContentLoaded', function() {
-            // Confirmación genérica antes de eliminar
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            deleteButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    if (!confirm('¿Está seguro de que desea eliminar este registro?')) {
-                        e.preventDefault();
-                    }
-                });
+</div>
+
+<!-- Bootstrap 5 Bundle JS Local -->
+<script src="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Confirmación genérica de eliminación
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!confirm('¿Está seguro de que desea eliminar este registro?')) {
+                    e.preventDefault();
+                }
             });
         });
-    </script>
+
+        // Marcar link activo en sidebar
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            if (currentPath.includes(link.getAttribute('href').replace('<?php echo URL_ROOT; ?>', ''))) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
 </body>
 </html>

@@ -8,51 +8,109 @@
     <!-- Bootstrap 5 Local -->
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.min.css">
     
-    <!-- Estilos Personalizados (Soporte Offline) -->
     <style>
         :root {
-            --primary-color: #0d6efd;
-            --secondary-color: #6c757d;
-            --success-color: #198754;
-            --info-color: #0dcaf0;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
+            --sidebar-width: 260px;
+            --primary: #1a73e8;
+            --dark: #1e293b;
         }
         body {
-            background-color: #f4f7f6;
+            background-color: #f1f5f9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .navbar-brand {
-            font-weight: bold;
-            letter-spacing: 1px;
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: var(--dark);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            padding-top: 0;
+            transition: transform .3s;
         }
-        .main-container {
-            padding-top: 2rem;
-            padding-bottom: 5rem;
+        .sidebar .brand {
+            padding: 1.2rem 1rem;
+            background: rgba(0,0,0,.2);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: .5px;
+        }
+        .sidebar .nav-section {
+            padding: .5rem 1rem .2rem;
+            color: #64748b;
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        .sidebar .nav-link {
+            color: #94a3b8;
+            padding: .55rem 1rem;
+            font-size: .88rem;
+            border-radius: 0;
+            transition: all .15s;
+        }
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,.08);
+        }
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem 2rem;
         }
         .card {
             border: none;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border-radius: .5rem;
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; }
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="<?php echo URL_ROOT; ?>">SIGTUR-IMATUR</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?php echo URL_ROOT; ?>/cargos/index">Cargos</a>
-                    </li>
-                    <!-- Más links luego -->
-                </ul>
-            </div>
-        </div>
-    </nav>
-    <main class="container main-container">
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+    <div class="brand">
+        SIGTUR-IMATUR
+    </div>
+    <ul class="nav flex-column mt-2">
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>">Panel Principal</a></li>
+
+        <li class="nav-section mt-3">RRHH</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/empleados/index">Empleados</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/cargos/index">Cargos</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/departamentos/index">Departamentos</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/asistencias/index">Asistencia</a></li>
+
+        <li class="nav-section mt-3">Inventario</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/inventario/index">Bienes</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/categorias/index">Categorías</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/ubicaciones/index">Ubicaciones</a></li>
+
+        <li class="nav-section mt-3">Formación</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/talleres/index">Talleres</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/ubicacionesformacion/index">Sedes</a></li>
+
+        <li class="nav-section mt-3">Turismo</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/rutas/index">Rutas</a></li>
+
+        <li class="nav-section mt-3">Sistema</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/usuarios/index">Usuarios</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/roles/index">Roles</a></li>
+    </ul>
+</nav>
+
+<!-- Main -->
+<div class="main-content">
+    <!-- Top bar mobile -->
+    <div class="d-md-none mb-3">
+        <button class="btn btn-dark" onclick="document.getElementById('sidebar').classList.toggle('show')">☰ Menú</button>
+    </div>
+
+    <main>
