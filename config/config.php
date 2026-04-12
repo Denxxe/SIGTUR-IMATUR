@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SIGTUR-IMATUR - Archivo de configuración global
  */
@@ -13,8 +14,8 @@ define('SITE_NAME', 'SIGTUR-IMATUR');
 define('DB_HOST', 'localhost');
 define('DB_PORT', '5432');
 define('DB_USER', 'postgres');
-define('DB_PASS', 'root'); // Cambiar según el entorno real
-define('DB_NAME', 'sigtur_imatur');
+define('DB_PASS', '1234'); // Cambiar según el entorno real
+define('DB_NAME', 'SIGTUR-IMATUR');
 
 // Carpeta de la aplicación (Raíz del proyecto)
 define('APP_ROOT', dirname(dirname(__FILE__)));
