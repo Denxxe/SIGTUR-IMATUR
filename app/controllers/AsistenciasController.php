@@ -54,7 +54,7 @@ class AsistenciasController extends Controller {
     }
 
     public function delete($id) {
-        if (Asistencia::delete($id, 1)) {
+        if (Asistencia::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/asistencias/index');
         }
     }

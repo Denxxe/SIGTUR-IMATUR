@@ -22,4 +22,9 @@ class Controller {
             die('La vista ' . $view . ' no existe');
         }
     }
+
+    // Helper para obtener User ID de la sesión actual
+    public function getUserId() {
+        return $_SESSION['user_id'] ?? null;
+    }
 }

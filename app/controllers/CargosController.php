@@ -61,7 +61,7 @@ class CargosController extends Controller {
     public function delete($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             // En una app real, esto debería ser vía POST o DELETE por seguridad
-            if (Cargo::delete($id, 1)) {
+            if (Cargo::delete($id, $this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/cargos/index');
             } else {
                 die('No se pudo eliminar el registro');

@@ -25,7 +25,7 @@ class DepartamentosController extends Controller {
             ];
 
             $dpto = new Departamento($data);
-            if ($dpto->save(1)) {
+            if ($dpto->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/departamentos/index');
             } else {
                 die('Error al guardar el departamento');
@@ -34,7 +34,7 @@ class DepartamentosController extends Controller {
     }
 
     public function delete($id) {
-        if (Departamento::delete($id, 1)) {
+        if (Departamento::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/departamentos/index');
         } else {
             die('Error al eliminar');

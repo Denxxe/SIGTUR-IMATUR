@@ -33,7 +33,7 @@ class UsuariosController extends Controller {
 
             $usuario = new Usuario($data);
 
-            if ($usuario->save(1)) {
+            if ($usuario->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/usuarios/index');
             } else {
                 die('Error al guardar el usuario');
@@ -42,7 +42,7 @@ class UsuariosController extends Controller {
     }
 
     public function delete($id) {
-        if (Usuario::delete($id, 1)) {
+        if (Usuario::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/usuarios/index');
         } else {
             die('Error al eliminar');

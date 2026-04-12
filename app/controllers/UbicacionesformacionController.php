@@ -26,7 +26,7 @@ class UbicacionesformacionController extends Controller {
             ];
 
             $ubi = new UbicacionFormacion($data);
-            if ($ubi->save(1)) {
+            if ($ubi->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
             } else {
                 die('Error al guardar la sede');
@@ -35,7 +35,7 @@ class UbicacionesformacionController extends Controller {
     }
 
     public function delete($id) {
-        if (UbicacionFormacion::delete($id, 1)) {
+        if (UbicacionFormacion::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
         }
     }

@@ -27,7 +27,7 @@ class RutasController extends Controller {
             ];
 
             $ruta = new Ruta($data);
-            if ($ruta->save(1)) {
+            if ($ruta->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/rutas/index');
             } else {
                 die('Error al guardar la ruta');
@@ -41,11 +41,18 @@ class RutasController extends Controller {
     public function detalle($id) {
         $ruta = Ruta::find($id);
         $puntos = Ruta::getPuntos($id);
+        
+        // Obtener inventario asignado a la ruta
+        $inventario_asignado = RutaInventario::getByRuta($id);
+        // Obtener inventario disponible para asignar
+        $inventario_disponible = Inventario::all();
 
         $data = [
             'titulo' => 'Ruta: ' . $ruta->nombre,
             'ruta' => $ruta,
-            'puntos' => $puntos
+            'puntos' => $puntos,
+            'inventario_asignado' => $inventario_asignado,
+            'inventario_disponible' => $inventario_disponible
         ];
         $this->view('rutas/detalle', $data);
     }
@@ -68,7 +75,7 @@ class RutasController extends Controller {
             ];
 
             $punto = new PuntoRuta($data);
-            if ($punto->save(1)) {
+            if ($punto->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/rutas/detalle/' . $data['id_ruta']);
             } else {
                 die('Error al guardar el punto');
@@ -80,14 +87,43 @@ class RutasController extends Controller {
      * Eliminar punto de ruta
      */
     public function deletePunto($id, $id_ruta) {
-        if (PuntoRuta::delete($id, 1)) {
+        if (PuntoRuta::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
         }
     }
 
     public function delete($id) {
-        if (Ruta::delete($id, 1)) {
+        if (Ruta::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/rutas/index');
+        }
+    }
+
+    /**
+     * Asignar inventario a ruta
+     */
+    public function storeInventario() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+            $id_ruta = (int)$_POST['id_ruta'];
+            $id_inventario = (int)$_POST['id_inventario'];
+            $cantidad = (int)$_POST['cantidad'];
+            $observaciones = trim($_POST['observaciones']);
+
+            if (RutaInventario::asignar($id_ruta, $id_inventario, $cantidad, $observaciones, $this->getUserId())) {
+                header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
+            } else {
+                die('Error al asignar el inventario');
+            }
+        }
+    }
+
+    /**
+     * Remover inventario de ruta
+     */
+    public function deleteInventario($id_asignacion, $id_ruta) {
+        if (RutaInventario::remover($id_asignacion)) {
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
         }
     }
 }

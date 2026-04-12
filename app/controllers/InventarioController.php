@@ -38,7 +38,7 @@ class InventarioController extends Controller {
             ];
 
             $item = new Inventario($data);
-            if ($item->save(1)) {
+            if ($item->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/inventario/index');
             } else {
                 die('Error al guardar el bien en inventario');
@@ -47,7 +47,7 @@ class InventarioController extends Controller {
     }
 
     public function delete($id) {
-        if (Inventario::delete($id, 1)) {
+        if (Inventario::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/inventario/index');
         }
     }

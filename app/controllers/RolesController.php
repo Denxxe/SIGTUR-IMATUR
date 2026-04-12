@@ -25,7 +25,7 @@ class RolesController extends Controller {
             ];
 
             $rol = new Rol($data);
-            if ($rol->save(1)) { // ID temporal
+            if ($rol->save($this->getUserId())) { // ID temporal
                 header('Location: ' . URL_ROOT . '/roles/index');
             } else {
                 die('Error al guardar el rol');
@@ -34,7 +34,7 @@ class RolesController extends Controller {
     }
 
     public function delete($id) {
-        if (Rol::delete($id, 1)) {
+        if (Rol::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/roles/index');
         } else {
             die('Error al eliminar');

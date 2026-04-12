@@ -43,7 +43,7 @@ class EmpleadosController extends Controller {
 
             $empleado = new Empleado($data);
 
-            if ($empleado->save(1)) {
+            if ($empleado->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/empleados/index');
             } else {
                 die('Error al guardar el empleado');
@@ -52,7 +52,7 @@ class EmpleadosController extends Controller {
     }
 
     public function delete($id) {
-        if (Empleado::delete($id, 1)) {
+        if (Empleado::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/empleados/index');
         } else {
             die('Error al eliminar');

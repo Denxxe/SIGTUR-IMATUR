@@ -2,6 +2,7 @@
 /**
  * SIGTUR-IMATUR - Punto de entrada principal (Front Controller)
  */
+session_start();
 
 // Cargar configuración
 require_once '../config/config.php';

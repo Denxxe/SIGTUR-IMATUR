@@ -24,7 +24,7 @@ class UbicacionesController extends Controller {
             ];
 
             $ubi = new Ubicacion($data);
-            if ($ubi->save(1)) {
+            if ($ubi->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/ubicaciones/index');
             } else {
                 die('Error al guardar la ubicación');
@@ -33,7 +33,7 @@ class UbicacionesController extends Controller {
     }
 
     public function delete($id) {
-        if (Ubicacion::delete($id, 1)) {
+        if (Ubicacion::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/ubicaciones/index');
         }
     }

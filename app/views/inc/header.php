@@ -91,7 +91,8 @@
         <li class="nav-section mt-3">Inventario</li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/inventario/index">Bienes</a></li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/categorias/index">Categorías</a></li>
-        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/ubicaciones/index">Ubicaciones</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/ubicaciones/index">Ubicaciones O.</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/actividadesinventario/index">Movimientos</a></li>
 
         <li class="nav-section mt-3">Formación</li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/talleres/index">Talleres</a></li>
@@ -99,18 +100,30 @@
 
         <li class="nav-section mt-3">Turismo</li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/rutas/index">Rutas</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/actividadesruta/index">Actividades y Eventos</a></li>
 
         <li class="nav-section mt-3">Sistema</li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/usuarios/index">Usuarios</a></li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/roles/index">Roles</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/auditoria/index">Log de Auditoría</a></li>
     </ul>
 </nav>
 
 <!-- Main -->
 <div class="main-content">
     <!-- Top bar mobile -->
-    <div class="d-md-none mb-3">
-        <button class="btn btn-dark" onclick="document.getElementById('sidebar').classList.toggle('show')">☰ Menú</button>
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+        <div class="d-md-none">
+            <button class="btn btn-dark" onclick="document.getElementById('sidebar').classList.toggle('show')">☰ Menú</button>
+        </div>
+        <div class="d-none d-md-block fw-bold text-muted">
+            Panel de Administración
+        </div>
+        <div>
+            <i class="bi bi-person-circle"></i> 
+            <span class="me-3 fw-bold"><?php echo $_SESSION['user_username'] ?? 'Usuario'; ?></span>
+            <a href="<?php echo URL_ROOT; ?>/auth/logout" class="btn btn-sm btn-outline-danger">Cerrar Sesión</a>
+        </div>
     </div>
 
     <main>

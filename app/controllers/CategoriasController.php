@@ -24,7 +24,7 @@ class CategoriasController extends Controller {
             ];
 
             $cat = new Categoria($data);
-            if ($cat->save(1)) {
+            if ($cat->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/categorias/index');
             } else {
                 die('Error al guardar la categoría');
@@ -33,7 +33,7 @@ class CategoriasController extends Controller {
     }
 
     public function delete($id) {
-        if (Categoria::delete($id, 1)) {
+        if (Categoria::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/categorias/index');
         }
     }

@@ -20,6 +20,14 @@ class Router {
             }
         }
 
+        // --- Auth Middleware ---
+        if (!isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
+            $this->currentController = 'AuthController';
+            $this->currentMethod = 'login';
+            $url = []; // Limpiar parámetros para no pasarlos a login
+        }
+        // -----------------------
+
         // 2. Requerir el controlador
         require_once '../app/controllers/' . $this->currentController . '.php';
 

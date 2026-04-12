@@ -16,9 +16,11 @@
         <?php endif; ?>
     </div>
     <div class="col-md-4 text-end">
-        <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn btn-outline-secondary me-2">← Volver</a>
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPunto" onclick="nuevoPunto()">
             Agregar Parada
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInventario" onclick="nuevoInventario()">
+            Asignar Bien/Equipo
         </button>
     </div>
 </div>
@@ -71,6 +73,46 @@
     </div>
 </div>
 
+<!-- Lista de Inventario Asignado -->
+<div class="card shadow-sm mt-4 border-top border-4 border-primary">
+    <div class="card-header bg-white text-dark fw-bold">
+        <i class="bi bi-box-seam"></i> Bienes y Equipos Asignados a la Ruta
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Código / Bien</th>
+                    <th>Condición del Bien</th>
+                    <th class="text-center">Cantidad</th>
+                    <th>Observaciones</th>
+                    <th class="text-center">Quitar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($data['inventario_asignado'])): ?>
+                    <tr><td colspan="5" class="text-center py-4 text-muted">No se han asignado bienes a esta ruta.</td></tr>
+                <?php else: ?>
+                    <?php foreach ($data['inventario_asignado'] as $inv): ?>
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge bg-secondary"><?php echo $inv->codigo_bn ?: 'S/C'; ?></span>
+                                <strong><?php echo $inv->item_nombre; ?></strong>
+                            </td>
+                            <td><span class="badge bg-info text-dark"><?php echo $inv->condicion; ?></span></td>
+                            <td class="text-center fw-bold"><?php echo $inv->cantidad; ?></td>
+                            <td class="small text-muted"><?php echo $inv->observaciones ?? '—'; ?></td>
+                            <td class="text-center">
+                                <a href="<?php echo URL_ROOT; ?>/rutas/deleteInventario/<?php echo $inv->id; ?>/<?php echo $data['ruta']->id; ?>" class="btn btn-sm btn-outline-danger delete-btn">Desvincular</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <!-- Modal Punto de Ruta -->
 <div class="modal fade" id="modalPunto" tabindex="-1">
     <div class="modal-dialog">
@@ -108,6 +150,45 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 <button type="submit" class="btn btn-success">Guardar Punto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Asignar Inventario a Ruta -->
+<div class="modal fade" id="modalInventario" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/storeInventario" method="POST" class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalInventarioLabel">Asignar Equipamiento / Bienes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id; ?>">
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Bien a Asignar</label>
+                    <select name="id_inventario" class="form-select" required>
+                        <option value="">Seleccione...</option>
+                        <?php foreach($data['inventario_disponible'] as $item): ?>
+                            <option value="<?php echo $item->id; ?>"><?php echo ($item->codigo_bn ? $item->codigo_bn.' - ' : '') . $item->nombre; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cantidad</label>
+                    <input type="number" name="cantidad" class="form-control" value="1" min="1" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Observaciones / Para qué se usa</label>
+                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn btn-primary">Asignar Bien</button>
             </div>
         </form>
     </div>

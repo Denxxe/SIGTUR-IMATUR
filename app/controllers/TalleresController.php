@@ -37,7 +37,7 @@ class TalleresController extends Controller {
             ];
 
             $taller = new Taller($data);
-            if ($taller->save(1)) {
+            if ($taller->save($this->getUserId())) {
                 header('Location: ' . URL_ROOT . '/talleres/index');
             } else {
                 die('Error al guardar el taller');
@@ -77,7 +77,7 @@ class TalleresController extends Controller {
     }
 
     public function delete($id) {
-        if (Taller::delete($id, 1)) {
+        if (Taller::delete($id, $this->getUserId())) {
             header('Location: ' . URL_ROOT . '/talleres/index');
         }
     }
