@@ -24,7 +24,27 @@ class Router {
         if (!isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
             $this->currentController = 'AuthController';
             $this->currentMethod = 'login';
-            $url = []; // Limpiar parámetros para no pasarlos a login
+            $url = [];
+        }
+
+        // --- RBAC Middleware (Control de Acceso por Rol) ---
+        if (isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
+            $rolId = $_SESSION['user_rol'] ?? 0;
+            // Mapa de permisos: rol_id => controladores permitidos
+            // 1=Administrador(todo), 2=RRHH, 3=Turismo, 4=Inventario
+            $permisos = [
+                1 => '*', // Acceso total
+                2 => ['DashboardController','EmpleadosController','CargosController','DepartamentosController','AsistenciasController','ReportesController'],
+                3 => ['DashboardController','RutasController','ActividadesrutaController','TalleresController','UbicacionesformacionController','ReportesController'],
+                4 => ['DashboardController','InventarioController','CategoriasController','UbicacionesController','ActividadesinventarioController','ReportesController']
+            ];
+
+            $permitidos = $permisos[$rolId] ?? [];
+            if ($permitidos !== '*' && !in_array($this->currentController, $permitidos)) {
+                $this->currentController = 'DashboardController';
+                $this->currentMethod = 'accesoDenegado';
+                $url = [];
+            }
         }
         // -----------------------
 

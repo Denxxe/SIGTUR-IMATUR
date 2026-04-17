@@ -36,7 +36,9 @@ class Departamento extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE departamentos SET 
                                 nombre = :nombre, 
                                 descripcion = :descripcion, 
@@ -51,18 +53,19 @@ class Departamento extends Model {
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':descripcion', $this->descripcion);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('departamentos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
-        $db->query("UPDATE departamentos SET 
-                        is_active = FALSE, 
-                        deleted_at = CURRENT_TIMESTAMP, 
-                        deleted_by = :user_id 
-                    WHERE id = :id");
+        $db->query("UPDATE departamentos SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('departamentos', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

@@ -7,6 +7,8 @@
 
 <!-- Bootstrap 5 Bundle JS Local -->
 <script src="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.bundle.min.js"></script>
+<!-- ApexCharts Local -->
+<script src="<?php echo URL_ROOT; ?>/assets/libs/apexcharts.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

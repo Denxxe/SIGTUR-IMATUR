@@ -46,7 +46,9 @@ class Rol extends Model {
      * Guardar o actualizar registro
      */
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE roles SET 
                                 nombre = :nombre, 
                                 descripcion = :descripcion, 
@@ -56,20 +58,30 @@ class Rol extends Model {
             $this->db->bind(':id', $this->id);
         } else {
             $this->db->query("INSERT INTO roles (nombre, descripcion, created_by) 
-                              VALUES (:nombre, :descripcion, :user_id)");
+                              VALUES (:nombre, :descripcion, :user_id) RETURNING id");
         }
 
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':descripcion', $this->descripcion);
         $this->db->bind(':user_id', $user_id);
 
-        return $this->db->execute();
+        if ($this->id) {
+            $result = $this->db->execute();
+            $this->audit('roles', 'UPDATE', $this->id, $previos, ['nombre' => $this->nombre, 'descripcion' => $this->descripcion], $user_id);
+            return $result;
+        } else {
+            $row = $this->db->single();
+            $newId = $row->id ?? null;
+            $this->audit('roles', 'INSERT', $newId, null, ['nombre' => $this->nombre, 'descripcion' => $this->descripcion], $user_id);
+            return true;
+        }
     }
 
     /**
      * Borrado lógico
      */
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE roles SET 
                         is_active = FALSE, 
@@ -78,6 +90,8 @@ class Rol extends Model {
                     WHERE id = :id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('roles', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

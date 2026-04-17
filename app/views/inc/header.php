@@ -106,6 +106,10 @@
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/usuarios/index">Usuarios</a></li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/roles/index">Roles</a></li>
         <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/auditoria/index">Log de Auditoría</a></li>
+
+        <li class="nav-section mt-3">Reportes</li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/reportes/index">Centro de Reportes</a></li>
+        <li><a class="nav-link" href="<?php echo URL_ROOT; ?>/reportes/indicadores">Indicadores</a></li>
     </ul>
 </nav>
 

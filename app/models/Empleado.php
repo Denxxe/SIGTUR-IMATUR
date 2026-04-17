@@ -73,10 +73,13 @@ class Empleado extends Model {
      * Guardar registro (Atómico: Persona + Empleado)
      */
     public function save($user_id = null) {
+        $previos = null;
+        $prevId = $this->id;
         try {
             $this->db->beginTransaction();
 
             if ($this->id) {
+                $previos = self::find($this->id);
                 // UPDATE Persona
                 $this->db->query("UPDATE personas SET cedula=:cedula, nombre=:nombre, apellido=:apellido, telefono=:telefono, 
                                  correo=:correo, genero=:genero, fecha_nacimiento=:fecha_nacimiento, direccion=:direccion, 
@@ -121,7 +124,19 @@ class Empleado extends Model {
             $this->db->bind(':user_id', $user_id);
             $this->db->execute();
 
+            if (!$prevId) {
+                $prevId = $this->db->lastInsertId('empleados_id_seq');
+            }
+
             $this->db->endTransaction();
+
+            // Auditoría automática
+            $operacion = $this->id ? 'UPDATE' : 'INSERT';
+            $this->audit('empleados', $operacion, $this->id ?? $prevId, $previos, [
+                'cedula' => $this->cedula, 'nombre' => $this->nombre, 'apellido' => $this->apellido,
+                'id_cargo' => $this->id_cargo, 'id_departamento' => $this->id_departamento
+            ], $user_id);
+
             return true;
         } catch (Exception $e) {
             $this->db->cancelTransaction();
@@ -133,10 +148,13 @@ class Empleado extends Model {
      * Borrado lógico (Solo marca el empleado como inactivo)
      */
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE empleados SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('empleados', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

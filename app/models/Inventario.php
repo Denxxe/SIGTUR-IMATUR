@@ -51,7 +51,9 @@ class Inventario extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE inventario SET id_categoria=:id_categoria, id_ubicacion=:id_ubicacion, codigo_bn=:codigo_bn, 
                               nombre=:nombre, descripcion=:descripcion, marca=:marca, modelo=:modelo, serial=:serial, 
                               condicion=:condicion, observaciones=:observaciones, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id 
@@ -72,14 +74,19 @@ class Inventario extends Model {
         $this->db->bind(':condicion', $this->condicion);
         $this->db->bind(':observaciones', $this->observaciones);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('inventario', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'codigo_bn' => $this->codigo_bn, 'condicion' => $this->condicion], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE inventario SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('inventario', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

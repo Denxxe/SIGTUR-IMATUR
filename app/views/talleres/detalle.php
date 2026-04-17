@@ -19,9 +19,20 @@
 
 <!-- Lista de participantes -->
 <div class="card shadow-sm">
-    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between">
+    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
         <span>Participantes Inscritos</span>
-        <span class="badge bg-light text-dark"><?php echo count($data['participantes']); ?> / <?php echo $data['taller']->cupo_maximo; ?></span>
+        <div class="text-end">
+            <?php 
+                $inscritos = count($data['participantes']);
+                $cupo = $data['taller']->cupo_maximo;
+                $porcentaje = $cupo > 0 ? round(($inscritos / $cupo) * 100) : 0;
+                $colorBarra = $porcentaje > 80 ? 'bg-danger' : ($porcentaje > 50 ? 'bg-warning' : 'bg-success');
+            ?>
+            <span class="badge bg-light text-dark"><?php echo $inscritos; ?> / <?php echo $cupo; ?> (<?php echo $porcentaje; ?>%)</span>
+            <div class="progress mt-1" style="height: 6px; width: 120px;">
+                <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
+            </div>
+        </div>
     </div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0">

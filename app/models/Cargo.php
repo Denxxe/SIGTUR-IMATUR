@@ -52,8 +52,9 @@ class Cargo extends Model {
      * Guardar o actualizar registro
      */
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
-            // Update
+            $previos = self::find($this->id);
             $this->db->query("UPDATE cargos SET 
                                 nombre = :nombre, 
                                 descripcion = :descripcion, 
@@ -63,31 +64,29 @@ class Cargo extends Model {
                               WHERE id = :id");
             $this->db->bind(':id', $this->id);
         } else {
-            // Insert
             $this->db->query("INSERT INTO cargos (nombre, descripcion, sueldo_base, created_by) 
                               VALUES (:nombre, :descripcion, :sueldo, :user_id)");
         }
-
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':descripcion', $this->descripcion);
         $this->db->bind(':sueldo', $this->sueldo_base);
         $this->db->bind(':user_id', $user_id);
-
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('cargos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'sueldo_base' => $this->sueldo_base], $user_id);
+        return $result;
     }
 
     /**
      * Borrado lógico (Soft Delete)
      */
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
-        $db->query("UPDATE cargos SET 
-                        is_active = FALSE, 
-                        deleted_at = CURRENT_TIMESTAMP, 
-                        deleted_by = :user_id 
-                    WHERE id = :id");
+        $db->query("UPDATE cargos SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('cargos', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }
