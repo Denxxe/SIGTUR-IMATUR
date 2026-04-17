@@ -11,7 +11,23 @@
 <script src="<?php echo URL_ROOT; ?>/assets/libs/apexcharts.min.js"></script>
 
 <script>
+    // ==================== SIDEBAR FUNCTIONS ====================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sbOverlay').classList.toggle('show');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sbOverlay').classList.remove('show');
+    }
+    function toggleSection(el) {
+        el.classList.toggle('collapsed');
+        var group = el.nextElementSibling;
+        if (group) group.classList.toggle('collapsed');
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+
         // Confirmación genérica de eliminación
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
@@ -22,12 +38,30 @@
         });
 
         // Marcar link activo en sidebar
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            if (currentPath.includes(link.getAttribute('href').replace('<?php echo URL_ROOT; ?>', ''))) {
+        var currentPath = window.location.pathname.toLowerCase();
+        document.querySelectorAll('.sb-link').forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (!href) return;
+            // Extraer la parte después del dominio
+            var linkPath = href.replace(/^https?:\/\/[^\/]+/, '').toLowerCase();
+            if (currentPath.indexOf(linkPath) !== -1 && linkPath.length > 1) {
                 link.classList.add('active');
+                // Asegurar que la sección padre esté expandida
+                var parentGroup = link.closest('.sb-group');
+                if (parentGroup) {
+                    parentGroup.classList.remove('collapsed');
+                    var prevSection = parentGroup.previousElementSibling;
+                    if (prevSection) prevSection.classList.remove('collapsed');
+                }
             }
         });
+
+        // En móvil: cerrar sidebar al hacer clic en un link
+        if (window.innerWidth <= 991) {
+            document.querySelectorAll('.sb-link').forEach(function(link) {
+                link.addEventListener('click', closeSidebar);
+            });
+        }
     });
 </script>
 </body>
