@@ -63,23 +63,18 @@ class AuditoriaController extends Controller {
             // 1. Restaurar registro principal
             $db->query("UPDATE $tabla SET is_active = TRUE, deleted_at = NULL, deleted_by = NULL WHERE id = :id");
             $db->bind(':id', $id);
-            $db->execute();
-
-            // 2. Restauración en Cascada (Según requerimiento del usuario)
-            if ($tabla == 'talleres') {
-                // El soft-delete en este sistema mantiene los inscritos pero el taller está oculto.
-                // No se requiere acción adicional de reversión mas que habilitar el padre.
+            if (!$db->execute()) {
+                throw new Exception("No se pudo actualizar el registro principal en $tabla.");
             }
 
+            // 2. Restauración en Cascada
             if ($tabla == 'rutas') {
-                // Restaurar puntos de ruta asociados
                 $db->query("UPDATE puntos_ruta SET is_active = TRUE, deleted_at = NULL WHERE id_ruta = :id");
                 $db->bind(':id', $id);
                 $db->execute();
             }
 
             if ($tabla == 'personas') {
-                // Si restauramos una persona, restauramos su vínculo como empleado si existía
                 $db->query("UPDATE empleados SET is_active = TRUE, deleted_at = NULL WHERE id_persona = :id");
                 $db->bind(':id', $id);
                 $db->execute();
@@ -89,10 +84,10 @@ class AuditoriaController extends Controller {
             AuditLog::log($tabla, 'RESTORE', $id, ['is_active' => false], ['is_active' => true], $_SESSION['user_id']);
 
             $db->endTransaction();
-            flash('auditoria_msg', 'Registro y sus dependencias han sido restaurados exitosamente.');
+            flash('global_msg', '¡Registro restaurado exitosamente! Los datos y sus asociaciones vuelven a estar vigentes.');
         } catch (Exception $e) {
             $db->cancelTransaction();
-            flash('auditoria_msg', 'Error crítico en la restauración: ' . $e->getMessage(), 'alert alert-danger');
+            flash('global_msg', 'No se pudo restaurar el registro: ' . $e->getMessage(), 'danger');
         }
 
         header('Location: ' . URL_ROOT . '/auditoria/papelera');

@@ -23,18 +23,33 @@ class CategoriasController extends Controller {
                 'descripcion' => trim($_POST['descripcion'])
             ];
 
+            $esEdicion = !empty($data['id']);
             $cat = new Categoria($data);
-            if ($cat->save($this->getUserId())) {
-                header('Location: ' . URL_ROOT . '/categorias/index');
-            } else {
-                die('Error al guardar la categoría');
+
+            try {
+                if ($cat->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Categoría de inventario actualizada." : "Nueva categoría registrada exitosamente.";
+                    flash('global_msg', $msg);
+                } else {
+                    throw new Exception("No se pudo completar el registro de la categoría.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Fallo de configuración: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/categorias/index');
         }
     }
 
     public function delete($id) {
-        if (Categoria::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/categorias/index');
+        try {
+            if (Categoria::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Categoría eliminada de la vista activa.', 'warning');
+            } else {
+                throw new Exception("Error al intentar dar de baja la categoría.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Error de BD: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/categorias/index');
     }
 }

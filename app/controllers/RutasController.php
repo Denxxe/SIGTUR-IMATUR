@@ -26,25 +26,28 @@ class RutasController extends Controller {
                 'estado' => $_POST['estado']
             ];
 
+            $esEdicion = !empty($data['id']);
             $ruta = new Ruta($data);
-            if ($ruta->save($this->getUserId())) {
+
+            try {
+                if ($ruta->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Información de la ruta actualizada correctamente." : "Nueva ruta turística creada exitosamente.";
+                    flash('global_msg', $msg);
+                    header('Location: ' . URL_ROOT . '/rutas/index');
+                } else {
+                    throw new Exception("Error al procesar la ruta turística.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Fallo en Rutas: ' . $e->getMessage(), 'danger');
                 header('Location: ' . URL_ROOT . '/rutas/index');
-            } else {
-                die('Error al guardar la ruta');
             }
         }
     }
 
-    /**
-     * Ver detalle de ruta con sus puntos
-     */
     public function detalle($id) {
         $ruta = Ruta::find($id);
         $puntos = Ruta::getPuntos($id);
-        
-        // Obtener inventario asignado a la ruta
         $inventario_asignado = RutaInventario::getByRuta($id);
-        // Obtener inventario disponible para asignar
         $inventario_disponible = Inventario::all();
 
         $data = [
@@ -57,9 +60,6 @@ class RutasController extends Controller {
         $this->view('rutas/detalle', $data);
     }
 
-    /**
-     * Guardar punto de ruta
-     */
     public function storePunto() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -75,32 +75,45 @@ class RutasController extends Controller {
             ];
 
             $punto = new PuntoRuta($data);
-            if ($punto->save($this->getUserId())) {
-                header('Location: ' . URL_ROOT . '/rutas/detalle/' . $data['id_ruta']);
-            } else {
-                die('Error al guardar el punto');
+            try {
+                if ($punto->save($this->getUserId())) {
+                    flash('global_msg', 'Punto de interés guardado en la ruta.');
+                } else {
+                    throw new Exception("No se pudo registrar el punto.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Error en puntos: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $data['id_ruta']);
         }
     }
 
-    /**
-     * Eliminar punto de ruta
-     */
     public function deletePunto($id, $id_ruta) {
-        if (PuntoRuta::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
+        try {
+            if (PuntoRuta::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Punto desactivado correctamente.', 'warning');
+            } else {
+                throw new Exception("Error al intentar dar de baja el punto.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
     }
 
     public function delete($id) {
-        if (Ruta::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/rutas/index');
+        try {
+            if (Ruta::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Ruta turística movida a la papelera.', 'warning');
+            } else {
+                throw new Exception("No es posible eliminar la ruta en este momento.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Fallo de BD: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/rutas/index');
     }
 
-    /**
-     * Asignar inventario a ruta
-     */
     public function storeInventario() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -110,20 +123,29 @@ class RutasController extends Controller {
             $cantidad = (int)$_POST['cantidad'];
             $observaciones = trim($_POST['observaciones']);
 
-            if (RutaInventario::asignar($id_ruta, $id_inventario, $cantidad, $observaciones, $this->getUserId())) {
-                header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
-            } else {
-                die('Error al asignar el inventario');
+            try {
+                if (RutaInventario::asignar($id_ruta, $id_inventario, $cantidad, $observaciones, $this->getUserId())) {
+                    flash('global_msg', 'Equipamiento asignado a la ruta correctamente.');
+                } else {
+                    throw new Exception("Error al procesar la asignación de recursos.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Error en inventario: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
         }
     }
 
-    /**
-     * Remover inventario de ruta
-     */
     public function deleteInventario($id_asignacion, $id_ruta) {
-        if (RutaInventario::remover($id_asignacion)) {
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
+        try {
+            if (RutaInventario::remover($id_asignacion)) {
+                flash('global_msg', 'Asignación removida exitosamente.', 'info');
+            } else {
+                throw new Exception("No se pudo desvincular el recurso.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT). '/rutas/detalle/' . $id_ruta;
     }
 }

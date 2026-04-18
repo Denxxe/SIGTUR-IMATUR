@@ -37,18 +37,34 @@ class InventarioController extends Controller {
                 'observaciones' => trim($_POST['observaciones'])
             ];
 
+            $esEdicion = !empty($data['id']);
             $item = new Inventario($data);
-            if ($item->save($this->getUserId())) {
+
+            try {
+                if ($item->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Bienes nacionales actualizados correctamente." : "Nuevo bien registrado exitosamente en el inventario.";
+                    flash('global_msg', $msg);
+                    header('Location: ' . URL_ROOT . '/inventario/index');
+                } else {
+                    throw new Exception("No es posible guardar el bien nacional en este momento.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Fallo en inventario: ' . $e->getMessage(), 'danger');
                 header('Location: ' . URL_ROOT . '/inventario/index');
-            } else {
-                die('Error al guardar el bien en inventario');
             }
         }
     }
 
     public function delete($id) {
-        if (Inventario::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/inventario/index');
+        try {
+            if (Inventario::delete($id, $this->getUserId())) {
+                flash('global_msg', 'El bien nacional ha sido movido a la papelera de reciclaje.', 'warning');
+            } else {
+                throw new Exception("Error al intentar dar de baja el registro.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Error de BD: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/inventario/index');
     }
 }

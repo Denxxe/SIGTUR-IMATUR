@@ -23,18 +23,33 @@ class UbicacionesController extends Controller {
                 'descripcion' => trim($_POST['descripcion'])
             ];
 
+            $esEdicion = !empty($data['id']);
             $ubi = new Ubicacion($data);
-            if ($ubi->save($this->getUserId())) {
-                header('Location: ' . URL_ROOT . '/ubicaciones/index');
-            } else {
-                die('Error al guardar la ubicación');
+
+            try {
+                if ($ubi->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Ubicación institucional actualizada." : "Nueva sede/almacén registrada con éxito.";
+                    flash('global_msg', $msg);
+                } else {
+                    throw new Exception("Error al procesar la ubicación física.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Fallo de configuración: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/ubicaciones/index');
         }
     }
 
     public function delete($id) {
-        if (Ubicacion::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/ubicaciones/index');
+        try {
+            if (Ubicacion::delete($id, $this->getUserId())) {
+                flash('global_msg', 'La ubicación ha sido enviada a la papelera.', 'warning');
+            } else {
+                throw new Exception("No pudimos eliminar la sede solicitada.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Error de BD: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/ubicaciones/index');
     }
 }

@@ -422,3 +422,4 @@
 <!-- ========== MAIN CONTENT ========== -->
 <div class="main-content">
     <main>
+        <?php flash('global_msg'); ?>

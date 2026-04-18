@@ -36,18 +36,24 @@ class TalleresController extends Controller {
                 'estado' => $_POST['estado']
             ];
 
+            $esEdicion = !empty($data['id']);
             $taller = new Taller($data);
-            if ($taller->save($this->getUserId())) {
+
+            try {
+                if ($taller->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Información del taller actualizada." : "Nuevo taller programado exitosamente.";
+                    flash('global_msg', $msg);
+                    header('Location: ' . URL_ROOT . '/talleres/index');
+                } else {
+                    throw new Exception("Error al procesar la solicitud del taller.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Fallo en formación: ' . $e->getMessage(), 'danger');
                 header('Location: ' . URL_ROOT . '/talleres/index');
-            } else {
-                die('Error al guardar el taller');
             }
         }
     }
 
-    /**
-     * Ver detalle de un taller y sus participantes
-     */
     public function detalle($id) {
         $taller = Taller::find($id);
         $participantes = Taller::getParticipantes($id);
@@ -60,31 +66,37 @@ class TalleresController extends Controller {
         $this->view('talleres/detalle', $data);
     }
 
-    /**
-     * Inscribir participante
-     */
     public function inscribir() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id_taller = (int)$_POST['id_taller'];
             $id_persona = (int)$_POST['id_persona'];
 
-            if (Taller::inscribir($id_taller, $id_persona, 1)) {
-                header('Location: ' . URL_ROOT . '/talleres/detalle/' . $id_taller);
-            } else {
-                die('Error al inscribir participante');
+            try {
+                if (Taller::inscribir($id_taller, $id_persona, 1)) {
+                    flash('global_msg', 'Participante inscrito correctamente en el taller.');
+                } else {
+                    throw new Exception("No se pudo realizar la inscripción. Verifique si el participante ya existe.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Error de inscripción: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/talleres/detalle/' . $id_taller);
         }
     }
 
     public function delete($id) {
-        if (Taller::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/talleres/index');
+        try {
+            if (Taller::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Taller cancelado y movido al historial de papelera.', 'warning');
+            } else {
+                throw new Exception("No es posible eliminar el taller en este momento.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Fallo en eliminación: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/talleres/index');
     }
 
-    /**
-     * Ver/Editar el Informe Oficial del Taller
-     */
     public function informe($id_taller) {
         $taller = Taller::find($id_taller);
         if (!$taller) {
@@ -107,7 +119,12 @@ class TalleresController extends Controller {
                 'resumen_actividad' => trim($_POST['resumen_actividad'] ?? '')
             ];
 
-            Taller::saveInforme($data);
+            try {
+                Taller::saveInforme($data);
+                flash('global_msg', 'Informe de actividad guardado y procesado correctamente.');
+            } catch (Exception $e) {
+                flash('global_msg', 'Error al guardar informe: ' . $e->getMessage(), 'danger');
+            }
             header('Location: ' . URL_ROOT . '/talleres/informe/' . $id_taller);
             exit;
         }

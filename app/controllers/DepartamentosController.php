@@ -24,20 +24,33 @@ class DepartamentosController extends Controller {
                 'descripcion' => trim($_POST['descripcion'])
             ];
 
+            $esEdicion = !empty($id);
             $dpto = new Departamento($data);
-            if ($dpto->save($this->getUserId())) {
-                header('Location: ' . URL_ROOT . '/departamentos/index');
-            } else {
-                die('Error al guardar el departamento');
+
+            try {
+                if ($dpto->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Departamento institucional actualizado." : "Nuevo departamento administrativo registrado.";
+                    flash('global_msg', $msg);
+                } else {
+                    throw new Exception("Error al intentar procesar el departamento.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'No se pudo guardar: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/departamentos/index');
         }
     }
 
     public function delete($id) {
-        if (Departamento::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/departamentos/index');
-        } else {
-            die('Error al eliminar');
+        try {
+            if (Departamento::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Departamento desactivado y movido a la papelera.', 'warning');
+            } else {
+                throw new Exception("El registro no pudo eliminarse.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Fallo en la BD: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/departamentos/index');
     }
 }

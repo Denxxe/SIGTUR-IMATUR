@@ -6,7 +6,6 @@ class EmpleadosController extends Controller {
 
     public function index() {
         $empleados = Empleado::all();
-        // Necesitamos cargos y departamentos para el modal
         $cargos = Cargo::all();
         $departamentos = Departamento::all();
 
@@ -41,21 +40,34 @@ class EmpleadosController extends Controller {
                 'fecha_ingreso' => $_POST['fecha_ingreso']
             ];
 
+            $esEdicion = !empty($data['id']);
             $empleado = new Empleado($data);
 
-            if ($empleado->save($this->getUserId())) {
+            try {
+                if ($empleado->save($this->getUserId())) {
+                    $msg = $esEdicion ? "Datos de empleado actualizados correctamente." : "Nuevo empleado registrado exitosamente en el sistema.";
+                    flash('global_msg', $msg);
+                    header('Location: ' . URL_ROOT . '/empleados/index');
+                } else {
+                    throw new Exception("Error interno al procesar el registro del empleado.");
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'No se pudo guardar la información: ' . $e->getMessage(), 'danger');
                 header('Location: ' . URL_ROOT . '/empleados/index');
-            } else {
-                die('Error al guardar el empleado');
             }
         }
     }
 
     public function delete($id) {
-        if (Empleado::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/empleados/index');
-        } else {
-            die('Error al eliminar');
+        try {
+            if (Empleado::delete($id, $this->getUserId())) {
+                flash('global_msg', 'El expediente del empleado ha sido movido a la papelera.', 'warning');
+            } else {
+                throw new Exception("No pudimos eliminar el registro en este momento.");
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Fallo en la eliminación: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/empleados/index');
     }
 }

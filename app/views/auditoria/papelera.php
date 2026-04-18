@@ -12,8 +12,6 @@
     </div>
 </div>
 
-<?php flash('auditoria_msg'); ?>
-
 <div class="card shadow-sm border-0">
     <div class="card-body p-4">
         <!-- Pestañas por Módulo -->
