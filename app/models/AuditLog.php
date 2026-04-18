@@ -24,6 +24,23 @@ class AuditLog extends Model {
         return $db->resultSet();
     }
 
+    /**
+     * Obtener registros marcados como eliminados (is_active = false) de una tabla específica.
+     */
+    public static function getDeleted($tabla) {
+        $db = new Database();
+        // Intentar obtener el nombre del campo identificador (asumimos 'nombre' o 'descripcion' para humanos)
+        $identificador = "id";
+        if ($tabla == 'personas') $identificador = "cedula || ' - ' || nombre || ' ' || apellido";
+        if ($tabla == 'inventario') $identificador = "codigo_bn || ' - ' || nombre";
+        if ($tabla == 'talleres' || $tabla == 'rutas' || $tabla == 'departamentos' || $tabla == 'cargos') $identificador = "nombre";
+        if ($tabla == 'pasantes') $identificador = "cedula || ' - ' || nombre";
+
+        $sql = "SELECT *, ($identificador) as display_name FROM $tabla WHERE is_active = FALSE ORDER BY deleted_at DESC";
+        $db->query($sql);
+        return $db->resultSet();
+    }
+
     // Insertar un log (Debe ser consumido internamente por los modelos en el `save()`)
     public static function log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario) {
         $db = new Database();

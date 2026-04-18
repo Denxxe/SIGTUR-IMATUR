@@ -358,9 +358,10 @@
             </a>
         </div>
 
-        <!-- Sistema -->
+        <!-- ADMINISTRACIÓN (Solo Administrador) -->
+        <?php if($_SESSION['user_rol'] == 1): ?>
         <div class="sb-section" onclick="toggleSection(this)">
-            <span>Sistema</span>
+            <span>Administración</span>
             <i class="bi bi-chevron-down sb-chevron"></i>
         </div>
         <div class="sb-group">
@@ -371,9 +372,13 @@
                 <i class="bi bi-shield-lock"></i> Roles y Permisos
             </a>
             <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/index">
-                <i class="bi bi-journal-text"></i> Log de Auditoría
+                <i class="bi bi-shield-check"></i> Bitácora del Sistema
+            </a>
+            <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
+                <i class="bi bi-recycle"></i> Papelera de Reciclaje
             </a>
         </div>
+        <?php endif; ?>
     </div>
 
     <!-- Footer: Usuario -->

@@ -7,6 +7,9 @@ session_start();
 // Cargar configuración
 require_once '../config/config.php';
 
+// Cargar Helpers
+require_once '../app/helpers/session_helper.php';
+
 // Cargar Clases base manualmente (Autoload simple)
 spl_autoload_register(function($className) {
     $paths = [
