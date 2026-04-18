@@ -81,7 +81,8 @@ class AuditoriaController extends Controller {
             }
 
             // 3. Registrar acción en Auditoría
-            AuditLog::log($tabla, 'RESTORE', $id, ['is_active' => false], ['is_active' => true], $_SESSION['user_id']);
+            // Usamos 'UPDATE' en lugar de 'RESTORE' para cumplir con la restricción CHECK de la base de datos actual.
+            AuditLog::log($tabla, 'UPDATE', $id, ['is_active' => false], ['is_active' => true], $_SESSION['user_id']);
 
             $db->endTransaction();
             flash('global_msg', '¡Registro restaurado exitosamente! Los datos y sus asociaciones vuelven a estar vigentes.');
