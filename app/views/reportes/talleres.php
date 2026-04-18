@@ -97,10 +97,11 @@
                     <tr>
                         <th>Taller</th>
                         <th>Facilitador</th>
-                        <th>Sede</th>
-                        <th>Fecha Inicio</th>
-                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th class="text-center">Resumen Demográfico</th>
                         <th class="text-center">Inscritos / Cupo</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -109,10 +110,34 @@
                     <?php else: ?>
                         <?php foreach ($data['talleres'] as $t): ?>
                             <tr>
-                                <td class="fw-bold"><?php echo $t->nombre; ?></td>
+                                <td class="fw-bold">
+                                    <?php echo $t->nombre; ?><br>
+                                    <small class="text-muted fw-normal"><i class="bi bi-geo-alt"></i> <?php echo $t->sede ?: 'Sin sede'; ?></small>
+                                </td>
                                 <td><?php echo $t->facilitador_nombre . ' ' . $t->facilitador_apellido; ?></td>
-                                <td><?php echo $t->sede ?: '<span class="text-muted">Sin sede</span>'; ?></td>
                                 <td><?php echo $t->fecha_inicio; ?></td>
+                                <td class="text-center">
+                                    <?php if(isset($t->total_atendidas)): ?>
+                                        <div class="d-flex justify-content-center gap-2 small fw-bold">
+                                            <span title="Mujeres" class="text-primary">👩<?php echo $t->mujeres; ?></span>
+                                            <span title="Hombres" class="text-secondary">👨<?php echo $t->hombres; ?></span>
+                                            <span title="Niños/as" class="text-success">👶<?php echo (int)$t->ninas + (int)$t->ninos; ?></span>
+                                        </div>
+                                        <div class="small text-muted mt-1">Total: <?php echo $t->total_atendidas; ?></div>
+                                    <?php else: ?>
+                                        <span class="text-muted fst-italic small">Sin informe</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-center fw-bold">
+                                    <?php 
+                                        $porcentaje = $t->cupo_maximo > 0 ? round(($t->total_inscritos / $t->cupo_maximo) * 100) : 0;
+                                        $colorBarra = $porcentaje > 80 ? 'bg-danger' : ($porcentaje > 50 ? 'bg-warning' : 'bg-success');
+                                    ?>
+                                    <small><?php echo $t->total_inscritos; ?> / <?php echo $t->cupo_maximo; ?></small>
+                                    <div class="progress mt-1" style="height: 5px;">
+                                        <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
+                                    </div>
+                                </td>
                                 <td>
                                     <?php 
                                         $color = 'bg-secondary';
@@ -123,15 +148,10 @@
                                     ?>
                                     <span class="badge <?php echo $color; ?>"><?php echo $t->estado; ?></span>
                                 </td>
-                                <td class="text-center fw-bold">
-                                    <?php 
-                                        $porcentaje = $t->cupo_maximo > 0 ? round(($t->total_inscritos / $t->cupo_maximo) * 100) : 0;
-                                        $colorBarra = $porcentaje > 80 ? 'bg-danger' : ($porcentaje > 50 ? 'bg-warning' : 'bg-success');
-                                    ?>
-                                    <?php echo $t->total_inscritos; ?> / <?php echo $t->cupo_maximo; ?>
-                                    <div class="progress mt-1" style="height: 5px;">
-                                        <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
-                                    </div>
+                                <td class="text-center">
+                                    <a href="<?php echo URL_ROOT; ?>/reportes/dossier/<?php echo $t->id; ?>" class="btn btn-sm btn-info text-white shadow-sm" title="Ver Informaci&oacute;n Detallada">
+                                        <i class="bi bi-file-earmark-person"></i> Ver Dossier
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -29,9 +29,16 @@
                 $porcentaje = $cupo > 0 ? round(($inscritos / $cupo) * 100) : 0;
                 $colorBarra = $porcentaje > 80 ? 'bg-danger' : ($porcentaje > 50 ? 'bg-warning' : 'bg-success');
             ?>
-            <span class="badge bg-light text-dark"><?php echo $inscritos; ?> / <?php echo $cupo; ?> (<?php echo $porcentaje; ?>%)</span>
-            <div class="progress mt-1" style="height: 6px; width: 120px;">
-                <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
+            <div class="d-flex align-items-center justify-content-end gap-3">
+                <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn btn-sm btn-success text-white">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Exportar Lista
+                </a>
+                <div class="text-end">
+                    <span class="badge bg-light text-dark"><?php echo $inscritos; ?> / <?php echo $cupo; ?> (<?php echo $porcentaje; ?>%)</span>
+                    <div class="progress mt-1" style="height: 6px; width: 120px;">
+                        <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

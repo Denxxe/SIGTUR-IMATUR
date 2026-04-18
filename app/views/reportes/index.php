@@ -34,7 +34,17 @@
                 <div class="display-4 text-info mb-3">🗺️</div>
                 <h5 class="fw-bold">Reporte de Rutas</h5>
                 <p class="text-muted small">Estado de las rutas turísticas, puntos y equipamiento asignado</p>
-                <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn btn-info">Generar</a>
+                <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn btn-info text-white">Generar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center py-5">
+                <div class="display-4 text-secondary mb-3">👨‍🎓</div>
+                <h5 class="fw-bold">Reporte de Pasantes</h5>
+                <p class="text-muted small">Control de practicantes, tutores y estatus de documentos</p>
+                <a href="<?php echo URL_ROOT; ?>/reportes/pasantes" class="btn btn-secondary">Generar</a>
             </div>
         </div>
     </div>

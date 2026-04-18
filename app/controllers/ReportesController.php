@@ -137,9 +137,11 @@ class ReportesController extends Controller {
         $estado = $_GET['estado'] ?? '';
         $sql = "SELECT t.*, uf.nombre as sede, 
                        p.nombre as facilitador_nombre, p.apellido as facilitador_apellido,
+                       inf.mujeres, inf.hombres, inf.ninas, inf.ninos, inf.total_atendidas,
                        (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) as total_inscritos
                 FROM talleres t
                 LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                LEFT JOIN taller_informes inf ON t.id = inf.id_taller
                 INNER JOIN empleados e ON t.id_facilitador = e.id
                 INNER JOIN personas p ON e.id_persona = p.id
                 WHERE t.is_active = TRUE";
@@ -222,6 +224,186 @@ class ReportesController extends Controller {
                         COUNT(CASE WHEN estado = 'En Mantenimiento' THEN 1 END) as mantenimiento
                     FROM rutas WHERE is_active = TRUE");
         return $db->single();
+    }
+
+    public function exportarParticipantesCsv($id_taller) {
+        $db = new Database();
+        $db->query("SELECT p.cedula, p.nombre, p.apellido, p.telefono, pt.asistio
+                    FROM participantes_taller pt
+                    INNER JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id_taller = :id_taller");
+        $db->bind(':id_taller', $id_taller);
+        $participantes = $db->resultSet();
+
+        $taller = $db->query("SELECT nombre FROM talleres WHERE id = :id_taller");
+        $db->bind(':id_taller', $id_taller);
+        $t = $db->single();
+
+        $headers = ['Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Asistió'];
+        $rows = [];
+        foreach($participantes as $p) {
+            $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->telefono, $p->asistio ? 'Sí' : 'No'];
+        }
+
+        $this->exportCsv("Inscritos_" . str_replace(' ', '_', $t->nombre), $headers, $rows);
+    }
+
+    // =========================================================================
+    // DOSSIER INTEGRAL DE TALLER (PAGINA CONTINUA)
+    // =========================================================================
+
+    public function dossier($id) {
+        $db = new Database();
+        // 1. Info básica y facilitador
+        $db->query("SELECT t.*, uf.nombre as sede, 
+                           p.nombre as fac_nom, p.apellido as fac_ape, e.nro_expediente
+                    FROM talleres t
+                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                    INNER JOIN empleados e ON t.id_facilitador = e.id
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    WHERE t.id = :id");
+        $db->bind(':id', $id);
+        $taller = $db->single();
+
+        if (!$taller) { header('Location: ' . URL_ROOT . '/reportes/talleres'); exit; }
+
+        // 2. Informe demográfico
+        $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
+        $db->bind(':id', $id);
+        $informe = $db->single();
+
+        // 3. Participantes
+        $db->query("SELECT p.cedula, p.nombre, p.apellido, pt.asistio
+                    FROM participantes_taller pt
+                    INNER JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id_taller = :id ORDER BY p.apellido ASC");
+        $db->bind(':id', $id);
+        $participantes = $db->resultSet();
+
+        $data = [
+            'titulo' => 'Dossier de Taller',
+            'taller' => $taller,
+            'informe' => $informe,
+            'participantes' => $participantes
+        ];
+
+        $this->view('reportes/taller_detalle', $data);
+    }
+
+    public function exportarDossierCsv($id) {
+        $db = new Database();
+        $db->query("SELECT t.*, p.nombre || ' ' || p.apellido as facilitador, uf.nombre as sede
+                    FROM talleres t
+                    INNER JOIN empleados e ON t.id_facilitador = e.id
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                    WHERE t.id = :id");
+        $db->bind(':id', $id);
+        $t = $db->single();
+
+        $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
+        $db->bind(':id', $id);
+        $inf = $db->single();
+
+        $db->query("SELECT p.cedula, p.nombre || ' ' || p.apellido as nombre, pt.asistio
+                    FROM participantes_taller pt
+                    INNER JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id_taller = :id");
+        $db->bind(':id', $id);
+        $participantes = $db->resultSet();
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="Dossier_Taller_' . time() . '.csv"');
+        
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM
+        
+        // Bloque 1: Generalidades
+        fputcsv($output, ['DOSSIER INTEGRAL DE ACTIVIDAD - IMATUR'], ';');
+        fputcsv($output, ['Taller:', $t->nombre], ';');
+        fputcsv($output, ['Facilitador:', $t->facilitador], ';');
+        fputcsv($output, ['Lugar:', $t->sede ?: 'No especificada'], ';');
+        fputcsv($output, ['Fecha:', $t->fecha_inicio], ';');
+        fputcsv($output, ['Estado:', $t->estado], ';');
+        fputcsv($output, [], ';');
+
+        // Bloque 2: Estadística Demográfica
+        fputcsv($output, ['RESUMEN DEMOGRÁFICO'], ';');
+        fputcsv($output, ['Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'], ';');
+        fputcsv($output, [
+            $inf->mujeres ?? 0, 
+            $inf->hombres ?? 0, 
+            $inf->ninas ?? 0, 
+            $inf->ninos ?? 0, 
+            $inf->total_atendidas ?? 0
+        ], ';');
+        fputcsv($output, [], ';');
+
+        // Bloque 3: Lista de Participantes
+        fputcsv($output, ['LISTADO DE PERSONAS INSCRITAS'], ';');
+        fputcsv($output, ['Cédula', 'Nombre Completo', 'Asistencia'], ';');
+        foreach($participantes as $p) {
+            fputcsv($output, [$p->cedula, $p->nombre, $p->asistio ? 'Presente' : 'Ausente'], ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
+
+    // =========================================================================
+    // EXPORTACIÓN DE PASANTES
+    // =========================================================================
+
+    public function pasantes() {
+        $db = new Database();
+        $db->query("SELECT p.*, e.nro_expediente, per.nombre AS tutor_nombre, per.apellido AS tutor_apellido
+                    FROM pasantes p
+                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
+                    LEFT JOIN personas per ON e.id_persona = per.id
+                    WHERE p.is_active = TRUE ORDER BY p.fecha_inicio DESC");
+        $pasantes = $db->resultSet();
+
+        $data = [
+            'titulo' => 'Reporte de Pasantes',
+            'pasantes' => $pasantes
+        ];
+        $this->view('reportes/pasantes', $data);
+    }
+
+    public function exportarPasantesCsv() {
+        $db = new Database();
+        $db->query("SELECT p.*, per.nombre || ' ' || per.apellido as tutor
+                    FROM pasantes p
+                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
+                    LEFT JOIN personas per ON e.id_persona = per.id
+                    WHERE p.is_active = TRUE ORDER BY p.cedula ASC");
+        $pasantes = $db->resultSet();
+
+        $headers = ['Cédula', 'Nombre', 'Apellido', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado'];
+        $rows = [];
+        foreach($pasantes as $p) {
+            $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->institucion, $p->carrera, $p->tutor ?? 'N/A', $p->fecha_inicio, $p->fecha_fin, $p->estado];
+        }
+
+        $this->exportCsv("Reporte_Pasantes", $headers, $rows);
+    }
+
+    public function exportarPasantesPdf() {
+        $db = new Database();
+        $db->query("SELECT p.*, per.nombre || ' ' || per.apellido as tutor
+                    FROM pasantes p
+                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
+                    LEFT JOIN personas per ON e.id_persona = per.id
+                    WHERE p.is_active = TRUE ORDER BY p.cedula ASC");
+        $pasantes = $db->resultSet();
+
+        $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado'];
+        $rows = [];
+        foreach($pasantes as $p) {
+            $rows[] = [$p->cedula, $p->nombre . ' ' . $p->apellido, $p->institucion, $p->tutor ?? '-', $p->estado];
+        }
+
+        $this->exportPdf("Listado Maestro de Pasantes", "IMATUR — Control de Formación Institucional", $headers, $rows);
     }
 
     // =========================================================================
