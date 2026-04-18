@@ -325,6 +325,9 @@
             <a class="sb-link" href="<?php echo URL_ROOT; ?>/ubicacionesformacion/index">
                 <i class="bi bi-pin-map"></i> Sedes de Formación
             </a>
+            <a class="sb-link" href="<?php echo URL_ROOT; ?>/pasantes/index">
+                <i class="bi bi-person-video3"></i> Gest. de Pasantes
+            </a>
         </div>
 
         <!-- Turismo -->

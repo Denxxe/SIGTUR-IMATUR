@@ -81,4 +81,43 @@ class TalleresController extends Controller {
             header('Location: ' . URL_ROOT . '/talleres/index');
         }
     }
+
+    /**
+     * Ver/Editar el Informe Oficial del Taller
+     */
+    public function informe($id_taller) {
+        $taller = Taller::find($id_taller);
+        if (!$taller) {
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+
+        $informe = Taller::getInforme($id_taller);
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'id_taller' => $id_taller,
+                'unidad_estadal' => trim($_POST['unidad_estadal'] ?? 'Sucre'),
+                'lugar_exacto' => trim($_POST['lugar_exacto'] ?? ''),
+                'instituciones_presentes' => trim($_POST['instituciones_presentes'] ?? ''),
+                'mujeres' => (int)$_POST['mujeres'],
+                'hombres' => (int)$_POST['hombres'],
+                'ninas' => (int)$_POST['ninas'],
+                'ninos' => (int)$_POST['ninos'],
+                'resumen_actividad' => trim($_POST['resumen_actividad'] ?? '')
+            ];
+
+            Taller::saveInforme($data);
+            header('Location: ' . URL_ROOT . '/talleres/informe/' . $id_taller);
+            exit;
+        }
+
+        $data = [
+            'titulo' => 'Reporte Oficial de Actividad',
+            'taller' => $taller,
+            'informe' => $informe
+        ];
+
+        $this->view('talleres/informe', $data);
+    }
 }

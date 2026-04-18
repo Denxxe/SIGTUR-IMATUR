@@ -10,9 +10,10 @@
         </p>
     </div>
     <div class="col-md-4 text-end">
-        <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn btn-outline-secondary me-2">← Volver</a>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
-            Inscribir Participante
+        <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn btn-outline-secondary mb-2">← Volver</a>
+        <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" class="btn btn-info text-white mb-2"><i class="bi bi-file-earmark-text"></i> Informe Oficial</a>
+        <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
+            <i class="bi bi-person-plus"></i> Inscribir
         </button>
     </div>
 </div>

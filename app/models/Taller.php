@@ -119,13 +119,44 @@ class Taller extends Model {
     }
 
     /**
-     * Marcar asistencia de participante
+     * Obtener y guardar el informe general / demográfico del evento
      */
-    public static function marcarAsistencia($id, $asistio) {
+    public static function getInforme($id_taller) {
         $db = new Database();
-        $db->query("UPDATE participantes_taller SET asistio = :asistio WHERE id = :id");
-        $db->bind(':id', $id);
-        $db->bind(':asistio', $asistio);
+        $db->query("SELECT * FROM taller_informes WHERE id_taller = :id_taller");
+        $db->bind(':id_taller', $id_taller);
+        return $db->single();
+    }
+
+    public static function saveInforme($data) {
+        $db = new Database();
+        
+        // Verificar si existe el informe
+        $inf = self::getInforme($data['id_taller']);
+        if ($inf) {
+            $db->query("UPDATE taller_informes 
+                        SET unidad_estadal=:unidad, lugar_exacto=:lugar, instituciones_presentes=:inst, 
+                            mujeres=:m, hombres=:h, ninas=:ni, ninos=:no, total_atendidas=:tot, 
+                            resumen_actividad=:res, updated_at=CURRENT_TIMESTAMP
+                        WHERE id_taller = :id_taller");
+        } else {
+            $db->query("INSERT INTO taller_informes 
+                        (id_taller, unidad_estadal, lugar_exacto, instituciones_presentes, mujeres, hombres, ninas, ninos, total_atendidas, resumen_actividad, created_by)
+                        VALUES (:id_taller, :unidad, :lugar, :inst, :m, :h, :ni, :no, :tot, :res, :user_id)");
+            $db->bind(':user_id', $_SESSION['user_id'] ?? null);
+        }
+        
+        $db->bind(':id_taller', $data['id_taller']);
+        $db->bind(':unidad', $data['unidad_estadal']);
+        $db->bind(':lugar', $data['lugar_exacto']);
+        $db->bind(':inst', $data['instituciones_presentes']);
+        $db->bind(':m', $data['mujeres']);
+        $db->bind(':h', $data['hombres']);
+        $db->bind(':ni', $data['ninas']);
+        $db->bind(':no', $data['ninos']);
+        $db->bind(':tot', (int)$data['mujeres'] + (int)$data['hombres'] + (int)$data['ninas'] + (int)$data['ninos']);
+        $db->bind(':res', $data['resumen_actividad']);
+        
         return $db->execute();
     }
 }

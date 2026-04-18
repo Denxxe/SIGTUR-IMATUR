@@ -35,7 +35,7 @@ class Router {
             $permisos = [
                 1 => '*', // Acceso total
                 2 => ['DashboardController','EmpleadosController','CargosController','DepartamentosController','AsistenciasController','ReportesController'],
-                3 => ['DashboardController','RutasController','ActividadesrutaController','TalleresController','UbicacionesformacionController','ReportesController'],
+                3 => ['DashboardController','RutasController','ActividadesrutaController','TalleresController','UbicacionesformacionController','PasantesController','ReportesController'],
                 4 => ['DashboardController','InventarioController','CategoriasController','UbicacionesController','ActividadesinventarioController','ReportesController']
             ];
 
