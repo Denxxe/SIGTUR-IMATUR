@@ -2,95 +2,104 @@
 /**
  * Controlador AuditoriaController
  * Maneja la gestión de bitácoras y la papelera de reciclaje global.
- * Acceso restringido solo a Administradores.
  */
 class AuditoriaController extends Controller {
 
-    /**
-     * Vista de Bitácora (Historial de acciones)
-     */
     public function index() {
         $logs = AuditLog::all();
-
         $data = [
             'titulo' => 'Bitácora y Trazabilidad de Acciones',
             'logs' => $logs
         ];
-
         $this->view('auditoria/index', $data);
     }
 
-    /**
-     * Vista de Papelera de Reciclaje (Registros is_active = false)
-     * Organizado por pestañas modulares.
-     */
     public function papelera() {
         $data = [
             'titulo' => 'Papelera de Reciclaje Global',
             'secciones' => [
                 'Recursos Humanos' => [
-                    'Personal/Personas' => ['tabla' => 'personas', 'items' => AuditLog::getDeleted('personas')],
+                    'Personal' => ['tabla' => 'personas', 'items' => AuditLog::getDeleted('personas')],
                     'Cargos' => ['tabla' => 'cargos', 'items' => AuditLog::getDeleted('cargos')],
                     'Departamentos' => ['tabla' => 'departamentos', 'items' => AuditLog::getDeleted('departamentos')]
                 ],
                 'Inventario' => [
-                    'Bienes Institucionales' => ['tabla' => 'inventario', 'items' => AuditLog::getDeleted('inventario')],
+                    'Bienes' => ['tabla' => 'inventario', 'items' => AuditLog::getDeleted('inventario')],
                     'Categorías' => ['tabla' => 'categorias', 'items' => AuditLog::getDeleted('categorias')],
-                    'Ubicaciones/Almacenes' => ['tabla' => 'ubicaciones', 'items' => AuditLog::getDeleted('ubicaciones')]
+                    'Ubicaciones' => ['tabla' => 'ubicaciones', 'items' => AuditLog::getDeleted('ubicaciones')]
                 ],
                 'Formación' => [
                     'Talleres' => ['tabla' => 'talleres', 'items' => AuditLog::getDeleted('talleres')],
                     'Pasantes' => ['tabla' => 'pasantes', 'items' => AuditLog::getDeleted('pasantes')],
-                    'Sedes de Formación' => ['tabla' => 'ubicaciones_formacion', 'items' => AuditLog::getDeleted('ubicaciones_formacion')]
+                    'Sedes' => ['tabla' => 'ubicaciones_formacion', 'items' => AuditLog::getDeleted('ubicaciones_formacion')]
                 ],
                 'Rutas Turísticas' => [
                     'Rutas' => ['tabla' => 'rutas', 'items' => AuditLog::getDeleted('rutas')]
                 ]
             ]
         ];
-
         $this->view('auditoria/papelera', $data);
     }
 
     /**
-     * Restaurar un registro borrado lógicamente con lógica de cascada.
+     * Restaurar un registro borrado lógicamente.
      */
     public function restaurar($tabla, $id) {
+        $id = (int)$id;
+        $tabla = strtolower(trim($tabla));
+        
+        // Creamos instancia única de conexión para asegurar integridad transaccional
         $db = new Database();
         $db->beginTransaction();
 
         try {
-            // 1. Restaurar registro principal
+            // 1. Verificar existencia y estado actual
+            $db->query("SELECT id FROM $tabla WHERE id = :id AND is_active = FALSE");
+            $db->bind(':id', $id);
+            $check = $db->single();
+            
+            if (!$check) {
+                throw new Exception("El registro con ID $id no pudo ser localizado en la papelera para la tabla '$tabla'.");
+            }
+
+            // 2. Restaurar registro principal
             $db->query("UPDATE $tabla SET is_active = TRUE, deleted_at = NULL, deleted_by = NULL WHERE id = :id");
             $db->bind(':id', $id);
-            if (!$db->execute()) {
-                throw new Exception("No se pudo actualizar el registro principal en $tabla.");
+            $db->execute();
+            
+            if ($db->rowCount() === 0) {
+                throw new Exception("No se detectaron cambios al intentar restaurar el registro principal.");
             }
 
-            // 2. Restauración en Cascada
-            if ($tabla == 'rutas') {
-                $db->query("UPDATE puntos_ruta SET is_active = TRUE, deleted_at = NULL WHERE id_ruta = :id");
-                $db->bind(':id', $id);
-                $db->execute();
-            }
-
+            // 3. Restauración en Cascada (Dependencias críticas)
             if ($tabla == 'personas') {
                 $db->query("UPDATE empleados SET is_active = TRUE, deleted_at = NULL WHERE id_persona = :id");
                 $db->bind(':id', $id);
                 $db->execute();
             }
 
-            // 3. Registrar acción en Auditoría
-            // Usamos 'UPDATE' en lugar de 'RESTORE' para cumplir con la restricción CHECK de la base de datos actual.
-            AuditLog::log($tabla, 'UPDATE', $id, ['is_active' => false], ['is_active' => true], $_SESSION['user_id']);
+            if ($tabla == 'rutas') {
+                $db->query("UPDATE puntos_ruta SET is_active = TRUE, deleted_at = NULL WHERE id_ruta = :id");
+                $db->bind(':id', $id);
+                $db->execute();
+            }
 
-            $db->endTransaction();
-            flash('global_msg', '¡Registro restaurado exitosamente! Los datos y sus asociaciones vuelven a estar vigentes.');
+            // 4. Registrar acción en Auditoría (Pasamos la instancia $db para que se guarde en la misma transacción)
+            AuditLog::log($tabla, 'UPDATE', $id, ['is_active' => false], ['is_active' => true], $_SESSION['user_id'], $db);
+
+            // 5. Commit y validación de persistencia física
+            if (!$db->endTransaction()) {
+                throw new Exception("La base de datos rechazó la confirmación de la restauración (Commit Fallido).");
+            }
+
+            flash('global_msg', '¡Restauración completada con éxito! El registro y sus vínculos han sido reactivados.');
+            
         } catch (Exception $e) {
             $db->cancelTransaction();
-            flash('global_msg', 'No se pudo restaurar el registro: ' . $e->getMessage(), 'danger');
+            flash('global_msg', 'Error crítico de restauración: ' . $e->getMessage(), 'danger');
         }
 
         header('Location: ' . URL_ROOT . '/auditoria/papelera');
+        exit;
     }
 }

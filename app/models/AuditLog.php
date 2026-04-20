@@ -1,6 +1,6 @@
 <?php
 /**
- * Clase AuditLog: Modelo de solo lectura para visualizar las bitácoras del sistema.
+ * Clase AuditLog: Modelo para visualizar y registrar las bitácoras del sistema.
  */
 class AuditLog extends Model {
     
@@ -24,12 +24,8 @@ class AuditLog extends Model {
         return $db->resultSet();
     }
 
-    /**
-     * Obtener registros marcados como eliminados (is_active = false) de una tabla específica.
-     */
     public static function getDeleted($tabla) {
         $db = new Database();
-        // Intentar obtener el nombre del campo identificador (asumimos 'nombre' o 'descripcion' para humanos)
         $identificador = "id";
         if ($tabla == 'personas') $identificador = "cedula || ' - ' || nombre || ' ' || apellido";
         if ($tabla == 'inventario') $identificador = "codigo_bn || ' - ' || nombre";
@@ -41,11 +37,23 @@ class AuditLog extends Model {
         return $db->resultSet();
     }
 
-    // Insertar un log (Debe ser consumido internamente por los modelos en el `save()`)
-    public static function log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario) {
-        $db = new Database();
+    /**
+     * Insertar un log de auditoría.
+     * @param string $tabla Tabla afectada.
+     * @param string $operacion Tipo de operación (INSERT, UPDATE, DELETE).
+     * @param int $record_id ID del registro afectado.
+     * @param array $datos_previos Datos antes del cambio.
+     * @param array $datos_nuevos Datos después del cambio.
+     * @param int $id_usuario Usuario que realiza la acción.
+     * @param Database|null $dbInstance Instancia de DB opcional para usar dentro de una transacción.
+     */
+    public static function log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario, $dbInstance = null) {
+        // Si no se provee instancia, creamos una nueva.
+        $db = $dbInstance ? $dbInstance : new Database();
+        
         $db->query("INSERT INTO audit_logs (tabla_afectada, operacion, record_id, datos_previos, datos_nuevos, id_usuario, ip_direccion) 
                     VALUES (:tabla, :operacion, :record_id, :previos, :nuevos, :id_usuario, :ip)");
+        
         $db->bind(':tabla', $tabla);
         $db->bind(':operacion', $operacion);
         $db->bind(':record_id', $record_id);
@@ -53,6 +61,7 @@ class AuditLog extends Model {
         $db->bind(':nuevos', $datos_nuevos ? json_encode($datos_nuevos) : null);
         $db->bind(':id_usuario', $id_usuario);
         $db->bind(':ip', $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        
         return $db->execute();
     }
 }

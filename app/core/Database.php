@@ -1,6 +1,7 @@
 <?php
 /**
- * Clase Database: Conexión Singleton/Base usando PDO para PostgreSQL
+ * Clase Database: Conexión Base usando PDO para PostgreSQL
+ * Se ha eliminado la persistencia para evitar fugas de estado en transacciones.
  */
 class Database {
     private $host = DB_HOST;
@@ -13,23 +14,35 @@ class Database {
     private $stmt;
     private $error;
 
-    public function __construct() {
+    public function __construct($pdoInstance = null) {
+        if ($pdoInstance) {
+            $this->dbh = $pdoInstance;
+            return;
+        }
+
         // Configurar DSN (Data Source Name)
         $dsn = 'pgsql:host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->dbname;
         
         $options = array(
-            PDO::ATTR_PERSISTENT => true,
+            // PERSISTENCIA DESACTIVADA: Evita que múltiples objetos compartan estado transaccional inadvertidamente.
+            PDO::ATTR_PERSISTENT => false, 
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ
         );
 
-        // Crear una instancia de PDO
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             die("Error de conexión: " . $this->error);
         }
+    }
+
+    /**
+     * Acceso al controlador PDO interno para compartirlo entre modelos.
+     */
+    public function getHandler() {
+        return $this->dbh;
     }
 
     // Preparar la consulta
@@ -74,14 +87,9 @@ class Database {
         return $this->stmt->fetch();
     }
 
-    // Obtener el número de filas
+    // Obtener el número de filas afectadas
     public function rowCount() {
         return $this->stmt->rowCount();
-    }
-
-    // Obtener el último ID insertado (PostgreSQL requiere nombre de secuencia)
-    public function lastInsertId($sequence = null) {
-        return $this->dbh->lastInsertId($sequence);
     }
 
     // Transacciones
@@ -89,6 +97,10 @@ class Database {
         return $this->dbh->beginTransaction();
     }
 
+    /**
+     * Finalizar transacción (Commit)
+     * @return bool True si tuvo éxito, False de lo contrario.
+     */
     public function endTransaction() {
         if ($this->dbh->inTransaction()) {
             return $this->dbh->commit();
@@ -101,5 +113,9 @@ class Database {
             return $this->dbh->rollBack();
         }
         return false;
+    }
+
+    public function inTransaction() {
+        return $this->dbh->inTransaction();
     }
 }
