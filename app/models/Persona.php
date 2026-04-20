@@ -1,8 +1,10 @@
 <?php
+
 /**
  * Clase Persona: Modelo para la tabla base personas
  */
-class Persona extends Model {
+class Persona extends Model
+{
     protected $id;
     protected $cedula;
     protected $nombre;
@@ -13,7 +15,8 @@ class Persona extends Model {
     protected $fecha_nacimiento;
     protected $direccion;
 
-    public function __construct($data = []) {
+    public function __construct($data = [])
+    {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;
@@ -29,15 +32,28 @@ class Persona extends Model {
     }
 
     // --- Getters y Setters ---
-    public function getId() { return $this->id; }
-    public function getCedula() { return $this->cedula; }
-    public function getNombre() { return $this->nombre; }
-    public function getApellido() { return $this->apellido; }
+    public function getId()
+    {
+        return $this->id;
+    }
+    public function getCedula()
+    {
+        return $this->cedula;
+    }
+    public function getNombre()
+    {
+        return $this->nombre;
+    }
+    public function getApellido()
+    {
+        return $this->apellido;
+    }
 
     /**
      * Guardar o actualizar registro de persona
      */
-    public function save($user_id = null) {
+    public function save($user_id = null)
+    {
         if ($this->id) {
             $this->db->query("UPDATE personas SET 
                                 cedula = :cedula, 

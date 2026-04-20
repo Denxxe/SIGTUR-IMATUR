@@ -9,6 +9,8 @@
 <script src="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.bundle.min.js"></script>
 <!-- ApexCharts Local -->
 <script src="<?php echo URL_ROOT; ?>/assets/libs/apexcharts.min.js"></script>
+<!-- Validador Global de Formularios -->
+<script src="<?php echo URL_ROOT; ?>/assets/js/sigtur-validations.js"></script>
 
 <!-- Contenedor Global de Toasts (Esquina Superior Derecha) -->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
