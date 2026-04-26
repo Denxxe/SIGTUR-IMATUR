@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur.png" />
+    <link rel="icon" type="image/png" href="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($data['titulo']) ? $data['titulo'] . ' - ' : ''; ?>SIGTUR-IMATUR</title>
 
@@ -62,7 +62,7 @@
         .sb-brand-icon {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, #1a73e8, #06b6d4);
+            background: linear-gradient(135deg, #0f172a, #020617);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -378,7 +378,7 @@
     <nav class="sidebar" id="sidebar">
         <!-- Brand -->
         <div class="sb-brand">
-            <div class="sb-brand-icon"><img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur.png" alt="Logo" width="50" height="60S"></div>
+            <div class="sb-brand-icon"><img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="Logo" width="50" height="50"></div>
             <div class="sb-brand-text">
                 SIGTUR-IMATUR
                 <small>Gestión Turística v1.1</small>
