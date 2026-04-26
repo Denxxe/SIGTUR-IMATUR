@@ -80,8 +80,8 @@ class Municipio extends Model
                               WHERE id = :id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO municipio (nombre, codigo_postal, created_by, is_active, updated_at, updated_by) 
-                              VALUES (:nombre, :codigo_postal, :user_id, TRUE, CURRENT_TIMESTAMP, :user_id) RETURNING id");
+            $this->db->query("INSERT INTO municipio (nombre, codigo_postal, created_by, is_active, created_at, updated_at, updated_by) 
+                              VALUES (:nombre, :codigo_postal, :user_id, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :user_id) RETURNING id");
         }
 
         $this->db->bind(':nombre', $this->nombre);

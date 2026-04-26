@@ -140,11 +140,23 @@
         .sb-group {
             overflow: hidden;
             transition: max-height .3s ease;
-            max-height: 500px;
+            max-height: 1000px;
         }
 
         .sb-group.collapsed {
             max-height: 0;
+        }
+
+        /* Sub-secciones anidadas para mejor jerarquía visual */
+        .sb-group .sb-section {
+            padding-left: 35px;
+            font-size: 10px;
+            color: #64748b;
+        }
+        
+        .sb-group .sb-group .sb-link {
+            padding-left: 50px;
+            font-size: 12px;
         }
 
         /* Links */
@@ -392,112 +404,189 @@
                 <i class="bi bi-speedometer2"></i> Panel Principal
             </a>
 
-            <!-- RRHH -->
-            <div class="sb-section" onclick="toggleSection(this)">
-                <span>RRHH</span>
-                <i class="bi bi-chevron-down sb-chevron"></i>
-            </div>
-            <div class="sb-group">
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/empleados/index">
-                    <i class="bi bi-person-badge"></i> Empleados
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/cargos/index">
-                    <i class="bi bi-briefcase"></i> Cargos
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/departamentos/index">
-                    <i class="bi bi-building"></i> Departamentos
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/asistencias/index">
-                    <i class="bi bi-clock-history"></i> Asistencia
-                </a>
-            </div>
-
-            <!-- Inventario -->
-            <div class="sb-section" onclick="toggleSection(this)">
-                <span>Inventario</span>
-                <i class="bi bi-chevron-down sb-chevron"></i>
-            </div>
-            <div class="sb-group">
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/inventario/index">
-                    <i class="bi bi-box-seam"></i> Bienes
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/categorias/index">
-                    <i class="bi bi-tags"></i> Categorías
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/ubicaciones/index">
-                    <i class="bi bi-geo-alt"></i> Ubicaciones
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/actividadesinventario/index">
-                    <i class="bi bi-arrow-left-right"></i> Movimientos
-                </a>
-            </div>
-
-            <!-- Formación -->
-            <div class="sb-section" onclick="toggleSection(this)">
-                <span>Formación</span>
-                <i class="bi bi-chevron-down sb-chevron"></i>
-            </div>
-            <div class="sb-group">
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/talleres/index">
-                    <i class="bi bi-mortarboard"></i> Talleres
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/ubicacionesformacion/index">
-                    <i class="bi bi-pin-map"></i> Sedes de Formación
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/pasantes/index">
-                    <i class="bi bi-person-video3"></i> Gest. de Pasantes
-                </a>
-            </div>
-
-            <!-- Turismo -->
-            <div class="sb-section" onclick="toggleSection(this)">
-                <span>Turismo</span>
-                <i class="bi bi-chevron-down sb-chevron"></i>
-            </div>
-            <div class="sb-group">
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/rutas/index">
-                    <i class="bi bi-compass"></i> Rutas Turísticas
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/actividadesruta/index">
-                    <i class="bi bi-calendar-event"></i> Actividades y Eventos
-                </a>
-            </div>
-
-            <!-- Reportes -->
-            <div class="sb-section" onclick="toggleSection(this)">
-                <span>Reportes</span>
-                <i class="bi bi-chevron-down sb-chevron"></i>
-            </div>
-            <div class="sb-group">
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/reportes/index">
-                    <i class="bi bi-bar-chart-line"></i> Centro de Reportes
-                </a>
-                <a class="sb-link" href="<?php echo URL_ROOT; ?>/reportes/indicadores">
-                    <i class="bi bi-graph-up-arrow"></i> Indicadores
-                </a>
-            </div>
-
             <!-- ADMINISTRACIÓN (Solo Administrador) -->
             <?php if ($_SESSION['user_rol'] == 1): ?>
-                <div class="sb-section" onclick="toggleSection(this)">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
                     <span>Administración</span>
                     <i class="bi bi-chevron-down sb-chevron"></i>
                 </div>
-                <div class="sb-group">
-                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/usuarios/index">
-                        <i class="bi bi-people"></i> Usuarios
-                    </a>
-                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/roles/index">
-                        <i class="bi bi-shield-lock"></i> Roles y Permisos
-                    </a>
-                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/index">
-                        <i class="bi bi-shield-check"></i> Bitácora del Sistema
-                    </a>
-                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
-                        <i class="bi bi-recycle"></i> Papelera de Reciclaje
-                    </a>
+                <div class="sb-group collapsed">
+                    <div class="sb-section collapsed" onclick="toggleSection(this)">
+                        <span>Seguridad</span>
+                        <i class="bi bi-chevron-down sb-chevron"></i>
+                    </div>
+                    <div class="sb-group collapsed">
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/usuarios/index">
+                            <i class="bi bi-people"></i> Usuarios
+                        </a>
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/roles/index">
+                            <i class="bi bi-shield-lock"></i> Roles y Permisos
+                        </a>
+                    </div>
+
+                    <div class="sb-section collapsed" onclick="toggleSection(this)">
+                        <span>Localidades</span>
+                        <i class="bi bi-chevron-down sb-chevron"></i>
+                    </div>
+                    <div class="sb-group collapsed">
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/municipio/index">
+                            <i class="bi bi-building"></i> Municipios
+                        </a>
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/parroquia/index">
+                            <i class="bi bi-signpost"></i> Parroquias
+                        </a>
+                    </div>
+
+                    <div class="sb-section collapsed" onclick="toggleSection(this)">
+                        <span>Sistema</span>
+                        <i class="bi bi-chevron-down sb-chevron"></i>
+                    </div>
+                    <div class="sb-group collapsed">
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/index">
+                            <i class="bi bi-shield-check"></i> Bitácora
+                        </a>
+                        <a class="sb-link" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
+                            <i class="bi bi-recycle"></i> Papelera
+                        </a>
+                    </div>
                 </div>
             <?php endif; ?>
+
+            <!-- RRHH -->
+            <div class="sb-section collapsed" onclick="toggleSection(this)">
+                <span>RRHH</span>
+                <i class="bi bi-chevron-down sb-chevron"></i>
+            </div>
+            <div class="sb-group collapsed">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Personal</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/empleados/index">
+                        <i class="bi bi-person-badge"></i> Empleados
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/asistencias/index">
+                        <i class="bi bi-clock-history"></i> Asistencia
+                    </a>
+                </div>
+
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Organización</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/cargos/index">
+                        <i class="bi bi-briefcase"></i> Cargos
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/departamentos/index">
+                        <i class="bi bi-building"></i> Departamentos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Inventario -->
+            <div class="sb-section collapsed" onclick="toggleSection(this)">
+                <span>Inventario</span>
+                <i class="bi bi-chevron-down sb-chevron"></i>
+            </div>
+            <div class="sb-group collapsed">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Catálogo</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/inventario/index">
+                        <i class="bi bi-box-seam"></i> Bienes
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/categorias/index">
+                        <i class="bi bi-tags"></i> Categorías
+                    </a>
+                </div>
+
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Logística</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/ubicaciones/index">
+                        <i class="bi bi-geo-alt"></i> Ubicaciones
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/actividadesinventario/index">
+                        <i class="bi bi-arrow-left-right"></i> Movimientos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Formación -->
+            <div class="sb-section collapsed" onclick="toggleSection(this)">
+                <span>Formación</span>
+                <i class="bi bi-chevron-down sb-chevron"></i>
+            </div>
+            <div class="sb-group collapsed">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Eventos</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/talleres/index">
+                        <i class="bi bi-mortarboard"></i> Talleres
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/ubicacionesformacion/index">
+                        <i class="bi bi-pin-map"></i> Sedes de Formación
+                    </a>
+                </div>
+
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Pasantes</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/pasantes/index">
+                        <i class="bi bi-person-video3"></i> Gest. de Pasantes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Turismo -->
+            <div class="sb-section collapsed" onclick="toggleSection(this)">
+                <span>Turismo</span>
+                <i class="bi bi-chevron-down sb-chevron"></i>
+            </div>
+            <div class="sb-group collapsed">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Planificación</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/rutas/index">
+                        <i class="bi bi-compass"></i> Rutas Turísticas
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/actividadesruta/index">
+                        <i class="bi bi-calendar-event"></i> Actividades y Eventos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Reportes -->
+            <div class="sb-section collapsed" onclick="toggleSection(this)">
+                <span>Reportes</span>
+                <i class="bi bi-chevron-down sb-chevron"></i>
+            </div>
+            <div class="sb-group collapsed">
+                <div class="sb-section collapsed" onclick="toggleSection(this)">
+                    <span>Análisis</span>
+                    <i class="bi bi-chevron-down sb-chevron"></i>
+                </div>
+                <div class="sb-group collapsed">
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/reportes/index">
+                        <i class="bi bi-bar-chart-line"></i> Centro de Reportes
+                    </a>
+                    <a class="sb-link" href="<?php echo URL_ROOT; ?>/reportes/indicadores">
+                        <i class="bi bi-graph-up-arrow"></i> Indicadores
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Footer: Usuario -->
