@@ -68,12 +68,17 @@
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Municipio</label>
-                    <input type="text" name="municipio" id="ubif_municipio" class="form-control">
+                    <label class="form-label fw-bold">Parroquia</label>
+                    <select name="parroquia" id="ubif_parroquia" class="form-select" required>
+                        <option value="">Seleccione una parroquia</option>
+                        <?php foreach ($data['parroquias'] as $p): ?>
+                            <option value="<?php echo $p->id; ?>"><?php echo $p->nombre; ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-bold">Dirección</label>
-                    <textarea name="direccion" id="ubif_direccion" class="form-control" rows="2"></textarea>
+                    <textarea name="direccion" id="ubif_direccion" class="form-control" rows="2" required></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -90,12 +95,13 @@
         document.getElementById('ubif_id').value = '';
         document.querySelector('#modalUbiForm form').reset();
     }
+
     function editarUbi(u) {
         document.getElementById('modalUbiFormLabel').innerText = 'Editar: ' + u.nombre;
         document.getElementById('ubif_id').value = u.id;
         document.getElementById('ubif_nombre').value = u.nombre;
         document.getElementById('ubif_tipo').value = u.tipo;
-        document.getElementById('ubif_municipio').value = u.municipio;
+        document.getElementById('ubif_parroquia').value = u.parroquia;
         document.getElementById('ubif_direccion').value = u.direccion;
         new bootstrap.Modal(document.getElementById('modalUbiForm')).show();
     }
