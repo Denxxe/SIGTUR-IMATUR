@@ -6,9 +6,13 @@ class UbicacionesformacionController extends Controller {
 
     public function index() {
         $ubicaciones = UbicacionFormacion::all();
+        require_once '../app/models/Parroquia.php';
+        $parroquias = Parroquia::all();
+        
         $data = [
             'titulo' => 'Sedes de Formación',
-            'ubicaciones' => $ubicaciones
+            'ubicaciones' => $ubicaciones,
+            'parroquias' => $parroquias
         ];
         $this->view('ubicaciones_formacion/index', $data);
     }
@@ -22,7 +26,7 @@ class UbicacionesformacionController extends Controller {
                 'nombre' => trim($_POST['nombre']),
                 'tipo' => trim($_POST['tipo']),
                 'direccion' => trim($_POST['direccion']),
-                'municipio' => trim($_POST['municipio'])
+                'id_parroquia' => trim($_POST['parroquia'])
             ];
 
             $ubi = new UbicacionFormacion($data);

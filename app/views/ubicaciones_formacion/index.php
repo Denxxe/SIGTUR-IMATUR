@@ -18,7 +18,7 @@
                 <tr>
                     <th class="ps-4">Nombre</th>
                     <th>Tipo</th>
-                    <th>Municipio</th>
+                    <th>Parroquia</th>
                     <th>Dirección</th>
                     <th class="text-center">Acciones</th>
                 </tr>
@@ -28,7 +28,7 @@
                     <tr>
                         <td class="ps-4 fw-bold"><?php echo $u->nombre; ?></td>
                         <td><span class="badge bg-info text-dark"><?php echo $u->tipo; ?></span></td>
-                        <td><?php echo $u->municipio; ?></td>
+                        <td><?php echo $u->parroquia; ?></td>
                         <td class="small"><?php echo $u->direccion; ?></td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm">
@@ -101,7 +101,7 @@
         document.getElementById('ubif_id').value = u.id;
         document.getElementById('ubif_nombre').value = u.nombre;
         document.getElementById('ubif_tipo').value = u.tipo;
-        document.getElementById('ubif_parroquia').value = u.parroquia;
+        document.getElementById('ubif_parroquia').value = u.id_parroquia;
         document.getElementById('ubif_direccion').value = u.direccion;
         new bootstrap.Modal(document.getElementById('modalUbiForm')).show();
     }
