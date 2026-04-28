@@ -26,7 +26,7 @@ class UbicacionFormacion extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT u.*, p.nombre AS parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.parroquia = p.id WHERE u.is_active = TRUE ORDER BY u.nombre ASC");
+        $db->query("SELECT u.*, p.nombre AS parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.id_parroquia = p.id WHERE u.is_active = TRUE ORDER BY u.nombre ASC");
         return $db->resultSet();
     }
 

@@ -1,96 +1,126 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1><i class="bi bi-graph-up-arrow"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">Métricas globales calculadas del sistema</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">
+            <a href="<?php echo URL_ROOT; ?>/reportes/index" style="color:inherit; text-decoration:none;">Reportes</a> · Dashboard Global
+        </div>
+        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <p class="page__subtitle">Resumen ejecutivo y métricas de desempeño institucional (KPIs) calculadas en tiempo real.</p>
     </div>
-    <div class="col-md-6 text-end">
-        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn btn-outline-secondary">← Volver a Reportes</a>
+    <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-arrow-left"></i> Volver a Reportes
+        </a>
+        <button class="btn-sig btn-sig--primary" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir Reporte
+        </button>
     </div>
 </div>
 
-<!-- Fila 1: Empleados por Depto + Inventario por Categoría -->
-<div class="row g-4 mb-4">
+<!-- Fila 1: Distribución de Personal e Inventario -->
+<div class="row g-4 mb-8 anim-slide-up">
     <div class="col-md-7">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-0 pt-3 ps-3">
-                <i class="bi bi-people-fill text-primary"></i> Distribución de Empleados por Departamento
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-people" style="color:var(--brand-500);"></i> Empleados por Departamento
+                </div>
             </div>
-            <div class="card-body">
+            <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div id="chartEmpDepto"></div>
             </div>
         </div>
     </div>
     <div class="col-md-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-0 pt-3 ps-3">
-                <i class="bi bi-box-seam-fill text-success"></i> Inventario por Categoría
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-box-seam" style="color:var(--success-500);"></i> Inventario por Categoría
+                </div>
             </div>
-            <div class="card-body">
+            <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div id="chartInvCat"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Fila 2: Inventario por Condición + Talleres por Mes -->
-<div class="row g-4 mb-4">
+<!-- Fila 2: Estado de Bienes y Tendencia de Formación -->
+<div class="row g-4 mb-8 anim-slide-up">
     <div class="col-md-5">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-0 pt-3 ps-3">
-                <i class="bi bi-clipboard2-check-fill text-warning"></i> Estado Físico del Inventario
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-clipboard-check" style="color:var(--warning-500);"></i> Estado Físico del Inventario
+                </div>
             </div>
-            <div class="card-body">
+            <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div id="chartInvCond"></div>
             </div>
         </div>
     </div>
     <div class="col-md-7">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white fw-bold border-0 pt-3 ps-3">
-                <i class="bi bi-calendar-range-fill text-info"></i> Tendencia de Talleres (Últimos 6 Meses)
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-graph-up-arrow" style="color:var(--accent-500);"></i> Tendencia de Capacitación (6 meses)
+                </div>
             </div>
-            <div class="card-body">
+            <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div id="chartTallMes"></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tablas de respaldo (datos numéricos) -->
-<div class="row g-4">
+<!-- Tablas de Respaldo -->
+<div class="row g-4 anim-slide-up" style="margin-bottom:var(--sp-8);">
     <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white fw-bold">Tabla: Empleados por Departamento</div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0 small">
-                    <thead class="table-light"><tr><th class="ps-3">Departamento</th><th class="text-center">Total</th></tr></thead>
+        <div class="sig-card">
+            <div class="sig-card__head">
+                <div class="sig-card__title">Resumen de Personal</div>
+            </div>
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
+                        <tr>
+                            <th>Departamento</th>
+                            <th style="text-align:center;">N° Empleados</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($data['empPorDepto'] as $e): ?>
-                            <tr><td class="ps-3 fw-bold"><?php echo $e->departamento; ?></td><td class="text-center"><?php echo $e->total; ?></td></tr>
+                            <tr>
+                                <td class="cell-strong"><?php echo $e->departamento; ?></td>
+                                <td style="text-align:center; font-weight:700; color:var(--brand-600);"><?php echo $e->total; ?></td>
+                            </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($data['empPorDepto'])): ?>
-                            <tr><td colspan="2" class="text-center text-muted py-3">Sin datos</td></tr>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
     <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white fw-bold">Tabla: Inventario por Categoría</div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0 small">
-                    <thead class="table-light"><tr><th class="ps-3">Categoría</th><th class="text-center">Total Bienes</th></tr></thead>
+        <div class="sig-card">
+            <div class="sig-card__head">
+                <div class="sig-card__title">Resumen de Inventario</div>
+            </div>
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th style="text-align:center;">Total Bienes</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($data['invPorCat'] as $i): ?>
-                            <tr><td class="ps-3 fw-bold"><?php echo $i->categoria; ?></td><td class="text-center"><?php echo $i->total; ?></td></tr>
+                            <tr>
+                                <td class="cell-strong"><?php echo $i->categoria; ?></td>
+                                <td style="text-align:center; font-weight:700; color:var(--success-600);"><?php echo $i->total; ?></td>
+                            </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($data['invPorCat'])): ?>
-                            <tr><td colspan="2" class="text-center text-muted py-3">Sin datos</td></tr>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -98,47 +128,49 @@
     </div>
 </div>
 
-<!-- ============ ApexCharts Scripts ============ -->
+<!-- ApexCharts Config -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textPrimary = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
+    const borderSubtle = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
 
-    // --- 1. EMPLEADOS POR DEPARTAMENTO (Barras verticales con gradiente) ---
+    // 1. Empleados por Departamento
     <?php
         $lblD = []; $valD = [];
         foreach ($data['empPorDepto'] as $e) { $lblD[] = $e->departamento; $valD[] = (int)$e->total; }
     ?>
     new ApexCharts(document.querySelector("#chartEmpDepto"), {
-        chart: { type: 'bar', height: 320, toolbar: { show: false } },
+        chart: { type: 'bar', height: 350, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Empleados', data: <?php echo json_encode($valD); ?> }],
-        xaxis: { categories: <?php echo json_encode($lblD); ?>, labels: { style: { fontSize: '11px' } } },
-        colors: ['#1a73e8'],
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '55%', distributed: true } },
-        fill: { type: 'gradient', gradient: { shade: 'dark', type: 'vertical', gradientToColors: ['#6dd5fa'], stops: [0, 100] } },
-        dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 700 } },
-        legend: { show: false },
-        grid: { borderColor: '#f1f5f9' },
-        tooltip: { theme: 'dark' },
-        noData: { text: 'Sin departamentos con empleados', style: { fontSize: '14px', color: '#94a3b8' } }
+        xaxis: { categories: <?php echo json_encode($lblD); ?>, labels: { style: { colors: textPrimary, fontSize: '11px' } }, axisBorder: { show: false } },
+        yaxis: { labels: { style: { colors: textPrimary } } },
+        theme: { mode: isDark ? 'dark' : 'light' },
+        colors: ['#3B82F6'],
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '50%', distributed: true } },
+        grid: { borderColor: borderSubtle, strokeDashArray: 4 },
+        dataLabels: { enabled: true, style: { fontWeight: 800 } },
+        legend: { show: false }
     }).render();
 
-    // --- 2. INVENTARIO POR CATEGORÍA (Donut) ---
+    // 2. Inventario por Categoría
     <?php
         $lblC = []; $valC = [];
         foreach ($data['invPorCat'] as $i) { $lblC[] = $i->categoria; $valC[] = (int)$i->total; }
     ?>
     new ApexCharts(document.querySelector("#chartInvCat"), {
-        chart: { type: 'donut', height: 340 },
+        chart: { type: 'donut', height: 350, background: 'transparent' },
         series: <?php echo json_encode($valC); ?>,
         labels: <?php echo json_encode($lblC); ?>,
-        colors: ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#f97316'],
-        legend: { position: 'bottom', fontSize: '12px' },
-        plotOptions: { pie: { donut: { size: '50%', labels: { show: true, total: { show: true, label: 'Total Bienes', fontSize: '14px', fontWeight: 700 } } } } },
-        dataLabels: { enabled: true, dropShadow: { enabled: false } },
-        tooltip: { theme: 'dark' },
-        noData: { text: 'Sin inventario categorizado', style: { fontSize: '14px', color: '#94a3b8' } }
+        colors: ['#10B981', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'],
+        theme: { mode: isDark ? 'dark' : 'light' },
+        legend: { position: 'bottom', labels: { colors: textPrimary } },
+        stroke: { show: false },
+        plotOptions: { pie: { donut: { size: '60%', labels: { show: true, total: { show: true, label: 'TOTAL BIENES', color: textPrimary, fontSize: '12px', fontWeight: 800 } } } } },
+        dataLabels: { enabled: false }
     }).render();
 
-    // --- 3. INVENTARIO POR CONDICIÓN (Radial Bar) ---
+    // 3. Inventario por Condición
     <?php
         $lblCond = []; $valCond = [];
         $totalInv = 0;
@@ -149,45 +181,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     ?>
     new ApexCharts(document.querySelector("#chartInvCond"), {
-        chart: { type: 'radialBar', height: 340 },
+        chart: { type: 'radialBar', height: 350, background: 'transparent' },
         series: <?php echo json_encode($valCond); ?>,
         labels: <?php echo json_encode($lblCond); ?>,
-        colors: ['#10b981','#3b82f6','#f59e0b','#ef4444','#1e293b'],
+        colors: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#64748B'],
+        theme: { mode: isDark ? 'dark' : 'light' },
         plotOptions: {
             radialBar: {
                 dataLabels: {
-                    name: { fontSize: '13px' },
-                    value: { fontSize: '16px', fontWeight: 700, formatter: function(val) { return val + '%'; } },
-                    total: { show: true, label: 'Dist. Total', fontSize: '13px', fontWeight: 600 }
+                    name: { fontSize: '13px', color: textPrimary },
+                    value: { fontSize: '20px', fontWeight: 800, color: textPrimary, formatter: val => val + '%' },
+                    total: { show: true, label: 'DISTRIBUCIÓN', color: textPrimary, fontSize: '11px', fontWeight: 700 }
                 },
-                hollow: { size: '30%' },
-                track: { background: '#f1f5f9' }
+                hollow: { size: '40%' },
+                track: { background: borderSubtle }
             }
         },
-        legend: { show: true, position: 'bottom', fontSize: '12px' },
-        tooltip: { theme: 'dark' },
-        noData: { text: 'Sin datos de condición', style: { fontSize: '14px', color: '#94a3b8' } }
+        legend: { show: true, position: 'bottom', labels: { colors: textPrimary } }
     }).render();
 
-    // --- 4. TALLERES POR MES (Línea con marcadores) ---
+    // 4. Talleres por Mes
     <?php
         $lblM = []; $valM = [];
         foreach ($data['talleresPorMes'] as $t) { $lblM[] = $t->mes; $valM[] = (int)$t->total; }
     ?>
     new ApexCharts(document.querySelector("#chartTallMes"), {
-        chart: { type: 'line', height: 320, toolbar: { show: false } },
+        chart: { type: 'area', height: 350, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Talleres', data: <?php echo json_encode($valM); ?> }],
-        xaxis: { categories: <?php echo json_encode($lblM); ?>, labels: { style: { fontSize: '12px' } } },
-        colors: ['#8b5cf6'],
+        xaxis: { categories: <?php echo json_encode($lblM); ?>, labels: { style: { colors: textPrimary } }, axisBorder: { show: false } },
+        yaxis: { labels: { style: { colors: textPrimary } } },
+        theme: { mode: isDark ? 'dark' : 'light' },
+        colors: ['#8B5CF6'],
         stroke: { curve: 'smooth', width: 3 },
-        markers: { size: 6, colors: ['#8b5cf6'], strokeColors: '#fff', strokeWidth: 2, hover: { size: 9 } },
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 } },
-        dataLabels: { enabled: true, style: { fontSize: '13px', fontWeight: 700 } },
-        grid: { borderColor: '#f1f5f9' },
-        tooltip: { theme: 'dark' },
-        noData: { text: 'Sin talleres en los últimos 6 meses', style: { fontSize: '14px', color: '#94a3b8' } }
+        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.45, opacityTo: 0.05, stops: [20, 100] } },
+        grid: { borderColor: borderSubtle, strokeDashArray: 4 },
+        markers: { size: 5, colors: ['#8B5CF6'], strokeWidth: 3, strokeColors: isDark ? '#1e1e2d' : '#fff' }
     }).render();
-
 });
 </script>
 

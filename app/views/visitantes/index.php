@@ -1,52 +1,52 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1><i class="bi bi-person-walking"></i> <?php echo $data['titulo']; ?></h1>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">Turismo · Gestión de Usuarios Externos</div>
+        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <p class="page__subtitle">Registro y control de visitantes, turistas y personas externas al instituto.</p>
     </div>
-    <div class="col-md-6 text-end">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalVisitante" onclick="nuevoVisitante()">
-            Registrar Visitante
+    <div class="page__actions">
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalVisitante" onclick="nuevoVisitante()">
+            <i class="bi bi-person-plus"></i> Registrar Visitante
         </button>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-dark">
+<div class="sig-table-wrap anim-slide-up">
+    <table class="sig-table">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre y Apellido</th>
+                <th>Procedencia</th>
+                <th>Teléfono</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($data['visitantes'])): ?>
+                <tr><td colspan="5" class="sig-table-empty">No hay visitantes registrados actualmente.</td></tr>
+            <?php else: ?>
+                <?php foreach ($data['visitantes'] as $v): ?>
                     <tr>
-                        <th class="ps-4">Cédula</th>
-                        <th>Nombre y Apellido</th>
-                        <th>Procedencia</th>
-                        <th>Teléfono</th>
-                        <th class="text-center">Acciones</th>
+                        <td class="cell-id"><?php echo $v->cedula; ?></td>
+                        <td class="cell-strong"><?php echo $v->nombre . ' ' . $v->apellido; ?></td>
+                        <td><?php echo $v->procedencia; ?></td>
+                        <td><?php echo $v->telefono; ?></td>
+                        <td class="col-actions">
+                            <button class="row-action row-action--edit" onclick='editarVisitante(<?php echo json_encode($v); ?>)'>
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <a href="<?php echo URL_ROOT; ?>/visitantes/delete/<?php echo $v->id; ?>" class="row-action row-action--del delete-btn">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['visitantes'])): ?>
-                        <tr><td colspan="5" class="text-center py-4">No hay visitantes registrados.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($data['visitantes'] as $v): ?>
-                            <tr>
-                                <td class="ps-4"><?php echo $v->cedula; ?></td>
-                                <td class="fw-bold"><?php echo $v->nombre . ' ' . $v->apellido; ?></td>
-                                <td><?php echo $v->procedencia; ?></td>
-                                <td><?php echo $v->telefono; ?></td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info" onclick='editarVisitante(<?php echo json_encode($v); ?>)'>Editar</button>
-                                        <a href="<?php echo URL_ROOT; ?>/visitantes/delete/<?php echo $v->id; ?>" class="btn btn-outline-danger delete-btn">Eliminar</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
 <!-- Modal -->
@@ -61,48 +61,64 @@
                 <input type="hidden" name="id" id="vis_id">
                 <input type="hidden" name="id_persona" id="vis_id_persona">
                 
-                <div class="row g-3">
+                <div class="row g-4">
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Cédula</label>
-                        <input type="text" name="cedula" id="vis_cedula" class="form-control" required>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Cédula <span class="req">*</span></label>
+                            <input type="text" name="cedula" id="vis_cedula" class="sig-input" required placeholder="V-00.000.000">
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Nombres</label>
-                        <input type="text" name="nombre" id="vis_nombre" class="form-control" required>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Nombres <span class="req">*</span></label>
+                            <input type="text" name="nombre" id="vis_nombre" class="sig-input" required>
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Apellidos</label>
-                        <input type="text" name="apellido" id="vis_apellido" class="form-control" required>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Apellidos <span class="req">*</span></label>
+                            <input type="text" name="apellido" id="vis_apellido" class="sig-input" required>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Procedencia</label>
-                        <input type="text" name="procedencia" id="vis_procedencia" class="form-control" placeholder="Entidad o Ciudad">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Procedencia</label>
+                            <input type="text" name="procedencia" id="vis_procedencia" class="sig-input" placeholder="Ciudad o Entidad">
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-bold">Teléfono</label>
-                        <input type="text" name="telefono" id="vis_telefono" class="form-control">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Teléfono</label>
+                            <input type="text" name="telefono" id="vis_telefono" class="sig-input">
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-bold">Género</label>
-                        <select name="genero" id="vis_genero" class="form-select">
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                            <option value="O">Otro</option>
-                        </select>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Género</label>
+                            <select name="genero" id="vis_genero" class="sig-select">
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="O">Otro</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="col-md-8">
-                        <label class="form-label fw-bold">Correo</label>
-                        <input type="email" name="correo" id="vis_correo" class="form-control">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Correo Electrónico</label>
+                            <input type="email" name="correo" id="vis_correo" class="sig-input" placeholder="ejemplo@correo.com">
+                        </div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-bold">Motivo Frecuente / Observaciones</label>
-                        <textarea name="motivo_frecuente" id="vis_motivo" class="form-control" rows="2"></textarea>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Observaciones</label>
+                            <textarea name="motivo_frecuente" id="vis_motivo" class="sig-textarea" rows="2" placeholder="Motivo de visita frecuente, notas especiales..."></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar Visitante</button>
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar Visitante</button>
             </div>
         </form>
     </div>

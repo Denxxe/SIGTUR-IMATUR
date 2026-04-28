@@ -1,0 +1,205 @@
+/* ============================================
+   SIGTUR-IMATUR · Design Tokens v2.0
+   Sistema Integral de Gestión Turística
+   Todas las variables se resuelven localmente.
+   ============================================ */
+
+:root {
+  /* === BRAND PALETTE (Azul institucional turismo) === */
+  --brand-50:  #eef4ff;
+  --brand-100: #dbe7ff;
+  --brand-200: #bdd1ff;
+  --brand-300: #8eb1ff;
+  --brand-400: #5a85ff;
+  --brand-500: #3461f6;
+  --brand-600: #2247db;
+  --brand-700: #1c39b0;
+  --brand-800: #1b3290;
+  --brand-900: #1c2f74;
+  --brand-950: #141d47;
+
+  /* Acento turismo (ámbar/sol) */
+  --accent-50:  #fffbeb;
+  --accent-100: #fef3c7;
+  --accent-200: #fde68a;
+  --accent-300: #fcd34d;
+  --accent-400: #fbbf24;
+  --accent-500: #f59e0b;
+  --accent-600: #d97706;
+  --accent-700: #b45309;
+
+  /* Verde naturaleza (rutas) */
+  --teal-50:  #effefb;
+  --teal-100: #c7fff2;
+  --teal-300: #5eead4;
+  --teal-500: #14b8a6;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+
+  /* Estados semánticos */
+  --success-50:  #ecfdf5;
+  --success-500: #10b981;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  --warning-50:  #fffbeb;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+
+  --danger-50:  #fef2f2;
+  --danger-500: #ef4444;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+
+  --info-50:  #eff6ff;
+  --info-500: #3b82f6;
+  --info-600: #2563eb;
+
+  /* === NEUTRALS === */
+  --slate-0:   #ffffff;
+  --slate-25:  #fafbfc;
+  --slate-50:  #f4f6fa;
+  --slate-100: #e8ecf4;
+  --slate-200: #d6dde9;
+  --slate-300: #b4bed1;
+  --slate-400: #8492ad;
+  --slate-500: #5c6a86;
+  --slate-600: #3f4b66;
+  --slate-700: #2c364f;
+  --slate-800: #1a2238;
+  --slate-900: #0e1426;
+  --slate-950: #060a18;
+
+  /* === SEMANTIC (Light) === */
+  --bg-app:        var(--slate-50);
+  --bg-surface:    var(--slate-0);
+  --bg-elevated:   var(--slate-0);
+  --bg-muted:      var(--slate-25);
+  --bg-sidebar:    var(--slate-900);
+  --bg-sidebar-active: var(--brand-600);
+  --bg-header:     var(--slate-0);
+
+  --border-subtle: var(--slate-100);
+  --border-default: var(--slate-200);
+  --border-strong: var(--slate-300);
+
+  --text-primary:   var(--slate-900);
+  --text-secondary: var(--slate-600);
+  --text-tertiary:  var(--slate-400);
+  --text-inverse:   var(--slate-0);
+  --text-brand:     var(--brand-600);
+
+  /* === TYPOGRAPHY (100% local — sin dependencia de internet) === */
+  --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.875rem;
+  --fs-md:   0.9375rem;
+  --fs-lg:   1.0625rem;
+  --fs-xl:   1.25rem;
+  --fs-2xl:  1.5rem;
+  --fs-3xl:  1.875rem;
+  --fs-4xl:  2.25rem;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  --lh-tight: 1.15;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+
+  /* === SPACING (4px base) === */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* === RADIUS === */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-full: 9999px;
+
+  /* === SHADOWS === */
+  --sh-xs: 0 1px 2px rgba(14, 20, 38, 0.04);
+  --sh-sm: 0 1px 3px rgba(14, 20, 38, 0.06), 0 1px 2px rgba(14, 20, 38, 0.04);
+  --sh-md: 0 4px 12px rgba(14, 20, 38, 0.06), 0 2px 4px rgba(14, 20, 38, 0.04);
+  --sh-lg: 0 12px 28px rgba(14, 20, 38, 0.08), 0 4px 8px rgba(14, 20, 38, 0.04);
+  --sh-xl: 0 24px 48px rgba(14, 20, 38, 0.12), 0 8px 16px rgba(14, 20, 38, 0.06);
+  --sh-glow-brand: 0 8px 24px -4px rgba(34, 71, 219, 0.35);
+  --sh-glow-success: 0 8px 24px -4px rgba(16, 185, 129, 0.35);
+
+  /* === LAYOUT === */
+  --sidebar-w: 252px;
+  --header-h: 60px;
+  --container-max: 1440px;
+
+  /* === MOTION === */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 120ms;
+  --t-base: 200ms;
+  --t-slow: 360ms;
+}
+
+/* === DARK MODE === */
+[data-theme="dark"] {
+  --bg-app:        #0f1422;
+  --bg-surface:    #181e2f;
+  --bg-elevated:   #232a3d;
+  --bg-muted:      #1a2033;
+  --bg-sidebar:    #0a0f1f;
+  --bg-header:     #181e2f;
+
+  --border-subtle: #2d354d;
+  --border-default: #3b4461;
+  --border-strong: #4d577a;
+
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-tertiary:  #64748b;
+  --text-brand:     #8eb1ff;
+
+  --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --sh-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --sh-lg: 0 12px 28px rgba(0, 0, 0, 0.5);
+  --sh-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+}
+
+/* === RESET === */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--text-primary);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
+
+::selection { background: var(--brand-200); color: var(--brand-900); }
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--slate-300); border: 2px solid transparent; background-clip: padding-box; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #2a3552; background-clip: padding-box; border: 2px solid transparent; }

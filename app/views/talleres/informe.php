@@ -1,136 +1,192 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row align-items-center mb-4">
-    <div class="col-md-8">
-        <h1><i class="bi bi-file-earmark-text"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">REPORTE DE ACTIVIDAD IMATUR-SUCRE — Taller: <strong><?php echo $data['taller']->nombre; ?></strong></p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">
+            <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" style="color:inherit; text-decoration:none;">Detalle de Taller</a> · Informe Oficial
+        </div>
+        <h1 class="page__title">Generar Informe de Actividad</h1>
+        <p class="page__subtitle">Documentación oficial de la jornada: <strong><?php echo $data['taller']->nombre; ?></strong></p>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" class="btn btn-outline-secondary mb-2">← Volver al Taller</a>
+    <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
         <?php if($data['informe']): ?>
-            <button onclick="window.print()" class="btn btn-danger mb-2"><i class="bi bi-printer"></i> Imprimir Oficial</button>
+            <button onclick="window.print()" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg, var(--danger-500), var(--danger-700)); box-shadow: var(--sh-glow-danger);">
+                <i class="bi bi-printer"></i> Imprimir Informe
+            </button>
         <?php endif; ?>
     </div>
 </div>
 
-<div class="row d-print-none">
-    <div class="col-12">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body">
-                <form action="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" method="POST">
-                    
-                    <h5 class="text-primary border-bottom pb-2 mb-4"><i class="bi bi-geo-alt"></i> Datos Básicos del Evento</h5>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Unidad Estadal</label>
-                            <input type="text" name="unidad_estadal" class="form-control" value="<?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Fecha y Hora</label>
-                            <input type="text" class="form-control bg-light" value="<?php echo $data['taller']->fecha_inicio . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Lugar exacto y municipio</label>
-                            <input type="text" name="lugar_exacto" class="form-control" value="<?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?>" placeholder="Ej: Plaza Bolívar, Municipio Sucre">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-bold">Instituciones o empresas presentes</label>
-                            <input type="text" name="instituciones_presentes" class="form-control" value="<?php echo $data['informe']->instituciones_presentes ?? ''; ?>" placeholder="Ej: Alcaldía, Policía, Voceros Comunales...">
-                        </div>
-                    </div>
-
-                    <h5 class="text-primary border-bottom pb-2 mb-4 mt-5"><i class="bi bi-people"></i> Demografía de Asistentes</h5>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-2">
-                            <label class="form-label">Mujeres</label>
-                            <input type="number" name="mujeres" class="form-control text-center" min="0" value="<?php echo $data['informe']->mujeres ?? 0; ?>" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Hombres</label>
-                            <input type="number" name="hombres" class="form-control text-center" min="0" value="<?php echo $data['informe']->hombres ?? 0; ?>" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Niñas</label>
-                            <input type="number" name="ninas" class="form-control text-center" min="0" value="<?php echo $data['informe']->ninas ?? 0; ?>" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Niños</label>
-                            <input type="number" name="ninos" class="form-control text-center" min="0" value="<?php echo $data['informe']->ninos ?? 0; ?>" required>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="bg-light p-2 rounded border">
-                                <small class="d-block text-muted">Total Personas Atendidas</small>
-                                <span class="fs-4 fw-bold text-success"><?php echo $data['informe']->total_atendidas ?? 0; ?></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <h5 class="text-primary border-bottom pb-2 mb-4 mt-5"><i class="bi bi-justify-left"></i> Resumen</h5>
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Resumen de la actividad</label>
-                        <textarea name="resumen_actividad" class="form-control" rows="5" required placeholder="Redacte los pormenores, logros observados y conclusiones de la actividad formacional..."><?php echo $data['informe']->resumen_actividad ?? ''; ?></textarea>
-                    </div>
-
-                    <div class="text-end pt-3 border-top">
-                        <button type="submit" class="btn btn-primary px-5"><i class="bi bi-save"></i> Guardar Informe Oficial</button>
-                    </div>
-                </form>
+<div class="sig-card anim-slide-up d-print-none" style="margin-bottom:var(--sp-8);">
+    <div class="sig-card__body" style="padding:var(--sp-8);">
+        <form action="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" method="POST">
+            
+            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
+                <i class="bi bi-geo-alt" style="font-size:20px; color:var(--brand-500);"></i>
+                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Datos del Evento</h3>
             </div>
-        </div>
+
+            <div class="row g-4 mb-8">
+                <div class="col-md-4">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Unidad Estadal</label>
+                        <input type="text" name="unidad_estadal" class="sig-input" value="<?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?>">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Fecha y Hora</label>
+                        <input type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)) . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly style="background:var(--bg-muted-subtle); cursor:not-allowed;">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Lugar exacto y municipio</label>
+                        <input type="text" name="lugar_exacto" class="sig-input" value="<?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?>" placeholder="Ej: Plaza Bolívar, Cumaná">
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Instituciones o empresas presentes</label>
+                        <input type="text" name="instituciones_presentes" class="sig-input" value="<?php echo $data['informe']->instituciones_presentes ?? ''; ?>" placeholder="Ej: Alcaldía, Policía Municipal, Voceros Comunales...">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
+                <i class="bi bi-people" style="font-size:20px; color:var(--brand-500);"></i>
+                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Demografía de Asistentes</h3>
+            </div>
+
+            <div class="row g-4 mb-8" style="align-items:flex-end;">
+                <div class="col-md-2">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Mujeres</label>
+                        <input type="number" name="mujeres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->mujeres ?? 0; ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Hombres</label>
+                        <input type="number" name="hombres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->hombres ?? 0; ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Niñas</label>
+                        <input type="number" name="ninas" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninas ?? 0; ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Niños</label>
+                        <input type="number" name="ninos" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninos ?? 0; ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div style="background:var(--bg-muted); padding:var(--sp-3) var(--sp-4); border-radius:var(--r-lg); border:1px solid var(--border-subtle); text-align:center;">
+                        <span style="display:block; font-size:11px; font-weight:600; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Total Atendidos</span>
+                        <span style="font-size:28px; font-weight:800; color:var(--success-600);"><?php echo $data['informe']->total_atendidas ?? 0; ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
+                <i class="bi bi-justify-left" style="font-size:20px; color:var(--brand-500);"></i>
+                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Resumen de la Actividad</h3>
+            </div>
+
+            <div class="sig-field mb-8">
+                <textarea name="resumen_actividad" class="sig-textarea" rows="6" required placeholder="Redacte los pormenores, logros alcanzados y conclusiones de la actividad..."><?php echo $data['informe']->resumen_actividad ?? ''; ?></textarea>
+            </div>
+
+            <div style="display:flex; justify-content:flex-end; padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
+                <button type="submit" class="btn-sig btn-sig--primary" style="padding:0 var(--sp-10); height:48px; font-size:16px;">
+                    <i class="bi bi-save"></i> Guardar Informe Oficial
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Estilos para Impresión -->
 <style>
 @media print {
-    body * { visibility: hidden; }
-    .print-container, .print-container * { visibility: visible; }
-    .print-container { position: absolute; left: 0; top: 0; width: 100%; padding: 2cm; background: #fff;}
-    .d-print-none { display: none !important; }
+    @page { margin: 1.5cm; }
+    body { background: white !important; }
+    .app-shell__sidebar, .app-shell__header, .page__head, .d-print-none, .btn-sig--ghost { display: none !important; }
+    .app-shell__main { padding: 0 !important; margin: 0 !important; }
+    .print-container { display: block !important; color: black; font-family: "Times New Roman", Times, serif; }
 }
-.print-container { display: none; }
-@media print { .print-container { display: block; } }
+.print-container { display: none; background: white; padding: 20px; max-width: 800px; margin: 0 auto; border: 1px solid #eee; }
 </style>
 
 <!-- Plantilla de Impresión Oficial -->
 <div class="print-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-        <div>
-            <h3 style="margin:0;">IMATUR</h3>
-            <p style="margin:0;">Instituto Municipal de Turismo</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px;">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="Logo" style="width:60px;">
+            <div>
+                <h2 style="margin:0; font-size:22px;">IMATUR</h2>
+                <p style="margin:0; font-size:12px; font-weight:600; text-transform:uppercase;">Instituto Municipal de Turismo</p>
+            </div>
         </div>
-        <div>
-            <h4 style="margin:0; text-align: right;">REPORTE DE ACTIVIDAD</h4>
-            <p style="margin:0; text-align: right; font-size: 12px;">Fecha Impresión: <?php echo date('d/m/Y'); ?></p>
+        <div style="text-align: right;">
+            <h3 style="margin:0; font-size:18px; color:#555;">REPORTE DE ACTIVIDAD</h3>
+            <p style="margin:5px 0 0; font-size:11px; color:#888;">Emitido el: <?php echo date('d/m/Y'); ?></p>
         </div>
     </div>
 
-    <p><strong>📍 Nombre de la Unidad Estadal:</strong> <?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?></p>
-    <p><strong>📌 Nombre de la Actividad:</strong> <?php echo $data['taller']->nombre; ?></p>
-    
-    <p><strong>📆 Fecha:</strong> <?php echo $data['taller']->fecha_inicio; ?></p>
-    <p><strong>⏰ Hora:</strong> <?php echo $data['taller']->hora_inicio ?? 'N/A'; ?></p>
-    <p><strong>🌐 Lugar exacto y municipio:</strong> <?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?></p>
-    <br>
-    <p><strong>📚 Instituciones o empresas presentes:</strong> <?php echo $data['informe']->instituciones_presentes ?? '-'; ?></p>
-
-    <div style="margin: 20px 0; padding: 15px; border: 1px dashed #ccc; width: 300px;">
-        <p style="margin: 3px 0;"><strong>Mujeres:</strong> <?php echo $data['informe']->mujeres ?? 0; ?></p>
-        <p style="margin: 3px 0;"><strong>Hombres:</strong> <?php echo $data['informe']->hombres ?? 0; ?></p>
-        <p style="margin: 3px 0;"><strong>Niñas:</strong> <?php echo $data['informe']->ninas ?? 0; ?></p>
-        <p style="margin: 3px 0;"><strong>Niños:</strong> <?php echo $data['informe']->ninos ?? 0; ?></p>
-        <hr>
-        <p style="margin: 3px 0;"><strong>Total personas Atendidas:</strong> <?php echo $data['informe']->total_atendidas ?? 0; ?></p>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div>
+            <p style="margin:8px 0;"><strong style="color:#555;">📍 Unidad Estadal:</strong> <?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">📌 Actividad:</strong> <?php echo $data['taller']->nombre; ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">📆 Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)); ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">⏰ Hora:</strong> <?php echo $data['taller']->hora_inicio ?? 'N/A'; ?></p>
+        </div>
+        <div>
+            <p style="margin:8px 0;"><strong style="color:#555;">🌐 Lugar / Municipio:</strong> <?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">🏢 Entidades presentes:</strong> <?php echo $data['informe']->instituciones_presentes ?? '-'; ?></p>
+        </div>
     </div>
 
-    <p><strong>🧾 Resumen de la actividad:</strong></p>
-    <p style="text-align: justify; line-height: 1.6;">
-        <?php echo nl2br(htmlspecialchars($data['informe']->resumen_actividad ?? '')); ?>
-    </p>
+    <div style="margin: 30px 0; display:flex; gap: 40px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 20px 0;">
+        <div style="flex:1;">
+            <h4 style="margin:0 0 15px; font-size:14px; text-transform:uppercase; color:#777; border-bottom: 2px solid #ddd; padding-bottom:5px;">Demografía de Asistencia</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <p style="margin:3px 0;"><strong>Mujeres:</strong> <?php echo $data['informe']->mujeres ?? 0; ?></p>
+                <p style="margin:3px 0;"><strong>Hombres:</strong> <?php echo $data['informe']->hombres ?? 0; ?></p>
+                <p style="margin:3px 0;"><strong>Niñas:</strong> <?php echo $data['informe']->ninas ?? 0; ?></p>
+                <p style="margin:3px 0;"><strong>Niños:</strong> <?php echo $data['informe']->ninos ?? 0; ?></p>
+            </div>
+            <div style="margin-top:15px; padding-top:10px; border-top:1px dashed #ccc;">
+                <p style="margin:0; font-size:16px;"><strong>Total Atendidos:</strong> <span style="font-size:20px;"><?php echo $data['informe']->total_atendidas ?? 0; ?></span></p>
+            </div>
+        </div>
+        <div style="flex:1.5;">
+            <h4 style="margin:0 0 15px; font-size:14px; text-transform:uppercase; color:#777; border-bottom: 2px solid #ddd; padding-bottom:5px;">Resumen Ejecutivo</h4>
+            <p style="text-align: justify; line-height: 1.5; font-size: 13px; margin:0;">
+                <?php echo nl2br(htmlspecialchars($data['informe']->resumen_actividad ?? '')); ?>
+            </p>
+        </div>
+    </div>
 
-    <div style="margin-top: 60px; text-align: center;">
-        <p>_____________________________________</p>
-        <p><strong>Firma Facilitador</strong><br><?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?></p>
+    <div style="margin-top: 80px; display:flex; justify-content:space-around;">
+        <div style="text-align: center; width: 250px;">
+            <div style="border-top: 1px solid #000; padding-top: 10px;">
+                <p style="margin:0; font-weight:bold;"><?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?></p>
+                <p style="margin:0; font-size:12px; color:#666;">Firma del Facilitador / Responsable</p>
+            </div>
+        </div>
+        <div style="text-align: center; width: 250px;">
+            <div style="border-top: 1px solid #000; padding-top: 10px;">
+                <p style="margin:0; font-weight:bold;">Sello de la Institución</p>
+                <p style="margin:0; font-size:12px; color:#666;">Coordinación de Formación IMATUR</p>
+            </div>
+        </div>
     </div>
 </div>
 

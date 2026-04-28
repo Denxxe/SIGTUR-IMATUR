@@ -1,60 +1,55 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1><i class="bi bi-geo-alt"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">Administración de municipios del estado.</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">Sistema · Localidades</div>
+        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <p class="page__subtitle">Administración de municipios del estado.</p>
     </div>
-    <div class="col-md-6 text-end">
-        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalMunicipio" onclick="nuevoMunicipio()">
+    <div class="page__actions">
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalMunicipio" onclick="nuevoMunicipio()">
             <i class="bi bi-plus-lg"></i> Nuevo Municipio
         </button>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
+<div class="sig-table-wrap anim-slide-up">
+    <table class="sig-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Código Postal</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($data['municipio'])): ?>
+                <tr>
+                    <td colspan="4" class="sig-table-empty">No hay municipios registrados.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($data['municipio'] as $mun): ?>
                     <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Nombre</th>
-                        <th>Código Postal</th>
-                        <th class="text-center">Acciones</th>
+                        <td><span class="cell-id"><?php echo $mun->id; ?></span></td>
+                        <td class="cell-strong"><?php echo $mun->nombre; ?></td>
+                        <td><?php echo $mun->codigo_postal; ?></td>
+                        <td class="col-actions">
+                            <button class="row-action row-action--edit" onclick='editarMunicipio(<?php echo json_encode($mun); ?>)'>
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <a href="<?php echo URL_ROOT; ?>/municipio/delete/<?php echo $mun->id; ?>" class="row-action row-action--del delete-btn">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['municipio'])): ?>
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">No hay municipios registrados.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($data['municipio'] as $mun): ?>
-                            <tr>
-                                <td class="ps-4"><?php echo $mun->id; ?></td>
-                                <td class="fw-bold"><?php echo $mun->nombre; ?></td>
-                                <td><?php echo $mun->codigo_postal; ?></td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info" onclick='editarMunicipio(<?php echo json_encode($mun); ?>)'>
-                                            Editar
-                                        </button>
-                                        <a href="<?php echo URL_ROOT; ?>/municipio/delete/<?php echo $mun->id; ?>" class="btn btn-outline-danger delete-btn">
-                                            Eliminar
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
-<!-- Modal para Crear/Editar Municipio -->
+<!-- Modal Municipio -->
 <div class="modal fade" id="modalMunicipio" tabindex="-1" aria-labelledby="modalMunicipioLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -65,22 +60,18 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="municipio_id">
-                    
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label fw-bold">Nombre del Municipio</label>
-                        <input type="text" class="form-control" name="nombre" id="municipio_nombre" required placeholder="Ej: Sucre">
-                        <div class="invalid-feedback">Por favor, ingrese el nombre del municipio.</div>
+                    <div class="sig-field mb-3">
+                        <label class="sig-field__label">Nombre del Municipio <span class="req">*</span></label>
+                        <input type="text" class="sig-input" name="nombre" id="municipio_nombre" required placeholder="Ej: Sucre">
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="codigo_postal" class="form-label fw-bold">Código Postal</label>
-                        <input type="text" class="form-control" name="codigo_postal" id="municipio_cp" required placeholder="Ej: 6101">
-                        <div class="invalid-feedback">Por favor, ingrese el código postal.</div>
+                    <div class="sig-field mb-3">
+                        <label class="sig-field__label">Código Postal <span class="req">*</span></label>
+                        <input type="text" class="sig-input" name="codigo_postal" id="municipio_cp" required placeholder="Ej: 6101">
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Registro</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
                 </div>
             </form>
         </div>
@@ -94,15 +85,12 @@
         document.getElementById('municipio_nombre').value = '';
         document.getElementById('municipio_cp').value = '';
     }
-
     function editarMunicipio(mun) {
-        document.getElementById('modalMunicipioLabel').innerText = 'Editar Municipio: ' + mun.nombre;
+        document.getElementById('modalMunicipioLabel').innerText = 'Editar: ' + mun.nombre;
         document.getElementById('municipio_id').value = mun.id;
         document.getElementById('municipio_nombre').value = mun.nombre;
         document.getElementById('municipio_cp').value = mun.codigo_postal;
-        
-        var myModal = new bootstrap.Modal(document.getElementById('modalMunicipio'));
-        myModal.show();
+        new bootstrap.Modal(document.getElementById('modalMunicipio')).show();
     }
 </script>
 

@@ -7,31 +7,34 @@
         /* === RESET & BASE === */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 10px;
             color: #1e293b;
             background: #fff;
-            padding: 20px 30px;
+            padding: 40px 50px;
+            line-height: 1.4;
         }
 
         /* === ENCABEZADO INSTITUCIONAL === */
         .header-doc {
-            border-bottom: 3px solid #1a73e8;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
         }
         .header-doc .logo-area h1 {
-            font-size: 20px;
-            color: #1a73e8;
-            letter-spacing: 1px;
+            font-size: 24px;
+            font-weight: 900;
+            color: #1e3a8a;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
         }
         .header-doc .logo-area p {
             color: #64748b;
-            font-size: 10px;
-            margin-top: 2px;
+            font-size: 11px;
+            font-weight: 500;
         }
         .header-doc .meta-area {
             text-align: right;
@@ -41,75 +44,85 @@
 
         /* === TÍTULO DEL REPORTE === */
         .report-title {
-            background: #f1f5f9;
-            border-left: 5px solid #1a73e8;
-            padding: 10px 15px;
-            margin-bottom: 15px;
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-radius: 0 4px 4px 0;
         }
         .report-title h2 {
-            font-size: 16px;
-            color: #1e293b;
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 4px;
         }
         .report-title p {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 2px;
+            font-size: 11px;
+            color: #475569;
         }
 
         /* === KPIs === */
         .kpi-row {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 25px;
         }
         .kpi-box {
             flex: 1;
+            background: #ffffff;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
         }
         .kpi-box .value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1a73e8;
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563eb;
+            margin-bottom: 2px;
         }
         .kpi-box .label {
             font-size: 9px;
+            font-weight: 700;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: .5px;
-            margin-top: 2px;
+            letter-spacing: 0.05em;
         }
 
         /* === TABLA === */
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10px;
+            margin-bottom: 30px;
         }
         thead th {
-            background: #1e293b;
-            color: #fff;
-            padding: 8px 6px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 8px;
             text-align: left;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: .5px;
+            letter-spacing: 0.05em;
         }
         tbody td {
-            padding: 6px;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
         }
         tbody tr:nth-child(even) {
-            background: #f8fafc;
+            background: #fcfdfe;
+        }
+        .cell-bold {
+            font-weight: 700;
+            color: #0f172a;
         }
 
         /* === PIE DE PÁGINA === */
         .footer-doc {
-            margin-top: 25px;
-            padding-top: 10px;
+            margin-top: 40px;
+            padding-top: 15px;
             border-top: 1px solid #e2e8f0;
             font-size: 9px;
             color: #94a3b8;
@@ -119,46 +132,54 @@
 
         /* === BOTONES (ocultos al imprimir) === */
         .no-print {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             text-align: right;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
         }
         .no-print button {
-            padding: 10px 25px;
+            padding: 10px 20px;
+            font-family: inherit;
             font-size: 13px;
             font-weight: 600;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-left: 8px;
+            transition: all 0.2s;
+            margin-left: 10px;
         }
         .btn-print {
-            background: #1a73e8;
+            background: #2563eb;
             color: #fff;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
-        .btn-print:hover { background: #1557b0; }
+        .btn-print:hover { background: #1d4ed8; transform: translateY(-1px); }
         .btn-back {
-            background: #e2e8f0;
+            background: #fff;
             color: #475569;
+            border: 1px solid #d1d5db !important;
         }
-        .btn-back:hover { background: #cbd5e1; }
+        .btn-back:hover { background: #f3f4f6; }
 
         /* === REGLAS DE IMPRESIÓN === */
         @media print {
             .no-print { display: none !important; }
-            body { padding: 10px; }
+            body { padding: 0; }
             @page {
                 size: landscape;
-                margin: 1cm;
+                margin: 1.5cm;
             }
         }
     </style>
 </head>
 <body>
 
-<!-- Botones de acción (NO se imprimen) -->
+<!-- Botones de acción -->
 <div class="no-print">
-    <button class="btn-back" onclick="window.history.back()">← Volver al Reporte</button>
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+    <button class="btn-back" onclick="window.history.back()">← Regresar al Panel</button>
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
 </div>
 
 <!-- Encabezado Institucional -->
@@ -166,19 +187,19 @@
     <div class="logo-area">
         <h1>SIGTUR-IMATUR</h1>
         <p>Sistema Integral de Gestión Turística y Administrativa</p>
-        <p>Instituto Municipal de Turismo</p>
+        <p>Instituto Municipal de Turismo — Cumaná, Estado Sucre</p>
     </div>
     <div class="meta-area">
-        <p><strong>Fecha de generación:</strong> <?php echo date('d/m/Y H:i'); ?></p>
-        <p><strong>Generado por:</strong> <?php echo $_SESSION['user_username'] ?? 'Sistema'; ?></p>
-        <p>Documento oficial</p>
+        <p><strong>Fecha:</strong> <?php echo date('d/m/Y H:i'); ?></p>
+        <p><strong>Usuario:</strong> <?php echo $_SESSION['user_username'] ?? 'Sistema'; ?></p>
+        <p style="margin-top:4px; font-weight:700; color:#3b82f6;">DOCUMENTO OFICIAL</p>
     </div>
 </div>
 
 <!-- Título del Reporte -->
 <div class="report-title">
     <h2><?php echo $data['titulo']; ?></h2>
-    <p><?php echo $data['subtitulo']; ?></p>
+    <p><?php echo $data['subtitulo'] ?: 'Consolidado general de registros del sistema.'; ?></p>
 </div>
 
 <!-- KPIs -->
@@ -204,7 +225,7 @@
     </thead>
     <tbody>
         <?php if (empty($data['rows'])): ?>
-            <tr><td colspan="<?php echo count($data['headers']); ?>" style="text-align:center; padding:20px; color:#94a3b8;">Sin datos disponibles para este reporte.</td></tr>
+            <tr><td colspan="<?php echo count($data['headers']); ?>" style="text-align:center; padding:40px; color:#94a3b8; font-style:italic; font-size:12px;">No se encontraron registros para los criterios seleccionados.</td></tr>
         <?php else: ?>
             <?php foreach ($data['rows'] as $row): ?>
                 <tr>
@@ -219,8 +240,8 @@
 
 <!-- Pie de Página -->
 <div class="footer-doc">
-    <span>SIGTUR-IMATUR © <?php echo date('Y'); ?> — Documento generado automáticamente</span>
-    <span>Total de registros: <?php echo count($data['rows']); ?></span>
+    <span>Generado mediante plataforma SIGTUR-IMATUR © <?php echo date('Y'); ?></span>
+    <span>Página 1 de 1 — Total registros: <?php echo count($data['rows']); ?></span>
 </div>
 
 </body>

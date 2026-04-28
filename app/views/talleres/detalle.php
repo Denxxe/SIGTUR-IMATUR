@@ -1,75 +1,80 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h1><i class="bi bi-mortarboard"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="mb-0">
-            <strong>Facilitador:</strong> <?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?> |
-            <strong>Sede:</strong> <?php echo $data['taller']->ubicacion ?? 'Sin asignar'; ?> |
-            <strong>Fecha:</strong> <?php echo $data['taller']->fecha_inicio; ?>
-        </p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">
+            <a href="<?php echo URL_ROOT; ?>/talleres/index" style="color:inherit; text-decoration:none;">Formación</a> · Detalle de Taller
+        </div>
+        <h1 class="page__title"><?php echo $data['taller']->nombre; ?></h1>
+        <div style="display:flex; gap:var(--sp-4); margin-top:var(--sp-2); font-size:13px; color:var(--text-secondary);">
+            <span><strong>Facilitador:</strong> <?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?></span>
+            <span><strong>Sede:</strong> <?php echo $data['taller']->ubicacion ?? 'Sin asignar'; ?></span>
+            <span><strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)); ?></span>
+        </div>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn btn-outline-secondary mb-2">← Volver</a>
-        <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" class="btn btn-info text-white mb-2"><i class="bi bi-file-earmark-text"></i> Informe Oficial</a>
-        <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
+    <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-file-earmark-text"></i> Informe Oficial
+        </a>
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
             <i class="bi bi-person-plus"></i> Inscribir
         </button>
     </div>
 </div>
 
-<!-- Lista de participantes -->
-<div class="card shadow-sm">
-    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-        <span>Participantes Inscritos</span>
-        <div class="text-end">
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="sig-card__title">Participantes Inscritos</div>
+        <div style="display:flex; align-items:center; gap:var(--sp-4);">
             <?php 
                 $inscritos = count($data['participantes']);
                 $cupo = $data['taller']->cupo_maximo;
-                $porcentaje = $cupo > 0 ? round(($inscritos / $cupo) * 100) : 0;
-                $colorBarra = $porcentaje > 80 ? 'bg-danger' : ($porcentaje > 50 ? 'bg-warning' : 'bg-success');
+                $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
             ?>
-            <div class="d-flex align-items-center justify-content-end gap-3">
-                <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn btn-sm btn-success text-white">
-                    <i class="bi bi-file-earmark-spreadsheet"></i> Exportar Lista
-                </a>
-                <div class="text-end">
-                    <span class="badge bg-light text-dark"><?php echo $inscritos; ?> / <?php echo $cupo; ?> (<?php echo $porcentaje; ?>%)</span>
-                    <div class="progress mt-1" style="height: 6px; width: 120px;">
-                        <div class="progress-bar <?php echo $colorBarra; ?>" style="width: <?php echo $porcentaje; ?>%"></div>
-                    </div>
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+            </a>
+            <div style="text-align:right;">
+                <div style="font-size:12px; font-weight:700; color:var(--text-primary);">
+                    <?php echo $inscritos; ?> / <?php echo $cupo; ?> <span style="color:var(--text-tertiary); font-weight:500;">(<?php echo $porcentaje; ?>%)</span>
+                </div>
+                <div style="height:4px; width:100px; background:var(--bg-muted); border-radius:2px; margin-top:4px; overflow:hidden;">
+                    <div style="height:100%; width:<?php echo $porcentaje; ?>%; background:var(--brand-500);"></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+    <div class="sig-table-wrap">
+        <table class="sig-table">
+            <thead>
                 <tr>
-                    <th class="ps-4">Cédula</th>
+                    <th>Cédula</th>
                     <th>Nombre Completo</th>
                     <th>Teléfono</th>
-                    <th class="text-center">¿Asistió?</th>
-                    <th class="text-center">Observaciones</th>
+                    <th class="text-center">Estado</th>
+                    <th>Observaciones</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($data['participantes'])): ?>
-                    <tr><td colspan="5" class="text-center py-4 text-muted">No hay participantes inscritos aún.</td></tr>
+                    <tr><td colspan="5" class="sig-table-empty">No hay participantes inscritos aún.</td></tr>
                 <?php else: ?>
                     <?php foreach ($data['participantes'] as $p): ?>
                         <tr>
-                            <td class="ps-4"><?php echo $p->cedula; ?></td>
-                            <td class="fw-bold"><?php echo $p->nombre . ' ' . $p->apellido; ?></td>
+                            <td class="cell-id"><?php echo $p->cedula; ?></td>
+                            <td class="cell-strong"><?php echo $p->nombre . ' ' . $p->apellido; ?></td>
                             <td><?php echo $p->telefono; ?></td>
                             <td class="text-center">
                                 <?php if ($p->asistio): ?>
-                                    <span class="badge bg-success">Sí</span>
+                                    <span class="sig-badge sig-badge--success">Asistió</span>
                                 <?php else: ?>
-                                    <span class="badge bg-secondary">Pendiente</span>
+                                    <span class="sig-badge sig-badge--neutral">Pendiente</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="text-center small"><?php echo $p->observaciones ?? '—'; ?></td>
+                            <td style="font-size:12px; color:var(--text-secondary);"><?php echo $p->observaciones ?? '—'; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -82,21 +87,23 @@
 <div class="modal fade" id="modalInscripcion" tabindex="-1">
     <div class="modal-dialog">
         <form action="<?php echo URL_ROOT; ?>/talleres/inscribir" method="POST" class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title">Inscribir Persona</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Cédula del Participante</label>
-                    <input type="text" name="id_persona" id="insc_persona" class="form-control" required placeholder="ID de persona registrada">
-                    <small class="text-muted">Ingrese el ID de la persona ya registrada en el sistema.</small>
+                <div class="sig-field">
+                    <label class="sig-field__label">Cédula del Participante <span class="req">*</span></label>
+                    <input type="text" name="id_persona" id="insc_persona" class="sig-input" required placeholder="Ingrese el ID de la persona">
+                    <p style="font-size:12px; color:var(--text-tertiary); margin-top:8px;">
+                        <i class="bi bi-info-circle"></i> La persona debe estar previamente registrada en el sistema de personal o comunidad.
+                    </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn btn-primary">Inscribir</button>
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-person-plus"></i> Inscribir</button>
             </div>
         </form>
     </div>

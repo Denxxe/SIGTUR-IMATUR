@@ -38,8 +38,8 @@ class Taller extends Model {
                            (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) as total_inscritos
                     FROM talleres t
                     LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
-                    INNER JOIN empleados e ON t.id_facilitador = e.id
-                    INNER JOIN personas p ON e.id_persona = p.id
+                    LEFT JOIN empleados e ON t.id_facilitador = e.id
+                    LEFT JOIN personas p ON e.id_persona = p.id
                     WHERE t.is_active = TRUE
                     ORDER BY t.fecha_inicio DESC");
         return $db->resultSet();
@@ -50,8 +50,8 @@ class Taller extends Model {
         $db->query("SELECT t.*, uf.nombre as ubicacion, p.nombre as facilitador_nombre, p.apellido as facilitador_apellido
                     FROM talleres t
                     LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
-                    INNER JOIN empleados e ON t.id_facilitador = e.id
-                    INNER JOIN personas p ON e.id_persona = p.id
+                    LEFT JOIN empleados e ON t.id_facilitador = e.id
+                    LEFT JOIN personas p ON e.id_persona = p.id
                     WHERE t.id = :id");
         $db->bind(':id', $id);
         return $db->single();
