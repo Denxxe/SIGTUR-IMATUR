@@ -32,9 +32,14 @@ class ParroquiaController extends Controller
 
             $parroquia = new Parroquia($data);
             if ($parroquia->save($this->getUserId())) { // ID temporal
+                $mensaje = $id ? 'Parroquia actualizada exitosamente.' : 'Parroquia registrada exitosamente.';
+                flash('global_msg', $mensaje, 'success');
                 header('Location: ' . URL_ROOT . '/parroquia/index');
+                exit();
             } else {
-                die('Error al guardar la parroquia');
+                flash('global_msg', 'Error al guardar la parroquia.', 'danger');
+                header('Location: ' . URL_ROOT . '/parroquia/index');
+                exit();
             }
         }
     }
@@ -42,9 +47,11 @@ class ParroquiaController extends Controller
     public function delete($id)
     {
         if (Parroquia::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/parroquia/index');
+            flash('global_msg', 'Parroquia eliminada correctamente.', 'success');
         } else {
-            die('Error al eliminar la parroquia');
+            flash('global_msg', 'Error al eliminar la parroquia.', 'danger');
         }
+        header('Location: ' . URL_ROOT . '/parroquia/index');
+        exit();
     }
 }

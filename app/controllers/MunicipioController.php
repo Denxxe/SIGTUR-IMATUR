@@ -30,9 +30,14 @@ class MunicipioController extends Controller
 
             $municipio = new Municipio($data);
             if ($municipio->save($this->getUserId())) { // ID temporal
+                $mensaje = $id ? 'Municipio actualizado exitosamente.' : 'Municipio registrado exitosamente.';
+                flash('global_msg', $mensaje, 'success');
                 header('Location: ' . URL_ROOT . '/municipio/index');
+                exit();
             } else {
-                die('Error al guardar el municipio');
+                flash('global_msg', 'Error al guardar el municipio.', 'danger');
+                header('Location: ' . URL_ROOT . '/municipio/index');
+                exit();
             }
         }
     }
@@ -40,9 +45,11 @@ class MunicipioController extends Controller
     public function delete($id)
     {
         if (Municipio::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/municipio/index');
+            flash('global_msg', 'Municipio eliminado correctamente.', 'success');
         } else {
-            die('Error al eliminar el municipio');
+            flash('global_msg', 'Error al eliminar el municipio.', 'danger');
         }
+        header('Location: ' . URL_ROOT . '/municipio/index');
+        exit();
     }
 }

@@ -31,16 +31,25 @@ class UbicacionesformacionController extends Controller {
 
             $ubi = new UbicacionFormacion($data);
             if ($ubi->save($this->getUserId())) {
+                $mensaje = $data['id'] ? 'Sede actualizada exitosamente.' : 'Sede registrada exitosamente.';
+                flash('global_msg', $mensaje, 'success');
                 header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+                exit();
             } else {
-                die('Error al guardar la sede');
+                flash('global_msg', 'Error al guardar la sede.', 'danger');
+                header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+                exit();
             }
         }
     }
 
     public function delete($id) {
         if (UbicacionFormacion::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+            flash('global_msg', 'Sede de formación eliminada correctamente.', 'success');
+        } else {
+            flash('global_msg', 'Error al eliminar la sede.', 'danger');
         }
+        header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+        exit();
     }
 }
