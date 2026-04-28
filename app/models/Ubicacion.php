@@ -3,11 +3,11 @@
  * Clase Ubicacion: Modelo para las ubicaciones físicas del inventario
  */
 class Ubicacion extends Model {
-    private $id;
-    private $nombre;
-    private $descripcion;
+    private ?int $id;
+    private string $nombre;
+    private string $descripcion;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

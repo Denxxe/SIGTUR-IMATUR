@@ -26,7 +26,7 @@
                 <label>Usuario</label>
                 <input type="text" name="username" placeholder="Ingrese su usuario"
                     class="<?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
-                    value="<?php echo $data['username']; ?>">
+                    value="<?php echo $data['username'] ?? ''; ?>">
                 <?php if (!empty($data['username_err'])): ?>
                     <div class="error-msg"><?php echo $data['username_err']; ?></div>
                 <?php endif; ?>

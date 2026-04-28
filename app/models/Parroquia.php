@@ -5,11 +5,11 @@
  */
 class Parroquia extends Model
 {
-    private $id;
-    private $nombre;
-    private $id_municipio;
+    private ?int $id;
+    private string $nombre;
+    private ?int $id_municipio;
 
-    public function __construct($data = [])
+    public function __construct(array $data = [])
     {
         parent::__construct();
         if (!empty($data)) {

@@ -5,18 +5,18 @@
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/talleres/index" style="color:inherit; text-decoration:none;">Formación</a> · Detalle de Taller
         </div>
-        <h1 class="page__title"><?php echo $data['taller']->nombre; ?></h1>
+        <h1 class="page__title"><?php echo $data['taller']->nombre ?? ''; ?></h1>
         <div style="display:flex; gap:var(--sp-4); margin-top:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-            <span><strong>Facilitador:</strong> <?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?></span>
-            <span><strong>Sede:</strong> <?php echo $data['taller']->ubicacion ?? 'Sin asignar'; ?></span>
-            <span><strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)); ?></span>
+            <span><strong>Facilitador:</strong> <?php echo $data['taller']->facilitador_nombre ?? 'N/A'; ?></span>
+            <span><strong>Sede:</strong> <?php echo $data['taller']->ubicacion ?? 'N/A'; ?></span>
+            <span><strong>Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio ?? 'N/A')); ?></span>
         </div>
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
-        <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
+        <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id ?? 'Sin asignar'; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-file-earmark-text"></i> Informe Oficial
         </a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
@@ -29,12 +29,12 @@
     <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
         <div class="sig-card__title">Participantes Inscritos</div>
         <div style="display:flex; align-items:center; gap:var(--sp-4);">
-            <?php 
-                $inscritos = count($data['participantes']);
-                $cupo = $data['taller']->cupo_maximo;
-                $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
+            <?php
+            $inscritos = count($data['participantes'] ?? []);
+            $cupo = $data['taller']->cupo_maximo ?? 0;
+            $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
             ?>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id ?? 'Sin asignar'; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
             </a>
             <div style="text-align:right;">
@@ -60,7 +60,9 @@
             </thead>
             <tbody>
                 <?php if (empty($data['participantes'])): ?>
-                    <tr><td colspan="5" class="sig-table-empty">No hay participantes inscritos aún.</td></tr>
+                    <tr>
+                        <td colspan="5" class="sig-table-empty">No hay participantes inscritos aún.</td>
+                    </tr>
                 <?php else: ?>
                     <?php foreach ($data['participantes'] as $p): ?>
                         <tr>
@@ -92,7 +94,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
+                <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id ?? 'Sin asignar'; ?>">
                 <div class="sig-field">
                     <label class="sig-field__label">Cédula del Participante <span class="req">*</span></label>
                     <input type="text" name="id_persona" id="insc_persona" class="sig-input" required placeholder="Ingrese el ID de la persona">

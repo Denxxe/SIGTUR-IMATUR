@@ -69,9 +69,9 @@
                         <select name="id_tutor_institucional" class="sig-select">
                             <option value="">-- Seleccionar Tutor (Opcional) --</option>
                             <?php if(isset($data['empleados'])): ?>
-                                <?php foreach($data['empleados'] as $e): ?>
-                                    <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?></option>
-                                <?php endforeach; ?>
+                            <?php foreach($data['empleados'] ?? [] as $e): ?>
+                                <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? '') . ' ' . ($e->apellido ?? ''); ?></option>
+                            <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                     </div>

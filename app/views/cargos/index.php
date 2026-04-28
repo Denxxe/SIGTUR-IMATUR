@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Organización</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Cargos'; ?></h1>
         <p class="page__subtitle">Administración de puestos y servicios institucionales.</p>
     </div>
     <div class="page__actions">
@@ -26,7 +26,9 @@
         </thead>
         <tbody>
             <?php if (empty($data['cargos'])): ?>
-                <tr><td colspan="5" class="sig-table-empty">No hay cargos registrados.</td></tr>
+                <tr>
+                    <td colspan="5" class="sig-table-empty">No hay cargos registrados.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['cargos'] as $cargo): ?>
                     <tr>
@@ -90,6 +92,7 @@
         document.getElementById('cargo_descripcion').value = '';
         document.getElementById('cargo_sueldo').value = '0.00';
     }
+
     function editarCargo(cargo) {
         document.getElementById('modalCargoLabel').innerText = 'Editar: ' + cargo.nombre;
         document.getElementById('cargo_id').value = cargo.id;

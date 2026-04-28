@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo $data['titulo']; ?> - SIGTUR-IMATUR</title>
+    <title><?php echo $data['titulo'] ?? 'Reporte'; ?> - SIGTUR-IMATUR</title>
     <style>
         /* === RESET & BASE === */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -198,17 +198,17 @@
 
 <!-- Título del Reporte -->
 <div class="report-title">
-    <h2><?php echo $data['titulo']; ?></h2>
-    <p><?php echo $data['subtitulo'] ?: 'Consolidado general de registros del sistema.'; ?></p>
+    <h2><?php echo $data['titulo'] ?? 'Reporte SIGTUR'; ?></h2>
+    <p><?php echo ($data['subtitulo'] ?? '') ?: 'Consolidado general de registros del sistema.'; ?></p>
 </div>
 
 <!-- KPIs -->
 <?php if (!empty($data['kpis'])): ?>
 <div class="kpi-row">
-    <?php foreach ($data['kpis'] as $label => $value): ?>
+    <?php foreach ($data['kpis'] ?? [] as $label => $value): ?>
         <div class="kpi-box">
-            <div class="value"><?php echo $value; ?></div>
-            <div class="label"><?php echo $label; ?></div>
+            <div class="value"><?php echo $value ?? 0; ?></div>
+            <div class="label"><?php echo $label ?? 'Dato'; ?></div>
         </div>
     <?php endforeach; ?>
 </div>
@@ -218,19 +218,19 @@
 <table>
     <thead>
         <tr>
-            <?php foreach ($data['headers'] as $h): ?>
-                <th><?php echo $h; ?></th>
+            <?php foreach ($data['headers'] ?? [] as $h): ?>
+                <th><?php echo $h ?? '-'; ?></th>
             <?php endforeach; ?>
         </tr>
     </thead>
     <tbody>
-        <?php if (empty($data['rows'])): ?>
-            <tr><td colspan="<?php echo count($data['headers']); ?>" style="text-align:center; padding:40px; color:#94a3b8; font-style:italic; font-size:12px;">No se encontraron registros para los criterios seleccionados.</td></tr>
+        <?php if (empty($data['rows'] ?? [])): ?>
+            <tr><td colspan="<?php echo count($data['headers'] ?? []); ?>" style="text-align:center; padding:40px; color:#94a3b8; font-style:italic; font-size:12px;">No se encontraron registros para los criterios seleccionados.</td></tr>
         <?php else: ?>
-            <?php foreach ($data['rows'] as $row): ?>
+            <?php foreach ($data['rows'] ?? [] as $row): ?>
                 <tr>
                     <?php foreach ($row as $cell): ?>
-                        <td><?php echo htmlspecialchars($cell); ?></td>
+                        <td><?php echo htmlspecialchars($cell ?? ''); ?></td>
                     <?php endforeach; ?>
                 </tr>
             <?php endforeach; ?>
@@ -241,7 +241,7 @@
 <!-- Pie de Página -->
 <div class="footer-doc">
     <span>Generado mediante plataforma SIGTUR-IMATUR © <?php echo date('Y'); ?></span>
-    <span>Página 1 de 1 — Total registros: <?php echo count($data['rows']); ?></span>
+    <span>Página 1 de 1 — Total registros: <?php echo count($data['rows'] ?? []); ?></span>
 </div>
 
 </body>

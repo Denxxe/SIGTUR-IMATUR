@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Formación · Capacitación</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Talleres'; ?></h1>
         <p class="page__subtitle">Administración de talleres, cursos y jornadas de capacitación comunitaria.</p>
     </div>
     <div class="page__actions">
@@ -34,15 +34,15 @@
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">ID #<?php echo $t->id; ?></span>
                 </div>
                 <div class="sig-card__body" style="flex:1;">
-                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo $t->nombre; ?></h3>
+                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo $t->nombre ?? 'Taller sin nombre'; ?></h3>
                     <p class="text-clamp-2" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
-                        <?php echo strip_tags($t->descripcion); ?>
+                        <?php echo strip_tags($t->descripcion ?? 'Sin descripción'); ?>
                     </p>
                     
                     <div style="display:grid; gap:var(--sp-2);">
                         <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
                             <i class="bi bi-calendar-event" style="color:var(--brand-500);"></i>
-                            <span><?php echo date('d/m/Y', strtotime($t->fecha_inicio)); ?></span>
+                            <span><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'today')); ?></span>
                         </div>
                         <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
                             <i class="bi bi-geo-alt" style="color:var(--brand-500);"></i>
@@ -158,8 +158,8 @@
                             <label class="sig-field__label">Facilitador <span class="req">*</span></label>
                             <select name="id_facilitador" id="tal_facilitador" class="sig-select" required>
                                 <option value="">Seleccione un facilitador...</option>
-                                <?php foreach ($data['empleados'] as $e): ?>
-                                    <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?></option>
+                                <?php foreach ($data['empleados'] ?? [] as $e): ?>
+                                    <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? 'Facilitador') . ' ' . ($e->apellido ?? 'Pendiente'); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Sistema · Seguridad</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalUsuario" onclick="nuevoUsuario()">
@@ -14,16 +14,24 @@
 
 <div class="sig-table-wrap anim-slide-up">
     <table class="sig-table">
-        <thead><tr><th>Usuario</th><th>Empleado</th><th>Rol</th><th>Estado</th><th class="col-actions">Acciones</th></tr></thead>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Empleado</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
         <tbody>
-            <?php foreach ($data['usuarios'] as $user): ?>
+            <?php foreach ($data['usuarios'] ?? [] as $user): ?>
                 <tr>
-                    <td class="cell-strong" style="color:var(--brand-600)"><?php echo $user->username; ?></td>
-                    <td><?php echo $user->nombre . ' ' . $user->apellido; ?></td>
-                    <td><span class="sig-badge sig-badge--neutral"><?php echo $user->rol; ?></span></td>
+                    <td class="cell-strong" style="color:var(--brand-600)"><?php echo $user->username ?? 'N/A'; ?></td>
+                    <td><?php echo ($user->nombre ?? 'N/A') . ' ' . ($user->apellido ?? ''); ?></td>
+                    <td><span class="sig-badge sig-badge--neutral"><?php echo $user->rol ?? 'Sin rol'; ?></span></td>
                     <td><span class="sig-badge sig-badge--success">Activo</span></td>
                     <td class="col-actions">
-                        <button class="row-action row-action--edit" onclick='editarUsuario(<?php echo json_encode($user); ?>)'><i class="bi bi-key"></i> Credenciales</button>
+                        <button class="row-action row-action--edit" onclick='editarUsuario(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-key"></i> Credenciales</button>
                         <a href="<?php echo URL_ROOT; ?>/usuarios/delete/<?php echo $user->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-slash-circle"></i> Suspender</a>
                     </td>
                 </tr>
@@ -35,14 +43,16 @@
 <div class="modal fade" id="modalUsuario" tabindex="-1">
     <div class="modal-dialog">
         <form action="<?php echo URL_ROOT; ?>/usuarios/store" method="POST" class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalUsuarioLabel">Configurar Acceso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalUsuarioLabel">Configurar Acceso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="user_id">
                 <div class="sig-field mb-3" id="div_empleado">
                     <label class="sig-field__label">Empleado Relacionado</label>
                     <select name="id_empleado" id="user_id_empleado" class="sig-select">
                         <option value="">Seleccione al empleado...</option>
-                        <?php foreach ($data['empleados'] as $e): ?>
+                        <?php foreach ($data['empleados'] ?? [] as $e): ?>
                             <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?> (<?php echo $e->cedula; ?>)</option>
                         <?php endforeach; ?>
                     </select>
@@ -50,7 +60,7 @@
                 <div class="sig-field mb-3">
                     <label class="sig-field__label">Rol en el Sistema <span class="req">*</span></label>
                     <select name="id_rol" id="user_id_rol" class="sig-select" required>
-                        <?php foreach ($data['roles'] as $r): ?>
+                        <?php foreach ($data['roles'] ?? [] as $r): ?>
                             <option value="<?php echo $r->id; ?>"><?php echo $r->nombre; ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -80,6 +90,7 @@
         document.getElementById('pass_notice').style.display = 'none';
         document.querySelector('#modalUsuario form').reset();
     }
+
     function editarUsuario(user) {
         document.getElementById('modalUsuarioLabel').innerText = 'Actualizar: ' + user.username;
         document.getElementById('user_id').value = user.id;

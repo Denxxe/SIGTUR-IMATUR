@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Turismo · Gestión de Destinos</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Rutas'; ?></h1>
         <p class="page__subtitle">Planificación y control de rutas turísticas y puntos de interés del municipio.</p>
     </div>
     <div class="page__actions">
@@ -20,7 +20,7 @@
             <p>No hay rutas turísticas registradas.</p>
         </div>
     <?php else: ?>
-        <?php foreach ($data['rutas'] as $r): ?>
+        <?php foreach ($data['rutas'] ?? [] as $r): ?>
             <div class="sig-card h-100" style="display:flex; flex-direction:column;">
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
                     <?php 
@@ -33,9 +33,9 @@
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">#<?php echo $r->id; ?></span>
                 </div>
                 <div class="sig-card__body" style="flex:1;">
-                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo $r->nombre; ?></h3>
+                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo $r->nombre ?? 'Ruta sin nombre'; ?></h3>
                     <p class="text-clamp-3" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
-                        <?php echo strip_tags($r->descripcion); ?>
+                        <?php echo strip_tags($r->descripcion ?? 'Sin descripción'); ?>
                     </p>
                     
                     <div style="display:grid; gap:var(--sp-2);">
@@ -67,7 +67,7 @@
                         <i class="bi bi-geo"></i> Ver Ruta
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
-                        <button class="row-action row-action--edit" onclick='editarRuta(<?php echo json_encode($r); ?>)'>
+                        <button class="row-action row-action--edit" onclick='editarRuta(<?php echo htmlspecialchars(json_encode($r), ENT_QUOTES, "UTF-8"); ?>)'>
                             <i class="bi bi-pencil"></i>
                         </button>
                         <a href="<?php echo URL_ROOT; ?>/rutas/delete/<?php echo $r->id; ?>" class="row-action row-action--del delete-btn">

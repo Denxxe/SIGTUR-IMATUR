@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Turismo · Eventos y Excursiones</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Gestión de excursiones, visitas guiadas y eventos programados en las rutas del municipio.</p>
     </div>
     <div class="page__actions">
@@ -20,19 +20,19 @@
             <p>No hay actividades turísticas programadas actualmente.</p>
         </div>
     <?php else: ?>
-        <?php foreach ($data['actividades'] as $a): ?>
+        <?php foreach ($data['actividades'] ?? [] as $a): ?>
             <div class="sig-card h-100" style="display:flex; flex-direction:column; border-left: 4px solid var(--teal-500);">
                 <div class="sig-card__body" style="flex:1;">
-                    <h3 style="font-size:18px; font-weight:700; color:var(--teal-700); margin-bottom:var(--sp-1);"><?php echo $a->nombre; ?></h3>
+                    <h3 style="font-size:18px; font-weight:700; color:var(--teal-700); margin-bottom:var(--sp-1);"><?php echo $a->nombre ?? 'Sin nombre'; ?></h3>
                     <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
                         <i class="bi bi-signpost-2"></i>
-                        <span><?php echo $a->ruta_nombre; ?></span>
+                        <span><?php echo $a->ruta_nombre ?? 'Ruta no especificada'; ?></span>
                     </div>
-                    
+
                     <p style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4); line-height:1.5;">
-                        <?php echo $a->descripcion; ?>
+                        <?php echo strip_tags($a->descripcion ?? 'Sin descripción'); ?>
                     </p>
-                    
+
                     <div style="background:var(--bg-muted); padding:var(--sp-3); border-radius:var(--r-md); display:grid; gap:var(--sp-2);">
                         <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:12px; color:var(--text-primary); font-weight:600;">
                             <i class="bi bi-calendar" style="color:var(--teal-500);"></i>
@@ -67,22 +67,22 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="act_id">
-                
+
                 <div class="sig-field mb-4">
                     <label class="sig-field__label">Ruta Turística <span class="req">*</span></label>
                     <select name="id_ruta" id="act_ruta" class="sig-select" required>
                         <option value="">Seleccione ruta principal...</option>
-                        <?php foreach($data['rutas'] as $r): ?>
+                        <?php foreach ($data['rutas'] ?? [] as $r): ?>
                             <option value="<?php echo $r->id; ?>"><?php echo $r->nombre; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="sig-field mb-4">
                     <label class="sig-field__label">Nombre del Evento / Excursión <span class="req">*</span></label>
                     <input type="text" name="nombre" id="act_nombre" class="sig-input" required placeholder="Ej: Full Day Casco Histórico">
                 </div>
-                
+
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="sig-field">
@@ -95,19 +95,19 @@
                             <label class="sig-field__label">Guía Responsable</label>
                             <select name="id_empleado_responsable" id="act_empleado" class="sig-select">
                                 <option value="">Sin asignar / Pendiente</option>
-                                <?php foreach($data['empleados'] as $emp): ?>
-                                    <option value="<?php echo $emp->id; ?>"><?php echo $emp->nombre . ' ' . $emp->apellido; ?></option>
+                                <?php foreach ($data['empleados'] ?? [] as $emp): ?>
+                                    <option value="<?php echo $emp->id; ?>"><?php echo ($emp->nombre ?? '') . ' ' . ($emp->apellido ?? ''); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="sig-field">
                     <label class="sig-field__label">Descripción de Actividades</label>
                     <textarea name="descripcion" id="act_descripcion" class="sig-textarea" rows="3" placeholder="Detalles de la logística, itinerario, etc..."></textarea>
                 </div>
-                
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
@@ -123,6 +123,7 @@
         document.getElementById('act_id').value = '';
         document.querySelector('#modalActividadRuta form').reset();
     }
+
     function editarActividad(a) {
         document.getElementById('modalActividadRutaLabel').innerText = 'Editar: ' + a.nombre;
         document.getElementById('act_id').value = a.id;

@@ -3,14 +3,14 @@
  * Clase Ruta: Modelo para la tabla rutas turísticas
  */
 class Ruta extends Model {
-    private $id;
-    private $nombre;
-    private $descripcion;
-    private $duracion_estimada;
-    private $nivel_dificultad;
-    private $estado;
+    private ?int $id;
+    private string $nombre;
+    private string $descripcion;
+    private string $duracion_estimada;
+    private string $nivel_dificultad;
+    private string $estado;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

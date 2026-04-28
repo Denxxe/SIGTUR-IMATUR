@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Asistencia</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Asistencias'; ?></h1>
         <p class="page__subtitle">Registro de entrada y salida del personal IMATUR.</p>
     </div>
 </div>
@@ -14,8 +14,8 @@
         <form action="<?php echo URL_ROOT; ?>/asistencias/marcar" method="POST" style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap">
             <select name="id_empleado" class="sig-select" required style="flex:1;min-width:200px">
                 <option value="">Seleccione su nombre...</option>
-                <?php foreach ($data['empleados'] as $e): ?>
-                    <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?> (<?php echo $e->cedula; ?>)</option>
+                <?php foreach ($data['empleados'] ?? [] as $e): ?>
+                    <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? '') . ' ' . ($e->apellido ?? ''); ?> (<?php echo $e->cedula ?? ''; ?>)</option>
                 <?php endforeach; ?>
             </select>
             <button type="submit" class="btn-sig btn-sig--primary" style="height:40px"><i class="bi bi-check2-circle"></i> MARCAR</button>
@@ -31,13 +31,20 @@
     <table class="sig-table">
         <thead>
             <tr>
-                <th>Fecha</th><th>Empleado</th><th>Expediente</th>
-                <th>Entrada</th><th>Salida</th><th>Observación</th><th class="col-actions">Eliminar</th>
+                <th>Fecha</th>
+                <th>Empleado</th>
+                <th>Expediente</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Observación</th>
+                <th class="col-actions">Eliminar</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['asistencias'])): ?>
-                <tr><td colspan="7" class="sig-table-empty">Aún no hay marcajes registrados hoy.</td></tr>
+                <tr>
+                    <td colspan="7" class="sig-table-empty">Aún no hay marcajes registrados hoy.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['asistencias'] as $as): ?>
                     <tr>
@@ -68,7 +75,9 @@
 <script>
     function updateClock() {
         const now = new Date();
-        document.getElementById('clock').innerText = now.toLocaleTimeString('es-ES', { hour12: false });
+        document.getElementById('clock').innerText = now.toLocaleTimeString('es-ES', {
+            hour12: false
+        });
     }
     setInterval(updateClock, 1000);
     updateClock();

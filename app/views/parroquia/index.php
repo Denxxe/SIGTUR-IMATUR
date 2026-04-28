@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Sistema · Localidades</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Parroquias'; ?></h1>
         <p class="page__subtitle">Administración de parroquias del estado.</p>
     </div>
     <div class="page__actions">
@@ -25,7 +25,9 @@
         </thead>
         <tbody>
             <?php if (empty($data['parroquia'])): ?>
-                <tr><td colspan="4" class="sig-table-empty">No hay parroquias registradas.</td></tr>
+                <tr>
+                    <td colspan="4" class="sig-table-empty">No hay parroquias registradas.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['parroquia'] as $par): ?>
                     <tr>
@@ -66,7 +68,7 @@
                         <label class="sig-field__label">Municipio <span class="req">*</span></label>
                         <select class="sig-select" name="id_municipio" id="parroquia_municipio" required>
                             <option value="">Seleccione un municipio...</option>
-                            <?php foreach ($data['municipios'] as $mun): ?>
+                            <?php foreach ($data['municipios'] ?? [] as $mun): ?>
                                 <option value="<?php echo $mun->id; ?>"><?php echo $mun->nombre; ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -88,6 +90,7 @@
         document.getElementById('parroquia_nombre').value = '';
         document.getElementById('parroquia_municipio').value = '';
     }
+
     function editarParroquia(par) {
         document.getElementById('modalParroquiaLabel').innerText = 'Editar: ' + par.nombre;
         document.getElementById('parroquia_id').value = par.id;

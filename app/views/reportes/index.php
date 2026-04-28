@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Análisis · Reportes</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Selecciona un tipo de reporte para generar.</p>
     </div>
 </div>

@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Organización</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Departamentos'; ?></h1>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalDpto" onclick="nuevoDpto()">
@@ -14,9 +14,16 @@
 
 <div class="sig-table-wrap anim-slide-up">
     <table class="sig-table">
-        <thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th class="col-actions">Acciones</th></tr></thead>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
         <tbody>
-            <?php foreach ($data['departamentos'] as $dpto): ?>
+            <?php foreach ($data['departamentos'] ?? [] as $dpto): ?>
                 <tr>
                     <td><span class="cell-id"><?php echo $dpto->id; ?></span></td>
                     <td class="cell-strong"><?php echo $dpto->nombre; ?></td>
@@ -64,6 +71,7 @@
         document.getElementById('dpto_nombre').value = '';
         document.getElementById('dpto_descripcion').value = '';
     }
+
     function editarDpto(dpto) {
         document.getElementById('modalDptoLabel').innerText = 'Editar: ' + dpto.nombre;
         document.getElementById('dpto_id').value = dpto.id;

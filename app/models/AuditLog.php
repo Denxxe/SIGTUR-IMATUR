@@ -54,7 +54,7 @@ class AuditLog extends Model
      * @param int $id_usuario Usuario que realiza la acción.
      * @param Database|null $dbInstance Instancia de DB opcional para usar dentro de una transacción.
      */
-    public static function log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario, $dbInstance = null)
+    public static function log(string $tabla, string $operacion, ?int $record_id, ?array $datos_previos, ?array $datos_nuevos, ?int $id_usuario, $dbInstance = null)
     {
         // Si no se provee instancia, creamos una nueva.
         $db = $dbInstance ? $dbInstance : new Database();

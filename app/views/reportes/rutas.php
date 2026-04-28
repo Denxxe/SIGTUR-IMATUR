@@ -5,7 +5,7 @@
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/reportes/index" style="color:inherit; text-decoration:none;">Reportes</a> · Turismo
         </div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Métricas de infraestructura turística, puntos de interés y equipamiento de las rutas municipales.</p>
     </div>
     <div class="page__actions">
@@ -98,26 +98,28 @@
         </thead>
         <tbody>
             <?php if (empty($data['rutas'])): ?>
-                <tr><td colspan="6" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td></tr>
+                <tr>
+                    <td colspan="6" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
                         <td class="cell-strong"><?php echo $r->nombre; ?></td>
                         <td>
-                            <?php 
-                                $diffBadge = 'sig-badge--neutral';
-                                if ($r->nivel_dificultad == 'Fácil') $diffBadge = 'sig-badge--success';
-                                elseif ($r->nivel_dificultad == 'Moderado') $diffBadge = 'sig-badge--info';
-                                elseif ($r->nivel_dificultad == 'Difícil') $diffBadge = 'sig-badge--warning';
-                                elseif ($r->nivel_dificultad == 'Extremo') $diffBadge = 'sig-badge--danger';
+                            <?php
+                            $diffBadge = 'sig-badge--neutral';
+                            if ($r->nivel_dificultad == 'Fácil') $diffBadge = 'sig-badge--success';
+                            elseif ($r->nivel_dificultad == 'Moderado') $diffBadge = 'sig-badge--info';
+                            elseif ($r->nivel_dificultad == 'Difícil') $diffBadge = 'sig-badge--warning';
+                            elseif ($r->nivel_dificultad == 'Extremo') $diffBadge = 'sig-badge--danger';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $diffBadge; ?>"><?php echo $r->nivel_dificultad; ?></span>
                         </td>
                         <td>
-                            <?php 
-                                $statusBadge = 'sig-badge--neutral';
-                                if ($r->estado == 'Activa') $statusBadge = 'sig-badge--success';
-                                elseif ($r->estado == 'En Mantenimiento') $statusBadge = 'sig-badge--warning';
+                            <?php
+                            $statusBadge = 'sig-badge--neutral';
+                            if ($r->estado == 'Activa') $statusBadge = 'sig-badge--success';
+                            elseif ($r->estado == 'En Mantenimiento') $statusBadge = 'sig-badge--warning';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
                         </td>
@@ -133,31 +135,65 @@
 
 <!-- ApexCharts Config -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textPrimary = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
-    const borderSubtle = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textPrimary = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
+        const borderSubtle = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
 
-    // Donut: Rutas por Estado
-    new ApexCharts(document.querySelector("#chartRutasEstado"), {
-        chart: { type: 'donut', height: 320, background: 'transparent' },
-        series: [
-            <?php echo $data['stats']->activas ?? 0; ?>,
-            <?php echo $data['stats']->inactivas ?? 0; ?>,
-            <?php echo $data['stats']->mantenimiento ?? 0; ?>
-        ],
-        labels: ['Activa', 'Inactiva', 'En Mantenimiento'],
-        colors: ['#10B981', '#64748B', '#F59E0B'],
-        theme: { mode: isDark ? 'dark' : 'light' },
-        legend: { position: 'bottom', labels: { colors: textPrimary } },
-        stroke: { show: false },
-        plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'TOTAL', color: textPrimary, fontSize: '14px', fontWeight: 800 } } } } },
-        dataLabels: { enabled: false }
-    }).render();
+        // Donut: Rutas por Estado
+        new ApexCharts(document.querySelector("#chartRutasEstado"), {
+            chart: {
+                type: 'donut',
+                height: 320,
+                background: 'transparent'
+            },
+            series: [
+                <?php echo $data['stats']->activas ?? 0; ?>,
+                <?php echo $data['stats']->inactivas ?? 0; ?>,
+                <?php echo $data['stats']->mantenimiento ?? 0; ?>
+            ],
+            labels: ['Activa', 'Inactiva', 'En Mantenimiento'],
+            colors: ['#10B981', '#64748B', '#F59E0B'],
+            theme: {
+                mode: isDark ? 'dark' : 'light'
+            },
+            legend: {
+                position: 'bottom',
+                labels: {
+                    colors: textPrimary
+                }
+            },
+            stroke: {
+                show: false
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'TOTAL',
+                                color: textPrimary,
+                                fontSize: '14px',
+                                fontWeight: 800
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            }
+        }).render();
 
-    // Barras agrupadas: Métricas por Ruta
-    <?php
-        $nR = []; $puntosR = []; $actR = []; $eqR = [];
+        // Barras agrupadas: Métricas por Ruta
+        <?php
+        $nR = [];
+        $puntosR = [];
+        $actR = [];
+        $eqR = [];
         if (!empty($data['rutas'])) {
             $cnt = 0;
             foreach ($data['rutas'] as $r) {
@@ -169,24 +205,76 @@ document.addEventListener('DOMContentLoaded', function() {
                 $cnt++;
             }
         }
-    ?>
-    new ApexCharts(document.querySelector("#chartRutasMetricas"), {
-        chart: { type: 'bar', height: 320, background: 'transparent', toolbar: { show: false } },
-        series: [
-            { name: 'Puntos de Interés', data: <?php echo json_encode($puntosR); ?> },
-            { name: 'Actividades', data: <?php echo json_encode($actR); ?> },
-            { name: 'Equipamiento', data: <?php echo json_encode($eqR); ?> }
-        ],
-        xaxis: { categories: <?php echo json_encode($nR); ?>, labels: { style: { colors: textPrimary, fontSize: '10px' } }, axisBorder: { show: false } },
-        yaxis: { labels: { style: { colors: textPrimary } } },
-        theme: { mode: isDark ? 'dark' : 'light' },
-        colors: ['#14B8A6', '#F59E0B', '#3B82F6'],
-        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', dataLabels: { position: 'top' } } },
-        grid: { borderColor: borderSubtle, strokeDashArray: 4 },
-        dataLabels: { enabled: false },
-        legend: { position: 'top', labels: { colors: textPrimary } }
-    }).render();
-});
+        ?>
+        new ApexCharts(document.querySelector("#chartRutasMetricas"), {
+            chart: {
+                type: 'bar',
+                height: 320,
+                background: 'transparent',
+                toolbar: {
+                    show: false
+                }
+            },
+            series: [{
+                    name: 'Puntos de Interés',
+                    data: <?php echo json_encode($puntosR); ?>
+                },
+                {
+                    name: 'Actividades',
+                    data: <?php echo json_encode($actR); ?>
+                },
+                {
+                    name: 'Equipamiento',
+                    data: <?php echo json_encode($eqR); ?>
+                }
+            ],
+            xaxis: {
+                categories: <?php echo json_encode($nR); ?>,
+                labels: {
+                    style: {
+                        colors: textPrimary,
+                        fontSize: '10px'
+                    }
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textPrimary
+                    }
+                }
+            },
+            theme: {
+                mode: isDark ? 'dark' : 'light'
+            },
+            colors: ['#14B8A6', '#F59E0B', '#3B82F6'],
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '60%',
+                    dataLabels: {
+                        position: 'top'
+                    }
+                }
+            },
+            grid: {
+                borderColor: borderSubtle,
+                strokeDashArray: 4
+            },
+            dataLabels: {
+                enabled: false
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    colors: textPrimary
+                }
+            }
+        }).render();
+    });
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

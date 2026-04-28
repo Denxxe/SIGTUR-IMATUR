@@ -3,15 +3,15 @@
  * Clase PuntoRuta: Modelo para los puntos/paradas de una ruta turística
  */
 class PuntoRuta extends Model {
-    private $id;
-    private $id_ruta;
-    private $nombre;
-    private $descripcion;
-    private $orden;
-    private $latitud;
-    private $longitud;
+    private ?int $id;
+    private ?int $id_ruta;
+    private string $nombre;
+    private string $descripcion;
+    private int $orden;
+    private ?float $latitud;
+    private ?float $longitud;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

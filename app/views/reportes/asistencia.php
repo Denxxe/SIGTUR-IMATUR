@@ -5,15 +5,15 @@
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/reportes/index" style="color:inherit; text-decoration:none;">Reportes</a> · Personal
         </div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Análisis detallado de puntualidad y asistencia en un rango de fechas específico.</p>
     </div>
     <div class="page__actions">
         <div style="display:flex; gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaCsv?fecha_inicio=<?php echo $data['fecha_inicio']; ?>&fecha_fin=<?php echo $data['fecha_fin']; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaCsv?fecha_inicio=<?php echo $data['fecha_inicio'] ?? ''; ?>&fecha_fin=<?php echo $data['fecha_fin'] ?? ''; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel (CSV)
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaPdf?fecha_inicio=<?php echo $data['fecha_inicio']; ?>&fecha_fin=<?php echo $data['fecha_fin']; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaPdf?fecha_inicio=<?php echo $data['fecha_inicio'] ?? ''; ?>&fecha_fin=<?php echo $data['fecha_fin'] ?? ''; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>
@@ -30,13 +30,13 @@
             <div class="col-md-4">
                 <div class="sig-field">
                     <label class="sig-field__label">Fecha Inicio</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo $data['fecha_inicio']; ?>">
+                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo $data['fecha_inicio'] ?? ''; ?>">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="sig-field">
                     <label class="sig-field__label">Fecha Fin</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo $data['fecha_fin']; ?>">
+                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo $data['fecha_fin'] ?? ''; ?>">
                 </div>
             </div>
             <div class="col-md-4">
@@ -83,21 +83,23 @@
         </thead>
         <tbody>
             <?php if (empty($data['registros'])): ?>
-                <tr><td colspan="6" class="sig-table-empty">Sin registros en el rango seleccionado.</td></tr>
+                <tr>
+                    <td colspan="6" class="sig-table-empty">Sin registros en el rango seleccionado.</td>
+                </tr>
             <?php else: ?>
-                <?php foreach ($data['registros'] as $r): ?>
+                <?php foreach ($data['registros'] ?? [] as $r): ?>
                     <tr>
-                        <td style="white-space:nowrap; font-weight:600;"><?php echo date('d/m/Y', strtotime($r->fecha)); ?></td>
+                        <td style="white-space:nowrap; font-weight:600;"><?php echo date('d/m/Y', strtotime($r->fecha ?? 'now')); ?></td>
                         <td>
                             <div style="display:flex; flex-direction:column;">
-                                <span class="cell-strong"><?php echo $r->nombre . ' ' . $r->apellido; ?></span>
-                                <span class="cell-id"><?php echo $r->cedula; ?></span>
+                                <span class="cell-strong"><?php echo ($r->nombre ?? 'N/A') . ' ' . ($r->apellido ?? ''); ?></span>
+                                <span class="cell-id"><?php echo $r->cedula ?? 'N/A'; ?></span>
                             </div>
                         </td>
-                        <td><span class="sig-badge sig-badge--neutral"><?php echo $r->departamento; ?></span></td>
-                        <td style="text-align:center;"><span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);"><?php echo $r->hora_entrada; ?></span></td>
+                        <td><span class="sig-badge sig-badge--neutral"><?php echo $r->departamento ?? 'Sin Dpto'; ?></span></td>
+                        <td style="text-align:center;"><span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);"><?php echo $r->hora_entrada ?? '--:--'; ?></span></td>
                         <td style="text-align:center;">
-                            <?php if($r->hora_salida): ?>
+                            <?php if ($r->hora_salida): ?>
                                 <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono);"><?php echo $r->hora_salida; ?></span>
                             <?php else: ?>
                                 <span style="color:var(--text-tertiary); font-size:11px;">--:--</span>

@@ -5,17 +5,17 @@
  */
 class Persona extends Model
 {
-    protected $id;
-    protected $cedula;
-    protected $nombre;
-    protected $apellido;
-    protected $telefono;
-    protected $correo;
-    protected $genero;
-    protected $fecha_nacimiento;
-    protected $direccion;
+    protected ?int $id;
+    protected string $cedula;
+    protected string $nombre;
+    protected string $apellido;
+    protected string $telefono;
+    protected string $correo;
+    protected ?string $genero;
+    protected ?string $fecha_nacimiento;
+    protected string $direccion;
 
-    public function __construct($data = [])
+    public function __construct(array $data = [])
     {
         parent::__construct();
         if (!empty($data)) {

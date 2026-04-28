@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Seguridad · Control de Accesos</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Control de flujo y marcaje de entrada/salida de personas ajenas a la institución.</p>
     </div>
 </div>
@@ -21,17 +21,17 @@
                         <label class="sig-field__label">Visitante (Quién llega/sale) <span class="req">*</span></label>
                         <select name="id_visitante" class="sig-select" required>
                             <option value="">Seleccione un visitante...</option>
-                            <?php foreach ($data['visitantes'] as $v): ?>
+                            <?php foreach ($data['visitantes'] ?? '' as $v): ?>
                                 <option value="<?php echo $v->id; ?>"><?php echo $v->nombre . ' ' . $v->apellido; ?> (<?php echo $v->cedula; ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <div class="sig-field mb-4">
                         <label class="sig-field__label">Empleado a visitar</label>
                         <select name="id_empleado" class="sig-select">
                             <option value="">Sin asignar / Trámite general</option>
-                            <?php foreach ($data['empleados'] as $e): ?>
+                            <?php foreach ($data['empleados'] ?? '' as $e): ?>
                                 <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -71,7 +71,9 @@
                     </thead>
                     <tbody>
                         <?php if (empty($data['visitas'])): ?>
-                            <tr><td colspan="5" class="sig-table-empty">Sin movimientos registrados hoy.</td></tr>
+                            <tr>
+                                <td colspan="5" class="sig-table-empty">Sin movimientos registrados hoy.</td>
+                            </tr>
                         <?php else: ?>
                             <?php foreach ($data['visitas'] as $v): ?>
                                 <tr>

@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Sistema · Localidades</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Municipios'; ?></h1>
         <p class="page__subtitle">Administración de municipios del estado.</p>
     </div>
     <div class="page__actions">
@@ -85,6 +85,7 @@
         document.getElementById('municipio_nombre').value = '';
         document.getElementById('municipio_cp').value = '';
     }
+
     function editarMunicipio(mun) {
         document.getElementById('modalMunicipioLabel').innerText = 'Editar: ' + mun.nombre;
         document.getElementById('municipio_id').value = mun.id;

@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Turismo · Gestión de Usuarios Externos</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Registro y control de visitantes, turistas y personas externas al instituto.</p>
     </div>
     <div class="page__actions">
@@ -26,7 +26,9 @@
         </thead>
         <tbody>
             <?php if (empty($data['visitantes'])): ?>
-                <tr><td colspan="5" class="sig-table-empty">No hay visitantes registrados actualmente.</td></tr>
+                <tr>
+                    <td colspan="5" class="sig-table-empty">No hay visitantes registrados actualmente.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['visitantes'] as $v): ?>
                     <tr>
@@ -60,7 +62,7 @@
             <div class="modal-body">
                 <input type="hidden" name="id" id="vis_id">
                 <input type="hidden" name="id_persona" id="vis_id_persona">
-                
+
                 <div class="row g-4">
                     <div class="col-md-4">
                         <div class="sig-field">
@@ -131,6 +133,7 @@
         document.getElementById('vis_id_persona').value = '';
         document.querySelector('#modalVisitante form').reset();
     }
+
     function editarVisitante(v) {
         document.getElementById('modalVisitanteLabel').innerText = 'Editar: ' + v.nombre;
         document.getElementById('vis_id').value = v.id;

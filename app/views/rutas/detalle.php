@@ -5,13 +5,13 @@
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/rutas/index" style="color:inherit; text-decoration:none;">Turismo</a> · Detalle de Ruta
         </div>
-        <h1 class="page__title"><?php echo $data['ruta']->nombre; ?></h1>
+        <h1 class="page__title"><?php echo $data['ruta']->nombre ?? ''; ?></h1>
         <div style="display:flex; gap:var(--sp-4); margin-top:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-            <span><strong>Duración:</strong> <?php echo $data['ruta']->duracion_estimada; ?></span>
-            <span><strong>Dificultad:</strong> <span class="sig-badge sig-badge--sm sig-badge--neutral"><?php echo $data['ruta']->nivel_dificultad; ?></span></span>
-            <span><strong>Estado:</strong> 
-                <span class="sig-badge sig-badge--sm <?php echo $data['ruta']->estado == 'Activa' ? 'sig-badge--success' : 'sig-badge--neutral'; ?>">
-                    <?php echo $data['ruta']->estado; ?>
+            <span><strong>Duración:</strong> <?php echo $data['ruta']->duracion_estimada ?? ''; ?></span>
+            <span><strong>Dificultad:</strong> <span class="sig-badge sig-badge--sm sig-badge--neutral"><?php echo $data['ruta']->nivel_dificultad ?? ''; ?></span></span>
+            <span><strong>Estado:</strong>
+                <span class="sig-badge sig-badge--sm <?php echo $data['ruta']->estado ?? '' == 'Activa' ? 'sig-badge--success' : 'sig-badge--neutral'; ?>">
+                    <?php echo $data['ruta']->estado ?? ''; ?>
                 </span>
             </span>
         </div>
@@ -29,11 +29,11 @@
     </div>
 </div>
 
-<?php if ($data['ruta']->descripcion): ?>
+<?php if ($data['ruta']->descripcion ?? ''): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
         <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-6);">
             <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.6;">
-                <?php echo $data['ruta']->descripcion; ?>
+                <?php echo $data['ruta']->descripcion ?? ''; ?>
             </p>
         </div>
     </div>
@@ -56,16 +56,18 @@
             </thead>
             <tbody>
                 <?php if (empty($data['puntos'])): ?>
-                    <tr><td colspan="5" class="sig-table-empty">Esta ruta aún no tiene paradas definidas.</td></tr>
+                    <tr>
+                        <td colspan="5" class="sig-table-empty">Esta ruta aún no tiene paradas definidas.</td>
+                    </tr>
                 <?php else: ?>
                     <?php foreach ($data['puntos'] as $p): ?>
                         <tr>
                             <td style="text-align:center;">
                                 <div style="width:32px; height:32px; background:var(--teal-100); color:var(--teal-700); border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:14px; margin:0 auto; border:2px solid var(--teal-200);">
-                                    <?php echo $p->orden; ?>
+                                    <?php echo $p->orden ?? ''; ?>
                                 </div>
                             </td>
-                            <td class="cell-strong"><?php echo $p->nombre; ?></td>
+                            <td class="cell-strong"><?php echo $p->nombre ?? ''; ?></td>
                             <td style="font-size:13px; color:var(--text-secondary);"><?php echo $p->descripcion ?? '—'; ?></td>
                             <td style="font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary);">
                                 <?php if ($p->latitud && $p->longitud): ?>
@@ -109,7 +111,9 @@
             </thead>
             <tbody>
                 <?php if (empty($data['inventario_asignado'])): ?>
-                    <tr><td colspan="5" class="sig-table-empty">No se han asignado bienes a esta ruta.</td></tr>
+                    <tr>
+                        <td colspan="5" class="sig-table-empty">No se han asignado bienes a esta ruta.</td>
+                    </tr>
                 <?php else: ?>
                     <?php foreach ($data['inventario_asignado'] as $inv): ?>
                         <tr>
@@ -145,7 +149,7 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="punto_id" id="pt_id">
-                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id; ?>">
+                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id ?? ''; ?>">
                 <div class="sig-field mb-4">
                     <label class="sig-field__label">Nombre del Punto <span class="req">*</span></label>
                     <input type="text" name="punto_nombre" id="pt_nombre" class="sig-input" required placeholder="Ej: Mirador de la Cruz">
@@ -192,13 +196,13 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id; ?>">
+                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id ?? ''; ?>">
                 <div class="sig-field mb-4">
                     <label class="sig-field__label">Bien a Asignar <span class="req">*</span></label>
                     <select name="id_inventario" class="sig-select" required>
                         <option value="">Seleccione un bien...</option>
-                        <?php foreach($data['inventario_disponible'] as $item): ?>
-                            <option value="<?php echo $item->id; ?>"><?php echo ($item->codigo_bn ? $item->codigo_bn.' - ' : '') . $item->nombre; ?></option>
+                        <?php foreach ($data['inventario_disponible'] ?? [] as $item): ?>
+                            <option value="<?php echo $item->id; ?>"><?php echo ($item->codigo_bn ? $item->codigo_bn . ' - ' : '') . $item->nombre; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -225,10 +229,11 @@
         document.getElementById('pt_id').value = '';
         document.getElementById('pt_nombre').value = '';
         document.getElementById('pt_descripcion').value = '';
-        document.getElementById('pt_orden').value = <?php echo count($data['puntos']) + 1; ?>;
+        document.getElementById('pt_orden').value = <?php echo count($data['puntos'] ?? []) + 1; ?>;
         document.getElementById('pt_lat').value = '';
         document.getElementById('pt_lng').value = '';
     }
+
     function editarPunto(p) {
         document.getElementById('modalPuntoLabel').innerText = 'Editar: ' + p.nombre;
         document.getElementById('pt_id').value = p.id;

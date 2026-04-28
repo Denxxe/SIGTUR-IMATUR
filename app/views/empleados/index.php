@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Gestión de Personal</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Personal'; ?></h1>
         <p class="page__subtitle">Registro y administración del personal activo de la institución.</p>
     </div>
     <div class="page__actions">
@@ -29,15 +29,15 @@
             <?php if (empty($data['empleados'])): ?>
                 <tr><td colspan="6" class="sig-table-empty">No hay empleados registrados.</td></tr>
             <?php else: ?>
-                <?php foreach ($data['empleados'] as $emp): ?>
+                <?php foreach ($data['empleados'] ?? [] as $emp): ?>
                     <tr>
-                        <td class="cell-strong"><?php echo $emp->nro_expediente; ?></td>
-                        <td><?php echo $emp->cedula; ?></td>
-                        <td><?php echo $emp->nombre . ' ' . $emp->apellido; ?></td>
-                        <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo; ?></span></td>
-                        <td><?php echo $emp->departamento; ?></td>
+                        <td class="cell-strong"><?php echo $emp->nro_expediente ?? 'N/A'; ?></td>
+                        <td><?php echo $emp->cedula ?? 'N/A'; ?></td>
+                        <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); ?></td>
+                        <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo ?? 'Sin cargo'; ?></span></td>
+                        <td><?php echo $emp->departamento ?? 'Sin dpto.'; ?></td>
                         <td class="col-actions">
-                            <button class="row-action row-action--edit" onclick='editarEmpleado(<?php echo json_encode($emp); ?>)'>
+                            <button class="row-action row-action--edit" onclick='editarEmpleado(<?php echo htmlspecialchars(json_encode($emp), ENT_QUOTES, "UTF-8"); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <a href="<?php echo URL_ROOT; ?>/empleados/delete/<?php echo $emp->id; ?>" class="row-action row-action--del delete-btn">
@@ -130,7 +130,7 @@
                             <label class="sig-field__label">Cargo <span class="req">*</span></label>
                             <select name="id_cargo" id="emp_id_cargo" class="sig-select" required>
                                 <option value="">Seleccione...</option>
-                                <?php foreach ($data['cargos'] as $c): ?>
+                                <?php foreach ($data['cargos'] ?? [] as $c): ?>
                                     <option value="<?php echo $c->id; ?>"><?php echo $c->nombre; ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -141,7 +141,7 @@
                             <label class="sig-field__label">Departamento <span class="req">*</span></label>
                             <select name="id_departamento" id="emp_id_departamento" class="sig-select" required>
                                 <option value="">Seleccione...</option>
-                                <?php foreach ($data['departamentos'] as $d): ?>
+                                <?php foreach ($data['departamentos'] ?? [] as $d): ?>
                                     <option value="<?php echo $d->id; ?>"><?php echo $d->nombre; ?></option>
                                 <?php endforeach; ?>
                             </select>

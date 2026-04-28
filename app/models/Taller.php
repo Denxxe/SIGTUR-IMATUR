@@ -3,19 +3,19 @@
  * Clase Taller: Modelo para la tabla talleres (Formación comunitaria)
  */
 class Taller extends Model {
-    private $id;
-    private $nombre;
-    private $descripcion;
-    private $fecha_inicio;
-    private $fecha_fin;
-    private $hora_inicio;
-    private $hora_fin;
-    private $id_ubicacion_formacion;
-    private $id_facilitador;
-    private $cupo_maximo;
-    private $estado;
+    private ?int $id;
+    private string $nombre;
+    private string $descripcion;
+    private ?string $fecha_inicio;
+    private ?string $fecha_fin;
+    private ?string $hora_inicio;
+    private ?string $hora_fin;
+    private ?int $id_ubicacion_formacion;
+    private ?int $id_facilitador;
+    private int $cupo_maximo;
+    private string $estado;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

@@ -30,21 +30,21 @@
             <div class="sig-card__body" style="padding:var(--sp-6);">
                 <div style="margin-bottom:var(--sp-4);">
                     <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Pasante</small>
-                    <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo $data['pasante']->nombre . ' ' . $data['pasante']->apellido; ?></div>
-                    <div class="cell-id" style="margin-top:2px;"><?php echo $data['pasante']->cedula; ?></div>
+                    <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
+                    <div class="cell-id" style="margin-top:2px;"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
                 </div>
 
                 <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
                     <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Institución / Carrera</small>
-                    <div style="font-weight:700; color:var(--text-secondary);"><?php echo $data['pasante']->institucion; ?></div>
-                    <div style="font-size:13px; color:var(--text-tertiary);"><?php echo $data['pasante']->carrera; ?></div>
+                    <div style="font-weight:700; color:var(--text-secondary);"><?php echo isset($data['pasante']->institucion) ? $data['pasante']->institucion : 'No especificada'; ?></div>
+                    <div style="font-size:13px; color:var(--text-tertiary);"><?php echo isset($data['pasante']->carrera) ? $data['pasante']->carrera : 'No especificada'; ?></div>
                 </div>
 
                 <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
                     <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Estado Institucional</small>
                     <?php 
                         $badgeClass = 'sig-badge--neutral';
-                        $e = $data['pasante']->estado;
+                        $e = $data['pasante']->estado ?? 'Desconocido';
                         if ($e == 'Postulado') $badgeClass = 'sig-badge--warning';
                         elseif ($e == 'Aceptado') $badgeClass = 'sig-badge--info';
                         elseif ($e == 'En Curso') $badgeClass = 'sig-badge--brand';
@@ -56,10 +56,10 @@
 
                 <div style="padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
                     <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Tutor Institucional</small>
-                    <?php if($data['pasante']->id_tutor_institucional): ?>
+                    <?php if(isset($data['pasante']->id_tutor_institucional) && $data['pasante']->id_tutor_institucional): ?>
                         <div style="display:flex; align-items:center; gap:var(--sp-2); font-weight:700; color:var(--brand-600);">
                             <i class="bi bi-person-check-fill"></i>
-                            <span><?php echo $data['pasante']->tutor_nombre . ' ' . $data['pasante']->tutor_apellido; ?></span>
+                            <span><?php echo (isset($data['pasante']->tutor_nombre) ? $data['pasante']->tutor_nombre : 'Tutor') . ' ' . (isset($data['pasante']->tutor_apellido) ? $data['pasante']->tutor_apellido : ''); ?></span>
                         </div>
                     <?php else: ?>
                         <span style="font-size:13px; color:var(--text-tertiary); font-style:italic;">No asignado</span>
@@ -68,18 +68,18 @@
             </div>
         </div>
         
-        <?php if($data['pasante']->estado == 'Culminado'): ?>
+        <?php if(isset($data['pasante']->estado) && $data['pasante']->estado == 'Culminado'): ?>
             <div class="sig-card" style="border-top: 4px solid var(--success-500);">
                 <div class="sig-card__body" style="padding:var(--sp-6);">
                     <h5 style="color:var(--success-600); font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:var(--sp-4);">
                         <i class="bi bi-award-fill"></i> Evaluación Final
                     </h5>
                     <p style="font-size:13px; font-style:italic; color:var(--text-secondary); margin-bottom:var(--sp-4);">
-                        "<?php echo $data['pasante']->evaluacion; ?>"
+                        "<?php echo $data['pasante']->evaluacion ?? ''; ?>"
                     </p>
                     <div style="background:var(--success-50); border:1px solid var(--success-200); border-radius:var(--r-lg); padding:var(--sp-4); text-align:center;">
                         <span style="display:block; font-size:11px; font-weight:700; color:var(--success-600); text-transform:uppercase; letter-spacing:0.05em;">Nota Final</span>
-                        <span style="font-size:32px; font-weight:900; color:var(--success-700);"><?php echo $data['pasante']->nota; ?> <small style="font-size:14px; font-weight:500;">/ 20</small></span>
+                        <span style="font-size:32px; font-weight:900; color:var(--success-700);"><?php echo $data['pasante']->nota ?? 0; ?> <small style="font-size:14px; font-weight:500;">/ 20</small></span>
                     </div>
                 </div>
             </div>
@@ -108,25 +108,25 @@
                         <?php if(empty($data['documentos'])): ?>
                             <tr><td colspan="4" class="sig-table-empty">Sin documentos registrados en el expediente.</td></tr>
                         <?php else: ?>
-                            <?php foreach($data['documentos'] as $doc): ?>
+                            <?php foreach($data['documentos'] ?? [] as $doc): ?>
                             <tr>
                                 <td>
                                     <div style="display:flex; align-items:center; gap:var(--sp-3);">
                                         <div style="width:32px; height:32px; background:var(--bg-muted); border-radius:var(--r-md); display:grid; place-items:center; color:var(--text-secondary);">
                                             <i class="bi bi-file-earmark-text"></i>
                                         </div>
-                                        <span class="cell-strong"><?php echo $doc->tipo_documento; ?></span>
+                                        <span class="cell-strong"><?php echo isset($doc->tipo_documento) ? $doc->tipo_documento : 'Documento'; ?></span>
                                     </div>
                                 </td>
                                 <td style="text-align:center;">
-                                    <?php if($doc->entregado): ?>
+                                    <?php if(isset($doc->entregado) && $doc->entregado): ?>
                                         <span class="sig-badge sig-badge--success"><i class="bi bi-check-circle"></i> Recibido</span>
                                     <?php else: ?>
                                         <span class="sig-badge sig-badge--danger"><i class="bi bi-x-circle"></i> Pendiente</span>
                                     <?php endif; ?>
                                 </td>
                                 <td style="text-align:center;">
-                                    <?php if($doc->archivo_url): ?>
+                                    <?php if(isset($doc->archivo_url) && $doc->archivo_url): ?>
                                         <a href="<?php echo URL_ROOT . $doc->archivo_url; ?>" target="_blank" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);">
                                             <i class="bi bi-file-pdf"></i> Ver PDF
                                         </a>
@@ -134,7 +134,7 @@
                                         <span style="font-size:11px; color:var(--text-tertiary);">N/A</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="font-size:12px; color:var(--text-secondary);"><?php echo $doc->observaciones ?: '—'; ?></td>
+                                <td style="font-size:12px; color:var(--text-secondary);"><?php echo (isset($doc->observaciones) && $doc->observaciones) ? $doc->observaciones : '—'; ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -154,7 +154,7 @@
 <div class="modal fade" id="modalSubirDoc" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form action="<?php echo URL_ROOT; ?>/pasantes/subirDocumento/<?php echo $data['pasante']->id; ?>" method="POST" enctype="multipart/form-data">
+      <form action="<?php echo URL_ROOT; ?>/pasantes/subirDocumento/<?php echo $data['pasante']->id ?? ''; ?>" method="POST" enctype="multipart/form-data">
           <div class="modal-header">
             <h5 class="modal-title"><i class="bi bi-cloud-upload"></i> Cargar Requisito Físico</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

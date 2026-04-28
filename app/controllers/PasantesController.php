@@ -4,8 +4,8 @@
  */
 class PasantesController extends Controller {
 
-    private $pasanteModel;
-    private $empleadoModel;
+    private Pasante $pasanteModel;
+    private Empleado $empleadoModel;
 
     public function __construct() {
         if (!isset($_SESSION['user_id'])) {

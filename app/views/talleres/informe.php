@@ -6,7 +6,7 @@
             <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" style="color:inherit; text-decoration:none;">Detalle de Taller</a> · Informe Oficial
         </div>
         <h1 class="page__title">Generar Informe de Actividad</h1>
-        <p class="page__subtitle">Documentación oficial de la jornada: <strong><?php echo $data['taller']->nombre; ?></strong></p>
+        <p class="page__subtitle">Documentación oficial de la jornada: <strong><?php echo $data['taller']->nombre ?? 'Taller'; ?></strong></p>
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
@@ -39,13 +39,13 @@
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label">Fecha y Hora</label>
-                        <input type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)) . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly style="background:var(--bg-muted-subtle); cursor:not-allowed;">
+                        <input type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio ?? 'now')) . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly style="background:var(--bg-muted-subtle); cursor:not-allowed;">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label">Lugar exacto y municipio</label>
-                        <input type="text" name="lugar_exacto" class="sig-input" value="<?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?>" placeholder="Ej: Plaza Bolívar, Cumaná">
+                        <input type="text" name="lugar_exacto" class="sig-input" value="<?php echo $data['informe']->lugar_exacto ?? ($data['taller']->ubicacion ?? ''); ?>" placeholder="Ej: Plaza Bolívar, Cumaná">
                     </div>
                 </div>
                 <div class="col-12">
@@ -128,7 +128,7 @@
 <div class="print-container">
     <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px;">
         <div style="display:flex; align-items:center; gap:15px;">
-            <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="Logo" style="width:60px;">
+            <img src="<?php echo URL_ROOT; ?>/assets/images/Logo_imatur-removebg-preview.png" alt="Logo" style="width:60px;">
             <div>
                 <h2 style="margin:0; font-size:22px;">IMATUR</h2>
                 <p style="margin:0; font-size:12px; font-weight:600; text-transform:uppercase;">Instituto Municipal de Turismo</p>
@@ -143,12 +143,12 @@
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
         <div>
             <p style="margin:8px 0;"><strong style="color:#555;">📍 Unidad Estadal:</strong> <?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?></p>
-            <p style="margin:8px 0;"><strong style="color:#555;">📌 Actividad:</strong> <?php echo $data['taller']->nombre; ?></p>
-            <p style="margin:8px 0;"><strong style="color:#555;">📆 Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio)); ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">📌 Actividad:</strong> <?php echo $data['taller']->nombre ?? 'N/A'; ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">📆 Fecha:</strong> <?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio ?? 'now')); ?></p>
             <p style="margin:8px 0;"><strong style="color:#555;">⏰ Hora:</strong> <?php echo $data['taller']->hora_inicio ?? 'N/A'; ?></p>
         </div>
         <div>
-            <p style="margin:8px 0;"><strong style="color:#555;">🌐 Lugar / Municipio:</strong> <?php echo $data['informe']->lugar_exacto ?? $data['taller']->ubicacion; ?></p>
+            <p style="margin:8px 0;"><strong style="color:#555;">🌐 Lugar / Municipio:</strong> <?php echo $data['informe']->lugar_exacto ?? ($data['taller']->ubicacion ?? 'N/A'); ?></p>
             <p style="margin:8px 0;"><strong style="color:#555;">🏢 Entidades presentes:</strong> <?php echo $data['informe']->instituciones_presentes ?? '-'; ?></p>
         </div>
     </div>
@@ -177,7 +177,7 @@
     <div style="margin-top: 80px; display:flex; justify-content:space-around;">
         <div style="text-align: center; width: 250px;">
             <div style="border-top: 1px solid #000; padding-top: 10px;">
-                <p style="margin:0; font-weight:bold;"><?php echo $data['taller']->facilitador_nombre . ' ' . $data['taller']->facilitador_apellido; ?></p>
+                <p style="margin:0; font-weight:bold;"><?php echo ($data['taller']->facilitador_nombre ?? 'N/A') . ' ' . ($data['taller']->facilitador_apellido ?? ''); ?></p>
                 <p style="margin:0; font-size:12px; color:#666;">Firma del Facilitador / Responsable</p>
             </div>
         </div>

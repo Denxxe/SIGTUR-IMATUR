@@ -6,24 +6,24 @@
 class Empleado extends Model
 {
     // Datos de personas
-    private $id_persona;
-    private $cedula;
-    private $nombre;
-    private $apellido;
-    private $telefono;
-    private $correo;
-    private $genero;
-    private $fecha_nacimiento;
-    private $direccion;
+    private ?int $id_persona;
+    private string $cedula;
+    private string $nombre;
+    private string $apellido;
+    private string $telefono;
+    private string $correo;
+    private ?string $genero;
+    private ?string $fecha_nacimiento;
+    private string $direccion;
 
     // Datos de empleados
-    private $id;
-    private $id_cargo;
-    private $id_departamento;
-    private $nro_expediente;
-    private $fecha_ingreso;
+    private ?int $id;
+    private ?int $id_cargo;
+    private ?int $id_departamento;
+    private ?string $nro_expediente;
+    private ?string $fecha_ingreso;
 
-    public function __construct($data = [])
+    public function __construct(array $data = [])
     {
         parent::__construct();
         if (!empty($data)) {

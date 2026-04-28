@@ -3,13 +3,13 @@
  * Clase Cargo: Modelo para la tabla cargos
  */
 class Cargo extends Model {
-    private $id;
-    private $nombre;
-    private $descripcion;
-    private $sueldo_base;
-    private $is_active;
+    private ?int $id;
+    private string $nombre;
+    private string $descripcion;
+    private float $sueldo_base;
+    private bool $is_active;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

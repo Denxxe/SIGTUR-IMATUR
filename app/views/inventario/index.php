@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Inventario · Bienes Nacionales</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Inventario Institucional'; ?></h1>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInv" onclick="nuevoInv()">
@@ -19,13 +19,13 @@
             <?php if (empty($data['items'])): ?>
                 <tr><td colspan="7" class="sig-table-empty">No hay bienes registrados.</td></tr>
             <?php else: ?>
-                <?php foreach ($data['items'] as $item): ?>
+                <?php foreach ($data['items'] ?? [] as $item): ?>
                     <tr>
-                        <td class="cell-strong" style="color:var(--brand-600)"><?php echo $item->codigo_bn; ?></td>
-                        <td><?php echo $item->nombre; ?></td>
-                        <td style="font-size:12.5px"><?php echo $item->marca; ?> / <?php echo $item->modelo; ?><br><span style="color:var(--text-tertiary)">S/N: <?php echo $item->serial; ?></span></td>
-                        <td><?php echo $item->categoria; ?></td>
-                        <td><?php echo $item->ubicacion; ?></td>
+                        <td class="cell-strong" style="color:var(--brand-600)"><?php echo $item->codigo_bn ?? 'N/A'; ?></td>
+                        <td><?php echo $item->nombre ?? 'Sin nombre'; ?></td>
+                        <td style="font-size:12.5px"><?php echo $item->marca ?? 'S/M'; ?> / <?php echo $item->modelo ?? 'S/M'; ?><br><span style="color:var(--text-tertiary)">S/N: <?php echo $item->serial ?? 'S/N'; ?></span></td>
+                        <td><?php echo $item->categoria ?? 'Sin cat.'; ?></td>
+                        <td><?php echo $item->ubicacion ?? 'Sin ubi.'; ?></td>
                         <td>
                             <?php
                                 $cls = 'sig-badge--neutral';
@@ -37,7 +37,7 @@
                             <span class="sig-badge <?php echo $cls; ?>"><?php echo $item->condicion; ?></span>
                         </td>
                         <td class="col-actions">
-                            <button class="row-action row-action--edit" onclick='editarInv(<?php echo json_encode($item); ?>)'><i class="bi bi-pencil"></i> Editar</button>
+                            <button class="row-action row-action--edit" onclick='editarInv(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                             <a href="<?php echo URL_ROOT; ?>/inventario/delete/<?php echo $item->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Baja</a>
                         </td>
                     </tr>
@@ -57,8 +57,8 @@
                 <div class="row g-3">
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Código B.N. <span class="req">*</span></label><input type="text" name="codigo_bn" id="inv_codigo" class="sig-input" required placeholder="IMATUR-001"></div></div>
                     <div class="col-md-8"><div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="inv_nombre" class="sig-input" required placeholder="Escritorio Ejecutivo"></div></div>
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Categoría <span class="req">*</span></label><select name="id_categoria" id="inv_id_cat" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['categorias'] as $c): ?><option value="<?php echo $c->id; ?>"><?php echo $c->nombre; ?></option><?php endforeach; ?></select></div></div>
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Ubicación <span class="req">*</span></label><select name="id_ubicacion" id="inv_id_ubi" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['ubicaciones'] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo $u->nombre; ?></option><?php endforeach; ?></select></div></div>
+                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Categoría <span class="req">*</span></label><select name="id_categoria" id="inv_id_cat" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['categorias'] ?? [] as $c): ?><option value="<?php echo $c->id; ?>"><?php echo $c->nombre; ?></option><?php endforeach; ?></select></div></div>
+                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Ubicación <span class="req">*</span></label><select name="id_ubicacion" id="inv_id_ubi" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['ubicaciones'] ?? [] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo $u->nombre; ?></option><?php endforeach; ?></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Condición</label><select name="condicion" id="inv_condicion" class="sig-select"><option value="Nuevo">Nuevo</option><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Dañado">Dañado</option></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Marca</label><input type="text" name="marca" id="inv_marca" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Modelo</label><input type="text" name="modelo" id="inv_modelo" class="sig-input"></div></div>

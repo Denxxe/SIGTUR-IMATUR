@@ -13,25 +13,25 @@
     <div class="kpi kpi--brand">
         <div class="kpi__icon"><i class="bi bi-people" style="font-size:20px"></i></div>
         <div class="kpi__label">Nómina Activa</div>
-        <div class="kpi__value"><?php echo $data['totalEmpleados']; ?></div>
+        <div class="kpi__value"><?php echo $data['totalEmpleados'] ?? 0; ?></div>
         <a href="<?php echo URL_ROOT; ?>/empleados/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Gestionar RRHH →</a>
     </div>
     <div class="kpi kpi--success">
         <div class="kpi__icon"><i class="bi bi-box-seam" style="font-size:20px"></i></div>
         <div class="kpi__label">Patrimonio Público</div>
-        <div class="kpi__value"><?php echo $data['totalInventario']; ?></div>
+        <div class="kpi__value"><?php echo $data['totalInventario'] ?? 0; ?></div>
         <a href="<?php echo URL_ROOT; ?>/inventario/index" style="font-size:12px;font-weight:600;color:var(--success-600);display:inline-flex;align-items:center;gap:4px">Control de Bienes →</a>
     </div>
     <div class="kpi kpi--accent">
         <div class="kpi__icon"><i class="bi bi-mortarboard" style="font-size:20px"></i></div>
         <div class="kpi__label">Programas de Formación</div>
-        <div class="kpi__value"><?php echo $data['totalTalleres']; ?></div>
+        <div class="kpi__value"><?php echo $data['totalTalleres'] ?? 0; ?></div>
         <a href="<?php echo URL_ROOT; ?>/talleres/index" style="font-size:12px;font-weight:600;color:var(--accent-600);display:inline-flex;align-items:center;gap:4px">Ver Capacitaciones →</a>
     </div>
     <div class="kpi kpi--teal">
         <div class="kpi__icon"><i class="bi bi-compass" style="font-size:20px"></i></div>
         <div class="kpi__label">Atractivos y Destinos</div>
-        <div class="kpi__value"><?php echo $data['totalRutas']; ?></div>
+        <div class="kpi__value"><?php echo $data['totalRutas'] ?? 0; ?></div>
         <a href="<?php echo URL_ROOT; ?>/rutas/index" style="font-size:12px;font-weight:600;color:var(--teal-600);display:inline-flex;align-items:center;gap:4px">Explorar Rutas →</a>
     </div>
 </div>
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <?php
         $labelsEmp = []; $valuesEmp = [];
-        foreach ($data['chartEmpleados'] as $item) { $labelsEmp[] = $item->label; $valuesEmp[] = (int)$item->value; }
+        foreach ($data['chartEmpleados'] ?? [] as $item) { $labelsEmp[] = $item->label; $valuesEmp[] = (int)$item->value; }
     ?>
     new ApexCharts(document.querySelector("#chartEmpleados"), {
         chart: { type: 'bar', height: 280, toolbar: { show: false }, background: 'transparent' },
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <?php
         $labelsInv = []; $valuesInv = [];
-        foreach ($data['chartInventario'] as $item) { $labelsInv[] = $item->label; $valuesInv[] = (int)$item->value; }
+        foreach ($data['chartInventario'] ?? [] as $item) { $labelsInv[] = $item->label; $valuesInv[] = (int)$item->value; }
     ?>
     new ApexCharts(document.querySelector("#chartInventario"), {
         chart: { type: 'donut', height: 300, background: 'transparent' },
@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <?php
         $labelsAsis = []; $valuesAsis = [];
-        foreach ($data['chartAsistencia'] as $item) { $labelsAsis[] = $item->label; $valuesAsis[] = (int)$item->value; }
+        foreach ($data['chartAsistencia'] ?? [] as $item) { $labelsAsis[] = $item->label; $valuesAsis[] = (int)$item->value; }
     ?>
     new ApexCharts(document.querySelector("#chartAsistencia"), {
         chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent' },
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <?php
         $labelsTall = []; $valuesTall = [];
-        foreach ($data['chartTalleres'] as $item) { $labelsTall[] = $item->label; $valuesTall[] = (int)$item->value; }
+        foreach ($data['chartTalleres'] ?? [] as $item) { $labelsTall[] = $item->label; $valuesTall[] = (int)$item->value; }
     ?>
     new ApexCharts(document.querySelector("#chartTalleres"), {
         chart: { type: 'polarArea', height: 300, background: 'transparent' },

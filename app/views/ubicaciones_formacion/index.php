@@ -3,7 +3,7 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Formación · Sedes</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Gestión de sedes y centros para talleres comunitarios.</p>
     </div>
     <div class="page__actions">
@@ -26,7 +26,9 @@
         </thead>
         <tbody>
             <?php if (empty($data['ubicaciones'])): ?>
-                <tr><td colspan="5" class="sig-table-empty">No hay sedes registradas.</td></tr>
+                <tr>
+                    <td colspan="5" class="sig-table-empty">No hay sedes registradas.</td>
+                </tr>
             <?php else: ?>
                 <?php foreach ($data['ubicaciones'] as $u): ?>
                     <tr>
@@ -77,7 +79,7 @@
                     <label class="sig-field__label">Parroquia <span class="req">*</span></label>
                     <select name="parroquia" id="ubif_parroquia" class="sig-select" required>
                         <option value="">Seleccione una parroquia</option>
-                        <?php foreach ($data['parroquias'] as $p): ?>
+                        <?php foreach ($data['parroquias'] ?? [] as $p): ?>
                             <option value="<?php echo $p->id; ?>"><?php echo $p->nombre; ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -101,6 +103,7 @@
         document.getElementById('ubif_id').value = '';
         document.querySelector('#modalUbiForm form').reset();
     }
+
     function editarUbi(u) {
         document.getElementById('modalUbiFormLabel').innerText = 'Editar: ' + u.nombre;
         document.getElementById('ubif_id').value = u.id;

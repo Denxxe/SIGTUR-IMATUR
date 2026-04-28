@@ -5,13 +5,13 @@
  */
 class UbicacionFormacion extends Model
 {
-    private $id;
-    private $nombre;
-    private $tipo;
-    private $direccion;
-    private $id_parroquia;
+    private ?int $id;
+    private string $nombre;
+    private string $tipo;
+    private string $direccion;
+    private ?int $id_parroquia;
 
-    public function __construct($data = [])
+    public function __construct(array $data = [])
     {
         parent::__construct();
         if (!empty($data)) {

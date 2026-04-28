@@ -3,19 +3,19 @@
  * Clase Inventario: Modelo para la gestión de bienes institucionales
  */
 class Inventario extends Model {
-    private $id;
-    private $id_categoria;
-    private $id_ubicacion;
-    private $codigo_bn;
-    private $nombre;
-    private $descripcion;
-    private $marca;
-    private $modelo;
-    private $serial;
-    private $condicion; // 'Nuevo', 'Bueno', 'Regular', 'Dañado'
-    private $observaciones;
+    private ?int $id;
+    private ?int $id_categoria;
+    private ?int $id_ubicacion;
+    private string $codigo_bn;
+    private string $nombre;
+    private string $descripcion;
+    private string $marca;
+    private string $modelo;
+    private string $serial;
+    private string $condicion; // 'Nuevo', 'Bueno', 'Regular', 'Dañado'
+    private string $observaciones;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

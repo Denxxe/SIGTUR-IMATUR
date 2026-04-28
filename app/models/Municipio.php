@@ -5,11 +5,11 @@
  */
 class Municipio extends Model
 {
-    private $id;
-    private $nombre;
-    private $codigo_postal;
+    private ?int $id;
+    private string $nombre;
+    private string $codigo_postal;
 
-    public function __construct($data = [])
+    public function __construct(array $data = [])
     {
         parent::__construct();
         if (!empty($data)) {

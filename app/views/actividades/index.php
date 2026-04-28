@@ -3,11 +3,12 @@
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Planificación · Agenda Institucional</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Agenda Institucional'; ?></h1>
         <p class="page__subtitle">Control y seguimiento de actividades institucionales, turísticas y comunitarias.</p>
     </div>
     <div class="page__actions">
-        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalActividad" onclick="nuevaActividad()">
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalActividad"
+            onclick="nuevaActividad()">
             <i class="bi bi-calendar-plus"></i> Programar Actividad
         </button>
     </div>
@@ -23,10 +24,10 @@
         <?php foreach ($data['actividades'] as $act): ?>
             <div class="sig-card h-100" style="display:flex; flex-direction:column;">
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                    <?php 
-                        $typeBadge = 'sig-badge--neutral';
-                        if ($act->tipo == 'Turística') $typeBadge = 'sig-badge--info';
-                        elseif ($act->tipo == 'Institucional') $typeBadge = 'sig-badge--brand';
+                    <?php
+                    $typeBadge = 'sig-badge--neutral';
+                    if ($act->tipo == 'Turística') $typeBadge = 'sig-badge--info';
+                    elseif ($act->tipo == 'Institucional') $typeBadge = 'sig-badge--brand';
                     ?>
                     <span class="sig-badge <?php echo $typeBadge; ?>"><?php echo $act->tipo; ?></span>
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">ID #<?php echo $act->id; ?></span>
@@ -36,7 +37,7 @@
                     <p class="text-clamp-2" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
                         <?php echo strip_tags($act->descripcion); ?>
                     </p>
-                    
+
                     <div style="display:grid; gap:var(--sp-2);">
                         <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
                             <i class="bi bi-calendar-event" style="color:var(--brand-500);"></i>
@@ -53,11 +54,11 @@
                     </div>
                 </div>
                 <div class="sig-card__footer" style="padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; background:var(--bg-muted-subtle);">
-                    <?php 
-                        $statusBadge = 'sig-badge--neutral';
-                        if ($act->estado == 'Planificada') $statusBadge = 'sig-badge--warning';
-                        elseif ($act->estado == 'En Ejecución') $statusBadge = 'sig-badge--brand';
-                        elseif ($act->estado == 'Culminada') $statusBadge = 'sig-badge--success';
+                    <?php
+                    $statusBadge = 'sig-badge--neutral';
+                    if ($act->estado == 'Planificada') $statusBadge = 'sig-badge--warning';
+                    elseif ($act->estado == 'En Ejecución') $statusBadge = 'sig-badge--brand';
+                    elseif ($act->estado == 'Culminada') $statusBadge = 'sig-badge--success';
                     ?>
                     <span class="sig-badge <?php echo $statusBadge; ?>"><?php echo $act->estado; ?></span>
                     <div style="display:flex; gap:var(--sp-1);">
@@ -158,6 +159,7 @@
         document.getElementById('act_id').value = '';
         document.querySelector('#modalActividad form').reset();
     }
+
     function editarActividad(act) {
         document.getElementById('modalActividadLabel').innerText = 'Editar: ' + act.nombre;
         document.getElementById('act_id').value = act.id;

@@ -5,15 +5,15 @@
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/reportes/index" style="color:inherit; text-decoration:none;">Reportes</a> · Formación
         </div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Reporte de Talleres'; ?></h1>
         <p class="page__subtitle">Estadísticas de impacto, demografía de asistentes y ocupación de talleres de capacitación.</p>
     </div>
     <div class="page__actions">
         <div style="display:flex; gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresCsv?estado=<?php echo $data['estado_filtro']; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresCsv?estado=<?php echo $data['estado_filtro'] ?? ''; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel (CSV)
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresPdf?estado=<?php echo $data['estado_filtro']; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresPdf?estado=<?php echo $data['estado_filtro'] ?? ''; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>
@@ -32,10 +32,10 @@
                     <label class="sig-field__label">Filtrar por Estado</label>
                     <select name="estado" class="sig-select">
                         <option value="">-- Todos los estados --</option>
-                        <option value="Programado" <?php echo $data['estado_filtro'] == 'Programado' ? 'selected' : ''; ?>>Programado</option>
-                        <option value="En Curso" <?php echo $data['estado_filtro'] == 'En Curso' ? 'selected' : ''; ?>>En Curso</option>
-                        <option value="Finalizado" <?php echo $data['estado_filtro'] == 'Finalizado' ? 'selected' : ''; ?>>Finalizado</option>
-                        <option value="Cancelado" <?php echo $data['estado_filtro'] == 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                        <option value="Programado" <?php echo ($data['estado_filtro'] ?? '') == 'Programado' ? 'selected' : ''; ?>>Programado</option>
+                        <option value="En Curso" <?php echo ($data['estado_filtro'] ?? '') == 'En Curso' ? 'selected' : ''; ?>>En Curso</option>
+                        <option value="Finalizado" <?php echo ($data['estado_filtro'] ?? '') == 'Finalizado' ? 'selected' : ''; ?>>Finalizado</option>
+                        <option value="Cancelado" <?php echo ($data['estado_filtro'] ?? '') == 'Cancelado' ? 'selected' : ''; ?>>Cancelado</option>
                     </select>
                 </div>
             </div>
@@ -124,51 +124,56 @@
         </thead>
         <tbody>
             <?php if (empty($data['talleres'])): ?>
-                <tr><td colspan="7" class="sig-table-empty">No se encontraron talleres con el filtro aplicado.</td></tr>
+                <tr>
+                    <td colspan="7" class="sig-table-empty">No se encontraron talleres con el filtro aplicado.</td>
+                </tr>
             <?php else: ?>
-                <?php foreach ($data['talleres'] as $t): ?>
+                <?php foreach ($data['talleres'] ?? [] as $t): ?>
                     <tr>
                         <td>
                             <div style="display:flex; flex-direction:column; gap:2px;">
-                                <span class="cell-strong"><?php echo $t->nombre; ?></span>
+                                <span class="cell-strong"><?php echo $t->nombre ?? 'N/A'; ?></span>
                                 <span style="font-size:11px; color:var(--text-tertiary);"><i class="bi bi-geo-alt"></i> <?php echo $t->sede ?: 'Sin sede asignada'; ?></span>
                             </div>
                         </td>
-                        <td style="font-size:13px; font-weight:600; color:var(--text-secondary);"><?php echo $t->facilitador_nombre . ' ' . $t->facilitador_apellido; ?></td>
-                        <td style="font-size:12px; color:var(--text-tertiary);"><?php echo date('d/m/Y', strtotime($t->fecha_inicio)); ?></td>
+                        <td style="font-size:13px; font-weight:600; color:var(--text-secondary);"><?php echo ($t->facilitador_nombre ?? 'N/A') . ' ' . ($t->facilitador_apellido ?? ''); ?></td>
+                        <td style="font-size:12px; color:var(--text-tertiary);"><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'now')); ?></td>
                         <td style="text-align:center;">
-                            <?php if(isset($t->total_atendidas)): ?>
+                            <?php if (isset($t->total_atendidas)): ?>
                                 <div style="display:flex; justify-content:center; gap:var(--sp-3); margin-bottom:2px;">
-                                    <span title="Mujeres" style="font-size:12px; font-weight:700; color:var(--brand-500);">👩 <?php echo $t->mujeres; ?></span>
-                                    <span title="Hombres" style="font-size:12px; font-weight:700; color:var(--text-secondary);">👨 <?php echo $t->hombres; ?></span>
-                                    <span title="Niños/as" style="font-size:12px; font-weight:700; color:var(--success-500);">👶 <?php echo (int)$t->ninas + (int)$t->ninos; ?></span>
+                                    <span title="Mujeres" style="font-size:12px; font-weight:700; color:var(--brand-500);">👩 <?php echo $t->mujeres ?? 0; ?></span>
+                                    <span title="Hombres" style="font-size:12px; font-weight:700; color:var(--text-secondary);">👨 <?php echo $t->hombres ?? 0; ?></span>
+                                    <span title="Niños/as" style="font-size:12px; font-weight:700; color:var(--success-500);">👶 <?php echo (int)($t->ninas ?? 0) + (int)($t->ninos ?? 0); ?></span>
                                 </div>
-                                <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase;">Total: <?php echo $t->total_atendidas; ?></div>
+                                <div style="font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase;">Total: <?php echo $t->total_atendidas ?? 0; ?></div>
                             <?php else: ?>
                                 <span style="font-size:11px; color:var(--text-tertiary); font-style:italic;">Sin informe final</span>
                             <?php endif; ?>
                         </td>
                         <td style="text-align:center;">
-                            <?php 
-                                $porcentaje = $t->cupo_maximo > 0 ? round(($t->total_inscritos / $t->cupo_maximo) * 100) : 0;
+                            <?php
+                            $cupo_max = (int)($t->cupo_maximo ?? 0);
+                            $inscritos = (int)($t->total_inscritos ?? 0);
+                            $porcentaje = $cupo_max > 0 ? round(($inscritos / $cupo_max) * 100) : 0;
                             ?>
-                            <div style="font-size:12px; font-weight:700; color:var(--text-primary); margin-bottom:4px;"><?php echo $t->total_inscritos; ?> / <?php echo $t->cupo_maximo; ?></div>
+                            <div style="font-size:12px; font-weight:700; color:var(--text-primary); margin-bottom:4px;"><?php echo $inscritos; ?> / <?php echo $cupo_max; ?></div>
                             <div style="height:4px; width:80px; background:var(--bg-muted); border-radius:2px; margin:0 auto; overflow:hidden;">
                                 <div style="height:100%; width:<?php echo $porcentaje; ?>%; background:var(--brand-500);"></div>
                             </div>
                         </td>
                         <td>
-                            <?php 
-                                $color = 'sig-badge--neutral';
-                                if ($t->estado == 'En Curso') $color = 'sig-badge--brand';
-                                elseif ($t->estado == 'Programado') $color = 'sig-badge--warning';
-                                elseif ($t->estado == 'Finalizado') $color = 'sig-badge--success';
-                                elseif ($t->estado == 'Cancelado') $color = 'sig-badge--danger';
+                            <?php
+                            $estado = $t->estado ?? 'Desconocido';
+                            $color = 'sig-badge--neutral';
+                            if ($estado == 'En Curso') $color = 'sig-badge--brand';
+                            elseif ($estado == 'Programado') $color = 'sig-badge--warning';
+                            elseif ($estado == 'Finalizado') $color = 'sig-badge--success';
+                            elseif ($estado == 'Cancelado') $color = 'sig-badge--danger';
                             ?>
-                            <span class="sig-badge <?php echo $color; ?>"><?php echo $t->estado; ?></span>
+                            <span class="sig-badge <?php echo $color; ?>"><?php echo $estado; ?></span>
                         </td>
                         <td class="col-actions">
-                            <a href="<?php echo URL_ROOT; ?>/reportes/dossier/<?php echo $t->id; ?>" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);" title="Ver Dossier Completo">
+                            <a href="<?php echo URL_ROOT; ?>/reportes/dossier/<?php echo $t->id ?? ''; ?>" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);" title="Ver Dossier Completo">
                                 <i class="bi bi-file-earmark-person"></i> Dossier
                             </a>
                         </td>
@@ -181,63 +186,142 @@
 
 <!-- ApexCharts Config -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const textPrimary = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
-    const borderSubtle = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textPrimary = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
+        const borderSubtle = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
 
-    // Chart Talleres por Estado
-    const stats = {
-        total: <?php echo $data['stats']->total_talleres ?? 0; ?>,
-        finalizados: <?php echo $data['stats']->finalizados ?? 0; ?>,
-        enCurso: <?php echo $data['stats']->en_curso ?? 0; ?>,
-        programados: <?php echo $data['stats']->programados ?? 0; ?>
-    };
-    let cancelados = stats.total - stats.finalizados - stats.enCurso - stats.programados;
-    if (cancelados < 0) cancelados = 0;
+        // Chart Talleres por Estado
+        const stats = {
+            total: <?php echo $data['stats']->total_talleres ?? 0; ?>,
+            finalizados: <?php echo $data['stats']->finalizados ?? 0; ?>,
+            enCurso: <?php echo $data['stats']->en_curso ?? 0; ?>,
+            programados: <?php echo $data['stats']->programados ?? 0; ?>
+        };
+        let cancelados = (stats.total ?? 0) - (stats.finalizados ?? 0) - (stats.enCurso ?? 0) - (stats.programados ?? 0);
+        if (cancelados < 0) cancelados = 0;
 
-    new ApexCharts(document.querySelector("#chartTalleresEstado"), {
-        chart: { type: 'donut', height: 300, background: 'transparent' },
-        series: [stats.programados, stats.enCurso, stats.finalizados, cancelados],
-        labels: ['Programado', 'En Curso', 'Finalizado', 'Cancelado'],
-        colors: ['#FBBF24', '#3B82F6', '#10B981', '#EF4444'],
-        theme: { mode: isDark ? 'dark' : 'light' },
-        legend: { position: 'bottom', labels: { colors: textPrimary } },
-        stroke: { show: false },
-        plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'TOTAL', color: textPrimary, fontSize: '14px', fontWeight: 800 } } } } },
-        dataLabels: { enabled: false }
-    }).render();
+        new ApexCharts(document.querySelector("#chartTalleresEstado"), {
+            chart: {
+                type: 'donut',
+                height: 300,
+                background: 'transparent'
+            },
+            series: [stats.programados, stats.enCurso, stats.finalizados, cancelados],
+            labels: ['Programado', 'En Curso', 'Finalizado', 'Cancelado'],
+            colors: ['#FBBF24', '#3B82F6', '#10B981', '#EF4444'],
+            theme: {
+                mode: isDark ? 'dark' : 'light'
+            },
+            legend: {
+                position: 'bottom',
+                labels: {
+                    colors: textPrimary
+                }
+            },
+            stroke: {
+                show: false
+            },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            total: {
+                                show: true,
+                                label: 'TOTAL',
+                                color: textPrimary,
+                                fontSize: '14px',
+                                fontWeight: 800
+                            }
+                        }
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            }
+        }).render();
 
-    // Chart Inscritos vs Cupo
-    <?php
-        $nombres = []; $inscritos = []; $cupos = [];
-        if (!empty($data['talleres'])) {
+        // Chart Inscritos vs Cupo
+        <?php
+        $nombres = [];
+        $inscritos_data = [];
+        $cupos_data = [];
+        if (!empty($data['talleres'] ?? [])) {
             $count = 0;
-            foreach ($data['talleres'] as $t) {
+            foreach ($data['talleres'] ?? [] as $t) {
                 if ($count >= 8) break;
-                $nombres[] = mb_substr($t->nombre, 0, 15) . '...';
-                $inscritos[] = (int)$t->total_inscritos;
-                $cupos[] = (int)$t->cupo_maximo;
+                $nombres[] = mb_substr($t->nombre ?? 'N/A', 0, 15) . '...';
+                $inscritos_data[] = (int)($t->total_inscritos ?? 0);
+                $cupos_data[] = (int)($t->cupo_maximo ?? 0);
                 $count++;
             }
         }
-    ?>
-    new ApexCharts(document.querySelector("#chartTalleresCupo"), {
-        chart: { type: 'bar', height: 300, background: 'transparent', toolbar: { show: false } },
-        series: [
-            { name: 'Inscritos', data: <?php echo json_encode($inscritos); ?> },
-            { name: 'Cupo Máximo', data: <?php echo json_encode($cupos); ?> }
-        ],
-        xaxis: { categories: <?php echo json_encode($nombres); ?>, labels: { style: { colors: textPrimary, fontSize: '10px' } }, axisBorder: { show: false } },
-        yaxis: { labels: { style: { colors: textPrimary } } },
-        theme: { mode: isDark ? 'dark' : 'light' },
-        colors: ['#3B82F6', '#E2E8F0'],
-        plotOptions: { bar: { borderRadius: 4, columnWidth: '55%' } },
-        grid: { borderColor: borderSubtle, strokeDashArray: 4 },
-        dataLabels: { enabled: false },
-        legend: { position: 'top', labels: { colors: textPrimary } }
-    }).render();
-});
+        ?>
+        new ApexCharts(document.querySelector("#chartTalleresCupo"), {
+            chart: {
+                type: 'bar',
+                height: 300,
+                background: 'transparent',
+                toolbar: {
+                    show: false
+                }
+            },
+            series: [{
+                    name: 'Inscritos',
+                    data: <?php echo json_encode($inscritos_data); ?>
+                },
+                {
+                    name: 'Cupo Máximo',
+                    data: <?php echo json_encode($cupos_data); ?>
+                }
+            ],
+            xaxis: {
+                categories: <?php echo json_encode($nombres); ?>,
+                labels: {
+                    style: {
+                        colors: textPrimary,
+                        fontSize: '10px'
+                    }
+                },
+                axisBorder: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    style: {
+                        colors: textPrimary
+                    }
+                }
+            },
+            theme: {
+                mode: isDark ? 'dark' : 'light'
+            },
+            colors: ['#3B82F6', '#E2E8F0'],
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '55%'
+                }
+            },
+            grid: {
+                borderColor: borderSubtle,
+                strokeDashArray: 4
+            },
+            dataLabels: {
+                enabled: false
+            },
+            legend: {
+                position: 'top',
+                labels: {
+                    colors: textPrimary
+                }
+            }
+        }).render();
+    });
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
