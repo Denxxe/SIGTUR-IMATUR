@@ -2,9 +2,9 @@
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
-        <div class="page__eyebrow">SIGTUR-IMATUR</div>
-        <h1 class="page__title"><?php echo $data['titulo']; ?></h1>
-        <p class="page__subtitle">Resumen operativo del Sistema Integral de Gestión Turística y Administrativa.</p>
+        <div class="page__eyebrow">Institucional · Municipio</div>
+        <h1 class="page__title">Tablero de Gestión Turística</h1>
+        <p class="page__subtitle" style="max-width: 600px;">Panel de control operativo para el monitoreo de personal, bienes públicos, formación comunitaria y rutas turísticas.</p>
     </div>
 </div>
 
@@ -12,32 +12,32 @@
 <div class="kpi-grid anim-slide-up">
     <div class="kpi kpi--brand">
         <div class="kpi__icon"><i class="bi bi-people" style="font-size:20px"></i></div>
-        <div class="kpi__label">Empleados Activos</div>
+        <div class="kpi__label">Nómina Activa</div>
         <div class="kpi__value"><?php echo $data['totalEmpleados']; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/empleados/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Ver Personal →</a>
+        <a href="<?php echo URL_ROOT; ?>/empleados/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Gestionar RRHH →</a>
     </div>
     <div class="kpi kpi--success">
         <div class="kpi__icon"><i class="bi bi-box-seam" style="font-size:20px"></i></div>
-        <div class="kpi__label">Bienes en Inventario</div>
+        <div class="kpi__label">Patrimonio Público</div>
         <div class="kpi__value"><?php echo $data['totalInventario']; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/inventario/index" style="font-size:12px;font-weight:600;color:var(--success-600);display:inline-flex;align-items:center;gap:4px">Ver Inventario →</a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/index" style="font-size:12px;font-weight:600;color:var(--success-600);display:inline-flex;align-items:center;gap:4px">Control de Bienes →</a>
     </div>
     <div class="kpi kpi--accent">
         <div class="kpi__icon"><i class="bi bi-mortarboard" style="font-size:20px"></i></div>
-        <div class="kpi__label">Talleres Vigentes</div>
+        <div class="kpi__label">Programas de Formación</div>
         <div class="kpi__value"><?php echo $data['totalTalleres']; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/talleres/index" style="font-size:12px;font-weight:600;color:var(--accent-600);display:inline-flex;align-items:center;gap:4px">Ver Formación →</a>
+        <a href="<?php echo URL_ROOT; ?>/talleres/index" style="font-size:12px;font-weight:600;color:var(--accent-600);display:inline-flex;align-items:center;gap:4px">Ver Capacitaciones →</a>
     </div>
     <div class="kpi kpi--teal">
         <div class="kpi__icon"><i class="bi bi-compass" style="font-size:20px"></i></div>
-        <div class="kpi__label">Rutas Activas</div>
+        <div class="kpi__label">Atractivos y Destinos</div>
         <div class="kpi__value"><?php echo $data['totalRutas']; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/rutas/index" style="font-size:12px;font-weight:600;color:var(--teal-600);display:inline-flex;align-items:center;gap:4px">Ver Turismo →</a>
+        <a href="<?php echo URL_ROOT; ?>/rutas/index" style="font-size:12px;font-weight:600;color:var(--teal-600);display:inline-flex;align-items:center;gap:4px">Explorar Rutas →</a>
     </div>
 </div>
 
 <!-- Gráficas Fila 1 -->
-<div style="display:grid;grid-template-columns:7fr 5fr;gap:var(--sp-4);margin-bottom:var(--sp-6)" class="anim-slide-up">
+<div class="grid-dash anim-slide-up" style="margin-bottom:var(--sp-6)">
     <div class="sig-card">
         <div class="sig-card__head">
             <div class="sig-card__title"><i class="bi bi-bar-chart-fill" style="color:var(--brand-600)"></i> Empleados por Departamento</div>
@@ -53,7 +53,7 @@
 </div>
 
 <!-- Gráficas Fila 2 -->
-<div style="display:grid;grid-template-columns:7fr 5fr;gap:var(--sp-4);margin-bottom:var(--sp-6)" class="anim-slide-up">
+<div class="grid-dash anim-slide-up" style="margin-bottom:var(--sp-6)">
     <div class="sig-card">
         <div class="sig-card__head">
             <div class="sig-card__title"><i class="bi bi-graph-up" style="color:var(--teal-600)"></i> Asistencia — Últimos 7 Días</div>
@@ -69,7 +69,7 @@
 </div>
 
 <!-- Accesos rápidos -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)" class="anim-slide-up">
+<div class="grid-2 anim-slide-up">
     <div class="sig-card">
         <div class="sig-card__head" style="background:var(--slate-900);color:white;border-radius:var(--r-lg) var(--r-lg) 0 0">
             <div class="sig-card__title" style="color:white"><i class="bi bi-clock-history"></i> Accesos Rápidos — RRHH</div>

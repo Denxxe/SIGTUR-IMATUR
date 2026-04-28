@@ -6,6 +6,11 @@
     <link rel="icon" type="image/png" href="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" />
     <title><?php echo isset($data['titulo']) ? $data['titulo'] . ' - ' : ''; ?>SIGTUR-IMATUR</title>
 
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Bootstrap 5 Local -->
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.min.css">
     <!-- Bootstrap Icons CDN -->
@@ -141,9 +146,9 @@
                 <i class="bi bi-list" style="font-size:20px;"></i>
             </button>
             <div class="sig-header__breadcrumb">
-                <i class="bi bi-house-door" style="font-size:14px;"></i>
+                <i class="bi bi-house-door" style="font-size:14px; color:var(--brand-500);"></i>
                 <span class="sig-header__breadcrumb-sep">/</span>
-                <span class="sig-header__breadcrumb-current"><?php echo $data['titulo'] ?? 'Panel Principal'; ?></span>
+                <span class="sig-header__breadcrumb-current">Gestión</span>
             </div>
             <div class="sig-header__actions">
                 <button class="sig-header__icon-btn" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
@@ -156,7 +161,7 @@
                     <div class="sig-header__user-name">Hola, <?php echo $_SESSION['user_username'] ?? 'Admin'; ?></div>
                 </div>
                 <a href="<?php echo URL_ROOT; ?>/auth/logout" class="btn-sig btn-sig--danger btn-sig--sm" style="font-size:12px;">
-                    <i class="bi bi-power"></i> Salir
+                    <i class="bi bi-power"></i> <span class="sig-header__logout-text">Salir</span>
                 </a>
             </div>
         </header>
