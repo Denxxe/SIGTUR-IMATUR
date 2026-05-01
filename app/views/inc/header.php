@@ -6,15 +6,10 @@
     <link rel="icon" type="image/png" href="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" />
     <title><?php echo isset($data['titulo']) ? $data['titulo'] . ' - ' : ''; ?>SIGTUR-IMATUR</title>
 
-    <!-- Google Fonts: Inter & Outfit -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <!-- Bootstrap 5 Local -->
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.min.css">
-    <!-- Bootstrap Icons CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Bootstrap Icons Local -->
+    <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/libs/bootstrap-icons.min.css">
     <!-- SIGTUR Design System -->
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-tokens.css">
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-components.css">
