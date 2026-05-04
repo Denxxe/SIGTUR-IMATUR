@@ -6,9 +6,9 @@
 
 ## ¿Qué es este proyecto?
 
-Sistema Integral de Gestión Turística y Administrativa (SIGTUR) para **IMATUR** (Instituto Municipal de Turismo de Cumaná, Sucre, Venezuela). Es una aplicación web MVC en PHP puro, diseñada para despliegue **on-premise** sin acceso a internet.
+Sistema Integral de Gestión Turística y Administrativa (SIGTUR) para **IMATUR** (Instituto Municipal de Turismo de Cumaná, Sucre, Venezuela). Aplicación web MVC en PHP puro, despliegue **on-premise** sin acceso a internet.
 
-**Usuario de prueba:** `admin` / contraseña en la BD (hash bcrypt en tabla `usuarios`)
+**Usuario de prueba:** `admin` / contraseña en la BD (hash bcrypt en tabla `usuarios`, rol 1)
 
 ---
 
@@ -19,20 +19,19 @@ public/index.php          ← Front controller (único punto de entrada)
 config/config.php         ← DB host/port/name/user + URL_ROOT
 app/
   core/
-    Router.php            ← URL parser + middleware de autenticación y RBAC
+    Router.php            ← URL parser + middleware autenticación + RBAC
     Database.php          ← PDO/PostgreSQL wrapper (prepared statements)
     Controller.php        ← Base: $this->view(), $this->model()
     Model.php             ← Base: $this->db
-  controllers/            ← 21 controllers (uno por módulo)
-  models/                 ← 21 models
+  controllers/            ← 23 controllers (uno por módulo)
+  models/                 ← 23 models
   views/
-    inc/header.php        ← Layout maestro + sidebar (carga CSS/JS)
+    inc/header.php        ← Layout maestro + sidebar con RBAC
     inc/footer.php        ← Scripts + toast container
     auth/login.php        ← Vista independiente (sin header.php)
 ```
 
 **Patrón de URL:** `/controlador/metodo/parametro`  
-**Redirect default:** `DashboardController::index()`  
 **Autenticación:** Session-based — `$_SESSION['user_id']`, `$_SESSION['user_rol']`
 
 ---
@@ -41,100 +40,190 @@ app/
 
 | Módulo | Controladores | Tablas principales |
 |--------|-------------|-------------------|
-| **RRHH** | Empleados, Cargos, Departamentos, Asistencias | personas, empleados, cargos, departamentos, asistencias |
+| **RRHH** | Empleados, Cargos, Departamentos, Asistencias | personas, empleados, cargos, departamentos, asistencias, horarios, permisos_laborales, vacaciones |
 | **Inventario** | Inventario, Categorias, Ubicaciones, ActividadesInventario | inventario, categorias, ubicaciones, actividad_inventario |
 | **Formación** | Talleres, UbicacionesFormacion, Pasantes | talleres, ubicaciones_formacion, pasantes, pasante_documentos, taller_informes, taller_inventario, participantes_taller |
-| **Turismo** | Rutas, ActividadesRuta | rutas, puntos_ruta, actividades_ruta, ruta_inventario |
+| **Turismo** | Rutas, ActividadesRuta, Visitantes, Visitas | rutas, puntos_ruta, actividades_ruta, ruta_inventario, visitantes, visitas |
 | **Ubicación** | Municipio, Parroquia | municipio, parroquia |
 | **Sistema** | Usuarios, Roles, Auditoria | usuarios, roles, audit_logs |
 | **Reportes** | Reportes, Dashboard | — (queries JOIN sobre todas las tablas) |
 
 ---
 
-## Base de Datos (PostgreSQL 17)
+## RBAC — Control de Acceso
 
-**Archivo de referencia:** `database/schema.sql` (pg_dump completo con datos de prueba)  
-**DB name:** `SIGTUR-IMATUR`  
-**Superuser:** `postgres`
+Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesController.php` (nivel de método).
 
-### Tablas por dominio
+| Rol ID | Nombre | Controladores permitidos |
+|--------|--------|--------------------------|
+| 1 | Administrador | Todo sin restricción |
+| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes |
+| 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
+| 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 
-#### Dominio 1: Sistema
-- `roles` — 4 roles fijos: Administrador(1), RRHH(2), Turismo(3), Inventario(4)
+### Protección por reporte (ReportesController::requireRoles)
 
-#### Dominio 2: RRHH
-- `personas` — tabla base con `parroquia_id` FK → parroquia
-- `departamentos`, `cargos`
-- `empleados` — 1:1 con personas, FK a cargo y departamento
-- `usuarios` — credenciales, FK a empleados y roles
-- `asistencias` — registro diario entrada/salida
+| Método(s) | Roles permitidos |
+|-----------|-----------------|
+| `asistencia`, `exportarAsistenciaCsv`, `exportarAsistenciaPdf` | [1, 2] |
+| `talleres`, `exportarTalleresCsv`, `exportarTalleresPdf`, `rutas`, `exportarRutasCsv`, `exportarRutasPdf`, `exportarParticipantesCsv`, `dossier`, `exportarDossierCsv`, `pasantes`, `exportarPasantesCsv`, `exportarPasantesPdf` | [1, 3] |
+| `indicadores`, `index` | todos |
 
-#### Dominio 3: Inventario
-- `categorias`, `ubicaciones` — tiene columna `"departamento _d"` (FK con espacio en nombre — usar comillas en queries)
-- `inventario` — condiciones: Nuevo/Bueno/Regular/Dañado/Inservible
-- `actividad_inventario` — movimientos: Asignacion/Devolucion/Traslado/Baja/Mantenimiento
+### Sidebar por rol (header.php)
 
-#### Dominio 4: Formación
-- `ubicaciones_formacion` — FK a `parroquia` (columna `parroquia INT NOT NULL`)
-- `talleres` — estados: Programado/En Curso/Finalizado/Cancelado
-- `taller_informes` — informe demográfico por taller (mujeres/hombres/niñas/niños)
-- `taller_inventario` — préstamo de bienes para un taller
-- `participantes_taller` — asistencia de personas a un taller
-- `pasantes` — tabla independiente (no hereda de personas): cedula/nombre/apellido/institucion propios
-- `pasante_documentos` — tipos: Carta de Postulación/Carta de Aceptación/Evaluación/Otro
-
-#### Dominio 5: Turismo
-- `rutas` — nivel: Fácil/Moderado/Difícil/Extremo; estado: Activa/Inactiva/En Mantenimiento
-- `puntos_ruta` — FK CASCADE a rutas, tiene lat/lon
-- `actividades_ruta` — eventos por ruta
-- `ruta_inventario` — bienes asignados a una ruta
-
-#### Dominio 6: Geografía (nuevas)
-- `municipio` — municipios con código postal
-- `parroquia` — parroquias por municipio (convención de columnas: `create_by`/`update_by`/`delete_by`/`create_at`/`update_at`/`delete_at` — inconsistente con el resto del esquema que usa `created_*`)
-
-### Soft Delete
-Todas las tablas tienen: `is_active BOOL`, `deleted_at TIMESTAMP`, `deleted_by INT`. Nunca se borran filas, se deshabilitan.
-
-### Convención de auditoría
-Todas las tablas (excepto parroquia) usan: `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `deleted_by`.  
-**Excepción:** `parroquia` usa `create_at`/`update_at`/`delete_at` y `create_by`/`update_by`/`delete_by` (sin la "d" al final).
+| Sección | Condición PHP |
+|---------|--------------|
+| RRHH | `in_array($rol, [1, 2])` |
+| Inventario | `in_array($rol, [1, 4])` |
+| Formación | `in_array($rol, [1, 3])` |
+| Turismo (Rutas + Actividades + Visitantes + Visitas) | `in_array($rol, [1, 3])` |
+| Recepción (Visitantes + Visitas para RRHH) | `$rol == 2` |
+| Análisis / Reportes | todos los roles (sin condición) |
+| Sistema | `$rol == 1` |
 
 ---
 
-## RBAC — Control de Acceso
+## Base de Datos (PostgreSQL 17)
 
-Implementado en `app/core/Router.php`. El rol se lee de `$_SESSION['user_rol']` (integer).
+**Archivo:** `database/schema.sql` (pg_dump con datos de prueba)  
+**DB:** `SIGTUR-IMATUR` | **User:** `postgres`
 
-| Rol ID | Nombre | Acceso |
-|--------|--------|--------|
-| 1 | Administrador | Todo — incluyendo Usuarios, Roles, Municipios, Parroquias, Auditoría |
-| 2 | RRHH | RRHH + Reportes |
-| 3 | Turismo | Rutas + Formación + Reportes |
-| 4 | Inventario | Inventario + Ubicaciones + Reportes |
+### Inventario completo de tablas
+
+#### Sistema
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `roles` | 4 roles fijos | ✅ |
+| `usuarios` | Credenciales, FK a empleados y roles | ✅ |
+| `audit_logs` | Log inmutable de operaciones JSONB | — (no se borra) |
+
+#### RRHH
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `personas` | Entidad base de personas físicas, FK a `parroquia` | ✅ |
+| `departamentos` | Unidades organizativas | ✅ |
+| `cargos` | Puestos con sueldo_base | ✅ |
+| `empleados` | 1:1 con personas; FK a cargo/departamento/horario | ✅ + `tipo_contrato`, `fecha_egreso` (migración 002) |
+| `asistencias` | Marcaje diario entrada/salida | ✅ |
+| `horarios` *(002)* | Turnos de trabajo | ✅ |
+| `permisos_laborales` *(002)* | Permisos y ausencias justificadas | ✅ |
+| `vacaciones` *(002)* | Control anual de días vacaciones | ✅ |
+
+#### Inventario
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `categorias` | Clasificación de bienes | ✅ |
+| `ubicaciones` | Oficinas/almacenes internos; tiene FK `"departamento _d"` (columna con espacio) | ✅ |
+| `inventario` | Bienes con código BN, marca, modelo, serial, condición | ✅ |
+| `actividad_inventario` | Movimientos: Asignacion/Devolucion/Traslado/Baja/Mantenimiento | ✅ |
+
+#### Formación
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `ubicaciones_formacion` | Sedes externas; FK a `parroquia` (columna `parroquia INT`) | ✅ |
+| `talleres` | Actividades formativas; `tipo_actividad` agregado en migración 002 | ✅ |
+| `taller_informes` | Informe demográfico por taller (mujeres/hombres/niñas/niños) | ✅ (002) |
+| `taller_inventario` | Préstamo de bienes a un taller | ✅ (002) |
+| `participantes_taller` | Inscripción y asistencia de personas a un taller | ✅ (002) |
+| `pasantes` | Tabla independiente (cedula/nombre propios, no hereda de personas) | ✅ (002) |
+| `pasante_documentos` | Cartas y evaluaciones con flags de entrega | ✅ (002) |
+
+#### Turismo
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `rutas` | Rutas turísticas; nivel y estado con CHECK | ✅ |
+| `puntos_ruta` | Waypoints con lat/lon y orden | ✅ |
+| `actividades_ruta` | Eventos por ruta con responsable | ✅ |
+| `ruta_inventario` | Bienes asignados a una ruta | ✅ (002) |
+| `visitantes` *(001)* | Personas externas; cedula, procedencia, genero | ✅ |
+| `visitas` *(001)* | Marcaje entrada/salida de visitantes | ✅ básico |
+
+#### Geografía
+| Tabla | Descripción | Auditoría completa |
+|-------|-------------|-------------------|
+| `municipio` | Municipios con código postal | ✅ (NOT NULL sin DEFAULT — ver quirks) |
+| `parroquia` | Parroquias por municipio | ⚠️ Nombrado inconsistente: `create_at`/`create_by` sin "d" |
+
+### Migraciones incrementales
+
+| Archivo | Estado | Contenido |
+|---------|--------|-----------|
+| `database/migrations/001_visitantes_visitas.sql` | ⚠️ Pendiente de ejecutar | Tablas `visitantes` y `visitas` |
+| `database/migrations/002_rrhh_extensions.sql` | ⚠️ Pendiente de ejecutar | Horarios, Permisos, Vacaciones + corrección auditoría |
+
+### Soft Delete
+Todas las tablas tienen: `is_active BOOL`, `deleted_at TIMESTAMP`, `deleted_by INT`.  
+Nunca se borran filas — se deshabilitan.
+
+### Convención de auditoría
+```
+created_at, updated_at, deleted_at  ← TIMESTAMPS
+created_by, updated_by, deleted_by  ← INT (id del usuario que operó)
+```
+**Excepción:** `parroquia` usa `create_at`/`update_at`/`delete_at` y `create_by`/`update_by`/`delete_by` (sin la "d").
+
+---
+
+## Análisis de Normalización (3FN)
+
+### Bien normalizado ✅
+- Jerarquía `personas → empleados → usuarios` (1:1, sin duplicación)
+- `categorias → inventario`, `departamentos/cargos → empleados`
+- Tablas pivote correctas: `participantes_taller`, `ruta_inventario`, `taller_inventario`
+
+### Problemas conocidos ⚠️
+1. **`pasantes` vs `personas`**: `pasantes` tiene su propio cedula/nombre/apellido (no hereda de `personas`). Si un pasante luego es participante en un taller, no se puede cruzar automáticamente. Decisión de diseño intencional; documentar al hacer reportes cruzados.
+2. **`taller_informes.total_atendidas`**: Dato derivado (mujeres+hombres+niñas+niños). Se puede generar inconsistencia si se actualiza una columna sin la otra. Validar en el controller.
+3. **`municipio.created_at NOT NULL` sin DEFAULT**: Si se hace INSERT sin ese valor explota. El model debe siempre pasar `created_at = NOW()`.
+4. **`ubicaciones."departamento _d"`**: Nombre con espacio — siempre usar comillas dobles en SQL.
+
+---
+
+## Reportes e Indicadores
+
+### Implementados (ReportesController)
+
+| Reporte | Roles | Export |
+|---------|-------|--------|
+| Asistencia con filtro de fechas | 1, 2 | CSV + PDF |
+| Talleres con filtro de estado | 1, 3 | CSV + PDF |
+| Dossier integral de taller | 1, 3 | CSV |
+| Participantes de un taller | 1, 3 | CSV |
+| Rutas turísticas | 1, 3 | CSV + PDF |
+| Pasantes con estado y tutor | 1, 3 | CSV + PDF |
+| Indicadores de gestión (KPIs) | todos | — |
+
+### KPIs en Indicadores (todos los roles)
+- Empleados por departamento (barras)
+- Inventario por categoría (barras)
+- Inventario por condición (dona)
+- Talleres por mes últimos 6 meses (línea)
+
+### Reportes pendientes de implementar (siguientes fases)
+- Permisos laborales por tipo/empleado/período
+- Saldo de vacaciones por empleado
+- Visitantes por mes / procedencia / motivo
+- Asistencia % promedio mensual (días asistidos / días laborales)
+- Indicadores ampliados: empleados en permiso hoy, visitas activas del día
 
 ---
 
 ## Frontend — Recursos Locales
 
-**Todos los recursos deben estar en `/public/assets/libs/` — sin CDN.**
+**Todos los recursos en `/public/assets/libs/` — sin CDN.**
 
-| Archivo | Estado | Notas |
-|---------|--------|-------|
-| `bootstrap.min.css` | ✅ Local | v5.3 |
-| `bootstrap.bundle.min.js` | ✅ Local | v5.3 + Popper |
-| `apexcharts.min.js` | ✅ Local | Gráficos dashboard |
-| `bootstrap-icons.min.css` | ✅ Local | v1.11.3 |
-| `bootstrap-icons.woff2` | ✅ Local | Fuente de iconos |
-| `bootstrap-icons.woff` | ✅ Local | Fallback fuente |
+| Archivo | Estado | Versión |
+|---------|--------|---------|
+| `bootstrap.min.css` | ✅ Local | 5.3 |
+| `bootstrap.bundle.min.js` | ✅ Local | 5.3 + Popper |
+| `apexcharts.min.js` | ✅ Local | Latest |
+| `bootstrap-icons.min.css` | ✅ Local | 1.11.3 |
+| `bootstrap-icons.woff2` | ✅ Local | 1.11.3 |
+| `bootstrap-icons.woff` | ✅ Local | 1.11.3 (fallback) |
 
 ### Tipografía
-
-Google Fonts fue eliminado del `header.php`. El CSS ya tiene fallback:
-```css
---font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-```
-En Windows 11, `system-ui` resuelve a Segoe UI Variable. Funcionamiento correcto sin internet.
+Google Fonts fue eliminado de `header.php`. Fallback en CSS: `'Inter', system-ui, -apple-system, sans-serif`.  
+En Windows 11 resuelve a Segoe UI Variable. Sin internet funciona correctamente.
 
 ---
 
@@ -143,11 +232,11 @@ En Windows 11, `system-ui` resuelve a Segoe UI Variable. Funcionamiento correcto
 | Archivo | Propósito |
 |---------|-----------|
 | `public/assets/css/sigtur-tokens.css` | Variables CSS: colores, tipografía, espaciado, dark mode |
-| `public/assets/css/sigtur-components.css` | Componentes custom: `.app-shell`, `.sidebar`, `.sig-header`, `.btn-sig`, `.card-sig` |
+| `public/assets/css/sigtur-components.css` | Componentes: `.app-shell`, `.sidebar`, `.sig-header`, `.btn-sig`, `.sig-card` |
 | `public/assets/css/login.css` | Estilos exclusivos del login |
-| `public/assets/js/sigtur-validations.js` | Validación client-side de formularios |
+| `public/assets/js/sigtur-validations.js` | Validación client-side |
 
-**Dark mode:** Toggle por `data-theme="dark"` en `<html>`. Persiste en `localStorage['sigtur-theme']`.
+**Dark mode:** Toggle con `data-theme="dark"` en `<html>`. Persiste en `localStorage['sigtur-theme']`.
 
 ---
 
@@ -155,7 +244,6 @@ En Windows 11, `system-ui` resuelve a Segoe UI Variable. Funcionamiento correcto
 
 ### Controllers
 ```php
-// Patrón estándar de un método index
 public function index() {
     $model = $this->model('NombreModel');
     $data = ['titulo' => 'Titulo', 'items' => $model->getAll()];
@@ -163,43 +251,50 @@ public function index() {
 }
 ```
 
+### Protección de roles en controllers de reporte
+```php
+// Llamar al inicio de cada método restringido:
+$this->requireRoles([1, 2]);  // solo RRHH y Admin
+$this->requireRoles([1, 3]);  // solo Turismo y Admin
+```
+
 ### Models
 ```php
-// Siempre usar prepared statements vía $this->db
 public function getAll() {
     $this->db->query('SELECT * FROM tabla WHERE is_active = TRUE ORDER BY id DESC');
     return $this->db->resultSet();
 }
 ```
 
-### Vistas
-- No hay template engine — PHP puro
-- Las vistas cargan `inc/header.php` al inicio y `inc/footer.php` al final
-- Flash messages con `flash('clave')` desde `session_helper.php`
-
 ### Auditoría
 ```php
-// Llamar desde controllers al hacer INSERT/UPDATE/DELETE
+// Desde controllers al hacer INSERT/UPDATE/DELETE:
 $this->logAudit('nombre_tabla', 'INSERT', $newId, null, $newData);
 ```
 
 ---
 
-## Peculiaridades / Cosas a tener en cuenta
+## Peculiaridades — Cosas a tener en cuenta
 
-1. **Columna con espacio en `ubicaciones`**: La columna FK a departamentos se llama `"departamento _d"` (con espacio). Siempre usar comillas dobles en SQL.
+1. **`ubicaciones."departamento _d"`**: FK a departamentos con espacio en el nombre. Siempre comillas dobles en SQL.
 
-2. **`parroquia` con nomenclatura inconsistente**: Usa `create_at`/`update_at` en lugar de `created_at`/`updated_at`. Los modelos Municipio y Parroquia manejan esto.
+2. **`parroquia` con nomenclatura inconsistente**: `create_at`/`update_at` en lugar de `created_at`/`updated_at`. Los models Municipio y Parroquia manejan esto.
 
-3. **`pasantes` es independiente**: A diferencia de `empleados`, la tabla `pasantes` tiene sus propios campos cedula/nombre/apellido — no hereda de `personas`.
+3. **`pasantes` es independiente de `personas`**: Tiene sus propios campos cedula/nombre/apellido. Reportes cruzados con participantes_taller requieren JOIN manual por cedula, no por FK.
 
-4. **Transacciones en Empleados**: El guardado de un empleado requiere insertar en `personas` Y en `empleados` de forma atómica. Ver `EmpleadosController::store()`.
+4. **Transacciones en Empleados**: Guardar un empleado requiere INSERT en `personas` y luego en `empleados` de forma atómica. Ver `EmpleadosController::store()`.
 
-5. **`ubicaciones_formacion` requiere parroquia**: La columna `parroquia INT NOT NULL` — al crear una sede de formación siempre se necesita seleccionar parroquia.
+5. **`ubicaciones_formacion.parroquia NOT NULL`**: Al crear sede de formación siempre se necesita seleccionar parroquia.
 
-6. **Módulo de Ubicaciones tiene FK a departamento**: `"departamento _d"` es NOT NULL — al crear una ubicación de inventario se debe seleccionar departamento.
+6. **`municipio.created_at NOT NULL` sin DEFAULT**: El model debe pasar `created_at = NOW()` explícitamente en INSERT.
 
-7. **Auth users**: Solo el usuario `admin` (id=2) existe en la BD de prueba. Rol 1 (Administrador).
+7. **Visitas — patrón toggle**: `Visita::registrar()` detecta si hay visita abierta (sin `hora_salida`). Si no hay → INSERT entrada. Si hay → UPDATE `hora_salida = NOW()`. No crear dos registros.
+
+8. **`taller_informes.total_atendidas` es derivado**: Siempre recalcular como `mujeres + hombres + ninas + ninos` antes de guardar para evitar inconsistencia.
+
+9. **`talleres.tipo_actividad`**: Columna nueva (migración 002). Valores: 'Taller','Charla','Curso','Taller de Arte','Capacitación'. Retrocompatible: DEFAULT 'Taller'.
+
+10. **`empleados.tipo_contrato`**: Valores: 'Fijo','Contratado','Suplente','Comisión de Servicio'. DEFAULT 'Fijo'.
 
 ---
 
@@ -207,21 +302,21 @@ $this->logAudit('nombre_tabla', 'INSERT', $newId, null, $newData);
 
 ```bash
 # 1. Laragon activo con PHP 8+ y PostgreSQL 17
-# 2. Crear la base de datos (si no existe):
+# 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar el schema completo (incluye datos de prueba):
+# 3. Importar schema completo (con datos de prueba):
 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema.sql
 
-# 4. Verificar config/config.php:
-#    define('DB_HOST', 'localhost');
-#    define('DB_PORT', '5432');
-#    define('DB_NAME', 'SIGTUR-IMATUR');
-#    define('DB_USER', 'postgres');
-#    define('DB_PASS', '');  // ajustar según entorno
+# 4. Ejecutar migraciones en orden:
+psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/001_visitantes_visitas.sql
+psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/002_rrhh_extensions.sql
 
-# 5. URL de acceso en Laragon: http://SIGTUR-IMATUR.test
-#    o http://localhost/SIGTUR-IMATUR/public
+# 5. Verificar config/config.php:
+#    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
+#    DB_USER=postgres  | DB_PASS=''  (ajustar según entorno)
+
+# 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
 ---
@@ -234,9 +329,9 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/schema.sql
 | Conexión DB (PDO wrapper) | `app/core/Database.php` |
 | Router + RBAC middleware | `app/core/Router.php` |
 | Flash messages / Toast | `app/helpers/session_helper.php` |
-| Layout principal | `app/views/inc/header.php` |
+| Layout principal + sidebar RBAC | `app/views/inc/header.php` |
 | Scripts + pie de página | `app/views/inc/footer.php` |
 | Schema completo con datos | `database/schema.sql` |
-| Documentación de módulos | `docs/01_Documentacion_Modulos.md` |
-| Arquitectura y auditoría | `docs/02_Documentacion_Arquitectura.md` |
-| Librerías y dependencias | `docs/04_Librerias_y_Dependencias.md` |
+| Migración visitantes/visitas | `database/migrations/001_visitantes_visitas.sql` |
+| Migración RRHH extensions | `database/migrations/002_rrhh_extensions.sql` |
+| Reportes e Indicadores | `app/controllers/ReportesController.php` |

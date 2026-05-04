@@ -34,13 +34,15 @@
             </div>
         </div>
 
+        <?php $rol = (int)($_SESSION['user_rol'] ?? 0); ?>
         <div class="sidebar__nav">
-            <!-- Dashboard -->
+            <!-- Dashboard — todos los roles -->
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>">
                 <i class="bi bi-speedometer2"></i> <span>Panel Principal</span>
             </a>
 
-            <!-- RRHH -->
+            <!-- RRHH — Administrador (1) y RRHH (2) -->
+            <?php if(in_array($rol, [1, 2])): ?>
             <div class="sidebar__group-label">RRHH</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/empleados/index">
                 <i class="bi bi-person-badge"></i> <span>Empleados</span>
@@ -54,8 +56,10 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/asistencias/index">
                 <i class="bi bi-clock-history"></i> <span>Asistencia</span>
             </a>
+            <?php endif; ?>
 
-            <!-- Inventario -->
+            <!-- Inventario — Administrador (1) e Inventario (4) -->
+            <?php if(in_array($rol, [1, 4])): ?>
             <div class="sidebar__group-label">Inventario</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/inventario/index">
                 <i class="bi bi-box-seam"></i> <span>Bienes</span>
@@ -69,8 +73,10 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/actividadesinventario/index">
                 <i class="bi bi-arrow-left-right"></i> <span>Movimientos</span>
             </a>
+            <?php endif; ?>
 
-            <!-- Formación -->
+            <!-- Formación — Administrador (1) y Turismo (3) -->
+            <?php if(in_array($rol, [1, 3])): ?>
             <div class="sidebar__group-label">Formación</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/talleres/index">
                 <i class="bi bi-mortarboard"></i> <span>Talleres</span>
@@ -81,8 +87,10 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/pasantes/index">
                 <i class="bi bi-person-video3"></i> <span>Pasantes</span>
             </a>
+            <?php endif; ?>
 
-            <!-- Turismo -->
+            <!-- Turismo — Administrador (1) y Turismo (3) -->
+            <?php if(in_array($rol, [1, 3])): ?>
             <div class="sidebar__group-label">Turismo</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/rutas/index">
                 <i class="bi bi-compass"></i> <span>Rutas Turísticas</span>
@@ -90,9 +98,33 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/actividadesruta/index">
                 <i class="bi bi-calendar-event"></i> <span>Actividades</span>
             </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
+                <i class="bi bi-people"></i> <span>Visitantes</span>
+            </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitas/index">
+                <i class="bi bi-door-open"></i> <span>Control de Visitas</span>
+            </a>
+            <?php endif; ?>
 
-            <!-- Sistema -->
-            <?php if($_SESSION['user_rol'] == 1): ?>
+            <!-- Recepción — solo RRHH (2): Visitantes y Visitas sin las rutas turísticas -->
+            <?php if($rol == 2): ?>
+            <div class="sidebar__group-label">Recepción</div>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
+                <i class="bi bi-people"></i> <span>Visitantes</span>
+            </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitas/index">
+                <i class="bi bi-door-open"></i> <span>Control de Visitas</span>
+            </a>
+            <?php endif; ?>
+
+            <!-- Reportes — todos los roles -->
+            <div class="sidebar__group-label">Análisis</div>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/reportes/index">
+                <i class="bi bi-bar-chart-line"></i> <span>Reportes</span>
+            </a>
+
+            <!-- Sistema — solo Administrador (1) -->
+            <?php if($rol == 1): ?>
             <div class="sidebar__group-label">Sistema</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/usuarios/index">
                 <i class="bi bi-people"></i> <span>Usuarios</span>
@@ -111,9 +143,6 @@
             </a>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
                 <i class="bi bi-recycle"></i> <span>Papelera</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/reportes/index">
-                <i class="bi bi-bar-chart-line"></i> <span>Reportes</span>
             </a>
             <?php endif; ?>
         </div>

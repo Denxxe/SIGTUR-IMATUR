@@ -26,14 +26,14 @@ class UbicacionFormacion extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT u.*, p.nombre AS parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.id_parroquia = p.id WHERE u.is_active = TRUE ORDER BY u.nombre ASC");
+        $db->query("SELECT u.*, p.nombre AS nombre_parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.parroquia = p.id WHERE u.is_active = TRUE ORDER BY u.nombre ASC");
         return $db->resultSet();
     }
 
     public static function find($id)
     {
         $db = new Database();
-        $db->query("SELECT u.*, p.nombre AS parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.id_parroquia = p.id WHERE u.id = :id");
+        $db->query("SELECT u.*, p.nombre AS nombre_parroquia FROM ubicaciones_formacion u LEFT JOIN parroquia p ON u.parroquia = p.id WHERE u.id = :id");
         $db->bind(':id', $id);
         return $db->single();
     }
@@ -41,12 +41,12 @@ class UbicacionFormacion extends Model
     public function save($user_id = null)
     {
         if ($this->id) {
-            $this->db->query("UPDATE ubicaciones_formacion SET nombre=:nombre, tipo=:tipo, direccion=:direccion, 
-                              id_parroquia=:id_parroquia, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
+            $this->db->query("UPDATE ubicaciones_formacion SET nombre=:nombre, tipo=:tipo, direccion=:direccion,
+                              parroquia=:id_parroquia, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO ubicaciones_formacion (nombre, tipo, direccion, id_parroquia, created_by, update_at, update_by, create_at) 
-                              VALUES (:nombre, :tipo, :direccion, :id_parroquia, :user_id, CURRENT_TIMESTAMP, :user_id, CURRENT_TIMESTAMP)");
+            $this->db->query("INSERT INTO ubicaciones_formacion (nombre, tipo, direccion, parroquia, created_by)
+                              VALUES (:nombre, :tipo, :direccion, :id_parroquia, :user_id)");
         }
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':tipo', $this->tipo);

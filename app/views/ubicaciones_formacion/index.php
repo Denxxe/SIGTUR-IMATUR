@@ -34,7 +34,7 @@
                     <tr>
                         <td class="cell-strong"><?php echo $u->nombre; ?></td>
                         <td><span class="sig-badge sig-badge--info"><?php echo $u->tipo; ?></span></td>
-                        <td><?php echo $u->parroquia; ?></td>
+                        <td><?php echo $u->nombre_parroquia; ?></td>
                         <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo $u->direccion; ?></td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($u); ?>)'>
@@ -109,7 +109,7 @@
         document.getElementById('ubif_id').value = u.id;
         document.getElementById('ubif_nombre').value = u.nombre;
         document.getElementById('ubif_tipo').value = u.tipo;
-        document.getElementById('ubif_parroquia').value = u.id_parroquia;
+        document.getElementById('ubif_parroquia').value = u.parroquia;
         document.getElementById('ubif_direccion').value = u.direccion;
         new bootstrap.Modal(document.getElementById('modalUbiForm')).show();
     }

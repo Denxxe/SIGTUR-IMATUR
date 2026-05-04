@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/celuc/Downloads/**)",
+      "Bash(unzip -p \"DOCUMENTO DE ESPECIFICACIÓN DE REQUISITOS \\(DER\\).odt\" content.xml)",
+      "Bash(sed 's/<[^>]*>//g')"
+    ]
+  }
+}

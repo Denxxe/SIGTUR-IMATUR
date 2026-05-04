@@ -12,10 +12,20 @@ class ReportesController extends Controller {
         $this->view('reportes/index', $data);
     }
 
+    private function requireRoles(array $roles) {
+        $rol = (int)($_SESSION['user_rol'] ?? 0);
+        if (!in_array($rol, $roles)) {
+            flash('global_msg', 'No tienes permiso para acceder a este reporte.', 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+            exit;
+        }
+    }
+
     // =========================================================================
     // RF27: Reporte de Asistencia
     // =========================================================================
     public function asistencia() {
+        $this->requireRoles([1, 2]);
         $registros = $this->queryAsistencia();
         $stats = $this->statsAsistencia();
 
@@ -30,6 +40,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarAsistenciaCsv() {
+        $this->requireRoles([1, 2]);
         $registros = $this->queryAsistencia();
         $headers = ['Fecha', 'Nombre', 'Apellido', 'Cédula', 'Departamento', 'Entrada', 'Salida', 'Observación'];
         $rows = [];
@@ -40,6 +51,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarAsistenciaPdf() {
+        $this->requireRoles([1, 2]);
         $registros = $this->queryAsistencia();
         $stats = $this->statsAsistencia();
         $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
@@ -92,6 +104,7 @@ class ReportesController extends Controller {
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {
+        $this->requireRoles([1, 3]);
         $talleres = $this->queryTalleres();
         $stats = $this->statsTalleres();
 
@@ -105,6 +118,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarTalleresCsv() {
+        $this->requireRoles([1, 3]);
         $talleres = $this->queryTalleres();
         $headers = ['Taller', 'Facilitador', 'Sede', 'Fecha Inicio', 'Estado', 'Inscritos', 'Cupo Máximo'];
         $rows = [];
@@ -115,6 +129,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarTalleresPdf() {
+        $this->requireRoles([1, 3]);
         $talleres = $this->queryTalleres();
         $stats = $this->statsTalleres();
 
@@ -167,6 +182,7 @@ class ReportesController extends Controller {
     // RF29: Reporte de Rutas Turísticas
     // =========================================================================
     public function rutas() {
+        $this->requireRoles([1, 3]);
         $rutas = $this->queryRutas();
         $stats = $this->statsRutas();
 
@@ -179,6 +195,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarRutasCsv() {
+        $this->requireRoles([1, 3]);
         $rutas = $this->queryRutas();
         $headers = ['Ruta', 'Dificultad', 'Duración', 'Estado', 'Puntos', 'Actividades', 'Equipos'];
         $rows = [];
@@ -189,6 +206,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarRutasPdf() {
+        $this->requireRoles([1, 3]);
         $rutas = $this->queryRutas();
         $stats = $this->statsRutas();
 
@@ -227,6 +245,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarParticipantesCsv($id_taller) {
+        $this->requireRoles([1, 3]);
         $db = new Database();
         $db->query("SELECT p.cedula, p.nombre, p.apellido, p.telefono, pt.asistio
                     FROM participantes_taller pt
@@ -253,6 +272,7 @@ class ReportesController extends Controller {
     // =========================================================================
 
     public function dossier($id) {
+        $this->requireRoles([1, 3]);
         $db = new Database();
         // 1. Info básica y facilitador
         $db->query("SELECT t.*, uf.nombre as sede, 
@@ -291,6 +311,7 @@ class ReportesController extends Controller {
     }
 
     public function exportarDossierCsv($id) {
+        $this->requireRoles([1, 3]);
         $db = new Database();
         $db->query("SELECT t.*, p.nombre || ' ' || p.apellido as facilitador, uf.nombre as sede
                     FROM talleres t
@@ -355,11 +376,15 @@ class ReportesController extends Controller {
     // =========================================================================
 
     public function pasantes() {
+        $this->requireRoles([1, 3]);
         $db = new Database();
-        $db->query("SELECT p.*, e.nro_expediente, per.nombre AS tutor_nombre, per.apellido AS tutor_apellido
+        $db->query("SELECT p.*,
+                           pp.cedula, pp.nombre, pp.apellido,
+                           pt.nombre AS tutor_nombre, pt.apellido AS tutor_apellido
                     FROM pasantes p
-                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
-                    LEFT JOIN personas per ON e.id_persona = per.id
+                    INNER JOIN personas pp ON p.id_persona = pp.id
+                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
                     WHERE p.is_active = TRUE ORDER BY p.fecha_inicio DESC");
         $pasantes = $db->resultSet();
 
@@ -371,12 +396,16 @@ class ReportesController extends Controller {
     }
 
     public function exportarPasantesCsv() {
+        $this->requireRoles([1, 3]);
         $db = new Database();
-        $db->query("SELECT p.*, per.nombre || ' ' || per.apellido as tutor
+        $db->query("SELECT p.*,
+                           pp.cedula, pp.nombre, pp.apellido,
+                           pt.nombre || ' ' || pt.apellido AS tutor
                     FROM pasantes p
-                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
-                    LEFT JOIN personas per ON e.id_persona = per.id
-                    WHERE p.is_active = TRUE ORDER BY p.cedula ASC");
+                    INNER JOIN personas pp ON p.id_persona = pp.id
+                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
+                    WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
         $pasantes = $db->resultSet();
 
         $headers = ['Cédula', 'Nombre', 'Apellido', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado'];
@@ -389,12 +418,16 @@ class ReportesController extends Controller {
     }
 
     public function exportarPasantesPdf() {
+        $this->requireRoles([1, 3]);
         $db = new Database();
-        $db->query("SELECT p.*, per.nombre || ' ' || per.apellido as tutor
+        $db->query("SELECT p.*,
+                           pp.cedula, pp.nombre, pp.apellido,
+                           pt.nombre || ' ' || pt.apellido AS tutor
                     FROM pasantes p
-                    LEFT JOIN empleados e ON p.id_tutor_institucional = e.id
-                    LEFT JOIN personas per ON e.id_persona = per.id
-                    WHERE p.is_active = TRUE ORDER BY p.cedula ASC");
+                    INNER JOIN personas pp ON p.id_persona = pp.id
+                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
+                    WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
         $pasantes = $db->resultSet();
 
         $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado'];
