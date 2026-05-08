@@ -13,6 +13,8 @@ class Taller extends Model {
     private string  $estado;
     private string  $tipo_actividad;
     private ?int    $id_oficio;
+    private bool    $es_interna;
+    private ?string $tipo_ente;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -30,6 +32,8 @@ class Taller extends Model {
             $this->estado                 = $data['estado'] ?? 'Programado';
             $this->tipo_actividad         = $data['tipo_actividad'] ?? 'Taller';
             $this->id_oficio              = $data['id_oficio'] ?? null;
+            $this->es_interna             = !empty($data['es_interna']);
+            $this->tipo_ente              = $data['tipo_ente'] ?? null;
         }
     }
 
@@ -69,6 +73,7 @@ class Taller extends Model {
                                   id_ubicacion_formacion=:id_ubicacion_formacion,
                                   id_facilitador=:id_facilitador, cupo_maximo=:cupo_maximo,
                                   estado=:estado, tipo_actividad=:tipo_actividad,
+                                  es_interna=:es_interna, tipo_ente=:tipo_ente,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -77,12 +82,12 @@ class Taller extends Model {
                               (nombre, descripcion, fecha_inicio, fecha_fin,
                                hora_inicio, hora_fin, id_ubicacion_formacion,
                                id_facilitador, cupo_maximo, estado, tipo_actividad,
-                               id_oficio, created_by)
+                               es_interna, tipo_ente, id_oficio, created_by)
                               VALUES
                               (:nombre, :descripcion, :fecha_inicio, :fecha_fin,
                                :hora_inicio, :hora_fin, :id_ubicacion_formacion,
                                :id_facilitador, :cupo_maximo, :estado, :tipo_actividad,
-                               :id_oficio, :user_id)");
+                               :es_interna, :tipo_ente, :id_oficio, :user_id)");
             $this->db->bind(':id_oficio', $this->id_oficio);
         }
         $this->db->bind(':nombre',                 $this->nombre);
@@ -96,6 +101,8 @@ class Taller extends Model {
         $this->db->bind(':cupo_maximo',            $this->cupo_maximo);
         $this->db->bind(':estado',                 $this->estado);
         $this->db->bind(':tipo_actividad',         $this->tipo_actividad);
+        $this->db->bind(':es_interna',             $this->es_interna);
+        $this->db->bind(':tipo_ente',              $this->tipo_ente);
         $this->db->bind(':user_id',                $user_id);
         return $this->db->execute();
     }
@@ -118,7 +125,7 @@ class Taller extends Model {
                     FROM participantes_taller pt
                     LEFT JOIN personas p ON pt.id_persona = p.id
                     WHERE pt.id_taller = :id_taller
-                    ORDER BY pt.id ASC");
+                    ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC, pt.id ASC");
         $db->bind(':id_taller', $id_taller);
         return $db->resultSet();
     }
@@ -132,12 +139,13 @@ class Taller extends Model {
     }
 
     // Inscribir persona con cédula registrada en el sistema
-    public static function inscribir($id_taller, $id_persona, $user_id = null) {
+    public static function inscribir($id_taller, $id_persona, $user_id = null, bool $esBrigadista = false) {
         $db = new Database();
-        $db->query("INSERT INTO participantes_taller (id_taller, id_persona, created_by)
-                    VALUES (:id_taller, :id_persona, :user_id)");
+        $db->query("INSERT INTO participantes_taller (id_taller, id_persona, es_brigadista, created_by)
+                    VALUES (:id_taller, :id_persona, :brigadista, :user_id)");
         $db->bind(':id_taller',  $id_taller);
         $db->bind(':id_persona', $id_persona);
+        $db->bind(':brigadista', $esBrigadista);
         $db->bind(':user_id',    $user_id);
         return $db->execute();
     }
@@ -146,14 +154,29 @@ class Taller extends Model {
     public static function inscribirLibre($id_taller, array $datos, $user_id = null) {
         $db = new Database();
         $db->query("INSERT INTO participantes_taller
-                    (id_taller, nombre_libre, apellido_libre, cedula_libre, created_by)
-                    VALUES (:id_taller, :nombre, :apellido, :cedula, :user_id)");
+                    (id_taller, nombre_libre, apellido_libre, cedula_libre,
+                     nombre_docente, cedula_docente, created_by)
+                    VALUES (:id_taller, :nombre, :apellido, :cedula,
+                            :nom_doc, :ced_doc, :user_id)");
         $db->bind(':id_taller', $id_taller);
         $db->bind(':nombre',    $datos['nombre_libre']);
         $db->bind(':apellido',  $datos['apellido_libre'] ?? null);
         $db->bind(':cedula',    $datos['cedula_libre'] ?? null);
+        $db->bind(':nom_doc',   $datos['nombre_docente'] ?? null);
+        $db->bind(':ced_doc',   $datos['cedula_docente'] ?? null);
         $db->bind(':user_id',   $user_id);
         return $db->execute();
+    }
+
+    // Verificar si una persona ha recibido formación previa (para prerequisito de rutas)
+    public static function personaRecibioFormacion(int $id_persona): bool {
+        $db = new Database();
+        $db->query("SELECT 1 FROM participantes_taller pt
+                    JOIN talleres t ON pt.id_taller = t.id
+                    WHERE pt.id_persona = :id AND pt.asistio = TRUE AND t.is_active = TRUE
+                    LIMIT 1");
+        $db->bind(':id', $id_persona);
+        return (bool)$db->single();
     }
 
     public static function buscarPersonaPorCedula(string $cedula) {

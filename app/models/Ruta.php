@@ -11,21 +11,23 @@ class Ruta extends Model {
     private ?int    $id_departamento;
     private ?int    $id_facilitador;
     private int     $cupo_maximo;
+    private bool    $requiere_formacion;
 
     public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
-            $this->id                = $data['id'] ?? null;
-            $this->nombre            = $data['nombre'] ?? '';
-            $this->descripcion       = $data['descripcion'] ?? '';
-            $this->duracion_estimada = $data['duracion_estimada'] ?? '';
-            $this->nivel_dificultad  = $data['nivel_dificultad'] ?? 'Fácil';
-            $this->estado            = $data['estado'] ?? 'Activa';
-            $this->fecha_visita      = $data['fecha_visita'] ?: null;
-            $this->hora_visita       = $data['hora_visita'] ?: null;
-            $this->id_departamento   = $data['id_departamento'] ? (int)$data['id_departamento'] : null;
-            $this->id_facilitador    = $data['id_facilitador'] ? (int)$data['id_facilitador'] : null;
-            $this->cupo_maximo       = isset($data['cupo_maximo']) ? (int)$data['cupo_maximo'] : 20;
+            $this->id                  = $data['id'] ?? null;
+            $this->nombre              = $data['nombre'] ?? '';
+            $this->descripcion         = $data['descripcion'] ?? '';
+            $this->duracion_estimada   = $data['duracion_estimada'] ?? '';
+            $this->nivel_dificultad    = $data['nivel_dificultad'] ?? 'Fácil';
+            $this->estado              = $data['estado'] ?? 'Activa';
+            $this->fecha_visita        = $data['fecha_visita'] ?: null;
+            $this->hora_visita         = $data['hora_visita'] ?: null;
+            $this->id_departamento     = $data['id_departamento'] ? (int)$data['id_departamento'] : null;
+            $this->id_facilitador      = $data['id_facilitador'] ? (int)$data['id_facilitador'] : null;
+            $this->cupo_maximo         = isset($data['cupo_maximo']) ? (int)$data['cupo_maximo'] : 20;
+            $this->requiere_formacion  = !empty($data['requiere_formacion']);
         }
     }
 
@@ -73,6 +75,7 @@ class Ruta extends Model {
                                   id_departamento=:id_departamento,
                                   id_facilitador=:id_facilitador,
                                   cupo_maximo=:cupo_maximo,
+                                  requiere_formacion=:requiere_formacion,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -80,10 +83,10 @@ class Ruta extends Model {
             $this->db->query("INSERT INTO rutas
                               (nombre, descripcion, duracion_estimada, nivel_dificultad, estado,
                                fecha_visita, hora_visita, id_departamento, id_facilitador,
-                               cupo_maximo, created_by)
+                               cupo_maximo, requiere_formacion, created_by)
                               VALUES (:nombre, :descripcion, :duracion_estimada, :nivel_dificultad,
                                       :estado, :fecha_visita, :hora_visita, :id_departamento,
-                                      :id_facilitador, :cupo_maximo, :user_id)");
+                                      :id_facilitador, :cupo_maximo, :requiere_formacion, :user_id)");
         }
         $this->db->bind(':nombre',           $this->nombre);
         $this->db->bind(':descripcion',      $this->descripcion);
@@ -94,8 +97,9 @@ class Ruta extends Model {
         $this->db->bind(':hora_visita',      $this->hora_visita);
         $this->db->bind(':id_departamento',  $this->id_departamento);
         $this->db->bind(':id_facilitador',   $this->id_facilitador);
-        $this->db->bind(':cupo_maximo',      $this->cupo_maximo);
-        $this->db->bind(':user_id',          $user_id);
+        $this->db->bind(':cupo_maximo',          $this->cupo_maximo);
+        $this->db->bind(':requiere_formacion',   $this->requiere_formacion);
+        $this->db->bind(':user_id',              $user_id);
         return $this->db->execute();
     }
 

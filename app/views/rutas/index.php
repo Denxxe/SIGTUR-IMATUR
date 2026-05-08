@@ -204,6 +204,19 @@
                         </div>
                     </div>
 
+                    <!-- Prerequisito de formación (RN-F12) -->
+                    <div class="col-12">
+                        <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="rut_req_form" name="requiere_formacion" value="1">
+                                <label class="form-check-label" for="rut_req_form" style="font-size:13px; cursor:pointer; user-select:none;">
+                                    <i class="bi bi-mortarboard"></i> Requiere formación previa para inscribirse
+                                    <span style="color:var(--text-tertiary); font-size:11px;">(ej: Exploradores de Cumaná)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -237,6 +250,7 @@ function editarRuta(r) {
     document.getElementById('rut_facilitador').value      = r.id_facilitador || '';
     document.getElementById('rut_fecha').value            = r.fecha_visita || '';
     document.getElementById('rut_hora').value             = r.hora_visita ? r.hora_visita.substring(0,5) : '';
+    document.getElementById('rut_req_form').checked       = r.requiere_formacion == true || r.requiere_formacion === 't' || r.requiere_formacion === '1';
     new bootstrap.Modal(document.getElementById('modalRuta')).show();
 }
 </script>

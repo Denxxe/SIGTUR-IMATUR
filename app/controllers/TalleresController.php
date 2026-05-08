@@ -19,8 +19,17 @@ class TalleresController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
         $_POST = $this->sanitizePost();
-        $userId  = $this->getUserId();
+        $userId    = $this->getUserId();
         $esEdicion = !empty($_POST['id']);
+        $esInterna = !empty($_POST['es_interna']);
+
+        $tiposValidos  = ['Taller', 'Charla', 'Inducción'];
+        $tipoActividad = in_array($_POST['tipo_actividad'] ?? '', $tiposValidos)
+            ? $_POST['tipo_actividad'] : 'Taller';
+
+        $tiposEnteValidos = ['Escuela','Liceo','Comunidad','Prestador de Servicio','IMATUR'];
+        $tipoEnte = (!$esInterna && in_array($_POST['tipo_ente'] ?? '', $tiposEnteValidos))
+            ? $_POST['tipo_ente'] : null;
 
         $data = [
             'id'                     => $esEdicion ? (int)$_POST['id'] : null,
@@ -33,7 +42,9 @@ class TalleresController extends Controller {
             'id_ubicacion_formacion' => (int)$_POST['id_ubicacion_formacion'] ?: null,
             'id_facilitador'         => (int)$_POST['id_facilitador'],
             'cupo_maximo'            => (int)$_POST['cupo_maximo'],
-            'tipo_actividad'         => $_POST['tipo_actividad'] ?? 'Taller',
+            'tipo_actividad'         => $tipoActividad,
+            'es_interna'             => $esInterna,
+            'tipo_ente'              => $tipoEnte,
             'id_oficio'              => null,
             // RN-F13: nuevas actividades siempre inician como Programado
             'estado'                 => $esEdicion ? $_POST['estado'] : 'Programado',
@@ -54,13 +65,13 @@ class TalleresController extends Controller {
                     }
                 }
             } else {
-                // RN-F05/F06: actividad externa requiere oficio
-                if (!empty($data['id_ubicacion_formacion'])) {
+                // RN-F05/F06: actividad externa con sede no propia requiere oficio
+                if (!$esInterna && !empty($data['id_ubicacion_formacion'])) {
                     $ubi = UbicacionFormacion::find($data['id_ubicacion_formacion']);
-                    $esExterna = isset($ubi->es_sede_propia)
+                    $esExternaSede = isset($ubi->es_sede_propia)
                         && !filter_var($ubi->es_sede_propia, FILTER_VALIDATE_BOOLEAN);
 
-                    if ($esExterna) {
+                    if ($esExternaSede) {
                         $fechaOficio = trim($_POST['oficio_fecha'] ?? '');
                         if (empty($fechaOficio)) {
                             throw new Exception('Las actividades externas requieren la fecha del oficio recibido (RN-F06).');
@@ -125,6 +136,8 @@ class TalleresController extends Controller {
                     'nombre_libre'   => $nombre,
                     'apellido_libre' => trim($_POST['apellido_libre'] ?? ''),
                     'cedula_libre'   => trim($_POST['cedula_libre'] ?? '') ?: null,
+                    'nombre_docente' => trim($_POST['nombre_docente'] ?? '') ?: null,
+                    'cedula_docente' => trim($_POST['cedula_docente'] ?? '') ?: null,
                 ], $userId);
             } else {
                 $cedula = trim($_POST['cedula_busqueda'] ?? '');
@@ -135,7 +148,8 @@ class TalleresController extends Controller {
                 if (!$persona) {
                     throw new Exception("No se encontró ninguna persona con cédula '{$cedula}' en el sistema.");
                 }
-                Taller::inscribir($id_taller, $persona->id, $userId);
+                $esBrigadista = !empty($_POST['es_brigadista']);
+                Taller::inscribir($id_taller, $persona->id, $userId, $esBrigadista);
             }
             flash('global_msg', 'Participante registrado correctamente.');
 

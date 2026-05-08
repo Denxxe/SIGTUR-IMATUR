@@ -30,9 +30,16 @@
                         elseif ($t->estado == 'Finalizado') $badgeClass = 'sig-badge--success';
                         elseif ($t->estado == 'Cancelado') $badgeClass = 'sig-badge--danger';
                     ?>
-                    <div style="display:flex; gap:var(--sp-2); align-items:center;">
+                    <div style="display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap;">
                         <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $t->estado; ?></span>
                         <span class="sig-badge sig-badge--neutral" style="font-size:10px;"><?php echo $t->tipo_actividad ?? 'Taller'; ?></span>
+                        <?php if (!empty($t->es_interna)): ?>
+                            <span class="sig-badge sig-badge--brand" style="font-size:10px;">Interna</span>
+                        <?php else: ?>
+                            <span class="sig-badge sig-badge--neutral" style="font-size:10px; color:var(--text-secondary);">
+                                <?php echo $t->tipo_ente ? htmlspecialchars($t->tipo_ente) : 'Externa'; ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">ID #<?php echo $t->id; ?></span>
                 </div>
@@ -98,6 +105,28 @@
                 <input type="hidden" name="id" id="tal_id">
                 <div class="row g-4">
 
+                    <!-- Toggle Interna / Externa -->
+                    <div class="col-12">
+                        <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--sp-3);">
+                            <div class="form-check form-switch" style="margin:0;">
+                                <input class="form-check-input" type="checkbox" id="tal_es_interna" name="es_interna" value="1">
+                                <label class="form-check-label" for="tal_es_interna" style="font-size:13px; cursor:pointer; user-select:none;">
+                                    <i class="bi bi-building"></i> Actividad interna (para personal IMATUR)
+                                </label>
+                            </div>
+                            <div id="bloque_tipo_ente" style="display:flex; align-items:center; gap:var(--sp-2);">
+                                <label class="sig-field__label" style="margin:0; white-space:nowrap;">Dirigida a:</label>
+                                <select name="tipo_ente" id="tal_tipo_ente" class="sig-select" style="min-width:180px;">
+                                    <option value="">Sin especificar</option>
+                                    <option value="Escuela">Escuela</option>
+                                    <option value="Liceo">Liceo</option>
+                                    <option value="Comunidad">Comunidad / Comuna</option>
+                                    <option value="Prestador de Servicio">Prestador de Servicio</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-md-6">
                         <div class="sig-field">
                             <label class="sig-field__label">Nombre <span class="req">*</span></label>
@@ -110,6 +139,7 @@
                             <select name="tipo_actividad" id="tal_tipo" class="sig-select" required>
                                 <option value="Taller">Taller</option>
                                 <option value="Charla">Charla / Conversatorio</option>
+                                <option value="Inducción">Inducción</option>
                             </select>
                         </div>
                     </div>
@@ -253,6 +283,8 @@ function nuevoTaller() {
     document.getElementById('tal_cupo').value = '30';
     document.getElementById('tal_tipo').value = 'Taller';
     setOpcionesEstado('Programado');
+    document.getElementById('tal_es_interna').checked = false;
+    actualizarModoInterno(false);
     ocultarOficio();
 }
 
@@ -269,6 +301,10 @@ function editarTaller(t) {
     document.getElementById('tal_facilitador').value = t.id_facilitador;
     document.getElementById('tal_cupo').value        = t.cupo_maximo;
     document.getElementById('tal_tipo').value        = t.tipo_actividad || 'Taller';
+    const esInterna = t.es_interna == true || t.es_interna === 't' || t.es_interna === '1';
+    document.getElementById('tal_es_interna').checked = esInterna;
+    document.getElementById('tal_tipo_ente').value = t.tipo_ente || '';
+    actualizarModoInterno(esInterna);
     setOpcionesEstado(t.estado);
     // En edición nunca se muestra el oficio (ya fue registrado al crear)
     ocultarOficio();
@@ -280,21 +316,36 @@ function ocultarOficio() {
     document.getElementById('oficio_fecha').required = false;
 }
 
-// RN-F06: mostrar sección oficio solo para nuevas actividades externas
-document.getElementById('tal_ubicacion').addEventListener('change', function () {
-    const esNueva  = !document.getElementById('tal_id').value;
-    const opt      = this.options[this.selectedIndex];
-    const esPropia = opt.value && opt.dataset.sedePropia === '1';
-    const seccion  = document.getElementById('seccion_oficio');
+function actualizarModoInterno(esInterna) {
+    document.getElementById('bloque_tipo_ente').style.display = esInterna ? 'none' : 'flex';
+    if (esInterna) ocultarOficio();
+    // Si es interna, forzar re-evaluar la visibilidad de oficio
+    if (!esInterna) evaluarOficio();
+}
+
+function evaluarOficio() {
+    const esNueva    = !document.getElementById('tal_id').value;
+    const esInterna  = document.getElementById('tal_es_interna').checked;
+    const sel        = document.getElementById('tal_ubicacion');
+    const opt        = sel.options[sel.selectedIndex];
+    const esPropia   = opt && opt.value && opt.dataset.sedePropia === '1';
+    const seccion    = document.getElementById('seccion_oficio');
     const fechaInput = document.getElementById('oficio_fecha');
 
-    if (esNueva && opt.value && !esPropia) {
+    if (esNueva && !esInterna && opt && opt.value && !esPropia) {
         seccion.style.display = 'block';
         fechaInput.required   = true;
     } else {
         ocultarOficio();
     }
+}
+
+document.getElementById('tal_es_interna').addEventListener('change', function () {
+    actualizarModoInterno(this.checked);
 });
+
+// RN-F06: mostrar sección oficio solo para nuevas actividades externas no internas
+document.getElementById('tal_ubicacion').addEventListener('change', evaluarOficio);
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

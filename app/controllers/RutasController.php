@@ -27,17 +27,18 @@ class RutasController extends Controller {
         $estado = in_array($_POST['estado'] ?? '', $estadosValidos) ? $_POST['estado'] : 'Activa';
 
         $data = [
-            'id'               => $esEdicion ? (int)$_POST['id'] : null,
-            'nombre'           => trim($_POST['nombre']),
-            'descripcion'      => trim($_POST['descripcion'] ?? ''),
-            'duracion_estimada'=> trim($_POST['duracion_estimada'] ?? ''),
-            'nivel_dificultad' => $nivel,
-            'estado'           => $estado,
-            'fecha_visita'     => $_POST['fecha_visita'] ?: null,
-            'hora_visita'      => $_POST['hora_visita'] ?: null,
-            'id_departamento'  => (int)$_POST['id_departamento'] ?: null,
-            'id_facilitador'   => (int)$_POST['id_facilitador'] ?: null,
-            'cupo_maximo'      => (int)($_POST['cupo_maximo'] ?? 20),
+            'id'                  => $esEdicion ? (int)$_POST['id'] : null,
+            'nombre'              => trim($_POST['nombre']),
+            'descripcion'         => trim($_POST['descripcion'] ?? ''),
+            'duracion_estimada'   => trim($_POST['duracion_estimada'] ?? ''),
+            'nivel_dificultad'    => $nivel,
+            'estado'              => $estado,
+            'fecha_visita'        => $_POST['fecha_visita'] ?: null,
+            'hora_visita'         => $_POST['hora_visita'] ?: null,
+            'id_departamento'     => (int)$_POST['id_departamento'] ?: null,
+            'id_facilitador'      => (int)$_POST['id_facilitador'] ?: null,
+            'cupo_maximo'         => (int)($_POST['cupo_maximo'] ?? 20),
+            'requiere_formacion'  => !empty($_POST['requiere_formacion']),
         ];
 
         $ruta = new Ruta($data);
@@ -100,6 +101,17 @@ class RutasController extends Controller {
                 if (empty($cedula)) throw new Exception('Ingrese la cédula del participante.');
                 $persona = Ruta::buscarPersonaPorCedula($cedula);
                 if (!$persona) throw new Exception("No se encontró ninguna persona con cédula '{$cedula}'.");
+
+                // RN-F12: verificar prerequisito de formación si la ruta lo requiere
+                $ruta = Ruta::find($id_ruta);
+                if ($ruta && !empty($ruta->requiere_formacion)) {
+                    if (!Taller::personaRecibioFormacion((int)$persona->id)) {
+                        throw new Exception(
+                            'Esta ruta requiere formación previa. La persona no tiene registro de actividades de formación completadas (RN-F12).'
+                        );
+                    }
+                }
+
                 Ruta::inscribir($id_ruta, $persona->id, $userId);
             }
             flash('global_msg', 'Participante registrado correctamente.');
