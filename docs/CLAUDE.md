@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-05-01  
+**Última actualización:** 2026-05-08  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -57,8 +57,8 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | Rol ID | Nombre | Controladores permitidos |
 |--------|--------|--------------------------|
 | 1 | Administrador | Todo sin restricción |
-| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes |
-| 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
+| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Reportes |
+| 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Reportes |
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 
 ### Protección por reporte (ReportesController::requireRoles)
@@ -76,8 +76,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | RRHH | `in_array($rol, [1, 2])` |
 | Inventario | `in_array($rol, [1, 4])` |
 | Formación | `in_array($rol, [1, 3])` |
-| Turismo (Rutas + Actividades + Visitantes + Visitas) | `in_array($rol, [1, 3])` |
-| Recepción (Visitantes + Visitas para RRHH) | `$rol == 2` |
+| Turismo (Rutas + Actividades) | `in_array($rol, [1, 3])` |
 | Análisis / Reportes | todos los roles (sin condición) |
 | Sistema | `$rol == 1` |
 
@@ -125,7 +124,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `taller_informes` | Informe demográfico por taller (mujeres/hombres/niñas/niños) | ✅ (002) |
 | `taller_inventario` | Préstamo de bienes a un taller | ✅ (002) |
 | `participantes_taller` | Inscripción y asistencia de personas a un taller | ✅ (002) |
-| `pasantes` | Tabla independiente (cedula/nombre propios, no hereda de personas) | ✅ (002) |
+| `pasantes` | Históricamente independiente; migración 003 agrega `id_persona FK` y elimina cedula/nombre/apellido propios | ✅ (002) |
 | `pasante_documentos` | Cartas y evaluaciones con flags de entrega | ✅ (002) |
 
 #### Turismo
@@ -150,6 +149,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 |---------|--------|-----------|
 | `database/migrations/001_visitantes_visitas.sql` | ⚠️ Pendiente de ejecutar | Tablas `visitantes` y `visitas` |
 | `database/migrations/002_rrhh_extensions.sql` | ⚠️ Pendiente de ejecutar | Horarios, Permisos, Vacaciones + corrección auditoría |
+| `database/migrations/003_normalize_pasantes.sql` | ⚠️ Pendiente de ejecutar (requiere 001 y 002 previos) | Normaliza `pasantes`: agrega `id_persona FK`, migra datos por cédula, elimina campos redundantes |
 
 ### Soft Delete
 Todas las tablas tienen: `is_active BOOL`, `deleted_at TIMESTAMP`, `deleted_by INT`.  
@@ -172,7 +172,7 @@ created_by, updated_by, deleted_by  ← INT (id del usuario que operó)
 - Tablas pivote correctas: `participantes_taller`, `ruta_inventario`, `taller_inventario`
 
 ### Problemas conocidos ⚠️
-1. **`pasantes` vs `personas`**: `pasantes` tiene su propio cedula/nombre/apellido (no hereda de `personas`). Si un pasante luego es participante en un taller, no se puede cruzar automáticamente. Decisión de diseño intencional; documentar al hacer reportes cruzados.
+1. **`pasantes` vs `personas`**: Antes de ejecutar la migración 003, `pasantes` tiene cedula/nombre/apellido propios. Después de 003 queda normalizado con `id_persona FK`. Hasta que se ejecute 003, los reportes cruzados con `participantes_taller` requieren JOIN manual por cédula.
 2. **`taller_informes.total_atendidas`**: Dato derivado (mujeres+hombres+niñas+niños). Se puede generar inconsistencia si se actualiza una columna sin la otra. Validar en el controller.
 3. **`municipio.created_at NOT NULL` sin DEFAULT**: Si se hace INSERT sin ese valor explota. El model debe siempre pasar `created_at = NOW()`.
 4. **`ubicaciones."departamento _d"`**: Nombre con espacio — siempre usar comillas dobles en SQL.
@@ -220,6 +220,7 @@ created_by, updated_by, deleted_by  ← INT (id del usuario que operó)
 | `bootstrap-icons.min.css` | ✅ Local | 1.11.3 |
 | `bootstrap-icons.woff2` | ✅ Local | 1.11.3 |
 | `bootstrap-icons.woff` | ✅ Local | 1.11.3 (fallback) |
+| `bootstrap-icons.svg` | ✅ Local | 1.11.3 (fallback SVG) |
 
 ### Tipografía
 Google Fonts fue eliminado de `header.php`. Fallback en CSS: `'Inter', system-ui, -apple-system, sans-serif`.  
@@ -280,7 +281,7 @@ $this->logAudit('nombre_tabla', 'INSERT', $newId, null, $newData);
 
 2. **`parroquia` con nomenclatura inconsistente**: `create_at`/`update_at` en lugar de `created_at`/`updated_at`. Los models Municipio y Parroquia manejan esto.
 
-3. **`pasantes` es independiente de `personas`**: Tiene sus propios campos cedula/nombre/apellido. Reportes cruzados con participantes_taller requieren JOIN manual por cedula, no por FK.
+3. **`pasantes` antes de migración 003**: Tiene sus propios campos cedula/nombre/apellido. Reportes cruzados con `participantes_taller` requieren JOIN manual por cedula hasta que se ejecute la migración 003, que resuelve esto con `id_persona FK`.
 
 4. **Transacciones en Empleados**: Guardar un empleado requiere INSERT en `personas` y luego en `empleados` de forma atómica. Ver `EmpleadosController::store()`.
 
@@ -311,6 +312,7 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/schema.sql
 # 4. Ejecutar migraciones en orden:
 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/001_visitantes_visitas.sql
 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/002_rrhh_extensions.sql
+psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/003_normalize_pasantes.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -334,4 +336,5 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/002_rrhh_extensions.s
 | Schema completo con datos | `database/schema.sql` |
 | Migración visitantes/visitas | `database/migrations/001_visitantes_visitas.sql` |
 | Migración RRHH extensions | `database/migrations/002_rrhh_extensions.sql` |
+| Migración normalización pasantes | `database/migrations/003_normalize_pasantes.sql` |
 | Reportes e Indicadores | `app/controllers/ReportesController.php` |

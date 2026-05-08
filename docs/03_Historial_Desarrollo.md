@@ -27,5 +27,23 @@ A lo largo del proyecto se implementaron las siguientes características fundame
 3. **Diagnóstico a Bajo Nivel (Script en `public/inspect.php`)**
    - Se generó un marco de pruebas `tester` usando código RAW para saltarse las restricciones y analizar el estado interno de las bases de Postgres cuando estas fallaban. Todo script diagnóstico fue eliminado al completar las pruebas para evitar vulneraciones de seguridad.
 
---- 
-*Notas Finales*: Toda esta infraestructura deja la pista lista para un despliegue sin interferencias en plataformas como Heroku/Railway u on-premise local para el IMATUR.
+## Migraciones Incrementales Registradas
+
+1. **001 — Visitantes y Visitas**
+   - Tablas `visitantes` (personas externas) y `visitas` (marcaje entrada/salida con patrón toggle: si hay visita abierta → cierra; si no → abre).
+
+2. **002 — Extensiones RRHH y Auditoría**
+   - Nuevas tablas: `horarios`, `permisos_laborales`, `vacaciones`.
+   - Columnas en `empleados`: `tipo_contrato`, `fecha_egreso`, `id_horario`.
+   - Columna `tipo_actividad` en `talleres`.
+   - Auditoría completa en: `taller_informes`, `taller_inventario`, `participantes_taller`, `pasantes`, `pasante_documentos`, `ruta_inventario`.
+
+3. **003 — Normalización Pasantes → Personas**
+   - Agrega `id_persona INT FK` a `pasantes`.
+   - Migra datos: para cada pasante activo busca o crea la `persona` equivalente por cédula.
+   - Elimina columnas redundantes (`cedula`, `nombre`, `apellido`) de `pasantes`.
+   - Resuelve la inconsistencia de normalización donde `pasantes` era independiente de `personas`.
+   - **Debe ejecutarse después de 001 y 002.**
+
+---
+*Notas Finales*: Toda esta infraestructura deja la pista lista para un despliegue sin interferencias en plataformas on-premise local para el IMATUR.

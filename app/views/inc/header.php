@@ -98,23 +98,6 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/actividadesruta/index">
                 <i class="bi bi-calendar-event"></i> <span>Actividades</span>
             </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
-                <i class="bi bi-people"></i> <span>Visitantes</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitas/index">
-                <i class="bi bi-door-open"></i> <span>Control de Visitas</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Recepción — solo RRHH (2): Visitantes y Visitas sin las rutas turísticas -->
-            <?php if($rol == 2): ?>
-            <div class="sidebar__group-label">Recepción</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
-                <i class="bi bi-people"></i> <span>Visitantes</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitas/index">
-                <i class="bi bi-door-open"></i> <span>Control de Visitas</span>
-            </a>
             <?php endif; ?>
 
             <!-- Reportes — todos los roles -->

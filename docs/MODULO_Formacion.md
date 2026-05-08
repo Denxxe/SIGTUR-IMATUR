@@ -7,10 +7,13 @@
 La división formativa recauda métricas, impulsa políticas turísticas y funciona como eje central de IMATUR. 
 
 ## Tablas en Juego
-- `ubicaciones_formacion`: Sitios donde se ejecutan formacionales.
-- `talleres`: Cabecillas de proyecto. Cuentan con Facilitador, fechas, y temas.
-- `taller_informes`: Registros demográficos que evalúan la calidad e impacto post-fecha de culminación del taller.
-- `pasantes`: Registro civil e institucional, y `pasante_documentos` para certificar estatus de entrada o finalización de periodo.
+- `ubicaciones_formacion`: Sitios donde se ejecutan formacionales. FK a `parroquia`.
+- `talleres`: Cabecillas de proyecto. Cuentan con Facilitador, fechas, y temas. Columna `tipo_actividad` agregada en migración 002 (valores: 'Taller','Charla','Curso','Taller de Arte','Capacitación'; DEFAULT 'Taller').
+- `taller_informes`: Registros demográficos que evalúan la calidad e impacto post-fecha de culminación del taller. `total_atendidas` es derivado (mujeres+hombres+niñas+niños) — siempre recalcular antes de guardar.
+- `participantes_taller` *(migración 002)*: Tabla pivote de inscripción y asistencia individual de personas a un taller.
+- `taller_inventario` *(migración 002)*: Préstamo de bienes del inventario institucional a un taller.
+- `pasantes`: Registro civil e institucional. La migración 003 agrega `id_persona` FK para normalizar con la tabla `personas` y eliminar los campos redundantes `cedula`, `nombre`, `apellido`.
+- `pasante_documentos`: Cartas y evaluaciones con flags de entrega por pasante.
 
 ## Lógica de Negocio (Business Rules)
 1. **Indicadores de Desempeño y Género:**

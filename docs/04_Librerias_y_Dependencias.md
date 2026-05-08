@@ -14,9 +14,9 @@ El sistema carga estas librerías desde la carpeta `/public/assets/libs/` para a
 - Se usa como framework estructural de FrontEnd para la disposición de columnas (Grid System), botones, modales (ventanas emergentes) e inputs de formulario.
 - **Integración de Validaciones:** Se emplean las clases `.needs-validation` y `.was-validated` nativas de Bootstrap para dar retroalimentación visual al usuario en The DOM cuando comete un error en el formulario (ej. bordes rojos).
 
-### 2.2 Bootstrap Icons CDN
-*Ruta:* `https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css`
-- Provee la iconografía moderna y limpia para el Sidebar, los botones de acción y los elementos del Dashboard. Aunque es por CDN, el sistema tiene fallbacks (textos de soporte) si no llega a cargar.
+### 2.2 Bootstrap Icons (Local)
+*Ruta:* `/assets/libs/bootstrap-icons.min.css` (fuentes: `bootstrap-icons.woff2`, `bootstrap-icons.woff`, `bootstrap-icons.svg`)
+- Provee la iconografía moderna y limpia para el Sidebar, los botones de acción y los elementos del Dashboard. Integrado 100% localmente; las rutas de fuente en el CSS apuntan a `./` para compatibilidad con el servidor local sin internet.
 
 ### 2.3 ApexCharts.js (Local)
 *Ruta:* `/assets/libs/apexcharts.min.js`
