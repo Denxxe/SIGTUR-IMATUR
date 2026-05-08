@@ -119,11 +119,11 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 #### Formación
 | Tabla | Descripción | Auditoría completa |
 |-------|-------------|-------------------|
-| `ubicaciones_formacion` | Sedes externas; FK a `parroquia` (columna `parroquia INT`) | ✅ |
-| `talleres` | Actividades formativas; `tipo_actividad` agregado en migración 002 | ✅ |
+| `ubicaciones_formacion` | Sedes e instituciones; FK a `parroquia`; columna `es_sede_propia BOOL` (migración 004) para marcar la sede de IMATUR | ✅ |
+| `talleres` | Actividades formativas; `tipo_actividad` ('Taller','Charla') por migración 004; `id_oficio FK` para actividades externas | ✅ |
 | `taller_informes` | Informe demográfico por taller (mujeres/hombres/niñas/niños) | ✅ (002) |
 | `taller_inventario` | Préstamo de bienes a un taller | ✅ (002) |
-| `participantes_taller` | Inscripción y asistencia de personas a un taller | ✅ (002) |
+| `participantes_taller` | Inscripción y asistencia; `id_persona` nullable desde migración 004; columnas `nombre_libre`, `apellido_libre`, `cedula_libre` para participantes sin cédula (niños/as) | ✅ (002) |
 | `pasantes` | Históricamente independiente; migración 003 agrega `id_persona FK` y elimina cedula/nombre/apellido propios | ✅ (002) |
 | `pasante_documentos` | Cartas y evaluaciones con flags de entrega | ✅ (002) |
 
@@ -150,6 +150,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `database/migrations/001_visitantes_visitas.sql` | ⚠️ Pendiente de ejecutar | Tablas `visitantes` y `visitas` |
 | `database/migrations/002_rrhh_extensions.sql` | ⚠️ Pendiente de ejecutar | Horarios, Permisos, Vacaciones + corrección auditoría |
 | `database/migrations/003_normalize_pasantes.sql` | ⚠️ Pendiente de ejecutar (requiere 001 y 002 previos) | Normaliza `pasantes`: agrega `id_persona FK`, migra datos por cédula, elimina campos redundantes |
+| `database/migrations/004_formacion_reglas_negocio.sql` | ⚠️ Pendiente de ejecutar (requiere 001, 002 y 003 previos) | RN-F01 tipo_actividad → solo Taller/Charla; RN-F02 `es_sede_propia` en ubicaciones; RN-F05/06 tabla `oficios` + `id_oficio` en talleres; RN-F16 participantes sin cédula |
 
 ### Soft Delete
 Todas las tablas tienen: `is_active BOOL`, `deleted_at TIMESTAMP`, `deleted_by INT`.  
@@ -293,7 +294,17 @@ $this->logAudit('nombre_tabla', 'INSERT', $newId, null, $newData);
 
 8. **`taller_informes.total_atendidas` es derivado**: Siempre recalcular como `mujeres + hombres + ninas + ninos` antes de guardar para evitar inconsistencia.
 
-9. **`talleres.tipo_actividad`**: Columna nueva (migración 002). Valores: 'Taller','Charla','Curso','Taller de Arte','Capacitación'. Retrocompatible: DEFAULT 'Taller'.
+9. **`talleres.tipo_actividad`**: Restringido a ('Taller','Charla') desde migración 004. DEFAULT 'Taller'.
+
+10. **`talleres.id_oficio`**: FK nullable a tabla `oficios`. Solo se asigna al crear una actividad en sede externa (`es_sede_propia = FALSE`). En ediciones posteriores no cambia.
+
+11. **`ubicaciones_formacion.es_sede_propia`**: Flag booleano (migración 004). Al crear una actividad, si la sede seleccionada tiene `es_sede_propia = TRUE` → actividad interna, no requiere oficio. Si es `FALSE` → externa, requiere fecha del oficio. Marcar IMATUR con: `UPDATE ubicaciones_formacion SET es_sede_propia = TRUE WHERE nombre ILIKE '%IMATUR%';`
+
+12. **`participantes_taller` sin cédula**: Desde migración 004, `id_persona` es nullable. Usar `inscribirLibre()` en el modelo para participantes sin documento (niños/as). La constraint `pt_participante_requerido` exige que al menos uno de `id_persona` o `nombre_libre` no sea NULL.
+
+13. **Máquina de estados en talleres (RN-F13)**: Transiciones válidas: Programado→(EnCurso|Cancelado), EnCurso→(Finalizado|Cancelado). Finalizado y Cancelado son terminales. Validado en `TalleresController::validarTransicion()`.
+
+14. **RN-F12 en TalleresController**: No se puede cambiar a 'Finalizado' si `Taller::countParticipantes()` retorna 0.
 
 10. **`empleados.tipo_contrato`**: Valores: 'Fijo','Contratado','Suplente','Comisión de Servicio'. DEFAULT 'Fijo'.
 

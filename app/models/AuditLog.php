@@ -34,10 +34,11 @@ class AuditLog extends Model
         $identificador = "id";
         if ($tabla == 'personas') $identificador = "cedula || ' - ' || nombre || ' ' || apellido";
         if ($tabla == 'inventario') $identificador = "codigo_bn || ' - ' || nombre";
-        if ($tabla == 'talleres' || $tabla == 'rutas' || $tabla == 'departamentos' || $tabla == 'cargos') $identificador = "nombre";
-        if ($tabla == 'pasantes') $identificador = "cedula || ' - ' || nombre";
+        if (in_array($tabla, ['talleres', 'rutas', 'departamentos', 'cargos', 'categorias', 'ubicaciones', 'ubicaciones_formacion'])) $identificador = "nombre";
+        // pasantes ya no tiene cedula/nombre propios (migración 003): se consulta a personas por id_persona
+        if ($tabla == 'pasantes') $identificador = "(SELECT pp.cedula || ' - ' || pp.nombre || ' ' || pp.apellido FROM personas pp WHERE pp.id = id_persona)";
         if ($tabla == 'municipio') $identificador = "nombre || ' - ' || codigo_postal";
-        if ($tabla == 'parroquias') $identificador = "nombre || ' - ' || codigo_postal";
+        if ($tabla == 'parroquia') $identificador = "nombre";
 
         $sql = "SELECT *, ($identificador) as display_name FROM $tabla WHERE is_active = FALSE ORDER BY deleted_at DESC";
         $db->query($sql);

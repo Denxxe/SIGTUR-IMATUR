@@ -247,9 +247,12 @@ class ReportesController extends Controller {
     public function exportarParticipantesCsv($id_taller) {
         $this->requireRoles([1, 3]);
         $db = new Database();
-        $db->query("SELECT p.cedula, p.nombre, p.apellido, p.telefono, pt.asistio
+        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                           COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
+                           COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
+                           p.telefono, pt.asistio
                     FROM participantes_taller pt
-                    INNER JOIN personas p ON pt.id_persona = p.id
+                    LEFT JOIN personas p ON pt.id_persona = p.id
                     WHERE pt.id_taller = :id_taller");
         $db->bind(':id_taller', $id_taller);
         $participantes = $db->resultSet();
@@ -293,10 +296,13 @@ class ReportesController extends Controller {
         $informe = $db->single();
 
         // 3. Participantes
-        $db->query("SELECT p.cedula, p.nombre, p.apellido, pt.asistio
+        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                           COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
+                           COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
+                           pt.asistio
                     FROM participantes_taller pt
-                    INNER JOIN personas p ON pt.id_persona = p.id
-                    WHERE pt.id_taller = :id ORDER BY p.apellido ASC");
+                    LEFT JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id_taller = :id ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
         $db->bind(':id', $id);
         $participantes = $db->resultSet();
 
@@ -326,9 +332,11 @@ class ReportesController extends Controller {
         $db->bind(':id', $id);
         $inf = $db->single();
 
-        $db->query("SELECT p.cedula, p.nombre || ' ' || p.apellido as nombre, pt.asistio
+        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                           COALESCE(p.nombre, pt.nombre_libre, '') || ' ' || COALESCE(p.apellido, pt.apellido_libre, '') as nombre,
+                           pt.asistio
                     FROM participantes_taller pt
-                    INNER JOIN personas p ON pt.id_persona = p.id
+                    LEFT JOIN personas p ON pt.id_persona = p.id
                     WHERE pt.id_taller = :id");
         $db->bind(':id', $id);
         $participantes = $db->resultSet();
