@@ -3,14 +3,14 @@
  * Clase ActividadRuta: Eventos programados a lo largo de una ruta turística
  */
 class ActividadRuta extends Model {
-    private $id;
-    private $id_ruta;
-    private $nombre;
-    private $descripcion;
-    private $fecha;
-    private $id_empleado_responsable;
+    private ?int $id;
+    private ?int $id_ruta;
+    private string $nombre;
+    private string $descripcion;
+    private ?string $fecha;
+    private ?int $id_empleado_responsable;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

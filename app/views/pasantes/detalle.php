@@ -1,128 +1,150 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h1><i class="bi bi-person-badge"></i> Expediente Técnico del Pasante</h1>
-        <p class="text-muted">Control de documentos y evaluación formal.</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">
+            <a href="<?php echo URL_ROOT; ?>/pasantes/index" style="color:inherit; text-decoration:none;">Pasantes</a> · Expediente
+        </div>
+        <h1 class="page__title">Expediente Técnico del Pasante</h1>
+        <p class="page__subtitle">Control de documentación académica, evaluación y estatus institucional.</p>
     </div>
-    <div class="col-md-4 text-end">
-        <a href="<?php echo URL_ROOT; ?>/pasantes/index" class="btn btn-outline-secondary">← Volver</a>
+    <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/pasantes/index" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
+            <i class="bi bi-cloud-upload"></i> Subir Documento
+        </button>
     </div>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 anim-slide-up">
     <!-- INFO BÁSICA Y ESTADO -->
     <div class="col-md-4">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-dark text-white fw-bold">
-                <i class="bi bi-info-circle"></i> Datos Generales
+        <div class="sig-card mb-4">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-info-circle" style="color:var(--brand-500);"></i> Datos Generales
+                </div>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <small class="text-muted d-block">Pasante:</small>
-                    <span class="fs-5 fw-bold"><?php echo $data['pasante']->nombre . ' ' . $data['pasante']->apellido; ?></span><br>
-                    <span class="badge bg-secondary"><?php echo $data['pasante']->cedula; ?></span>
+            <div class="sig-card__body" style="padding:var(--sp-6);">
+                <div style="margin-bottom:var(--sp-4);">
+                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Pasante</small>
+                    <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
+                    <div class="cell-id" style="margin-top:2px;"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
                 </div>
-                <hr>
-                <div class="mb-3">
-                    <small class="text-muted d-block">Institución Origen:</small>
-                    <span class="fw-bold"><?php echo $data['pasante']->institucion; ?></span><br>
-                    <span><?php echo $data['pasante']->carrera; ?></span>
+
+                <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
+                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Institución / Carrera</small>
+                    <div style="font-weight:700; color:var(--text-secondary);"><?php echo isset($data['pasante']->institucion) ? $data['pasante']->institucion : 'No especificada'; ?></div>
+                    <div style="font-size:13px; color:var(--text-tertiary);"><?php echo isset($data['pasante']->carrera) ? $data['pasante']->carrera : 'No especificada'; ?></div>
                 </div>
-                <hr>
-                <div class="mb-3">
-                    <small class="text-muted d-block">Estado Institucional:</small>
+
+                <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
+                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Estado Institucional</small>
                     <?php 
-                        $color = 'bg-secondary';
-                        $e = $data['pasante']->estado;
-                        if ($e == 'Aceptado') $color = 'bg-primary';
-                        if ($e == 'En Curso') $color = 'bg-success';
-                        if ($e == 'Culminado') $color = 'bg-dark';
-                        if ($e == 'Rechazado') $color = 'bg-danger';
-                        if ($e == 'Postulado') $color = 'bg-warning text-dark';
+                        $badgeClass = 'sig-badge--neutral';
+                        $e = $data['pasante']->estado ?? 'Desconocido';
+                        if ($e == 'Postulado') $badgeClass = 'sig-badge--warning';
+                        elseif ($e == 'Aceptado') $badgeClass = 'sig-badge--info';
+                        elseif ($e == 'En Curso') $badgeClass = 'sig-badge--brand';
+                        elseif ($e == 'Culminado') $badgeClass = 'sig-badge--success';
+                        elseif ($e == 'Rechazado') $badgeClass = 'sig-badge--danger';
                     ?>
-                    <span class="badge <?php echo $color; ?> fs-6"><?php echo $e; ?></span>
+                    <span class="sig-badge <?php echo $badgeClass; ?>" style="font-size:14px; padding:6px 12px;"><?php echo $e; ?></span>
                 </div>
-                <hr>
-                <div class="mb-0">
-                    <small class="text-muted d-block">Tutor Asignado:</small>
-                    <?php if($data['pasante']->id_tutor_institucional): ?>
-                        <span class="fw-bold text-primary"><i class="bi bi-person-check-fill"></i> <?php echo $data['pasante']->tutor_nombre . ' ' . $data['pasante']->tutor_apellido; ?></span>
+
+                <div style="padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
+                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Tutor Institucional</small>
+                    <?php if(isset($data['pasante']->id_tutor_institucional) && $data['pasante']->id_tutor_institucional): ?>
+                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-weight:700; color:var(--brand-600);">
+                            <i class="bi bi-person-check-fill"></i>
+                            <span><?php echo (isset($data['pasante']->tutor_nombre) ? $data['pasante']->tutor_nombre : 'Tutor') . ' ' . (isset($data['pasante']->tutor_apellido) ? $data['pasante']->tutor_apellido : ''); ?></span>
+                        </div>
                     <?php else: ?>
-                        <span class="text-muted">No asignado</span>
+                        <span style="font-size:13px; color:var(--text-tertiary); font-style:italic;">No asignado</span>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
         
-        <?php if($data['pasante']->estado == 'Culminado'): ?>
-        <div class="card shadow-sm border-0 border-top border-success border-4">
-            <div class="card-body">
-                <h5 class="text-success fw-bold"><i class="bi bi-award-fill"></i> Evaluación Final</h5>
-                <p class="fst-italic small text-muted mb-2">"<?php echo $data['pasante']->evaluacion; ?>"</p>
-                <div class="display-6 fw-bold text-success text-center border rounded p-2">
-                    <?php echo $data['pasante']->nota; ?> / 20
+        <?php if(isset($data['pasante']->estado) && $data['pasante']->estado == 'Culminado'): ?>
+            <div class="sig-card" style="border-top: 4px solid var(--success-500);">
+                <div class="sig-card__body" style="padding:var(--sp-6);">
+                    <h5 style="color:var(--success-600); font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:var(--sp-4);">
+                        <i class="bi bi-award-fill"></i> Evaluación Final
+                    </h5>
+                    <p style="font-size:13px; font-style:italic; color:var(--text-secondary); margin-bottom:var(--sp-4);">
+                        "<?php echo $data['pasante']->evaluacion ?? ''; ?>"
+                    </p>
+                    <div style="background:var(--success-50); border:1px solid var(--success-200); border-radius:var(--r-lg); padding:var(--sp-4); text-align:center;">
+                        <span style="display:block; font-size:11px; font-weight:700; color:var(--success-600); text-transform:uppercase; letter-spacing:0.05em;">Nota Final</span>
+                        <span style="font-size:32px; font-weight:900; color:var(--success-700);"><?php echo $data['pasante']->nota ?? 0; ?> <small style="font-size:14px; font-weight:500;">/ 20</small></span>
+                    </div>
                 </div>
             </div>
-        </div>
         <?php endif; ?>
     </div>
 
     <!-- DOCUMENTOS Y CHECKLIST -->
     <div class="col-md-8">
-        <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white border-0 fw-bold pt-3 d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-folder-check text-primary"></i> Checklist de Documentación</span>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
-                    <i class="bi bi-upload"></i> Subir Documento
-                </button>
+        <div class="sig-card h-100">
+            <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="sig-card__title">
+                    <i class="bi bi-folder-check" style="color:var(--brand-500);"></i> Checklist de Documentación
+                </div>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
                         <tr>
-                            <th class="ps-4">Tipo Documento</th>
-                            <th>Estado Físico</th>
-                            <th>Archivo Digital</th>
+                            <th>Tipo Documento</th>
+                            <th style="text-align:center;">Estado Físico</th>
+                            <th style="text-align:center;">Digital</th>
                             <th>Observaciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if(empty($data['documentos'])): ?>
-                            <tr><td colspan="4" class="text-center py-5 text-muted">Sin documentos registrados.</td></tr>
+                            <tr><td colspan="4" class="sig-table-empty">Sin documentos registrados en el expediente.</td></tr>
                         <?php else: ?>
-                            <?php foreach($data['documentos'] as $doc): ?>
+                            <?php foreach($data['documentos'] ?? [] as $doc): ?>
                             <tr>
-                                <td class="ps-4 fw-bold text-secondary">
-                                    <i class="bi bi-file-earmark-text"></i> <?php echo $doc->tipo_documento; ?>
-                                </td>
                                 <td>
-                                    <?php if($doc->entregado): ?>
-                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Entregado</span>
+                                    <div style="display:flex; align-items:center; gap:var(--sp-3);">
+                                        <div style="width:32px; height:32px; background:var(--bg-muted); border-radius:var(--r-md); display:grid; place-items:center; color:var(--text-secondary);">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </div>
+                                        <span class="cell-strong"><?php echo isset($doc->tipo_documento) ? $doc->tipo_documento : 'Documento'; ?></span>
+                                    </div>
+                                </td>
+                                <td style="text-align:center;">
+                                    <?php if(isset($doc->entregado) && $doc->entregado): ?>
+                                        <span class="sig-badge sig-badge--success"><i class="bi bi-check-circle"></i> Recibido</span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Pendiente</span>
+                                        <span class="sig-badge sig-badge--danger"><i class="bi bi-x-circle"></i> Pendiente</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <?php if($doc->archivo_url): ?>
-                                        <a href="<?php echo URL_ROOT . $doc->archivo_url; ?>" target="_blank" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-file-pdf-fill"></i> Ver PDF
+                                <td style="text-align:center;">
+                                    <?php if(isset($doc->archivo_url) && $doc->archivo_url): ?>
+                                        <a href="<?php echo URL_ROOT . $doc->archivo_url; ?>" target="_blank" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);">
+                                            <i class="bi bi-file-pdf"></i> Ver PDF
                                         </a>
                                     <?php else: ?>
-                                        <span class="text-muted small">No subido</span>
+                                        <span style="font-size:11px; color:var(--text-tertiary);">N/A</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
-                                    <small class="text-muted"><?php echo $doc->observaciones ?: '-'; ?></small>
-                                </td>
+                                <td style="font-size:12px; color:var(--text-secondary);"><?php echo (isset($doc->observaciones) && $doc->observaciones) ? $doc->observaciones : '—'; ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer bg-light p-3 text-muted small">
-                * Para legalizar el paso a <strong>En Curso</strong>, debe constar de Carta de Postulación y Aceptación entregadas.
+            <div class="sig-card__footer" style="background:var(--bg-muted-subtle); padding:var(--sp-4) var(--sp-6); border-top:1px solid var(--border-subtle);">
+                <p style="margin:0; font-size:12px; color:var(--text-tertiary); line-height:1.5;">
+                    <i class="bi bi-info-circle"></i> Nota: Para validar el estatus <strong>"En Curso"</strong>, es requisito obligatorio la entrega de la Carta de Postulación y la respectiva Carta de Aceptación.
+                </p>
             </div>
         </div>
     </div>
@@ -131,38 +153,38 @@
 <!-- Modal Subir Documento -->
 <div class="modal fade" id="modalSubirDoc" tabindex="-1">
   <div class="modal-dialog">
-    <div class="modal-content border-0 shadow">
-      <form action="<?php echo URL_ROOT; ?>/pasantes/subirDocumento/<?php echo $data['pasante']->id; ?>" method="POST" enctype="multipart/form-data">
-          <div class="modal-header bg-primary text-white border-0">
+    <div class="modal-content">
+      <form action="<?php echo URL_ROOT; ?>/pasantes/subirDocumento/<?php echo $data['pasante']->id ?? ''; ?>" method="POST" enctype="multipart/form-data">
+          <div class="modal-header">
             <h5 class="modal-title"><i class="bi bi-cloud-upload"></i> Cargar Requisito Físico</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body bg-light">
-              <div class="alert alert-info py-2 small">
-                  El sistema marcará este documento como <strong>Entregado ✅</strong> automáticamente al guardarlo. Puedes anexar el escaneo en PDF o simplemente registrar que lo recibiste en físico.
+          <div class="modal-body">
+              <div style="background:var(--brand-50); border:1px solid var(--brand-200); border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4); color:var(--brand-700); font-size:13px; margin-bottom:var(--sp-6);">
+                  <i class="bi bi-info-circle-fill"></i> Al registrar el documento, se marcará automáticamente como <strong>Entregado</strong> en el expediente físico.
               </div>
-              <div class="mb-3">
-                  <label class="form-label fw-bold">Tipo de Documento</label>
-                  <select name="tipo_documento" class="form-select" required>
-                      <option value="">Seleccione...</option>
+              <div class="sig-field mb-4">
+                  <label class="sig-field__label">Tipo de Documento <span class="req">*</span></label>
+                  <select name="tipo_documento" class="sig-select" required>
+                      <option value="">Seleccione un tipo...</option>
                       <option value="Carta de Postulación">Carta de Postulación (Origen)</option>
                       <option value="Carta de Aceptación">Carta de Aceptación (IMATUR)</option>
                       <option value="Evaluación">Formato de Evaluación Final</option>
                       <option value="Otro">Otro (Proyectos, Planillas anexas...)</option>
                   </select>
               </div>
-              <div class="mb-3">
-                  <label class="form-label fw-bold">Archivo PDF (Opcional si solo es físico)</label>
-                  <input type="file" name="archivo" class="form-control" accept=".pdf,.jpeg,.jpg,.png">
+              <div class="sig-field mb-4">
+                  <label class="sig-field__label">Archivo Digital (PDF/Imagen)</label>
+                  <input type="file" name="archivo" class="sig-input" accept=".pdf,.jpeg,.jpg,.png" style="padding-top:10px;">
               </div>
-              <div class="mb-3">
-                  <label class="form-label fw-bold">Observaciones</label>
-                  <textarea name="observaciones" class="form-control" rows="2" placeholder="Ej: Firmada por el Director académico..."></textarea>
+              <div class="sig-field">
+                  <label class="sig-field__label">Observaciones</label>
+                  <textarea name="observaciones" class="sig-textarea" rows="2" placeholder="Ej: Firmada por el Director académico..."></textarea>
               </div>
           </div>
-          <div class="modal-footer border-0">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Registrar Entrega</button>
+          <div class="modal-footer">
+            <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Registrar Entrega</button>
           </div>
       </form>
     </div>

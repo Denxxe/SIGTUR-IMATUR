@@ -3,14 +3,14 @@
  * Clase Usuario: Modelo para la tabla usuarios
  */
 class Usuario extends Model {
-    private $id;
-    private $id_empleado;
-    private $id_rol;
-    private $username;
-    private $password;
-    private $is_active;
+    private ?int $id;
+    private ?int $id_empleado;
+    private ?int $id_rol;
+    private string $username;
+    private string $password;
+    private bool $is_active;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

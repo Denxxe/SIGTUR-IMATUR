@@ -112,14 +112,19 @@ function formatCedula(e) {
  * Lógica para Capitalizar palabras y eliminar números de Nombres y Apellidos
  */
 function formatNombreApellido(e) {
-    let val = e.target.value;
+    const input = e.target;
+    const pos = input.selectionStart;
+    let val = input.value;
+
     // Eliminar números y caracteres prohibidos
-    val = val.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
-    
-    // Capitalizar primera letra de cada palabra
-    val = val.replace(/\b\w/g, c => c.toUpperCase());
-    
-    e.target.value = val;
+    val = val.replace(/[^a-zA-ZáéíóúüÁÉÍÓÚÜñÑ\s]/g, '');
+
+    // Capitalizar primera letra de cada palabra respetando caracteres acentuados
+    val = val.replace(/(^|[\s])([a-záéíóúüñ])/gi, (_, sep, c) => sep + c.toUpperCase());
+
+    input.value = val;
+    // Restaurar posición del cursor para no saltar al final al editar en medio
+    try { input.setSelectionRange(pos, pos); } catch(_) {}
 }
 
 /**

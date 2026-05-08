@@ -10,8 +10,11 @@ Este documento detalla la lógica de negocio, tablas y relaciones de cada uno de
 ### Componentes y Controladores:
 - **Departamentos (`DepartamentosController`)**: Gestiona las áreas físicas o lógicas empresariales.
 - **Cargos (`CargosController`)**: Administra los roles internos y sueldos base de los empleados.
-- **Empleados (`EmpleadosController`)**: Relaciona atributos personales (`personas`) con atributos empresariales (`empleados`). Maneja la asignación de cargo y expediente de forma atómica en base de datos.
+- **Empleados (`EmpleadosController`)**: Relaciona atributos personales (`personas`) con atributos empresariales (`empleados`). Maneja la asignación de cargo y expediente de forma atómica en base de datos. Incluye `tipo_contrato` y `fecha_egreso` (migración 002).
 - **Asistencias (`AsistenciasController`)**: Registro diario de entrada, salida y observaciones del personal interno vigente.
+- **Horarios** *(migración 002)*: Definición de turnos de trabajo asignables a empleados.
+- **Permisos Laborales** *(migración 002)*: Control de ausencias justificadas con tipo, fechas y estado de aprobación.
+- **Vacaciones** *(migración 002)*: Gestión anual de días correspondientes y días tomados por empleado.
 
 ### Funcionalidades Clave:
 - Guardado atómico con transacciones en PostgreSQL (Tabla `personas` + Tabla `empleados`).
@@ -35,10 +38,11 @@ Este documento detalla la lógica de negocio, tablas y relaciones de cada uno de
 
 ### Componentes y Controladores:
 - **Sedes (`UbicacionesformacionController`)**: Espacios donde se imparten las charlas u oficinas adscritas para talleres.
-- **Talleres (`TalleresController`)**: Creación de un curso temporal con fecha inicio/fin, cupos y un empleado como "Facilitador".
+- **Talleres (`TalleresController`)**: Creación de un curso temporal con fecha inicio/fin, cupos y un empleado como "Facilitador". Incluye campo `tipo_actividad` (Taller / Charla / Curso / Taller de Arte / Capacitación) agregado en migración 002.
 - **Informes Demográficos (`Taller_informes`)**: Al terminar un taller, se captura obligatoriamente cuántos asistentes hubo y se segmentan en: Mujeres, Hombres, Niñas, Niños, asegurando estadísticas precisas (Totales calculados automáticamente).
+- **Participantes (`Participantes_taller`)**: Inscripción y control de asistencia individual de personas a un taller. Tabla pivote agregada en migración 002.
 - **Insumos por Taller (`Taller_inventario`)**: Permite que a un evento de formación se le "presten" sillas, proyectores, etc., vinculando el Módulo de Inventario con el de Formación temporalmente.
-- **Pasantes (`PasantesController`)**: Gestión de jóvenes practicantes, su casa de estudio y el estado de entrega de sus requisitos (Postulación, Aceptación, Evaluación final).
+- **Pasantes (`PasantesController`)**: Gestión de jóvenes practicantes, su casa de estudio y el estado de entrega de sus requisitos (Postulación, Aceptación, Evaluación final). La migración 003 normaliza la tabla vinculando `pasantes` con `personas` a través de `id_persona`.
 
 ---
 

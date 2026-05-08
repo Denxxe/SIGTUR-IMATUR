@@ -27,4 +27,13 @@ class Controller {
     public function getUserId() {
         return $_SESSION['user_id'] ?? null;
     }
+
+    // Sanitiza $_POST: elimina tags HTML sin corromper caracteres UTF-8 (tildes, ñ, etc.)
+    protected function sanitizePost(): array {
+        $raw = $_POST ?? [];
+        return array_map(function($v) {
+            if (!is_string($v)) return $v;
+            return trim(strip_tags($v));
+        }, $raw);
+    }
 }

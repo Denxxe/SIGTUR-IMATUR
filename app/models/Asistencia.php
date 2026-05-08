@@ -3,14 +3,14 @@
  * Clase Asistencia: Modelo para la tabla asistencias
  */
 class Asistencia extends Model {
-    private $id;
-    private $id_empleado;
-    private $fecha;
-    private $hora_entrada;
-    private $hora_salida;
-    private $observacion;
+    private ?int $id;
+    private ?int $id_empleado;
+    private ?string $fecha;
+    private string $hora_entrada;
+    private ?string $hora_salida;
+    private string $observacion;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

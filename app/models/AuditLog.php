@@ -1,10 +1,13 @@
 <?php
+
 /**
  * Clase AuditLog: Modelo para visualizar y registrar las bitácoras del sistema.
  */
-class AuditLog extends Model {
-    
-    public static function all() {
+class AuditLog extends Model
+{
+
+    public static function all()
+    {
         $db = new Database();
         $db->query("SELECT a.*, u.username 
                     FROM audit_logs a
@@ -13,7 +16,8 @@ class AuditLog extends Model {
         return $db->resultSet();
     }
 
-    public static function byTabla($tabla) {
+    public static function byTabla($tabla)
+    {
         $db = new Database();
         $db->query("SELECT a.*, u.username 
                     FROM audit_logs a
@@ -24,13 +28,17 @@ class AuditLog extends Model {
         return $db->resultSet();
     }
 
-    public static function getDeleted($tabla) {
+    public static function getDeleted($tabla)
+    {
         $db = new Database();
         $identificador = "id";
         if ($tabla == 'personas') $identificador = "cedula || ' - ' || nombre || ' ' || apellido";
         if ($tabla == 'inventario') $identificador = "codigo_bn || ' - ' || nombre";
-        if ($tabla == 'talleres' || $tabla == 'rutas' || $tabla == 'departamentos' || $tabla == 'cargos') $identificador = "nombre";
-        if ($tabla == 'pasantes') $identificador = "cedula || ' - ' || nombre";
+        if (in_array($tabla, ['talleres', 'rutas', 'departamentos', 'cargos', 'categorias', 'ubicaciones', 'ubicaciones_formacion'])) $identificador = "nombre";
+        // pasantes ya no tiene cedula/nombre propios (migración 003): se consulta a personas por id_persona
+        if ($tabla == 'pasantes') $identificador = "(SELECT pp.cedula || ' - ' || pp.nombre || ' ' || pp.apellido FROM personas pp WHERE pp.id = id_persona)";
+        if ($tabla == 'municipio') $identificador = "nombre || ' - ' || codigo_postal";
+        if ($tabla == 'parroquia') $identificador = "nombre";
 
         $sql = "SELECT *, ($identificador) as display_name FROM $tabla WHERE is_active = FALSE ORDER BY deleted_at DESC";
         $db->query($sql);
@@ -47,13 +55,14 @@ class AuditLog extends Model {
      * @param int $id_usuario Usuario que realiza la acción.
      * @param Database|null $dbInstance Instancia de DB opcional para usar dentro de una transacción.
      */
-    public static function log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario, $dbInstance = null) {
+    public static function log(string $tabla, string $operacion, ?int $record_id, ?array $datos_previos, ?array $datos_nuevos, ?int $id_usuario, $dbInstance = null)
+    {
         // Si no se provee instancia, creamos una nueva.
         $db = $dbInstance ? $dbInstance : new Database();
-        
+
         $db->query("INSERT INTO audit_logs (tabla_afectada, operacion, record_id, datos_previos, datos_nuevos, id_usuario, ip_direccion) 
                     VALUES (:tabla, :operacion, :record_id, :previos, :nuevos, :id_usuario, :ip)");
-        
+
         $db->bind(':tabla', $tabla);
         $db->bind(':operacion', $operacion);
         $db->bind(':record_id', $record_id);
@@ -61,7 +70,7 @@ class AuditLog extends Model {
         $db->bind(':nuevos', $datos_nuevos ? json_encode($datos_nuevos) : null);
         $db->bind(':id_usuario', $id_usuario);
         $db->bind(':ip', $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
-        
+
         return $db->execute();
     }
 }

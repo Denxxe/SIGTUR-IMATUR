@@ -1,63 +1,57 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h1><i class="bi bi-briefcase"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">Administración de puestos y servicios institucionales.</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">RRHH · Organización</div>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Cargos'; ?></h1>
+        <p class="page__subtitle">Administración de puestos y servicios institucionales.</p>
     </div>
-    <div class="col-md-6 text-end">
-        <!-- Botón para abrir modal de creación -->
-        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCargo" onclick="nuevoCargo()">
+    <div class="page__actions">
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalCargo" onclick="nuevoCargo()">
             <i class="bi bi-plus-lg"></i> Nuevo Cargo
         </button>
     </div>
 </div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
+<div class="sig-table-wrap anim-slide-up">
+    <table class="sig-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Sueldo Base</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($data['cargos'])): ?>
+                <tr>
+                    <td colspan="5" class="sig-table-empty">No hay cargos registrados.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($data['cargos'] as $cargo): ?>
                     <tr>
-                        <th class="ps-4">ID</th>
-                        <th>Nombre</th>
-                        <th>Descripción</th>
-                        <th>Sueldo Base</th>
-                        <th class="text-center">Acciones</th>
+                        <td><span class="cell-id"><?php echo $cargo->id; ?></span></td>
+                        <td class="cell-strong"><?php echo $cargo->nombre; ?></td>
+                        <td style="color:var(--text-secondary);font-size:13px"><?php echo $cargo->descripcion; ?></td>
+                        <td><span class="sig-badge sig-badge--success"><?php echo number_format($cargo->sueldo_base, 2); ?></span></td>
+                        <td class="col-actions">
+                            <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <a href="<?php echo URL_ROOT; ?>/cargos/delete/<?php echo $cargo->id; ?>" class="row-action row-action--del delete-btn">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['cargos'])): ?>
-                        <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No hay cargos registrados.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($data['cargos'] as $cargo): ?>
-                            <tr>
-                                <td class="ps-4"><?php echo $cargo->id; ?></td>
-                                <td class="fw-bold"><?php echo $cargo->nombre; ?></td>
-                                <td><?php echo $cargo->descripcion; ?></td>
-                                <td><?php echo number_format($cargo->sueldo_base, 2); ?></td>
-                                <td class="text-center">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-info" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>
-                                            Editar
-                                        </button>
-                                        <a href="<?php echo URL_ROOT; ?>/cargos/delete/<?php echo $cargo->id; ?>" class="btn btn-outline-danger delete-btn">
-                                            Eliminar
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
-<!-- Modal para Crear/Editar Cargo -->
+<!-- Modal -->
 <div class="modal fade" id="modalCargo" tabindex="-1" aria-labelledby="modalCargoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -68,28 +62,22 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id" id="cargo_id">
-                    
-                    <div class="mb-3">
-                        <label for="nombre" class="form-label fw-bold">Nombre del Cargo</label>
-                        <input type="text" class="form-control" name="nombre" id="cargo_nombre" required placeholder="Ej: Especialista III">
+                    <div class="sig-field mb-3">
+                        <label class="sig-field__label">Nombre del Cargo <span class="req">*</span></label>
+                        <input type="text" class="sig-input" name="nombre" id="cargo_nombre" required placeholder="Ej: Especialista III">
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="descripcion" class="form-label fw-bold">Descripción</label>
-                        <textarea class="form-control" name="descripcion" id="cargo_descripcion" rows="3" placeholder="Información sobre las funciones..."></textarea>
+                    <div class="sig-field mb-3">
+                        <label class="sig-field__label">Descripción</label>
+                        <textarea class="sig-textarea" name="descripcion" id="cargo_descripcion" rows="3" placeholder="Funciones del cargo..."></textarea>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="sueldo_base" class="form-label fw-bold">Sueldo Base</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" step="0.01" class="form-control" name="sueldo_base" id="cargo_sueldo" required value="0.00">
-                        </div>
+                    <div class="sig-field mb-3">
+                        <label class="sig-field__label">Sueldo Base <span class="req">*</span></label>
+                        <input type="number" step="0.01" class="sig-input" name="sueldo_base" id="cargo_sueldo" required value="0.00">
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Registro</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
                 </div>
             </form>
         </div>
@@ -106,15 +94,12 @@
     }
 
     function editarCargo(cargo) {
-        document.getElementById('modalCargoLabel').innerText = 'Editar Cargo: ' + cargo.nombre;
+        document.getElementById('modalCargoLabel').innerText = 'Editar: ' + cargo.nombre;
         document.getElementById('cargo_id').value = cargo.id;
         document.getElementById('cargo_nombre').value = cargo.nombre;
         document.getElementById('cargo_descripcion').value = cargo.descripcion;
         document.getElementById('cargo_sueldo').value = cargo.sueldo_base;
-        
-        // Abrir el modal manualmente si no es mediante data-bs
-        var myModal = new bootstrap.Modal(document.getElementById('modalCargo'));
-        myModal.show();
+        new bootstrap.Modal(document.getElementById('modalCargo')).show();
     }
 </script>
 

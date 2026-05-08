@@ -3,14 +3,14 @@
  * Clase ActividadInventario: Modelo para movimientos/actividad de inventario
  */
 class ActividadInventario extends Model {
-    private $id;
-    private $id_inventario;
-    private $tipo_movimiento;
-    private $descripcion;
-    private $fecha;
-    private $id_empleado_responsable;
+    private ?int $id;
+    private ?int $id_inventario;
+    private string $tipo_movimiento;
+    private string $descripcion;
+    private ?string $fecha;
+    private ?int $id_empleado_responsable;
 
-    public function __construct($data = []) {
+    public function __construct(array $data = []) {
         parent::__construct();
         if (!empty($data)) {
             $this->id = $data['id'] ?? null;

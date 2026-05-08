@@ -5,7 +5,7 @@
 class RutaInventario extends Model {
     
     // Asignar un bien a una ruta
-    public static function asignar($id_ruta, $id_inventario, $cantidad, $observaciones = '', $user_id = null) {
+    public static function asignar(int $id_ruta, int $id_inventario, int $cantidad, string $observaciones = '', ?int $user_id = null) {
         $db = new Database();
         $db->query("INSERT INTO ruta_inventario (id_ruta, id_inventario, cantidad, observaciones, created_by) 
                     VALUES (:id_ruta, :id_inventario, :cantidad, :observaciones, :user_id)");

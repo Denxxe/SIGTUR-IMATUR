@@ -1,79 +1,113 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row mb-4">
-    <div class="col-md-7">
-        <h1><i class="bi bi-person-badge"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">Gestión de flujo de personas ajenas a la institución.</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">Seguridad · Control de Accesos</div>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
+        <p class="page__subtitle">Control de flujo y marcaje de entrada/salida de personas ajenas a la institución.</p>
     </div>
-    <div class="col-md-5">
-        <div class="card border-primary shadow-sm bg-light">
-            <div class="card-body">
+</div>
+
+<div class="row g-4 mb-8 anim-slide-up">
+    <!-- FORMULARIO DE REGISTRO RÁPIDO -->
+    <div class="col-md-5 order-md-2">
+        <div class="sig-card" style="border-top: 4px solid var(--brand-500); height: 100%;">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-clock-history" style="color:var(--brand-500);"></i> Registro de Marcaje</div>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-6);">
                 <form action="<?php echo URL_ROOT; ?>/visitas/registrar" method="POST">
-                    <div class="mb-2">
-                        <select name="id_visitante" class="form-select" required>
-                            <option value="">¿Quién llega/sale? (Visitante)</option>
-                            <?php foreach ($data['visitantes'] as $v): ?>
+                    <div class="sig-field mb-4">
+                        <label class="sig-field__label">Visitante (Quién llega/sale) <span class="req">*</span></label>
+                        <select name="id_visitante" class="sig-select" required>
+                            <option value="">Seleccione un visitante...</option>
+                            <?php foreach ($data['visitantes'] ?? '' as $v): ?>
                                 <option value="<?php echo $v->id; ?>"><?php echo $v->nombre . ' ' . $v->apellido; ?> (<?php echo $v->cedula; ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-2">
-                        <select name="id_empleado" class="form-select">
-                            <option value="">¿A quién visita? (Empleado)</option>
-                            <?php foreach ($data['empleados'] as $e): ?>
+
+                    <div class="sig-field mb-4">
+                        <label class="sig-field__label">Empleado a visitar</label>
+                        <select name="id_empleado" class="sig-select">
+                            <option value="">Sin asignar / Trámite general</option>
+                            <?php foreach ($data['empleados'] ?? '' as $e): ?>
                                 <option value="<?php echo $e->id; ?>"><?php echo $e->nombre . ' ' . $e->apellido; ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-muted small">Opcional si es entrada nueva.</small>
+                        <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">Opcional si es una nueva entrada.</p>
                     </div>
-                    <div class="mb-2">
-                        <input type="text" name="motivo" class="form-control" placeholder="Motivo de la visita">
+
+                    <div class="sig-field mb-6">
+                        <label class="sig-field__label">Motivo de la visita</label>
+                        <input type="text" name="motivo" class="sig-input" placeholder="Ej: Entrega de documentos, Reunión...">
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">PROCESAR MARCAJE</button>
+
+                    <button type="submit" class="btn-sig btn-sig--primary" style="width:100%; height:48px; font-size:16px;">
+                        <i class="bi bi-check-circle"></i> PROCESAR MARCAJE
+                    </button>
                     <input type="hidden" name="observaciones" value="Registro manual en recepción">
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<div class="card shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="ps-4">Fecha</th>
-                        <th>Visitante</th>
-                        <th>Visita a:</th>
-                        <th>Motivo</th>
-                        <th>Entrada</th>
-                        <th>Salida</th>
-                        <th class="text-center">Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['visitas'])): ?>
-                        <tr><td colspan="7" class="text-center py-4">Sin movimientos registrados hoy.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($data['visitas'] as $v): ?>
+    <!-- TABLA DE MOVIMIENTOS -->
+    <div class="col-md-7 order-md-1">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">Movimientos Recientes</div>
+            </div>
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
+                        <tr>
+                            <th>Visitante</th>
+                            <th>Visita a:</th>
+                            <th style="text-align:center;">Entrada</th>
+                            <th style="text-align:center;">Salida</th>
+                            <th class="col-actions">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($data['visitas'])): ?>
                             <tr>
-                                <td class="ps-4 small"><?php echo date('d/m/Y', strtotime($v->fecha)); ?></td>
-                                <td class="fw-bold"><?php echo $v->vis_nombre . ' ' . $v->vis_apellido; ?> <br><small class="text-muted">CI: <?php echo $v->vis_cedula; ?></small></td>
-                                <td><?php echo $v->emp_nombre . ' ' . $v->emp_apellido; ?></td>
-                                <td><small><?php echo $v->motivo; ?></small></td>
-                                <td class="text-success fw-bold"><?php echo $v->hora_entrada; ?></td>
-                                <td class="text-danger fw-bold"><?php echo $v->hora_salida ? $v->hora_salida : '---'; ?></td>
-                                <td class="text-center">
-                                    <a href="<?php echo URL_ROOT; ?>/visitas/delete/<?php echo $v->id; ?>" class="btn btn-sm btn-outline-danger delete-btn">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
+                                <td colspan="5" class="sig-table-empty">Sin movimientos registrados hoy.</td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <?php else: ?>
+                            <?php foreach ($data['visitas'] as $v): ?>
+                                <tr>
+                                    <td>
+                                        <div style="display:flex; flex-direction:column;">
+                                            <span class="cell-strong"><?php echo $v->vis_nombre . ' ' . $v->vis_apellido; ?></span>
+                                            <span class="cell-id">CI: <?php echo $v->vis_cedula; ?></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size:12px; font-weight:600; color:var(--text-secondary);"><?php echo $v->emp_nombre . ' ' . $v->emp_apellido; ?></div>
+                                        <div style="font-size:11px; color:var(--text-tertiary);"><?php echo $v->motivo; ?></div>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <span class="sig-badge sig-badge--success" style="font-weight:700; font-family:var(--font-mono);"><?php echo $v->hora_entrada; ?></span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <?php if ($v->hora_salida): ?>
+                                            <span class="sig-badge sig-badge--danger" style="font-weight:700; font-family:var(--font-mono);"><?php echo $v->hora_salida; ?></span>
+                                        <?php else: ?>
+                                            <span class="sig-badge sig-badge--neutral" style="opacity:0.5;">--:--</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="col-actions">
+                                        <a href="<?php echo URL_ROOT; ?>/visitas/delete/<?php echo $v->id; ?>" class="row-action row-action--del delete-btn">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

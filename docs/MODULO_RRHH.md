@@ -10,8 +10,11 @@ La lógica de negocio se enfoca en gestionar todo el historial del talento human
 - `departamentos`: Divisiones lógicas (Dirección, RRHH, etc).
 - `cargos`: Perfiles profesionales y la asigación de límite sueldo base.
 - `personas`: Datos puros, indivisibles del ser humano (Cédula, Nombres, Genero, Nacimiento).
-- `empleados`: Extensión laboral que une un `id_persona` con su rol institucional (`id_cargo`, `id_departamento`, `fecha_ingreso`).
+- `empleados`: Extensión laboral que une un `id_persona` con su rol institucional (`id_cargo`, `id_departamento`, `fecha_ingreso`). Columnas adicionales (migración 002): `tipo_contrato` ('Fijo','Contratado','Suplente','Comisión de Servicio'), `fecha_egreso`, `id_horario`.
 - `asistencias`: Diario de movimientos y comentarios por cada empleado activo.
+- `horarios` *(migración 002)*: Turnos de trabajo con `hora_entrada`, `hora_salida` y `dias_laborales`. Se asigna a empleados mediante `id_horario`.
+- `permisos_laborales` *(migración 002)*: Ausencias justificadas con `tipo_permiso`, `fecha_inicio`, `fecha_fin` y `estado` de aprobación.
+- `vacaciones` *(migración 002)*: Control anual de días vacaciones por empleado: `anio`, `dias_correspondientes`, `dias_tomados`.
 
 ## Lógica de Negocio (Business Rules)
 1. **Transacción Dual (Registro Atómico):**

@@ -1,76 +1,86 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
-<div class="row align-items-center mb-4">
-    <div class="col-md-6">
-        <h1><i class="bi bi-person-video3"></i> <?php echo $data['titulo']; ?></h1>
-        <p class="text-muted">Gestión institucional de practicantes y pasantes.</p>
+<div class="page__head anim-slide-up">
+    <div class="page__title-block">
+        <div class="page__eyebrow">RRHH · Pasantes y Practicantes</div>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Pasantes'; ?></h1>
+        <p class="page__subtitle">Gestión institucional de practicantes universitarios y pasantes de media técnica.</p>
     </div>
-    <div class="col-md-6 text-end">
-        <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesCsv" class="btn btn-success shadow-sm">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+    <div class="page__actions">
+        <div style="display:flex; gap:var(--sp-2);">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesCsv" class="btn-sig btn-sig--ghost btn-sig--sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Excel
+            </a>
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesPdf" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+        </div>
+        <a href="<?php echo URL_ROOT; ?>/pasantes/crear" class="btn-sig btn-sig--primary">
+            <i class="bi bi-person-plus"></i> Registrar Pasante
         </a>
-        <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesPdf" class="btn btn-danger shadow-sm" target="_blank">
-            <i class="bi bi-file-earmark-pdf"></i> PDF
-        </a>
-        <a href="<?php echo URL_ROOT; ?>/pasantes/crear" class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Registrar Pasante</a>
     </div>
 </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
+<div class="sig-table-wrap anim-slide-up">
+    <table class="sig-table">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre y Apellido</th>
+                <th>Institución / Carrera</th>
+                <th>Tutor Institucional</th>
+                <th>Estado</th>
+                <th class="col-actions">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($data['pasantes'])): ?>
+                <tr>
+                    <td colspan="6" class="sig-table-empty">No hay pasantes registrados actualmente.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($data['pasantes'] as $p): ?>
                     <tr>
-                        <th>Cédula</th>
-                        <th>Nombre y Apellido</th>
-                        <th>Institución Educativa</th>
-                        <th>Tutor Asignado</th>
-                        <th>Estado</th>
-                        <th class="text-center">Acciones</th>
+                        <td class="cell-id"><?php echo $p->cedula; ?></td>
+                        <td class="cell-strong"><?php echo $p->nombre . ' ' . $p->apellido; ?></td>
+                        <td>
+                            <div style="font-weight:600; font-size:13px; color:var(--text-primary);"><?php echo $p->institucion; ?></div>
+                            <div style="font-size:12px; color:var(--text-tertiary);"><?php echo $p->carrera; ?></div>
+                        </td>
+                        <td>
+                            <?php if ($p->id_tutor_institucional): ?>
+                                <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
+                                    <i class="bi bi-person-check" style="color:var(--brand-500);"></i>
+                                    <span><?php echo $p->tutor_nombre . ' ' . $p->tutor_apellido; ?></span>
+                                </div>
+                            <?php else: ?>
+                                <span style="font-size:12px; color:var(--text-tertiary); font-style:italic;">Sin asignar</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php
+                            $badgeClass = 'sig-badge--neutral';
+                            if ($p->estado == 'Postulado') $badgeClass = 'sig-badge--warning';
+                            elseif ($p->estado == 'Aceptado') $badgeClass = 'sig-badge--info';
+                            elseif ($p->estado == 'En Curso') $badgeClass = 'sig-badge--brand';
+                            elseif ($p->estado == 'Culminado') $badgeClass = 'sig-badge--success';
+                            elseif ($p->estado == 'Rechazado') $badgeClass = 'sig-badge--danger';
+                            ?>
+                            <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $p->estado; ?></span>
+                        </td>
+                        <td class="col-actions">
+                            <a href="<?php echo URL_ROOT; ?>/pasantes/detalle/<?php echo $p->id; ?>" class="row-action row-action--view" title="Ver Expediente">
+                                <i class="bi bi-folder2-open"></i> Expediente
+                            </a>
+                            <a href="<?php echo URL_ROOT; ?>/pasantes/editar/<?php echo $p->id; ?>" class="row-action row-action--edit" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($data['pasantes'])): ?>
-                        <tr><td colspan="6" class="text-center py-4 text-muted">No hay pasantes registrados.</td></tr>
-                    <?php else: ?>
-                        <?php foreach($data['pasantes'] as $p): ?>
-                        <tr>
-                            <td class="fw-bold"><?php echo $p->cedula; ?></td>
-                            <td><?php echo $p->nombre . ' ' . $p->apellido; ?></td>
-                            <td>
-                                <div><?php echo $p->institucion; ?></div>
-                                <small class="text-muted"><?php echo $p->carrera; ?></small>
-                            </td>
-                            <td>
-                                <?php if($p->id_tutor_institucional): ?>
-                                    <span class="badge bg-light text-dark border"><i class="bi bi-person"></i> <?php echo $p->tutor_nombre . ' ' . $p->tutor_apellido; ?></span>
-                                <?php else: ?>
-                                    <span class="text-muted fst-italic">Sin asignar</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php 
-                                    $color = 'bg-secondary';
-                                    if ($p->estado == 'Aceptado') $color = 'bg-primary';
-                                    if ($p->estado == 'En Curso') $color = 'bg-success';
-                                    if ($p->estado == 'Culminado') $color = 'bg-dark';
-                                    if ($p->estado == 'Rechazado') $color = 'bg-danger';
-                                    if ($p->estado == 'Postulado') $color = 'bg-warning text-dark';
-                                ?>
-                                <span class="badge <?php echo $color; ?>"><?php echo $p->estado; ?></span>
-                            </td>
-                            <td class="text-center">
-                                <a href="<?php echo URL_ROOT; ?>/pasantes/detalle/<?php echo $p->id; ?>" class="btn btn-sm btn-info" title="Expediente y Documentos"><i class="bi bi-folder2-open"></i> Expediente</a>
-                                <a href="<?php echo URL_ROOT; ?>/pasantes/editar/<?php echo $p->id; ?>" class="btn btn-sm btn-warning" title="Editar"><i class="bi bi-pencil"></i></a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
