@@ -332,23 +332,19 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar schema completo:
-psql -U postgres -d "SIGTUR-IMATUR" -f database/schema.sql
+# 3. Importar schema completo consolidado (schema base + migraciones 001-006):
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.sql
 
-# 4. Ejecutar migraciones en orden (todas ya ejecutadas en entorno de desarrollo):
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/001_visitantes_visitas.sql
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/002_rrhh_extensions.sql
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/003_normalize_pasantes.sql
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/004_formacion_reglas_negocio.sql
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/005_rutas_config_sistema.sql
-psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/006_formacion_mejoras.sql
-
-# 5. Verificar config/config.php:
+# 4. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
 #    DB_USER=postgres  | DB_PASS=1234 (entorno Laragon)
 
-# 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
+# 5. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
+
+> **Nota:** `database/schema_completo.sql` reemplaza `schema.sql` + las 6 migraciones individuales.
+> No ejecutar las migraciones por separado si se usó el archivo consolidado.
+> Los archivos `database/schema.sql` y `database/migrations/` se conservan como historial.
 
 ---
 
@@ -381,4 +377,5 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/006_formacion_mejoras
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema completo con datos | `database/schema.sql` |
+| Schema consolidado (instalar desde cero) | `database/schema_completo.sql` |
+| Schema base original (historial) | `database/schema.sql` |
