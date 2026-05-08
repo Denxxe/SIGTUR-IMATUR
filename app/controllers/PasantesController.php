@@ -39,7 +39,7 @@ class PasantesController extends Controller {
 
     public function crear() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = $this->sanitizePost();
 
             $cedula    = trim($_POST['cedula']    ?? '');
             $nombre    = trim($_POST['nombre']    ?? '');
@@ -100,7 +100,7 @@ class PasantesController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = $this->sanitizePost();
 
             $idPersona = (int)($_POST['id_persona'] ?? $pasante->id_persona);
             $userId    = $this->getUserId();

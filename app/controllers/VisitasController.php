@@ -27,7 +27,7 @@ class VisitasController extends Controller {
 
     public function registrar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = $this->sanitizePost();
             $data = [
                 'id_visitante'  => (int)$_POST['id_visitante'],
                 'id_empleado'   => !empty($_POST['id_empleado']) ? (int)$_POST['id_empleado'] : null,

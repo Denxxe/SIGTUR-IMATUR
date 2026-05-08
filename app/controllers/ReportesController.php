@@ -183,13 +183,17 @@ class ReportesController extends Controller {
     // =========================================================================
     public function rutas() {
         $this->requireRoles([1, 3]);
-        $rutas = $this->queryRutas();
+        $filtroEstado     = trim($_GET['estado'] ?? '');
+        $filtroDificultad = trim($_GET['nivel_dificultad'] ?? '');
+        $rutas = $this->queryRutas($filtroEstado, $filtroDificultad);
         $stats = $this->statsRutas();
 
         $data = [
-            'titulo' => 'Reporte de Rutas Turísticas',
-            'rutas' => $rutas,
-            'stats' => $stats
+            'titulo'            => 'Reporte de Rutas Turísticas',
+            'rutas'             => $rutas,
+            'stats'             => $stats,
+            'filtro_estado'     => $filtroEstado,
+            'filtro_dificultad' => $filtroDificultad,
         ];
         $this->view('reportes/rutas', $data);
     }
@@ -197,10 +201,19 @@ class ReportesController extends Controller {
     public function exportarRutasCsv() {
         $this->requireRoles([1, 3]);
         $rutas = $this->queryRutas();
-        $headers = ['Ruta', 'Dificultad', 'Duración', 'Estado', 'Puntos', 'Actividades', 'Equipos'];
+        $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Dificultad', 'Estado', 'Participantes', 'Paradas', 'Equipos'];
         $rows = [];
         foreach ($rutas as $r) {
-            $rows[] = [$r->nombre, $r->nivel_dificultad, $r->duracion_estimada ?? '-', $r->estado, $r->total_puntos, $r->total_actividades, $r->total_equipos];
+            $rows[] = [
+                $r->nombre,
+                $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                $r->departamento_nombre ?? '-',
+                $r->nivel_dificultad,
+                $r->estado,
+                (int)$r->total_participantes,
+                (int)$r->total_puntos,
+                (int)$r->total_equipos,
+            ];
         }
         $this->exportCsv('reporte_rutas', $headers, $rows);
     }
@@ -210,10 +223,17 @@ class ReportesController extends Controller {
         $rutas = $this->queryRutas();
         $stats = $this->statsRutas();
 
-        $headers = ['Ruta', 'Dificultad', 'Duración', 'Estado', 'Puntos', 'Actividades', 'Equipos'];
+        $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Estado', 'Participantes', 'Paradas'];
         $rows = [];
         foreach ($rutas as $r) {
-            $rows[] = [$r->nombre, $r->nivel_dificultad, $r->duracion_estimada ?? '-', $r->estado, $r->total_puntos, $r->total_actividades, $r->total_equipos];
+            $rows[] = [
+                $r->nombre,
+                $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                $r->departamento_nombre ?? '-',
+                $r->estado,
+                (int)$r->total_participantes,
+                (int)$r->total_puntos,
+            ];
         }
         $kpis = [
             'Total Rutas' => $stats->total_rutas,
@@ -224,13 +244,22 @@ class ReportesController extends Controller {
         $this->exportPdf("Reporte de Rutas Turísticas", "IMATUR — Gestión Turística", $headers, $rows, $kpis);
     }
 
-    private function queryRutas() {
+    private function queryRutas(string $estado = '', string $dificultad = '') {
         $db = new Database();
+        $where = "r.is_active = TRUE";
+        if ($estado)     $where .= " AND r.estado = :estado";
+        if ($dificultad) $where .= " AND r.nivel_dificultad = :dificultad";
         $db->query("SELECT r.*,
+                           d.nombre AS departamento_nombre,
                            (SELECT COUNT(*) FROM puntos_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) as total_puntos,
-                           (SELECT COUNT(*) FROM actividades_ruta ar WHERE ar.id_ruta = r.id AND ar.is_active = TRUE) as total_actividades,
+                           (SELECT COUNT(*) FROM participantes_ruta par WHERE par.id_ruta = r.id) as total_participantes,
                            (SELECT COUNT(*) FROM ruta_inventario ri WHERE ri.id_ruta = r.id) as total_equipos
-                    FROM rutas r WHERE r.is_active = TRUE ORDER BY r.created_at DESC");
+                    FROM rutas r
+                    LEFT JOIN departamentos d ON r.id_departamento = d.id
+                    WHERE {$where}
+                    ORDER BY r.created_at DESC");
+        if ($estado)     $db->bind(':estado', $estado);
+        if ($dificultad) $db->bind(':dificultad', $dificultad);
         return $db->resultSet();
     }
 
@@ -393,7 +422,10 @@ class ReportesController extends Controller {
 
     public function pasantes() {
         $this->requireRoles([1, 3]);
+        $filtroEstado = trim($_GET['estado'] ?? '');
         $db = new Database();
+        $where = "p.is_active = TRUE";
+        if ($filtroEstado) $where .= " AND p.estado = :estado";
         $db->query("SELECT p.*,
                            pp.cedula, pp.nombre, pp.apellido,
                            pt.nombre AS tutor_nombre, pt.apellido AS tutor_apellido
@@ -401,12 +433,14 @@ class ReportesController extends Controller {
                     INNER JOIN personas pp ON p.id_persona = pp.id
                     LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
                     LEFT  JOIN personas pt  ON e.id_persona = pt.id
-                    WHERE p.is_active = TRUE ORDER BY p.fecha_inicio DESC");
+                    WHERE {$where} ORDER BY p.fecha_inicio DESC");
+        if ($filtroEstado) $db->bind(':estado', $filtroEstado);
         $pasantes = $db->resultSet();
 
         $data = [
-            'titulo' => 'Reporte de Pasantes',
-            'pasantes' => $pasantes
+            'titulo'        => 'Reporte de Pasantes',
+            'pasantes'      => $pasantes,
+            'filtro_estado' => $filtroEstado,
         ];
         $this->view('reportes/pasantes', $data);
     }

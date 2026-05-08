@@ -106,9 +106,16 @@
                 <i class="bi bi-bar-chart-line"></i> <span>Reportes</span>
             </a>
 
+            <!-- Configuración — Admin (1) y RRHH (2) -->
+            <?php if(in_array($rol, [1, 2])): ?>
+            <div class="sidebar__group-label">Sistema</div>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/config/index">
+                <i class="bi bi-gear"></i> <span>Configuración</span>
+            </a>
+            <?php endif; ?>
+
             <!-- Sistema — solo Administrador (1) -->
             <?php if($rol == 1): ?>
-            <div class="sidebar__group-label">Sistema</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/usuarios/index">
                 <i class="bi bi-people"></i> <span>Usuarios</span>
             </a>

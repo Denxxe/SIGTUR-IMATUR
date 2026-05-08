@@ -19,7 +19,7 @@ class MunicipioController extends Controller
     public function store()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = $this->sanitizePost();
 
             $id = isset($_POST['id']) ? (int)$_POST['id'] : null;
             $data = [

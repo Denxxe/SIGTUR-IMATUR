@@ -21,9 +21,8 @@ class Model {
      */
     protected function audit($tabla, $operacion, $record_id, $previos = null, $nuevos = null, $user_id = null) {
         try {
-            AuditLog::log($tabla, $operacion, $record_id, $previos, $nuevos, $user_id);
+            AuditLog::log($tabla, $operacion, $record_id, self::toArray($previos), self::toArray($nuevos), $user_id);
         } catch (\Exception $e) {
-            // La auditoría nunca debe romper la operación principal
             error_log("AuditLog Error: " . $e->getMessage());
         }
     }
@@ -33,9 +32,15 @@ class Model {
      */
     protected static function auditStatic($tabla, $operacion, $record_id, $previos = null, $nuevos = null, $user_id = null) {
         try {
-            AuditLog::log($tabla, $operacion, $record_id, $previos, $nuevos, $user_id);
+            AuditLog::log($tabla, $operacion, $record_id, self::toArray($previos), self::toArray($nuevos), $user_id);
         } catch (\Exception $e) {
             error_log("AuditLog Error: " . $e->getMessage());
         }
+    }
+
+    private static function toArray($val): ?array {
+        if ($val === null) return null;
+        if (is_array($val)) return $val;
+        return (array) $val;
     }
 }

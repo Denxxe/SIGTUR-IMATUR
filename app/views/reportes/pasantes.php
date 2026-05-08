@@ -23,6 +23,38 @@
     </div>
 </div>
 
+<!-- Filtros -->
+<form method="GET" action="" class="anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card">
+        <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-5);">
+            <div style="display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:flex-end;">
+                <div class="sig-field" style="margin:0; min-width:180px;">
+                    <label class="sig-field__label">Estado</label>
+                    <select name="estado" class="sig-select">
+                        <option value="">Todos los estados</option>
+                        <?php foreach (['Postulado','Aceptado','En Curso','Culminado','Rechazado'] as $opt): ?>
+                            <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>>
+                                <?php echo $opt; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+                <?php if (!empty($data['filtro_estado'])): ?>
+                <a href="<?php echo URL_ROOT; ?>/reportes/pasantes" class="btn-sig btn-sig--ghost btn-sig--sm">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+                <?php endif; ?>
+                <span style="font-size:12px; color:var(--text-tertiary); margin-left:auto;">
+                    <?php echo count($data['pasantes']); ?> resultado(s)
+                </span>
+            </div>
+        </div>
+    </div>
+</form>
+
 <div class="sig-table-wrap anim-slide-up">
     <table class="sig-table">
         <thead>

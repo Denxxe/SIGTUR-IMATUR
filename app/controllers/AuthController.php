@@ -23,7 +23,7 @@ class AuthController extends Controller {
         ];
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $_POST = $this->sanitizePost();
             
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);

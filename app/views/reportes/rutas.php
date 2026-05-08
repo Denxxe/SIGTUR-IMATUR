@@ -59,6 +59,49 @@
     </div>
 </div>
 
+<!-- Filtros -->
+<form method="GET" action="" class="anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card">
+        <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-5);">
+            <div style="display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:flex-end;">
+                <div class="sig-field" style="margin:0; min-width:170px;">
+                    <label class="sig-field__label">Estado</label>
+                    <select name="estado" class="sig-select">
+                        <option value="">Todos los estados</option>
+                        <?php foreach (['Activa','Inactiva','En Mantenimiento'] as $opt): ?>
+                            <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>>
+                                <?php echo $opt; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field" style="margin:0; min-width:170px;">
+                    <label class="sig-field__label">Dificultad</label>
+                    <select name="nivel_dificultad" class="sig-select">
+                        <option value="">Todas</option>
+                        <?php foreach (['Fácil','Moderado','Difícil','Extremo'] as $opt): ?>
+                            <option value="<?php echo $opt; ?>" <?php if (($data['filtro_dificultad'] ?? '') === $opt) echo 'selected'; ?>>
+                                <?php echo $opt; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm">
+                    <i class="bi bi-funnel"></i> Filtrar
+                </button>
+                <?php if (!empty($data['filtro_estado']) || !empty($data['filtro_dificultad'])): ?>
+                <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--ghost btn-sig--sm">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+                <?php endif; ?>
+                <span style="font-size:12px; color:var(--text-tertiary); margin-left:auto;">
+                    <?php echo count($data['rutas']); ?> resultado(s)
+                </span>
+            </div>
+        </div>
+    </div>
+</form>
+
 <!-- Gráficas -->
 <div class="row g-4 mb-8 anim-slide-up">
     <div class="col-md-5">
@@ -89,22 +132,33 @@
         <thead>
             <tr>
                 <th>Nombre de la Ruta</th>
+                <th>Fecha Visita</th>
+                <th>Departamento</th>
                 <th>Dificultad</th>
                 <th>Estado</th>
+                <th style="text-align:center;">Participantes</th>
                 <th style="text-align:center;">Paradas</th>
-                <th style="text-align:center;">Actividades</th>
                 <th style="text-align:center;">Equipamiento</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="6" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="8" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
-                        <td class="cell-strong"><?php echo $r->nombre; ?></td>
+                        <td class="cell-strong"><?php echo htmlspecialchars($r->nombre); ?></td>
+                        <td style="font-size:12px; color:var(--text-secondary);">
+                            <?php if ($r->fecha_visita): ?>
+                                <?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?>
+                                <?php if ($r->hora_visita): ?><br><span style="color:var(--text-tertiary);"><?php echo substr($r->hora_visita, 0, 5); ?></span><?php endif; ?>
+                            <?php else: ?>
+                                <span style="color:var(--text-tertiary);">—</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
                         <td>
                             <?php
                             $diffBadge = 'sig-badge--neutral';
@@ -119,13 +173,14 @@
                             <?php
                             $statusBadge = 'sig-badge--neutral';
                             if ($r->estado == 'Activa') $statusBadge = 'sig-badge--success';
+                            elseif ($r->estado == 'Inactiva') $statusBadge = 'sig-badge--danger';
                             elseif ($r->estado == 'En Mantenimiento') $statusBadge = 'sig-badge--warning';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
                         </td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo $r->total_puntos; ?></td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo $r->total_actividades; ?></td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo $r->total_equipos; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_equipos; ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

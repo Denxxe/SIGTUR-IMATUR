@@ -18,7 +18,7 @@ class TalleresController extends Controller {
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-        $_POST   = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $_POST = $this->sanitizePost();
         $userId  = $this->getUserId();
         $esEdicion = !empty($_POST['id']);
 
@@ -109,7 +109,7 @@ class TalleresController extends Controller {
     public function inscribir() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-        $_POST     = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        $_POST = $this->sanitizePost();
         $id_taller = (int)$_POST['id_taller'];
         $userId    = $this->getUserId();
         $esLibre   = !empty($_POST['tipo_participante_libre']);
