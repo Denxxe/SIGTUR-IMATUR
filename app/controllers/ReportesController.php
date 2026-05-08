@@ -342,11 +342,19 @@ class ReportesController extends Controller {
         $participantes = $db->resultSet();
 
         header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="Dossier_Taller_' . time() . '.csv"');
-        
+        header('Content-Disposition: attachment; filename="Dossier_Taller_' . date('Y-m-d') . '.csv"');
+
         $output = fopen('php://output', 'w');
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM
-        
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+
+        // Cabecera institucional
+        fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
+        fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
+        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
+        fputcsv($output, ['Cumaná, Estado Sucre'], ';');
+        fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
+        fputcsv($output, [''], ';');
+
         // Bloque 1: Generalidades
         fputcsv($output, ['DOSSIER INTEGRAL DE ACTIVIDAD - IMATUR'], ';');
         fputcsv($output, ['Taller:', $t->nombre], ';');
@@ -495,12 +503,26 @@ class ReportesController extends Controller {
         header('Expires: 0');
 
         $output = fopen('php://output', 'w');
-        // BOM UTF-8 para que Excel interprete los acentos correctamente
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
+
+        // Cabecera institucional
+        fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
+        fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
+        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
+        fputcsv($output, ['Cumaná, Estado Sucre'], ';');
+        fputcsv($output, [''], ';');
+        fputcsv($output, ['Reporte: ' . $filename], ';');
+        fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
+        fputcsv($output, [''], ';');
+
+        // Encabezados y datos
         fputcsv($output, $headers, ';');
         foreach ($rows as $row) {
             fputcsv($output, $row, ';');
         }
+        fputcsv($output, [''], ';');
+        fputcsv($output, ['Total de registros: ' . count($rows)], ';');
+
         fclose($output);
         exit;
     }

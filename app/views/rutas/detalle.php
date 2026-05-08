@@ -20,6 +20,9 @@
         <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
+        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-envelope-paper"></i> Generar Oficio
+        </a>
         <button type="button" class="btn-sig btn-sig--primary" style="background:var(--teal-600);" data-bs-toggle="modal" data-bs-target="#modalPunto" onclick="nuevoPunto()">
             <i class="bi bi-pin-map"></i> Agregar Parada
         </button>

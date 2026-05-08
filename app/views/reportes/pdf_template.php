@@ -2,247 +2,324 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo $data['titulo'] ?? 'Reporte'; ?> - SIGTUR-IMATUR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($data['titulo'] ?? 'Reporte'); ?> — IMATUR-SUCRE</title>
     <style>
-        /* === RESET & BASE === */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 10px;
-            color: #1e293b;
-            background: #fff;
-            padding: 40px 50px;
-            line-height: 1.4;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            font-size: 10.5pt;
+            color: #1a2535;
+            background: #eef1f6;
+            line-height: 1.55;
         }
 
-        /* === ENCABEZADO INSTITUCIONAL === */
-        .header-doc {
-            border-bottom: 2px solid #3b82f6;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+        /* ── WRAPPER ─────────────────────────────────────────────────── */
+        .page-wrap {
+            max-width: 980px;
+            margin: 28px auto;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 16px rgba(0,0,0,.10);
+            overflow: hidden;
+        }
+
+        /* ── BARRA DE CONTROLES (pantalla) ───────────────────────────── */
+        .ctrl-bar {
+            background: #f0f4ff;
+            border-bottom: 1px solid #c7d2fe;
+            padding: 11px 36px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
         }
-        .header-doc .logo-area h1 {
-            font-size: 24px;
-            font-weight: 900;
-            color: #1e3a8a;
-            letter-spacing: -0.02em;
-            margin-bottom: 4px;
+        .ctrl-bar span { font-size: 9pt; color: #374151; }
+        .ctrl-bar .btns { display: flex; gap: 8px; }
+        .ctrl-btn {
+            padding: 7px 18px;
+            font-family: inherit;
+            font-size: 9.5pt;
+            font-weight: 600;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background .15s;
         }
-        .header-doc .logo-area p {
-            color: #64748b;
-            font-size: 11px;
-            font-weight: 500;
-        }
-        .header-doc .meta-area {
-            text-align: right;
-            font-size: 10px;
-            color: #64748b;
-        }
+        .ctrl-btn--primary { background: #1a56db; color: #fff; }
+        .ctrl-btn--primary:hover { background: #1648c0; }
+        .ctrl-btn--ghost { background: #fff; color: #374151; border: 1px solid #d1d5db !important; }
+        .ctrl-btn--ghost:hover { background: #f9fafb; }
 
-        /* === TÍTULO DEL REPORTE === */
-        .report-title {
-            background: #f8fafc;
-            border-left: 4px solid #3b82f6;
-            padding: 15px 20px;
-            margin-bottom: 25px;
-            border-radius: 0 4px 4px 0;
-        }
-        .report-title h2 {
-            font-size: 18px;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-        .report-title p {
-            font-size: 11px;
-            color: #475569;
-        }
-
-        /* === KPIs === */
-        .kpi-row {
+        /* ── CABECERA INSTITUCIONAL ───────────────────────────────────── */
+        .inst-header {
+            padding: 20px 36px 16px;
+            background: #fff;
             display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 3px solid #1a56db;
         }
-        .kpi-box {
+        .inst-header img {
+            height: 68px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .inst-header .inst-text {
             flex: 1;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
             text-align: center;
         }
-        .kpi-box .value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #2563eb;
-            margin-bottom: 2px;
-        }
-        .kpi-box .label {
-            font-size: 9px;
+        .inst-header .inst-text h2 {
+            font-size: 9.5pt;
             font-weight: 700;
-            color: #64748b;
+            color: #111827;
+            line-height: 1.65;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.02em;
+        }
+        .inst-header .inst-text .rif {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #6b7280;
+            margin-top: 4px;
         }
 
-        /* === TABLA === */
+        /* ── BARRA TÍTULO DEL REPORTE ─────────────────────────────────── */
+        .report-bar {
+            background: #0f172a;
+            padding: 15px 36px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .report-bar .rb-title {
+            font-size: 13.5pt;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: -0.01em;
+        }
+        .report-bar .rb-sub {
+            font-size: 9pt;
+            color: #7dd3fc;
+            margin-top: 3px;
+        }
+        .report-bar .rb-meta {
+            text-align: right;
+            font-size: 8.5pt;
+            color: #94a3b8;
+            line-height: 1.7;
+        }
+        .report-bar .rb-meta strong { color: #cbd5e1; }
+        .rb-badge {
+            display: inline-block;
+            margin-top: 5px;
+            background: #1e40af;
+            color: #bfdbfe;
+            font-size: 7.5pt;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 3px;
+        }
+
+        /* ── KPI STRIP ───────────────────────────────────────────────── */
+        .kpi-strip {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafbfd;
+        }
+        .kpi-item {
+            flex: 1;
+            padding: 14px 12px;
+            text-align: center;
+            border-right: 1px solid #e5e7eb;
+        }
+        .kpi-item:last-child { border-right: none; }
+        .kpi-item .kv {
+            font-size: 22pt;
+            font-weight: 800;
+            color: #1a56db;
+            line-height: 1.1;
+        }
+        .kpi-item .kl {
+            font-size: 7pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* ── TABLA ───────────────────────────────────────────────────── */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
         }
         thead th {
-            background: #0f172a;
-            color: #ffffff;
-            padding: 10px 8px;
+            background: #f1f5f9;
+            color: #374151;
+            padding: 9px 14px;
             text-align: left;
+            font-size: 8pt;
             font-weight: 700;
-            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
+            border-bottom: 2px solid #1a56db;
         }
         tbody td {
-            padding: 8px;
+            padding: 8px 14px;
             border-bottom: 1px solid #f1f5f9;
-            color: #334155;
+            font-size: 10pt;
+            color: #374151;
             vertical-align: top;
         }
-        tbody tr:nth-child(even) {
-            background: #fcfdfe;
-        }
-        .cell-bold {
-            font-weight: 700;
-            color: #0f172a;
+        tbody tr:nth-child(even) td { background: #f8fafc; }
+        tbody tr:last-child td { border-bottom: none; }
+        .td-first { font-weight: 700; color: #111827; }
+        .td-empty {
+            text-align: center;
+            padding: 40px 14px;
+            color: #9ca3af;
+            font-style: italic;
         }
 
-        /* === PIE DE PÁGINA === */
-        .footer-doc {
-            margin-top: 40px;
-            padding-top: 15px;
-            border-top: 1px solid #e2e8f0;
-            font-size: 9px;
-            color: #94a3b8;
+        /* ── PIE INSTITUCIONAL ────────────────────────────────────────── */
+        .inst-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 36px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
         }
+        .inst-footer .address {
+            font-size: 7.5pt;
+            color: #6b7280;
+        }
+        .inst-footer .generated {
+            font-size: 8pt;
+            color: #9ca3af;
+        }
+        .inst-footer .generated strong { color: #6b7280; }
 
-        /* === BOTONES (ocultos al imprimir) === */
-        .no-print {
-            margin-bottom: 30px;
-            text-align: right;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .no-print button {
-            padding: 10px 20px;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-left: 10px;
-        }
-        .btn-print {
-            background: #2563eb;
-            color: #fff;
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
-        }
-        .btn-print:hover { background: #1d4ed8; transform: translateY(-1px); }
-        .btn-back {
-            background: #fff;
-            color: #475569;
-            border: 1px solid #d1d5db !important;
-        }
-        .btn-back:hover { background: #f3f4f6; }
-
-        /* === REGLAS DE IMPRESIÓN === */
+        /* ── PRINT ────────────────────────────────────────────────────── */
         @media print {
-            .no-print { display: none !important; }
-            body { padding: 0; }
+            body { background: #fff; }
+            .ctrl-bar { display: none !important; }
+            .page-wrap {
+                margin: 0;
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+            }
             @page {
                 size: landscape;
-                margin: 1.5cm;
+                margin: 1.2cm 1.4cm;
             }
         }
     </style>
 </head>
 <body>
 
-<!-- Botones de acción -->
-<div class="no-print">
-    <button class="btn-back" onclick="window.history.back()">← Regresar al Panel</button>
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
-</div>
+<div class="page-wrap">
 
-<!-- Encabezado Institucional -->
-<div class="header-doc">
-    <div class="logo-area">
-        <h1>SIGTUR-IMATUR</h1>
-        <p>Sistema Integral de Gestión Turística y Administrativa</p>
-        <p>Instituto Municipal de Turismo — Cumaná, Estado Sucre</p>
-    </div>
-    <div class="meta-area">
-        <p><strong>Fecha:</strong> <?php echo date('d/m/Y H:i'); ?></p>
-        <p><strong>Usuario:</strong> <?php echo $_SESSION['user_username'] ?? 'Sistema'; ?></p>
-        <p style="margin-top:4px; font-weight:700; color:#3b82f6;">DOCUMENTO OFICIAL</p>
-    </div>
-</div>
-
-<!-- Título del Reporte -->
-<div class="report-title">
-    <h2><?php echo $data['titulo'] ?? 'Reporte SIGTUR'; ?></h2>
-    <p><?php echo ($data['subtitulo'] ?? '') ?: 'Consolidado general de registros del sistema.'; ?></p>
-</div>
-
-<!-- KPIs -->
-<?php if (!empty($data['kpis'])): ?>
-<div class="kpi-row">
-    <?php foreach ($data['kpis'] ?? [] as $label => $value): ?>
-        <div class="kpi-box">
-            <div class="value"><?php echo $value ?? 0; ?></div>
-            <div class="label"><?php echo $label ?? 'Dato'; ?></div>
+    <!-- ── Controles de pantalla ── -->
+    <div class="ctrl-bar">
+        <span>
+            <strong><?php echo htmlspecialchars($data['titulo'] ?? 'Reporte'); ?></strong>
+            &nbsp;·&nbsp; Documento listo para imprimir o guardar como PDF
+        </span>
+        <div class="btns">
+            <button class="ctrl-btn ctrl-btn--ghost" onclick="window.history.back()">← Regresar</button>
+            <button class="ctrl-btn ctrl-btn--primary" onclick="window.print()">&#x1F5A8;&nbsp; Imprimir / Guardar PDF</button>
         </div>
-    <?php endforeach; ?>
-</div>
-<?php endif; ?>
+    </div>
 
-<!-- Tabla de Datos -->
-<table>
-    <thead>
-        <tr>
-            <?php foreach ($data['headers'] ?? [] as $h): ?>
-                <th><?php echo $h ?? '-'; ?></th>
-            <?php endforeach; ?>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if (empty($data['rows'] ?? [])): ?>
-            <tr><td colspan="<?php echo count($data['headers'] ?? []); ?>" style="text-align:center; padding:40px; color:#94a3b8; font-style:italic; font-size:12px;">No se encontraron registros para los criterios seleccionados.</td></tr>
-        <?php else: ?>
-            <?php foreach ($data['rows'] ?? [] as $row): ?>
+    <!-- ── Cabecera institucional ── -->
+    <div class="inst-header">
+        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía de Cumaná">
+        <div class="inst-text">
+            <h2>
+                República Bolivariana de Venezuela<br>
+                Alcaldía Bolivariana del Municipio Sucre<br>
+                Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
+                Cumaná, Estado Sucre
+            </h2>
+            <div class="rif">RIF. G-20008498-7</div>
+        </div>
+        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
+    </div>
+
+    <!-- ── Barra título ── -->
+    <div class="report-bar">
+        <div>
+            <div class="rb-title"><?php echo htmlspecialchars($data['titulo'] ?? 'Reporte'); ?></div>
+            <div class="rb-sub"><?php echo htmlspecialchars(($data['subtitulo'] ?? '') ?: 'Consolidado general de registros del sistema.'); ?></div>
+        </div>
+        <div class="rb-meta">
+            <div><strong>Fecha:</strong> <?php echo date('d/m/Y'); ?> &nbsp;<strong>Hora:</strong> <?php echo date('H:i'); ?></div>
+            <div><strong>Usuario:</strong> <?php echo htmlspecialchars($_SESSION['user_username'] ?? 'Sistema'); ?></div>
+            <div><span class="rb-badge">Documento Oficial</span></div>
+        </div>
+    </div>
+
+    <!-- ── KPIs ── -->
+    <?php if (!empty($data['kpis'])): ?>
+    <div class="kpi-strip">
+        <?php foreach ($data['kpis'] as $label => $value): ?>
+        <div class="kpi-item">
+            <div class="kv"><?php echo htmlspecialchars((string)($value ?? '0')); ?></div>
+            <div class="kl"><?php echo htmlspecialchars($label); ?></div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- ── Tabla ── -->
+    <table>
+        <thead>
+            <tr>
+                <?php foreach ($data['headers'] ?? [] as $h): ?>
+                    <th><?php echo htmlspecialchars($h ?? '—'); ?></th>
+                <?php endforeach; ?>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($data['rows'] ?? [])): ?>
                 <tr>
-                    <?php foreach ($row as $cell): ?>
-                        <td><?php echo htmlspecialchars($cell ?? ''); ?></td>
-                    <?php endforeach; ?>
+                    <td colspan="<?php echo count($data['headers'] ?? []); ?>" class="td-empty">
+                        No se encontraron registros para los criterios seleccionados.
+                    </td>
                 </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </tbody>
-</table>
+            <?php else: ?>
+                <?php foreach ($data['rows'] as $i => $row): ?>
+                    <tr>
+                        <?php foreach ($row as $j => $cell): ?>
+                            <td <?php if ($j === 0) echo 'class="td-first"'; ?>>
+                                <?php echo htmlspecialchars((string)($cell ?? '')); ?>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
 
-<!-- Pie de Página -->
-<div class="footer-doc">
-    <span>Generado mediante plataforma SIGTUR-IMATUR © <?php echo date('Y'); ?></span>
-    <span>Página 1 de 1 — Total registros: <?php echo count($data['rows'] ?? []); ?></span>
+    <!-- ── Pie institucional ── -->
+    <div class="inst-footer">
+        <div class="address">
+            Calle Sucre N° 11, San Francisco, Parroquia Santa Inés, Municipio Sucre — Edo. Sucre
+        </div>
+        <div class="generated">
+            Generado por SIGTUR-IMATUR © <?php echo date('Y'); ?>
+            &nbsp;·&nbsp; Total registros: <strong><?php echo count($data['rows'] ?? []); ?></strong>
+        </div>
+    </div>
+
 </div>
-
 </body>
 </html>

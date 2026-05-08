@@ -101,6 +101,23 @@ class RutasController extends Controller {
         header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
     }
 
+    public function oficio($id) {
+        $ruta = Ruta::find($id);
+        if (!$ruta) {
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+        $puntos = Ruta::getPuntos($id);
+        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $data = [
+            'titulo'   => 'Oficio: ' . $ruta->nombre,
+            'ruta'     => $ruta,
+            'puntos'   => $puntos,
+            'fecha_hoy' => date('j') . ' de ' . $meses[(int)date('n') - 1] . ' de ' . date('Y'),
+        ];
+        $this->view('rutas/oficio', $data);
+    }
+
     public function delete($id) {
         try {
             if (Ruta::delete($id, $this->getUserId())) {
