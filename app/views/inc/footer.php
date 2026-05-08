@@ -16,6 +16,42 @@
         <!-- Contenedor de Toasts del nuevo diseño -->
         <div class="sig-toast-region" id="sigToastRegion"></div>
 
+        <!-- ==================== MODAL CONFIRMACIÓN ELIMINACIÓN ==================== -->
+        <div class="modal fade" id="modalConfirmDelete" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+                <div class="modal-content" style="border:none; overflow:hidden;">
+                    <div class="modal-header" style="background:var(--danger-50,#fef2f2); border-bottom:1px solid var(--danger-100,#fecaca); padding:16px 20px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:38px; height:38px; border-radius:50%; background:var(--danger-100,#fecaca);
+                                        display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <i class="bi bi-trash3" style="color:var(--danger-600,#dc2626); font-size:17px;"></i>
+                            </div>
+                            <h5 class="modal-title" id="modalDeleteTitle"
+                                style="font-size:15px; font-weight:700; color:var(--danger-700,#b91c1c); margin:0;">
+                                Confirmar eliminación
+                            </h5>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body" style="padding:20px;">
+                        <p id="modalDeleteMsg"
+                           style="font-size:14px; font-weight:500; color:var(--text-primary); margin-bottom:10px;"></p>
+                        <p id="modalDeleteSub"
+                           style="font-size:12px; color:var(--text-tertiary); margin:0; display:flex; align-items:center; gap:6px;">
+                        </p>
+                    </div>
+                    <div class="modal-footer" style="padding:12px 20px; border-top:1px solid var(--border-subtle); gap:8px;">
+                        <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg"></i> Cancelar
+                        </button>
+                        <a id="modalDeleteConfirm" href="#" class="btn-sig btn-sig--danger">
+                            <i class="bi bi-trash3"></i> <span id="modalDeleteAction">Eliminar</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             /**
              * Sistema de Notificaciones (Toasts) — Diseño SIGTUR v2.0
@@ -96,12 +132,69 @@
 
             // ==================== DOMContentLoaded ====================
             document.addEventListener('DOMContentLoaded', function() {
-                // Confirmación genérica de eliminación
-                document.querySelectorAll('.delete-btn').forEach(btn => {
+
+                // ── Modal de confirmación de eliminación ──────────────────
+                const _delModal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
+
+                // Textos y subtítulos según el controlador detectado en la URL
+                const _delContexts = {
+                    'usuarios':              { title: 'Suspender usuario',       action: 'Suspender',    sub: 'El usuario perderá acceso al sistema. Puede reactivarse desde la Papelera.' },
+                    'inventario':            { title: 'Dar de baja el bien',      action: 'Dar de baja',  sub: 'El bien será registrado como inactivo. Puede restaurarse desde la Papelera.' },
+                    'empleados':             { title: 'Desactivar empleado',      action: 'Desactivar',   sub: 'El empleado pasará a inactivo. Puede restaurarse desde la Papelera.' },
+                    'desinscribir':          { title: 'Quitar participante',      action: 'Quitar',       sub: 'El participante será removido de esta actividad.' },
+                    'deletepunto':           { title: 'Eliminar parada',          action: 'Eliminar',     sub: 'La parada será removida de la ruta.' },
+                    'deleteinventario':      { title: 'Desvincular equipamiento', action: 'Desvincular',  sub: 'El recurso será desvinculado de esta ruta.' },
+                };
+                const _delDefault = { title: 'Confirmar eliminación', action: 'Eliminar',
+                    sub: 'El registro pasará a la Papelera y podrá restaurarse desde Auditoría → Papelera.' };
+
+                document.querySelectorAll('.delete-btn').forEach(function(btn) {
                     btn.addEventListener('click', function(e) {
-                        if (!confirm('¿Está seguro de que desea eliminar este registro?')) {
-                            e.preventDefault();
+                        e.preventDefault();
+
+                        // Detectar contexto desde la URL del botón
+                        var href   = this.getAttribute('href') || '#';
+                        var parts  = href.replace(/^.*\/\/[^/]+/, '').split('/').filter(Boolean);
+                        // Busca la acción: "delete", "desinscribir", "deletePunto", etc.
+                        var action = '';
+                        for (var i = 0; i < parts.length; i++) {
+                            if (/delete|desinscribir/i.test(parts[i])) {
+                                action = parts[i].toLowerCase() + (parts[i-1] ? '' : '');
+                                // controller/action → combinación
+                                action = (parts[i-1] || '') + '/' + parts[i].toLowerCase();
+                                break;
+                            }
                         }
+                        // Buscar contexto: primero la acción completa, luego solo el controller
+                        var ctx = null;
+                        for (var key in _delContexts) {
+                            if (action.includes(key)) { ctx = _delContexts[key]; break; }
+                        }
+                        ctx = ctx || _delDefault;
+
+                        // Detectar nombre del registro: data-nombre → .cell-strong en <tr> → h3 en .sig-card
+                        var nombre = this.dataset.nombre || '';
+                        if (!nombre) {
+                            var tr = this.closest('tr');
+                            if (tr) nombre = (tr.querySelector('.cell-strong, td:first-child') || {}).textContent || '';
+                        }
+                        if (!nombre) {
+                            var card = this.closest('.sig-card');
+                            if (card) nombre = (card.querySelector('h3, .sig-card__title') || {}).textContent || '';
+                        }
+                        nombre = nombre.trim().replace(/\s+/g, ' ').substring(0, 60);
+
+                        // Rellenar modal
+                        document.getElementById('modalDeleteTitle').textContent  = ctx.title;
+                        document.getElementById('modalDeleteAction').textContent = ctx.action;
+                        document.getElementById('modalDeleteMsg').textContent    = nombre
+                            ? '¿Estás seguro de que deseas ' + ctx.action.toLowerCase() + ' "' + nombre + '"?'
+                            : '¿Estás seguro de que deseas ' + ctx.action.toLowerCase() + ' este registro?';
+                        document.getElementById('modalDeleteSub').innerHTML =
+                            '<i class="bi bi-recycle" style="color:var(--warning-500);margin-right:4px;"></i>' + ctx.sub;
+                        document.getElementById('modalDeleteConfirm').setAttribute('href', href);
+
+                        _delModal.show();
                     });
                 });
 
