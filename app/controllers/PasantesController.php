@@ -124,6 +124,16 @@ class PasantesController extends Controller {
             ];
 
             try {
+                // RN-PS01: Solo el Administrador puede aprobar (Postulado → Aceptado)
+                $estadoActual = $pasante->estado ?? '';
+                $estadoNuevo  = $pasanteData['estado'] ?? '';
+                if ($estadoActual === 'Postulado' && $estadoNuevo === 'Aceptado') {
+                    $rolActual = (int)($_SESSION['user_rol'] ?? 0);
+                    if ($rolActual !== 1) {
+                        throw new Exception('Solo el Administrador puede aprobar el paso de Postulado a Aceptado (RN-PS01).');
+                    }
+                }
+
                 $this->pasanteModel->updatePersona($idPersona, $personaData, $userId);
 
                 if ($this->pasanteModel->update($pasanteData, $userId)) {
@@ -159,6 +169,31 @@ class PasantesController extends Controller {
         }
         header('Location: ' . URL_ROOT . '/pasantes/index');
         exit;
+    }
+
+    public function carta($id) {
+        $pasante = $this->pasanteModel->getPasanteUnico($id);
+        if (!$pasante || $pasante->estado !== 'Culminado') {
+            flash('global_msg', 'La carta de culminación solo está disponible para pasantes en estado Culminado.', 'danger');
+            header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id);
+            exit;
+        }
+
+        $configModel = $this->model('ConfigSistema');
+        $config = $configModel->getAll();
+
+        $data = [
+            'pasante' => $pasante,
+            'config'  => $config,
+            'fecha_hoy' => $this->fechaEspanol(date('d'), date('n'), date('Y')),
+        ];
+        $this->view('pasantes/carta_culminacion', $data);
+    }
+
+    private function fechaEspanol(int $dia, int $mes, int $year): string {
+        $meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        return $dia . ' de ' . $meses[$mes] . ' de ' . $year;
     }
 
     public function subirDocumento($id_pasante) {

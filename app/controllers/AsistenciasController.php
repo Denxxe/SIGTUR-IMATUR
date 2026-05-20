@@ -23,7 +23,7 @@ class AsistenciasController extends Controller {
     public function marcar() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id_empleado = (int)$_POST['id_empleado'];
-            $user_id = 1; // ID temporal
+            $user_id = $this->getUserId();
 
             // 1. Verificar si tiene una asistencia abierta hoy
             $asistenciaAbierta = Asistencia::findOpen($id_empleado);
@@ -37,6 +37,7 @@ class AsistenciasController extends Controller {
                 ];
                 $asistencia = new Asistencia($data);
                 $asistencia->save($user_id);
+                flash('global_msg', 'Salida registrada correctamente.');
             } else {
                 // Registrar Entrada
                 $data = [
@@ -47,6 +48,7 @@ class AsistenciasController extends Controller {
                 ];
                 $asistencia = new Asistencia($data);
                 $asistencia->save($user_id);
+                flash('global_msg', 'Entrada registrada correctamente.');
             }
 
             header('Location: ' . URL_ROOT . '/asistencias/index');

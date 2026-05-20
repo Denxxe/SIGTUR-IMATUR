@@ -16,6 +16,10 @@
             <button onclick="window.print()" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg, var(--danger-500), var(--danger-700)); box-shadow: var(--sh-glow-danger);">
                 <i class="bi bi-printer"></i> Imprimir Informe
             </button>
+            <a href="<?php echo URL_ROOT; ?>/talleres/informeImprimible/<?php echo $data['taller']->id; ?>"
+               class="btn-sig btn-sig--success" target="_blank">
+                <i class="bi bi-printer"></i> Vista Imprimible
+            </a>
         <?php endif; ?>
     </div>
 </div>

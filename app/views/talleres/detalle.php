@@ -34,6 +34,10 @@
         <a href="<?php echo URL_ROOT; ?>/talleres/informe/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-file-earmark-text"></i> Informe Oficial
         </a>
+        <a href="<?php echo URL_ROOT; ?>/talleres/listaAsistencia/<?php echo $data['taller']->id; ?>"
+           class="btn-sig btn-sig--ghost" target="_blank">
+            <i class="bi bi-list-check"></i> Lista de Asistencia
+        </a>
         <?php if (!in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado'])): ?>
             <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
                 <i class="bi bi-person-plus"></i> Agregar Participante

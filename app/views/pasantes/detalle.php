@@ -15,6 +15,12 @@
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
             <i class="bi bi-cloud-upload"></i> Subir Documento
         </button>
+        <?php if ($data['pasante']->estado === 'Culminado'): ?>
+        <a href="<?php echo URL_ROOT; ?>/pasantes/carta/<?php echo $data['pasante']->id; ?>"
+           class="btn-sig btn-sig--success" target="_blank">
+            <i class="bi bi-file-earmark-text"></i> Carta de Culminación
+        </a>
+        <?php endif; ?>
     </div>
 </div>
 

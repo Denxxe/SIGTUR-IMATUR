@@ -20,6 +20,13 @@ $rol = (int)($_SESSION['user_rol'] ?? 0);
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Historial de asistencia del personal con filtros por fecha</p>
         <a href="<?php echo URL_ROOT; ?>/reportes/asistencia" class="btn-sig btn-sig--primary">Generar</a>
     </div>
+
+    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:48px;margin-bottom:12px">👥</div>
+        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Visitantes</h5>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Registro de visitas institucionales con filtros por fecha y motivo</p>
+        <a href="<?php echo URL_ROOT; ?>/reportes/visitantes" class="btn-sig btn-sig--primary">Generar</a>
+    </div>
     <?php endif; ?>
 
     <?php if(in_array($rol, [1, 3])): ?>
@@ -42,6 +49,22 @@ $rol = (int)($_SESSION['user_rol'] ?? 0);
         <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Pasantes</h5>
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Control de practicantes, tutores y documentos</p>
         <a href="<?php echo URL_ROOT; ?>/reportes/pasantes" class="btn-sig btn-sig--ghost">Generar</a>
+    </div>
+    <?php endif; ?>
+
+    <?php if(in_array($rol, [1, 4])): ?>
+    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:48px;margin-bottom:12px">🗃️</div>
+        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Inventario</h5>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Control patrimonial de bienes por condición y categoría</p>
+        <a href="<?php echo URL_ROOT; ?>/reportes/inventario" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg,var(--teal-500),var(--teal-600))">Generar</a>
+    </div>
+
+    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:48px;margin-bottom:12px">🗑️</div>
+        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Bienes Dados de Baja</h5>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Historial de bienes desincorporados del inventario activo</p>
+        <a href="<?php echo URL_ROOT; ?>/reportes/bajasInventario" class="btn-sig btn-sig--ghost">Generar</a>
     </div>
     <?php endif; ?>
 

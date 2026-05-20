@@ -490,6 +490,212 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // Reporte de Visitantes y Visitas
+    // =========================================================================
+    public function visitantes() {
+        $this->requireRoles([1, 2]);
+        $registros = $this->queryVisitantes();
+        $stats = $this->statsVisitantes();
+
+        $data = [
+            'titulo'        => 'Reporte de Visitantes',
+            'registros'     => $registros,
+            'stats'         => $stats,
+            'fecha_inicio'  => $_GET['fecha_inicio'] ?? date('Y-m-01'),
+            'fecha_fin'     => $_GET['fecha_fin'] ?? date('Y-m-d'),
+            'filtro_motivo' => $_GET['motivo'] ?? '',
+        ];
+        $this->view('reportes/visitantes', $data);
+    }
+
+    public function exportarVisitantesCsv() {
+        $this->requireRoles([1, 2]);
+        $registros = $this->queryVisitantes();
+        $headers = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
+        $rows = [];
+        foreach ($registros as $r) {
+            $rows[] = [
+                $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
+                date('H:i', strtotime($r->hora_entrada)),
+                $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En visita',
+                $r->cedula ?? '',
+                $r->nombre ?? '',
+                $r->apellido ?? '',
+                $r->procedencia ?? '',
+                $r->motivo ?? '',
+                trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: 'N/A',
+            ];
+        }
+        $this->exportCsv('reporte_visitantes', $headers, $rows);
+    }
+
+    public function exportarVisitantesPdf() {
+        $this->requireRoles([1, 2]);
+        $registros = $this->queryVisitantes();
+        $stats = $this->statsVisitantes();
+        $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
+        $ff = $_GET['fecha_fin'] ?? date('Y-m-d');
+
+        $headers = ['Fecha', 'Cédula', 'Nombre y Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
+        $rows = [];
+        foreach ($registros as $r) {
+            $rows[] = [
+                $r->fecha ?? '-',
+                $r->cedula ?? '-',
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->procedencia ?? '-',
+                $r->motivo ?? '-',
+                trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '-',
+            ];
+        }
+        $kpis = [
+            'Total Visitas'    => $stats->total_visitas,
+            'Visitantes Únicos' => $stats->visitantes_unicos,
+            'En Visita Ahora'  => $stats->en_visita,
+            'Período'          => "$fi a $ff",
+        ];
+        $this->exportPdf("Reporte de Visitantes", "Período: $fi — $ff", $headers, $rows, $kpis);
+    }
+
+    private function queryVisitantes() {
+        $db = new Database();
+        $fi     = $_GET['fecha_inicio'] ?? date('Y-m-01');
+        $ff     = $_GET['fecha_fin']    ?? date('Y-m-d');
+        $motivo = trim($_GET['motivo']  ?? '');
+
+        $where = "v.is_active = TRUE AND DATE(v.hora_entrada) BETWEEN :fi AND :ff";
+        if ($motivo !== '') $where .= " AND v.motivo ILIKE :motivo";
+
+        $db->query("SELECT v.hora_entrada, v.hora_salida, v.motivo,
+                           DATE(v.hora_entrada) AS fecha,
+                           vis.cedula, vis.nombre, vis.apellido, vis.procedencia,
+                           pe.nombre AS emp_nombre, pe.apellido AS emp_apellido
+                    FROM visitas v
+                    INNER JOIN visitantes vis ON v.id_visitante = vis.id
+                    LEFT  JOIN empleados e   ON v.id_empleado   = e.id
+                    LEFT  JOIN personas pe   ON e.id_persona    = pe.id
+                    WHERE {$where}
+                    ORDER BY v.hora_entrada DESC");
+        $db->bind(':fi', $fi);
+        $db->bind(':ff', $ff);
+        if ($motivo !== '') $db->bind(':motivo', '%' . $motivo . '%');
+        return $db->resultSet();
+    }
+
+    private function statsVisitantes() {
+        $db = new Database();
+        $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
+        $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
+        $db->query("SELECT
+                        COUNT(*) AS total_visitas,
+                        COUNT(DISTINCT id_visitante) AS visitantes_unicos,
+                        COUNT(CASE WHEN hora_salida IS NULL THEN 1 END) AS en_visita
+                    FROM visitas
+                    WHERE is_active = TRUE AND DATE(hora_entrada) BETWEEN :fi AND :ff");
+        $db->bind(':fi', $fi);
+        $db->bind(':ff', $ff);
+        return $db->single();
+    }
+
+    // =========================================================================
+    // Reporte de Inventario
+    // =========================================================================
+    public function inventario() {
+        $this->requireRoles([1, 4]);
+        $registros = $this->queryInventario();
+        $stats = $this->statsInventario();
+
+        $data = [
+            'titulo'           => 'Reporte de Inventario',
+            'registros'        => $registros,
+            'stats'            => $stats,
+            'filtro_condicion' => $_GET['condicion'] ?? '',
+            'filtro_categoria' => $_GET['categoria'] ?? '',
+        ];
+        $this->view('reportes/inventario', $data);
+    }
+
+    public function exportarInventarioCsv() {
+        $this->requireRoles([1, 4]);
+        $registros = $this->queryInventario();
+        $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial'];
+        $rows = [];
+        foreach ($registros as $r) {
+            $rows[] = [
+                $r->codigo_bn,
+                $r->nombre,
+                $r->categoria ?? '-',
+                $r->ubicacion ?? '-',
+                $r->condicion,
+                $r->marca ?? '-',
+                $r->modelo ?? '-',
+                $r->serial ?? '-',
+            ];
+        }
+        $this->exportCsv('reporte_inventario', $headers, $rows);
+    }
+
+    public function exportarInventarioPdf() {
+        $this->requireRoles([1, 4]);
+        $registros = $this->queryInventario();
+        $stats = $this->statsInventario();
+
+        $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición'];
+        $rows = [];
+        foreach ($registros as $r) {
+            $rows[] = [
+                $r->codigo_bn,
+                $r->nombre,
+                $r->categoria ?? '-',
+                $r->ubicacion ?? '-',
+                $r->condicion,
+            ];
+        }
+        $kpis = [
+            'Total Bienes' => $stats->total,
+            'Nuevos'       => $stats->nuevos,
+            'Buenos'       => $stats->buenos,
+            'Regulares'    => $stats->regulares,
+            'Dañados'      => $stats->danados,
+        ];
+        $this->exportPdf("Reporte de Inventario de Bienes", "IMATUR — Control Patrimonial", $headers, $rows, $kpis);
+    }
+
+    private function queryInventario() {
+        $db = new Database();
+        $condicion = trim($_GET['condicion'] ?? '');
+        $categoria = trim($_GET['categoria'] ?? '');
+
+        $where = "i.is_active = TRUE";
+        if ($condicion !== '') $where .= " AND i.condicion = :condicion";
+        if ($categoria !== '') $where .= " AND c.nombre ILIKE :categoria";
+
+        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
+                           c.nombre AS categoria,
+                           u.nombre AS ubicacion
+                    FROM inventario i
+                    LEFT JOIN categorias c   ON i.id_categoria = c.id
+                    LEFT JOIN ubicaciones u  ON i.id_ubicacion = u.id
+                    WHERE {$where}
+                    ORDER BY c.nombre ASC, i.nombre ASC");
+        if ($condicion !== '') $db->bind(':condicion', $condicion);
+        if ($categoria !== '') $db->bind(':categoria', '%' . $categoria . '%');
+        return $db->resultSet();
+    }
+
+    private function statsInventario() {
+        $db = new Database();
+        $db->query("SELECT
+                        COUNT(*) AS total,
+                        COUNT(CASE WHEN condicion = 'Nuevo'    THEN 1 END) AS nuevos,
+                        COUNT(CASE WHEN condicion = 'Bueno'    THEN 1 END) AS buenos,
+                        COUNT(CASE WHEN condicion = 'Regular'  THEN 1 END) AS regulares,
+                        COUNT(CASE WHEN condicion = 'Dañado'   THEN 1 END) AS danados
+                    FROM inventario WHERE is_active = TRUE");
+        return $db->single();
+    }
+
+    // =========================================================================
     // RF30: Indicadores Generales de Gestión
     // =========================================================================
     public function indicadores() {
@@ -521,6 +727,63 @@ class ReportesController extends Controller {
             'talleresPorMes' => $talleresPorMes
         ];
         $this->view('reportes/indicadores', $data);
+    }
+
+    // =========================================================================
+    // Reporte de Bienes Dados de Baja
+    // =========================================================================
+    public function bajasInventario() {
+        $this->requireRoles([1, 4]);
+        $db = new Database();
+        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
+                           c.nombre AS categoria,
+                           u.nombre AS ubicacion,
+                           i.deleted_at,
+                           pu.username AS eliminado_por
+                    FROM inventario i
+                    LEFT JOIN categorias c   ON i.id_categoria = c.id
+                    LEFT JOIN ubicaciones u  ON i.id_ubicacion = u.id
+                    LEFT JOIN usuarios pu    ON i.deleted_by = pu.id
+                    WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
+                    ORDER BY i.deleted_at DESC");
+        $bajas = $db->resultSet();
+
+        $data = [
+            'titulo' => 'Bienes Dados de Baja',
+            'bajas'  => $bajas,
+        ];
+        $this->view('reportes/bajas_inventario', $data);
+    }
+
+    public function exportarBajasInventarioCsv() {
+        $this->requireRoles([1, 4]);
+        $db = new Database();
+        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
+                           c.nombre AS categoria, u.nombre AS ubicacion,
+                           i.deleted_at, pu.username AS eliminado_por
+                    FROM inventario i
+                    LEFT JOIN categorias c ON i.id_categoria = c.id
+                    LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
+                    LEFT JOIN usuarios pu ON i.deleted_by = pu.id
+                    WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
+                    ORDER BY i.deleted_at DESC");
+        $bajas = $db->resultSet();
+        $headers = ['Código BN','Nombre','Categoría','Ubicación','Condición','Marca','Modelo','Fecha Baja','Dado de baja por'];
+        $rows = [];
+        foreach ($bajas as $b) {
+            $rows[] = [
+                $b->codigo_bn ?? 'S/N',
+                $b->nombre,
+                $b->categoria ?? '-',
+                $b->ubicacion ?? '-',
+                $b->condicion,
+                $b->marca ?? '-',
+                $b->modelo ?? '-',
+                $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '-',
+                $b->eliminado_por ?? '-',
+            ];
+        }
+        $this->exportCsv('bajas_inventario', $headers, $rows);
     }
 
     // =========================================================================
