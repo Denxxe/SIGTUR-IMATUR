@@ -52,7 +52,7 @@ class DashboardController extends Controller {
         $formacionCompletada = $db->single()->total ?? 0;
 
         // KPI: Logs del sistema hoy
-        $db->query("SELECT COUNT(*) as total FROM audit_logs WHERE DATE(created_at) = CURRENT_DATE");
+        $db->query("SELECT COUNT(*) as total FROM audit_logs WHERE DATE(fecha) = CURRENT_DATE");
         $logsHoy = $db->single()->total ?? 0;
 
         // Alertas: contratos por vencer en 30 días
