@@ -53,8 +53,21 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/departamentos/index">
                 <i class="bi bi-building"></i> <span>Departamentos</span>
             </a>
+            <?php endif; ?>
+            <?php if(in_array($rol, [1, 2, 5])): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/asistencias/index">
                 <i class="bi bi-clock-history"></i> <span>Asistencia</span>
+            </a>
+            <?php endif; ?>
+
+            <!-- Recepción — Administrador (1), RRHH (2), Turismo (3) y Recepción (5) -->
+            <?php if(in_array($rol, [1, 2, 3, 5])): ?>
+            <div class="sidebar__group-label">Recepción</div>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
+                <i class="bi bi-person-lines-fill"></i> <span>Visitantes</span>
+            </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitas/index">
+                <i class="bi bi-door-open"></i> <span>Visitas</span>
             </a>
             <?php endif; ?>
 

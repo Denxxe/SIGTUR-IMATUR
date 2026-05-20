@@ -33,30 +33,42 @@ class ConfigSistema extends Model {
 
     /**
      * Genera el siguiente número de oficio (ej: "007/2026").
+     * Acepta un parámetro $modulo para usar correlativas independientes por módulo.
      * Reinicia automáticamente el correlativo si cambia el año.
      */
-    public static function generarNumeroOficio(): string {
-        $db = new Database();
+    public static function generarNumeroOficio(string $modulo = 'ruta'): string {
+        $claveCorr = 'correlativo_oficio_' . $modulo;
+        $claveAnio = 'ano_correlativo_'    . $modulo;
 
-        $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'correlativo_oficio'");
-        $corrActual = (int)($db->single()->valor ?? 0);
+        $anioActual   = (int)date('Y');
+        $anioGuardado = (int)(self::get($claveAnio) ?: $anioActual);
 
-        $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'ano_correlativo'");
-        $anoActual  = (int)($db->single()->valor ?? date('Y'));
-        $anoReal    = (int)date('Y');
+        if ($anioActual !== $anioGuardado) {
+            $db = new Database();
+            $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = :clave");
+            $db->bind(':ano', (string)$anioActual);
+            $db->bind(':clave', $claveAnio);
+            $db->execute();
 
-        if ($anoActual !== $anoReal) {
-            $corrActual = 0;
-            $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = 'ano_correlativo'");
-            $db->bind(':ano', (string)$anoReal);
+            $db->query("UPDATE configuracion_sistema SET valor = '0' WHERE clave = :clave");
+            $db->bind(':clave', $claveCorr);
             $db->execute();
         }
 
-        $corrNuevo = $corrActual + 1;
-        $db->query("UPDATE configuracion_sistema SET valor = :val WHERE clave = 'correlativo_oficio'");
-        $db->bind(':val', (string)$corrNuevo);
+        $corrActual = (int)(self::get($claveCorr) ?: 0);
+        $correlativo = $corrActual + 1;
+
+        $db = new Database();
+        $db->query("UPDATE configuracion_sistema SET valor = :val WHERE clave = :clave");
+        $db->bind(':val', (string)$correlativo);
+        $db->bind(':clave', $claveCorr);
         $db->execute();
 
-        return str_pad((string)$corrNuevo, 3, '0', STR_PAD_LEFT) . '/' . $anoReal;
+        $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = :clave");
+        $db->bind(':ano', (string)$anioActual);
+        $db->bind(':clave', $claveAnio);
+        $db->execute();
+
+        return str_pad($correlativo, 3, '0', STR_PAD_LEFT) . '/' . $anioActual;
     }
 }

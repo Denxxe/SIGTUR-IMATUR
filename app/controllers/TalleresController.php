@@ -64,6 +64,13 @@ class TalleresController extends Controller {
                         throw new Exception('No se puede finalizar una actividad sin participantes inscritos (RN-F12).');
                     }
                 }
+
+                // RN-F13: Finalizado requiere informe demográfico
+                if ($data['estado'] === 'Finalizado') {
+                    if (Taller::getInforme($data['id']) === false || Taller::getInforme($data['id']) === null) {
+                        throw new Exception('No se puede finalizar una actividad sin completar el Reporte Oficial de Actividad (informe demográfico). Ir a Detalle → Reporte Oficial.');
+                    }
+                }
             } else {
                 // RN-F05/F06: actividad externa con sede no propia requiere oficio
                 if (!$esInterna && !empty($data['id_ubicacion_formacion'])) {
@@ -210,6 +217,43 @@ class TalleresController extends Controller {
             'informe' => $informe
         ];
         $this->view('talleres/informe', $data);
+    }
+
+    public function listaAsistencia($id) {
+        $taller = Taller::find($id);
+        if (!$taller) {
+            flash('global_msg', 'Actividad no encontrada.', 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+        $participantes = Taller::getParticipantes($id);
+        $data = [
+            'taller'        => $taller,
+            'participantes' => $participantes,
+        ];
+        $this->view('talleres/lista_asistencia', $data);
+    }
+
+    public function informeImprimible($id) {
+        $taller = Taller::find($id);
+        if (!$taller) {
+            flash('global_msg', 'Actividad no encontrada.', 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+        $informe      = Taller::getInforme($id);
+        $participantes = Taller::getParticipantes($id);
+
+        $configModel = $this->model('ConfigSistema');
+        $config      = $configModel->getAll();
+
+        $data = [
+            'taller'        => $taller,
+            'informe'       => $informe,
+            'participantes' => $participantes,
+            'config'        => $config,
+        ];
+        $this->view('talleres/informe_imprimible', $data);
     }
 
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────

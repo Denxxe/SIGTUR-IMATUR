@@ -33,6 +33,7 @@
                                 elseif ($item->condicion == 'Bueno') $cls = 'sig-badge--info';
                                 elseif ($item->condicion == 'Regular') $cls = 'sig-badge--warning';
                                 elseif ($item->condicion == 'Dañado') $cls = 'sig-badge--danger';
+                                elseif ($item->condicion == 'En Reparación') $cls = 'sig-badge--warning';
                             ?>
                             <span class="sig-badge <?php echo $cls; ?>"><?php echo $item->condicion; ?></span>
                         </td>
@@ -59,7 +60,7 @@
                     <div class="col-md-8"><div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="inv_nombre" class="sig-input" required placeholder="Escritorio Ejecutivo"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Categoría <span class="req">*</span></label><select name="id_categoria" id="inv_id_cat" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['categorias'] ?? [] as $c): ?><option value="<?php echo $c->id; ?>"><?php echo $c->nombre; ?></option><?php endforeach; ?></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Ubicación <span class="req">*</span></label><select name="id_ubicacion" id="inv_id_ubi" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['ubicaciones'] ?? [] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo $u->nombre; ?></option><?php endforeach; ?></select></div></div>
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Condición</label><select name="condicion" id="inv_condicion" class="sig-select"><option value="Nuevo">Nuevo</option><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Dañado">Dañado</option></select></div></div>
+                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Condición</label><select name="condicion" id="inv_condicion" class="sig-select"><option value="Nuevo">Nuevo</option><option value="Bueno">Bueno</option><option value="Regular">Regular</option><option value="Dañado">Dañado</option><option value="En Reparación">En Reparación</option></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Marca</label><input type="text" name="marca" id="inv_marca" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Modelo</label><input type="text" name="modelo" id="inv_modelo" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Serial</label><input type="text" name="serial" id="inv_serial" class="sig-input"></div></div>

@@ -36,7 +36,8 @@ class Router {
                 1 => '*', // Acceso total
                 2 => ['DashboardController','EmpleadosController','CargosController','DepartamentosController','AsistenciasController','VisitantesController','VisitasController','ReportesController','ConfigController'],
                 3 => ['DashboardController','RutasController','ActividadesrutaController','TalleresController','UbicacionesformacionController','PasantesController','VisitantesController','VisitasController','ReportesController'],
-                4 => ['DashboardController','InventarioController','CategoriasController','UbicacionesController','ActividadesinventarioController','ReportesController']
+                4 => ['DashboardController','InventarioController','CategoriasController','UbicacionesController','ActividadesinventarioController','ReportesController'],
+                5 => ['DashboardController','VisitantesController','VisitasController','AsistenciasController']
             ];
 
             $permitidos = $permisos[$rolId] ?? [];

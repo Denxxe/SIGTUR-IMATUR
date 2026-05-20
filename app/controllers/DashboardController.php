@@ -41,11 +41,44 @@ class DashboardController extends Controller {
         $chartTalleres = $db->resultSet();
 
         // Gráfica: Actividad últimos 7 días (asistencias registradas)
-        $db->query("SELECT fecha::text as label, COUNT(*) as value 
-                    FROM asistencias 
+        $db->query("SELECT fecha::text as label, COUNT(*) as value
+                    FROM asistencias
                     WHERE is_active = TRUE AND fecha >= (CURRENT_DATE - INTERVAL '7 days')
                     GROUP BY fecha ORDER BY fecha ASC");
         $chartAsistencia = $db->resultSet();
+
+        // KPI: Formación completada (talleres finalizados este año)
+        $db->query("SELECT COUNT(*) as total FROM talleres WHERE is_active = TRUE AND estado = 'Finalizado' AND EXTRACT(YEAR FROM fecha_inicio) = EXTRACT(YEAR FROM CURRENT_DATE)");
+        $formacionCompletada = $db->single()->total ?? 0;
+
+        // KPI: Logs del sistema hoy
+        $db->query("SELECT COUNT(*) as total FROM audit_logs WHERE DATE(created_at) = CURRENT_DATE");
+        $logsHoy = $db->single()->total ?? 0;
+
+        // Alertas: contratos por vencer en 30 días
+        $db->query("SELECT p.nombre, p.apellido, e.fecha_egreso
+                    FROM empleados e
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    WHERE e.is_active = TRUE
+                      AND e.tipo_contrato = 'Contratado'
+                      AND e.fecha_egreso IS NOT NULL
+                      AND e.fecha_egreso BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')
+                    ORDER BY e.fecha_egreso ASC LIMIT 10");
+        $alertasContratos = $db->resultSet();
+
+        // Alertas: talleres en curso hoy
+        $db->query("SELECT nombre, fecha_inicio FROM talleres WHERE is_active = TRUE AND estado = 'En Curso' LIMIT 5");
+        $talleresEnCurso = $db->resultSet();
+
+        // Alertas: pasantes próximos a culminar (fecha_fin en 15 días)
+        $db->query("SELECT pp.nombre, pp.apellido, pa.fecha_fin, pa.institucion
+                    FROM pasantes pa
+                    INNER JOIN personas pp ON pa.id_persona = pp.id
+                    WHERE pa.is_active = TRUE AND pa.estado = 'En Curso'
+                      AND pa.fecha_fin IS NOT NULL
+                      AND pa.fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '15 days')
+                    ORDER BY pa.fecha_fin ASC LIMIT 10");
+        $alertasPasantes = $db->resultSet();
 
         $data = [
             'titulo' => 'Panel Principal',
@@ -56,7 +89,12 @@ class DashboardController extends Controller {
             'chartEmpleados' => $chartEmpleados,
             'chartInventario' => $chartInventario,
             'chartTalleres' => $chartTalleres,
-            'chartAsistencia' => $chartAsistencia
+            'chartAsistencia' => $chartAsistencia,
+            'formacionCompletada' => $formacionCompletada,
+            'logsHoy'            => $logsHoy,
+            'alertasContratos'   => $alertasContratos,
+            'talleresEnCurso'    => $talleresEnCurso,
+            'alertasPasantes'    => $alertasPasantes,
         ];
 
         $this->view('dashboard/index', $data);

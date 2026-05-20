@@ -40,7 +40,15 @@
 
                     <div class="sig-field mb-6">
                         <label class="sig-field__label">Motivo de la visita</label>
-                        <input type="text" name="motivo" class="sig-input" placeholder="Ej: Entrega de documentos, Reunión...">
+                        <select name="motivo" class="sig-select">
+                            <option value="">Seleccione un motivo...</option>
+                            <option value="Reunión de trabajo">Reunión de trabajo</option>
+                            <option value="Trámite administrativo">Trámite administrativo</option>
+                            <option value="Entrega de documentos">Entrega de documentos</option>
+                            <option value="Visita institucional">Visita institucional</option>
+                            <option value="Pasantías">Pasantías</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
 
                     <button type="submit" class="btn-sig btn-sig--primary" style="width:100%; height:48px; font-size:16px;">

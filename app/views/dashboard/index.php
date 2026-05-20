@@ -34,6 +34,18 @@
         <div class="kpi__value"><?php echo $data['totalRutas'] ?? 0; ?></div>
         <a href="<?php echo URL_ROOT; ?>/rutas/index" style="font-size:12px;font-weight:600;color:var(--teal-600);display:inline-flex;align-items:center;gap:4px">Explorar Rutas →</a>
     </div>
+    <div class="kpi kpi--accent">
+        <div class="kpi__icon"><i class="bi bi-check2-all" style="font-size:20px"></i></div>
+        <div class="kpi__label">Formación Completada</div>
+        <div class="kpi__value"><?php echo $data['formacionCompletada'] ?? 0; ?></div>
+        <span style="font-size:12px;font-weight:600;color:var(--accent-600);">Este año →</span>
+    </div>
+    <div class="kpi kpi--brand">
+        <div class="kpi__icon"><i class="bi bi-shield-check" style="font-size:20px"></i></div>
+        <div class="kpi__label">Logs Hoy</div>
+        <div class="kpi__value"><?php echo $data['logsHoy'] ?? 0; ?></div>
+        <a href="<?php echo URL_ROOT; ?>/auditoria/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Ver Auditoría →</a>
+    </div>
 </div>
 
 <!-- Gráficas Fila 1 -->
@@ -167,5 +179,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }).render();
 });
 </script>
+
+<?php
+$hayAlertas = !empty($data['alertasContratos']) || !empty($data['alertasPasantes']) || !empty($data['talleresEnCurso']);
+if ($hayAlertas):
+?>
+<div class="sig-card anim-slide-up" style="margin-top:var(--sp-6); border-left: 4px solid var(--warning-500);">
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-bell-fill" style="color:var(--warning-500);"></i> Alertas del Sistema</div>
+    </div>
+    <div class="sig-card__body" style="padding:var(--sp-4);">
+        <?php foreach ($data['alertasContratos'] ?? [] as $a): ?>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
+            <span class="sig-badge sig-badge--warning">Contrato</span>
+            <span style="font-size:13px;"><?php echo htmlspecialchars($a->nombre . ' ' . $a->apellido); ?> — vence el <?php echo date('d/m/Y', strtotime($a->fecha_egreso)); ?></span>
+        </div>
+        <?php endforeach; ?>
+        <?php foreach ($data['alertasPasantes'] ?? [] as $a): ?>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
+            <span class="sig-badge sig-badge--brand">Pasante</span>
+            <span style="font-size:13px;"><?php echo htmlspecialchars($a->nombre . ' ' . $a->apellido); ?> — culmina el <?php echo date('d/m/Y', strtotime($a->fecha_fin)); ?></span>
+        </div>
+        <?php endforeach; ?>
+        <?php foreach ($data['talleresEnCurso'] ?? [] as $t): ?>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
+            <span class="sig-badge sig-badge--success">En Curso</span>
+            <span style="font-size:13px;"><?php echo htmlspecialchars($t->nombre); ?></span>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

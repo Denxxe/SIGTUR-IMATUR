@@ -199,7 +199,7 @@ class Ruta extends Model {
      * Genera un número correlativo, guarda el registro y devuelve el número asignado.
      */
     public static function crearOficioEmitido(int $id_ruta, array $data, int $user_id): string {
-        $numero = ConfigSistema::generarNumeroOficio();
+        $numero = ConfigSistema::generarNumeroOficio('ruta');
         $db     = new Database();
         $db->query("INSERT INTO oficios_emitidos
                     (numero, fecha, destinatario_nombre, destinatario_cargo, asunto, id_ruta, created_by)

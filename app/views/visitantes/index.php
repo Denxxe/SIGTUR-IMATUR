@@ -19,7 +19,7 @@
             <tr>
                 <th>Cédula</th>
                 <th>Nombre y Apellido</th>
-                <th>Procedencia</th>
+                <th>Institución / Procedencia</th>
                 <th>Teléfono</th>
                 <th class="col-actions">Acciones</th>
             </tr>
@@ -84,8 +84,8 @@
                     </div>
                     <div class="col-md-6">
                         <div class="sig-field">
-                            <label class="sig-field__label">Procedencia</label>
-                            <input type="text" name="procedencia" id="vis_procedencia" class="sig-input" placeholder="Ciudad o Entidad">
+                            <label class="sig-field__label">Institución / Procedencia</label>
+                            <input type="text" name="procedencia" id="vis_procedencia" class="sig-input" placeholder="Institución que representa">
                         </div>
                     </div>
                     <div class="col-md-6">

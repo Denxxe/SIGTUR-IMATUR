@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-05-08  
+**Última actualización:** 2026-05-19  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -62,6 +62,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes, **Config** |
 | 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
+| 5 | Recepción | Dashboard, Visitantes, Visitas, Asistencias |
 
 ### Protección por reporte (ReportesController::requireRoles)
 
@@ -79,6 +80,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | Inventario | `in_array($rol, [1, 4])` |
 | Formación | `in_array($rol, [1, 3])` |
 | Turismo (Rutas + Actividades) | `in_array($rol, [1, 3])` |
+| Visitantes / Visitas / Asistencias | `in_array($rol, [1, 2, 3, 5])` |
 | Análisis / Reportes | todos los roles |
 | Sistema + Configuración | `in_array($rol, [1, 2])` |
 
@@ -111,6 +113,8 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `permisos_laborales` *(002, sin UI)* | Permisos y ausencias |
 | `vacaciones` *(002, sin UI)* | Control anual de días |
 
+Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 002. Sin UI. Pendiente respuestas D-RH01–D-RH11.
+
 #### Inventario
 | Tabla | Descripción |
 |-------|-------------|
@@ -134,11 +138,12 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 #### Turismo
 | Tabla | Descripción |
 |-------|-------------|
-| `rutas` | Itinerarios; `nivel_dificultad` CHECK; `requiere_formacion BOOL` *(006)* |
+| `rutas` | Itinerarios; `nivel_dificultad` CHECK; `requiere_formacion BOOL` *(006)*; `tiene_tarifa BOOL`, `tarifa_monto DECIMAL`, `nombre_facilitador_externo VARCHAR` *(007)* |
 | `puntos_ruta` | Paradas con lat/lon y orden |
 | `actividades_ruta` | Eventos programados por ruta |
 | `ruta_inventario` | Bienes asignados a una ruta |
-| `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)* |
+| `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)*; `id_institucion FK instituciones_externas` *(007)* |
+| `instituciones_externas` | Instituciones educativas/empresas externas con flag `es_educativa` *(007)* |
 | `visitantes` | Personas externas que visitan IMATUR físicamente |
 | `visitas` | Marcaje entrada/salida; `id_empleado` (empleado visitado) |
 | `oficios_emitidos` | Oficios salientes generados desde rutas *(005)* |
@@ -162,6 +167,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | 004 | `004_formacion_reglas_negocio.sql` | ✅ Ejecutado | tipo_actividad, es_sede_propia, oficios, participantes libre |
 | 005 | `005_rutas_config_sistema.sql` | ✅ Ejecutado | rutas extendidas, participantes_ruta, configuracion_sistema, oficios_emitidos |
 | 006 | `006_formacion_mejoras.sql` | ✅ Ejecutado | talleres: es_interna/tipo_ente; participantes_taller: es_brigadista/nombre_docente/cedula_docente; rutas: requiere_formacion; tipo_actividad: +Inducción |
+| 007 | `007_mejoras_negocio.sql` | ✅ Ejecutado | condicion+En Reparación; rol 5 Recepción; correlativos por módulo; instituciones_externas; rutas+tarifa+facilitador_externo |
 
 Para ejecutar una migración: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -317,11 +323,17 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 15. **`AuditLog::log()`** — requiere `?array`. PDO retorna `stdClass`. El `Model::toArray()` hace el cast. **No pasar objetos directamente**.
 
-16. **`AsistenciasController::marcar()`** — usa `$user_id = 1` hardcodeado. ⚠️ Bug conocido, pendiente corregir.
+16. **`AsistenciasController::marcar()`** — usa `$this->getUserId()` para registrar el usuario que marcó la asistencia. Bug corregido en fase 1.
 
 17. **Máquina de estados de talleres (RN-F13)** — `TalleresController::validarTransicion()`. Terminales: Finalizado, Cancelado. No se puede Finalizar sin participantes.
 
 18. **`empleados.tipo_contrato`** — valores: `'Fijo'`,`'Contratado'`,`'Suplente'`,`'Comisión de Servicio'`. DEFAULT `'Fijo'`.
+
+19. **`configuracion_sistema` correlativos por módulo** — claves `correlativo_oficio_ruta`/`ano_correlativo_ruta` (renombradas desde 007). `ConfigSistema::generarNumeroOficio($modulo)` acepta parámetro de módulo. Formato resultado: `RUTA-007/2026` o `FORM-001/2026`.
+
+20. **`inventario.condicion` CHECK** — ahora incluye `'En Reparación'`. Actualizar whitelist en todos los controladores que validen este campo: `['Nuevo','Bueno','Regular','Dañado','En Reparación']`.
+
+21. **`inventario.codigo_bn` nullable** — puede ser NULL para bienes pendientes de código BN oficial. Mostrar "—" en vistas cuando sea NULL.
 
 ---
 
