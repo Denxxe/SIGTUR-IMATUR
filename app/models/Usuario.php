@@ -40,6 +40,13 @@ class Usuario extends Model {
         return $db->resultSet();
     }
 
+    public static function find($id) {
+        $db = new Database();
+        $db->query("SELECT u.id, u.id_empleado, u.id_rol, u.username, u.is_active FROM usuarios u WHERE u.id = :id");
+        $db->bind(':id', $id);
+        return $db->single();
+    }
+
     /**
      * Buscar un usuario por username (para Login)
      */
@@ -54,20 +61,18 @@ class Usuario extends Model {
      * Guardar registro
      */
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
-            // Update
+            $previos = self::find($this->id);
             $sql = "UPDATE usuarios SET id_rol = :id_rol, username = :username";
-            // Solo actualizar password si se proporcionó uno nuevo
             if (!empty($this->password)) {
                 $sql .= ", password = :password";
             }
             $sql .= ", updated_at = CURRENT_TIMESTAMP, updated_by = :user_id WHERE id = :id";
-            
             $this->db->query($sql);
             $this->db->bind(':id', $this->id);
         } else {
-            // Insert
-            $this->db->query("INSERT INTO usuarios (id_empleado, id_rol, username, password, created_by) 
+            $this->db->query("INSERT INTO usuarios (id_empleado, id_rol, username, password, created_by)
                               VALUES (:id_empleado, :id_rol, :username, :password, :user_id)");
             $this->db->bind(':id_empleado', $this->id_empleado);
         }
@@ -77,22 +82,27 @@ class Usuario extends Model {
         $this->db->bind(':user_id', $user_id);
 
         if (!empty($this->password) || !$this->id) {
-            // Hashear password antes de guardar
             $hashed_password = password_hash($this->password, PASSWORD_BCRYPT);
             $this->db->bind(':password', $hashed_password);
         }
 
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $nuevos = ['username' => $this->username, 'id_rol' => $this->id_rol, 'id_empleado' => $this->id_empleado, 'password_changed' => !empty($this->password)];
+        $this->audit('usuarios', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, $nuevos, $user_id);
+        return $result;
     }
 
     /**
      * Borrado lógico
      */
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE usuarios SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('usuarios', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

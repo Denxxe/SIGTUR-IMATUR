@@ -42,13 +42,15 @@ class ActividadRuta extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
-            $this->db->query("UPDATE actividades_ruta SET id_ruta=:id_ruta, nombre=:nombre, descripcion=:descripcion, 
-                              fecha=:fecha, id_empleado_responsable=:id_empleado_responsable, 
+            $previos = self::find($this->id);
+            $this->db->query("UPDATE actividades_ruta SET id_ruta=:id_ruta, nombre=:nombre, descripcion=:descripcion,
+                              fecha=:fecha, id_empleado_responsable=:id_empleado_responsable,
                               updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO actividades_ruta (id_ruta, nombre, descripcion, fecha, id_empleado_responsable, created_by) 
+            $this->db->query("INSERT INTO actividades_ruta (id_ruta, nombre, descripcion, fecha, id_empleado_responsable, created_by)
                               VALUES (:id_ruta, :nombre, :descripcion, :fecha, :id_empleado_responsable, :user_id)");
         }
         $this->db->bind(':id_ruta', $this->id_ruta);
@@ -57,14 +59,19 @@ class ActividadRuta extends Model {
         $this->db->bind(':fecha', $this->fecha);
         $this->db->bind(':id_empleado_responsable', $this->id_empleado_responsable);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('actividades_ruta', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'id_ruta' => $this->id_ruta, 'fecha' => $this->fecha, 'descripcion' => $this->descripcion], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE actividades_ruta SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('actividades_ruta', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

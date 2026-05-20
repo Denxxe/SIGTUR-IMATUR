@@ -47,14 +47,23 @@ class ActividadInventario extends Model {
         return $db->resultSet();
     }
 
+    public static function find($id) {
+        $db = new Database();
+        $db->query("SELECT * FROM actividad_inventario WHERE id = :id");
+        $db->bind(':id', $id);
+        return $db->single();
+    }
+
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE actividad_inventario SET tipo_movimiento=:tipo_movimiento, descripcion=:descripcion,
                               fecha=:fecha, id_empleado_responsable=:id_empleado_responsable,
                               updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO actividad_inventario (id_inventario, tipo_movimiento, descripcion, fecha, id_empleado_responsable, created_by) 
+            $this->db->query("INSERT INTO actividad_inventario (id_inventario, tipo_movimiento, descripcion, fecha, id_empleado_responsable, created_by)
                               VALUES (:id_inventario, :tipo_movimiento, :descripcion, :fecha, :id_empleado_responsable, :user_id)");
             $this->db->bind(':id_inventario', $this->id_inventario);
         }
@@ -63,14 +72,19 @@ class ActividadInventario extends Model {
         $this->db->bind(':fecha', $this->fecha);
         $this->db->bind(':id_empleado_responsable', $this->id_empleado_responsable);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('actividad_inventario', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['id_inventario' => $this->id_inventario, 'tipo_movimiento' => $this->tipo_movimiento, 'descripcion' => $this->descripcion, 'fecha' => $this->fecha], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE actividad_inventario SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('actividad_inventario', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

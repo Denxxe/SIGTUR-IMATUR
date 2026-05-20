@@ -18,6 +18,13 @@ class Visita extends Model {
         return $db->resultSet();
     }
 
+    public static function find($id) {
+        $db = new Database();
+        $db->query("SELECT * FROM visitas WHERE id = :id");
+        $db->bind(':id', $id);
+        return $db->single();
+    }
+
     /**
      * Toggle marcaje: si hay visita abierta del mismo visitante marca salida; si no, registra entrada.
      */
@@ -34,24 +41,31 @@ class Visita extends Model {
         if ($abierta) {
             $db->query("UPDATE visitas SET hora_salida = CURRENT_TIMESTAMP WHERE id = :id");
             $db->bind(':id', $abierta->id);
+            $result = $db->execute();
+            self::auditStatic('visitas', 'UPDATE', (int)$abierta->id, ['hora_salida' => null], ['hora_salida' => 'NOW()'], $userId);
         } else {
             $db->query("
                 INSERT INTO visitas (id_visitante, id_empleado, motivo, observaciones, created_by)
                 VALUES (:id_visitante, :id_empleado, :motivo, :observaciones, :uid)
             ");
-            $db->bind(':id_visitante', $data['id_visitante']);
-            $db->bind(':id_empleado',  $data['id_empleado'] ?: null);
-            $db->bind(':motivo',       $data['motivo'] ?: null);
+            $db->bind(':id_visitante',  $data['id_visitante']);
+            $db->bind(':id_empleado',   $data['id_empleado'] ?: null);
+            $db->bind(':motivo',        $data['motivo'] ?: null);
             $db->bind(':observaciones', $data['observaciones'] ?: null);
-            $db->bind(':uid',          $userId);
+            $db->bind(':uid',           $userId);
+            $result = $db->execute();
+            self::auditStatic('visitas', 'INSERT', null, null, ['id_visitante' => $data['id_visitante'], 'id_empleado' => $data['id_empleado'] ?: null, 'motivo' => $data['motivo'] ?: null], $userId);
         }
-        return $db->execute();
+        return $result;
     }
 
-    public static function delete($id) {
+    public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE visitas SET is_active = FALSE WHERE id = :id");
         $db->bind(':id', $id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('visitas', 'DELETE', (int)$id, $previos, null, $user_id);
+        return $result;
     }
 }

@@ -66,7 +66,9 @@ class Ruta extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE rutas
                               SET nombre=:nombre, descripcion=:descripcion,
                                   duracion_estimada=:duracion_estimada,
@@ -88,27 +90,32 @@ class Ruta extends Model {
                                       :estado, :fecha_visita, :hora_visita, :id_departamento,
                                       :id_facilitador, :cupo_maximo, :requiere_formacion, :user_id)");
         }
-        $this->db->bind(':nombre',           $this->nombre);
-        $this->db->bind(':descripcion',      $this->descripcion);
-        $this->db->bind(':duracion_estimada',$this->duracion_estimada);
-        $this->db->bind(':nivel_dificultad', $this->nivel_dificultad);
-        $this->db->bind(':estado',           $this->estado);
-        $this->db->bind(':fecha_visita',     $this->fecha_visita);
-        $this->db->bind(':hora_visita',      $this->hora_visita);
-        $this->db->bind(':id_departamento',  $this->id_departamento);
-        $this->db->bind(':id_facilitador',   $this->id_facilitador);
-        $this->db->bind(':cupo_maximo',          $this->cupo_maximo);
-        $this->db->bind(':requiere_formacion',   $this->requiere_formacion);
-        $this->db->bind(':user_id',              $user_id);
-        return $this->db->execute();
+        $this->db->bind(':nombre',             $this->nombre);
+        $this->db->bind(':descripcion',        $this->descripcion);
+        $this->db->bind(':duracion_estimada',  $this->duracion_estimada);
+        $this->db->bind(':nivel_dificultad',   $this->nivel_dificultad);
+        $this->db->bind(':estado',             $this->estado);
+        $this->db->bind(':fecha_visita',       $this->fecha_visita);
+        $this->db->bind(':hora_visita',        $this->hora_visita);
+        $this->db->bind(':id_departamento',    $this->id_departamento);
+        $this->db->bind(':id_facilitador',     $this->id_facilitador);
+        $this->db->bind(':cupo_maximo',        $this->cupo_maximo);
+        $this->db->bind(':requiere_formacion', $this->requiere_formacion);
+        $this->db->bind(':user_id',            $user_id);
+        $result = $this->db->execute();
+        $this->audit('rutas', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'nivel_dificultad' => $this->nivel_dificultad, 'fecha_visita' => $this->fecha_visita, 'cupo_maximo' => $this->cupo_maximo, 'requiere_formacion' => $this->requiere_formacion], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE rutas SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('rutas', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 
     public static function getPuntos($id_ruta) {
@@ -157,7 +164,6 @@ class Ruta extends Model {
 
     public static function inscribir(int $id_ruta, int $id_persona, int $user_id) {
         $db = new Database();
-        // Evitar duplicados activos
         $db->query("SELECT id FROM participantes_ruta WHERE id_ruta=:r AND id_persona=:p AND is_active=TRUE LIMIT 1");
         $db->bind(':r', $id_ruta);
         $db->bind(':p', $id_persona);
@@ -168,7 +174,9 @@ class Ruta extends Model {
         $db->bind(':r', $id_ruta);
         $db->bind(':p', $id_persona);
         $db->bind(':u', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'id_persona' => $id_persona], $user_id);
+        return $result;
     }
 
     public static function inscribirLibre(int $id_ruta, array $datos, int $user_id) {
@@ -180,7 +188,9 @@ class Ruta extends Model {
         $db->bind(':ape', $datos['apellido_libre'] ?? null);
         $db->bind(':ced', $datos['cedula_libre'] ?? null);
         $db->bind(':u',   $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'nombre_libre' => $datos['nombre_libre'], 'cedula_libre' => $datos['cedula_libre'] ?? null], $user_id);
+        return $result;
     }
 
     public static function desinscribir(int $id_participante, int $user_id) {
@@ -190,7 +200,9 @@ class Ruta extends Model {
                     WHERE id=:id");
         $db->bind(':id', $id_participante);
         $db->bind(':u',  $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('participantes_ruta', 'DELETE', $id_participante, null, null, $user_id);
+        return $result;
     }
 
     // ── Oficio emitido ───────────────────────────────────────────────────────

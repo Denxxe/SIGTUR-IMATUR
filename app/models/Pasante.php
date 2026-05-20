@@ -104,10 +104,13 @@ class Pasante extends Model {
         $this->db->bind(':fecha_fin',    $data['fecha_fin'] ?: null);
         $this->db->bind(':estado',       $data['estado'] ?? 'Postulado');
         $this->db->bind(':uid',          $userId);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('pasantes', 'INSERT', null, null, ['id_persona' => $idPersona, 'estado' => $data['estado'] ?? 'Postulado', 'institucion' => $data['institucion'], 'carrera' => $data['carrera']], $userId);
+        return $result;
     }
 
     public function update($data, $userId) {
+        $previos = $this->getById($data['id']);
         $this->db->query("
             UPDATE pasantes SET
                 institucion            = :institucion,
@@ -132,10 +135,13 @@ class Pasante extends Model {
         $this->db->bind(':evaluacion',   $data['evaluacion'] ?: null);
         $this->db->bind(':nota',         isset($data['nota']) && $data['nota'] !== '' ? (float)$data['nota'] : null);
         $this->db->bind(':uid',          $userId);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('pasantes', 'UPDATE', (int)$data['id'], $previos, ['estado' => $data['estado'], 'institucion' => $data['institucion'], 'carrera' => $data['carrera'], 'fecha_inicio' => $data['fecha_inicio'], 'fecha_fin' => $data['fecha_fin'], 'evaluacion' => $data['evaluacion'] ?? null, 'nota' => $data['nota'] ?? null], $userId);
+        return $result;
     }
 
     public function softDelete($id, $userId) {
+        $previos = $this->getById($id);
         $this->db->query("
             UPDATE pasantes
             SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :uid
@@ -143,7 +149,9 @@ class Pasante extends Model {
         ");
         $this->db->bind(':uid', $userId);
         $this->db->bind(':id',  $id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('pasantes', 'DELETE', (int)$id, $previos, null, $userId);
+        return $result;
     }
 
     public function getDocumentos($id_pasante) {

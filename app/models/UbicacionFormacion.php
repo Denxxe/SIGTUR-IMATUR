@@ -40,7 +40,9 @@ class UbicacionFormacion extends Model
 
     public function save($user_id = null)
     {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE ubicaciones_formacion SET nombre=:nombre, tipo=:tipo, direccion=:direccion,
                               parroquia=:id_parroquia, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -53,15 +55,20 @@ class UbicacionFormacion extends Model
         $this->db->bind(':direccion', $this->direccion);
         $this->db->bind(':id_parroquia', $this->id_parroquia);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('ubicaciones_formacion', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'tipo' => $this->tipo, 'direccion' => $this->direccion], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null)
     {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE ubicaciones_formacion SET  is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('ubicaciones_formacion', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

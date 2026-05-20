@@ -39,12 +39,14 @@ class PuntoRuta extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE puntos_ruta SET nombre=:nombre, descripcion=:descripcion, orden=:orden,
                               latitud=:latitud, longitud=:longitud, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, created_by) 
+            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, created_by)
                               VALUES (:id_ruta, :nombre, :descripcion, :orden, :latitud, :longitud, :user_id)");
             $this->db->bind(':id_ruta', $this->id_ruta);
         }
@@ -54,14 +56,19 @@ class PuntoRuta extends Model {
         $this->db->bind(':latitud', $this->latitud);
         $this->db->bind(':longitud', $this->longitud);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('puntos_ruta', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'id_ruta' => $this->id_ruta, 'orden' => $this->orden], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE puntos_ruta SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('puntos_ruta', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }

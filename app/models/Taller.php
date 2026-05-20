@@ -65,7 +65,9 @@ class Taller extends Model {
     }
 
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
+            $previos = self::find($this->id);
             $this->db->query("UPDATE talleres
                               SET nombre=:nombre, descripcion=:descripcion,
                                   fecha_inicio=:fecha_inicio, fecha_fin=:fecha_fin,
@@ -104,15 +106,20 @@ class Taller extends Model {
         $this->db->bind(':es_interna',             $this->es_interna);
         $this->db->bind(':tipo_ente',              $this->tipo_ente);
         $this->db->bind(':user_id',                $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $this->audit('talleres', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'tipo_actividad' => $this->tipo_actividad, 'fecha_inicio' => $this->fecha_inicio, 'fecha_fin' => $this->fecha_fin, 'cupo_maximo' => $this->cupo_maximo], $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE talleres SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('talleres', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 
     // ── Participantes ────────────────────────────────────────────────────────
@@ -147,7 +154,9 @@ class Taller extends Model {
         $db->bind(':id_persona', $id_persona);
         $db->bind(':brigadista', $esBrigadista);
         $db->bind(':user_id',    $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('participantes_taller', 'INSERT', null, null, ['id_taller' => $id_taller, 'id_persona' => $id_persona, 'es_brigadista' => $esBrigadista], $user_id);
+        return $result;
     }
 
     // Inscribir participante sin cédula — niño/a (RN-F16)
@@ -165,7 +174,9 @@ class Taller extends Model {
         $db->bind(':nom_doc',   $datos['nombre_docente'] ?? null);
         $db->bind(':ced_doc',   $datos['cedula_docente'] ?? null);
         $db->bind(':user_id',   $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('participantes_taller', 'INSERT', null, null, ['id_taller' => $id_taller, 'nombre_libre' => $datos['nombre_libre'], 'cedula_libre' => $datos['cedula_libre'] ?? null], $user_id);
+        return $result;
     }
 
     // Verificar si una persona ha recibido formación previa (para prerequisito de rutas)
@@ -212,8 +223,10 @@ class Taller extends Model {
     }
 
     public static function saveInforme($data) {
-        $db  = new Database();
-        $inf = self::getInforme($data['id_taller']);
+        $db     = new Database();
+        $inf    = self::getInforme($data['id_taller']);
+        $userId = $_SESSION['user_id'] ?? null;
+        $op     = $inf ? 'UPDATE' : 'INSERT';
         if ($inf) {
             $db->query("UPDATE taller_informes
                         SET unidad_estadal=:unidad, lugar_exacto=:lugar,
@@ -226,7 +239,7 @@ class Taller extends Model {
                         (id_taller, unidad_estadal, lugar_exacto, instituciones_presentes,
                          mujeres, hombres, ninas, ninos, total_atendidas, resumen_actividad, created_by)
                         VALUES (:id_taller, :unidad, :lugar, :inst, :m, :h, :ni, :no, :tot, :res, :user_id)");
-            $db->bind(':user_id', $_SESSION['user_id'] ?? null);
+            $db->bind(':user_id', $userId);
         }
         $db->bind(':id_taller', $data['id_taller']);
         $db->bind(':unidad',    $data['unidad_estadal']);
@@ -238,6 +251,9 @@ class Taller extends Model {
         $db->bind(':no',        $data['ninos']);
         $db->bind(':tot',       (int)$data['mujeres'] + (int)$data['hombres'] + (int)$data['ninas'] + (int)$data['ninos']);
         $db->bind(':res',       $data['resumen_actividad']);
-        return $db->execute();
+        $result = $db->execute();
+        $total  = (int)$data['mujeres'] + (int)$data['hombres'] + (int)$data['ninas'] + (int)$data['ninos'];
+        self::auditStatic('taller_informes', $op, (int)$data['id_taller'], $inf ?: null, ['id_taller' => $data['id_taller'], 'mujeres' => $data['mujeres'], 'hombres' => $data['hombres'], 'ninas' => $data['ninas'], 'ninos' => $data['ninos'], 'total_atendidas' => $total], $userId);
+        return $result;
     }
 }

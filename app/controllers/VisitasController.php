@@ -50,7 +50,7 @@ class VisitasController extends Controller {
 
     public function delete($id) {
         try {
-            if (Visita::delete($id)) {
+            if (Visita::delete($id, $this->getUserId())) {
                 flash('global_msg', 'Registro de visita eliminado.', 'warning');
             } else {
                 throw new Exception("No se pudo eliminar el registro.");

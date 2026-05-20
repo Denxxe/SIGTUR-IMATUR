@@ -36,6 +36,13 @@ class Asistencia extends Model {
         return $db->resultSet();
     }
 
+    public static function find($id) {
+        $db = new Database();
+        $db->query("SELECT * FROM asistencias WHERE id = :id");
+        $db->bind(':id', $id);
+        return $db->single();
+    }
+
     /**
      * Buscar asistencia abierta de un empleado (sin hora de salida) para el día actual
      */
@@ -54,17 +61,19 @@ class Asistencia extends Model {
      * Guardar o actualizar registro
      */
     public function save($user_id = null) {
+        $previos = null;
         if ($this->id) {
-            $this->db->query("UPDATE asistencias SET 
-                                hora_salida = :hora_salida, 
-                                observacion = :observacion, 
-                                updated_at = CURRENT_TIMESTAMP, 
-                                updated_by = :user_id 
+            $previos = self::find($this->id);
+            $this->db->query("UPDATE asistencias SET
+                                hora_salida = :hora_salida,
+                                observacion = :observacion,
+                                updated_at = CURRENT_TIMESTAMP,
+                                updated_by = :user_id
                               WHERE id = :id");
             $this->db->bind(':id', $this->id);
             $this->db->bind(':hora_salida', $this->hora_salida);
         } else {
-            $this->db->query("INSERT INTO asistencias (id_empleado, fecha, hora_entrada, observacion, created_by) 
+            $this->db->query("INSERT INTO asistencias (id_empleado, fecha, hora_entrada, observacion, created_by)
                               VALUES (:id_empleado, :fecha, :hora_entrada, :observacion, :user_id)");
             $this->db->bind(':id_empleado', $this->id_empleado);
             $this->db->bind(':fecha', $this->fecha);
@@ -72,14 +81,22 @@ class Asistencia extends Model {
         }
         $this->db->bind(':observacion', $this->observacion);
         $this->db->bind(':user_id', $user_id);
-        return $this->db->execute();
+        $result = $this->db->execute();
+        $nuevos = $this->id
+            ? ['hora_salida' => $this->hora_salida, 'observacion' => $this->observacion]
+            : ['id_empleado' => $this->id_empleado, 'fecha' => $this->fecha, 'hora_entrada' => $this->hora_entrada];
+        $this->audit('asistencias', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, $nuevos, $user_id);
+        return $result;
     }
 
     public static function delete($id, $user_id = null) {
+        $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE asistencias SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
-        return $db->execute();
+        $result = $db->execute();
+        self::auditStatic('asistencias', 'DELETE', $id, $previos, null, $user_id);
+        return $result;
     }
 }
