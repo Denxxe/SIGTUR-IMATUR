@@ -5,15 +5,20 @@
 class EmpleadosController extends Controller {
 
     public function index() {
-        $empleados = Empleado::all();
-        $cargos = Cargo::all();
+        $empleados     = Empleado::all();
+        $cargos        = Cargo::all();
         $departamentos = Departamento::all();
 
+        $db = new Database();
+        $db->query("SELECT id, nombre, hora_entrada, hora_salida FROM horarios WHERE is_active = TRUE ORDER BY nombre ASC");
+        $horarios = $db->resultSet();
+
         $data = [
-            'titulo' => 'Gestión de Personal (Empleados)',
-            'empleados' => $empleados,
-            'cargos' => $cargos,
-            'departamentos' => $departamentos
+            'titulo'       => 'Gestión de Personal (Empleados)',
+            'empleados'    => $empleados,
+            'cargos'       => $cargos,
+            'departamentos'=> $departamentos,
+            'horarios'     => $horarios,
         ];
 
         $this->view('empleados/index', $data);
@@ -23,21 +28,28 @@ class EmpleadosController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
             
+            $tiposContrato = ['Fijo', 'Contratado', 'Suplente', 'Comisión de Servicio'];
+            $tipoContrato  = in_array($_POST['tipo_contrato'] ?? '', $tiposContrato)
+                             ? $_POST['tipo_contrato'] : 'Fijo';
+
             $data = [
-                'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,
-                'id_persona' => isset($_POST['id_persona']) ? (int)$_POST['id_persona'] : null,
-                'cedula' => trim($_POST['cedula']),
-                'nombre' => trim($_POST['nombre']),
-                'apellido' => trim($_POST['apellido']),
-                'telefono' => trim($_POST['telefono']),
-                'correo' => trim($_POST['correo']),
-                'genero' => $_POST['genero'],
-                'fecha_nacimiento' => $_POST['fecha_nacimiento'],
-                'direccion' => trim($_POST['direccion']),
-                'id_cargo' => (int)$_POST['id_cargo'],
-                'id_departamento' => (int)$_POST['id_departamento'],
+                'id'             => isset($_POST['id']) ? (int)$_POST['id'] : null,
+                'id_persona'     => isset($_POST['id_persona']) ? (int)$_POST['id_persona'] : null,
+                'cedula'         => trim($_POST['cedula']),
+                'nombre'         => trim($_POST['nombre']),
+                'apellido'       => trim($_POST['apellido']),
+                'telefono'       => trim($_POST['telefono']),
+                'correo'         => trim($_POST['correo']),
+                'genero'         => $_POST['genero'],
+                'fecha_nacimiento'=> $_POST['fecha_nacimiento'],
+                'direccion'      => trim($_POST['direccion']),
+                'id_cargo'       => (int)$_POST['id_cargo'],
+                'id_departamento'=> (int)$_POST['id_departamento'],
                 'nro_expediente' => trim($_POST['nro_expediente']),
-                'fecha_ingreso' => $_POST['fecha_ingreso']
+                'fecha_ingreso'  => $_POST['fecha_ingreso'],
+                'tipo_contrato'  => $tipoContrato,
+                'fecha_egreso'   => !empty($_POST['fecha_egreso']) ? $_POST['fecha_egreso'] : null,
+                'id_horario'     => !empty($_POST['id_horario']) ? (int)$_POST['id_horario'] : null,
             ];
 
             $esEdicion = !empty($data['id']);

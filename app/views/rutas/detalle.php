@@ -228,54 +228,95 @@
 
 <!-- ── Modal: Añadir Participante ── -->
 <div class="modal fade" id="modalParticipante" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="<?php echo URL_ROOT; ?>/rutas/inscribir" method="POST" class="modal-content">
+    <div class="modal-dialog modal-lg">
+        <form action="<?php echo URL_ROOT; ?>/rutas/inscribir" method="POST" class="modal-content" id="formInscribir">
             <div class="modal-header">
-                <h5 class="modal-title">Añadir Participante</h5>
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Añadir Participante</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id; ?>">
-                <div class="mb-4" style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
-                    <div class="form-check form-switch">
+
+                <!-- Toggle tipo participante -->
+                <div class="mb-4" style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; display:flex; align-items:center; gap:var(--sp-4);">
+                    <div class="form-check form-switch mb-0">
                         <input class="form-check-input" type="checkbox" id="part_es_libre" name="tipo_participante_libre" value="1">
-                        <label class="form-check-label" for="part_es_libre" style="font-size:13px; cursor:pointer;">
-                            <i class="bi bi-person-x"></i> Sin cédula (niño/a)
+                        <label class="form-check-label" for="part_es_libre" style="font-size:13px; cursor:pointer; user-select:none;">
+                            <i class="bi bi-person-badge"></i> Sin cédula (niño/a sin documento de identidad)
                         </label>
                     </div>
                 </div>
+
+                <!-- Bloque con cédula -->
                 <div id="bloque_cedula_ruta">
-                    <div class="sig-field">
+                    <div class="sig-field mb-2">
                         <label class="sig-field__label">Cédula <span class="req">*</span></label>
-                        <input type="text" name="cedula_busqueda" id="part_cedula" class="sig-input" placeholder="V-12345678">
+                        <div style="position:relative;">
+                            <input type="text" name="cedula_busqueda" id="part_cedula" class="sig-input"
+                                   placeholder="V-12345678 o E-12345678" autocomplete="off"
+                                   style="padding-right:40px; text-transform:uppercase;">
+                            <span id="part_cedula_spinner" style="display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--text-secondary);">
+                                <i class="bi bi-hourglass-split"></i>
+                            </span>
+                        </div>
                     </div>
+                    <!-- Feedback de búsqueda -->
+                    <div id="part_cedula_feedback" style="display:none; padding:var(--sp-2) var(--sp-3); border-radius:6px; font-size:13px; margin-bottom:var(--sp-3);"></div>
                 </div>
+
+                <!-- Bloque sin cédula -->
                 <div id="bloque_libre_ruta" style="display:none;">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field">
                                 <label class="sig-field__label">Nombre <span class="req">*</span></label>
-                                <input type="text" name="nombre_libre" id="part_nombre_libre" class="sig-input">
+                                <input type="text" name="nombre_libre" id="part_nombre_libre" class="sig-input" placeholder="Nombre(s)">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
                                 <label class="sig-field__label">Apellido</label>
-                                <input type="text" name="apellido_libre" class="sig-input">
+                                <input type="text" name="apellido_libre" class="sig-input" placeholder="Apellido(s)">
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="sig-field">
-                                <label class="sig-field__label">N° ID Escolar (opcional)</label>
-                                <input type="text" name="cedula_libre" class="sig-input">
+                                <label class="sig-field__label">N° ID Escolar <small style="color:var(--text-secondary);">(opcional)</small></label>
+                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene identificación escolar">
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin:var(--sp-4) 0; border-color:var(--border-subtle);">
+
+                <!-- Campos comunes -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Institución <small style="color:var(--text-secondary);">(opcional)</small></label>
+                            <select name="id_institucion" class="sig-input">
+                                <option value="">— Sin institución —</option>
+                                <?php foreach ($data['instituciones'] ?? [] as $inst): ?>
+                                <option value="<?php echo $inst->id; ?>">
+                                    <?php echo htmlspecialchars($inst->nombre); ?>
+                                    <?php if ($inst->tipo): ?><small>(<?php echo htmlspecialchars($inst->tipo); ?>)</small><?php endif; ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Observaciones <small style="color:var(--text-secondary);">(opcional)</small></label>
+                            <input type="text" name="observaciones" class="sig-input" placeholder="Notas adicionales">
                         </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-person-plus"></i> Agregar</button>
+                <button type="submit" id="part_submit_btn" class="btn-sig btn-sig--primary"><i class="bi bi-person-plus"></i> Agregar</button>
             </div>
         </form>
     </div>
@@ -368,14 +409,104 @@
 </div>
 
 <script>
-document.getElementById('part_es_libre').addEventListener('change', function () {
-    const esLibre = this.checked;
-    document.getElementById('bloque_cedula_ruta').style.display = esLibre ? 'none' : 'block';
-    document.getElementById('bloque_libre_ruta').style.display  = esLibre ? 'block' : 'none';
-    document.getElementById('part_cedula').required              = !esLibre;
-    document.getElementById('part_nombre_libre').required        = esLibre;
-});
-document.getElementById('part_cedula').required = true;
+(function () {
+    const URL_ROOT = '<?php echo URL_ROOT; ?>';
+    const elToggle   = document.getElementById('part_es_libre');
+    const elCedula   = document.getElementById('part_cedula');
+    const elNombre   = document.getElementById('part_nombre_libre');
+    const elFeedback = document.getElementById('part_cedula_feedback');
+    const elSpinner  = document.getElementById('part_cedula_spinner');
+    const elModal    = document.getElementById('modalParticipante');
+    const elForm     = document.getElementById('formInscribir');
+
+    elCedula.required = true;
+
+    // ── Toggle sin cédula ────────────────────────────────────────────────────
+    elToggle.addEventListener('change', function () {
+        const esLibre = this.checked;
+        document.getElementById('bloque_cedula_ruta').style.display = esLibre ? 'none' : 'block';
+        document.getElementById('bloque_libre_ruta').style.display  = esLibre ? 'block' : 'none';
+        elCedula.required = !esLibre;
+        elNombre.required = esLibre;
+        clearFeedback();
+    });
+
+    // ── Formato y búsqueda AJAX de cédula ────────────────────────────────────
+    let ajaxTimer = null;
+
+    function normalizarCedula(val) {
+        val = val.toUpperCase().replace(/\s/g, '');
+        // Si escribe sólo números, agrega prefijo V-
+        if (/^\d+$/.test(val)) val = 'V-' + val;
+        // Si escribe V123... agrega el guión
+        val = val.replace(/^([VEve])(\d)/, '$1-$2');
+        return val;
+    }
+
+    function clearFeedback() {
+        elFeedback.style.display = 'none';
+        elFeedback.innerHTML = '';
+        elCedula.style.borderColor = '';
+        elSpinner.style.display = 'none';
+    }
+
+    function showFeedback(found, texto) {
+        elSpinner.style.display = 'none';
+        if (found) {
+            elFeedback.style.background = '#d1fae5';
+            elFeedback.style.color = '#065f46';
+            elFeedback.innerHTML = '<i class="bi bi-person-check-fill"></i> ' + texto;
+            elCedula.style.borderColor = '#10b981';
+        } else {
+            elFeedback.style.background = '#fee2e2';
+            elFeedback.style.color = '#991b1b';
+            elFeedback.innerHTML = '<i class="bi bi-person-x-fill"></i> ' + texto;
+            elCedula.style.borderColor = '#ef4444';
+        }
+        elFeedback.style.display = 'block';
+    }
+
+    elCedula.addEventListener('input', function () {
+        const norm = normalizarCedula(this.value);
+        if (this.value !== norm) {
+            const pos = this.selectionStart + (norm.length - this.value.length);
+            this.value = norm;
+            try { this.setSelectionRange(pos, pos); } catch(e) {}
+        }
+
+        clearFeedback();
+        const cedula = this.value.trim();
+
+        // Solo buscar si tiene formato mínimo: X-NNNNNNN (al menos 5 dígitos)
+        if (!/^[VEve]-\d{5,10}$/.test(cedula)) return;
+
+        clearTimeout(ajaxTimer);
+        elSpinner.style.display = 'inline';
+        ajaxTimer = setTimeout(function () {
+            fetch(URL_ROOT + '/rutas/buscarPersona?cedula=' + encodeURIComponent(cedula))
+                .then(r => r.json())
+                .then(data => {
+                    if (data.found) {
+                        showFeedback(true, 'Encontrado: <strong>' + data.nombre + '</strong>');
+                    } else {
+                        showFeedback(false, 'No se encontró ninguna persona con esa cédula.');
+                    }
+                })
+                .catch(() => clearFeedback());
+        }, 500);
+    });
+
+    // ── Reset del modal al cerrar ────────────────────────────────────────────
+    elModal.addEventListener('hidden.bs.modal', function () {
+        elForm.reset();
+        elToggle.checked = false;
+        document.getElementById('bloque_cedula_ruta').style.display = 'block';
+        document.getElementById('bloque_libre_ruta').style.display  = 'none';
+        elCedula.required = true;
+        elNombre.required = false;
+        clearFeedback();
+    });
+}());
 
 function nuevoPunto() {
     document.getElementById('modalPuntoLabel').innerText = 'Agregar Parada';

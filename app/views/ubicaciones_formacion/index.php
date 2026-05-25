@@ -68,11 +68,11 @@
                 <div class="sig-field mb-3">
                     <label class="sig-field__label">Tipo de Espacio</label>
                     <select name="tipo" id="ubif_tipo" class="sig-select">
+                        <option value="Escuela">Escuela</option>
                         <option value="Liceo">Liceo</option>
                         <option value="Plaza">Plaza</option>
                         <option value="Centro Comunitario">Centro Comunitario</option>
                         <option value="Auditorio">Auditorio</option>
-                        <option value="Otro">Otro</option>
                     </select>
                 </div>
                 <div class="sig-field mb-3">

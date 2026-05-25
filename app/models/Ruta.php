@@ -162,7 +162,7 @@ class Ruta extends Model {
         return $db->single();
     }
 
-    public static function inscribir(int $id_ruta, int $id_persona, int $user_id) {
+    public static function inscribir(int $id_ruta, int $id_persona, int $user_id, ?int $id_institucion = null, ?string $observaciones = null) {
         $db = new Database();
         $db->query("SELECT id FROM participantes_ruta WHERE id_ruta=:r AND id_persona=:p AND is_active=TRUE LIMIT 1");
         $db->bind(':r', $id_ruta);
@@ -170,24 +170,29 @@ class Ruta extends Model {
         if ($db->single()) {
             throw new Exception('Esta persona ya está inscrita en la ruta.');
         }
-        $db->query("INSERT INTO participantes_ruta (id_ruta, id_persona, created_by) VALUES (:r, :p, :u)");
-        $db->bind(':r', $id_ruta);
-        $db->bind(':p', $id_persona);
-        $db->bind(':u', $user_id);
+        $db->query("INSERT INTO participantes_ruta (id_ruta, id_persona, id_institucion, observaciones, created_by)
+                    VALUES (:r, :p, :inst, :obs, :u)");
+        $db->bind(':r',    $id_ruta);
+        $db->bind(':p',    $id_persona);
+        $db->bind(':inst', $id_institucion);
+        $db->bind(':obs',  $observaciones);
+        $db->bind(':u',    $user_id);
         $result = $db->execute();
-        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'id_persona' => $id_persona], $user_id);
+        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'id_persona' => $id_persona, 'id_institucion' => $id_institucion], $user_id);
         return $result;
     }
 
     public static function inscribirLibre(int $id_ruta, array $datos, int $user_id) {
         $db = new Database();
-        $db->query("INSERT INTO participantes_ruta (id_ruta, nombre_libre, apellido_libre, cedula_libre, created_by)
-                    VALUES (:r, :nom, :ape, :ced, :u)");
-        $db->bind(':r',   $id_ruta);
-        $db->bind(':nom', $datos['nombre_libre']);
-        $db->bind(':ape', $datos['apellido_libre'] ?? null);
-        $db->bind(':ced', $datos['cedula_libre'] ?? null);
-        $db->bind(':u',   $user_id);
+        $db->query("INSERT INTO participantes_ruta (id_ruta, nombre_libre, apellido_libre, cedula_libre, id_institucion, observaciones, created_by)
+                    VALUES (:r, :nom, :ape, :ced, :inst, :obs, :u)");
+        $db->bind(':r',    $id_ruta);
+        $db->bind(':nom',  $datos['nombre_libre']);
+        $db->bind(':ape',  $datos['apellido_libre'] ?? null);
+        $db->bind(':ced',  $datos['cedula_libre'] ?? null);
+        $db->bind(':inst', $datos['id_institucion'] ?? null);
+        $db->bind(':obs',  $datos['observaciones'] ?? null);
+        $db->bind(':u',    $user_id);
         $result = $db->execute();
         self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'nombre_libre' => $datos['nombre_libre'], 'cedula_libre' => $datos['cedula_libre'] ?? null], $user_id);
         return $result;

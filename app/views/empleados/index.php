@@ -146,16 +146,47 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="sig-field">
                             <label class="sig-field__label">Nro. Expediente <span class="req">*</span></label>
                             <input type="text" name="nro_expediente" id="emp_nro_expediente" class="sig-input" required>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Tipo de Contrato <span class="req">*</span></label>
+                            <select name="tipo_contrato" id="emp_tipo_contrato" class="sig-select" required>
+                                <option value="Fijo">Fijo</option>
+                                <option value="Contratado">Contratado</option>
+                                <option value="Suplente">Suplente</option>
+                                <option value="Comisión de Servicio">Comisión de Servicio</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Horario Asignado</label>
+                            <select name="id_horario" id="emp_id_horario" class="sig-select">
+                                <option value="">— Sin horario asignado —</option>
+                                <?php foreach ($data['horarios'] ?? [] as $h): ?>
+                                    <option value="<?php echo $h->id; ?>">
+                                        <?php echo htmlspecialchars($h->nombre); ?>
+                                        (<?php echo substr($h->hora_entrada,0,5); ?>–<?php echo substr($h->hora_salida,0,5); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <div class="sig-field">
                             <label class="sig-field__label">Fecha de Ingreso <span class="req">*</span></label>
                             <input type="date" name="fecha_ingreso" id="emp_fecha_ingreso" class="sig-input" required value="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Fecha de Egreso <small style="color:var(--text-secondary)">(si aplica)</small></label>
+                            <input type="date" name="fecha_egreso" id="emp_fecha_egreso" class="sig-input">
                         </div>
                     </div>
                 </div>
@@ -178,21 +209,24 @@
         document.getElementById('emp_fecha_ingreso').value = '<?php echo date('Y-m-d'); ?>';
     }
     function editarEmpleado(emp) {
-        document.getElementById('modalEmpleadoLabel').innerText = 'Editar: ' + emp.nombre;
-        document.getElementById('emp_id').value = emp.id;
-        document.getElementById('emp_id_persona').value = emp.id_persona;
-        document.getElementById('emp_cedula').value = emp.cedula;
-        document.getElementById('emp_nombre').value = emp.nombre;
-        document.getElementById('emp_apellido').value = emp.apellido;
-        document.getElementById('emp_genero').value = emp.genero;
-        document.getElementById('emp_fecha_nac').value = emp.fecha_nacimiento;
-        document.getElementById('emp_telefono').value = emp.telefono;
-        document.getElementById('emp_correo').value = emp.correo;
-        document.getElementById('emp_direccion').value = emp.direccion;
-        document.getElementById('emp_id_cargo').value = emp.id_cargo;
-        document.getElementById('emp_id_departamento').value = emp.id_departamento;
-        document.getElementById('emp_nro_expediente').value = emp.nro_expediente;
-        document.getElementById('emp_fecha_ingreso').value = emp.fecha_ingreso;
+        document.getElementById('modalEmpleadoLabel').innerText = 'Editar: ' + emp.nombre + ' ' + emp.apellido;
+        document.getElementById('emp_id').value             = emp.id;
+        document.getElementById('emp_id_persona').value     = emp.id_persona;
+        document.getElementById('emp_cedula').value         = emp.cedula       || '';
+        document.getElementById('emp_nombre').value         = emp.nombre       || '';
+        document.getElementById('emp_apellido').value       = emp.apellido     || '';
+        document.getElementById('emp_genero').value         = emp.genero       || 'M';
+        document.getElementById('emp_fecha_nac').value      = emp.fecha_nacimiento || '';
+        document.getElementById('emp_telefono').value       = emp.telefono     || '';
+        document.getElementById('emp_correo').value         = emp.correo       || '';
+        document.getElementById('emp_direccion').value      = emp.direccion    || '';
+        document.getElementById('emp_id_cargo').value       = emp.id_cargo;
+        document.getElementById('emp_id_departamento').value= emp.id_departamento;
+        document.getElementById('emp_nro_expediente').value = emp.nro_expediente || '';
+        document.getElementById('emp_tipo_contrato').value  = emp.tipo_contrato || 'Fijo';
+        document.getElementById('emp_id_horario').value     = emp.id_horario   || '';
+        document.getElementById('emp_fecha_ingreso').value  = emp.fecha_ingreso || '';
+        document.getElementById('emp_fecha_egreso').value   = emp.fecha_egreso  || '';
         new bootstrap.Modal(document.getElementById('modalEmpleado')).show();
     }
 </script>

@@ -66,6 +66,10 @@ class RutasController extends Controller {
         $inventario_asignado  = RutaInventario::getByRuta($id);
         $inventario_disponible= Inventario::all();
 
+        $db = new Database();
+        $db->query("SELECT id, nombre, tipo FROM instituciones_externas WHERE is_active = TRUE ORDER BY nombre ASC");
+        $instituciones = $db->resultSet();
+
         $data = [
             'titulo'               => 'Ruta: ' . $ruta->nombre,
             'ruta'                 => $ruta,
@@ -73,8 +77,29 @@ class RutasController extends Controller {
             'participantes'        => $participantes,
             'inventario_asignado'  => $inventario_asignado,
             'inventario_disponible'=> $inventario_disponible,
+            'instituciones'        => $instituciones,
         ];
         $this->view('rutas/detalle', $data);
+    }
+
+    public function buscarPersona() {
+        header('Content-Type: application/json');
+        $cedula = trim($_GET['cedula'] ?? '');
+        if (empty($cedula)) {
+            echo json_encode(['found' => false]);
+            exit;
+        }
+        $persona = Ruta::buscarPersonaPorCedula($cedula);
+        if ($persona) {
+            echo json_encode([
+                'found'    => true,
+                'nombre'   => htmlspecialchars($persona->nombre . ' ' . ($persona->apellido ?? '')),
+                'cedula'   => htmlspecialchars($persona->cedula),
+            ]);
+        } else {
+            echo json_encode(['found' => false]);
+        }
+        exit;
     }
 
     // ── Participantes ────────────────────────────────────────────────────────
@@ -87,6 +112,9 @@ class RutasController extends Controller {
         $userId    = $this->getUserId();
         $esLibre   = !empty($_POST['tipo_participante_libre']);
 
+        $id_institucion = (int)($_POST['id_institucion'] ?? 0) ?: null;
+        $observaciones  = trim($_POST['observaciones'] ?? '') ?: null;
+
         try {
             if ($esLibre) {
                 $nombre = trim($_POST['nombre_libre'] ?? '');
@@ -95,6 +123,8 @@ class RutasController extends Controller {
                     'nombre_libre'   => $nombre,
                     'apellido_libre' => trim($_POST['apellido_libre'] ?? ''),
                     'cedula_libre'   => trim($_POST['cedula_libre'] ?? '') ?: null,
+                    'id_institucion' => $id_institucion,
+                    'observaciones'  => $observaciones,
                 ], $userId);
             } else {
                 $cedula = trim($_POST['cedula_busqueda'] ?? '');
@@ -112,7 +142,7 @@ class RutasController extends Controller {
                     }
                 }
 
-                Ruta::inscribir($id_ruta, $persona->id, $userId);
+                Ruta::inscribir($id_ruta, $persona->id, $userId, $id_institucion, $observaciones);
             }
             flash('global_msg', 'Participante registrado correctamente.');
         } catch (Exception $e) {

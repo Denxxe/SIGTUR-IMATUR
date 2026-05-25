@@ -22,6 +22,9 @@ class Empleado extends Model
     private ?int $id_departamento;
     private ?string $nro_expediente;
     private ?string $fecha_ingreso;
+    private ?string $tipo_contrato;
+    private ?string $fecha_egreso;
+    private ?int    $id_horario;
 
     public function __construct(array $data = [])
     {
@@ -37,10 +40,13 @@ class Empleado extends Model
             $this->genero = !empty($data['genero']) ? $data['genero'] : null;
             $this->fecha_nacimiento = !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null;
             $this->direccion = $data['direccion'] ?? '';
-            $this->id_cargo = !empty($data['id_cargo']) ? $data['id_cargo'] : null;
-            $this->id_departamento = !empty($data['id_departamento']) ? $data['id_departamento'] : null;
+            $this->id_cargo = !empty($data['id_cargo']) ? (int)$data['id_cargo'] : null;
+            $this->id_departamento = !empty($data['id_departamento']) ? (int)$data['id_departamento'] : null;
             $this->nro_expediente = $data['nro_expediente'] ?? null;
             $this->fecha_ingreso = !empty($data['fecha_ingreso']) ? $data['fecha_ingreso'] : null;
+            $this->tipo_contrato = !empty($data['tipo_contrato']) ? $data['tipo_contrato'] : 'Fijo';
+            $this->fecha_egreso  = !empty($data['fecha_egreso'])  ? $data['fecha_egreso']  : null;
+            $this->id_horario    = !empty($data['id_horario'])    ? (int)$data['id_horario'] : null;
         }
     }
 
@@ -79,8 +85,9 @@ class Empleado extends Model
      */
     public function save($user_id = null)
     {
-        $previos = null;
-        $prevId = $this->id;
+        $previos  = null;
+        $prevId   = $this->id;
+        $esNuevo  = empty($this->id);
         try {
             $this->db->beginTransaction();
 
@@ -117,19 +124,31 @@ class Empleado extends Model
 
             // --- EMPLEADO ---
             if ($this->id) {
-                $this->db->query("UPDATE empleados SET id_cargo=:id_cargo, id_departamento=:id_departamento, nro_expediente=:nro_expediente, 
-                                 updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
+                $this->db->query("UPDATE empleados
+                                  SET id_cargo=:id_cargo, id_departamento=:id_departamento,
+                                      nro_expediente=:nro_expediente, fecha_ingreso=:fecha_ingreso,
+                                      tipo_contrato=:tipo_contrato, fecha_egreso=:fecha_egreso,
+                                      id_horario=:id_horario,
+                                      updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
+                                  WHERE id=:id");
                 $this->db->bind(':id', $this->id);
             } else {
-                $this->db->query("INSERT INTO empleados (id_persona, id_cargo, id_departamento, nro_expediente, fecha_ingreso, created_by) 
-                                 VALUES (:id_persona, :id_cargo, :id_departamento, :nro_expediente, :fecha_ingreso, :user_id) RETURNING id");
+                $this->db->query("INSERT INTO empleados
+                                  (id_persona, id_cargo, id_departamento, nro_expediente,
+                                   fecha_ingreso, tipo_contrato, fecha_egreso, id_horario, created_by)
+                                  VALUES (:id_persona, :id_cargo, :id_departamento, :nro_expediente,
+                                          :fecha_ingreso, :tipo_contrato, :fecha_egreso, :id_horario, :user_id)
+                                  RETURNING id");
                 $this->db->bind(':id_persona', $this->id_persona);
-                $this->db->bind(':fecha_ingreso', $this->fecha_ingreso);
             }
 
-            $this->db->bind(':id_cargo', $this->id_cargo);
-            $this->db->bind(':id_departamento', $this->id_departamento);
-            $this->db->bind(':nro_expediente', $this->nro_expediente);
+            $this->db->bind(':id_cargo',        $this->id_cargo);
+            $this->db->bind(':id_departamento',  $this->id_departamento);
+            $this->db->bind(':nro_expediente',   $this->nro_expediente);
+            $this->db->bind(':fecha_ingreso',    $this->fecha_ingreso);
+            $this->db->bind(':tipo_contrato',    $this->tipo_contrato);
+            $this->db->bind(':fecha_egreso',     $this->fecha_egreso);
+            $this->db->bind(':id_horario',       $this->id_horario);
             $this->db->bind(':user_id', $user_id);
 
             if (!$this->id) {
@@ -144,7 +163,7 @@ class Empleado extends Model
             $this->db->endTransaction();
 
             // Auditoría automática
-            $operacion = $this->id ? 'UPDATE' : 'INSERT';
+            $operacion = $esNuevo ? 'INSERT' : 'UPDATE';
             $this->audit('empleados', $operacion, $this->id ?? $prevId, $previos, [
                 'cedula' => $this->cedula,
                 'nombre' => $this->nombre,
