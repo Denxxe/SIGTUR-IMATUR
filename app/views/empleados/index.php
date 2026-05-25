@@ -91,7 +91,6 @@
                             <select name="genero" id="emp_genero" class="sig-select" required>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
-                                <option value="O">Otro</option>
                             </select>
                         </div>
                     </div>
