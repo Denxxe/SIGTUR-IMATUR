@@ -1,5 +1,7 @@
 # DECISIONES PENDIENTES — SIGTUR-IMATUR
-**Propósito:** Documento de trabajo para responder las preguntas sin resolver que bloquean o condicionan el desarrollo del sistema. Cada pregunta indica qué funcionalidad queda desbloqueada al ser respondida.
+
+**Última actualización:** 2026-05-22  
+**Propósito:** Documento de trabajo — Q&A de modelo de negocio con respuestas e impacto técnico. Las preguntas **sin responder** están también en `preguntas_modelo_negocio.md` como resumen ejecutivo.
 
 **Instrucción:** Escribir la respuesta en la línea `RESPUESTA:` de cada pregunta. Las marcadas 🔴 bloquean decisiones de BD o lógica central. Las 🟡 desbloquean funcionalidades de alto impacto. Las 🟢 son mejoras menores.
 
@@ -451,18 +453,37 @@
 - Contraseña por defecto = cédula al crear usuario (D-US05)
 
 ### Nuevas preguntas generadas durante implementación
+
 - D-NEW01 ❓ ¿El correlativo de oficios de formación (talleres externos) se necesita actualmente, o solo se prepara la infraestructura?
-  > **Desbloquea:** Activar correlativo formación en UI de talleres
+  > **Desbloquea:** Activar correlativo FORM-XXX en UI de talleres
   > **RESPUESTA:**
 - D-NEW02 ❓ ¿La tabla `instituciones_externas` debe tener un CRUD dedicado en el sistema, o solo se usa como lookup al registrar participantes?
   > **Desbloquea:** Controlador `InstitucionesExternasController` + vista CRUD
   > **RESPUESTA:**
-- D-NEW03 ❓ ¿El facilitador externo (campo `nombre_facilitador_externo`) debe ir en una lista manejada por el sistema, o es texto libre cada vez?
-  > **Desbloquea:** Si se necesita tabla de guías/facilitadores externos registrados
+- D-NEW03 ❓ ¿El facilitador externo (`nombre_facilitador_externo`) debe ir en una lista gestionada por el sistema, o es texto libre cada vez?
+  > **Desbloquea:** Tabla de guías/facilitadores externos registrados
   > **RESPUESTA:**
 - D-NEW04 ❓ ¿Los tipos de permisos laborales son los estándar venezolanos (Médico, Personal, Duelo, Maternidad/Paternidad, Sindical, Estudio) u otros?
-  > **Requiere:** Para implementar PermisosLaboralesController en Fase 3
+  > **Requiere:** Enum final en `permisos_laborales.tipo_permiso` para PermisosLaboralesController
   > **RESPUESTA:**
 - D-NEW05 ❓ ¿Los días de vacaciones según LOTTT venezolana (15 días + 1 día adicional por año) aplican a IMATUR como ente municipal?
-  > **Requiere:** Para implementar cálculo de saldo en VacacionesController
+  > **Requiere:** Fórmula de cálculo de saldo en VacacionesController
+  > **RESPUESTA:**
+
+### Preguntas RRHH adicionales (identificadas en revisión 2026-05-22)
+
+- D-RH12 ❓ ¿Se manejan horas extras? ¿Deben registrarse en el sistema?
+  > **Desbloquea:** Campo `horas_extra` en `asistencias` o tabla separada
+  > **RESPUESTA:**
+- D-RH13 ❓ ¿Las ausencias justificadas e injustificadas se gestionan por separado? ¿Quién las aprueba?
+  > **Desbloquea:** Tipo de ausencia en `asistencias` o diferenciación en `permisos_laborales`
+  > **RESPUESTA:**
+- D-RH14 ❓ ¿Existe "bono vacacional"? ¿El sistema debe calcularlo o solo registrarlo?
+  > **Desbloquea:** Campo en `vacaciones` o módulo de cálculo salarial
+  > **RESPUESTA:**
+
+### Preguntas Inventario adicionales (identificadas en revisión 2026-05-22)
+
+- D-IN09 ❓ ¿El sistema debe registrar el costo de adquisición, fecha de compra y proveedor de los bienes?
+  > **Desbloquea:** Campos `costo_adquisicion`, `fecha_compra`, `proveedor` en tabla `inventario`
   > **RESPUESTA:**

@@ -1,5 +1,7 @@
 # Módulo de Inventario — Reglas de Negocio
 
+**Última actualización:** 2026-05-22
+
 ## Contexto institucional
 
 El inventario de bienes de IMATUR lo gestiona la **Dirección Administrativa**. Los bienes tienen un código de Bien Nacional (BN) asignado por la Contraloría Municipal. Los bienes pueden prestarse a rutas turísticas y talleres temporalmente.
@@ -8,24 +10,28 @@ El inventario de bienes de IMATUR lo gestiona la **Dirección Administrativa**. 
 
 ## RN-IN01 — Identificación de bienes
 
-- Cada bien tiene un `codigo_bn` (Bien Nacional) como identificador principal.
-- Opcionalmente tiene `serial` (número de serie del fabricante).
+- Cada bien tiene un `codigo_bn` (Bien Nacional) como identificador principal — **nullable** desde migración 007.
+- Los bienes sin código BN se muestran con "—" en vistas hasta que se asigne el código oficial.
 - El sistema no genera correlativo propio: el código BN viene dado por la Alcaldía/Contraloría.
-- **Pendiente confirmar:** si hay bienes sin código BN asignado y cómo se manejan (ver pregunta 136).
+- Opcionalmente tiene `serial` (número de serie del fabricante).
 
 ---
 
 ## RN-IN02 — Condiciones válidas
 
-Valores: `'Nuevo'`, `'Bueno'`, `'Regular'`, `'Dañado'`.  
+Valores válidos: `'Nuevo'`, `'Bueno'`, `'Regular'`, `'Dañado'`, `'En Reparación'`.
+
+La condición `'En Reparación'` fue añadida en migración 007. La whitelist en `InventarioController` debe incluir los 5 valores.
+
 La condición se actualiza manualmente vía `actividadinventario` o edición directa.
 
 ---
 
 ## RN-IN03 — Soft delete = "Dar de baja"
 
-La eliminación de un bien aplica `is_active = FALSE` (no destrucción física del registro). El bien dado de baja permanece en el historial de auditoría y en movimientos previos.  
-**Pendiente:** si la baja formal requiere un acto administrativo o resolución (ver pregunta 137).
+La eliminación de un bien aplica `is_active = FALSE` (no destrucción física del registro). El bien dado de baja permanece en el historial de auditoría y en movimientos previos.
+
+El registro interno es suficiente — no se genera acto administrativo imprimible (D-IN01 respondida).
 
 ---
 
@@ -52,16 +58,19 @@ Existe la tabla `taller_inventario` para préstamo de bienes a talleres. No hay 
 
 ## RN-IN07 — Ubicaciones
 
-Las ubicaciones son lugares físicos fijos dentro de IMATUR (oficinas, almacenes). Tienen FK a departamento (`"departamento _d"` — columna con espacio, siempre requiere comillas dobles en SQL). Un bien puede estar en una ubicación sin estar asignado a un empleado.
+Las ubicaciones son lugares físicos fijos dentro de IMATUR (oficinas, almacenes). Tienen FK a departamento mediante columna `"departamento _d"` — **atención: la columna tiene un espacio en el nombre, siempre requiere comillas dobles en SQL**.
+
+Un bien puede estar en una ubicación sin estar asignado a un empleado.
 
 ---
 
-## Brechas identificadas (pendientes de implementación)
+## Estado de brechas
 
-| ID | Descripción | Impacto |
-|----|-------------|---------|
-| BIN-01 | UI para `taller_inventario` (tabla existe, sin vista) | Bajo |
-| BIN-02 | Confirmar proceso de baja formal (¿acto administrativo?) | Alto |
-| BIN-03 | Verificación periódica de inventario (conteo físico) | Medio |
-| BIN-04 | Reporte de bienes por condición/categoría/ubicación | Medio |
-| BIN-05 | Control de bienes fungibles vs durables | Bajo |
+| ID | Descripción | Estado |
+|----|-------------|--------|
+| BIN-01 | UI para `taller_inventario` | ❓ Pendiente — bajo impacto |
+| BIN-02 | Baja formal: ¿requiere acto administrativo? | ✅ Resuelto — D-IN01: solo registro interno |
+| BIN-03 | Verificación periódica (conteo físico) | ✅ Resuelto — reporte de conteo exportable a CSV |
+| BIN-04 | Reporte de bienes por condición/categoría/ubicación | ✅ Resuelto — D-IN02: reporte de bajas implementado |
+| BIN-05 | Control de bienes fungibles vs durables | ❓ Pendiente — D-IN05: definir si aplica |
+| BIN-06 | `codigo_bn` nullable para bienes sin código | ✅ Resuelto — migración 007, campo nullable |

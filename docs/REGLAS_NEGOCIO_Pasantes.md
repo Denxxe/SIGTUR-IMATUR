@@ -1,5 +1,7 @@
 # Módulo de Pasantes — Reglas de Negocio
 
+**Última actualización:** 2026-05-22
+
 ## Contexto institucional
 
 El proceso de pasantías lo gestiona el **Departamento de Formación y Capacitación**, con revisión de Talento Humano y firma/sello final de la Dirección General.
@@ -14,8 +16,8 @@ Postulado → Aceptado → En Curso → Culminado
            Rechazado             Abandonado
 ```
 
-- **Postulado:** El estudiante se presentó y entregó carta de postulación a la institución IMATUR.
-- **Aceptado:** Dirección firmó y selló la carta → se remite carta de aceptación al estudiante/institución. El sistema debe registrar este cambio de estado.
+- **Postulado:** El estudiante se presentó y entregó carta de postulación a IMATUR.
+- **Aceptado:** Dirección firmó y selló la carta → se remite carta de aceptación al estudiante/institución. **Solo rol 1 (Administrador) puede ejecutar esta transición** (D-PS01 respondida).
 - **Rechazado:** Dirección rechazó la solicitud (terminal).
 - **En Curso:** Pasantía activa, con tutor asignado.
 - **Culminado:** Pasantía finalizada, carta de culminación emitida.
@@ -31,49 +33,49 @@ Todo pasante tiene un `id_persona FK` a la tabla `personas` (migración 003). No
 
 ## RN-PS03 — Documentos requeridos
 
-La tabla `pasante_documentos` almacena flags de entrega de documentos. Los documentos exactos a confirmar (ver pregunta 158). La práctica actual:
-- Se registra si el documento fue entregado (flag booleano).
-- Los documentos físicos se archivan en papel.
-- No hay almacenamiento digital de archivos en el sistema actual.
+La tabla `pasante_documentos` almacena flags de entrega. Los documentos requeridos son exactamente 3:
+- Carta Institucional
+- Copia de Cédula
+- Planilla
+
+Los documentos físicos se archivan en papel. No hay almacenamiento digital de archivos en el sistema.
 
 ---
 
 ## RN-PS04 — Tutor institucional
 
-- El tutor es un **empleado de IMATUR** (`id_tutor_institucional FK` a `empleados`).
-- El tutor se asigna al pasar al estado "Aceptado" o "En Curso".
-- **Pendiente confirmar:** si siempre debe ser el jefe del departamento o puede ser cualquier empleado (ver pregunta 145).
-- No hay límite implementado de pasantes por tutor.
+- El tutor es cualquier **empleado activo de IMATUR** (`id_tutor_institucional FK` a `empleados`).
+- Lo asigna la Dirección según la necesidad del proyecto/pasante.
+- El select en vistas lista todos los empleados con `is_active = TRUE` — sin filtro por cargo o departamento.
+- No hay límite de pasantes por tutor ni por departamento.
 
 ---
 
 ## RN-PS05 — Carta de culminación
 
-Al culminar la pasantía, IMATUR emite una carta de culminación firmada por la Dirección. Esta carta sigue el mismo flujo: Formación → revisión → Talento Humano → Dirección (firma y sello).  
-**Pendiente:** generación imprimible en el sistema (similar al oficio de rutas, ver pregunta 147).
+Al culminar la pasantía, IMATUR emite una carta de culminación firmada por la Dirección. Generada imprimible desde el sistema en `pasantes/carta_culminacion.php` (D-PS04 respondida). Incluye: período completo (fecha inicio → fecha fin) y total de días calculado.
 
 ---
 
 ## RN-PS06 — Evaluación
 
-El sistema tiene un campo `nota` en `pasantes`. La escala exacta y si hay evaluaciones parciales están pendientes de confirmar (ver pregunta 146).
+El sistema tiene campo `nota` (DECIMAL numérico) y campo `evaluacion` (texto cualitativo: Excelente/Bueno/Regular/Deficiente). Ambos campos existen en BD. La vista detalle muestra ambos valores (D-PS02 respondida).
 
 ---
 
-## RN-PS07 — Horas de pasantía
+## RN-PS07 — Cálculo de duración
 
-El cálculo de horas a partir de `fecha_inicio` y `fecha_fin` no está automatizado. Las horas totales podrían calcularse como `(fecha_fin - fecha_inicio) × horas_diarias_estándar`.  
-**Pendiente:** confirmar si el sistema debe calcularlas (ver pregunta 161).
+La duración se calcula como `(fecha_fin - fecha_inicio)` mostrado en días en la vista detalle. No hay estándar de horas diarias definido (D-PS04 respondida).
 
 ---
 
-## Brechas identificadas (pendientes de implementación)
+## Estado de brechas
 
-| ID | Descripción | Impacto |
-|----|-------------|---------|
-| BPS-01 | Flujo formal de cambio de estado (Postulado→Aceptado requiere acción de Dirección) | Alto |
-| BPS-02 | Generación imprimible de carta de culminación | Alto |
-| BPS-03 | Cálculo automático de horas de pasantía | Medio |
-| BPS-04 | Lista de documentos requeridos con checklist en UI | Medio |
-| BPS-05 | Límite de pasantes simultáneos por departamento o tutor | Bajo |
-| BPS-06 | Escala y rubrica de evaluación definida | Medio |
+| ID | Descripción | Estado |
+|----|-------------|--------|
+| BPS-01 | Restricción de rol para Postulado→Aceptado | ✅ Resuelto — solo rol 1 en `PasantesController::editar()` |
+| BPS-02 | Carta de culminación imprimible | ✅ Resuelto — `pasantes/carta_culminacion.php` |
+| BPS-03 | Cálculo automático de duración | ✅ Resuelto — días calculados en vista detalle |
+| BPS-04 | Checklist de documentos en UI | ✅ Resuelto — 3 documentos (carta, cédula, planilla) |
+| BPS-05 | Límite de pasantes por tutor/departamento | ✅ Resuelto — D-PS07: sin límite |
+| BPS-06 | Escala de evaluación definida | ✅ Resuelto — numérica + cualitativa (D-PS02) |

@@ -1,5 +1,7 @@
 # Módulo de Visitantes y Control de Visitas — Reglas de Negocio
 
+**Última actualización:** 2026-05-22
+
 ## Contexto institucional
 
 El control de visitantes registra a personas **externas que ingresan físicamente a las instalaciones de IMATUR** (no a turistas de rutas, que se registran en el módulo de Rutas). Su propósito es control de acceso institucional y estadística de visitas recibidas.
@@ -17,8 +19,9 @@ El control de visitantes registra a personas **externas que ingresan físicament
 
 ## RN-VIS02 — Registro de visitante (perfil)
 
-El visitante tiene: cédula, nombre, apellido, procedencia, teléfono, género, correo, motivo frecuente.  
-El campo `motivo_frecuente` es un **perfil del visitante** (dato estático), no el motivo de cada visita concreta.
+El visitante tiene: cédula, nombre, apellido, procedencia/institución, teléfono, género, correo, motivo frecuente.  
+
+El campo `procedencia` representa la **institución que representa** el visitante, no su ciudad de origen (D-VIS02 respondida). El label en UI es "Institución / Procedencia".
 
 ---
 
@@ -39,31 +42,36 @@ Cada visita puede vincularse al empleado que atendió al visitante (`id_empleado
 
 ## RN-VIS05 — Motivo de visita
 
-El campo `motivo` en la tabla `visitas` es texto libre (por visita específica, no por perfil).  
-**Pendiente confirmar:** si debe ser lista categorizada o libre (ver pregunta 151).
+El campo `motivo` en la tabla `visitas` es una lista predefinida (D-VIS01 respondida):
+- `'Reunión de trabajo'`
+- `'Trámite administrativo'`
+- `'Entrega de documentos'`
+- `'Visita institucional'`
+- `'Pasantías'`
+- `'Otro'`
+
+El formulario usa `<select>` con CHECK constraint en BD. Whitelist actualizada en `VisitasController`.
 
 ---
 
-## RN-VIS06 — Visitantes extranjeros
+## RN-VIS06 — Solo visitantes venezolanos
 
-El campo `cedula` actualmente asume documentos venezolanos. No hay campo `tipo_documento` (CI / Pasaporte / RIF).  
-**Pendiente:** confirmar si se reciben visitantes extranjeros frecuentemente (ver pregunta 83).
+IMATUR no recibe visitantes extranjeros frecuentes. El campo `cedula` asume documentos venezolanos. No existe campo `tipo_documento` (D-VIS03 respondida).
 
 ---
 
 ## RN-VIS07 — Reportes de visitas
 
-No hay reporte dedicado de visitas implementado. Los datos existen en BD. Los reportes actuales en `ReportesController` no incluyen el módulo de visitas.  
-**Pendiente:** reporte de visitantes por mes/procedencia/motivo.
+Reporte implementado con filtros por: período (fechas), institución/procedencia, motivo de visita, empleado atendido (D-VIS04 respondida).
 
 ---
 
-## Brechas identificadas (pendientes de implementación)
+## Estado de brechas
 
-| ID | Descripción | Impacto |
-|----|-------------|---------|
-| BVIS-01 | Reporte de visitantes por período/procedencia/motivo | Medio |
-| BVIS-02 | Campo `tipo_documento` para visitantes extranjeros | Bajo |
-| BVIS-03 | Categorías de motivo de visita (lista vs texto libre) | Bajo |
-| BVIS-04 | Indicador "visitas activas del día" en Dashboard | Bajo |
-| BVIS-05 | Conexión estadística entre visitas y módulo de Reportes | Medio |
+| ID | Descripción | Estado |
+|----|-------------|--------|
+| BVIS-01 | Reporte de visitantes por período/procedencia/motivo | ✅ Resuelto — filtros completos implementados |
+| BVIS-02 | Campo `tipo_documento` para extranjeros | ✅ Resuelto — D-VIS03: no aplica, solo venezolanos |
+| BVIS-03 | Categorías de motivo de visita | ✅ Resuelto — lista de 6 categorías predefinidas |
+| BVIS-04 | Indicador "visitas activas del día" en Dashboard | ❓ Pendiente — bajo impacto |
+| BVIS-05 | Estadísticas de visitas en módulo de Reportes | ❓ Pendiente — datos existen, falta integrarlo |
