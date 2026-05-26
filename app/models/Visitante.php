@@ -49,6 +49,35 @@ class Visitante extends Model {
         return $result;
     }
 
+    public static function buscarPorCedula(string $cedula) {
+        $db = new Database();
+        $db->query("SELECT * FROM visitantes WHERE cedula = :cedula AND is_active = TRUE LIMIT 1");
+        $db->bind(':cedula', $cedula);
+        return $db->single();
+    }
+
+    public static function crear(array $data, $userId): int {
+        $db = new Database();
+        $db->query("
+            INSERT INTO visitantes (cedula, nombre, apellido, procedencia, telefono, genero, correo, motivo_frecuente, created_by)
+            VALUES (:cedula, :nombre, :apellido, :procedencia, :telefono, :genero, :correo, :motivo, :uid)
+            RETURNING id
+        ");
+        $db->bind(':cedula',      $data['cedula'] ?: null);
+        $db->bind(':nombre',      $data['nombre']);
+        $db->bind(':apellido',    $data['apellido']);
+        $db->bind(':procedencia', $data['procedencia'] ?: null);
+        $db->bind(':telefono',    $data['telefono'] ?: null);
+        $db->bind(':genero',      $data['genero'] ?: null);
+        $db->bind(':correo',      $data['correo'] ?: null);
+        $db->bind(':motivo',      $data['motivo_frecuente'] ?: null);
+        $db->bind(':uid',         $userId);
+        $row = $db->single();
+        if (!$row) throw new Exception('Error al registrar el visitante.');
+        self::auditStatic('visitantes', 'INSERT', (int)$row->id, null, ['cedula' => $data['cedula'] ?: null, 'nombre' => $data['nombre'], 'apellido' => $data['apellido']], $userId);
+        return (int)$row->id;
+    }
+
     public static function delete($id, $userId) {
         $previos = self::find($id);
         $db = new Database();

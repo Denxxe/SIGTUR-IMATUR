@@ -47,6 +47,7 @@
                                                 <tr>
                                                     <th>Registro</th>
                                                     <th>Fecha Eliminación</th>
+                                                    <th>Eliminado Por</th>
                                                     <th class="col-actions">Acción</th>
                                                 </tr>
                                             </thead>
@@ -60,6 +61,7 @@
                                                         <tr>
                                                             <td class="cell-strong" style="color:var(--brand-600)"><?php echo $item->display_name; ?></td>
                                                             <td><?php echo date('d/m/Y H:i', strtotime($item->deleted_at)); ?></td>
+                                                            <td><?php echo $item->deleted_by  ?: 'Sistema'; ?></td>
                                                             <td class="col-actions">
                                                                 <form action="<?php echo URL_ROOT; ?>/auditoria/restaurar/<?php echo $info['tabla']; ?>/<?php echo $item->id; ?>" method="POST" onsubmit="return confirm('¿Confirma restaurar?')" style="display:inline">
                                                                     <button type="submit" class="row-action row-action--edit"><i class="bi bi-arrow-counterclockwise"></i> Restaurar</button>
