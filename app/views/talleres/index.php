@@ -219,7 +219,7 @@
                     <div class="col-md-2">
                         <div class="sig-field">
                             <label class="sig-field__label">Cupo Máx.</label>
-                            <input type="number" name="cupo_maximo" id="tal_cupo" class="sig-input" value="30" min="1">
+                            <input type="number" name="cupo_maximo" id="tal_cupo" class="sig-input" value="30" min="1" max="200">
                         </div>
                     </div>
 
@@ -482,9 +482,11 @@ function checkFormValid() {
     var oficioFecha  = oficioVis ? (document.getElementById('oficio_fecha').value || '').trim() : 'ok';
     var canceladoVis = document.getElementById('sec_edit_cancelado').style.display !== 'none';
     var motivoOk     = !canceladoVis || (document.getElementById('tal_motivo_cancelacion').value || '').trim() !== '';
+    var cupo         = parseInt(document.getElementById('tal_cupo').value || '0', 10);
+    var cupoOk       = cupo >= 1 && cupo <= 200;
 
     document.getElementById('btn_guardar').disabled =
-        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && oficioFecha !== '' && motivoOk);
+        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && oficioFecha !== '' && motivoOk && cupoOk);
 }
 
 // ── Abrir modal — nueva actividad ─────────────────────────────────────────
@@ -632,6 +634,7 @@ document.getElementById('tal_hora_inicio').addEventListener('change', checkFormV
 document.getElementById('tal_hora_fin').addEventListener('change', checkFormValid);
 document.getElementById('oficio_fecha').addEventListener('change', checkFormValid);
 document.getElementById('tal_motivo_cancelacion').addEventListener('input', checkFormValid);
+document.getElementById('tal_cupo').addEventListener('input', checkFormValid);
 
 document.getElementById('ce_nuevo_estado').addEventListener('change', function() {
     var estado         = this.value;

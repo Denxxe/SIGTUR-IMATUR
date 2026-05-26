@@ -41,7 +41,7 @@ class TalleresController extends Controller {
             'hora_fin'               => $_POST['hora_fin'] ?: null,
             'id_ubicacion_formacion' => (int)$_POST['id_ubicacion_formacion'] ?: null,
             'id_facilitador'         => (int)$_POST['id_facilitador'],
-            'cupo_maximo'            => (int)$_POST['cupo_maximo'],
+            'cupo_maximo'            => min(200, max(1, (int)$_POST['cupo_maximo'])),
             'tipo_actividad'         => $tipoActividad,
             'es_interna'             => $esInterna,
             'tipo_ente'              => $tipoEnte,

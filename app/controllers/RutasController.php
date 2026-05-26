@@ -37,7 +37,7 @@ class RutasController extends Controller {
             'hora_visita'         => $_POST['hora_visita'] ?: null,
             'id_departamento'     => (int)$_POST['id_departamento'] ?: null,
             'id_facilitador'      => (int)$_POST['id_facilitador'] ?: null,
-            'cupo_maximo'         => (int)($_POST['cupo_maximo'] ?? 20),
+            'cupo_maximo'         => min(200, max(1, (int)($_POST['cupo_maximo'] ?? 20))),
             'requiere_formacion'  => !empty($_POST['requiere_formacion']),
         ];
 

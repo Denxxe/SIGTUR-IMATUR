@@ -128,7 +128,7 @@
                     <div class="col-md-2">
                         <div class="sig-field">
                             <label class="sig-field__label">Cupo Máx.</label>
-                            <input type="number" name="cupo_maximo" id="rut_cupo" class="sig-input" value="20" min="1">
+                            <input type="number" name="cupo_maximo" id="rut_cupo" class="sig-input" value="20" min="1" max="200">
                         </div>
                     </div>
 
