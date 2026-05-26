@@ -90,26 +90,6 @@ class TalleresController extends Controller {
                 if ($data['estado'] === 'Finalizado' && Taller::countEvidencias($data['id']) === 0) {
                     throw new Exception('Debe subir evidencias antes de finalizar. Use "Cambiar Estado" en la tarjeta.');
                 }
-            } else {
-                // RN-F05/F06: actividad externa con sede no propia requiere oficio
-                if (!$esInterna && !empty($data['id_ubicacion_formacion'])) {
-                    $ubi = UbicacionFormacion::find($data['id_ubicacion_formacion']);
-                    $esExternaSede = isset($ubi->es_sede_propia)
-                        && !filter_var($ubi->es_sede_propia, FILTER_VALIDATE_BOOLEAN);
-
-                    if ($esExternaSede) {
-                        $fechaOficio = trim($_POST['oficio_fecha'] ?? '');
-                        if (empty($fechaOficio)) {
-                            throw new Exception('Las actividades externas requieren la fecha del oficio recibido (RN-F06).');
-                        }
-                        $data['id_oficio'] = Taller::crearOficio([
-                            'numero'          => trim($_POST['oficio_numero'] ?? ''),
-                            'fecha'           => $fechaOficio,
-                            'id_institucion'  => $data['id_ubicacion_formacion'],
-                            'asunto'          => trim($_POST['oficio_asunto'] ?? ''),
-                        ], $userId);
-                    }
-                }
             }
 
             $taller = new Taller($data);

@@ -242,34 +242,6 @@
                         </div>
                     </div>
 
-                    <!-- RN-F06: Oficio — solo para actividades externas (nueva actividad) -->
-                    <div id="seccion_oficio" class="col-12" style="display:none;">
-                        <hr style="margin:0 0 var(--sp-2);">
-                        <p style="font-size:13px; font-weight:600; color:var(--brand-500); margin-bottom:var(--sp-3);">
-                            <i class="bi bi-file-earmark-text"></i> Actividad externa — datos del oficio recibido
-                        </p>
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <div class="sig-field">
-                                    <label class="sig-field__label">N° de Oficio</label>
-                                    <input type="text" name="oficio_numero" class="sig-input" placeholder="OF-2025-001">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="sig-field">
-                                    <label class="sig-field__label">Fecha del Oficio <span class="req">*</span></label>
-                                    <input type="date" name="oficio_fecha" id="oficio_fecha" class="sig-input">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="sig-field">
-                                    <label class="sig-field__label">Asunto</label>
-                                    <input type="text" name="oficio_asunto" class="sig-input" placeholder="Tema o motivo de la solicitud...">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
             <div class="modal-footer">
@@ -392,7 +364,6 @@ function filtrarSedes(esInterna) {
     });
     var disponible = Array.from(sel.options).some(function(o) { return o.value === valorPrevio; });
     sel.value = disponible ? valorPrevio : '';
-    evaluarOficio();
 }
 
 // ── Estilo visual del bloque toggle ──────────────────────────────────────
@@ -430,6 +401,10 @@ function setOpcionesEstado(estadoActual) {
 }
 
 // ── Validación de fechas y horas ──────────────────────────────────────────
+function timeToMin(t) {
+    var p = t.split(':'); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+}
+
 function validarFechas() {
     var fi    = document.getElementById('tal_fecha_inicio').value;
     var ff    = document.getElementById('tal_fecha_fin').value;
@@ -448,10 +423,13 @@ function validarFechas() {
         if (msgFf) msgFf.textContent = 'La fecha de fin no puede ser anterior a la de inicio.';
         return false;
     }
-    if (hi && hf && (!ff || ff === fi) && hf < hi) {
-        inHf.classList.add('is-invalid');
-        if (msgHf) msgHf.textContent = 'La hora de fin no puede ser anterior a la de inicio.';
-        return false;
+    // Mismo día (o sin fecha fin): duración mínima 15 minutos
+    if (hi && hf && (!ff || ff === fi)) {
+        if (timeToMin(hf) - timeToMin(hi) < 15) {
+            inHf.classList.add('is-invalid');
+            if (msgHf) msgHf.textContent = 'La duración mínima es de 15 minutos.';
+            return false;
+        }
     }
     return true;
 }
@@ -478,15 +456,13 @@ function checkFormValid() {
     var fechaInicio  = document.getElementById('tal_fecha_inicio').value;
     var facil        = document.getElementById('tal_facilitador').value;
     var fechasOk     = validarFechas();
-    var oficioVis    = document.getElementById('seccion_oficio').style.display !== 'none';
-    var oficioFecha  = oficioVis ? (document.getElementById('oficio_fecha').value || '').trim() : 'ok';
     var canceladoVis = document.getElementById('sec_edit_cancelado').style.display !== 'none';
     var motivoOk     = !canceladoVis || (document.getElementById('tal_motivo_cancelacion').value || '').trim() !== '';
     var cupo         = parseInt(document.getElementById('tal_cupo').value || '0', 10);
     var cupoOk       = cupo >= 1 && cupo <= 200;
 
     document.getElementById('btn_guardar').disabled =
-        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && oficioFecha !== '' && motivoOk && cupoOk);
+        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && motivoOk && cupoOk);
 }
 
 // ── Abrir modal — nueva actividad ─────────────────────────────────────────
@@ -499,7 +475,6 @@ function nuevoTaller() {
     setOpcionesEstado('Programado');
     document.getElementById('tal_es_interna').checked = false;
     actualizarModoInterno(false);
-    ocultarOficio();
     document.getElementById('sec_edit_cancelado').style.display = 'none';
     document.getElementById('sec_edit_en_curso').style.display  = 'none';
     checkFormValid();
@@ -531,39 +506,14 @@ function editarTaller(t) {
 
     setOpcionesEstado(t.estado);
     actualizarSeccionesEstadoEdit(t.estado);
-    ocultarOficio();
     checkFormValid();
     new bootstrap.Modal(document.getElementById('modalTaller')).show();
-}
-
-function ocultarOficio() {
-    document.getElementById('seccion_oficio').style.display = 'none';
-    document.getElementById('oficio_fecha').required = false;
 }
 
 function actualizarModoInterno(esInterna) {
     document.getElementById('bloque_tipo_ente').style.display = esInterna ? 'none' : 'flex';
     actualizarEstiloToggle(esInterna);
     filtrarSedes(esInterna);
-    if (esInterna) ocultarOficio();
-    checkFormValid();
-}
-
-function evaluarOficio() {
-    var esNueva    = !document.getElementById('tal_id').value;
-    var esInterna  = document.getElementById('tal_es_interna').checked;
-    var sel        = document.getElementById('tal_ubicacion');
-    var opt        = sel.options[sel.selectedIndex];
-    var esPropia   = opt && opt.value && opt.dataset.sedePropia === '1';
-    var seccion    = document.getElementById('seccion_oficio');
-    var fechaInput = document.getElementById('oficio_fecha');
-
-    if (esNueva && !esInterna && opt && opt.value && !esPropia) {
-        seccion.style.display = 'block';
-        fechaInput.required   = true;
-    } else {
-        ocultarOficio();
-    }
     checkFormValid();
 }
 
@@ -625,14 +575,12 @@ document.getElementById('tal_estado').addEventListener('change', function() {
     actualizarSeccionesEstadoEdit(this.value);
     checkFormValid();
 });
-document.getElementById('tal_ubicacion').addEventListener('change', evaluarOficio);
 document.getElementById('tal_nombre').addEventListener('input', checkFormValid);
 document.getElementById('tal_facilitador').addEventListener('change', checkFormValid);
 document.getElementById('tal_fecha_inicio').addEventListener('change', checkFormValid);
 document.getElementById('tal_fecha_fin').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_inicio').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_fin').addEventListener('change', checkFormValid);
-document.getElementById('oficio_fecha').addEventListener('change', checkFormValid);
 document.getElementById('tal_motivo_cancelacion').addEventListener('input', checkFormValid);
 document.getElementById('tal_cupo').addEventListener('input', checkFormValid);
 
