@@ -2,9 +2,8 @@
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
-        <div class="page__eyebrow">Seguridad · Control de Accesos</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Recepción'; ?></h1>
-        <p class="page__subtitle">Control de flujo y marcaje de entrada/salida de visitantes.</p>
+        <p class="page__subtitle">Control de entrada de visitantes.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary"
@@ -19,13 +18,13 @@
     <table class="sig-table">
         <thead>
             <tr>
+                <th style="text-align:center;">Entrada</th>
                 <th>Cédula</th>
                 <th>Nombre y Apellido</th>
+                <th>Teléfono</th>
                 <th>Institución / Procedencia</th>
                 <th>Correo</th>
                 <th>Motivo</th>
-                <th style="text-align:center;">Entrada</th>
-                <th style="text-align:center;">Salida</th>
             </tr>
         </thead>
         <tbody>
@@ -36,9 +35,13 @@
             <?php else: ?>
                 <?php foreach ($data['movimientos'] as $v): ?>
                     <tr>
+                        <td style="text-align:center;"><?php echo htmlspecialchars($v->entrada ?? '—'); ?></td>
                         <td class="cell-id"><?php echo htmlspecialchars($v->vis_cedula ?? '—'); ?></td>
                         <td>
                             <span class="cell-strong"><?php echo htmlspecialchars($v->vis_nombre . ' ' . $v->vis_apellido); ?></span>
+                        </td>
+                        <td style="font-size:13px; color:var(--text-secondary);">
+                            <?php echo htmlspecialchars($v->vis_telefono ?? '—'); ?>
                         </td>
                         <td style="font-size:13px; color:var(--text-secondary);">
                             <?php echo htmlspecialchars($v->procedencia ?? '—'); ?>
@@ -52,20 +55,6 @@
                                 <div style="font-size:11px; color:var(--text-tertiary);">
                                     → <?php echo htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido); ?>
                                 </div>
-                            <?php endif; ?>
-                        </td>
-                        <td style="text-align:center;">
-                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono); font-size:11px; font-weight:700;">
-                                <?php echo date('H:i', strtotime($v->hora_entrada)); ?>
-                            </span>
-                        </td>
-                        <td style="text-align:center;">
-                            <?php if ($v->hora_salida): ?>
-                                <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono); font-size:11px; font-weight:700;">
-                                    <?php echo date('H:i', strtotime($v->hora_salida)); ?>
-                                </span>
-                            <?php else: ?>
-                                <span class="sig-badge sig-badge--neutral" style="opacity:0.5; font-size:11px;">adentro</span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -153,36 +142,19 @@
                     </div>
                 </div>
 
-                <!-- Datos de la visita -->
+                <!-- Motivo de la visita -->
                 <div style="border-top:1px solid var(--border-subtle); padding-top:var(--sp-4);">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="sig-field">
-                                <label class="sig-field__label">Motivo de la visita</label>
-                                <select name="motivo" class="sig-select">
-                                    <option value="">Sin especificar</option>
-                                    <option value="Reunión de trabajo">Reunión de trabajo</option>
-                                    <option value="Trámite administrativo">Trámite administrativo</option>
-                                    <option value="Entrega de documentos">Entrega de documentos</option>
-                                    <option value="Visita institucional">Visita institucional</option>
-                                    <option value="Pasantías">Pasantías</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="sig-field">
-                                <label class="sig-field__label">Empleado a visitar</label>
-                                <select name="id_empleado" class="sig-select">
-                                    <option value="">Sin asignar / Trámite general</option>
-                                    <?php foreach ($data['empleados'] ?? [] as $e): ?>
-                                        <option value="<?php echo $e->id; ?>">
-                                            <?php echo htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')); ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
+                    <div class="sig-field">
+                        <label class="sig-field__label">Motivo de la visita</label>
+                        <select name="motivo" class="sig-select">
+                            <option value="">Sin especificar</option>
+                            <option value="Reunión de trabajo">Reunión de trabajo</option>
+                            <option value="Trámite administrativo">Trámite administrativo</option>
+                            <option value="Entrega de documentos">Entrega de documentos</option>
+                            <option value="Visita institucional">Visita institucional</option>
+                            <option value="Pasantías">Pasantías</option>
+                            <option value="Otro">Otro</option>
+                        </select>
                     </div>
                 </div>
 

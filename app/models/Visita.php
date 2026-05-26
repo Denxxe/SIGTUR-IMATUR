@@ -9,6 +9,7 @@ class Visita extends Model {
                    COALESCE(p.nombre,   vt.nombre)   AS vis_nombre,
                    COALESCE(p.apellido, vt.apellido) AS vis_apellido,
                    COALESCE(p.correo,   vt.correo)   AS vis_correo,
+                   COALESCE(p.telefono, vt.telefono) AS vis_telefono,
                    vt.procedencia,
                    ep.nombre  AS emp_nombre,
                    ep.apellido AS emp_apellido

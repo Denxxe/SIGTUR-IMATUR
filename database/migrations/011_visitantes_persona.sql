@@ -34,3 +34,7 @@ BEGIN
         UPDATE visitantes SET id_persona = pid WHERE id = v.id;
     END LOOP;
 END $$;
+
+-- visitantes.nombre y apellido pasan a ser nullable (datos viven en personas)
+ALTER TABLE visitantes ALTER COLUMN nombre   DROP NOT NULL;
+ALTER TABLE visitantes ALTER COLUMN apellido DROP NOT NULL;
