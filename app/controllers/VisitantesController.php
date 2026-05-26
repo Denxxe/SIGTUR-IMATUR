@@ -7,52 +7,107 @@ class VisitantesController extends Controller {
             exit;
         }
         $this->model('Visitante');
+        $this->model('Visita');
+        $this->model('Empleado');
     }
 
     public function index() {
-        $visitantes = Visitante::all();
+        $movimientos = Visita::getRecientes();
+        $empleados   = Empleado::all();
+
         $data = [
-            'titulo'     => 'Registro de Visitantes',
-            'visitantes' => $visitantes
+            'titulo'       => 'Recepción y Control de Visitas',
+            'movimientos'  => $movimientos,
+            'empleados'    => $empleados,
         ];
         $this->view('visitantes/index', $data);
     }
 
-    public function store() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = $this->sanitizePost();
-            $data = [
-                'id'               => !empty($_POST['id']) ? (int)$_POST['id'] : null,
-                'cedula'           => trim($_POST['cedula'] ?? ''),
-                'nombre'           => trim($_POST['nombre'] ?? ''),
-                'apellido'         => trim($_POST['apellido'] ?? ''),
-                'procedencia'      => trim($_POST['procedencia'] ?? ''),
-                'telefono'         => trim($_POST['telefono'] ?? ''),
-                'genero'           => $_POST['genero'] ?? null,
-                'correo'           => trim($_POST['correo'] ?? ''),
-                'motivo_frecuente' => trim($_POST['motivo_frecuente'] ?? '')
+    public function buscarVisitante() {
+        header('Content-Type: application/json');
+        $cedula = strip_tags(trim($_GET['cedula'] ?? ''));
+        if (empty($cedula)) {
+            echo json_encode(['found' => false]);
+            exit;
+        }
+        $v = Visitante::buscarPorCedula($cedula);
+        if ($v) {
+            echo json_encode([
+                'found'     => true,
+                'visitante' => [
+                    'id_visitante'    => $v->id_visitante,
+                    'cedula'          => $v->cedula,
+                    'nombre'          => $v->nombre,
+                    'apellido'        => $v->apellido,
+                    'procedencia'     => $v->procedencia     ?? '',
+                    'telefono'        => $v->telefono        ?? '',
+                    'correo'          => $v->correo          ?? '',
+                    'genero'          => $v->genero          ?? '',
+                    'motivo_frecuente'=> $v->motivo_frecuente ?? '',
+                ],
+            ]);
+        } else {
+            echo json_encode(['found' => false]);
+        }
+        exit;
+    }
+
+    public function registrar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $_POST  = $this->sanitizePost();
+        $userId = $this->getUserId();
+
+        try {
+            $cedula   = trim($_POST['cedula']   ?? '') ?: null;
+            $nombre   = trim($_POST['nombre']   ?? '');
+            $apellido = trim($_POST['apellido'] ?? '');
+
+            if (empty($nombre) || empty($apellido)) {
+                throw new Exception('El nombre y apellido son requeridos.');
+            }
+
+            // Find existing visitante by cédula, or create one
+            $visitante = $cedula ? Visitante::buscarPorCedula($cedula) : null;
+
+            if ($visitante) {
+                $idVisitante = $visitante->id_visitante;
+            } else {
+                $idVisitante = Visitante::crear([
+                    'cedula'           => $cedula,
+                    'nombre'           => $nombre,
+                    'apellido'         => $apellido,
+                    'procedencia'      => trim($_POST['procedencia'] ?? '') ?: null,
+                    'telefono'         => trim($_POST['telefono']    ?? '') ?: null,
+                    'genero'           => trim($_POST['genero']      ?? '') ?: null,
+                    'correo'           => trim($_POST['correo']      ?? '') ?: null,
+                    'motivo_frecuente' => trim($_POST['motivo']      ?? '') ?: null,
+                ], $userId);
+            }
+
+            $visitaData = [
+                'id_visitante'  => $idVisitante,
+                'id_empleado'   => !empty($_POST['id_empleado']) ? (int)$_POST['id_empleado'] : null,
+                'motivo'        => trim($_POST['motivo'] ?? ''),
+                'observaciones' => 'Registro en recepción',
             ];
 
-            try {
-                if (Visitante::store($data, $this->getUserId())) {
-                    $msg = empty($_POST['id']) ? 'Visitante registrado correctamente.' : 'Datos del visitante actualizados.';
-                    flash('global_msg', $msg);
-                } else {
-                    throw new Exception("No se pudo guardar el registro.");
-                }
-            } catch (Exception $e) {
-                flash('global_msg', 'Error: ' . $e->getMessage(), 'danger');
-            }
-            header('Location: ' . URL_ROOT . '/visitantes/index');
+            Visita::registrar($visitaData, $userId);
+            flash('global_msg', 'Marcaje procesado correctamente.');
+
+        } catch (Exception $e) {
+            flash('global_msg', 'Error: ' . $e->getMessage(), 'danger');
         }
+
+        header('Location: ' . URL_ROOT . '/visitantes/index');
     }
 
     public function delete($id) {
         try {
-            if (Visitante::delete($id, $this->getUserId())) {
-                flash('global_msg', 'Visitante eliminado del registro.', 'warning');
+            if (Visita::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Registro eliminado.', 'warning');
             } else {
-                throw new Exception("No se pudo eliminar.");
+                throw new Exception('No se pudo eliminar.');
             }
         } catch (Exception $e) {
             flash('global_msg', 'Error: ' . $e->getMessage(), 'danger');

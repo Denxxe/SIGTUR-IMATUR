@@ -5,15 +5,21 @@ class Visita extends Model {
         $db = new Database();
         $db->query("
             SELECT vi.*,
-                   vt.nombre  AS vis_nombre,  vt.apellido AS vis_apellido, vt.cedula AS vis_cedula,
-                   p.nombre   AS emp_nombre,  p.apellido  AS emp_apellido
-            FROM visitas vi
-            LEFT JOIN visitantes vt ON vi.id_visitante = vt.id
-            LEFT JOIN empleados  e  ON vi.id_empleado  = e.id
-            LEFT JOIN personas   p  ON e.id_persona    = p.id
-            WHERE vi.is_active = TRUE
-            ORDER BY vi.hora_entrada DESC
-            LIMIT 100
+                   COALESCE(p.cedula,   vt.cedula)   AS vis_cedula,
+                   COALESCE(p.nombre,   vt.nombre)   AS vis_nombre,
+                   COALESCE(p.apellido, vt.apellido) AS vis_apellido,
+                   COALESCE(p.correo,   vt.correo)   AS vis_correo,
+                   vt.procedencia,
+                   ep.nombre  AS emp_nombre,
+                   ep.apellido AS emp_apellido
+            FROM   visitas    vi
+            JOIN   visitantes vt  ON vi.id_visitante = vt.id
+            LEFT JOIN personas  p   ON vt.id_persona   = p.id
+            LEFT JOIN empleados e   ON vi.id_empleado  = e.id
+            LEFT JOIN personas  ep  ON e.id_persona    = ep.id
+            WHERE  vi.is_active = TRUE
+            ORDER  BY vi.hora_entrada DESC
+            LIMIT  100
         ");
         return $db->resultSet();
     }
