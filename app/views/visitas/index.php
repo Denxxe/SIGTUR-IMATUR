@@ -2,7 +2,6 @@
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
-        <div class="page__eyebrow">Seguridad · Control de Accesos</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
         <p class="page__subtitle">Control de flujo y marcaje de entrada/salida de personas ajenas a la institución.</p>
     </div>
