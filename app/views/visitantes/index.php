@@ -35,7 +35,11 @@
             <?php else: ?>
                 <?php foreach ($data['movimientos'] as $v): ?>
                     <tr>
-                        <td style="text-align:center;"><?php echo htmlspecialchars($v->entrada ?? '—'); ?></td>
+                        <td style="text-align:center;">
+                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono); font-size:11px; font-weight:700;">
+                                <?php echo date('d/m H:i', strtotime($v->hora_entrada)); ?>
+                            </span>
+                        </td>
                         <td class="cell-id"><?php echo htmlspecialchars($v->vis_cedula ?? '—'); ?></td>
                         <td>
                             <span class="cell-strong"><?php echo htmlspecialchars($v->vis_nombre . ' ' . $v->vis_apellido); ?></span>
