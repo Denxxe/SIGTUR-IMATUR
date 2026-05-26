@@ -2,24 +2,29 @@
 class RolesController extends Controller {
 
     /**
-     * Mapa RBAC: rol_id => controladores permitidos ('*' = acceso total).
-     * Fuente única de verdad para permisos — Router.php lee esta misma estructura.
-     * Cuando los permisos pasen a BD, solo se reemplaza este método.
+     * Mapa RBAC leído desde la tabla permisos_rol.
+     * Devuelve [id_rol => '*'] para acceso total o [id_rol => [ctrl, ...]] para limitado.
+     * Router.php llama este método en cada request.
      */
     public static function getMapaRbac(): array {
-        return [
-            1 => '*',
-            2 => ['DashboardController','EmpleadosController','CargosController',
-                  'DepartamentosController','AsistenciasController','VisitantesController',
-                  'VisitasController','ReportesController','ConfigController'],
-            3 => ['DashboardController','RutasController','ActividadesrutaController',
-                  'TalleresController','UbicacionesformacionController','PasantesController',
-                  'VisitantesController','VisitasController','ReportesController'],
-            4 => ['DashboardController','InventarioController','CategoriasController',
-                  'UbicacionesController','ActividadesinventarioController','ReportesController'],
-            5 => ['DashboardController','VisitantesController','VisitasController',
-                  'AsistenciasController'],
-        ];
+        try {
+            $db = new Database();
+            $db->query("SELECT id_rol, modulo FROM permisos_rol ORDER BY id_rol, modulo");
+            $rows = $db->resultSet();
+            $mapa = [];
+            foreach ($rows as $row) {
+                $rolId = (int)$row->id_rol;
+                if ($row->modulo === '*') {
+                    $mapa[$rolId] = '*';
+                } elseif (!isset($mapa[$rolId]) || $mapa[$rolId] !== '*') {
+                    $mapa[$rolId][] = $row->modulo;
+                }
+            }
+            return $mapa;
+        } catch (Exception $e) {
+            // Fallback mínimo si la BD no responde
+            return [1 => '*'];
+        }
     }
 
     /**
@@ -50,9 +55,77 @@ class RolesController extends Controller {
         ];
     }
 
+    /**
+     * Guarda los módulos asignados a un rol (reemplaza los permisos actuales).
+     * El rol Administrador (id=1) no puede modificarse desde aquí.
+     */
+    public function storePermisos() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $_POST = $this->sanitizePost();
+        $id_rol = (int)($_POST['id_rol'] ?? 0);
+        $userId = $this->getUserId();
+
+        if ($id_rol <= 0) {
+            flash('global_msg', 'Rol inválido.', 'danger');
+            header('Location: ' . URL_ROOT . '/roles/index');
+            return;
+        }
+        if ($id_rol === 1) {
+            flash('global_msg', 'El rol Administrador no puede modificarse desde aquí.', 'danger');
+            header('Location: ' . URL_ROOT . '/roles/index');
+            return;
+        }
+
+        $modulosValidos  = array_keys(self::getModulos());
+        $modulosEnviados = (array)($_POST['modulos'] ?? []);
+
+        // Filtrar solo módulos conocidos (whitelist)
+        $modulosNuevos = array_filter($modulosEnviados, fn($m) => in_array($m, $modulosValidos));
+
+        // DashboardController siempre incluido
+        $modulosNuevos[] = 'DashboardController';
+        $modulosNuevos   = array_unique($modulosNuevos);
+
+        try {
+            $db = new Database();
+            $db->beginTransaction();
+
+            $previos = [];
+            $db->query("SELECT modulo FROM permisos_rol WHERE id_rol = :id");
+            $db->bind(':id', $id_rol);
+            foreach ($db->resultSet() as $r) $previos[] = $r->modulo;
+
+            $db->query("DELETE FROM permisos_rol WHERE id_rol = :id");
+            $db->bind(':id', $id_rol);
+            $db->execute();
+
+            foreach ($modulosNuevos as $modulo) {
+                $db->query("INSERT INTO permisos_rol (id_rol, modulo, created_by) VALUES (:r, :m, :u)");
+                $db->bind(':r', $id_rol);
+                $db->bind(':m', $modulo);
+                $db->bind(':u', $userId);
+                $db->execute();
+            }
+
+            $db->endTransaction();
+
+            $this->audit('permisos_rol', 'UPDATE', $id_rol,
+                (object)['modulos' => implode(',', $previos)],
+                ['modulos' => implode(',', $modulosNuevos)],
+                $userId);
+
+            flash('global_msg', 'Permisos del rol actualizados correctamente.');
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            flash('global_msg', 'Error al guardar permisos: ' . $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/roles/index');
+    }
+
     public function index() {
         $roles   = Rol::all();
-        $rbac    = self::getMapaRbac();
+        $rbac    = self::getMapaRbac();   // ahora viene de BD
         $modulos = self::getModulos();
 
         $data = [
