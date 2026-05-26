@@ -110,14 +110,18 @@ class RolesController extends Controller {
 
             $db->endTransaction();
 
-            $this->audit('permisos_rol', 'UPDATE', $id_rol,
-                (object)['modulos' => implode(',', $previos)],
-                ['modulos' => implode(',', $modulosNuevos)],
-                $userId);
+            try {
+                AuditLog::log('permisos_rol', 'UPDATE', $id_rol,
+                    ['modulos' => implode(',', $previos)],
+                    ['modulos' => implode(',', $modulosNuevos)],
+                    $userId);
+            } catch (Exception $ae) {
+                error_log('AuditLog storePermisos: ' . $ae->getMessage());
+            }
 
             flash('global_msg', 'Permisos del rol actualizados correctamente.');
         } catch (Exception $e) {
-            $db->cancelTransaction();
+            if (isset($db) && $db->inTransaction()) $db->cancelTransaction();
             flash('global_msg', 'Error al guardar permisos: ' . $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/roles/index');
