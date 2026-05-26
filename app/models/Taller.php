@@ -197,10 +197,33 @@ class Taller extends Model {
 
     public static function buscarPersonaPorCedula(string $cedula) {
         $db = new Database();
-        $db->query("SELECT id, cedula, nombre, apellido
+        $db->query("SELECT id, cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento
                     FROM personas WHERE cedula = :cedula AND is_active = TRUE");
         $db->bind(':cedula', $cedula);
         return $db->single();
+    }
+
+    public static function crearPersona(array $data, $userId): int {
+        $db = new Database();
+        $db->query("INSERT INTO personas (cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento, created_by)
+                    VALUES (:cedula, :nombre, :apellido, :telefono, :correo, :genero, :fecha_nacimiento, :uid)
+                    RETURNING id");
+        $db->bind(':cedula',           $data['cedula']);
+        $db->bind(':nombre',           $data['nombre']);
+        $db->bind(':apellido',         $data['apellido']);
+        $db->bind(':telefono',         $data['telefono'] ?? null);
+        $db->bind(':correo',           $data['correo'] ?? null);
+        $db->bind(':genero',           $data['genero'] ?? null);
+        $db->bind(':fecha_nacimiento', $data['fecha_nacimiento'] ?? null);
+        $db->bind(':uid',              $userId);
+        $row = $db->single();
+        if (!$row) throw new Exception('Error al registrar los datos de la persona.');
+        self::auditStatic('personas', 'INSERT', (int)$row->id, null, [
+            'cedula'   => $data['cedula'],
+            'nombre'   => $data['nombre'],
+            'apellido' => $data['apellido'],
+        ], $userId);
+        return (int)$row->id;
     }
 
     // Crear registro de oficio para actividad externa y retornar su ID (RN-F06)

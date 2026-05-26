@@ -145,10 +145,38 @@ class TalleresController extends Controller {
         $this->view('talleres/detalle', $data);
     }
 
+    public function buscarPersona() {
+        header('Content-Type: application/json');
+        $cedula = strip_tags(trim($_GET['cedula'] ?? ''));
+        if (empty($cedula)) {
+            echo json_encode(['found' => false]);
+            exit;
+        }
+        $persona = Taller::buscarPersonaPorCedula($cedula);
+        if ($persona) {
+            echo json_encode([
+                'found'   => true,
+                'persona' => [
+                    'id'               => $persona->id,
+                    'cedula'           => $persona->cedula,
+                    'nombre'           => $persona->nombre,
+                    'apellido'         => $persona->apellido,
+                    'telefono'         => $persona->telefono         ?? '',
+                    'correo'           => $persona->correo           ?? '',
+                    'genero'           => $persona->genero           ?? '',
+                    'fecha_nacimiento' => $persona->fecha_nacimiento ?? '',
+                ]
+            ]);
+        } else {
+            echo json_encode(['found' => false]);
+        }
+        exit;
+    }
+
     public function inscribir() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-        $_POST = $this->sanitizePost();
+        $_POST     = $this->sanitizePost();
         $id_taller = (int)$_POST['id_taller'];
         $userId    = $this->getUserId();
         $esLibre   = !empty($_POST['tipo_participante_libre']);
@@ -168,16 +196,36 @@ class TalleresController extends Controller {
                     'cedula_docente' => trim($_POST['cedula_docente'] ?? '') ?: null,
                 ], $userId);
             } else {
-                $cedula = trim($_POST['cedula_busqueda'] ?? '');
-                if (empty($cedula)) {
-                    throw new Exception('Ingrese la cédula del participante.');
+                $cedula   = trim($_POST['cedula_participante'] ?? '') ?: null;
+                $nombre   = trim($_POST['nombre']   ?? '');
+                $apellido = trim($_POST['apellido'] ?? '');
+
+                if (empty($nombre) || empty($apellido)) {
+                    throw new Exception('El nombre y apellido del participante son requeridos.');
                 }
-                $persona = Taller::buscarPersonaPorCedula($cedula);
-                if (!$persona) {
-                    throw new Exception("No se encontró ninguna persona con cédula '{$cedula}' en el sistema.");
+
+                // Buscar persona existente por cédula; si no existe, crear nueva
+                $persona = $cedula ? Taller::buscarPersonaPorCedula($cedula) : null;
+
+                if ($persona) {
+                    $idPersona = $persona->id;
+                } else {
+                    $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
+                    if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
+                        $fechaNac = null;
+                    }
+                    $idPersona = Taller::crearPersona([
+                        'cedula'           => $cedula,
+                        'nombre'           => $nombre,
+                        'apellido'         => $apellido,
+                        'telefono'         => trim($_POST['telefono'] ?? '') ?: null,
+                        'correo'           => trim($_POST['correo']   ?? '') ?: null,
+                        'genero'           => trim($_POST['genero']   ?? '') ?: null,
+                        'fecha_nacimiento' => $fechaNac,
+                    ], $userId);
                 }
-                $esBrigadista = !empty($_POST['es_brigadista']);
-                Taller::inscribir($id_taller, $persona->id, $userId, $esBrigadista);
+
+                Taller::inscribir($id_taller, $idPersona, $userId, !empty($_POST['es_brigadista']));
             }
             flash('global_msg', 'Participante registrado correctamente.');
 

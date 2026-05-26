@@ -189,17 +189,17 @@
 
 <!-- Modal agregar participante -->
 <div class="modal fade" id="modalInscripcion" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="<?php echo URL_ROOT; ?>/talleres/inscribir" method="POST" class="modal-content needs-validation" novalidate>
+    <div class="modal-dialog modal-lg">
+        <form action="<?php echo URL_ROOT; ?>/talleres/inscribir" method="POST" class="modal-content" id="formInscripcion">
             <div class="modal-header">
-                <h5 class="modal-title">Agregar Participante</h5>
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Agregar Participante</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:var(--sp-4);">
                 <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
 
-                <!-- Toggle tipo participante (RN-F16) -->
-                <div class="mb-4" style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
+                <!-- Toggle niño/a sin cédula (RN-F16) -->
+                <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="insc_es_libre" name="tipo_participante_libre" value="1">
                         <label class="form-check-label" for="insc_es_libre" style="font-size:13px; cursor:pointer; user-select:none;">
@@ -208,24 +208,88 @@
                     </div>
                 </div>
 
-                <!-- Bloque con cédula -->
-                <div id="bloque_cedula">
-                    <div class="sig-field">
-                        <label class="sig-field__label">Cédula <span class="req">*</span></label>
-                        <input type="text" name="cedula_busqueda" id="insc_cedula" class="sig-input" placeholder="V-12345678">
-                        <p style="font-size:12px; color:var(--text-tertiary); margin-top:6px;">
-                            <i class="bi bi-info-circle"></i> La persona debe estar registrada en el sistema.
-                        </p>
+                <!-- ── BLOQUE PERSONA CON CÉDULA ─────────────────────────── -->
+                <div id="bloque_persona">
+
+                    <!-- Búsqueda rápida -->
+                    <div class="row g-3" style="margin-bottom:var(--sp-1);">
+                        <div class="col-md-8">
+                            <div class="sig-field" style="margin:0;">
+                                <label class="sig-field__label">
+                                    Cédula
+                                    <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— busca si ya está registrado, o completa para registrar</span>
+                                </label>
+                                <input type="text" id="insc_cedula_busqueda" name="cedula_participante"
+                                       class="sig-input" placeholder="Ej: V-12345678" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="display:flex; align-items:flex-end;">
+                            <button type="button" id="btn_buscar_cedula" class="btn-sig btn-sig--ghost" style="width:100%;">
+                                <i class="bi bi-search" id="ico_buscar"></i> Buscar
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-check" style="margin-top:var(--sp-2);">
-                        <input class="form-check-input" type="checkbox" id="insc_brigadista" name="es_brigadista" value="1">
-                        <label class="form-check-label" for="insc_brigadista" style="font-size:13px;">
-                            <i class="bi bi-shield-check"></i> Es brigadista de la institución
-                        </label>
+
+                    <!-- Resultado búsqueda -->
+                    <div id="insc_status" style="display:none;"></div>
+
+                    <!-- Datos personales -->
+                    <div id="bloque_datos_persona" style="display:none;">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                    <input type="text" name="nombre" id="insc_nombre" class="sig-input" placeholder="Ej: Carlos">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Apellido <span class="req">*</span></label>
+                                    <input type="text" name="apellido" id="insc_apellido" class="sig-input" placeholder="Ej: González">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Teléfono</label>
+                                    <input type="text" name="telefono" id="insc_telefono" class="sig-input" placeholder="0412-1234567">
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Correo electrónico</label>
+                                    <input type="email" name="correo" id="insc_correo" class="sig-input" placeholder="ejemplo@correo.com">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Género</label>
+                                    <select name="genero" id="insc_genero" class="sig-select">
+                                        <option value="">—</option>
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                        <option value="O">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Fecha de nacimiento <span id="insc_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                    <input type="date" name="fecha_nacimiento" id="insc_fecha_nac" class="sig-input">
+                                </div>
+                            </div>
+                            <div class="col-md-8" style="display:flex; align-items:flex-end; padding-bottom:4px;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="insc_brigadista" name="es_brigadista" value="1">
+                                    <label class="form-check-label" for="insc_brigadista" style="font-size:13px;">
+                                        <i class="bi bi-shield-check"></i> Es brigadista de la institución
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Bloque libre — niños/as (RN-F16) -->
+                <!-- ── BLOQUE LIBRE — niños/as (RN-F16) ─────────────────── -->
                 <div id="bloque_libre" style="display:none;">
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -269,22 +333,164 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-person-plus"></i> Agregar</button>
+                <button type="submit" id="btn_insc_submit" class="btn-sig btn-sig--primary" disabled>
+                    <i class="bi bi-person-plus"></i> Agregar
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+<style>
+#btn_insc_submit:disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+input[readonly].sig-input, select:disabled.sig-select {
+    background: var(--bg-muted-subtle);
+    color: var(--text-secondary);
+    cursor: default;
+}
+</style>
 <script>
-document.getElementById('insc_es_libre').addEventListener('change', function () {
-    const esLibre = this.checked;
-    document.getElementById('bloque_cedula').style.display = esLibre ? 'none' : 'block';
-    document.getElementById('bloque_libre').style.display  = esLibre ? 'block' : 'none';
-    document.getElementById('insc_cedula').required        = !esLibre;
-    document.getElementById('insc_nombre_libre').required  = esLibre;
+// ── Utilidades ────────────────────────────────────────────────────────────
+function calcularEdad(fechaNac) {
+    if (!fechaNac) return null;
+    var hoy = new Date(), nac = new Date(fechaNac);
+    var a = hoy.getFullYear() - nac.getFullYear();
+    if (hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate())) a--;
+    return a >= 0 ? a : null;
+}
+
+function checkInscripcionValid() {
+    var esLibre = document.getElementById('insc_es_libre').checked;
+    var btn = document.getElementById('btn_insc_submit');
+    if (esLibre) {
+        btn.disabled = (document.getElementById('insc_nombre_libre').value || '').trim() === '';
+    } else {
+        var bloqueVisible = document.getElementById('bloque_datos_persona').style.display !== 'none';
+        var nombre    = (document.getElementById('insc_nombre').value   || '').trim();
+        var apellido  = (document.getElementById('insc_apellido').value || '').trim();
+        btn.disabled  = !bloqueVisible || !nombre || !apellido;
+    }
+}
+
+// ── Reset completo del bloque persona ─────────────────────────────────────
+function resetBloquePersona() {
+    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.value = ''; el.readOnly = false; }
+    });
+    var gen = document.getElementById('insc_genero');
+    gen.value = ''; gen.disabled = false;
+    document.getElementById('insc_brigadista').checked = false;
+    document.getElementById('insc_status').style.display = 'none';
+    document.getElementById('bloque_datos_persona').style.display = 'none';
+    document.getElementById('insc_edad_label').textContent = '';
+    checkInscripcionValid();
+}
+
+function setPersonaReadonly(readonly) {
+    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+        document.getElementById(id).readOnly = readonly;
+    });
+    document.getElementById('insc_genero').disabled = readonly;
+}
+
+function mostrarStatus(tipo, html) {
+    var s = document.getElementById('insc_status');
+    var estilos = {
+        ok:   'background:rgba(34,197,94,.1);  border-left:3px solid var(--success-600); color:var(--success-700);',
+        warn: 'background:rgba(234,179,8,.1);  border-left:3px solid #ca8a04; color:#92400e;',
+        err:  'background:rgba(239,68,68,.1);  border-left:3px solid var(--danger-600);  color:var(--danger-700);'
+    };
+    s.style.cssText = 'padding:var(--sp-2) var(--sp-3); border-radius:6px; font-size:13px; ' + (estilos[tipo] || '');
+    s.innerHTML = html;
+    s.style.display = 'block';
+}
+
+// ── Búsqueda por cédula (AJAX) ────────────────────────────────────────────
+document.getElementById('btn_buscar_cedula').addEventListener('click', function() {
+    var cedula = (document.getElementById('insc_cedula_busqueda').value || '').trim();
+    var btn = this;
+    var ico = document.getElementById('ico_buscar');
+
+    // Sin cédula: mostrar formulario en blanco para registro manual
+    if (!cedula) {
+        resetBloquePersona();
+        document.getElementById('bloque_datos_persona').style.display = 'block';
+        mostrarStatus('warn', '<i class="bi bi-pencil"></i> Complete los datos para registrar un nuevo participante.');
+        checkInscripcionValid();
+        return;
+    }
+
+    btn.disabled = true; ico.className = 'bi bi-hourglass-split';
+
+    fetch('<?php echo URL_ROOT; ?>/talleres/buscarPersona?cedula=' + encodeURIComponent(cedula))
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            document.getElementById('bloque_datos_persona').style.display = 'block';
+
+            if (res.found) {
+                var p = res.persona;
+                document.getElementById('insc_nombre').value    = p.nombre;
+                document.getElementById('insc_apellido').value  = p.apellido;
+                document.getElementById('insc_telefono').value  = p.telefono || '';
+                document.getElementById('insc_correo').value    = p.correo   || '';
+                document.getElementById('insc_genero').value    = p.genero   || '';
+                document.getElementById('insc_fecha_nac').value = p.fecha_nacimiento || '';
+                setPersonaReadonly(true);
+
+                var edad = calcularEdad(p.fecha_nacimiento);
+                var edadTxt = edad !== null ? '· ' + edad + ' años' : '';
+                document.getElementById('insc_edad_label').textContent = edadTxt;
+
+                mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + ' — datos cargados automáticamente.');
+            } else {
+                setPersonaReadonly(false);
+                mostrarStatus('warn', '<i class="bi bi-person-plus"></i> Persona no registrada — complete los datos para crear el registro.');
+            }
+            checkInscripcionValid();
+        })
+        .catch(function() {
+            mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Error al consultar. Intente nuevamente.');
+        })
+        .finally(function() { btn.disabled = false; ico.className = 'bi bi-search'; });
 });
-// Cédula requerida por defecto
-document.getElementById('insc_cedula').required = true;
+
+// Enter en campo cédula también dispara la búsqueda
+document.getElementById('insc_cedula_busqueda').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn_buscar_cedula').click(); }
+});
+
+// Toggle libre / persona
+document.getElementById('insc_es_libre').addEventListener('change', function() {
+    var esLibre = this.checked;
+    document.getElementById('bloque_persona').style.display = esLibre ? 'none' : 'block';
+    document.getElementById('bloque_libre').style.display   = esLibre ? 'block' : 'none';
+    if (!esLibre) {
+        document.getElementById('insc_cedula_busqueda').value = '';
+        resetBloquePersona();
+    }
+    checkInscripcionValid();
+});
+
+// Fecha → mostrar edad calculada en tiempo real
+document.getElementById('insc_fecha_nac').addEventListener('change', function() {
+    var edad = calcularEdad(this.value);
+    document.getElementById('insc_edad_label').textContent = edad !== null ? '· ' + edad + ' años' : '';
+});
+
+// Habilitar submit cuando cambien campos requeridos
+document.getElementById('insc_nombre').addEventListener('input', checkInscripcionValid);
+document.getElementById('insc_apellido').addEventListener('input', checkInscripcionValid);
+document.getElementById('insc_nombre_libre').addEventListener('input', checkInscripcionValid);
+
+// Reset al abrir el modal
+document.getElementById('modalInscripcion').addEventListener('show.bs.modal', function() {
+    document.getElementById('insc_es_libre').checked           = false;
+    document.getElementById('bloque_persona').style.display    = 'block';
+    document.getElementById('bloque_libre').style.display      = 'none';
+    document.getElementById('insc_cedula_busqueda').value      = '';
+    resetBloquePersona();
+});
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
