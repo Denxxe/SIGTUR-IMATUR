@@ -136,6 +136,57 @@
     </div>
 </div>
 
+<?php if (($data['taller']->estado ?? '') === 'Cancelado' && !empty($data['taller']->motivo_cancelacion)): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-left:4px solid var(--danger-500);">
+    <div class="sig-card__head">
+        <div class="sig-card__title" style="color:var(--danger-600);">
+            <i class="bi bi-x-circle"></i> Motivo de Cancelación
+        </div>
+    </div>
+    <div class="sig-card__body">
+        <p style="font-size:14px; color:var(--text-primary); white-space:pre-wrap; margin:0;">
+            <?php echo htmlspecialchars($data['taller']->motivo_cancelacion); ?>
+        </p>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($data['evidencias'])): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-images"></i> Evidencias</div>
+        <div style="font-size:12px; color:var(--text-tertiary);"><?php echo count($data['evidencias']); ?> archivo(s)</div>
+    </div>
+    <div class="sig-card__body">
+        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:var(--sp-3);">
+            <?php foreach ($data['evidencias'] as $ev): ?>
+                <?php
+                $url      = URL_ROOT . '/public/uploads/talleres/' . $ev->archivo;
+                $esPdf    = strtolower(pathinfo($ev->archivo, PATHINFO_EXTENSION)) === 'pdf';
+                $nombre   = htmlspecialchars($ev->nombre_original);
+                $fecha    = date('d/m/Y H:i', strtotime($ev->uploaded_at));
+                ?>
+                <a href="<?php echo $url; ?>" target="_blank" title="<?php echo $nombre; ?> — <?php echo $fecha; ?>"
+                   style="display:flex; flex-direction:column; align-items:center; gap:var(--sp-1); padding:var(--sp-3);
+                          background:var(--bg-muted-subtle); border-radius:8px; border:1px solid var(--border-subtle);
+                          text-decoration:none; transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
+                    <?php if ($esPdf): ?>
+                        <i class="bi bi-file-earmark-pdf" style="font-size:40px; color:var(--danger-500);"></i>
+                    <?php else: ?>
+                        <img src="<?php echo $url; ?>" alt="<?php echo $nombre; ?>"
+                             style="width:100%; height:80px; object-fit:cover; border-radius:4px;">
+                    <?php endif; ?>
+                    <span style="font-size:10px; color:var(--text-secondary); text-align:center; word-break:break-all; max-width:100%;">
+                        <?php echo mb_strimwidth($ev->nombre_original, 0, 28, '…'); ?>
+                    </span>
+                    <span style="font-size:9px; color:var(--text-tertiary);"><?php echo $fecha; ?></span>
+                </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Modal agregar participante -->
 <div class="modal fade" id="modalInscripcion" tabindex="-1">
     <div class="modal-dialog">

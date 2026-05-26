@@ -79,6 +79,10 @@
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
                         <?php if (!in_array($t->estado, ['Finalizado', 'Cancelado'])): ?>
+                            <button class="row-action" style="color:var(--brand-600);" title="Cambiar estado"
+                                    onclick='abrirCambioEstado(<?php echo $t->id; ?>, "<?php echo $t->estado; ?>", <?php echo (int)$t->total_inscritos; ?>)'>
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
                             <button class="row-action row-action--edit" onclick='editarTaller(<?php echo json_encode($t); ?>)'>
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -107,7 +111,7 @@
 
                     <!-- Toggle Interna / Externa -->
                     <div class="col-12">
-                        <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--sp-3);">
+                        <div id="toggle_inner" style="padding:var(--sp-3) var(--sp-4); background:var(--bg-muted-subtle); border-radius:8px; border:1px solid transparent; transition:background .25s,border-color .25s; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--sp-3);">
                             <div class="form-check form-switch" style="margin:0;">
                                 <input class="form-check-input" type="checkbox" id="tal_es_interna" name="es_interna" value="1">
                                 <label class="form-check-label" for="tal_es_interna" style="font-size:13px; cursor:pointer; user-select:none;">
@@ -169,6 +173,7 @@
                         <div class="sig-field">
                             <label class="sig-field__label">Fecha Fin</label>
                             <input type="date" name="fecha_fin" id="tal_fecha_fin" class="sig-input">
+                            <div class="invalid-feedback" id="msg_fecha_fin"></div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -181,6 +186,7 @@
                         <div class="sig-field">
                             <label class="sig-field__label">Hora Fin</label>
                             <input type="time" name="hora_fin" id="tal_hora_fin" class="sig-input">
+                            <div class="invalid-feedback" id="msg_hora_fin"></div>
                         </div>
                     </div>
 
@@ -217,6 +223,25 @@
                         </div>
                     </div>
 
+                    <!-- Motivo cancelación — solo visible al seleccionar Cancelado en edición -->
+                    <div id="sec_edit_cancelado" class="col-12" style="display:none;">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Motivo de cancelación <span class="req">*</span></label>
+                            <textarea name="motivo_cancelacion" id="tal_motivo_cancelacion" class="sig-textarea" rows="3"
+                                      placeholder="Indique el motivo por el que se cancela esta actividad..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Aviso participantes — visible al seleccionar En Curso en edición -->
+                    <div id="sec_edit_en_curso" class="col-12" style="display:none;">
+                        <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; border-left:3px solid var(--brand-300);">
+                            <p style="font-size:13px; color:var(--text-secondary); margin:0;">
+                                <i class="bi bi-people" style="color:var(--brand-500);"></i>
+                                Se requiere al menos 1 participante inscrito para iniciar la actividad.
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- RN-F06: Oficio — solo para actividades externas (nueva actividad) -->
                     <div id="seccion_oficio" class="col-12" style="display:none;">
                         <hr style="margin:0 0 var(--sp-2);">
@@ -249,14 +274,143 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+                <button type="submit" id="btn_guardar" class="btn-sig btn-sig--primary" disabled><i class="bi bi-check-lg"></i> Guardar</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Modal cambio rápido de estado -->
+<div class="modal fade" id="modalCambioEstado" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="formCambioEstado" action="" method="POST" enctype="multipart/form-data" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Cambiar Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; gap:var(--sp-4);">
+                <input type="hidden" id="ce_id_taller" name="ce_id_taller">
+                <input type="hidden" id="ce_estado_actual" name="ce_estado_actual">
+
+                <div class="sig-field">
+                    <label class="sig-field__label">Estado actual</label>
+                    <div id="ce_badge_actual" style="margin-top:4px;"></div>
+                </div>
+
+                <div class="sig-field">
+                    <label class="sig-field__label">Nuevo estado <span class="req">*</span></label>
+                    <select id="ce_nuevo_estado" name="nuevo_estado" class="sig-select">
+                        <option value="">Seleccione...</option>
+                    </select>
+                </div>
+
+                <!-- Sección Cancelado -->
+                <div id="sec_ce_cancelado" style="display:none;">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Motivo de cancelación <span class="req">*</span></label>
+                        <textarea id="ce_motivo" name="motivo_cancelacion" class="sig-textarea" rows="3"
+                                  placeholder="Indique el motivo por el que se cancela..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Sección En Curso -->
+                <div id="sec_ce_en_curso" style="display:none;">
+                    <div id="ce_msg_participantes" style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; border-left:3px solid var(--brand-300); font-size:13px;"></div>
+                </div>
+
+                <!-- Sección Finalizado — subir evidencias -->
+                <div id="sec_ce_finalizado" style="display:none;">
+                    <div class="sig-field">
+                        <label class="sig-field__label">Evidencias <span class="req">*</span></label>
+                        <input type="file" id="ce_evidencias" name="evidencias[]" class="sig-input"
+                               multiple accept="image/*,application/pdf">
+                        <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">
+                            <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF. Puede seleccionar varios archivos.
+                        </p>
+                        <div id="ce_evidencias_existentes" data-count="0" style="font-size:12px; color:var(--text-secondary); margin-top:var(--sp-1);"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" id="btn_ce_guardar" class="btn-sig btn-sig--primary" disabled>
+                    <i class="bi bi-arrow-repeat"></i> Cambiar Estado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.sig-input.is-invalid,
+.sig-select.is-invalid {
+    border-color: var(--danger-500) !important;
+    box-shadow: 0 0 0 2px rgba(239,68,68,.12) !important;
+}
+.sig-input.is-invalid + .invalid-feedback,
+.sig-select.is-invalid + .invalid-feedback {
+    display: block;
+    color: var(--danger-600);
+    font-size: 11px;
+    margin-top: 4px;
+}
+#btn_guardar:disabled,
+#btn_ce_guardar:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+</style>
 <script>
-// Transiciones válidas de estado (RN-F13)
+// ── Captura inicial de todas las opciones de sede ─────────────────────────
+var sedesData = [];
+(function() {
+    var sel = document.getElementById('tal_ubicacion');
+    sedesData = Array.from(sel.options).map(function(opt) {
+        return { value: opt.value, text: opt.text, esPropia: opt.dataset.sedePropia === '1' };
+    });
+})();
+
+// ── Filtrar sedes según modo interno/externo ──────────────────────────────
+function filtrarSedes(esInterna) {
+    var sel = document.getElementById('tal_ubicacion');
+    var valorPrevio = sel.value;
+    sel.innerHTML = '';
+    sedesData.forEach(function(d) {
+        if (!d.value) {
+            var ph = document.createElement('option');
+            ph.value = ''; ph.textContent = d.text;
+            sel.appendChild(ph); return;
+        }
+        var mostrar = esInterna ? d.esPropia : !d.esPropia;
+        if (mostrar) {
+            var opt = document.createElement('option');
+            opt.value = d.value; opt.textContent = d.text;
+            opt.dataset.sedePropia = d.esPropia ? '1' : '0';
+            sel.appendChild(opt);
+        }
+    });
+    var disponible = Array.from(sel.options).some(function(o) { return o.value === valorPrevio; });
+    sel.value = disponible ? valorPrevio : '';
+    evaluarOficio();
+}
+
+// ── Estilo visual del bloque toggle ──────────────────────────────────────
+function actualizarEstiloToggle(esInterna) {
+    var inner = document.getElementById('toggle_inner');
+    if (esInterna) {
+        inner.style.background      = 'var(--brand-50)';
+        inner.style.borderColor     = 'var(--brand-200)';
+        inner.style.borderLeftWidth = '3px';
+        inner.style.borderLeftColor = 'var(--brand-500)';
+    } else {
+        inner.style.background      = 'var(--bg-muted-subtle)';
+        inner.style.borderColor     = 'transparent';
+        inner.style.borderLeftWidth = '1px';
+    }
+}
+
+// ── Transiciones válidas de estado (RN-F13) ───────────────────────────────
 const TRANSICIONES = {
     'Programado': ['Programado', 'En Curso', 'Cancelado'],
     'En Curso':   ['En Curso', 'Finalizado', 'Cancelado'],
@@ -265,17 +419,75 @@ const TRANSICIONES = {
 };
 
 function setOpcionesEstado(estadoActual) {
-    const sel = document.getElementById('tal_estado');
+    var sel = document.getElementById('tal_estado');
     sel.innerHTML = '';
-    (TRANSICIONES[estadoActual] || [estadoActual]).forEach(op => {
-        const opt = document.createElement('option');
-        opt.value = op;
-        opt.textContent = op;
+    (TRANSICIONES[estadoActual] || [estadoActual]).forEach(function(op) {
+        var opt = document.createElement('option');
+        opt.value = op; opt.textContent = op;
         if (op === estadoActual) opt.selected = true;
         sel.appendChild(opt);
     });
 }
 
+// ── Validación de fechas y horas ──────────────────────────────────────────
+function validarFechas() {
+    var fi    = document.getElementById('tal_fecha_inicio').value;
+    var ff    = document.getElementById('tal_fecha_fin').value;
+    var hi    = document.getElementById('tal_hora_inicio').value;
+    var hf    = document.getElementById('tal_hora_fin').value;
+    var inFf  = document.getElementById('tal_fecha_fin');
+    var inHf  = document.getElementById('tal_hora_fin');
+    var msgFf = document.getElementById('msg_fecha_fin');
+    var msgHf = document.getElementById('msg_hora_fin');
+
+    inFf.classList.remove('is-invalid'); inHf.classList.remove('is-invalid');
+    if (msgFf) msgFf.textContent = ''; if (msgHf) msgHf.textContent = '';
+
+    if (fi && ff && ff < fi) {
+        inFf.classList.add('is-invalid');
+        if (msgFf) msgFf.textContent = 'La fecha de fin no puede ser anterior a la de inicio.';
+        return false;
+    }
+    if (hi && hf && (!ff || ff === fi) && hf < hi) {
+        inHf.classList.add('is-invalid');
+        if (msgHf) msgHf.textContent = 'La hora de fin no puede ser anterior a la de inicio.';
+        return false;
+    }
+    return true;
+}
+
+// ── Mostrar/ocultar secciones condicionales en modal edición ──────────────
+function actualizarSeccionesEstadoEdit(estado) {
+    var secCancelado = document.getElementById('sec_edit_cancelado');
+    var secEnCurso   = document.getElementById('sec_edit_en_curso');
+    var motivo       = document.getElementById('tal_motivo_cancelacion');
+
+    if (estado === 'Cancelado') {
+        secCancelado.style.display = 'block';
+        motivo.required = true;
+    } else {
+        secCancelado.style.display = 'none';
+        motivo.required = false;
+    }
+    secEnCurso.style.display = (estado === 'En Curso') ? 'block' : 'none';
+}
+
+// ── Habilitar/deshabilitar botón Guardar ──────────────────────────────────
+function checkFormValid() {
+    var nombre       = (document.getElementById('tal_nombre').value || '').trim();
+    var fechaInicio  = document.getElementById('tal_fecha_inicio').value;
+    var facil        = document.getElementById('tal_facilitador').value;
+    var fechasOk     = validarFechas();
+    var oficioVis    = document.getElementById('seccion_oficio').style.display !== 'none';
+    var oficioFecha  = oficioVis ? (document.getElementById('oficio_fecha').value || '').trim() : 'ok';
+    var canceladoVis = document.getElementById('sec_edit_cancelado').style.display !== 'none';
+    var motivoOk     = !canceladoVis || (document.getElementById('tal_motivo_cancelacion').value || '').trim() !== '';
+
+    document.getElementById('btn_guardar').disabled =
+        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && oficioFecha !== '' && motivoOk);
+}
+
+// ── Abrir modal — nueva actividad ─────────────────────────────────────────
 function nuevoTaller() {
     document.getElementById('modalTallerLabel').innerText = 'Programar Actividad';
     document.getElementById('tal_id').value = '';
@@ -286,28 +498,39 @@ function nuevoTaller() {
     document.getElementById('tal_es_interna').checked = false;
     actualizarModoInterno(false);
     ocultarOficio();
+    document.getElementById('sec_edit_cancelado').style.display = 'none';
+    document.getElementById('sec_edit_en_curso').style.display  = 'none';
+    checkFormValid();
 }
 
+// ── Abrir modal — editar actividad ────────────────────────────────────────
 function editarTaller(t) {
     document.getElementById('modalTallerLabel').innerText = 'Editar: ' + t.nombre;
-    document.getElementById('tal_id').value          = t.id;
-    document.getElementById('tal_nombre').value      = t.nombre;
-    document.getElementById('tal_descripcion').value = t.descripcion;
+    document.getElementById('tal_id').value           = t.id;
+    document.getElementById('tal_nombre').value       = t.nombre;
+    document.getElementById('tal_descripcion').value  = t.descripcion;
     document.getElementById('tal_fecha_inicio').value = t.fecha_inicio;
-    document.getElementById('tal_fecha_fin').value   = t.fecha_fin || '';
-    document.getElementById('tal_hora_inicio').value = t.hora_inicio || '';
-    document.getElementById('tal_hora_fin').value    = t.hora_fin || '';
-    document.getElementById('tal_ubicacion').value   = t.id_ubicacion_formacion || '';
-    document.getElementById('tal_facilitador').value = t.id_facilitador;
-    document.getElementById('tal_cupo').value        = t.cupo_maximo;
-    document.getElementById('tal_tipo').value        = t.tipo_actividad || 'Taller';
-    const esInterna = t.es_interna == true || t.es_interna === 't' || t.es_interna === '1';
+    document.getElementById('tal_fecha_fin').value    = t.fecha_fin   || '';
+    document.getElementById('tal_hora_inicio').value  = t.hora_inicio || '';
+    document.getElementById('tal_hora_fin').value     = t.hora_fin    || '';
+    document.getElementById('tal_facilitador').value  = t.id_facilitador;
+    document.getElementById('tal_cupo').value         = t.cupo_maximo;
+    document.getElementById('tal_tipo').value         = t.tipo_actividad || 'Taller';
+    document.getElementById('tal_motivo_cancelacion').value = t.motivo_cancelacion || '';
+
+    var esInterna = t.es_interna == true || t.es_interna === 't' || t.es_interna === '1';
     document.getElementById('tal_es_interna').checked = esInterna;
-    document.getElementById('tal_tipo_ente').value = t.tipo_ente || '';
-    actualizarModoInterno(esInterna);
+    document.getElementById('tal_tipo_ente').value    = t.tipo_ente || '';
+
+    actualizarEstiloToggle(esInterna);
+    document.getElementById('bloque_tipo_ente').style.display = esInterna ? 'none' : 'flex';
+    filtrarSedes(esInterna);
+    document.getElementById('tal_ubicacion').value = t.id_ubicacion_formacion || '';
+
     setOpcionesEstado(t.estado);
-    // En edición nunca se muestra el oficio (ya fue registrado al crear)
+    actualizarSeccionesEstadoEdit(t.estado);
     ocultarOficio();
+    checkFormValid();
     new bootstrap.Modal(document.getElementById('modalTaller')).show();
 }
 
@@ -318,19 +541,20 @@ function ocultarOficio() {
 
 function actualizarModoInterno(esInterna) {
     document.getElementById('bloque_tipo_ente').style.display = esInterna ? 'none' : 'flex';
+    actualizarEstiloToggle(esInterna);
+    filtrarSedes(esInterna);
     if (esInterna) ocultarOficio();
-    // Si es interna, forzar re-evaluar la visibilidad de oficio
-    if (!esInterna) evaluarOficio();
+    checkFormValid();
 }
 
 function evaluarOficio() {
-    const esNueva    = !document.getElementById('tal_id').value;
-    const esInterna  = document.getElementById('tal_es_interna').checked;
-    const sel        = document.getElementById('tal_ubicacion');
-    const opt        = sel.options[sel.selectedIndex];
-    const esPropia   = opt && opt.value && opt.dataset.sedePropia === '1';
-    const seccion    = document.getElementById('seccion_oficio');
-    const fechaInput = document.getElementById('oficio_fecha');
+    var esNueva    = !document.getElementById('tal_id').value;
+    var esInterna  = document.getElementById('tal_es_interna').checked;
+    var sel        = document.getElementById('tal_ubicacion');
+    var opt        = sel.options[sel.selectedIndex];
+    var esPropia   = opt && opt.value && opt.dataset.sedePropia === '1';
+    var seccion    = document.getElementById('seccion_oficio');
+    var fechaInput = document.getElementById('oficio_fecha');
 
     if (esNueva && !esInterna && opt && opt.value && !esPropia) {
         seccion.style.display = 'block';
@@ -338,14 +562,103 @@ function evaluarOficio() {
     } else {
         ocultarOficio();
     }
+    checkFormValid();
 }
 
-document.getElementById('tal_es_interna').addEventListener('change', function () {
+// ── Cambio rápido de estado ───────────────────────────────────────────────
+function estadoBadgeClass(estado) {
+    var map = {
+        'Programado': 'sig-badge--warning',
+        'En Curso':   'sig-badge--brand',
+        'Finalizado': 'sig-badge--success',
+        'Cancelado':  'sig-badge--danger'
+    };
+    return map[estado] || 'sig-badge--neutral';
+}
+
+function abrirCambioEstado(id, estadoActual, totalInscritos) {
+    document.getElementById('ce_id_taller').value      = id;
+    document.getElementById('ce_estado_actual').value  = estadoActual;
+    document.getElementById('formCambioEstado').action = '<?php echo URL_ROOT; ?>/talleres/cambiarEstado/' + id;
+
+    document.getElementById('ce_badge_actual').innerHTML =
+        '<span class="sig-badge ' + estadoBadgeClass(estadoActual) + '">' + estadoActual + '</span>';
+
+    var transiciones = TRANSICIONES[estadoActual] || [];
+    var sel = document.getElementById('ce_nuevo_estado');
+    sel.innerHTML = '<option value="">Seleccione...</option>';
+    transiciones.filter(function(op) { return op !== estadoActual; }).forEach(function(op) {
+        var opt = document.createElement('option');
+        opt.value = op; opt.textContent = op;
+        sel.appendChild(opt);
+    });
+    sel.dataset.totalInscritos = totalInscritos;
+
+    document.getElementById('sec_ce_cancelado').style.display  = 'none';
+    document.getElementById('sec_ce_en_curso').style.display   = 'none';
+    document.getElementById('sec_ce_finalizado').style.display = 'none';
+    document.getElementById('ce_motivo').value  = '';
+    document.getElementById('ce_evidencias').value = '';
+    document.getElementById('ce_evidencias_existentes').innerHTML  = '';
+    document.getElementById('ce_evidencias_existentes').dataset.count = '0';
+    document.getElementById('btn_ce_guardar').disabled = true;
+
+    new bootstrap.Modal(document.getElementById('modalCambioEstado')).show();
+}
+
+function checkCambioEstadoValid() {
+    var estado = document.getElementById('ce_nuevo_estado').value;
+    if (!estado) { document.getElementById('btn_ce_guardar').disabled = true; return; }
+    var motivoOk    = estado !== 'Cancelado'  || (document.getElementById('ce_motivo').value || '').trim() !== '';
+    var tieneExist  = parseInt(document.getElementById('ce_evidencias_existentes').dataset.count || '0', 10) > 0;
+    var evidenciaOk = estado !== 'Finalizado' || tieneExist || document.getElementById('ce_evidencias').files.length > 0;
+    document.getElementById('btn_ce_guardar').disabled = !(motivoOk && evidenciaOk);
+}
+
+// ── Event listeners ───────────────────────────────────────────────────────
+document.getElementById('tal_es_interna').addEventListener('change', function() {
     actualizarModoInterno(this.checked);
 });
-
-// RN-F06: mostrar sección oficio solo para nuevas actividades externas no internas
+document.getElementById('tal_estado').addEventListener('change', function() {
+    actualizarSeccionesEstadoEdit(this.value);
+    checkFormValid();
+});
 document.getElementById('tal_ubicacion').addEventListener('change', evaluarOficio);
+document.getElementById('tal_nombre').addEventListener('input', checkFormValid);
+document.getElementById('tal_facilitador').addEventListener('change', checkFormValid);
+document.getElementById('tal_fecha_inicio').addEventListener('change', checkFormValid);
+document.getElementById('tal_fecha_fin').addEventListener('change', checkFormValid);
+document.getElementById('tal_hora_inicio').addEventListener('change', checkFormValid);
+document.getElementById('tal_hora_fin').addEventListener('change', checkFormValid);
+document.getElementById('oficio_fecha').addEventListener('change', checkFormValid);
+document.getElementById('tal_motivo_cancelacion').addEventListener('input', checkFormValid);
+
+document.getElementById('ce_nuevo_estado').addEventListener('change', function() {
+    var estado         = this.value;
+    var totalInscritos = parseInt(this.dataset.totalInscritos || '0', 10);
+
+    document.getElementById('sec_ce_cancelado').style.display  = estado === 'Cancelado'  ? 'block' : 'none';
+    document.getElementById('sec_ce_en_curso').style.display   = estado === 'En Curso'   ? 'block' : 'none';
+    document.getElementById('sec_ce_finalizado').style.display = estado === 'Finalizado' ? 'block' : 'none';
+
+    if (estado === 'En Curso') {
+        var color = totalInscritos > 0 ? 'var(--success-600)' : 'var(--danger-600)';
+        var icon  = totalInscritos > 0 ? 'bi-check-circle'    : 'bi-exclamation-circle';
+        document.getElementById('ce_msg_participantes').innerHTML =
+            '<i class="bi ' + icon + '" style="color:' + color + ';"></i> ' +
+            '<strong>' + totalInscritos + '</strong> participante(s) inscrito(s).' +
+            (totalInscritos === 0
+                ? ' <span style="color:var(--danger-600);">Se requiere al menos 1 para iniciar.</span>'
+                : '');
+    }
+    checkCambioEstadoValid();
+});
+document.getElementById('ce_motivo').addEventListener('input', checkCambioEstadoValid);
+document.getElementById('ce_evidencias').addEventListener('change', checkCambioEstadoValid);
+
+document.querySelector('#modalTaller form').addEventListener('submit', function(e) {
+    if (!validarFechas()) e.preventDefault();
+});
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

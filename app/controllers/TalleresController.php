@@ -2,8 +2,8 @@
 class TalleresController extends Controller {
 
     public function index() {
-        $talleres   = Taller::all();
-        $empleados  = Empleado::all();
+        $talleres    = Taller::all();
+        $empleados   = Empleado::facilitadoresTalleres();
         $ubicaciones = UbicacionFormacion::all();
 
         $data = [
@@ -48,6 +48,7 @@ class TalleresController extends Controller {
             'id_oficio'              => null,
             // RN-F13: nuevas actividades siempre inician como Programado
             'estado'                 => $esEdicion ? $_POST['estado'] : 'Programado',
+            'motivo_cancelacion'     => null,
         ];
 
         try {
@@ -70,6 +71,24 @@ class TalleresController extends Controller {
                     if (Taller::getInforme($data['id']) === false || Taller::getInforme($data['id']) === null) {
                         throw new Exception('No se puede finalizar una actividad sin completar el Reporte Oficial de Actividad (informe demográfico). Ir a Detalle → Reporte Oficial.');
                     }
+                }
+
+                // RN-F13: Cancelado requiere motivo registrado
+                if ($data['estado'] === 'Cancelado') {
+                    $motivo = trim($_POST['motivo_cancelacion'] ?? '');
+                    if (empty($motivo)) {
+                        $existing = $actual->motivo_cancelacion ?? null;
+                        if (empty($existing)) {
+                            throw new Exception('Debe indicar el motivo de cancelación.');
+                        }
+                        $data['motivo_cancelacion'] = $existing;
+                    } else {
+                        $data['motivo_cancelacion'] = $motivo;
+                    }
+                }
+                // Finalizado vía modal edición requiere evidencias ya guardadas
+                if ($data['estado'] === 'Finalizado' && Taller::countEvidencias($data['id']) === 0) {
+                    throw new Exception('Debe subir evidencias antes de finalizar. Use "Cambiar Estado" en la tarjeta.');
                 }
             } else {
                 // RN-F05/F06: actividad externa con sede no propia requiere oficio
@@ -115,11 +134,13 @@ class TalleresController extends Controller {
             exit;
         }
         $participantes = Taller::getParticipantes($id);
+        $evidencias    = Taller::getEvidencias((int)$id);
 
         $data = [
             'titulo'        => 'Detalle: ' . $taller->nombre,
             'taller'        => $taller,
-            'participantes' => $participantes
+            'participantes' => $participantes,
+            'evidencias'    => $evidencias,
         ];
         $this->view('talleres/detalle', $data);
     }
@@ -254,6 +275,93 @@ class TalleresController extends Controller {
             'config'        => $config,
         ];
         $this->view('talleres/informe_imprimible', $data);
+    }
+
+    public function cambiarEstado($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+
+        $_POST  = $this->sanitizePost();
+        $userId = $this->getUserId();
+
+        $taller = Taller::find($id);
+        if (!$taller) {
+            flash('global_msg', 'Actividad no encontrada.', 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+
+        $nuevoEstado = $_POST['nuevo_estado'] ?? '';
+
+        try {
+            $this->validarTransicion($taller->estado, $nuevoEstado);
+
+            $motivo = null;
+
+            if ($nuevoEstado === 'Cancelado') {
+                $motivo = trim($_POST['motivo_cancelacion'] ?? '');
+                if (empty($motivo)) {
+                    throw new Exception('Debe indicar el motivo de cancelación.');
+                }
+            }
+
+            if ($nuevoEstado === 'En Curso') {
+                if (Taller::countParticipantes((int)$id) === 0) {
+                    throw new Exception('No se puede iniciar sin participantes inscritos (RN-F12).');
+                }
+            }
+
+            if ($nuevoEstado === 'Finalizado') {
+                if (Taller::countParticipantes((int)$id) === 0) {
+                    throw new Exception('No se puede finalizar sin participantes inscritos (RN-F12).');
+                }
+                if (Taller::getInforme($id) === false || Taller::getInforme($id) === null) {
+                    throw new Exception('Complete el Reporte Oficial de Actividad antes de finalizar.');
+                }
+
+                // Subir archivos de evidencia si se enviaron
+                if (!empty($_FILES['evidencias']['name'][0])) {
+                    $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
+                    if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+                    $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
+                    $archivos = [];
+                    $count    = count($_FILES['evidencias']['name']);
+
+                    for ($i = 0; $i < $count; $i++) {
+                        if ($_FILES['evidencias']['error'][$i] !== UPLOAD_ERR_OK) continue;
+                        $tipo = $_FILES['evidencias']['type'][$i];
+                        if (!in_array($tipo, $allowedTypes)) {
+                            throw new Exception('Tipo de archivo no permitido. Solo imágenes y PDF.');
+                        }
+                        $ext    = strtolower(pathinfo($_FILES['evidencias']['name'][$i], PATHINFO_EXTENSION));
+                        $nombre = 'ev_' . $id . '_' . time() . '_' . $i . '.' . $ext;
+                        if (!move_uploaded_file($_FILES['evidencias']['tmp_name'][$i], $dir . $nombre)) {
+                            throw new Exception('Error al mover el archivo de evidencia.');
+                        }
+                        $archivos[] = [
+                            'archivo'         => $nombre,
+                            'nombre_original' => $_FILES['evidencias']['name'][$i],
+                            'tipo_archivo'    => $tipo,
+                        ];
+                    }
+                    if (!empty($archivos)) {
+                        Taller::saveEvidencias((int)$id, $archivos, $userId);
+                    }
+                }
+
+                if (Taller::countEvidencias((int)$id) === 0) {
+                    throw new Exception('Debe subir al menos una evidencia para finalizar la actividad.');
+                }
+            }
+
+            Taller::cambiarEstado((int)$id, $nuevoEstado, $motivo, $userId);
+            flash('global_msg', 'Estado actualizado a "' . $nuevoEstado . '" correctamente.');
+
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+
+        header('Location: ' . URL_ROOT . '/talleres/index');
     }
 
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────

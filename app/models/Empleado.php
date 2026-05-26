@@ -56,12 +56,37 @@ class Empleado extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT e.*, p.cedula, p.nombre, p.apellido, c.nombre as cargo, d.nombre as departamento 
+        $db->query("SELECT e.*, p.cedula, p.nombre, p.apellido, c.nombre as cargo, d.nombre as departamento
                     FROM empleados e
                     INNER JOIN personas p ON e.id_persona = p.id
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
+                    ORDER BY p.nombre ASC");
+        return $db->resultSet();
+    }
+
+    /**
+     * Empleados que pueden ser facilitadores de talleres:
+     * pertenecen a departamentos de Turismo o Formación, o tienen usuario con rol Admin.
+     */
+    public static function facilitadoresTalleres()
+    {
+        $db = new Database();
+        $db->query("SELECT e.*, p.cedula, p.nombre, p.apellido, c.nombre as cargo, d.nombre as departamento
+                    FROM empleados e
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    INNER JOIN cargos c ON e.id_cargo = c.id
+                    INNER JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE e.is_active = TRUE AND p.is_active = TRUE
+                    AND (
+                        d.nombre ILIKE '%turismo%'
+                        OR d.nombre ILIKE '%formaci%'
+                        OR EXISTS (
+                            SELECT 1 FROM usuarios u
+                            WHERE u.id_empleado = e.id AND u.id_rol = 1 AND u.is_active = TRUE
+                        )
+                    )
                     ORDER BY p.nombre ASC");
         return $db->resultSet();
     }

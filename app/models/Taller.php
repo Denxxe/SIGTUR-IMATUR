@@ -15,6 +15,7 @@ class Taller extends Model {
     private ?int    $id_oficio;
     private bool    $es_interna;
     private ?string $tipo_ente;
+    private ?string $motivo_cancelacion;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -34,6 +35,7 @@ class Taller extends Model {
             $this->id_oficio              = $data['id_oficio'] ?? null;
             $this->es_interna             = !empty($data['es_interna']);
             $this->tipo_ente              = $data['tipo_ente'] ?? null;
+            $this->motivo_cancelacion     = $data['motivo_cancelacion'] ?? null;
         }
     }
 
@@ -41,7 +43,8 @@ class Taller extends Model {
         $db = new Database();
         $db->query("SELECT t.*, uf.nombre AS ubicacion, uf.es_sede_propia,
                            p.nombre AS facilitador_nombre, p.apellido AS facilitador_apellido,
-                           (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) AS total_inscritos
+                           (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) AS total_inscritos,
+                           (SELECT COUNT(*) FROM taller_evidencias   te WHERE te.id_taller = t.id AND te.is_active = TRUE) AS total_evidencias
                     FROM talleres t
                     LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
                     LEFT JOIN empleados e  ON t.id_facilitador = e.id
@@ -76,6 +79,7 @@ class Taller extends Model {
                                   id_facilitador=:id_facilitador, cupo_maximo=:cupo_maximo,
                                   estado=:estado, tipo_actividad=:tipo_actividad,
                                   es_interna=:es_interna, tipo_ente=:tipo_ente,
+                                  motivo_cancelacion=:motivo_cancelacion,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -105,6 +109,7 @@ class Taller extends Model {
         $this->db->bind(':tipo_actividad',         $this->tipo_actividad);
         $this->db->bind(':es_interna',             $this->es_interna);
         $this->db->bind(':tipo_ente',              $this->tipo_ente);
+        $this->db->bind(':motivo_cancelacion',     $this->motivo_cancelacion);
         $this->db->bind(':user_id',                $user_id);
         $result = $this->db->execute();
         $this->audit('talleres', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'tipo_actividad' => $this->tipo_actividad, 'fecha_inicio' => $this->fecha_inicio, 'fecha_fin' => $this->fecha_fin, 'cupo_maximo' => $this->cupo_maximo], $user_id);
@@ -255,5 +260,51 @@ class Taller extends Model {
         $total  = (int)$data['mujeres'] + (int)$data['hombres'] + (int)$data['ninas'] + (int)$data['ninos'];
         self::auditStatic('taller_informes', $op, (int)$data['id_taller'], $inf ?: null, ['id_taller' => $data['id_taller'], 'mujeres' => $data['mujeres'], 'hombres' => $data['hombres'], 'ninas' => $data['ninas'], 'ninos' => $data['ninos'], 'total_atendidas' => $total], $userId);
         return $result;
+    }
+
+    // ── Evidencias ───────────────────────────────────────────────────────────
+
+    public static function countEvidencias(int $id_taller): int {
+        $db = new Database();
+        $db->query("SELECT COUNT(*) AS total FROM taller_evidencias WHERE id_taller = :id AND is_active = TRUE");
+        $db->bind(':id', $id_taller);
+        $row = $db->single();
+        return (int)($row->total ?? 0);
+    }
+
+    public static function getEvidencias(int $id_taller): array {
+        $db = new Database();
+        $db->query("SELECT * FROM taller_evidencias WHERE id_taller = :id AND is_active = TRUE ORDER BY uploaded_at ASC");
+        $db->bind(':id', $id_taller);
+        return $db->resultSet() ?: [];
+    }
+
+    public static function saveEvidencias(int $id_taller, array $archivos, $userId): void {
+        $db = new Database();
+        foreach ($archivos as $arch) {
+            $db->query("INSERT INTO taller_evidencias (id_taller, archivo, nombre_original, tipo_archivo, uploaded_by)
+                        VALUES (:id_taller, :archivo, :nombre_original, :tipo_archivo, :uid)");
+            $db->bind(':id_taller',       $id_taller);
+            $db->bind(':archivo',         $arch['archivo']);
+            $db->bind(':nombre_original', $arch['nombre_original']);
+            $db->bind(':tipo_archivo',    $arch['tipo_archivo']);
+            $db->bind(':uid',             $userId);
+            $db->execute();
+        }
+        self::auditStatic('taller_evidencias', 'INSERT', $id_taller, null, ['id_taller' => $id_taller, 'total_subidas' => count($archivos)], $userId);
+    }
+
+    // Actualiza solo el estado y el motivo (para el cambio rápido de estado desde la tarjeta)
+    public static function cambiarEstado(int $id, string $estado, ?string $motivoCancelacion, $userId): bool {
+        $db = new Database();
+        $db->query("UPDATE talleres
+                    SET estado=:estado, motivo_cancelacion=:motivo,
+                        updated_at=CURRENT_TIMESTAMP, updated_by=:uid
+                    WHERE id=:id");
+        $db->bind(':estado', $estado);
+        $db->bind(':motivo', $motivoCancelacion);
+        $db->bind(':uid',    $userId);
+        $db->bind(':id',     $id);
+        return $db->execute();
     }
 }
