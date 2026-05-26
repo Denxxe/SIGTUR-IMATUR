@@ -64,7 +64,7 @@
             <?php if(in_array($rol, [1, 2, 3, 5])): ?>
             <div class="sidebar__group-label">Recepción</div>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
-                <i class="bi bi-door-open"></i> <span>Recepción</span>
+                <i class="bi bi-door-open"></i> <span>Visitas</span>
             </a>
             <?php endif; ?>
 

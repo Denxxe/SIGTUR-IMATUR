@@ -1,7 +1,7 @@
 <?php
 class Visita extends Model {
 
-    public static function getRecientes() {
+    public static function getRecientesToday() {
         $db = new Database();
         $db->query("
             SELECT vi.*,
@@ -17,7 +17,8 @@ class Visita extends Model {
             LEFT JOIN personas  p   ON vt.id_persona   = p.id
             LEFT JOIN empleados e   ON vi.id_empleado  = e.id
             LEFT JOIN personas  ep  ON e.id_persona    = ep.id
-            WHERE  vi.is_active = TRUE
+            WHERE  vi.is_active = TRUE 
+            AND    DATE(vi.hora_entrada) = CURRENT_DATE
             ORDER  BY vi.hora_entrada DESC
             LIMIT  100
         ");

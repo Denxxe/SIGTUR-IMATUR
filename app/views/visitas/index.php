@@ -134,7 +134,6 @@
                                     <option value="">Sin especificar</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
-                                    <option value="O">Otro</option>
                                 </select>
                             </div>
                         </div>
@@ -178,7 +177,7 @@
 
                         <button type="submit" id="btn_procesar" class="btn-sig btn-sig--primary"
                                 style="width:100%; height:48px; font-size:16px;" disabled>
-                            <i class="bi bi-check-circle"></i> PROCESAR MARCAJE
+                            <i class="bi bi-check-circle"></i> Registrar visita
                         </button>
                     </div>
 

@@ -12,11 +12,11 @@ class VisitantesController extends Controller {
     }
 
     public function index() {
-        $movimientos = Visita::getRecientes();
+        $movimientos = Visita::getRecientesToday();
         $empleados   = Empleado::all();
 
         $data = [
-            'titulo'       => 'Recepción y Control de Visitas',
+            'titulo'       => 'Recepción',
             'movimientos'  => $movimientos,
             'empleados'    => $empleados,
         ];
