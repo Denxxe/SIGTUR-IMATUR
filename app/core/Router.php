@@ -30,16 +30,8 @@ class Router {
         // --- RBAC Middleware (Control de Acceso por Rol) ---
         if (isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
             $rolId = $_SESSION['user_rol'] ?? 0;
-            // Mapa de permisos: rol_id => controladores permitidos
-            // 1=Administrador(todo), 2=RRHH, 3=Turismo, 4=Inventario
-            $permisos = [
-                1 => '*', // Acceso total
-                2 => ['DashboardController','EmpleadosController','CargosController','DepartamentosController','AsistenciasController','VisitantesController','VisitasController','ReportesController','ConfigController'],
-                3 => ['DashboardController','RutasController','ActividadesrutaController','TalleresController','UbicacionesformacionController','PasantesController','VisitantesController','VisitasController','ReportesController'],
-                4 => ['DashboardController','InventarioController','CategoriasController','UbicacionesController','ActividadesinventarioController','ReportesController'],
-                5 => ['DashboardController','VisitantesController','VisitasController','AsistenciasController']
-            ];
-
+            require_once '../app/controllers/RolesController.php';
+            $permisos   = RolesController::getMapaRbac();
             $permitidos = $permisos[$rolId] ?? [];
             if ($permitidos !== '*' && !in_array($this->currentController, $permitidos)) {
                 $this->currentController = 'DashboardController';
