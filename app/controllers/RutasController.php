@@ -152,13 +152,14 @@ class RutasController extends Controller {
     }
 
     public function desinscribir($id_participante) {
-        $db = new Database();
-        $db->query("SELECT id_ruta FROM participantes_ruta WHERE id = :id");
-        $db->bind(':id', $id_participante);
-        $row = $db->single();
-        $id_ruta = $row ? $row->id_ruta : 0;
-
+        $id_ruta = 0;
         try {
+            $db = new Database();
+            $db->query("SELECT id_ruta FROM participantes_ruta WHERE id = :id");
+            $db->bind(':id', $id_participante);
+            $row     = $db->single();
+            $id_ruta = $row ? $row->id_ruta : 0;
+
             Ruta::desinscribir((int)$id_participante, $this->getUserId());
             flash('global_msg', 'Participante removido.', 'warning');
         } catch (Exception $e) {

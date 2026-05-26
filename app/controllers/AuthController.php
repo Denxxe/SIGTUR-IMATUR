@@ -36,7 +36,13 @@ class AuthController extends Controller {
             }
 
             if (empty($data['username_err']) && empty($data['password_err'])) {
-                $loggedInUser = Usuario::findByUsername($data['username']);
+                try {
+                    $loggedInUser = Usuario::findByUsername($data['username']);
+                } catch (Exception $e) {
+                    $data['username_err'] = 'Error de conexión con el sistema. Intente más tarde.';
+                    $this->view('auth/login', $data);
+                    return;
+                }
 
                 if ($loggedInUser) {
                     if (password_verify($data['password'], $loggedInUser->password)) {

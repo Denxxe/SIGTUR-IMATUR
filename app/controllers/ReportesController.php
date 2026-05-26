@@ -26,73 +26,88 @@ class ReportesController extends Controller {
     // =========================================================================
     public function asistencia() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryAsistencia();
-        $stats = $this->statsAsistencia();
+        try {
+            $registros = $this->queryAsistencia();
+            $stats     = $this->statsAsistencia();
 
-        $data = [
-            'titulo' => 'Reporte de Asistencia',
-            'registros' => $registros,
-            'stats' => $stats,
-            'fecha_inicio' => $_GET['fecha_inicio'] ?? date('Y-m-01'),
-            'fecha_fin' => $_GET['fecha_fin'] ?? date('Y-m-d')
-        ];
-        $this->view('reportes/asistencia', $data);
+            $data = [
+                'titulo'       => 'Reporte de Asistencia',
+                'registros'    => $registros,
+                'stats'        => $stats,
+                'fecha_inicio' => $_GET['fecha_inicio'] ?? date('Y-m-01'),
+                'fecha_fin'    => $_GET['fecha_fin']    ?? date('Y-m-d'),
+            ];
+            $this->view('reportes/asistencia', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de asistencia: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarAsistenciaCsv() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryAsistencia();
-        $headers = ['Fecha', 'Nombre', 'Apellido', 'Cédula', 'Departamento', 'Entrada', 'Salida', 'Observación'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [$r->fecha, $r->nombre, $r->apellido, $r->cedula, $r->departamento, $r->hora_entrada, $r->hora_salida ?? '', $r->observacion ?? ''];
+        try {
+            $registros = $this->queryAsistencia();
+            $headers   = ['Fecha', 'Nombre', 'Apellido', 'Cédula', 'Departamento', 'Entrada', 'Salida', 'Observación'];
+            $rows      = [];
+            foreach ($registros as $r) {
+                $rows[] = [$r->fecha, $r->nombre, $r->apellido, $r->cedula, $r->departamento, $r->hora_entrada, $r->hora_salida ?? '', $r->observacion ?? ''];
+            }
+            $this->exportCsv('reporte_asistencia', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('reporte_asistencia', $headers, $rows);
     }
 
     public function exportarAsistenciaPdf() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryAsistencia();
-        $stats = $this->statsAsistencia();
-        $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $ff = $_GET['fecha_fin'] ?? date('Y-m-d');
+        try {
+            $registros = $this->queryAsistencia();
+            $stats     = $this->statsAsistencia();
+            $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
+            $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-        $headers = ['Fecha', 'Empleado', 'Cédula', 'Departamento', 'Entrada', 'Salida'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [$r->fecha, $r->nombre . ' ' . $r->apellido, $r->cedula, $r->departamento, $r->hora_entrada, $r->hora_salida ?? '-'];
+            $headers = ['Fecha', 'Empleado', 'Cédula', 'Departamento', 'Entrada', 'Salida'];
+            $rows    = [];
+            foreach ($registros as $r) {
+                $rows[] = [$r->fecha, $r->nombre . ' ' . $r->apellido, $r->cedula, $r->departamento, $r->hora_entrada, $r->hora_salida ?? '-'];
+            }
+            $kpis = [
+                'Total Registros'  => $stats->total,
+                'Empleados Únicos' => $stats->empleados_unicos,
+                'Período'          => "$fi a $ff",
+            ];
+            $this->exportPdf("Reporte de Asistencia", "Período: $fi — $ff", $headers, $rows, $kpis);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $kpis = [
-            'Total Registros' => $stats->total,
-            'Empleados Únicos' => $stats->empleados_unicos,
-            'Período' => "$fi a $ff"
-        ];
-        $this->exportPdf("Reporte de Asistencia", "Período: $fi — $ff", $headers, $rows, $kpis);
     }
 
     private function queryAsistencia() {
         $db = new Database();
         $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $ff = $_GET['fecha_fin'] ?? date('Y-m-d');
+        $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
 
         $db->query("SELECT a.fecha, a.hora_entrada, a.hora_salida, a.observacion,
                            p.nombre, p.apellido, p.cedula, d.nombre as departamento
                     FROM asistencias a
-                    INNER JOIN empleados e ON a.id_empleado = e.id
-                    INNER JOIN personas p ON e.id_persona = p.id
+                    INNER JOIN empleados e    ON a.id_empleado = e.id
+                    INNER JOIN personas p     ON e.id_persona  = p.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
-                    WHERE a.is_active = TRUE 
+                    WHERE a.is_active = TRUE
                       AND a.fecha BETWEEN :fecha_inicio AND :fecha_fin
                     ORDER BY a.fecha DESC, p.apellido ASC");
         $db->bind(':fecha_inicio', $fi);
-        $db->bind(':fecha_fin', $ff);
+        $db->bind(':fecha_fin',    $ff);
         return $db->resultSet();
     }
 
     private function statsAsistencia() {
         $db = new Database();
         $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $ff = $_GET['fecha_fin'] ?? date('Y-m-d');
+        $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
         $db->query("SELECT COUNT(*) as total, COUNT(DISTINCT id_empleado) as empleados_unicos
                     FROM asistencias WHERE is_active = TRUE AND fecha BETWEEN :fi AND :ff");
         $db->bind(':fi', $fi);
@@ -105,60 +120,75 @@ class ReportesController extends Controller {
     // =========================================================================
     public function talleres() {
         $this->requireRoles([1, 3]);
-        $talleres = $this->queryTalleres();
-        $stats = $this->statsTalleres();
+        try {
+            $talleres = $this->queryTalleres();
+            $stats    = $this->statsTalleres();
 
-        $data = [
-            'titulo' => 'Reporte de Talleres y Formación',
-            'talleres' => $talleres,
-            'stats' => $stats,
-            'estado_filtro' => $_GET['estado'] ?? ''
-        ];
-        $this->view('reportes/talleres', $data);
+            $data = [
+                'titulo'        => 'Reporte de Talleres y Formación',
+                'talleres'      => $talleres,
+                'stats'         => $stats,
+                'estado_filtro' => $_GET['estado'] ?? '',
+            ];
+            $this->view('reportes/talleres', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de talleres: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarTalleresCsv() {
         $this->requireRoles([1, 3]);
-        $talleres = $this->queryTalleres();
-        $headers = ['Taller', 'Facilitador', 'Sede', 'Fecha Inicio', 'Estado', 'Inscritos', 'Cupo Máximo'];
-        $rows = [];
-        foreach ($talleres as $t) {
-            $rows[] = [$t->nombre, $t->facilitador_nombre . ' ' . $t->facilitador_apellido, $t->sede ?? 'Sin sede', $t->fecha_inicio, $t->estado, $t->total_inscritos, $t->cupo_maximo];
+        try {
+            $talleres = $this->queryTalleres();
+            $headers  = ['Taller', 'Facilitador', 'Sede', 'Fecha Inicio', 'Estado', 'Inscritos', 'Cupo Máximo'];
+            $rows     = [];
+            foreach ($talleres as $t) {
+                $rows[] = [$t->nombre, $t->facilitador_nombre . ' ' . $t->facilitador_apellido, $t->sede ?? 'Sin sede', $t->fecha_inicio, $t->estado, $t->total_inscritos, $t->cupo_maximo];
+            }
+            $this->exportCsv('reporte_talleres', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('reporte_talleres', $headers, $rows);
     }
 
     public function exportarTalleresPdf() {
         $this->requireRoles([1, 3]);
-        $talleres = $this->queryTalleres();
-        $stats = $this->statsTalleres();
+        try {
+            $talleres = $this->queryTalleres();
+            $stats    = $this->statsTalleres();
 
-        $headers = ['Taller', 'Facilitador', 'Sede', 'Fecha', 'Estado', 'Inscritos/Cupo'];
-        $rows = [];
-        foreach ($talleres as $t) {
-            $rows[] = [$t->nombre, $t->facilitador_nombre . ' ' . $t->facilitador_apellido, $t->sede ?? '-', $t->fecha_inicio, $t->estado, $t->total_inscritos . '/' . $t->cupo_maximo];
+            $headers = ['Taller', 'Facilitador', 'Sede', 'Fecha', 'Estado', 'Inscritos/Cupo'];
+            $rows    = [];
+            foreach ($talleres as $t) {
+                $rows[] = [$t->nombre, $t->facilitador_nombre . ' ' . $t->facilitador_apellido, $t->sede ?? '-', $t->fecha_inicio, $t->estado, $t->total_inscritos . '/' . $t->cupo_maximo];
+            }
+            $kpis = [
+                'Total Talleres'         => $stats->total_talleres,
+                'Finalizados'            => $stats->finalizados,
+                'En Curso'               => $stats->en_curso,
+                'Participantes Totales'  => $stats->total_participantes,
+            ];
+            $this->exportPdf("Reporte de Talleres y Formación", "IMATUR — Formación Comunitaria", $headers, $rows, $kpis);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $kpis = [
-            'Total Talleres' => $stats->total_talleres,
-            'Finalizados' => $stats->finalizados,
-            'En Curso' => $stats->en_curso,
-            'Participantes Totales' => $stats->total_participantes
-        ];
-        $this->exportPdf("Reporte de Talleres y Formación", "IMATUR — Formación Comunitaria", $headers, $rows, $kpis);
     }
 
     private function queryTalleres() {
-        $db = new Database();
+        $db     = new Database();
         $estado = $_GET['estado'] ?? '';
-        $sql = "SELECT t.*, uf.nombre as sede, 
+        $sql = "SELECT t.*, uf.nombre as sede,
                        p.nombre as facilitador_nombre, p.apellido as facilitador_apellido,
                        inf.mujeres, inf.hombres, inf.ninas, inf.ninos, inf.total_atendidas,
                        (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) as total_inscritos
                 FROM talleres t
                 LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
-                LEFT JOIN taller_informes inf ON t.id = inf.id_taller
-                INNER JOIN empleados e ON t.id_facilitador = e.id
-                INNER JOIN personas p ON e.id_persona = p.id
+                LEFT JOIN taller_informes inf        ON t.id = inf.id_taller
+                INNER JOIN empleados e               ON t.id_facilitador = e.id
+                INNER JOIN personas p                ON e.id_persona = p.id
                 WHERE t.is_active = TRUE";
         if (!empty($estado)) $sql .= " AND t.estado = :estado";
         $sql .= " ORDER BY t.fecha_inicio DESC";
@@ -171,7 +201,7 @@ class ReportesController extends Controller {
         $db = new Database();
         $db->query("SELECT COUNT(*) as total_talleres,
                         COUNT(CASE WHEN estado = 'Finalizado' THEN 1 END) as finalizados,
-                        COUNT(CASE WHEN estado = 'En Curso' THEN 1 END) as en_curso,
+                        COUNT(CASE WHEN estado = 'En Curso'   THEN 1 END) as en_curso,
                         COUNT(CASE WHEN estado = 'Programado' THEN 1 END) as programados,
                         (SELECT COUNT(*) FROM participantes_taller) as total_participantes
                     FROM talleres WHERE is_active = TRUE");
@@ -183,69 +213,84 @@ class ReportesController extends Controller {
     // =========================================================================
     public function rutas() {
         $this->requireRoles([1, 3]);
-        $filtroEstado     = trim($_GET['estado'] ?? '');
-        $filtroDificultad = trim($_GET['nivel_dificultad'] ?? '');
-        $rutas = $this->queryRutas($filtroEstado, $filtroDificultad);
-        $stats = $this->statsRutas();
+        try {
+            $filtroEstado     = trim($_GET['estado']            ?? '');
+            $filtroDificultad = trim($_GET['nivel_dificultad']  ?? '');
+            $rutas            = $this->queryRutas($filtroEstado, $filtroDificultad);
+            $stats            = $this->statsRutas();
 
-        $data = [
-            'titulo'            => 'Reporte de Rutas Turísticas',
-            'rutas'             => $rutas,
-            'stats'             => $stats,
-            'filtro_estado'     => $filtroEstado,
-            'filtro_dificultad' => $filtroDificultad,
-        ];
-        $this->view('reportes/rutas', $data);
+            $data = [
+                'titulo'            => 'Reporte de Rutas Turísticas',
+                'rutas'             => $rutas,
+                'stats'             => $stats,
+                'filtro_estado'     => $filtroEstado,
+                'filtro_dificultad' => $filtroDificultad,
+            ];
+            $this->view('reportes/rutas', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de rutas: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarRutasCsv() {
         $this->requireRoles([1, 3]);
-        $rutas = $this->queryRutas();
-        $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Dificultad', 'Estado', 'Participantes', 'Paradas', 'Equipos'];
-        $rows = [];
-        foreach ($rutas as $r) {
-            $rows[] = [
-                $r->nombre,
-                $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
-                $r->departamento_nombre ?? '-',
-                $r->nivel_dificultad,
-                $r->estado,
-                (int)$r->total_participantes,
-                (int)$r->total_puntos,
-                (int)$r->total_equipos,
-            ];
+        try {
+            $rutas   = $this->queryRutas();
+            $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Dificultad', 'Estado', 'Participantes', 'Paradas', 'Equipos'];
+            $rows    = [];
+            foreach ($rutas as $r) {
+                $rows[] = [
+                    $r->nombre,
+                    $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                    $r->departamento_nombre ?? '-',
+                    $r->nivel_dificultad,
+                    $r->estado,
+                    (int)$r->total_participantes,
+                    (int)$r->total_puntos,
+                    (int)$r->total_equipos,
+                ];
+            }
+            $this->exportCsv('reporte_rutas', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('reporte_rutas', $headers, $rows);
     }
 
     public function exportarRutasPdf() {
         $this->requireRoles([1, 3]);
-        $rutas = $this->queryRutas();
-        $stats = $this->statsRutas();
+        try {
+            $rutas  = $this->queryRutas();
+            $stats  = $this->statsRutas();
 
-        $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Estado', 'Participantes', 'Paradas'];
-        $rows = [];
-        foreach ($rutas as $r) {
-            $rows[] = [
-                $r->nombre,
-                $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
-                $r->departamento_nombre ?? '-',
-                $r->estado,
-                (int)$r->total_participantes,
-                (int)$r->total_puntos,
+            $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Estado', 'Participantes', 'Paradas'];
+            $rows    = [];
+            foreach ($rutas as $r) {
+                $rows[] = [
+                    $r->nombre,
+                    $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                    $r->departamento_nombre ?? '-',
+                    $r->estado,
+                    (int)$r->total_participantes,
+                    (int)$r->total_puntos,
+                ];
+            }
+            $kpis = [
+                'Total Rutas'    => $stats->total_rutas,
+                'Activas'        => $stats->activas,
+                'Inactivas'      => $stats->inactivas,
+                'En Mantenimiento' => $stats->mantenimiento,
             ];
+            $this->exportPdf("Reporte de Rutas Turísticas", "IMATUR — Gestión Turística", $headers, $rows, $kpis);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $kpis = [
-            'Total Rutas' => $stats->total_rutas,
-            'Activas' => $stats->activas,
-            'Inactivas' => $stats->inactivas,
-            'En Mantenimiento' => $stats->mantenimiento
-        ];
-        $this->exportPdf("Reporte de Rutas Turísticas", "IMATUR — Gestión Turística", $headers, $rows, $kpis);
     }
 
     private function queryRutas(string $estado = '', string $dificultad = '') {
-        $db = new Database();
+        $db    = new Database();
         $where = "r.is_active = TRUE";
         if ($estado)     $where .= " AND r.estado = :estado";
         if ($dificultad) $where .= " AND r.nivel_dificultad = :dificultad";
@@ -266,8 +311,8 @@ class ReportesController extends Controller {
     private function statsRutas() {
         $db = new Database();
         $db->query("SELECT COUNT(*) as total_rutas,
-                        COUNT(CASE WHEN estado = 'Activa' THEN 1 END) as activas,
-                        COUNT(CASE WHEN estado = 'Inactiva' THEN 1 END) as inactivas,
+                        COUNT(CASE WHEN estado = 'Activa'          THEN 1 END) as activas,
+                        COUNT(CASE WHEN estado = 'Inactiva'        THEN 1 END) as inactivas,
                         COUNT(CASE WHEN estado = 'En Mantenimiento' THEN 1 END) as mantenimiento
                     FROM rutas WHERE is_active = TRUE");
         return $db->single();
@@ -275,28 +320,32 @@ class ReportesController extends Controller {
 
     public function exportarParticipantesCsv($id_taller) {
         $this->requireRoles([1, 3]);
-        $db = new Database();
-        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                           COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
-                           COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
-                           p.telefono, pt.asistio
-                    FROM participantes_taller pt
-                    LEFT JOIN personas p ON pt.id_persona = p.id
-                    WHERE pt.id_taller = :id_taller");
-        $db->bind(':id_taller', $id_taller);
-        $participantes = $db->resultSet();
+        try {
+            $db = new Database();
+            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
+                               COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
+                               p.telefono, pt.asistio
+                        FROM participantes_taller pt
+                        LEFT JOIN personas p ON pt.id_persona = p.id
+                        WHERE pt.id_taller = :id_taller");
+            $db->bind(':id_taller', $id_taller);
+            $participantes = $db->resultSet();
 
-        $taller = $db->query("SELECT nombre FROM talleres WHERE id = :id_taller");
-        $db->bind(':id_taller', $id_taller);
-        $t = $db->single();
+            $db->query("SELECT nombre FROM talleres WHERE id = :id_taller");
+            $db->bind(':id_taller', $id_taller);
+            $t = $db->single();
 
-        $headers = ['Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Asistió'];
-        $rows = [];
-        foreach($participantes as $p) {
-            $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->telefono, $p->asistio ? 'Sí' : 'No'];
+            $headers = ['Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Asistió'];
+            $rows    = [];
+            foreach ($participantes as $p) {
+                $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->telefono, $p->asistio ? 'Sí' : 'No'];
+            }
+            $this->exportCsv("Inscritos_" . str_replace(' ', '_', $t->nombre ?? 'taller'), $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar participantes: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/talleres');
         }
-
-        $this->exportCsv("Inscritos_" . str_replace(' ', '_', $t->nombre), $headers, $rows);
     }
 
     // =========================================================================
@@ -305,70 +354,82 @@ class ReportesController extends Controller {
 
     public function dossier($id) {
         $this->requireRoles([1, 3]);
-        $db = new Database();
-        // 1. Info básica y facilitador
-        $db->query("SELECT t.*, uf.nombre as sede, 
-                           p.nombre as fac_nom, p.apellido as fac_ape, e.nro_expediente
-                    FROM talleres t
-                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
-                    INNER JOIN empleados e ON t.id_facilitador = e.id
-                    INNER JOIN personas p ON e.id_persona = p.id
-                    WHERE t.id = :id");
-        $db->bind(':id', $id);
-        $taller = $db->single();
+        try {
+            $db = new Database();
+            $db->query("SELECT t.*, uf.nombre as sede,
+                               p.nombre as fac_nom, p.apellido as fac_ape, e.nro_expediente
+                        FROM talleres t
+                        LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                        INNER JOIN empleados e             ON t.id_facilitador = e.id
+                        INNER JOIN personas p              ON e.id_persona = p.id
+                        WHERE t.id = :id");
+            $db->bind(':id', $id);
+            $taller = $db->single();
 
-        if (!$taller) { header('Location: ' . URL_ROOT . '/reportes/talleres'); exit; }
+            if (!$taller) {
+                header('Location: ' . URL_ROOT . '/reportes/talleres');
+                exit;
+            }
 
-        // 2. Informe demográfico
-        $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
-        $db->bind(':id', $id);
-        $informe = $db->single();
+            $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
+            $db->bind(':id', $id);
+            $informe = $db->single();
 
-        // 3. Participantes
-        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                           COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
-                           COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
-                           pt.asistio
-                    FROM participantes_taller pt
-                    LEFT JOIN personas p ON pt.id_persona = p.id
-                    WHERE pt.id_taller = :id ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
-        $db->bind(':id', $id);
-        $participantes = $db->resultSet();
+            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
+                               COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
+                               pt.asistio
+                        FROM participantes_taller pt
+                        LEFT JOIN personas p ON pt.id_persona = p.id
+                        WHERE pt.id_taller = :id ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
+            $db->bind(':id', $id);
+            $participantes = $db->resultSet();
 
-        $data = [
-            'titulo' => 'Dossier de Taller',
-            'taller' => $taller,
-            'informe' => $informe,
-            'participantes' => $participantes
-        ];
-
-        $this->view('reportes/taller_detalle', $data);
+            $data = [
+                'titulo'        => 'Dossier de Taller',
+                'taller'        => $taller,
+                'informe'       => $informe,
+                'participantes' => $participantes,
+            ];
+            $this->view('reportes/taller_detalle', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al cargar el dossier: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/talleres');
+        }
     }
 
     public function exportarDossierCsv($id) {
         $this->requireRoles([1, 3]);
-        $db = new Database();
-        $db->query("SELECT t.*, p.nombre || ' ' || p.apellido as facilitador, uf.nombre as sede
-                    FROM talleres t
-                    INNER JOIN empleados e ON t.id_facilitador = e.id
-                    INNER JOIN personas p ON e.id_persona = p.id
-                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
-                    WHERE t.id = :id");
-        $db->bind(':id', $id);
-        $t = $db->single();
+        try {
+            $db = new Database();
+            $db->query("SELECT t.*, p.nombre || ' ' || p.apellido as facilitador, uf.nombre as sede
+                        FROM talleres t
+                        INNER JOIN empleados e ON t.id_facilitador = e.id
+                        INNER JOIN personas p  ON e.id_persona = p.id
+                        LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                        WHERE t.id = :id");
+            $db->bind(':id', $id);
+            $t = $db->single();
 
-        $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
-        $db->bind(':id', $id);
-        $inf = $db->single();
+            if (!$t) throw new Exception('Taller no encontrado.');
 
-        $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                           COALESCE(p.nombre, pt.nombre_libre, '') || ' ' || COALESCE(p.apellido, pt.apellido_libre, '') as nombre,
-                           pt.asistio
-                    FROM participantes_taller pt
-                    LEFT JOIN personas p ON pt.id_persona = p.id
-                    WHERE pt.id_taller = :id");
-        $db->bind(':id', $id);
-        $participantes = $db->resultSet();
+            $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
+            $db->bind(':id', $id);
+            $inf = $db->single();
+
+            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '') || ' ' || COALESCE(p.apellido, pt.apellido_libre, '') as nombre,
+                               pt.asistio
+                        FROM participantes_taller pt
+                        LEFT JOIN personas p ON pt.id_persona = p.id
+                        WHERE pt.id_taller = :id");
+            $db->bind(':id', $id);
+            $participantes = $db->resultSet();
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar dossier: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/talleres');
+            return;
+        }
 
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="Dossier_Taller_' . date('Y-m-d') . '.csv"');
@@ -376,7 +437,6 @@ class ReportesController extends Controller {
         $output = fopen('php://output', 'w');
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
 
-        // Cabecera institucional
         fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
         fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
         fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
@@ -384,34 +444,31 @@ class ReportesController extends Controller {
         fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
         fputcsv($output, [''], ';');
 
-        // Bloque 1: Generalidades
         fputcsv($output, ['DOSSIER INTEGRAL DE ACTIVIDAD - IMATUR'], ';');
-        fputcsv($output, ['Taller:', $t->nombre], ';');
+        fputcsv($output, ['Taller:',     $t->nombre], ';');
         fputcsv($output, ['Facilitador:', $t->facilitador], ';');
-        fputcsv($output, ['Lugar:', $t->sede ?: 'No especificada'], ';');
-        fputcsv($output, ['Fecha:', $t->fecha_inicio], ';');
-        fputcsv($output, ['Estado:', $t->estado], ';');
+        fputcsv($output, ['Lugar:',       $t->sede ?: 'No especificada'], ';');
+        fputcsv($output, ['Fecha:',       $t->fecha_inicio], ';');
+        fputcsv($output, ['Estado:',      $t->estado], ';');
         fputcsv($output, [], ';');
 
-        // Bloque 2: Estadística Demográfica
         fputcsv($output, ['RESUMEN DEMOGRÁFICO'], ';');
         fputcsv($output, ['Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'], ';');
         fputcsv($output, [
-            $inf->mujeres ?? 0, 
-            $inf->hombres ?? 0, 
-            $inf->ninas ?? 0, 
-            $inf->ninos ?? 0, 
-            $inf->total_atendidas ?? 0
+            $inf->mujeres       ?? 0,
+            $inf->hombres       ?? 0,
+            $inf->ninas         ?? 0,
+            $inf->ninos         ?? 0,
+            $inf->total_atendidas ?? 0,
         ], ';');
         fputcsv($output, [], ';');
 
-        // Bloque 3: Lista de Participantes
         fputcsv($output, ['LISTADO DE PERSONAS INSCRITAS'], ';');
         fputcsv($output, ['Cédula', 'Nombre Completo', 'Asistencia'], ';');
-        foreach($participantes as $p) {
+        foreach ($participantes as $p) {
             fputcsv($output, [$p->cedula, $p->nombre, $p->asistio ? 'Presente' : 'Ausente'], ';');
         }
-        
+
         fclose($output);
         exit;
     }
@@ -422,71 +479,84 @@ class ReportesController extends Controller {
 
     public function pasantes() {
         $this->requireRoles([1, 3]);
-        $filtroEstado = trim($_GET['estado'] ?? '');
-        $db = new Database();
-        $where = "p.is_active = TRUE";
-        if ($filtroEstado) $where .= " AND p.estado = :estado";
-        $db->query("SELECT p.*,
-                           pp.cedula, pp.nombre, pp.apellido,
-                           pt.nombre AS tutor_nombre, pt.apellido AS tutor_apellido
-                    FROM pasantes p
-                    INNER JOIN personas pp ON p.id_persona = pp.id
-                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
-                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
-                    WHERE {$where} ORDER BY p.fecha_inicio DESC");
-        if ($filtroEstado) $db->bind(':estado', $filtroEstado);
-        $pasantes = $db->resultSet();
+        try {
+            $filtroEstado = trim($_GET['estado'] ?? '');
+            $db    = new Database();
+            $where = "p.is_active = TRUE";
+            if ($filtroEstado) $where .= " AND p.estado = :estado";
+            $db->query("SELECT p.*,
+                               pp.cedula, pp.nombre, pp.apellido,
+                               pt.nombre AS tutor_nombre, pt.apellido AS tutor_apellido
+                        FROM pasantes p
+                        INNER JOIN personas pp ON p.id_persona = pp.id
+                        LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                        LEFT  JOIN personas pt  ON e.id_persona = pt.id
+                        WHERE {$where} ORDER BY p.fecha_inicio DESC");
+            if ($filtroEstado) $db->bind(':estado', $filtroEstado);
+            $pasantes = $db->resultSet();
 
-        $data = [
-            'titulo'        => 'Reporte de Pasantes',
-            'pasantes'      => $pasantes,
-            'filtro_estado' => $filtroEstado,
-        ];
-        $this->view('reportes/pasantes', $data);
+            $data = [
+                'titulo'        => 'Reporte de Pasantes',
+                'pasantes'      => $pasantes,
+                'filtro_estado' => $filtroEstado,
+            ];
+            $this->view('reportes/pasantes', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de pasantes: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarPasantesCsv() {
         $this->requireRoles([1, 3]);
-        $db = new Database();
-        $db->query("SELECT p.*,
-                           pp.cedula, pp.nombre, pp.apellido,
-                           pt.nombre || ' ' || pt.apellido AS tutor
-                    FROM pasantes p
-                    INNER JOIN personas pp ON p.id_persona = pp.id
-                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
-                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
-                    WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
-        $pasantes = $db->resultSet();
+        try {
+            $db = new Database();
+            $db->query("SELECT p.*,
+                               pp.cedula, pp.nombre, pp.apellido,
+                               pt.nombre || ' ' || pt.apellido AS tutor
+                        FROM pasantes p
+                        INNER JOIN personas pp ON p.id_persona = pp.id
+                        LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                        LEFT  JOIN personas pt  ON e.id_persona = pt.id
+                        WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
+            $pasantes = $db->resultSet();
 
-        $headers = ['Cédula', 'Nombre', 'Apellido', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado'];
-        $rows = [];
-        foreach($pasantes as $p) {
-            $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->institucion, $p->carrera, $p->tutor ?? 'N/A', $p->fecha_inicio, $p->fecha_fin, $p->estado];
+            $headers = ['Cédula', 'Nombre', 'Apellido', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado'];
+            $rows    = [];
+            foreach ($pasantes as $p) {
+                $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->institucion, $p->carrera, $p->tutor ?? 'N/A', $p->fecha_inicio, $p->fecha_fin, $p->estado];
+            }
+            $this->exportCsv("Reporte_Pasantes", $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-
-        $this->exportCsv("Reporte_Pasantes", $headers, $rows);
     }
 
     public function exportarPasantesPdf() {
         $this->requireRoles([1, 3]);
-        $db = new Database();
-        $db->query("SELECT p.*,
-                           pp.cedula, pp.nombre, pp.apellido,
-                           pt.nombre || ' ' || pt.apellido AS tutor
-                    FROM pasantes p
-                    INNER JOIN personas pp ON p.id_persona = pp.id
-                    LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
-                    LEFT  JOIN personas pt  ON e.id_persona = pt.id
-                    WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
-        $pasantes = $db->resultSet();
+        try {
+            $db = new Database();
+            $db->query("SELECT p.*,
+                               pp.cedula, pp.nombre, pp.apellido,
+                               pt.nombre || ' ' || pt.apellido AS tutor
+                        FROM pasantes p
+                        INNER JOIN personas pp ON p.id_persona = pp.id
+                        LEFT  JOIN empleados e  ON p.id_tutor_institucional = e.id
+                        LEFT  JOIN personas pt  ON e.id_persona = pt.id
+                        WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
+            $pasantes = $db->resultSet();
 
-        $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado'];
-        $rows = [];
-        foreach($pasantes as $p) {
-            $rows[] = [$p->cedula, $p->nombre . ' ' . $p->apellido, $p->institucion, $p->tutor ?? '-', $p->estado];
+            $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado'];
+            $rows    = [];
+            foreach ($pasantes as $p) {
+                $rows[] = [$p->cedula, $p->nombre . ' ' . $p->apellido, $p->institucion, $p->tutor ?? '-', $p->estado];
+            }
+            $this->exportPdf("Listado Maestro de Pasantes", "IMATUR — Control de Formación Institucional", $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-
-        $this->exportPdf("Listado Maestro de Pasantes", "IMATUR — Control de Formación Institucional", $headers, $rows);
     }
 
     // =========================================================================
@@ -494,71 +564,86 @@ class ReportesController extends Controller {
     // =========================================================================
     public function visitantes() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryVisitantes();
-        $stats = $this->statsVisitantes();
+        try {
+            $registros = $this->queryVisitantes();
+            $stats     = $this->statsVisitantes();
 
-        $data = [
-            'titulo'        => 'Reporte de Visitantes',
-            'registros'     => $registros,
-            'stats'         => $stats,
-            'fecha_inicio'  => $_GET['fecha_inicio'] ?? date('Y-m-01'),
-            'fecha_fin'     => $_GET['fecha_fin'] ?? date('Y-m-d'),
-            'filtro_motivo' => $_GET['motivo'] ?? '',
-        ];
-        $this->view('reportes/visitantes', $data);
+            $data = [
+                'titulo'        => 'Reporte de Visitantes',
+                'registros'     => $registros,
+                'stats'         => $stats,
+                'fecha_inicio'  => $_GET['fecha_inicio'] ?? date('Y-m-01'),
+                'fecha_fin'     => $_GET['fecha_fin']    ?? date('Y-m-d'),
+                'filtro_motivo' => $_GET['motivo']       ?? '',
+            ];
+            $this->view('reportes/visitantes', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de visitantes: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarVisitantesCsv() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryVisitantes();
-        $headers = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [
-                $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
-                date('H:i', strtotime($r->hora_entrada)),
-                $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En visita',
-                $r->cedula ?? '',
-                $r->nombre ?? '',
-                $r->apellido ?? '',
-                $r->procedencia ?? '',
-                $r->motivo ?? '',
-                trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: 'N/A',
-            ];
+        try {
+            $registros = $this->queryVisitantes();
+            $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
+            $rows      = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
+                    date('H:i', strtotime($r->hora_entrada)),
+                    $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En visita',
+                    $r->cedula    ?? '',
+                    $r->nombre    ?? '',
+                    $r->apellido  ?? '',
+                    $r->procedencia ?? '',
+                    $r->motivo    ?? '',
+                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: 'N/A',
+                ];
+            }
+            $this->exportCsv('reporte_visitantes', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('reporte_visitantes', $headers, $rows);
     }
 
     public function exportarVisitantesPdf() {
         $this->requireRoles([1, 2]);
-        $registros = $this->queryVisitantes();
-        $stats = $this->statsVisitantes();
-        $fi = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $ff = $_GET['fecha_fin'] ?? date('Y-m-d');
+        try {
+            $registros = $this->queryVisitantes();
+            $stats     = $this->statsVisitantes();
+            $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
+            $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-        $headers = ['Fecha', 'Cédula', 'Nombre y Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [
-                $r->fecha ?? '-',
-                $r->cedula ?? '-',
-                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
-                $r->procedencia ?? '-',
-                $r->motivo ?? '-',
-                trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '-',
+            $headers = ['Fecha', 'Cédula', 'Nombre y Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
+            $rows    = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    $r->fecha ?? '-',
+                    $r->cedula ?? '-',
+                    trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                    $r->procedencia ?? '-',
+                    $r->motivo ?? '-',
+                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '-',
+                ];
+            }
+            $kpis = [
+                'Total Visitas'     => $stats->total_visitas,
+                'Visitantes Únicos' => $stats->visitantes_unicos,
+                'En Visita Ahora'   => $stats->en_visita,
+                'Período'           => "$fi a $ff",
             ];
+            $this->exportPdf("Reporte de Visitantes", "Período: $fi — $ff", $headers, $rows, $kpis);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $kpis = [
-            'Total Visitas'    => $stats->total_visitas,
-            'Visitantes Únicos' => $stats->visitantes_unicos,
-            'En Visita Ahora'  => $stats->en_visita,
-            'Período'          => "$fi a $ff",
-        ];
-        $this->exportPdf("Reporte de Visitantes", "Período: $fi — $ff", $headers, $rows, $kpis);
     }
 
     private function queryVisitantes() {
-        $db = new Database();
+        $db     = new Database();
         $fi     = $_GET['fecha_inicio'] ?? date('Y-m-01');
         $ff     = $_GET['fecha_fin']    ?? date('Y-m-d');
         $motivo = trim($_GET['motivo']  ?? '');
@@ -572,8 +657,8 @@ class ReportesController extends Controller {
                            pe.nombre AS emp_nombre, pe.apellido AS emp_apellido
                     FROM visitas v
                     INNER JOIN visitantes vis ON v.id_visitante = vis.id
-                    LEFT  JOIN empleados e   ON v.id_empleado   = e.id
-                    LEFT  JOIN personas pe   ON e.id_persona    = pe.id
+                    LEFT  JOIN empleados e    ON v.id_empleado  = e.id
+                    LEFT  JOIN personas pe    ON e.id_persona   = pe.id
                     WHERE {$where}
                     ORDER BY v.hora_entrada DESC");
         $db->bind(':fi', $fi);
@@ -602,67 +687,82 @@ class ReportesController extends Controller {
     // =========================================================================
     public function inventario() {
         $this->requireRoles([1, 4]);
-        $registros = $this->queryInventario();
-        $stats = $this->statsInventario();
+        try {
+            $registros = $this->queryInventario();
+            $stats     = $this->statsInventario();
 
-        $data = [
-            'titulo'           => 'Reporte de Inventario',
-            'registros'        => $registros,
-            'stats'            => $stats,
-            'filtro_condicion' => $_GET['condicion'] ?? '',
-            'filtro_categoria' => $_GET['categoria'] ?? '',
-        ];
-        $this->view('reportes/inventario', $data);
+            $data = [
+                'titulo'           => 'Reporte de Inventario',
+                'registros'        => $registros,
+                'stats'            => $stats,
+                'filtro_condicion' => $_GET['condicion'] ?? '',
+                'filtro_categoria' => $_GET['categoria'] ?? '',
+            ];
+            $this->view('reportes/inventario', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de inventario: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarInventarioCsv() {
         $this->requireRoles([1, 4]);
-        $registros = $this->queryInventario();
-        $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [
-                $r->codigo_bn,
-                $r->nombre,
-                $r->categoria ?? '-',
-                $r->ubicacion ?? '-',
-                $r->condicion,
-                $r->marca ?? '-',
-                $r->modelo ?? '-',
-                $r->serial ?? '-',
-            ];
+        try {
+            $registros = $this->queryInventario();
+            $headers   = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial'];
+            $rows      = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    $r->codigo_bn,
+                    $r->nombre,
+                    $r->categoria ?? '-',
+                    $r->ubicacion ?? '-',
+                    $r->condicion,
+                    $r->marca     ?? '-',
+                    $r->modelo    ?? '-',
+                    $r->serial    ?? '-',
+                ];
+            }
+            $this->exportCsv('reporte_inventario', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('reporte_inventario', $headers, $rows);
     }
 
     public function exportarInventarioPdf() {
         $this->requireRoles([1, 4]);
-        $registros = $this->queryInventario();
-        $stats = $this->statsInventario();
+        try {
+            $registros = $this->queryInventario();
+            $stats     = $this->statsInventario();
 
-        $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición'];
-        $rows = [];
-        foreach ($registros as $r) {
-            $rows[] = [
-                $r->codigo_bn,
-                $r->nombre,
-                $r->categoria ?? '-',
-                $r->ubicacion ?? '-',
-                $r->condicion,
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición'];
+            $rows    = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    $r->codigo_bn,
+                    $r->nombre,
+                    $r->categoria ?? '-',
+                    $r->ubicacion ?? '-',
+                    $r->condicion,
+                ];
+            }
+            $kpis = [
+                'Total Bienes' => $stats->total,
+                'Nuevos'       => $stats->nuevos,
+                'Buenos'       => $stats->buenos,
+                'Regulares'    => $stats->regulares,
+                'Dañados'      => $stats->danados,
             ];
+            $this->exportPdf("Reporte de Inventario de Bienes", "IMATUR — Control Patrimonial", $headers, $rows, $kpis);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $kpis = [
-            'Total Bienes' => $stats->total,
-            'Nuevos'       => $stats->nuevos,
-            'Buenos'       => $stats->buenos,
-            'Regulares'    => $stats->regulares,
-            'Dañados'      => $stats->danados,
-        ];
-        $this->exportPdf("Reporte de Inventario de Bienes", "IMATUR — Control Patrimonial", $headers, $rows, $kpis);
     }
 
     private function queryInventario() {
-        $db = new Database();
+        $db        = new Database();
         $condicion = trim($_GET['condicion'] ?? '');
         $categoria = trim($_GET['categoria'] ?? '');
 
@@ -674,8 +774,8 @@ class ReportesController extends Controller {
                            c.nombre AS categoria,
                            u.nombre AS ubicacion
                     FROM inventario i
-                    LEFT JOIN categorias c   ON i.id_categoria = c.id
-                    LEFT JOIN ubicaciones u  ON i.id_ubicacion = u.id
+                    LEFT JOIN categorias c  ON i.id_categoria = c.id
+                    LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
                     WHERE {$where}
                     ORDER BY c.nombre ASC, i.nombre ASC");
         if ($condicion !== '') $db->bind(':condicion', $condicion);
@@ -687,10 +787,10 @@ class ReportesController extends Controller {
         $db = new Database();
         $db->query("SELECT
                         COUNT(*) AS total,
-                        COUNT(CASE WHEN condicion = 'Nuevo'    THEN 1 END) AS nuevos,
-                        COUNT(CASE WHEN condicion = 'Bueno'    THEN 1 END) AS buenos,
-                        COUNT(CASE WHEN condicion = 'Regular'  THEN 1 END) AS regulares,
-                        COUNT(CASE WHEN condicion = 'Dañado'   THEN 1 END) AS danados
+                        COUNT(CASE WHEN condicion = 'Nuevo'   THEN 1 END) AS nuevos,
+                        COUNT(CASE WHEN condicion = 'Bueno'   THEN 1 END) AS buenos,
+                        COUNT(CASE WHEN condicion = 'Regular' THEN 1 END) AS regulares,
+                        COUNT(CASE WHEN condicion = 'Dañado'  THEN 1 END) AS danados
                     FROM inventario WHERE is_active = TRUE");
         return $db->single();
     }
@@ -699,34 +799,39 @@ class ReportesController extends Controller {
     // RF30: Indicadores Generales de Gestión
     // =========================================================================
     public function indicadores() {
-        $db = new Database();
+        try {
+            $db = new Database();
 
-        $db->query("SELECT d.nombre as departamento, COUNT(e.id) as total
-                    FROM departamentos d LEFT JOIN empleados e ON d.id = e.id_departamento AND e.is_active = TRUE
-                    WHERE d.is_active = TRUE GROUP BY d.nombre ORDER BY total DESC");
-        $empPorDepto = $db->resultSet();
+            $db->query("SELECT d.nombre as departamento, COUNT(e.id) as total
+                        FROM departamentos d LEFT JOIN empleados e ON d.id = e.id_departamento AND e.is_active = TRUE
+                        WHERE d.is_active = TRUE GROUP BY d.nombre ORDER BY total DESC");
+            $empPorDepto = $db->resultSet();
 
-        $db->query("SELECT c.nombre as categoria, COUNT(i.id) as total
-                    FROM categorias c LEFT JOIN inventario i ON c.id = i.id_categoria AND i.is_active = TRUE
-                    WHERE c.is_active = TRUE GROUP BY c.nombre ORDER BY total DESC");
-        $invPorCat = $db->resultSet();
+            $db->query("SELECT c.nombre as categoria, COUNT(i.id) as total
+                        FROM categorias c LEFT JOIN inventario i ON c.id = i.id_categoria AND i.is_active = TRUE
+                        WHERE c.is_active = TRUE GROUP BY c.nombre ORDER BY total DESC");
+            $invPorCat = $db->resultSet();
 
-        $db->query("SELECT condicion, COUNT(*) as total FROM inventario WHERE is_active = TRUE GROUP BY condicion ORDER BY total DESC");
-        $invPorCondicion = $db->resultSet();
+            $db->query("SELECT condicion, COUNT(*) as total FROM inventario WHERE is_active = TRUE GROUP BY condicion ORDER BY total DESC");
+            $invPorCondicion = $db->resultSet();
 
-        $db->query("SELECT TO_CHAR(fecha_inicio, 'YYYY-MM') as mes, COUNT(*) as total
-                    FROM talleres WHERE is_active = TRUE AND fecha_inicio >= (CURRENT_DATE - INTERVAL '6 months')
-                    GROUP BY mes ORDER BY mes ASC");
-        $talleresPorMes = $db->resultSet();
+            $db->query("SELECT TO_CHAR(fecha_inicio, 'YYYY-MM') as mes, COUNT(*) as total
+                        FROM talleres WHERE is_active = TRUE AND fecha_inicio >= (CURRENT_DATE - INTERVAL '6 months')
+                        GROUP BY mes ORDER BY mes ASC");
+            $talleresPorMes = $db->resultSet();
 
-        $data = [
-            'titulo' => 'Indicadores de Gestión',
-            'empPorDepto' => $empPorDepto,
-            'invPorCat' => $invPorCat,
-            'invPorCondicion' => $invPorCondicion,
-            'talleresPorMes' => $talleresPorMes
-        ];
-        $this->view('reportes/indicadores', $data);
+            $data = [
+                'titulo'          => 'Indicadores de Gestión',
+                'empPorDepto'     => $empPorDepto,
+                'invPorCat'       => $invPorCat,
+                'invPorCondicion' => $invPorCondicion,
+                'talleresPorMes'  => $talleresPorMes,
+            ];
+            $this->view('reportes/indicadores', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al cargar los indicadores: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     // =========================================================================
@@ -734,65 +839,72 @@ class ReportesController extends Controller {
     // =========================================================================
     public function bajasInventario() {
         $this->requireRoles([1, 4]);
-        $db = new Database();
-        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
-                           c.nombre AS categoria,
-                           u.nombre AS ubicacion,
-                           i.deleted_at,
-                           pu.username AS eliminado_por
-                    FROM inventario i
-                    LEFT JOIN categorias c   ON i.id_categoria = c.id
-                    LEFT JOIN ubicaciones u  ON i.id_ubicacion = u.id
-                    LEFT JOIN usuarios pu    ON i.deleted_by = pu.id
-                    WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
-                    ORDER BY i.deleted_at DESC");
-        $bajas = $db->resultSet();
+        try {
+            $db = new Database();
+            $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
+                               c.nombre AS categoria,
+                               u.nombre AS ubicacion,
+                               i.deleted_at,
+                               pu.username AS eliminado_por
+                        FROM inventario i
+                        LEFT JOIN categorias c  ON i.id_categoria = c.id
+                        LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
+                        LEFT JOIN usuarios pu   ON i.deleted_by   = pu.id
+                        WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
+                        ORDER BY i.deleted_at DESC");
+            $bajas = $db->resultSet();
 
-        $data = [
-            'titulo' => 'Bienes Dados de Baja',
-            'bajas'  => $bajas,
-        ];
-        $this->view('reportes/bajas_inventario', $data);
+            $data = [
+                'titulo' => 'Bienes Dados de Baja',
+                'bajas'  => $bajas,
+            ];
+            $this->view('reportes/bajas_inventario', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al cargar bajas: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
     }
 
     public function exportarBajasInventarioCsv() {
         $this->requireRoles([1, 4]);
-        $db = new Database();
-        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
-                           c.nombre AS categoria, u.nombre AS ubicacion,
-                           i.deleted_at, pu.username AS eliminado_por
-                    FROM inventario i
-                    LEFT JOIN categorias c ON i.id_categoria = c.id
-                    LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
-                    LEFT JOIN usuarios pu ON i.deleted_by = pu.id
-                    WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
-                    ORDER BY i.deleted_at DESC");
-        $bajas = $db->resultSet();
-        $headers = ['Código BN','Nombre','Categoría','Ubicación','Condición','Marca','Modelo','Fecha Baja','Dado de baja por'];
-        $rows = [];
-        foreach ($bajas as $b) {
-            $rows[] = [
-                $b->codigo_bn ?? 'S/N',
-                $b->nombre,
-                $b->categoria ?? '-',
-                $b->ubicacion ?? '-',
-                $b->condicion,
-                $b->marca ?? '-',
-                $b->modelo ?? '-',
-                $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '-',
-                $b->eliminado_por ?? '-',
-            ];
+        try {
+            $db = new Database();
+            $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
+                               c.nombre AS categoria, u.nombre AS ubicacion,
+                               i.deleted_at, pu.username AS eliminado_por
+                        FROM inventario i
+                        LEFT JOIN categorias c ON i.id_categoria = c.id
+                        LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
+                        LEFT JOIN usuarios pu  ON i.deleted_by   = pu.id
+                        WHERE i.is_active = FALSE AND i.deleted_at IS NOT NULL
+                        ORDER BY i.deleted_at DESC");
+            $bajas   = $db->resultSet();
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Fecha Baja', 'Dado de baja por'];
+            $rows    = [];
+            foreach ($bajas as $b) {
+                $rows[] = [
+                    $b->codigo_bn ?? 'S/N',
+                    $b->nombre,
+                    $b->categoria ?? '-',
+                    $b->ubicacion ?? '-',
+                    $b->condicion,
+                    $b->marca     ?? '-',
+                    $b->modelo    ?? '-',
+                    $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '-',
+                    $b->eliminado_por ?? '-',
+                ];
+            }
+            $this->exportCsv('bajas_inventario', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
         }
-        $this->exportCsv('bajas_inventario', $headers, $rows);
     }
 
     // =========================================================================
     // HELPERS DE EXPORTACIÓN
     // =========================================================================
 
-    /**
-     * Exportar a CSV (Compatible con Excel y LibreOffice)
-     */
     private function exportCsv($filename, $headers, $rows) {
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.csv"');
@@ -802,7 +914,6 @@ class ReportesController extends Controller {
         $output = fopen('php://output', 'w');
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
 
-        // Cabecera institucional
         fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
         fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
         fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
@@ -812,7 +923,6 @@ class ReportesController extends Controller {
         fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
         fputcsv($output, [''], ';');
 
-        // Encabezados y datos
         fputcsv($output, $headers, ';');
         foreach ($rows as $row) {
             fputcsv($output, $row, ';');
@@ -824,16 +934,13 @@ class ReportesController extends Controller {
         exit;
     }
 
-    /**
-     * Exportar a PDF (Documento HTML optimizado para impresión directa)
-     */
     private function exportPdf($titulo, $subtitulo, $headers, $rows, $kpis = []) {
         $data = [
-            'titulo' => $titulo,
+            'titulo'    => $titulo,
             'subtitulo' => $subtitulo,
-            'headers' => $headers,
-            'rows' => $rows,
-            'kpis' => $kpis
+            'headers'   => $headers,
+            'rows'      => $rows,
+            'kpis'      => $kpis,
         ];
         $this->view('reportes/pdf_template', $data);
     }

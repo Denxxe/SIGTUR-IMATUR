@@ -12,7 +12,12 @@ class ConfigController extends Controller {
 
     public function index() {
         $this->requireRoles([1, 2]);
-        $config = ConfigSistema::getAll();
+        try {
+            $config = ConfigSistema::getAll();
+        } catch (Exception $e) {
+            $config = [];
+            flash('global_msg', 'Error al cargar configuración: ' . $e->getMessage(), 'danger');
+        }
         $data = [
             'titulo' => 'Configuración Institucional',
             'config' => $config,
@@ -27,19 +32,23 @@ class ConfigController extends Controller {
             exit;
         }
 
-        $userId   = $this->getUserId();
-        $updated  = 0;
-        $config   = ConfigSistema::getAll();
+        $userId  = $this->getUserId();
+        $updated = 0;
 
-        foreach ($config as $clave => $info) {
-            if (isset($_POST[$clave])) {
-                $valor = trim($_POST[$clave]);
-                ConfigSistema::set($clave, $valor, $userId);
-                $updated++;
+        try {
+            $config = ConfigSistema::getAll();
+            foreach ($config as $clave => $info) {
+                if (isset($_POST[$clave])) {
+                    $valor = trim($_POST[$clave]);
+                    ConfigSistema::set($clave, $valor, $userId);
+                    $updated++;
+                }
             }
+            flash('global_msg', "Configuración actualizada ({$updated} valores guardados).");
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al guardar configuración: ' . $e->getMessage(), 'danger');
         }
 
-        flash('global_msg', "Configuración actualizada ({$updated} valores guardados).");
         header('Location: ' . URL_ROOT . '/config/index');
         exit;
     }
