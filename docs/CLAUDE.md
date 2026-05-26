@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-05-19  
+**Última actualización:** 2026-05-25  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -56,10 +56,15 @@ app/
 
 Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesController.php` (nivel de método).
 
-| Rol ID | Nombre | Controladores permitidos |
-|--------|--------|--------------------------|
-| 1 | Administrador | Todo sin restricción |
-| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes, **Config** |
+**A partir de migración 008:** Los permisos son **dinámicos** — almacenados en la tabla `permisos_rol` y gestionables desde `Sistema → Roles y Permisos` en la UI.  
+- `RolesController::getMapaRbac()` es la fuente única: la llama el Router en cada request y también la vista de roles.  
+- El Administrador (rol 1) usa el marcador `'*'` en `permisos_rol` → acceso total, no modificable desde la UI.  
+- Los demás roles tienen lista explícita de controladores permitidos. Cambios aplican en la próxima sesión del usuario.
+
+| Rol ID | Nombre | Controladores permitidos (seed 008) |
+|--------|--------|--------------------------------------|
+| 1 | Administrador | `'*'` — acceso total sin restricción |
+| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes, Config |
 | 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 | 5 | Recepción | Dashboard, Visitantes, Visitas, Asistencias |
@@ -68,8 +73,10 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 
 | Método(s) | Roles permitidos |
 |-----------|-----------------|
-| `asistencia`, `exportarAsistenciaCsv`, `exportarAsistenciaPdf` | [1, 2] |
+| `asistencia`, `exportarAsistenciaCsv/Pdf` | [1, 2] |
+| `visitantes`, `exportarVisitantesCsv/Pdf` | [1, 2] |
 | `talleres`, `exportarTalleresCsv/Pdf`, `rutas`, `exportarRutasCsv/Pdf`, `exportarParticipantesCsv`, `dossier`, `exportarDossierCsv`, `pasantes`, `exportarPasantesCsv/Pdf` | [1, 3] |
+| `inventario`, `exportarInventarioCsv/Pdf`, `bajasInventario`, `exportarBajasInventarioCsv` | [1, 4] |
 | `indicadores`, `index` | todos |
 
 ### Sidebar por rol (header.php)
@@ -96,7 +103,8 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 #### Sistema
 | Tabla | Descripción |
 |-------|-------------|
-| `roles` | 4 roles fijos |
+| `roles` | 5 roles (Admin, RRHH, Turismo, Inventario, Recepción) |
+| `permisos_rol` | Permisos dinámicos: `(id_rol, modulo)`. Admin usa marcador `'*'` *(migración 008)* |
 | `usuarios` | Credenciales, FK opcional a empleados y roles |
 | `audit_logs` | Log inmutable de operaciones JSONB |
 | `configuracion_sistema` | Clave/valor: director, resolución, correlativo de oficios |
@@ -168,6 +176,8 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 005 | `005_rutas_config_sistema.sql` | ✅ Ejecutado | rutas extendidas, participantes_ruta, configuracion_sistema, oficios_emitidos |
 | 006 | `006_formacion_mejoras.sql` | ✅ Ejecutado | talleres: es_interna/tipo_ente; participantes_taller: es_brigadista/nombre_docente/cedula_docente; rutas: requiere_formacion; tipo_actividad: +Inducción |
 | 007 | `007_mejoras_negocio.sql` | ✅ Ejecutado | condicion+En Reparación; rol 5 Recepción; correlativos por módulo; instituciones_externas; rutas+tarifa+facilitador_externo |
+| 008 | `008_permisos_rol.sql` | ✅ Ejecutado | Tabla `permisos_rol`; convierte RBAC hardcoded a dinámico; seed con permisos de los 5 roles |
+| 009 | `009_fix_sequences.sql` | ✅ Ejecutado | Resincroniza las 36 secuencias SERIAL desincronizadas por inserts con ID explícito en seeds |
 
 Para ejecutar una migración: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -192,17 +202,19 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 | Reporte | Roles | Export |
 |---------|-------|--------|
 | Asistencia con filtro de fechas | 1, 2 | CSV + PDF |
+| Visitantes con filtro fecha/motivo | 1, 2 | CSV + PDF |
 | Talleres con filtros estado/tipo | 1, 3 | CSV + PDF |
 | Dossier integral de taller | 1, 3 | CSV |
 | Participantes de un taller | 1, 3 | CSV |
 | Rutas con filtros estado/dificultad | 1, 3 | CSV + PDF |
 | Pasantes con estado y tutor | 1, 3 | CSV + PDF |
+| Inventario con filtros condición/categoría | 1, 4 | CSV + PDF |
+| Bienes dados de baja | 1, 4 | CSV |
 | Indicadores KPIs (4 gráficas ApexCharts) | todos | — |
 
 ### Reportes pendientes de implementar
 - Permisos laborales por tipo/empleado/período
 - Saldo de vacaciones por empleado
-- Visitantes por mes / procedencia / motivo
 - Informe trimestral de Formación (metas, logros, actividades)
 - Indicadores ampliados: visitas activas, empleados en permiso hoy
 
@@ -335,6 +347,14 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 21. **`inventario.codigo_bn` nullable** — puede ser NULL para bienes pendientes de código BN oficial. Mostrar "—" en vistas cuando sea NULL.
 
+22. **`permisos_rol` — RBAC dinámico (migración 008)** — no modificar el RBAC tocando `Router.php`. La fuente de verdad es la tabla. `RolesController::getMapaRbac()` devuelve `[id_rol => '*']` (acceso total) o `[id_rol => ['Ctrl1', 'Ctrl2',...]]`. `DashboardController` se agrega automáticamente a todo rol en `storePermisos()`.
+
+23. **`AuditLog::log()` en controllers** — `$this->audit()` y `$this->auditStatic()` son métodos `protected` de `Model`. Los **controllers** extienden `Controller`, no `Model` → usar `AuditLog::log()` directamente. Envolver en try-catch separado para no revertir la transacción principal si el log falla.
+
+24. **Convención de manejo de errores** — Todo método público de controller que acceda a BD debe envolver el cuerpo en `try-catch (Exception $e)`. En caso de error: `flash('global_msg', $e->getMessage(), 'danger')` + `header('Location: ...')`. Los métodos de exportación (CSV/PDF) deben capturar excepciones **antes** de enviar cualquier header de descarga.
+
+25. **Secuencias SERIAL (migración 009)** — Al insertar filas con IDs explícitos en seeds, las secuencias PostgreSQL no avanzan. Si aparece `llave duplicada viola restricción «X_pkey»`, ejecutar migración 009 (`009_fix_sequences.sql`) que usa `GREATEST(MAX(id), last_value)` para resincronizar las 36 secuencias sin riesgo de retroceso.
+
 ---
 
 ## Pasos para levantar el entorno
@@ -344,19 +364,21 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar schema completo consolidado (schema base + migraciones 001-006):
+# 3. Importar schema completo consolidado (schema base + migraciones 001-007):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.sql
 
-# 4. Verificar config/config.php:
+# 4. Aplicar migraciones posteriores al schema consolidado:
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/008_permisos_rol.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/009_fix_sequences.sql
+
+# 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
 #    DB_USER=postgres  | DB_PASS=1234 (entorno Laragon)
 
-# 5. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
+# 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_completo.sql` reemplaza `schema.sql` + las 6 migraciones individuales.
-> No ejecutar las migraciones por separado si se usó el archivo consolidado.
-> Los archivos `database/schema.sql` y `database/migrations/` se conservan como historial.
+> **Nota:** `database/schema_completo.sql` cubre schema base + migraciones 001-007. Las migraciones 008 y 009 se aplican por separado hasta que se actualice el consolidado.
 
 ---
 

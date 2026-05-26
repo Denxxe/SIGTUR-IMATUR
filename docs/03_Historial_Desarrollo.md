@@ -1,6 +1,6 @@
 # Historial de Desarrollo — SIGTUR-IMATUR
 
-**Última actualización:** 2026-05-22  
+**Última actualización:** 2026-05-25  
 Sistema para IMATUR (Instituto Municipal de Turismo de Cumaná, Sucre, Venezuela).
 
 ---
@@ -11,7 +11,7 @@ Sistema para IMATUR (Instituto Municipal de Turismo de Cumaná, Sucre, Venezuela
 |------|--------|-------------|
 | Fase 1 | ✅ Completada | Core MVC + módulos base + RBAC + reportes |
 | Fase 2 | ✅ Completada | Reglas de negocio + oficios + documentos imprimibles |
-| Fase 2.5 | ✅ Completada | Corrección de bugs + mejoras de calidad |
+| Fase 2.5 | ✅ Completada | Bugs + mejoras de calidad + RBAC dinámico + hardening de errores |
 | Fase 3 | 🔄 Pendiente | RRHH extensiones + libro correspondencia + mapa offline |
 | Fase 4 | 📋 Backlog | Importación datos históricos + multi-facilitadores |
 
@@ -126,6 +126,31 @@ Tablas iniciales: `roles`, `usuarios`, `personas`, `departamentos`, `cargos`, `e
 
 ---
 
+---
+
+## Migración 008 — RBAC Dinámico
+
+**Archivo:** `database/migrations/008_permisos_rol.sql`
+
+- Tabla `permisos_rol` (`id SERIAL PK`, `id_rol FK roles ON DELETE CASCADE`, `modulo VARCHAR(60)`, `UNIQUE(id_rol, modulo)`)
+- Convierte el RBAC hardcodeado en `Router.php` a una tabla gestionable desde la UI
+- Seed inicial con los permisos de los 5 roles (Admin = `'*'`, RRHH = 9 módulos, Turismo = 9, Inventario = 6, Recepción = 4)
+- `RolesController::getMapaRbac()` — método estático, fuente única para Router y la vista de Roles
+- `RolesController::storePermisos()` — reemplaza permisos de un rol de forma transaccional (DELETE + INSERT); siempre incluye `DashboardController`; rol Administrador no modificable
+- Vista `roles/index.php` — cards por rol con checkboxes agrupados por área, contador en tiempo real, botón "todo" por grupo
+
+---
+
+## Migración 009 — Sincronización de Secuencias SERIAL
+
+**Archivo:** `database/migrations/009_fix_sequences.sql`
+
+- Las 36 secuencias SERIAL quedaron desincronizadas al insertar filas con IDs explícitos en seeds anteriores
+- Corrige con `setval(seq, GREATEST(MAX(id), last_value))` para cada tabla — patrón seguro que nunca retrocede la secuencia
+- Soluciona el error `SQLSTATE[23505]: llave duplicada viola restricción «X_pkey»` que aparecía al crear nuevos registros después de una instalación con seeds
+
+---
+
 ## Migración 007 — Mejoras de Negocio (Transversal)
 
 **Archivo:** `database/migrations/007_mejoras_negocio.sql`
@@ -167,7 +192,9 @@ Tablas iniciales: `roles`, `usuarios`, `personas`, `departamentos`, `cargos`, `e
 
 ---
 
-## Fase 2.5 — Corrección de Bugs
+## Fase 2.5 — Corrección de Bugs y Mejoras de Calidad
+
+### Bugs corregidos (primera ronda)
 
 | Bug | Archivo corregido | Descripción |
 |-----|------------------|-------------|
@@ -176,16 +203,45 @@ Tablas iniciales: `roles`, `usuarios`, `personas`, `departamentos`, `cargos`, `e
 | `audit_logs.fecha` | `app/controllers/DashboardController.php` | Columna correcta es `fecha`, no `created_at` |
 | Correlativo por módulo | `app/models/ConfigSistema.php` | `generarNumeroOficio(string $modulo)` acepta parámetro |
 
+### Mejoras de módulos
+
+- **Formulario empleados** — Campos `tipo_contrato`, `fecha_egreso`, `id_horario` integrados en la vista y en `Empleado::save()`. Corrección del bug de auditoría: `$esNuevo = empty($this->id)` capturado antes de la transacción para que `INSERT` no se registre como `UPDATE`.
+- **Inscripción de participantes en rutas** — Lookup AJAX de persona por cédula (fetch debounced), autoformato de cédula venezolana, selector de institución externa, campo de observaciones, reset completo del modal al cerrar.
+- **UsuariosController** — Eliminados todos los `die()` → flash + redirect. Dropdown de empleados filtra solo los que no tienen cuenta (`NOT EXISTS` subquery). Validación de contraseña mínima (6 caracteres) y confirmación en modo creación.
+
+### RBAC dinámico (migración 008)
+
+- `Router.php` — Reemplaza array hardcodeado por llamada a `RolesController::getMapaRbac()`
+- `RolesController::getMapaRbac()` — Fuente única de permisos; fallback `[1=>'*']` si la BD no responde
+- `RolesController::storePermisos()` — Corregido: usaba `$this->audit()` (no existe en controllers) → cambiado a `AuditLog::log()` directamente
+- Secuencias SERIAL — Corregida excepción `SQLSTATE 23505` al crear roles con `id=5` (migración 009)
+
+### Hardening de manejo de errores (todos los controladores)
+
+Todos los métodos públicos que acceden a BD envueltos en `try-catch (Exception $e)` con `flash()` + redirect. El sistema ya no puede mostrar pantalla blanca por error de BD o lógica.
+
+| Controlador | Métodos corregidos |
+|-------------|-------------------|
+| `AsistenciasController` | `index`, `marcar`, `delete` |
+| `ConfigController` | `index`, `store` |
+| `AuthController` | `login` (findByUsername) |
+| `RutasController` | `desinscribir` (query inicial fuera de try-catch) |
+| `ReportesController` | Los 24 métodos públicos (rendering + exports) |
+
 ---
 
 ## Schema consolidado
 
 **Archivo:** `database/schema_completo.sql`  
-Reemplaza `schema.sql` + migraciones 001-007 individuales. Para instalación limpia, usar solo el schema consolidado.
+Reemplaza `schema.sql` + migraciones 001-007 individuales. Para instalación limpia, usar solo el schema consolidado más las migraciones 008 y 009.
 
 ```bash
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/008_permisos_rol.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/009_fix_sequences.sql
 ```
+
+> **Pendiente:** Actualizar `schema_completo.sql` para incorporar las migraciones 008 y 009.
 
 ---
 
@@ -201,6 +257,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.
 - Informe de gestión trimestral consolidado (todas las secciones)
 - InstitucionesExternasController + CRUD (requiere confirmar D-NEW02)
 - Contraseña por defecto = cédula al crear usuario (flag `password_debe_cambiar`)
+- Actualizar `schema_completo.sql` para incorporar migraciones 008 y 009
 
 ### Backlog Fase 4
 - Mapa visual de puntos de ruta (Leaflet.js + OpenStreetMap offline)
