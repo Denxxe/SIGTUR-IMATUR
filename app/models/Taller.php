@@ -43,7 +43,7 @@ class Taller extends Model {
         $db = new Database();
         $db->query("SELECT t.*, uf.nombre AS ubicacion, uf.es_sede_propia,
                            p.nombre AS facilitador_nombre, p.apellido AS facilitador_apellido,
-                           (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id) AS total_inscritos,
+                           (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id AND pt.is_active = TRUE) AS total_inscritos,
                            (SELECT COUNT(*) FROM taller_evidencias   te WHERE te.id_taller = t.id AND te.is_active = TRUE) AS total_evidencias
                     FROM talleres t
                     LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
@@ -201,7 +201,7 @@ class Taller extends Model {
 
     public static function countParticipantes($id_taller): int {
         $db = new Database();
-        $db->query("SELECT COUNT(*) AS total FROM participantes_taller WHERE id_taller = :id");
+        $db->query("SELECT COUNT(*) AS total FROM participantes_taller WHERE id_taller = :id AND is_active = TRUE");
         $db->bind(':id', $id_taller);
         $row = $db->single();
         return (int)($row->total ?? 0);
