@@ -572,12 +572,28 @@ function abrirCambioEstado(id, estadoActual, totalInscritos) {
 }
 
 function checkCambioEstadoValid() {
-    var estado = document.getElementById('ce_nuevo_estado').value;
-    if (!estado) { document.getElementById('btn_ce_guardar').disabled = true; return; }
-    var motivoOk    = estado !== 'Cancelado'  || (document.getElementById('ce_motivo').value || '').trim() !== '';
-    var tieneExist  = parseInt(document.getElementById('ce_evidencias_existentes').dataset.count || '0', 10) > 0;
-    var evidenciaOk = estado !== 'Finalizado' || tieneExist || document.getElementById('ce_evidencias').files.length > 0;
-    document.getElementById('btn_ce_guardar').disabled = !(motivoOk && evidenciaOk);
+    var estado         = document.getElementById('ce_nuevo_estado').value;
+    var btn            = document.getElementById('btn_ce_guardar');
+    if (!estado) { btn.disabled = true; return; }
+
+    var totalInscritos = parseInt(document.getElementById('ce_nuevo_estado').dataset.totalInscritos || '0', 10);
+    var motivo         = (document.getElementById('ce_motivo').value || '').trim();
+    var motivoOk       = estado !== 'Cancelado'  || motivo !== '';
+    var tieneExist     = parseInt(document.getElementById('ce_evidencias_existentes').dataset.count || '0', 10) > 0;
+    var evidenciaOk    = estado !== 'Finalizado' || tieneExist || document.getElementById('ce_evidencias').files.length > 0;
+    var inscritosOk    = estado !== 'En Curso'   || totalInscritos > 0;
+
+    // Retroalimentación visual en el campo de motivo
+    var campoMotivo = document.getElementById('ce_motivo');
+    if (estado === 'Cancelado') {
+        campoMotivo.style.borderColor = motivoOk ? '' : 'var(--danger-500)';
+        campoMotivo.style.boxShadow   = motivoOk ? '' : '0 0 0 2px rgba(239,68,68,.12)';
+    } else {
+        campoMotivo.style.borderColor = '';
+        campoMotivo.style.boxShadow   = '';
+    }
+
+    btn.disabled = !(motivoOk && evidenciaOk && inscritosOk);
 }
 
 // ── Event listeners ───────────────────────────────────────────────────────
@@ -606,14 +622,18 @@ document.getElementById('ce_nuevo_estado').addEventListener('change', function()
     document.getElementById('sec_ce_finalizado').style.display = estado === 'Finalizado' ? 'block' : 'none';
 
     if (estado === 'En Curso') {
-        var color = totalInscritos > 0 ? 'var(--success-600)' : 'var(--danger-600)';
-        var icon  = totalInscritos > 0 ? 'bi-check-circle'    : 'bi-exclamation-circle';
+        var sinInscritos = totalInscritos === 0;
+        var color = sinInscritos ? 'var(--danger-600)' : 'var(--success-600)';
+        var icon  = sinInscritos ? 'bi-exclamation-circle' : 'bi-check-circle';
+        var secEnCurso = document.getElementById('sec_ce_en_curso');
+        secEnCurso.querySelector('#ce_msg_participantes').style.borderLeftColor =
+            sinInscritos ? 'var(--danger-500)' : 'var(--success-500)';
+        secEnCurso.querySelector('#ce_msg_participantes').style.background =
+            sinInscritos ? 'rgba(239,68,68,.06)' : 'rgba(34,197,94,.06)';
         document.getElementById('ce_msg_participantes').innerHTML =
             '<i class="bi ' + icon + '" style="color:' + color + ';"></i> ' +
             '<strong>' + totalInscritos + '</strong> participante(s) inscrito(s).' +
-            (totalInscritos === 0
-                ? ' <span style="color:var(--danger-600);">Se requiere al menos 1 para iniciar.</span>'
-                : '');
+            (sinInscritos ? ' <span style="color:var(--danger-600);">Se requiere al menos 1 para iniciar.</span>' : '');
     }
     checkCambioEstadoValid();
 });
