@@ -460,27 +460,32 @@ CREATE TABLE taller_evidencias (
 
 -- ─────────────────────────────────────────────────────
 -- participantes_taller (estado final — migr. 002: auditoría; 004: libre;
---                        006: es_brigadista, nombre_docente, cedula_docente)
+--                        006: es_brigadista, nombre_docente, cedula_docente;
+--                        012: fecha_nac_libre, genero_libre, parroquia_id_libre, direccion_libre)
 -- ─────────────────────────────────────────────────────
 CREATE TABLE participantes_taller (
-    id             SERIAL PRIMARY KEY,
-    id_taller      INTEGER NOT NULL,
-    id_persona     INTEGER,
-    nombre_libre   VARCHAR(100),
-    apellido_libre VARCHAR(100),
-    cedula_libre   VARCHAR(20),
-    asistio        BOOLEAN DEFAULT FALSE,
-    observaciones  TEXT,
-    es_brigadista  BOOLEAN NOT NULL DEFAULT FALSE,
-    nombre_docente VARCHAR(100),
-    cedula_docente VARCHAR(20),
-    is_active      BOOLEAN   DEFAULT TRUE,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP,
-    deleted_at     TIMESTAMP,
-    created_by     INTEGER,
-    updated_by     INTEGER,
-    deleted_by     INTEGER,
+    id                  SERIAL PRIMARY KEY,
+    id_taller           INTEGER NOT NULL,
+    id_persona          INTEGER,
+    nombre_libre        VARCHAR(100),
+    apellido_libre      VARCHAR(100),
+    cedula_libre        VARCHAR(20),
+    asistio             BOOLEAN DEFAULT FALSE,
+    observaciones       TEXT,
+    es_brigadista       BOOLEAN NOT NULL DEFAULT FALSE,
+    nombre_docente      VARCHAR(100),
+    cedula_docente      VARCHAR(20),
+    fecha_nac_libre     DATE,
+    genero_libre        CHAR(1) CHECK (genero_libre IN ('M', 'F', 'O')),
+    parroquia_id_libre  INTEGER,
+    direccion_libre     TEXT,
+    is_active           BOOLEAN   DEFAULT TRUE,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP,
+    deleted_at          TIMESTAMP,
+    created_by          INTEGER,
+    updated_by          INTEGER,
+    deleted_by          INTEGER,
     CONSTRAINT pt_participante_requerido
         CHECK (id_persona IS NOT NULL OR nombre_libre IS NOT NULL),
     UNIQUE (id_taller, id_persona)

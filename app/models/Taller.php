@@ -136,12 +136,16 @@ class Taller extends Model {
                            p.cedula, p.nombre, p.apellido, p.telefono,
                            p.correo, p.genero, p.fecha_nacimiento,
                            p.parroquia_id, p.direccion,
-                           par.nombre AS parroquia_nombre,
-                           m.nombre   AS municipio_nombre
+                           par.nombre  AS parroquia_nombre,
+                           m.nombre    AS municipio_nombre,
+                           par2.nombre AS parroquia_libre_nombre,
+                           m2.nombre   AS municipio_libre_nombre
                     FROM participantes_taller pt
-                    LEFT JOIN personas  p   ON pt.id_persona   = p.id
-                    LEFT JOIN parroquia par ON p.parroquia_id  = par.id
-                    LEFT JOIN municipio m   ON par.id_municipio = m.id
+                    LEFT JOIN personas  p    ON pt.id_persona        = p.id
+                    LEFT JOIN parroquia par  ON p.parroquia_id       = par.id
+                    LEFT JOIN municipio m    ON par.id_municipio     = m.id
+                    LEFT JOIN parroquia par2 ON pt.parroquia_id_libre = par2.id
+                    LEFT JOIN municipio m2   ON par2.id_municipio    = m2.id
                     WHERE pt.id_taller = :id_taller AND pt.is_active = TRUE
                     ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC, pt.id ASC");
         $db->bind(':id_taller', $id_taller);
@@ -163,6 +167,28 @@ class Taller extends Model {
         $db->bind(':u', $userId);
         $db->bind(':id', $id);
         $db->execute();
+    }
+
+    public static function marcarAsistenciaMasiva(int $idTaller, $userId): void {
+        $db = new Database();
+        $db->query("UPDATE participantes_taller SET asistio = TRUE, updated_at = NOW(), updated_by = :u WHERE id_taller = :t AND is_active = TRUE AND asistio = FALSE");
+        $db->bind(':u', $userId);
+        $db->bind(':t', $idTaller);
+        $db->execute();
+    }
+
+    public static function getHistorialPersona(int $idPersona): array {
+        $db = new Database();
+        $db->query("SELECT t.nombre, t.tipo_actividad, t.fecha_inicio, t.estado, pt.asistio,
+                           uf.nombre AS ubicacion
+                    FROM participantes_taller pt
+                    JOIN talleres t ON pt.id_taller = t.id
+                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                    WHERE pt.id_persona = :id AND pt.is_active = TRUE AND t.is_active = TRUE
+                    ORDER BY t.fecha_inicio DESC
+                    LIMIT 30");
+        $db->bind(':id', $idPersona);
+        return $db->resultSet() ?: [];
     }
 
     public static function desinscribir(int $id, $userId): bool {
@@ -200,16 +226,24 @@ class Taller extends Model {
         $db = new Database();
         $db->query("INSERT INTO participantes_taller
                     (id_taller, nombre_libre, apellido_libre, cedula_libre,
-                     nombre_docente, cedula_docente, created_by)
+                     nombre_docente, cedula_docente,
+                     fecha_nac_libre, genero_libre, parroquia_id_libre, direccion_libre,
+                     created_by)
                     VALUES (:id_taller, :nombre, :apellido, :cedula,
-                            :nom_doc, :ced_doc, :user_id)");
-        $db->bind(':id_taller', $id_taller);
-        $db->bind(':nombre',    $datos['nombre_libre']);
-        $db->bind(':apellido',  $datos['apellido_libre'] ?? null);
-        $db->bind(':cedula',    $datos['cedula_libre'] ?? null);
-        $db->bind(':nom_doc',   $datos['nombre_docente'] ?? null);
-        $db->bind(':ced_doc',   $datos['cedula_docente'] ?? null);
-        $db->bind(':user_id',   $user_id);
+                            :nom_doc, :ced_doc,
+                            :fecha_nac, :genero, :parroquia, :direccion,
+                            :user_id)");
+        $db->bind(':id_taller',  $id_taller);
+        $db->bind(':nombre',     $datos['nombre_libre']);
+        $db->bind(':apellido',   $datos['apellido_libre'] ?? null);
+        $db->bind(':cedula',     $datos['cedula_libre'] ?? null);
+        $db->bind(':nom_doc',    $datos['nombre_docente'] ?? null);
+        $db->bind(':ced_doc',    $datos['cedula_docente'] ?? null);
+        $db->bind(':fecha_nac',  $datos['fecha_nac_libre'] ?? null);
+        $db->bind(':genero',     $datos['genero_libre'] ?? null);
+        $db->bind(':parroquia',  $datos['parroquia_id_libre'] ?? null);
+        $db->bind(':direccion',  $datos['direccion_libre'] ?? null);
+        $db->bind(':user_id',    $user_id);
         $result = $db->execute();
         self::auditStatic('participantes_taller', 'INSERT', null, null, ['id_taller' => $id_taller, 'nombre_libre' => $datos['nombre_libre'], 'cedula_libre' => $datos['cedula_libre'] ?? null], $user_id);
         return $result;

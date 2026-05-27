@@ -120,7 +120,9 @@ class TalleresController extends Controller {
         $evidencias    = Taller::getEvidencias((int)$id);
 
         require_once '../app/models/Parroquia.php';
+        require_once '../app/models/Empleado.php';
         $parroquias = Parroquia::all();
+        $empleados  = !empty($taller->es_interna) ? Empleado::all() : [];
 
         $data = [
             'titulo'        => 'Detalle: ' . $taller->nombre,
@@ -128,6 +130,7 @@ class TalleresController extends Controller {
             'participantes' => $participantes,
             'evidencias'    => $evidencias,
             'parroquias'    => $parroquias,
+            'empleados'     => $empleados,
         ];
         $this->view('talleres/detalle', $data);
     }
@@ -169,20 +172,39 @@ class TalleresController extends Controller {
         $id_taller = (int)$_POST['id_taller'];
         $userId    = $this->getUserId();
         $esLibre   = !empty($_POST['tipo_participante_libre']);
+        $esInterna = !empty($_POST['es_interna_taller']);
 
         try {
-            if ($esLibre) {
+            if ($esInterna) {
+                // Actividad interna: inscribir empleado directamente por id_persona
+                $idPersona = (int)($_POST['id_empleado_persona'] ?? 0);
+                if (!$idPersona) {
+                    throw new Exception('Seleccione un empleado para inscribir.');
+                }
+                if (Taller::estaInscrito($id_taller, $idPersona)) {
+                    throw new Exception('Este empleado ya está inscrito en esta actividad.');
+                }
+                Taller::inscribir($id_taller, $idPersona, $userId, false);
+            } elseif ($esLibre) {
                 // RN-F16: participante sin cédula (niño/a)
                 $nombre = trim($_POST['nombre_libre'] ?? '');
                 if (empty($nombre)) {
                     throw new Exception('El nombre del participante es requerido.');
                 }
+                $fechaNacLibre = trim($_POST['fecha_nac_libre'] ?? '') ?: null;
+                if ($fechaNacLibre && \DateTime::createFromFormat('Y-m-d', $fechaNacLibre) === false) {
+                    $fechaNacLibre = null;
+                }
                 Taller::inscribirLibre($id_taller, [
-                    'nombre_libre'   => $nombre,
-                    'apellido_libre' => trim($_POST['apellido_libre'] ?? ''),
-                    'cedula_libre'   => trim($_POST['cedula_libre'] ?? '') ?: null,
-                    'nombre_docente' => trim($_POST['nombre_docente'] ?? '') ?: null,
-                    'cedula_docente' => trim($_POST['cedula_docente'] ?? '') ?: null,
+                    'nombre_libre'      => $nombre,
+                    'apellido_libre'    => trim($_POST['apellido_libre'] ?? ''),
+                    'cedula_libre'      => trim($_POST['cedula_libre'] ?? '') ?: null,
+                    'nombre_docente'    => trim($_POST['nombre_docente'] ?? '') ?: null,
+                    'cedula_docente'    => trim($_POST['cedula_docente'] ?? '') ?: null,
+                    'fecha_nac_libre'   => $fechaNacLibre,
+                    'genero_libre'      => trim($_POST['genero_libre'] ?? '') ?: null,
+                    'parroquia_id_libre'=> (int)($_POST['parroquia_id_libre'] ?? 0) ?: null,
+                    'direccion_libre'   => trim($_POST['direccion_libre'] ?? '') ?: null,
                 ], $userId);
             } else {
                 $cedula   = trim($_POST['cedula_participante'] ?? '') ?: null;
@@ -438,6 +460,30 @@ class TalleresController extends Controller {
         } catch (Exception $e) {
             echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
         }
+        exit;
+    }
+
+    public function marcarAsistenciaMasiva() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false]); exit;
+        }
+        $idTaller = (int)($_POST['id_taller'] ?? 0);
+        $userId   = $this->getUserId();
+        try {
+            Taller::marcarAsistenciaMasiva($idTaller, $userId);
+            echo json_encode(['ok' => true]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function historialPersona() {
+        header('Content-Type: application/json');
+        $idPersona = (int)($_GET['id_persona'] ?? 0);
+        if (!$idPersona) { echo json_encode([]); exit; }
+        echo json_encode(Taller::getHistorialPersona($idPersona));
         exit;
     }
 

@@ -46,15 +46,31 @@
     </div>
 </div>
 
+<?php
+$puedeModificar = !in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado']);
+$esInterna      = !empty($data['taller']->es_interna);
+$inscritos      = count($data['participantes'] ?? []);
+$cupo           = $data['taller']->cupo_maximo ?? 0;
+$porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
+?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="sig-card__title">Participantes</div>
-        <div style="display:flex; align-items:center; gap:var(--sp-4);">
-            <?php
-            $inscritos  = count($data['participantes'] ?? []);
-            $cupo       = $data['taller']->cupo_maximo ?? 0;
-            $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
-            ?>
+    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3);">
+        <div style="display:flex; align-items:center; gap:var(--sp-3);">
+            <div class="sig-card__title">Participantes</div>
+            <?php if ($puedeModificar): ?>
+            <div style="position:relative;">
+                <input type="text" id="filtro_participantes" placeholder="Buscar por nombre o cédula…"
+                       class="sig-input" style="font-size:12px; padding:4px 10px; min-width:220px;">
+            </div>
+            <?php endif; ?>
+        </div>
+        <div style="display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap;">
+            <?php if ($puedeModificar && $inscritos > 0): ?>
+            <button type="button" id="btn_asistencia_masiva" class="btn-sig btn-sig--ghost btn-sig--sm"
+                    data-taller="<?php echo $data['taller']->id; ?>">
+                <i class="bi bi-check2-all"></i> Marcar todos asistieron
+            </button>
+            <?php endif; ?>
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
             </a>
@@ -68,9 +84,6 @@
             </div>
         </div>
     </div>
-    <?php
-    $puedeModificar = !in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado']);
-    ?>
     <div class="sig-table-wrap">
         <table class="sig-table">
             <thead>
@@ -95,45 +108,54 @@
                     <?php foreach ($data['participantes'] as $p): ?>
                         <?php
                         $esLibre = empty($p->id_persona);
-                        $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.', 'O' => 'Otro'][$p->genero ?? ''] ?? '—';
+                        $generoSrc = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
+                        $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.', 'O' => 'Otro'][$generoSrc] ?? '—';
+                        $fechaNacSrc = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
                         $edad = null;
-                        if (!$esLibre && !empty($p->fecha_nacimiento)) {
-                            $nac  = new DateTime($p->fecha_nacimiento);
+                        if (!empty($fechaNacSrc)) {
+                            $nac  = new DateTime($fechaNacSrc);
                             $hoy  = new DateTime();
                             $edad = (int)$nac->diff($hoy)->y;
                         }
+                        $parroquiaNombre  = $esLibre ? ($p->parroquia_libre_nombre ?? null) : ($p->parroquia_nombre ?? null);
+                        $municipioNombre  = $esLibre ? ($p->municipio_libre_nombre ?? null) : ($p->municipio_nombre ?? null);
+                        $nombreCompleto   = $esLibre
+                            ? htmlspecialchars(trim(($p->nombre_libre ?? '') . ' ' . ($p->apellido_libre ?? '')))
+                            : htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''));
                         ?>
-                        <tr id="fila-pt-<?php echo $p->id; ?>">
-                            <td class="cell-id">
+                        <tr id="fila-pt-<?php echo $p->id; ?>" class="fila-participante">
+                            <td class="cell-id" data-buscar="<?php echo htmlspecialchars($esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '')); ?>">
                                 <?php if ($esLibre): ?>
                                     <?php echo $p->cedula_libre ? htmlspecialchars($p->cedula_libre) : '<em style="color:var(--text-tertiary);">Sin cédula</em>'; ?>
                                 <?php else: ?>
                                     <?php echo htmlspecialchars($p->cedula ?? '—'); ?>
                                 <?php endif; ?>
                             </td>
-                            <td class="cell-strong">
+                            <td class="cell-strong" data-buscar="<?php echo $nombreCompleto; ?>">
                                 <?php if ($esLibre): ?>
-                                    <?php echo htmlspecialchars(trim(($p->nombre_libre ?? '') . ' ' . ($p->apellido_libre ?? ''))); ?>
+                                    <?php echo $nombreCompleto; ?>
                                     <span class="sig-badge sig-badge--neutral" style="font-size:10px; margin-left:4px;">Niño/a</span>
                                 <?php else: ?>
-                                    <?php echo htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? '')); ?>
+                                    <span style="cursor:pointer; text-decoration:underline dotted; color:inherit;"
+                                          class="link-historial"
+                                          data-id="<?php echo $p->id_persona; ?>"
+                                          data-nombre="<?php echo $nombreCompleto; ?>"
+                                          title="Ver historial de actividades">
+                                        <?php echo $nombreCompleto; ?>
+                                    </span>
                                 <?php endif; ?>
                             </td>
                             <td style="font-size:12px; white-space:nowrap;">
-                                <?php if (!$esLibre): ?>
-                                    <span><?php echo $generoLabel; ?></span>
-                                    <?php if ($edad !== null): ?>
-                                        <span style="color:var(--text-tertiary); margin-left:4px;"><?php echo $edad; ?> años</span>
-                                    <?php endif; ?>
-                                <?php else: ?>
-                                    <span style="color:var(--text-tertiary);">—</span>
+                                <span><?php echo $generoLabel; ?></span>
+                                <?php if ($edad !== null): ?>
+                                    <span style="color:var(--text-tertiary); margin-left:4px;"><?php echo $edad; ?> años</span>
                                 <?php endif; ?>
                             </td>
                             <td style="font-size:12px; color:var(--text-secondary);">
-                                <?php if (!$esLibre && !empty($p->parroquia_nombre)): ?>
-                                    <?php echo htmlspecialchars($p->parroquia_nombre); ?>
-                                    <?php if (!empty($p->municipio_nombre)): ?>
-                                        <span style="color:var(--text-tertiary); display:block; font-size:11px;"><?php echo htmlspecialchars($p->municipio_nombre); ?></span>
+                                <?php if (!empty($parroquiaNombre)): ?>
+                                    <?php echo htmlspecialchars($parroquiaNombre); ?>
+                                    <?php if (!empty($municipioNombre)): ?>
+                                        <span style="color:var(--text-tertiary); display:block; font-size:11px;"><?php echo htmlspecialchars($municipioNombre); ?></span>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     —
@@ -245,11 +267,39 @@
     <div class="modal-dialog modal-lg">
         <form action="<?php echo URL_ROOT; ?>/talleres/inscribir" method="POST" class="modal-content" id="formInscripcion">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Agregar Participante</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-person-plus"></i> Agregar Participante
+                    <span class="sig-badge <?php echo $esInterna ? 'sig-badge--brand' : 'sig-badge--neutral'; ?>" style="font-size:11px; margin-left:8px; vertical-align:middle;">
+                        <?php echo $esInterna ? 'Actividad Interna' : 'Actividad Externa'; ?>
+                    </span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="display:flex; flex-direction:column; gap:var(--sp-4);">
                 <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
+                <input type="hidden" name="es_interna_taller" value="<?php echo $esInterna ? '1' : '0'; ?>">
+
+                <?php if ($esInterna): ?>
+                <!-- ── BLOQUE INTERNO: selección de empleado ─────────────── -->
+                <div style="padding:var(--sp-3); background:rgba(var(--brand-rgb,.22,.48,.86),.06); border-left:3px solid var(--brand-500); border-radius:6px; font-size:13px; color:var(--text-secondary);">
+                    <i class="bi bi-info-circle"></i> Las actividades internas se inscriben directamente desde el registro de empleados.
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Empleado <span class="req">*</span></label>
+                    <select name="id_empleado_persona" id="sel_empleado" class="sig-select">
+                        <option value="">— Seleccione empleado —</option>
+                        <?php foreach ($data['empleados'] as $emp): ?>
+                            <option value="<?php echo $emp->id_persona; ?>">
+                                <?php echo htmlspecialchars($emp->nombre . ' ' . $emp->apellido); ?>
+                                <?php if (!empty($emp->cedula)): ?> — <?php echo htmlspecialchars($emp->cedula); ?><?php endif; ?>
+                                <?php if (!empty($emp->cargo)): ?> (<?php echo htmlspecialchars($emp->cargo); ?>)<?php endif; ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <?php else: ?>
+                <!-- ── BLOQUE EXTERNO ────────────────────────────────────── -->
 
                 <!-- Toggle niño/a sin cédula (RN-F16) -->
                 <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
@@ -263,8 +313,6 @@
 
                 <!-- ── BLOQUE PERSONA CON CÉDULA ─────────────────────────── -->
                 <div id="bloque_persona">
-
-                    <!-- Búsqueda rápida -->
                     <div class="row g-3" style="margin-bottom:var(--sp-1);">
                         <div class="col-md-8">
                             <div class="sig-field" style="margin:0;">
@@ -282,11 +330,7 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Resultado búsqueda -->
                     <div id="insc_status" style="display:none;"></div>
-
-                    <!-- Datos personales -->
                     <div id="bloque_datos_persona" style="display:none;">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -350,7 +394,7 @@
                                     <input type="text" name="direccion" id="insc_direccion" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
                                 </div>
                             </div>
-                            <div class="col-md-8" style="display:flex; align-items:flex-end; padding-bottom:4px;">
+                            <div class="col-12" style="padding-bottom:4px;">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="insc_brigadista" name="es_brigadista" value="1">
                                     <label class="form-check-label" for="insc_brigadista" style="font-size:13px;">
@@ -377,10 +421,47 @@
                                 <input type="text" name="apellido_libre" class="sig-input" placeholder="Ej: González">
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label">Fecha de nacimiento <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                <input type="date" name="fecha_nac_libre" id="libre_fecha_nac" class="sig-input">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label">Género</label>
+                                <select name="genero_libre" class="sig-select">
+                                    <option value="">—</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="O">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label">N° ID Escolar</label>
+                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Opcional">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="sig-field">
+                                <label class="sig-field__label">Parroquia</label>
+                                <select name="parroquia_id_libre" class="sig-select">
+                                    <option value="">— Seleccione parroquia —</option>
+                                    <?php foreach ($data['parroquias'] as $par): ?>
+                                        <option value="<?php echo $par->id; ?>">
+                                            <?php echo htmlspecialchars($par->nombre); ?>
+                                            <?php if (!empty($par->municipio)): ?> (<?php echo htmlspecialchars($par->municipio); ?>)<?php endif; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
                         <div class="col-12">
                             <div class="sig-field">
-                                <label class="sig-field__label">N° ID Escolar (opcional)</label>
-                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene identificación escolar...">
+                                <label class="sig-field__label">Dirección</label>
+                                <input type="text" name="direccion_libre" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
                             </div>
                         </div>
                         <div class="col-12">
@@ -403,10 +484,12 @@
                         </div>
                     </div>
                 </div>
+                <?php endif; // fin bloque externo ?>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" id="btn_insc_submit" class="btn-sig btn-sig--primary" disabled>
+                <button type="submit" id="btn_insc_submit" class="btn-sig btn-sig--primary" <?php echo $esInterna ? '' : 'disabled'; ?>>
                     <i class="bi bi-person-plus"></i> Agregar
                 </button>
             </div>
@@ -423,7 +506,6 @@ input[readonly].sig-input, select:disabled.sig-select {
 }
 </style>
 <script>
-// ── Utilidades ────────────────────────────────────────────────────────────
 function calcularEdad(fechaNac) {
     if (!fechaNac) return null;
     var hoy = new Date(), nac = new Date(fechaNac);
@@ -432,29 +514,112 @@ function calcularEdad(fechaNac) {
     return a >= 0 ? a : null;
 }
 
+// ── Filtro de tabla ───────────────────────────────────────────────────────
+var filtroInput = document.getElementById('filtro_participantes');
+if (filtroInput) {
+    filtroInput.addEventListener('input', function() {
+        var q = this.value.toLowerCase();
+        document.querySelectorAll('tr.fila-participante').forEach(function(tr) {
+            var textos = Array.from(tr.querySelectorAll('[data-buscar]')).map(function(el) {
+                return el.dataset.buscar.toLowerCase();
+            }).join(' ');
+            tr.style.display = textos.includes(q) ? '' : 'none';
+        });
+    });
+}
+
+// ── Marcado masivo de asistencia ─────────────────────────────────────────
+var btnMasiva = document.getElementById('btn_asistencia_masiva');
+if (btnMasiva) {
+    btnMasiva.addEventListener('click', function() {
+        if (!confirm('¿Marcar como "Asistió" a todos los participantes pendientes?')) return;
+        var idTaller = this.dataset.taller;
+        var self = this;
+        var fd = new FormData();
+        fd.append('id_taller', idTaller);
+        self.disabled = true;
+        fetch('<?php echo URL_ROOT; ?>/talleres/marcarAsistenciaMasiva', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    document.querySelectorAll('.btn-asistencia[data-asistio="0"]').forEach(function(btn) {
+                        btn.dataset.asistio = '1';
+                        btn.className = 'btn-asistencia sig-badge sig-badge--success';
+                        btn.textContent = 'Asistió';
+                    });
+                    self.style.opacity = '0.4';
+                    self.disabled = true;
+                }
+            });
+    });
+}
+
+// ── Toggle de asistencia inline ───────────────────────────────────────────
+document.querySelectorAll('.btn-asistencia').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var id     = this.dataset.id;
+        var actual = this.dataset.asistio === '1';
+        var nuevo  = actual ? '0' : '1';
+        var self   = this;
+        var fd = new FormData(); fd.append('id', id); fd.append('asistio', nuevo);
+        fetch('<?php echo URL_ROOT; ?>/talleres/marcarAsistencia', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    self.dataset.asistio = res.asistio ? '1' : '0';
+                    self.className = 'btn-asistencia sig-badge ' + (res.asistio ? 'sig-badge--success' : 'sig-badge--neutral');
+                    self.textContent = res.asistio ? 'Asistió' : 'Pendiente';
+                }
+            });
+    });
+});
+
+// ── Modal historial por persona ───────────────────────────────────────────
+var modalHistorial = document.getElementById('modalHistorial');
+document.querySelectorAll('.link-historial').forEach(function(el) {
+    el.addEventListener('click', function() {
+        var idPersona = this.dataset.id;
+        var nombre    = this.dataset.nombre;
+        document.getElementById('hist_nombre').textContent = nombre;
+        var cuerpo = document.getElementById('hist_cuerpo');
+        cuerpo.innerHTML = '<em style="color:var(--text-tertiary);">Cargando…</em>';
+        new bootstrap.Modal(modalHistorial).show();
+        fetch('<?php echo URL_ROOT; ?>/talleres/historialPersona?id_persona=' + idPersona)
+            .then(function(r) { return r.json(); })
+            .then(function(rows) {
+                if (!rows.length) { cuerpo.innerHTML = '<em>Sin actividades registradas.</em>'; return; }
+                var html = '<table class="sig-table" style="font-size:12px;"><thead><tr><th>Actividad</th><th>Tipo</th><th>Fecha</th><th>Estado</th><th class="text-center">Asistió</th></tr></thead><tbody>';
+                rows.forEach(function(r) {
+                    var asistio = r.asistio ? '<span class="sig-badge sig-badge--success" style="font-size:10px;">Sí</span>' : '<span class="sig-badge sig-badge--neutral" style="font-size:10px;">No</span>';
+                    html += '<tr><td>' + r.nombre + '</td><td>' + r.tipo_actividad + '</td><td>' + (r.fecha_inicio || '').substring(0,10) + '</td><td>' + r.estado + '</td><td class="text-center">' + asistio + '</td></tr>';
+                });
+                cuerpo.innerHTML = html + '</tbody></table>';
+            });
+    });
+});
+
+<?php if (!$esInterna): ?>
+// ── Modal de inscripción (actividad externa) ──────────────────────────────
 function checkInscripcionValid() {
     var esLibre = document.getElementById('insc_es_libre').checked;
     var btn = document.getElementById('btn_insc_submit');
     if (esLibre) {
         btn.disabled = (document.getElementById('insc_nombre_libre').value || '').trim() === '';
     } else {
-        var bloqueVisible = document.getElementById('bloque_datos_persona').style.display !== 'none';
-        var nombre    = (document.getElementById('insc_nombre').value   || '').trim();
-        var apellido  = (document.getElementById('insc_apellido').value || '').trim();
-        btn.disabled  = !bloqueVisible || !nombre || !apellido;
+        var visible  = document.getElementById('bloque_datos_persona').style.display !== 'none';
+        var nombre   = (document.getElementById('insc_nombre').value   || '').trim();
+        var apellido = (document.getElementById('insc_apellido').value || '').trim();
+        btn.disabled = !visible || !nombre || !apellido;
     }
 }
 
-// ── Reset completo del bloque persona ─────────────────────────────────────
 function resetBloquePersona() {
     ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac','insc_direccion'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.value = ''; el.readOnly = false; }
     });
-    var gen = document.getElementById('insc_genero');
-    gen.value = ''; gen.disabled = false;
-    var par = document.getElementById('insc_parroquia');
-    par.value = ''; par.disabled = false;
+    document.getElementById('insc_genero').value = '';    document.getElementById('insc_genero').disabled = false;
+    document.getElementById('insc_parroquia').value = ''; document.getElementById('insc_parroquia').disabled = false;
     document.getElementById('insc_brigadista').checked = false;
     document.getElementById('insc_status').style.display = 'none';
     document.getElementById('bloque_datos_persona').style.display = 'none';
@@ -478,32 +643,23 @@ function mostrarStatus(tipo, html) {
         err:  'background:rgba(239,68,68,.1);  border-left:3px solid var(--danger-600);  color:var(--danger-700);'
     };
     s.style.cssText = 'padding:var(--sp-2) var(--sp-3); border-radius:6px; font-size:13px; ' + (estilos[tipo] || '');
-    s.innerHTML = html;
-    s.style.display = 'block';
+    s.innerHTML = html; s.style.display = 'block';
 }
 
-// ── Búsqueda por cédula (AJAX) ────────────────────────────────────────────
 document.getElementById('btn_buscar_cedula').addEventListener('click', function() {
     var cedula = (document.getElementById('insc_cedula_busqueda').value || '').trim();
-    var btn = this;
-    var ico = document.getElementById('ico_buscar');
-
-    // Sin cédula: mostrar formulario en blanco para registro manual
+    var btn = this; var ico = document.getElementById('ico_buscar');
     if (!cedula) {
         resetBloquePersona();
         document.getElementById('bloque_datos_persona').style.display = 'block';
         mostrarStatus('warn', '<i class="bi bi-pencil"></i> Complete los datos para registrar un nuevo participante.');
-        checkInscripcionValid();
-        return;
+        checkInscripcionValid(); return;
     }
-
     btn.disabled = true; ico.className = 'bi bi-hourglass-split';
-
     fetch('<?php echo URL_ROOT; ?>/talleres/buscarPersona?cedula=' + encodeURIComponent(cedula))
         .then(function(r) { return r.json(); })
         .then(function(res) {
             document.getElementById('bloque_datos_persona').style.display = 'block';
-
             if (res.found) {
                 var p = res.persona;
                 document.getElementById('insc_nombre').value    = p.nombre;
@@ -512,95 +668,85 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
                 document.getElementById('insc_correo').value    = p.correo   || '';
                 document.getElementById('insc_genero').value    = p.genero   || '';
                 document.getElementById('insc_fecha_nac').value = p.fecha_nacimiento || '';
-                document.getElementById('insc_parroquia').value  = p.parroquia_id    || '';
-                document.getElementById('insc_direccion').value  = p.direccion       || '';
+                document.getElementById('insc_parroquia').value = p.parroquia_id     || '';
+                document.getElementById('insc_direccion').value = p.direccion        || '';
                 setPersonaReadonly(true);
-                // Desbloquear campos vacíos para que el usuario pueda completar datos faltantes
                 ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac','insc_direccion'].forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el.value) el.readOnly = false;
+                    var el = document.getElementById(id); if (!el.value) el.readOnly = false;
                 });
                 if (!document.getElementById('insc_genero').value)    document.getElementById('insc_genero').disabled    = false;
                 if (!document.getElementById('insc_parroquia').value) document.getElementById('insc_parroquia').disabled = false;
-
                 var edad = calcularEdad(p.fecha_nacimiento);
                 var edadTxt = edad !== null ? '· ' + edad + ' años' : '';
                 document.getElementById('insc_edad_label').textContent = edadTxt;
-
-                var tieneFaltantes = !p.fecha_nacimiento || !p.telefono || !p.correo || !p.genero || !p.parroquia_id || !p.direccion;
-                var extra = tieneFaltantes ? ' — <em>complete los campos vacíos si lo desea</em>' : ' — datos cargados automáticamente.';
-                mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + extra);
+                var faltantes = !p.fecha_nacimiento || !p.telefono || !p.correo || !p.genero || !p.parroquia_id || !p.direccion;
+                mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + (faltantes ? ' — <em>complete los campos vacíos si lo desea</em>' : ' — datos cargados automáticamente.'));
             } else {
                 setPersonaReadonly(false);
                 mostrarStatus('warn', '<i class="bi bi-person-plus"></i> Persona no registrada — complete los datos para crear el registro.');
             }
             checkInscripcionValid();
         })
-        .catch(function() {
-            mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Error al consultar. Intente nuevamente.');
-        })
+        .catch(function() { mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Error al consultar. Intente nuevamente.'); })
         .finally(function() { btn.disabled = false; ico.className = 'bi bi-search'; });
 });
 
-// Enter en campo cédula también dispara la búsqueda
 document.getElementById('insc_cedula_busqueda').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn_buscar_cedula').click(); }
 });
 
-// Toggle libre / persona
 document.getElementById('insc_es_libre').addEventListener('change', function() {
     var esLibre = this.checked;
     document.getElementById('bloque_persona').style.display = esLibre ? 'none' : 'block';
     document.getElementById('bloque_libre').style.display   = esLibre ? 'block' : 'none';
-    if (!esLibre) {
-        document.getElementById('insc_cedula_busqueda').value = '';
-        resetBloquePersona();
-    }
+    if (!esLibre) { document.getElementById('insc_cedula_busqueda').value = ''; resetBloquePersona(); }
     checkInscripcionValid();
 });
 
-// Fecha → mostrar edad calculada en tiempo real
 document.getElementById('insc_fecha_nac').addEventListener('change', function() {
     var edad = calcularEdad(this.value);
     document.getElementById('insc_edad_label').textContent = edad !== null ? '· ' + edad + ' años' : '';
 });
 
-// Habilitar submit cuando cambien campos requeridos
+document.getElementById('libre_fecha_nac').addEventListener('change', function() {
+    var edad = calcularEdad(this.value);
+    document.getElementById('libre_edad_label').textContent = edad !== null ? '· ' + edad + ' años' : '';
+});
+
 document.getElementById('insc_nombre').addEventListener('input', checkInscripcionValid);
 document.getElementById('insc_apellido').addEventListener('input', checkInscripcionValid);
 document.getElementById('insc_nombre_libre').addEventListener('input', checkInscripcionValid);
 
-// Reset al abrir el modal
 document.getElementById('modalInscripcion').addEventListener('show.bs.modal', function() {
-    document.getElementById('insc_es_libre').checked           = false;
-    document.getElementById('bloque_persona').style.display    = 'block';
-    document.getElementById('bloque_libre').style.display      = 'none';
-    document.getElementById('insc_cedula_busqueda').value      = '';
+    document.getElementById('insc_es_libre').checked        = false;
+    document.getElementById('bloque_persona').style.display = 'block';
+    document.getElementById('bloque_libre').style.display   = 'none';
+    document.getElementById('insc_cedula_busqueda').value   = '';
     resetBloquePersona();
 });
 
-// ── Toggle de asistencia inline ───────────────────────────────────────────
-document.querySelectorAll('.btn-asistencia').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-        var id      = this.dataset.id;
-        var actual  = this.dataset.asistio === '1';
-        var nuevo   = actual ? '0' : '1';
-        var self    = this;
-        var fd = new FormData();
-        fd.append('id', id);
-        fd.append('asistio', nuevo);
-        fetch('<?php echo URL_ROOT; ?>/talleres/marcarAsistencia', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.ok) {
-                    var asistio = res.asistio;
-                    self.dataset.asistio = asistio ? '1' : '0';
-                    self.className = 'btn-asistencia sig-badge ' + (asistio ? 'sig-badge--success' : 'sig-badge--neutral');
-                    self.textContent = asistio ? 'Asistió' : 'Pendiente';
-                }
-            });
-    });
+<?php else: ?>
+// ── Modal de inscripción (actividad interna — empleados) ──────────────────
+document.getElementById('sel_empleado').addEventListener('change', function() {
+    document.getElementById('btn_insc_submit').disabled = !this.value;
 });
+<?php endif; ?>
 </script>
+
+<!-- Modal historial de participante -->
+<div class="modal fade" id="modalHistorial" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-clock-history"></i> Historial — <span id="hist_nombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="hist_cuerpo" style="min-height:80px;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
