@@ -234,12 +234,7 @@
 
                     <!-- Aviso participantes — visible al seleccionar En Curso en edición -->
                     <div id="sec_edit_en_curso" class="col-12" style="display:none;">
-                        <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px; border-left:3px solid var(--brand-300);">
-                            <p style="font-size:13px; color:var(--text-secondary); margin:0;">
-                                <i class="bi bi-people" style="color:var(--brand-500);"></i>
-                                Se requiere al menos 1 participante inscrito para iniciar la actividad.
-                            </p>
-                        </div>
+                        <div id="edit_en_curso_msg" style="padding:var(--sp-3); border-radius:8px; border-left:3px solid var(--brand-300); font-size:13px;"></div>
                     </div>
 
                 </div>
@@ -460,7 +455,22 @@ function actualizarSeccionesEstadoEdit(estado) {
         secCancelado.style.display = 'none';
         motivo.required = false;
     }
-    secEnCurso.style.display = (estado === 'En Curso') ? 'block' : 'none';
+
+    if (estado === 'En Curso') {
+        var totalInscritos = parseInt(document.getElementById('tal_estado').dataset.totalInscritos || '0', 10);
+        var sinInscritos   = totalInscritos === 0;
+        var msg = document.getElementById('edit_en_curso_msg');
+        msg.style.borderLeftColor = sinInscritos ? 'var(--danger-500)' : 'var(--success-500)';
+        msg.style.background      = sinInscritos ? 'rgba(239,68,68,.06)' : 'rgba(34,197,94,.06)';
+        var icon  = sinInscritos ? 'bi-exclamation-circle' : 'bi-people';
+        var color = sinInscritos ? 'var(--danger-600)' : 'var(--success-600)';
+        msg.innerHTML = '<i class="bi ' + icon + '" style="color:' + color + ';"></i> '
+            + '<strong>' + totalInscritos + '</strong> participante(s) inscrito(s).'
+            + (sinInscritos ? ' <span style="color:var(--danger-600);">Se requiere al menos 1 para iniciar.</span>' : '');
+        secEnCurso.style.display = 'block';
+    } else {
+        secEnCurso.style.display = 'none';
+    }
 }
 
 // ── Habilitar/deshabilitar botón Guardar ──────────────────────────────────
@@ -473,9 +483,12 @@ function checkFormValid() {
     var motivoOk     = !canceladoVis || (document.getElementById('tal_motivo_cancelacion').value || '').trim() !== '';
     var cupo         = parseInt(document.getElementById('tal_cupo').value || '0', 10);
     var cupoOk       = cupo >= 1 && cupo <= 200;
+    var estado       = document.getElementById('tal_estado').value;
+    var totalInsc    = parseInt(document.getElementById('tal_estado').dataset.totalInscritos || '0', 10);
+    var enCursoOk    = estado !== 'En Curso' || totalInsc > 0;
 
     document.getElementById('btn_guardar').disabled =
-        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && motivoOk && cupoOk);
+        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && motivoOk && cupoOk && enCursoOk);
 }
 
 // ── Abrir modal — nueva actividad ─────────────────────────────────────────
@@ -517,6 +530,7 @@ function editarTaller(t) {
     filtrarSedes(esInterna);
     document.getElementById('tal_ubicacion').value = t.id_ubicacion_formacion || '';
 
+    document.getElementById('tal_estado').dataset.totalInscritos = t.total_inscritos || 0;
     setOpcionesEstado(t.estado);
     actualizarSeccionesEstadoEdit(t.estado);
     checkFormValid();

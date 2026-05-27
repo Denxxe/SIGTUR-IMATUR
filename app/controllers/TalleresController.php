@@ -61,10 +61,10 @@ class TalleresController extends Controller {
                     $this->validarTransicion($actual->estado, $data['estado']);
                 }
 
-                // RN-F12: Finalizado requiere al menos un participante
-                if ($data['estado'] === 'Finalizado') {
+                // RN-F12: En Curso y Finalizado requieren al menos un participante
+                if (in_array($data['estado'], ['En Curso', 'Finalizado'])) {
                     if (Taller::countParticipantes($data['id']) === 0) {
-                        throw new Exception('No se puede finalizar una actividad sin participantes inscritos (RN-F12).');
+                        throw new Exception('No se puede cambiar a "' . $data['estado'] . '" sin participantes inscritos (RN-F12).');
                     }
                 }
 
