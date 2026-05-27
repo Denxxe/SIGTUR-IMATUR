@@ -133,13 +133,44 @@ class Taller extends Model {
     public static function getParticipantes($id_taller) {
         $db = new Database();
         $db->query("SELECT pt.*,
-                           p.cedula, p.nombre, p.apellido, p.telefono
+                           p.cedula, p.nombre, p.apellido, p.telefono,
+                           p.correo, p.genero, p.fecha_nacimiento,
+                           p.parroquia_id, p.direccion,
+                           par.nombre AS parroquia_nombre,
+                           m.nombre   AS municipio_nombre
                     FROM participantes_taller pt
-                    LEFT JOIN personas p ON pt.id_persona = p.id
-                    WHERE pt.id_taller = :id_taller
+                    LEFT JOIN personas  p   ON pt.id_persona   = p.id
+                    LEFT JOIN parroquia par ON p.parroquia_id  = par.id
+                    LEFT JOIN municipio m   ON par.id_municipio = m.id
+                    WHERE pt.id_taller = :id_taller AND pt.is_active = TRUE
                     ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC, pt.id ASC");
         $db->bind(':id_taller', $id_taller);
         return $db->resultSet();
+    }
+
+    public static function estaInscrito(int $idTaller, int $idPersona): bool {
+        $db = new Database();
+        $db->query("SELECT 1 FROM participantes_taller WHERE id_taller = :t AND id_persona = :p AND is_active = TRUE");
+        $db->bind(':t', $idTaller);
+        $db->bind(':p', $idPersona);
+        return (bool)$db->single();
+    }
+
+    public static function marcarAsistencia(int $id, bool $asistio, $userId): void {
+        $db = new Database();
+        $db->query("UPDATE participantes_taller SET asistio = :a, updated_at = NOW(), updated_by = :u WHERE id = :id AND is_active = TRUE");
+        $db->bind(':a', $asistio);
+        $db->bind(':u', $userId);
+        $db->bind(':id', $id);
+        $db->execute();
+    }
+
+    public static function desinscribir(int $id, $userId): bool {
+        $db = new Database();
+        $db->query("UPDATE participantes_taller SET is_active = FALSE, deleted_at = NOW(), deleted_by = :u WHERE id = :id");
+        $db->bind(':u', $userId);
+        $db->bind(':id', $id);
+        return $db->execute();
     }
 
     public static function countParticipantes($id_taller): int {
@@ -197,7 +228,8 @@ class Taller extends Model {
 
     public static function buscarPersonaPorCedula(string $cedula) {
         $db = new Database();
-        $db->query("SELECT id, cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento
+        $db->query("SELECT id, cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento,
+                           parroquia_id, direccion
                     FROM personas WHERE cedula = :cedula AND is_active = TRUE");
         $db->bind(':cedula', $cedula);
         return $db->single();
@@ -205,8 +237,8 @@ class Taller extends Model {
 
     public static function crearPersona(array $data, $userId): int {
         $db = new Database();
-        $db->query("INSERT INTO personas (cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento, created_by)
-                    VALUES (:cedula, :nombre, :apellido, :telefono, :correo, :genero, :fecha_nacimiento, :uid)
+        $db->query("INSERT INTO personas (cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento, parroquia_id, direccion, created_by)
+                    VALUES (:cedula, :nombre, :apellido, :telefono, :correo, :genero, :fecha_nacimiento, :parroquia_id, :direccion, :uid)
                     RETURNING id");
         $db->bind(':cedula',           $data['cedula']);
         $db->bind(':nombre',           $data['nombre']);
@@ -215,6 +247,8 @@ class Taller extends Model {
         $db->bind(':correo',           $data['correo'] ?? null);
         $db->bind(':genero',           $data['genero'] ?? null);
         $db->bind(':fecha_nacimiento', $data['fecha_nacimiento'] ?? null);
+        $db->bind(':parroquia_id',     $data['parroquia_id'] ?? null);
+        $db->bind(':direccion',        $data['direccion'] ?? null);
         $db->bind(':uid',              $userId);
         $row = $db->single();
         if (!$row) throw new Exception('Error al registrar los datos de la persona.');

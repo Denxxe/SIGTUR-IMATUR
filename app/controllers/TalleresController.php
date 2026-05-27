@@ -119,11 +119,15 @@ class TalleresController extends Controller {
         $participantes = Taller::getParticipantes($id);
         $evidencias    = Taller::getEvidencias((int)$id);
 
+        require_once '../app/models/Parroquia.php';
+        $parroquias = Parroquia::all();
+
         $data = [
             'titulo'        => 'Detalle: ' . $taller->nombre,
             'taller'        => $taller,
             'participantes' => $participantes,
             'evidencias'    => $evidencias,
+            'parroquias'    => $parroquias,
         ];
         $this->view('talleres/detalle', $data);
     }
@@ -148,6 +152,8 @@ class TalleresController extends Controller {
                     'correo'           => $persona->correo           ?? '',
                     'genero'           => $persona->genero           ?? '',
                     'fecha_nacimiento' => $persona->fecha_nacimiento ?? '',
+                    'parroquia_id'     => $persona->parroquia_id     ?? '',
+                    'direccion'        => $persona->direccion        ?? '',
                 ]
             ]);
         } else {
@@ -190,26 +196,32 @@ class TalleresController extends Controller {
                 // Buscar persona existente por cédula; si no existe, crear nueva
                 $persona = $cedula ? Taller::buscarPersonaPorCedula($cedula) : null;
 
+                $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
+                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
+                    $fechaNac = null;
+                }
+                $parroquiaId = (int)($_POST['parroquia_id'] ?? 0) ?: null;
+                $direccion   = trim($_POST['direccion'] ?? '') ?: null;
+
                 if ($persona) {
                     $idPersona = $persona->id;
-                    // Actualizar campos vacíos en personas con los datos recién aportados
-                    $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
-                    if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
-                        $fechaNac = null;
+
+                    if (Taller::estaInscrito($id_taller, $idPersona)) {
+                        throw new Exception('Este participante ya está inscrito en esta actividad.');
                     }
+
+                    // Actualizar campos vacíos en personas con los datos recién aportados
                     $actualizacion = [];
-                    if (empty($persona->telefono)        && !empty($_POST['telefono']))     $actualizacion['telefono']        = trim($_POST['telefono']);
-                    if (empty($persona->correo)          && !empty($_POST['correo']))       $actualizacion['correo']          = trim($_POST['correo']);
-                    if (empty($persona->genero)          && !empty($_POST['genero']))       $actualizacion['genero']          = trim($_POST['genero']);
-                    if (empty($persona->fecha_nacimiento) && $fechaNac)                     $actualizacion['fecha_nacimiento'] = $fechaNac;
+                    if (empty($persona->telefono)         && !empty($_POST['telefono']))  $actualizacion['telefono']         = trim($_POST['telefono']);
+                    if (empty($persona->correo)           && !empty($_POST['correo']))    $actualizacion['correo']           = trim($_POST['correo']);
+                    if (empty($persona->genero)           && !empty($_POST['genero']))    $actualizacion['genero']           = trim($_POST['genero']);
+                    if (empty($persona->fecha_nacimiento) && $fechaNac)                   $actualizacion['fecha_nacimiento'] = $fechaNac;
+                    if (empty($persona->parroquia_id)     && $parroquiaId)               $actualizacion['parroquia_id']     = $parroquiaId;
+                    if (empty($persona->direccion)        && $direccion)                 $actualizacion['direccion']        = $direccion;
                     if (!empty($actualizacion)) {
                         Taller::actualizarPersona($idPersona, $actualizacion, $userId);
                     }
                 } else {
-                    $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
-                    if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
-                        $fechaNac = null;
-                    }
                     $idPersona = Taller::crearPersona([
                         'cedula'           => $cedula,
                         'nombre'           => $nombre,
@@ -218,6 +230,8 @@ class TalleresController extends Controller {
                         'correo'           => trim($_POST['correo']   ?? '') ?: null,
                         'genero'           => trim($_POST['genero']   ?? '') ?: null,
                         'fecha_nacimiento' => $fechaNac,
+                        'parroquia_id'     => $parroquiaId,
+                        'direccion'        => $direccion,
                     ], $userId);
                 }
 
@@ -406,6 +420,38 @@ class TalleresController extends Controller {
         }
 
         header('Location: ' . URL_ROOT . '/talleres/index');
+    }
+
+    // ── Asistencia y desinscripción de participantes ─────────────────────────
+
+    public function marcarAsistencia() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['ok' => false]); exit;
+        }
+        $id      = (int)($_POST['id']      ?? 0);
+        $asistio = !empty($_POST['asistio']) && $_POST['asistio'] !== '0';
+        $userId  = $this->getUserId();
+        try {
+            Taller::marcarAsistencia($id, $asistio, $userId);
+            echo json_encode(['ok' => true, 'asistio' => $asistio]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function desinscribir($id) {
+        $id     = (int)$id;
+        $userId = $this->getUserId();
+        $ref    = $_POST['id_taller'] ?? '';
+        try {
+            Taller::desinscribir($id, $userId);
+            flash('global_msg', 'Participante desinscrito correctamente.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/talleres/detalle/' . (int)$ref);
     }
 
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────

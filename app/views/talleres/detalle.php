@@ -68,27 +68,42 @@
             </div>
         </div>
     </div>
+    <?php
+    $puedeModificar = !in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado']);
+    ?>
     <div class="sig-table-wrap">
         <table class="sig-table">
             <thead>
                 <tr>
                     <th>Cédula / ID</th>
                     <th>Nombre Completo</th>
-                    <th>Teléfono</th>
+                    <th>Género / Edad</th>
+                    <th>Parroquia</th>
                     <th class="text-center">Asistencia</th>
-                    <th>Brigadista / Docente</th>
-                    <th>Observaciones</th>
+                    <th>Rol</th>
+                    <?php if ($puedeModificar): ?>
+                    <th class="text-center" style="width:50px;"></th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($data['participantes'])): ?>
                     <tr>
-                        <td colspan="6" class="sig-table-empty">No hay participantes registrados aún.</td>
+                        <td colspan="<?php echo $puedeModificar ? 7 : 6; ?>" class="sig-table-empty">No hay participantes registrados aún.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($data['participantes'] as $p): ?>
-                        <?php $esLibre = empty($p->id_persona); ?>
-                        <tr>
+                        <?php
+                        $esLibre = empty($p->id_persona);
+                        $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.', 'O' => 'Otro'][$p->genero ?? ''] ?? '—';
+                        $edad = null;
+                        if (!$esLibre && !empty($p->fecha_nacimiento)) {
+                            $nac  = new DateTime($p->fecha_nacimiento);
+                            $hoy  = new DateTime();
+                            $edad = (int)$nac->diff($hoy)->y;
+                        }
+                        ?>
+                        <tr id="fila-pt-<?php echo $p->id; ?>">
                             <td class="cell-id">
                                 <?php if ($esLibre): ?>
                                     <?php echo $p->cedula_libre ? htmlspecialchars($p->cedula_libre) : '<em style="color:var(--text-tertiary);">Sin cédula</em>'; ?>
@@ -104,9 +119,37 @@
                                     <?php echo htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? '')); ?>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo $esLibre ? '—' : htmlspecialchars($p->telefono ?? '—'); ?></td>
+                            <td style="font-size:12px; white-space:nowrap;">
+                                <?php if (!$esLibre): ?>
+                                    <span><?php echo $generoLabel; ?></span>
+                                    <?php if ($edad !== null): ?>
+                                        <span style="color:var(--text-tertiary); margin-left:4px;"><?php echo $edad; ?> años</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span style="color:var(--text-tertiary);">—</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-size:12px; color:var(--text-secondary);">
+                                <?php if (!$esLibre && !empty($p->parroquia_nombre)): ?>
+                                    <?php echo htmlspecialchars($p->parroquia_nombre); ?>
+                                    <?php if (!empty($p->municipio_nombre)): ?>
+                                        <span style="color:var(--text-tertiary); display:block; font-size:11px;"><?php echo htmlspecialchars($p->municipio_nombre); ?></span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
                             <td class="text-center">
-                                <?php if ($p->asistio): ?>
+                                <?php if ($puedeModificar && !$esLibre): ?>
+                                    <button type="button"
+                                        class="btn-asistencia sig-badge <?php echo $p->asistio ? 'sig-badge--success' : 'sig-badge--neutral'; ?>"
+                                        data-id="<?php echo $p->id; ?>"
+                                        data-asistio="<?php echo $p->asistio ? '1' : '0'; ?>"
+                                        title="Click para cambiar asistencia"
+                                        style="cursor:pointer; border:none; background:none; padding:0;">
+                                        <?php echo $p->asistio ? 'Asistió' : 'Pendiente'; ?>
+                                    </button>
+                                <?php elseif ($p->asistio): ?>
                                     <span class="sig-badge sig-badge--success">Asistió</span>
                                 <?php else: ?>
                                     <span class="sig-badge sig-badge--neutral">Pendiente</span>
@@ -127,7 +170,17 @@
                                     —
                                 <?php endif; ?>
                             </td>
-                            <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($p->observaciones ?? '—'); ?></td>
+                            <?php if ($puedeModificar): ?>
+                            <td class="text-center">
+                                <form method="POST" action="<?php echo URL_ROOT; ?>/talleres/desinscribir/<?php echo $p->id; ?>"
+                                      onsubmit="return confirm('¿Desinscribir a este participante?');" style="margin:0;">
+                                    <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
+                                    <button type="submit" class="btn-sig btn-sig--danger btn-sig--sm" title="Desinscribir" style="padding:2px 6px;">
+                                        <i class="bi bi-person-dash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -277,6 +330,26 @@
                                     <input type="date" name="fecha_nacimiento" id="insc_fecha_nac" class="sig-input">
                                 </div>
                             </div>
+                            <div class="col-md-8">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Parroquia</label>
+                                    <select name="parroquia_id" id="insc_parroquia" class="sig-select">
+                                        <option value="">— Seleccione parroquia —</option>
+                                        <?php foreach ($data['parroquias'] as $par): ?>
+                                            <option value="<?php echo $par->id; ?>">
+                                                <?php echo htmlspecialchars($par->nombre); ?>
+                                                <?php if (!empty($par->municipio)): ?> (<?php echo htmlspecialchars($par->municipio); ?>)<?php endif; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="sig-field">
+                                    <label class="sig-field__label">Dirección</label>
+                                    <input type="text" name="direccion" id="insc_direccion" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
+                                </div>
+                            </div>
                             <div class="col-md-8" style="display:flex; align-items:flex-end; padding-bottom:4px;">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="insc_brigadista" name="es_brigadista" value="1">
@@ -374,12 +447,14 @@ function checkInscripcionValid() {
 
 // ── Reset completo del bloque persona ─────────────────────────────────────
 function resetBloquePersona() {
-    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac','insc_direccion'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) { el.value = ''; el.readOnly = false; }
     });
     var gen = document.getElementById('insc_genero');
     gen.value = ''; gen.disabled = false;
+    var par = document.getElementById('insc_parroquia');
+    par.value = ''; par.disabled = false;
     document.getElementById('insc_brigadista').checked = false;
     document.getElementById('insc_status').style.display = 'none';
     document.getElementById('bloque_datos_persona').style.display = 'none';
@@ -388,10 +463,11 @@ function resetBloquePersona() {
 }
 
 function setPersonaReadonly(readonly) {
-    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+    ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac','insc_direccion'].forEach(function(id) {
         document.getElementById(id).readOnly = readonly;
     });
-    document.getElementById('insc_genero').disabled = readonly;
+    document.getElementById('insc_genero').disabled    = readonly;
+    document.getElementById('insc_parroquia').disabled = readonly;
 }
 
 function mostrarStatus(tipo, html) {
@@ -436,21 +512,22 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
                 document.getElementById('insc_correo').value    = p.correo   || '';
                 document.getElementById('insc_genero').value    = p.genero   || '';
                 document.getElementById('insc_fecha_nac').value = p.fecha_nacimiento || '';
+                document.getElementById('insc_parroquia').value  = p.parroquia_id    || '';
+                document.getElementById('insc_direccion').value  = p.direccion       || '';
                 setPersonaReadonly(true);
                 // Desbloquear campos vacíos para que el usuario pueda completar datos faltantes
-                ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+                ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac','insc_direccion'].forEach(function(id) {
                     var el = document.getElementById(id);
                     if (!el.value) el.readOnly = false;
                 });
-                if (!document.getElementById('insc_genero').value) {
-                    document.getElementById('insc_genero').disabled = false;
-                }
+                if (!document.getElementById('insc_genero').value)    document.getElementById('insc_genero').disabled    = false;
+                if (!document.getElementById('insc_parroquia').value) document.getElementById('insc_parroquia').disabled = false;
 
                 var edad = calcularEdad(p.fecha_nacimiento);
                 var edadTxt = edad !== null ? '· ' + edad + ' años' : '';
                 document.getElementById('insc_edad_label').textContent = edadTxt;
 
-                var tieneFaltantes = !p.fecha_nacimiento || !p.telefono || !p.correo || !p.genero;
+                var tieneFaltantes = !p.fecha_nacimiento || !p.telefono || !p.correo || !p.genero || !p.parroquia_id || !p.direccion;
                 var extra = tieneFaltantes ? ' — <em>complete los campos vacíos si lo desea</em>' : ' — datos cargados automáticamente.';
                 mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + extra);
             } else {
@@ -500,6 +577,29 @@ document.getElementById('modalInscripcion').addEventListener('show.bs.modal', fu
     document.getElementById('bloque_libre').style.display      = 'none';
     document.getElementById('insc_cedula_busqueda').value      = '';
     resetBloquePersona();
+});
+
+// ── Toggle de asistencia inline ───────────────────────────────────────────
+document.querySelectorAll('.btn-asistencia').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var id      = this.dataset.id;
+        var actual  = this.dataset.asistio === '1';
+        var nuevo   = actual ? '0' : '1';
+        var self    = this;
+        var fd = new FormData();
+        fd.append('id', id);
+        fd.append('asistio', nuevo);
+        fetch('<?php echo URL_ROOT; ?>/talleres/marcarAsistencia', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    var asistio = res.asistio;
+                    self.dataset.asistio = asistio ? '1' : '0';
+                    self.className = 'btn-asistencia sig-badge ' + (asistio ? 'sig-badge--success' : 'sig-badge--neutral');
+                    self.textContent = asistio ? 'Asistió' : 'Pendiente';
+                }
+            });
+    });
 });
 </script>
 
