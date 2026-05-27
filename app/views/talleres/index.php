@@ -190,7 +190,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-5">
+                    <div class="col-md-5" id="bloque_sede">
                         <div class="sig-field">
                             <label class="sig-field__label">Sede / Institución</label>
                             <select name="id_ubicacion_formacion" id="tal_ubicacion" class="sig-select">
@@ -343,27 +343,40 @@ var sedesData = [];
     });
 })();
 
-// ── Filtrar sedes según modo interno/externo ──────────────────────────────
+// ── Gestión de sede según modo interno/externo ────────────────────────────
+// Interna ON  → auto-selecciona la sede IMATUR y oculta el campo visualmente
+// Interna OFF → muestra todas las sedes (incluida IMATUR) para elegir libremente
 function filtrarSedes(esInterna) {
-    var sel = document.getElementById('tal_ubicacion');
+    var sel    = document.getElementById('tal_ubicacion');
+    var bloque = document.getElementById('bloque_sede');
     var valorPrevio = sel.value;
     sel.innerHTML = '';
-    sedesData.forEach(function(d) {
-        if (!d.value) {
-            var ph = document.createElement('option');
-            ph.value = ''; ph.textContent = d.text;
-            sel.appendChild(ph); return;
-        }
-        var mostrar = esInterna ? d.esPropia : !d.esPropia;
-        if (mostrar) {
+
+    if (esInterna) {
+        // Poblar solo con sedes propias de IMATUR y auto-seleccionar la primera
+        var primeraImatur = null;
+        sedesData.forEach(function(d) {
+            if (!d.value || !d.esPropia) return;
             var opt = document.createElement('option');
             opt.value = d.value; opt.textContent = d.text;
-            opt.dataset.sedePropia = d.esPropia ? '1' : '0';
+            opt.dataset.sedePropia = '1';
             sel.appendChild(opt);
-        }
-    });
-    var disponible = Array.from(sel.options).some(function(o) { return o.value === valorPrevio; });
-    sel.value = disponible ? valorPrevio : '';
+            if (!primeraImatur) primeraImatur = d.value;
+        });
+        if (primeraImatur) sel.value = primeraImatur;
+        bloque.style.display = 'none';
+    } else {
+        // Mostrar todas las sedes (externas e IMATUR — pueden celebrarse en cualquier lugar)
+        sedesData.forEach(function(d) {
+            var opt = document.createElement('option');
+            opt.value = d.value; opt.textContent = d.text;
+            if (d.value) opt.dataset.sedePropia = d.esPropia ? '1' : '0';
+            sel.appendChild(opt);
+        });
+        var disponible = Array.from(sel.options).some(function(o) { return o.value === valorPrevio; });
+        sel.value = disponible ? valorPrevio : '';
+        bloque.style.display = '';
+    }
 }
 
 // ── Estilo visual del bloque toggle ──────────────────────────────────────

@@ -46,8 +46,10 @@ class TalleresController extends Controller {
             'es_interna'             => $esInterna,
             'tipo_ente'              => $tipoEnte,
             'id_oficio'              => null,
-            // RN-F13: nuevas actividades siempre inician como Programado
-            'estado'                 => $esEdicion ? $_POST['estado'] : 'Programado',
+            'estado'                 => $esEdicion
+                                        ? $_POST['estado']
+                                        : (in_array($_POST['estado'] ?? '', ['Programado','Cancelado'])
+                                            ? $_POST['estado'] : 'Programado'),
             'motivo_cancelacion'     => null,
         ];
 
@@ -73,22 +75,23 @@ class TalleresController extends Controller {
                     }
                 }
 
-                // RN-F13: Cancelado requiere motivo registrado
-                if ($data['estado'] === 'Cancelado') {
-                    $motivo = trim($_POST['motivo_cancelacion'] ?? '');
-                    if (empty($motivo)) {
-                        $existing = $actual->motivo_cancelacion ?? null;
-                        if (empty($existing)) {
-                            throw new Exception('Debe indicar el motivo de cancelación.');
-                        }
-                        $data['motivo_cancelacion'] = $existing;
-                    } else {
-                        $data['motivo_cancelacion'] = $motivo;
-                    }
-                }
                 // Finalizado vía modal edición requiere evidencias ya guardadas
                 if ($data['estado'] === 'Finalizado' && Taller::countEvidencias($data['id']) === 0) {
                     throw new Exception('Debe subir evidencias antes de finalizar. Use "Cambiar Estado" en la tarjeta.');
+                }
+            }
+
+            // Aplica para creación y edición: Cancelado requiere motivo
+            if ($data['estado'] === 'Cancelado') {
+                $motivo = trim($_POST['motivo_cancelacion'] ?? '');
+                if (empty($motivo)) {
+                    $existing = $esEdicion ? (Taller::find($data['id'])->motivo_cancelacion ?? null) : null;
+                    if (empty($existing)) {
+                        throw new Exception('Debe indicar el motivo de cancelación.');
+                    }
+                    $data['motivo_cancelacion'] = $existing;
+                } else {
+                    $data['motivo_cancelacion'] = $motivo;
                 }
             }
 

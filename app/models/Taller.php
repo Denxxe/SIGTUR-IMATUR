@@ -88,12 +88,12 @@ class Taller extends Model {
                               (nombre, descripcion, fecha_inicio, fecha_fin,
                                hora_inicio, hora_fin, id_ubicacion_formacion,
                                id_facilitador, cupo_maximo, estado, tipo_actividad,
-                               es_interna, tipo_ente, id_oficio, created_by)
+                               es_interna, tipo_ente, id_oficio, motivo_cancelacion, created_by)
                               VALUES
                               (:nombre, :descripcion, :fecha_inicio, :fecha_fin,
                                :hora_inicio, :hora_fin, :id_ubicacion_formacion,
                                :id_facilitador, :cupo_maximo, :estado, :tipo_actividad,
-                               :es_interna, :tipo_ente, :id_oficio, :user_id)");
+                               :es_interna, :tipo_ente, :id_oficio, :motivo_cancelacion, :user_id)");
             $this->db->bind(':id_oficio', $this->id_oficio);
         }
         $this->db->bind(':nombre',                 $this->nombre);
