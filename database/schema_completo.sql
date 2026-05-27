@@ -1,7 +1,7 @@
 -- =============================================================================
 -- SIGTUR-IMATUR — Schema completo consolidado
--- Versión: schema base + migraciones 001 al 006 (estado final)
--- Generado: 2026-05-08
+-- Versión: schema base + migraciones 001 al 011 (estado final)
+-- Generado: 2026-05-27
 --
 -- Uso (instalación limpia):
 --   createdb -U postgres "SIGTUR-IMATUR"
@@ -11,8 +11,21 @@
 --   Usuario app: admin   (contraseña: hash bcrypt en tabla usuarios)
 --   Usuario DB:  postgres / 1234  (entorno Laragon local)
 --
--- Este archivo reemplaza schema.sql + migraciones 001-006.
+-- Este archivo reemplaza schema.sql + migraciones 001-011.
 -- NO ejecutar las migraciones individualmente si ya se usó este archivo.
+--
+-- Historial de migraciones incorporadas:
+--   001  visitantes, visitas
+--   002  horarios, permisos_laborales, vacaciones, auditoría, tipo_contrato en empleados
+--   003  pasantes normalizado (id_persona FK, drop cedula/nombre/apellido)
+--   004  participantes_taller modo libre, oficios entrantes, tipo_actividad, es_sede_propia
+--   005  rutas extendidas, participantes_ruta, configuracion_sistema, oficios_emitidos
+--   006  talleres: es_interna/tipo_ente; participantes_taller: es_brigadista/docente; rutas: requiere_formacion
+--   007  inventario: En Reparación; rol 5 Recepción; instituciones_externas; correlativos por módulo; rutas: tarifa/facilitador_externo
+--   008  tabla permisos_rol; RBAC dinámico; seed de permisos para 5 roles
+--   009  resincronización de 36 secuencias SERIAL (patrón GREATEST)
+--   010  taller_evidencias; talleres.motivo_cancelacion
+--   011  visitantes.id_persona FK personas; nombre/apellido nullable
 -- =============================================================================
 
 SET client_encoding = 'UTF8';
@@ -282,7 +295,7 @@ CREATE TABLE inventario (
     modelo        VARCHAR(100),
     serial        VARCHAR(100) UNIQUE,
     condicion     VARCHAR(20) DEFAULT 'Bueno'
-                      CHECK (condicion IN ('Nuevo','Bueno','Regular','Dañado','Inservible')),
+                      CHECK (condicion IN ('Nuevo','Bueno','Regular','Dañado','En Reparación')),
     observaciones TEXT,
     is_active     BOOLEAN   DEFAULT TRUE,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -352,7 +365,8 @@ CREATE TABLE oficios (
 
 -- ─────────────────────────────────────────────────────
 -- talleres (estado final — migr. 002: tipo_actividad; 004: id_oficio;
---            006: es_interna, tipo_ente, 'Inducción' en CHECK)
+--            006: es_interna, tipo_ente, 'Inducción' en CHECK;
+--            010: motivo_cancelacion)
 -- ─────────────────────────────────────────────────────
 CREATE TABLE talleres (
     id                     SERIAL PRIMARY KEY,
@@ -374,6 +388,7 @@ CREATE TABLE talleres (
     tipo_ente              VARCHAR(50)
                                CHECK (tipo_ente IS NULL OR tipo_ente IN
                                    ('Escuela','Liceo','Comunidad','Prestador de Servicio','IMATUR')),
+    motivo_cancelacion     TEXT,
     is_active              BOOLEAN   DEFAULT TRUE,
     created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at             TIMESTAMP,
@@ -425,6 +440,22 @@ CREATE TABLE taller_inventario (
     updated_by    INTEGER,
     deleted_by    INTEGER,
     UNIQUE (id_taller, id_inventario)
+);
+
+-- ─────────────────────────────────────────────────────
+-- taller_evidencias (migración 010 — adjuntos de talleres finalizados)
+-- ─────────────────────────────────────────────────────
+CREATE TABLE taller_evidencias (
+    id               SERIAL PRIMARY KEY,
+    id_taller        INTEGER      NOT NULL,
+    archivo          VARCHAR(300) NOT NULL,
+    nombre_original  VARCHAR(300) NOT NULL,
+    tipo_archivo     VARCHAR(100),
+    uploaded_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by      INTEGER,
+    is_active        BOOLEAN      NOT NULL DEFAULT TRUE,
+    deleted_at       TIMESTAMP,
+    deleted_by       INTEGER
 );
 
 -- ─────────────────────────────────────────────────────
@@ -505,30 +536,34 @@ CREATE TABLE pasante_documentos (
 
 -- ─────────────────────────────────────────────────────
 -- rutas (estado final — migr. 005: fecha_visita, hora_visita, id_departamento,
---         id_facilitador, cupo_maximo; 006: requiere_formacion)
+--         id_facilitador, cupo_maximo; 006: requiere_formacion;
+--         007: tiene_tarifa, tarifa_monto, nombre_facilitador_externo)
 -- ─────────────────────────────────────────────────────
 CREATE TABLE rutas (
-    id                 SERIAL PRIMARY KEY,
-    nombre             VARCHAR(200) NOT NULL,
-    descripcion        TEXT,
-    duracion_estimada  VARCHAR(50),
-    nivel_dificultad   VARCHAR(20) DEFAULT 'Fácil'
-                           CHECK (nivel_dificultad IN ('Fácil','Moderado','Difícil','Extremo')),
-    estado             VARCHAR(20) DEFAULT 'Activa'
-                           CHECK (estado IN ('Activa','Inactiva','En Mantenimiento')),
-    fecha_visita       DATE,
-    hora_visita        TIME,
-    id_departamento    INTEGER,
-    id_facilitador     INTEGER,
-    cupo_maximo        INTEGER DEFAULT 20,
-    requiere_formacion BOOLEAN NOT NULL DEFAULT FALSE,
-    is_active          BOOLEAN   DEFAULT TRUE,
-    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP,
-    deleted_at         TIMESTAMP,
-    created_by         INTEGER,
-    updated_by         INTEGER,
-    deleted_by         INTEGER
+    id                         SERIAL PRIMARY KEY,
+    nombre                     VARCHAR(200) NOT NULL,
+    descripcion                TEXT,
+    duracion_estimada          VARCHAR(50),
+    nivel_dificultad           VARCHAR(20) DEFAULT 'Fácil'
+                                   CHECK (nivel_dificultad IN ('Fácil','Moderado','Difícil','Extremo')),
+    estado                     VARCHAR(20) DEFAULT 'Activa'
+                                   CHECK (estado IN ('Activa','Inactiva','En Mantenimiento')),
+    fecha_visita               DATE,
+    hora_visita                TIME,
+    id_departamento            INTEGER,
+    id_facilitador             INTEGER,
+    cupo_maximo                INTEGER     DEFAULT 20,
+    requiere_formacion         BOOLEAN     NOT NULL DEFAULT FALSE,
+    tiene_tarifa               BOOLEAN     DEFAULT FALSE,
+    tarifa_monto               DECIMAL(10,2),
+    nombre_facilitador_externo VARCHAR(150),
+    is_active                  BOOLEAN     DEFAULT TRUE,
+    created_at                 TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP,
+    deleted_at                 TIMESTAMP,
+    created_by                 INTEGER,
+    updated_by                 INTEGER,
+    deleted_by                 INTEGER
 );
 
 -- ─────────────────────────────────────────────────────
@@ -590,7 +625,29 @@ CREATE TABLE ruta_inventario (
 );
 
 -- ─────────────────────────────────────────────────────
--- participantes_ruta (migración 005 — espejo de participantes_taller para rutas)
+-- instituciones_externas (migración 007 — D-RT04)
+-- Instituciones educativas o empresas que traen grupos a rutas.
+-- ─────────────────────────────────────────────────────
+CREATE TABLE instituciones_externas (
+    id           SERIAL PRIMARY KEY,
+    nombre       VARCHAR(150) NOT NULL,
+    tipo         VARCHAR(50)  DEFAULT 'Educativa',
+    es_educativa BOOLEAN      DEFAULT TRUE,
+    municipio    VARCHAR(100),
+    contacto     VARCHAR(100),
+    telefono     VARCHAR(30),
+    is_active    BOOLEAN      DEFAULT TRUE,
+    created_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    created_by   INTEGER,
+    updated_at   TIMESTAMP,
+    updated_by   INTEGER,
+    deleted_at   TIMESTAMP,
+    deleted_by   INTEGER
+);
+
+-- ─────────────────────────────────────────────────────
+-- participantes_ruta (migración 005 — espejo de participantes_taller para rutas;
+--                     007: id_institucion FK instituciones_externas)
 -- ─────────────────────────────────────────────────────
 CREATE TABLE participantes_ruta (
     id             SERIAL PRIMARY KEY,
@@ -601,6 +658,7 @@ CREATE TABLE participantes_ruta (
     cedula_libre   VARCHAR(20),
     asistio        BOOLEAN DEFAULT FALSE,
     observaciones  TEXT,
+    id_institucion INTEGER,
     is_active      BOOLEAN   DEFAULT TRUE,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP,
@@ -613,18 +671,21 @@ CREATE TABLE participantes_ruta (
 );
 
 -- ─────────────────────────────────────────────────────
--- visitantes (migración 001 — personas externas que visitan IMATUR)
+-- visitantes (migración 001 — personas externas que visitan IMATUR;
+--             011: id_persona FK personas; nombre/apellido nullable)
+-- Nota: datos personales viven en personas. nombre/apellido solo para legado.
 -- ─────────────────────────────────────────────────────
 CREATE TABLE visitantes (
     id               SERIAL PRIMARY KEY,
     cedula           VARCHAR(20) UNIQUE,
-    nombre           VARCHAR(100) NOT NULL,
-    apellido         VARCHAR(100) NOT NULL,
+    nombre           VARCHAR(100),
+    apellido         VARCHAR(100),
     procedencia      VARCHAR(100),
     telefono         VARCHAR(20),
     genero           CHAR(1) CHECK (genero IN ('M','F','O')),
     correo           VARCHAR(100),
     motivo_frecuente TEXT,
+    id_persona       INTEGER,
     is_active        BOOLEAN   DEFAULT TRUE,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP,
@@ -732,41 +793,59 @@ CREATE TABLE vacaciones (
 );
 COMMENT ON TABLE vacaciones IS 'Control anual de días de vacaciones por empleado.';
 
+-- ─────────────────────────────────────────────────────
+-- permisos_rol (migración 008 — RBAC dinámico)
+-- Fuente de verdad de permisos. Admin (rol 1) usa marcador '*'.
+-- RolesController::getMapaRbac() es la única fuente para Router.php y la UI.
+-- ─────────────────────────────────────────────────────
+CREATE TABLE permisos_rol (
+    id         SERIAL PRIMARY KEY,
+    id_rol     INTEGER      NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    modulo     VARCHAR(60)  NOT NULL,
+    created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER,
+    UNIQUE (id_rol, modulo)
+);
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SECCIÓN 2 — ÍNDICES
 -- ══════════════════════════════════════════════════════════════════════════════
 
-CREATE INDEX idx_personas_cedula          ON personas          (cedula);
-CREATE INDEX idx_asistencias_fecha        ON asistencias       (fecha);
-CREATE INDEX idx_asistencias_emp_fecha    ON asistencias       (id_empleado, fecha);
-CREATE INDEX idx_usuarios_username        ON usuarios          (username);
-CREATE INDEX idx_logs_fecha               ON audit_logs        (fecha);
-CREATE INDEX idx_logs_tabla               ON audit_logs        (tabla_afectada);
-CREATE INDEX idx_inventario_codigo_bn     ON inventario        (codigo_bn);
-CREATE INDEX idx_talleres_fecha           ON talleres          (fecha_inicio);
-CREATE INDEX idx_talleres_estado          ON talleres          (estado);
-CREATE INDEX idx_pasantes_persona         ON pasantes          (id_persona);
-CREATE INDEX idx_rutas_estado             ON rutas             (estado);
-CREATE INDEX idx_act_inv_fecha            ON actividad_inventario (fecha);
-CREATE INDEX idx_act_ruta_fecha           ON actividades_ruta  (fecha);
-CREATE INDEX idx_visitantes_cedula        ON visitantes        (cedula);
-CREATE INDEX idx_visitas_visitante        ON visitas           (id_visitante);
-CREATE INDEX idx_visitas_entrada          ON visitas           (hora_entrada);
-CREATE INDEX idx_permisos_empleado        ON permisos_laborales (id_empleado);
-CREATE INDEX idx_permisos_fechas          ON permisos_laborales (fecha_inicio, fecha_fin);
-CREATE INDEX idx_vacaciones_empleado      ON vacaciones        (id_empleado);
-CREATE INDEX idx_vacaciones_anio          ON vacaciones        (anio);
+CREATE INDEX idx_personas_cedula              ON personas               (cedula);
+CREATE INDEX idx_asistencias_fecha            ON asistencias            (fecha);
+CREATE INDEX idx_asistencias_emp_fecha        ON asistencias            (id_empleado, fecha);
+CREATE INDEX idx_usuarios_username            ON usuarios               (username);
+CREATE INDEX idx_logs_fecha                   ON audit_logs             (fecha);
+CREATE INDEX idx_logs_tabla                   ON audit_logs             (tabla_afectada);
+CREATE INDEX idx_inventario_codigo_bn         ON inventario             (codigo_bn);
+CREATE INDEX idx_talleres_fecha               ON talleres               (fecha_inicio);
+CREATE INDEX idx_talleres_estado              ON talleres               (estado);
+CREATE INDEX idx_taller_evidencias_taller     ON taller_evidencias      (id_taller);
+CREATE INDEX idx_pasantes_persona             ON pasantes               (id_persona);
+CREATE INDEX idx_rutas_estado                 ON rutas                  (estado);
+CREATE INDEX idx_act_inv_fecha                ON actividad_inventario   (fecha);
+CREATE INDEX idx_act_ruta_fecha               ON actividades_ruta       (fecha);
+CREATE INDEX idx_visitantes_cedula            ON visitantes             (cedula);
+CREATE INDEX idx_visitantes_persona           ON visitantes             (id_persona);
+CREATE INDEX idx_visitas_visitante            ON visitas                (id_visitante);
+CREATE INDEX idx_visitas_entrada              ON visitas                (hora_entrada);
+CREATE INDEX idx_permisos_empleado            ON permisos_laborales     (id_empleado);
+CREATE INDEX idx_permisos_fechas              ON permisos_laborales     (fecha_inicio, fecha_fin);
+CREATE INDEX idx_vacaciones_empleado          ON vacaciones             (id_empleado);
+CREATE INDEX idx_vacaciones_anio              ON vacaciones             (anio);
+CREATE INDEX idx_permisos_rol_rol             ON permisos_rol           (id_rol);
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SECCIÓN 3 — DATOS SEMILLA (datos de desarrollo)
 -- ══════════════════════════════════════════════════════════════════════════════
 
--- roles (4 roles fijos del sistema)
+-- roles (5 roles del sistema — rol 5 agregado en migración 007)
 INSERT INTO roles (id, nombre, descripcion, is_active, created_at) VALUES
-    (1, 'Administrador', 'Acceso total al sistema',           TRUE, '2026-04-12 14:15:24'),
-    (2, 'RRHH',          'Gestión de personal y asistencia',  TRUE, '2026-04-12 14:15:24'),
-    (3, 'Turismo',       'Gestión de rutas y formación',      TRUE, '2026-04-12 14:15:24'),
-    (4, 'Inventario',    'Gestión de bienes institucionales', TRUE, '2026-04-12 14:15:24');
+    (1, 'Administrador', 'Acceso total al sistema',                                                                                  TRUE, '2026-04-12 14:15:24'),
+    (2, 'RRHH',          'Gestión de personal y asistencia',                                                                         TRUE, '2026-04-12 14:15:24'),
+    (3, 'Turismo',       'Gestión de rutas y formación',                                                                             TRUE, '2026-04-12 14:15:24'),
+    (4, 'Inventario',    'Gestión de bienes institucionales',                                                                        TRUE, '2026-04-12 14:15:24'),
+    (5, 'Recepción',     'Registro de visitantes, visitas y marcaje de asistencias. Sin acceso a módulos de gestión.',               TRUE, CURRENT_TIMESTAMP);
 
 -- municipio (Sucre y Bolivar — Cumaná está en Sucre)
 INSERT INTO municipio (id, nombre, codigo_postal, is_active, created_at, updated_at, created_by, updated_by) VALUES
@@ -853,20 +932,74 @@ INSERT INTO pasante_documentos (id, id_pasante, tipo_documento, entregado, archi
     (4, 1, 'Otro',                 TRUE,  '/uploads/pasantes/1776786487_WhatsAppImage2025-07-02at4.53.32PM1.jpeg', 'Dale',                      TRUE, '2026-04-21 15:48:07', 2),
     (5, 1, 'Carta de Aceptación',  TRUE,  '/uploads/pasantes/1777346944_Anyeliscv.pdf.pdf',                       '',                          TRUE, '2026-04-28 03:29:04', 2);
 
--- configuracion_sistema (11 claves institucionales — de migración 005)
+-- configuracion_sistema (14 claves institucionales — migr. 005 + 007)
+-- Nota migr. 007: correlativo_oficio → correlativo_oficio_ruta;
+--                 ano_correlativo → ano_correlativo_ruta;
+--                 nuevas: firmante_cargo, correlativo_oficio_formacion, ano_correlativo_formacion
 INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
-    ('director_nombre',    '',                        'Nombre del Director/Presidente de IMATUR'),
-    ('director_apellido',  '',                        'Apellido del Director/Presidente'),
-    ('director_cargo',     'Director',                'Cargo del firmante institucional'),
-    ('resolucion_numero',  '',                        'N° de la Resolución de nombramiento'),
-    ('resolucion_fecha',   '',                        'Fecha de la Resolución (texto, ej: 15 de enero de 2025)'),
-    ('gaceta_numero',      '',                        'N° de la Gaceta Municipal Extraordinaria'),
-    ('gaceta_fecha',       '',                        'Fecha de la Gaceta (texto, ej: 20 de enero de 2025)'),
-    ('telf_institucion',   '(0293) 431-4073',         'Teléfono institucional'),
-    ('correo_institucion', 'imatur.cumana@gmail.com', 'Correo electrónico institucional'),
-    ('correlativo_oficio', '0',                       'Último correlativo de oficio emitido en el año en curso'),
-    ('ano_correlativo',    '2026',                    'Año del correlativo activo (se reinicia automáticamente)')
+    ('director_nombre',              '',                        'Nombre del Director/Presidente de IMATUR'),
+    ('director_apellido',            '',                        'Apellido del Director/Presidente'),
+    ('director_cargo',               'Director',                'Cargo oficial del director (para documentos)'),
+    ('firmante_cargo',               'Director General',        'Cargo del firmante en oficios (puede diferir del cargo)'),
+    ('resolucion_numero',            '',                        'N° de la Resolución de nombramiento'),
+    ('resolucion_fecha',             '',                        'Fecha de la Resolución (texto, ej: 15 de enero de 2025)'),
+    ('gaceta_numero',                '',                        'N° de la Gaceta Municipal Extraordinaria'),
+    ('gaceta_fecha',                 '',                        'Fecha de la Gaceta (texto, ej: 20 de enero de 2025)'),
+    ('telf_institucion',             '(0293) 431-4073',         'Teléfono institucional'),
+    ('correo_institucion',           'imatur.cumana@gmail.com', 'Correo electrónico institucional'),
+    ('correlativo_oficio_ruta',      '0',                       'Último correlativo de oficio de rutas emitido en el año en curso'),
+    ('ano_correlativo_ruta',         '2026',                    'Año del correlativo de rutas activo (se reinicia automáticamente)'),
+    ('correlativo_oficio_formacion', '0',                       'Último correlativo de oficio de formación emitido en el año en curso'),
+    ('ano_correlativo_formacion',    '2026',                    'Año del correlativo de formación activo (se reinicia automáticamente)')
 ON CONFLICT (clave) DO NOTHING;
+
+-- permisos_rol (migración 008 — seed RBAC para los 5 roles)
+-- Rol 1 — Administrador: marcador '*' (acceso total, no modificable desde UI)
+INSERT INTO permisos_rol (id_rol, modulo) VALUES (1, '*') ON CONFLICT DO NOTHING;
+
+-- Rol 2 — RRHH
+INSERT INTO permisos_rol (id_rol, modulo) VALUES
+    (2, 'DashboardController'),
+    (2, 'EmpleadosController'),
+    (2, 'CargosController'),
+    (2, 'DepartamentosController'),
+    (2, 'AsistenciasController'),
+    (2, 'VisitantesController'),
+    (2, 'VisitasController'),
+    (2, 'ReportesController'),
+    (2, 'ConfigController')
+ON CONFLICT DO NOTHING;
+
+-- Rol 3 — Turismo
+INSERT INTO permisos_rol (id_rol, modulo) VALUES
+    (3, 'DashboardController'),
+    (3, 'RutasController'),
+    (3, 'ActividadesrutaController'),
+    (3, 'TalleresController'),
+    (3, 'UbicacionesformacionController'),
+    (3, 'PasantesController'),
+    (3, 'VisitantesController'),
+    (3, 'VisitasController'),
+    (3, 'ReportesController')
+ON CONFLICT DO NOTHING;
+
+-- Rol 4 — Inventario
+INSERT INTO permisos_rol (id_rol, modulo) VALUES
+    (4, 'DashboardController'),
+    (4, 'InventarioController'),
+    (4, 'CategoriasController'),
+    (4, 'UbicacionesController'),
+    (4, 'ActividadesinventarioController'),
+    (4, 'ReportesController')
+ON CONFLICT DO NOTHING;
+
+-- Rol 5 — Recepción
+INSERT INTO permisos_rol (id_rol, modulo) VALUES
+    (5, 'DashboardController'),
+    (5, 'VisitantesController'),
+    (5, 'VisitasController'),
+    (5, 'AsistenciasController')
+ON CONFLICT DO NOTHING;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- SECCIÓN 4 — FOREIGN KEY CONSTRAINTS (al final, cuando todos los datos existen)
@@ -956,8 +1089,17 @@ ALTER TABLE ruta_inventario ADD CONSTRAINT fk_ri_ruta         FOREIGN KEY (id_ru
 ALTER TABLE ruta_inventario ADD CONSTRAINT fk_ri_inv          FOREIGN KEY (id_inventario)    REFERENCES inventario(id)    ON DELETE RESTRICT;
 
 -- participantes_ruta
-ALTER TABLE participantes_ruta ADD CONSTRAINT fk_pr_ruta      FOREIGN KEY (id_ruta)          REFERENCES rutas(id)         ON DELETE CASCADE;
-ALTER TABLE participantes_ruta ADD CONSTRAINT fk_pr_persona   FOREIGN KEY (id_persona)       REFERENCES personas(id)      ON DELETE RESTRICT;
+ALTER TABLE participantes_ruta ADD CONSTRAINT fk_pr_ruta          FOREIGN KEY (id_ruta)          REFERENCES rutas(id)                  ON DELETE CASCADE;
+ALTER TABLE participantes_ruta ADD CONSTRAINT fk_pr_persona        FOREIGN KEY (id_persona)       REFERENCES personas(id)               ON DELETE RESTRICT;
+ALTER TABLE participantes_ruta ADD CONSTRAINT fk_pr_institucion    FOREIGN KEY (id_institucion)   REFERENCES instituciones_externas(id) ON DELETE SET NULL;
+
+-- taller_evidencias
+ALTER TABLE taller_evidencias ADD CONSTRAINT fk_tev_taller         FOREIGN KEY (id_taller)        REFERENCES talleres(id)               ON DELETE CASCADE;
+ALTER TABLE taller_evidencias ADD CONSTRAINT fk_tev_uploaded_by    FOREIGN KEY (uploaded_by)      REFERENCES usuarios(id)               ON DELETE SET NULL;
+ALTER TABLE taller_evidencias ADD CONSTRAINT fk_tev_deleted_by     FOREIGN KEY (deleted_by)       REFERENCES usuarios(id)               ON DELETE SET NULL;
+
+-- visitantes (migración 011)
+ALTER TABLE visitantes ADD CONSTRAINT fk_visitantes_persona        FOREIGN KEY (id_persona)       REFERENCES personas(id)               ON DELETE SET NULL;
 
 -- visitas
 ALTER TABLE visitas ADD CONSTRAINT fk_visitas_visitante       FOREIGN KEY (id_visitante)     REFERENCES visitantes(id)    ON DELETE RESTRICT;
@@ -974,42 +1116,46 @@ ALTER TABLE permisos_laborales ADD CONSTRAINT fk_permiso_apro FOREIGN KEY (id_ap
 ALTER TABLE vacaciones ADD CONSTRAINT fk_vacacion_emp         FOREIGN KEY (id_empleado)      REFERENCES empleados(id)     ON DELETE RESTRICT;
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- SECCIÓN 5 — AJUSTE DE SECUENCIAS (reflejan el estado real de los datos)
+-- SECCIÓN 5 — AJUSTE DE SECUENCIAS (migración 009 — patrón GREATEST)
+-- GREATEST garantiza que la secuencia nunca retrocede si ya está adelantada.
 -- ══════════════════════════════════════════════════════════════════════════════
 
-SELECT setval('roles_id_seq',                  4,  true);
-SELECT setval('municipio_id_seq',              3,  true);
-SELECT setval('parroquia_id_seq',              7,  true);
-SELECT setval('personas_id_seq',               3,  true);
-SELECT setval('departamentos_id_seq',          5,  true);
-SELECT setval('cargos_id_seq',                 3,  true);
-SELECT setval('horarios_id_seq',               1,  false);
-SELECT setval('empleados_id_seq',              1,  true);
-SELECT setval('asistencias_id_seq',            2,  true);
-SELECT setval('usuarios_id_seq',               2,  true);
-SELECT setval('audit_logs_id_seq',             19, true);
-SELECT setval('categorias_id_seq',             2,  true);
-SELECT setval('ubicaciones_id_seq',            1,  false);
-SELECT setval('inventario_id_seq',             1,  false);
-SELECT setval('actividad_inventario_id_seq',   1,  false);
-SELECT setval('ubicaciones_formacion_id_seq',  1,  false);
-SELECT setval('oficios_id_seq',                1,  false);
-SELECT setval('talleres_id_seq',               2,  true);
-SELECT setval('taller_informes_id_seq',        1,  false);
-SELECT setval('taller_inventario_id_seq',      1,  false);
-SELECT setval('participantes_taller_id_seq',   1,  false);
-SELECT setval('pasantes_id_seq',               1,  true);
-SELECT setval('pasante_documentos_id_seq',     5,  true);
-SELECT setval('rutas_id_seq',                  1,  false);
-SELECT setval('puntos_ruta_id_seq',            1,  false);
-SELECT setval('actividades_ruta_id_seq',       1,  false);
-SELECT setval('ruta_inventario_id_seq',        1,  false);
-SELECT setval('participantes_ruta_id_seq',     1,  false);
-SELECT setval('visitantes_id_seq',             1,  false);
-SELECT setval('visitas_id_seq',                1,  false);
-SELECT setval('configuracion_sistema_id_seq',  11, true);
-SELECT setval('oficios_emitidos_id_seq',       1,  false);
-SELECT setval('permisos_laborales_id_seq',     1,  false);
-SELECT setval('vacaciones_id_seq',             1,  false);
+SELECT setval('actividad_inventario_id_seq',   GREATEST((SELECT COALESCE(MAX(id),1) FROM actividad_inventario),   (SELECT last_value FROM actividad_inventario_id_seq)));
+SELECT setval('actividades_ruta_id_seq',        GREATEST((SELECT COALESCE(MAX(id),1) FROM actividades_ruta),        (SELECT last_value FROM actividades_ruta_id_seq)));
+SELECT setval('asistencias_id_seq',             GREATEST((SELECT COALESCE(MAX(id),1) FROM asistencias),             (SELECT last_value FROM asistencias_id_seq)));
+SELECT setval('audit_logs_id_seq',              GREATEST((SELECT COALESCE(MAX(id),1) FROM audit_logs),              (SELECT last_value FROM audit_logs_id_seq)));
+SELECT setval('cargos_id_seq',                  GREATEST((SELECT COALESCE(MAX(id),1) FROM cargos),                  (SELECT last_value FROM cargos_id_seq)));
+SELECT setval('categorias_id_seq',              GREATEST((SELECT COALESCE(MAX(id),1) FROM categorias),              (SELECT last_value FROM categorias_id_seq)));
+SELECT setval('configuracion_sistema_id_seq',   GREATEST((SELECT COALESCE(MAX(id),1) FROM configuracion_sistema),   (SELECT last_value FROM configuracion_sistema_id_seq)));
+SELECT setval('departamentos_id_seq',           GREATEST((SELECT COALESCE(MAX(id),1) FROM departamentos),           (SELECT last_value FROM departamentos_id_seq)));
+SELECT setval('empleados_id_seq',               GREATEST((SELECT COALESCE(MAX(id),1) FROM empleados),               (SELECT last_value FROM empleados_id_seq)));
+SELECT setval('horarios_id_seq',                GREATEST((SELECT COALESCE(MAX(id),1) FROM horarios),                (SELECT last_value FROM horarios_id_seq)));
+SELECT setval('instituciones_externas_id_seq',  GREATEST((SELECT COALESCE(MAX(id),1) FROM instituciones_externas),  (SELECT last_value FROM instituciones_externas_id_seq)));
+SELECT setval('inventario_id_seq',              GREATEST((SELECT COALESCE(MAX(id),1) FROM inventario),              (SELECT last_value FROM inventario_id_seq)));
+SELECT setval('municipio_id_seq',               GREATEST((SELECT COALESCE(MAX(id),1) FROM municipio),               (SELECT last_value FROM municipio_id_seq)));
+SELECT setval('oficios_id_seq',                 GREATEST((SELECT COALESCE(MAX(id),1) FROM oficios),                 (SELECT last_value FROM oficios_id_seq)));
+SELECT setval('oficios_emitidos_id_seq',        GREATEST((SELECT COALESCE(MAX(id),1) FROM oficios_emitidos),        (SELECT last_value FROM oficios_emitidos_id_seq)));
+SELECT setval('parroquia_id_seq',               GREATEST((SELECT COALESCE(MAX(id),1) FROM parroquia),               (SELECT last_value FROM parroquia_id_seq)));
+SELECT setval('participantes_ruta_id_seq',      GREATEST((SELECT COALESCE(MAX(id),1) FROM participantes_ruta),      (SELECT last_value FROM participantes_ruta_id_seq)));
+SELECT setval('participantes_taller_id_seq',    GREATEST((SELECT COALESCE(MAX(id),1) FROM participantes_taller),    (SELECT last_value FROM participantes_taller_id_seq)));
+SELECT setval('pasante_documentos_id_seq',      GREATEST((SELECT COALESCE(MAX(id),1) FROM pasante_documentos),      (SELECT last_value FROM pasante_documentos_id_seq)));
+SELECT setval('pasantes_id_seq',                GREATEST((SELECT COALESCE(MAX(id),1) FROM pasantes),                (SELECT last_value FROM pasantes_id_seq)));
+SELECT setval('permisos_laborales_id_seq',      GREATEST((SELECT COALESCE(MAX(id),1) FROM permisos_laborales),      (SELECT last_value FROM permisos_laborales_id_seq)));
+SELECT setval('permisos_rol_id_seq',            GREATEST((SELECT COALESCE(MAX(id),1) FROM permisos_rol),            (SELECT last_value FROM permisos_rol_id_seq)));
+SELECT setval('personas_id_seq',                GREATEST((SELECT COALESCE(MAX(id),1) FROM personas),                (SELECT last_value FROM personas_id_seq)));
+SELECT setval('puntos_ruta_id_seq',             GREATEST((SELECT COALESCE(MAX(id),1) FROM puntos_ruta),             (SELECT last_value FROM puntos_ruta_id_seq)));
+SELECT setval('roles_id_seq',                   GREATEST((SELECT COALESCE(MAX(id),1) FROM roles),                   (SELECT last_value FROM roles_id_seq)));
+SELECT setval('ruta_inventario_id_seq',         GREATEST((SELECT COALESCE(MAX(id),1) FROM ruta_inventario),         (SELECT last_value FROM ruta_inventario_id_seq)));
+SELECT setval('rutas_id_seq',                   GREATEST((SELECT COALESCE(MAX(id),1) FROM rutas),                   (SELECT last_value FROM rutas_id_seq)));
+SELECT setval('taller_evidencias_id_seq',       GREATEST((SELECT COALESCE(MAX(id),1) FROM taller_evidencias),       (SELECT last_value FROM taller_evidencias_id_seq)));
+SELECT setval('taller_informes_id_seq',         GREATEST((SELECT COALESCE(MAX(id),1) FROM taller_informes),         (SELECT last_value FROM taller_informes_id_seq)));
+SELECT setval('taller_inventario_id_seq',       GREATEST((SELECT COALESCE(MAX(id),1) FROM taller_inventario),       (SELECT last_value FROM taller_inventario_id_seq)));
+SELECT setval('talleres_id_seq',                GREATEST((SELECT COALESCE(MAX(id),1) FROM talleres),                (SELECT last_value FROM talleres_id_seq)));
+SELECT setval('ubicaciones_id_seq',             GREATEST((SELECT COALESCE(MAX(id),1) FROM ubicaciones),             (SELECT last_value FROM ubicaciones_id_seq)));
+SELECT setval('ubicaciones_formacion_id_seq',   GREATEST((SELECT COALESCE(MAX(id),1) FROM ubicaciones_formacion),   (SELECT last_value FROM ubicaciones_formacion_id_seq)));
+SELECT setval('usuarios_id_seq',                GREATEST((SELECT COALESCE(MAX(id),1) FROM usuarios),                (SELECT last_value FROM usuarios_id_seq)));
+SELECT setval('vacaciones_id_seq',              GREATEST((SELECT COALESCE(MAX(id),1) FROM vacaciones),              (SELECT last_value FROM vacaciones_id_seq)));
+SELECT setval('visitantes_id_seq',              GREATEST((SELECT COALESCE(MAX(id),1) FROM visitantes),              (SELECT last_value FROM visitantes_id_seq)));
+SELECT setval('visitas_id_seq',                 GREATEST((SELECT COALESCE(MAX(id),1) FROM visitas),                 (SELECT last_value FROM visitas_id_seq)));
 
 COMMIT;

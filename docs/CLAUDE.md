@@ -178,6 +178,8 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 007 | `007_mejoras_negocio.sql` | ✅ Ejecutado | condicion+En Reparación; rol 5 Recepción; correlativos por módulo; instituciones_externas; rutas+tarifa+facilitador_externo |
 | 008 | `008_permisos_rol.sql` | ✅ Ejecutado | Tabla `permisos_rol`; convierte RBAC hardcoded a dinámico; seed con permisos de los 5 roles |
 | 009 | `009_fix_sequences.sql` | ✅ Ejecutado | Resincroniza las 36 secuencias SERIAL desincronizadas por inserts con ID explícito en seeds |
+| 010 | `010_taller_evidencias.sql` | ✅ Ejecutado | Tabla `taller_evidencias`; campo `talleres.motivo_cancelacion` |
+| 011 | `011_visitantes_persona.sql` | ✅ Ejecutado | `visitantes.id_persona FK personas`; `nombre`/`apellido` nullable; migración de datos existentes |
 
 Para ejecutar una migración: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -364,12 +366,8 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar schema completo consolidado (schema base + migraciones 001-007):
+# 3. Importar schema completo consolidado (schema base + migraciones 001-011):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.sql
-
-# 4. Aplicar migraciones posteriores al schema consolidado:
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/008_permisos_rol.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/009_fix_sequences.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -378,7 +376,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/009_f
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_completo.sql` cubre schema base + migraciones 001-007. Las migraciones 008 y 009 se aplican por separado hasta que se actualice el consolidado.
+> **Nota:** `database/schema_completo.sql` cubre schema base + migraciones 001-011. No se necesitan migraciones adicionales en una instalación limpia.
 
 ---
 
