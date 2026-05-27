@@ -226,6 +226,19 @@ class Taller extends Model {
         return (int)$row->id;
     }
 
+    public static function actualizarPersona(int $id, array $campos, $userId): void {
+        if (empty($campos)) return;
+        $db = new Database();
+        $sets = implode(', ', array_map(fn($k) => "$k = :$k", array_keys($campos)));
+        $db->query("UPDATE personas SET $sets, updated_at = NOW(), updated_by = :uid WHERE id = :id");
+        foreach ($campos as $k => $v) {
+            $db->bind(":$k", $v);
+        }
+        $db->bind(':uid', $userId);
+        $db->bind(':id',  $id);
+        $db->execute();
+    }
+
     // Crear registro de oficio para actividad externa y retornar su ID (RN-F06)
     public static function crearOficio(array $data, $user_id): int {
         $db = new Database();

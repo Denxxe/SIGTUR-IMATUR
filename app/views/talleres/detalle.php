@@ -437,12 +437,22 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
                 document.getElementById('insc_genero').value    = p.genero   || '';
                 document.getElementById('insc_fecha_nac').value = p.fecha_nacimiento || '';
                 setPersonaReadonly(true);
+                // Desbloquear campos vacíos para que el usuario pueda completar datos faltantes
+                ['insc_nombre','insc_apellido','insc_telefono','insc_correo','insc_fecha_nac'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el.value) el.readOnly = false;
+                });
+                if (!document.getElementById('insc_genero').value) {
+                    document.getElementById('insc_genero').disabled = false;
+                }
 
                 var edad = calcularEdad(p.fecha_nacimiento);
                 var edadTxt = edad !== null ? '· ' + edad + ' años' : '';
                 document.getElementById('insc_edad_label').textContent = edadTxt;
 
-                mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + ' — datos cargados automáticamente.');
+                var tieneFaltantes = !p.fecha_nacimiento || !p.telefono || !p.correo || !p.genero;
+                var extra = tieneFaltantes ? ' — <em>complete los campos vacíos si lo desea</em>' : ' — datos cargados automáticamente.';
+                mostrarStatus('ok', '<i class="bi bi-check-circle"></i> <strong>Persona encontrada</strong> ' + edadTxt + extra);
             } else {
                 setPersonaReadonly(false);
                 mostrarStatus('warn', '<i class="bi bi-person-plus"></i> Persona no registrada — complete los datos para crear el registro.');

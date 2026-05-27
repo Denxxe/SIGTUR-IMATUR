@@ -192,6 +192,19 @@ class TalleresController extends Controller {
 
                 if ($persona) {
                     $idPersona = $persona->id;
+                    // Actualizar campos vacíos en personas con los datos recién aportados
+                    $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
+                    if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
+                        $fechaNac = null;
+                    }
+                    $actualizacion = [];
+                    if (empty($persona->telefono)        && !empty($_POST['telefono']))     $actualizacion['telefono']        = trim($_POST['telefono']);
+                    if (empty($persona->correo)          && !empty($_POST['correo']))       $actualizacion['correo']          = trim($_POST['correo']);
+                    if (empty($persona->genero)          && !empty($_POST['genero']))       $actualizacion['genero']          = trim($_POST['genero']);
+                    if (empty($persona->fecha_nacimiento) && $fechaNac)                     $actualizacion['fecha_nacimiento'] = $fechaNac;
+                    if (!empty($actualizacion)) {
+                        Taller::actualizarPersona($idPersona, $actualizacion, $userId);
+                    }
                 } else {
                     $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
                     if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
