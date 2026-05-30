@@ -9,11 +9,18 @@
         <p class="page__subtitle">Control patrimonial de bienes institucionales filtrado por condición y categoría.</p>
     </div>
     <div class="page__actions">
+        <?php
+        $qsI = http_build_query(array_filter([
+            'condicion' => $data['filtro_condicion'] ?? '',
+            'categoria' => $data['filtro_categoria'] ?? '',
+            'ubicacion' => $data['filtro_ubicacion'] ?? '',
+        ]));
+        ?>
         <div style="display:flex; gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarInventarioCsv?condicion=<?php echo urlencode($data['filtro_condicion'] ?? ''); ?>&categoria=<?php echo urlencode($data['filtro_categoria'] ?? ''); ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarInventarioCsv?<?php echo $qsI; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel (CSV)
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarInventarioPdf?condicion=<?php echo urlencode($data['filtro_condicion'] ?? ''); ?>&categoria=<?php echo urlencode($data['filtro_categoria'] ?? ''); ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarInventarioPdf?<?php echo $qsI; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>
@@ -25,76 +32,68 @@
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-5) var(--sp-6);">
-        <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/inventario" class="row g-4 align-items-end">
-            <div class="col-md-4">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+        <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/inventario" class="row g-3 align-items-end">
+            <div class="col-md-3">
                 <div class="sig-field">
                     <label class="sig-field__label">Condición</label>
                     <select name="condicion" class="sig-select">
                         <option value="">Todas las condiciones</option>
-                        <?php foreach (['Nuevo', 'Bueno', 'Regular', 'Dañado'] as $c): ?>
+                        <?php foreach (['Nuevo', 'Bueno', 'Regular', 'Dañado', 'En Reparación'] as $c): ?>
                             <option value="<?php echo $c; ?>" <?php if (($data['filtro_condicion'] ?? '') === $c) echo 'selected'; ?>><?php echo $c; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="sig-field">
                     <label class="sig-field__label">Categoría (contiene)</label>
                     <input type="text" name="categoria" class="sig-input" placeholder="Ej: mobiliario, tecnología..." value="<?php echo htmlspecialchars($data['filtro_categoria'] ?? ''); ?>">
                 </div>
             </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn-sig btn-sig--primary" style="width:100%; height:42px;">
-                    <i class="bi bi-filter"></i> Filtrar Resultados
-                </button>
+            <div class="col-md-3">
+                <div class="sig-field">
+                    <label class="sig-field__label">Ubicación (contiene)</label>
+                    <input type="text" name="ubicacion" class="sig-input" placeholder="Ej: oficina, almacén..." value="<?php echo htmlspecialchars($data['filtro_ubicacion'] ?? ''); ?>">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div style="display:flex;gap:var(--sp-2);">
+                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <?php if (!empty($data['filtro_condicion']) || !empty($data['filtro_categoria']) || !empty($data['filtro_ubicacion'])): ?>
+                        <a href="<?php echo URL_ROOT; ?>/reportes/inventario" class="btn-sig btn-sig--ghost" style="height:42px;padding:0 var(--sp-3);" title="Limpiar filtros">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
 <!-- KPI Cards -->
-<div class="row g-4 mb-6 anim-slide-up">
-    <div class="col-md-2 col-6">
-        <div class="sig-card" style="border-bottom: 3px solid var(--brand-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Total</span>
-                <span style="font-size:28px; font-weight:900; color:var(--brand-600);"><?php echo $data['stats']->total ?? 0; ?></span>
+<div class="row g-3 mb-6 anim-slide-up">
+    <?php
+    $invKpis = [
+        ['label' => 'Total Bienes',    'val' => $data['stats']->total     ?? 0, 'color' => 'var(--brand-500)',   'txt' => 'var(--brand-600)'],
+        ['label' => 'Nuevos',          'val' => $data['stats']->nuevos    ?? 0, 'color' => 'var(--success-500)', 'txt' => 'var(--success-600)'],
+        ['label' => 'Buenos',          'val' => $data['stats']->buenos    ?? 0, 'color' => 'var(--teal-500)',    'txt' => 'var(--teal-600)'],
+        ['label' => 'Regulares',       'val' => $data['stats']->regulares ?? 0, 'color' => 'var(--warning-500)', 'txt' => 'var(--warning-600)'],
+        ['label' => 'Dañados',         'val' => $data['stats']->danados   ?? 0, 'color' => 'var(--danger-500)',  'txt' => 'var(--danger-600)'],
+        ['label' => 'En Reparación',   'val' => $data['stats']->reparacion ?? 0,'color' => '#8B5CF6',            'txt' => '#7C3AED'],
+    ];
+    foreach ($invKpis as $k): ?>
+    <div class="col-md-2 col-4">
+        <div class="sig-card" style="border-bottom:3px solid <?php echo $k['color']; ?>;">
+            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
+                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;"><?php echo $k['label']; ?></div>
+                <div style="font-size:26px;font-weight:900;color:<?php echo $k['txt']; ?>;"><?php echo number_format($k['val']); ?></div>
             </div>
         </div>
     </div>
-    <div class="col-md-2 col-6">
-        <div class="sig-card" style="border-bottom: 3px solid var(--success-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Nuevos</span>
-                <span style="font-size:28px; font-weight:900; color:var(--success-600);"><?php echo $data['stats']->nuevos ?? 0; ?></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2 col-6">
-        <div class="sig-card" style="border-bottom: 3px solid var(--teal-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Buenos</span>
-                <span style="font-size:28px; font-weight:900; color:var(--teal-600);"><?php echo $data['stats']->buenos ?? 0; ?></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="sig-card" style="border-bottom: 3px solid var(--warning-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Regulares</span>
-                <span style="font-size:28px; font-weight:900; color:var(--warning-600);"><?php echo $data['stats']->regulares ?? 0; ?></span>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="sig-card" style="border-bottom: 3px solid var(--danger-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:10px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Dañados</span>
-                <span style="font-size:28px; font-weight:900; color:var(--danger-600);"><?php echo $data['stats']->danados ?? 0; ?></span>
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- Tabla -->
@@ -108,6 +107,7 @@
                 <th>Ubicación</th>
                 <th style="text-align:center;">Condición</th>
                 <th>Marca / Modelo</th>
+                <th>Serial</th>
             </tr>
         </thead>
         <tbody>
@@ -127,13 +127,14 @@
                     <tr>
                         <td><span class="cell-id" style="font-family:var(--font-mono);"><?php echo htmlspecialchars($r->codigo_bn ?? '—'); ?></span></td>
                         <td><span class="cell-strong"><?php echo htmlspecialchars($r->nombre ?? '—'); ?></span></td>
-                        <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->categoria ?? 'Sin categoría'); ?></span></td>
-                        <td style="font-size:13px;"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
+                        <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->categoria ?? 'Sin cat.'); ?></span></td>
+                        <td style="font-size:12px;"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
                         <td style="text-align:center;"><span class="sig-badge <?php echo $condBadge; ?>"><?php echo htmlspecialchars($r->condicion ?? '—'); ?></span></td>
-                        <td style="font-size:12px; color:var(--text-secondary);">
-                            <?php echo htmlspecialchars($r->marca ?? ''); ?>
-                            <?php if (!empty($r->modelo)): ?> / <?php echo htmlspecialchars($r->modelo); ?><?php endif; ?>
+                        <td style="font-size:12px;color:var(--text-secondary);">
+                            <?php echo htmlspecialchars($r->marca ?? '—'); ?>
+                            <?php if (!empty($r->modelo)): ?><br><span style="color:var(--text-tertiary);"><?php echo htmlspecialchars($r->modelo); ?></span><?php endif; ?>
                         </td>
+                        <td style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);"><?php echo htmlspecialchars($r->serial ?? '—'); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

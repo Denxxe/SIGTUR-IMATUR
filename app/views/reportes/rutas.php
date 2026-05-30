@@ -9,11 +9,17 @@
         <p class="page__subtitle">Métricas de infraestructura turística, puntos de interés y equipamiento de las rutas municipales.</p>
     </div>
     <div class="page__actions">
+        <?php
+        $qsR = http_build_query(array_filter([
+            'estado'           => $data['filtro_estado']     ?? '',
+            'nivel_dificultad' => $data['filtro_dificultad'] ?? '',
+        ]));
+        ?>
         <div style="display:flex; gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarRutasCsv" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarRutasCsv?<?php echo $qsR; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel (CSV)
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarRutasPdf" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarRutasPdf?<?php echo $qsR; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>
@@ -247,16 +253,17 @@
         <?php
         $nR = [];
         $puntosR = [];
-        $actR = [];
+        $partR = [];
         $eqR = [];
         if (!empty($data['rutas'])) {
             $cnt = 0;
             foreach ($data['rutas'] as $r) {
                 if ($cnt >= 8) break;
-                $nR[] = mb_substr($r->nombre, 0, 15) . '...';
+                $lbl = mb_strlen($r->nombre) > 16 ? mb_substr($r->nombre, 0, 14) . '…' : $r->nombre;
+                $nR[]      = $lbl;
                 $puntosR[] = (int)$r->total_puntos;
-                $actR[] = (int)$r->total_actividades;
-                $eqR[] = (int)$r->total_equipos;
+                $partR[]   = (int)$r->total_participantes;
+                $eqR[]     = (int)$r->total_equipos;
                 $cnt++;
             }
         }
@@ -266,17 +273,15 @@
                 type: 'bar',
                 height: 320,
                 background: 'transparent',
-                toolbar: {
-                    show: false
-                }
+                toolbar: { show: false }
             },
             series: [{
                     name: 'Puntos de Interés',
                     data: <?php echo json_encode($puntosR); ?>
                 },
                 {
-                    name: 'Actividades',
-                    data: <?php echo json_encode($actR); ?>
+                    name: 'Participantes',
+                    data: <?php echo json_encode($partR); ?>
                 },
                 {
                     name: 'Equipamiento',
