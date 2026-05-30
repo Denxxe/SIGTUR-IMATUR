@@ -93,10 +93,12 @@ class RutasController extends Controller {
         }
         $persona = Ruta::buscarPersonaPorCedula($cedula);
         if ($persona) {
+            require_once '../app/models/Taller.php';
             echo json_encode([
-                'found'    => true,
-                'nombre'   => htmlspecialchars($persona->nombre . ' ' . ($persona->apellido ?? '')),
-                'cedula'   => htmlspecialchars($persona->cedula),
+                'found'          => true,
+                'nombre'         => htmlspecialchars($persona->nombre . ' ' . ($persona->apellido ?? '')),
+                'cedula'         => htmlspecialchars($persona->cedula),
+                'tiene_formacion'=> Taller::personaRecibioFormacion((int)$persona->id),
             ]);
         } else {
             echo json_encode(['found' => false]);
@@ -135,11 +137,14 @@ class RutasController extends Controller {
                 if (!$persona) throw new Exception("No se encontró ninguna persona con cédula '{$cedula}'.");
 
                 // RN-F12: verificar prerequisito de formación si la ruta lo requiere
-                $ruta = Ruta::find($id_ruta);
+                $ruta         = Ruta::find($id_ruta);
+                $forzar       = !empty($_POST['forzar_inscripcion']);
                 if ($ruta && !empty($ruta->requiere_formacion)) {
-                    if (!Taller::personaRecibioFormacion((int)$persona->id)) {
+                    if (!Taller::personaRecibioFormacion((int)$persona->id) && !$forzar) {
+                        $nombreP = htmlspecialchars(trim(($persona->nombre ?? '') . ' ' . ($persona->apellido ?? '')));
                         throw new Exception(
-                            'Esta ruta requiere formación previa. La persona no tiene registro de actividades de formación completadas (RN-F12).'
+                            "{$nombreP} no tiene actividades de formación completadas. Esta ruta requiere formación previa (RN-F12). " .
+                            'Si es un caso excepcional, marque "Inscribir sin formación" en el formulario.'
                         );
                     }
                 }

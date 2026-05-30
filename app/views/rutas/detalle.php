@@ -49,13 +49,26 @@
 </div>
 
 <?php if ($data['ruta']->descripcion ?? ''): ?>
-    <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);">
         <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-6);">
             <p style="margin:0; font-size:15px; color:var(--text-secondary); line-height:1.6;">
                 <?php echo htmlspecialchars($data['ruta']->descripcion ?? ''); ?>
             </p>
         </div>
     </div>
+<?php endif; ?>
+
+<?php if (!empty($data['ruta']->requiere_formacion)): ?>
+<div style="display:flex; align-items:flex-start; gap:var(--sp-3); background:rgba(245,158,11,.08); border-left:4px solid #D97706; border-radius:6px; padding:var(--sp-3) var(--sp-5); margin-bottom:var(--sp-6);" class="anim-slide-up">
+    <i class="bi bi-mortarboard-fill" style="color:#D97706; font-size:1.2rem; flex-shrink:0; margin-top:2px;"></i>
+    <div>
+        <strong style="color:#92400E; font-size:13px;">Esta ruta requiere formación previa</strong>
+        <p style="margin:4px 0 0; font-size:12px; color:#78350F; line-height:1.5;">
+            Los participantes deben haber completado al menos una actividad formativa (taller, charla o inducción) para inscribirse.
+            Si se trata de un caso excepcional, puede forzar la inscripción desde el formulario de inscripción.
+        </p>
+    </div>
+</div>
 <?php endif; ?>
 
 <!-- ── Participantes ── -->
@@ -288,6 +301,22 @@
                     </div>
                 </div>
 
+                <?php if (!empty($data['ruta']->requiere_formacion)): ?>
+                <!-- Alerta y override RN-F12 — solo visible cuando la búsqueda detecta sin formación -->
+                <div id="bloque_sin_formacion" style="display:none; background:rgba(239,68,68,.06); border:1px solid var(--danger-300); border-radius:8px; padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-3);">
+                    <p style="font-size:13px; color:var(--danger-700); margin:0 0 var(--sp-2); font-weight:600;">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Este participante no tiene formación previa registrada en el sistema.
+                    </p>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="part_forzar" name="forzar_inscripcion" value="1">
+                        <label class="form-check-label" for="part_forzar" style="font-size:12px; color:var(--danger-700);">
+                            Inscribir de todas formas (caso excepcional — quedará registrado)
+                        </label>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <hr style="margin:var(--sp-4) 0; border-color:var(--border-subtle);">
 
                 <!-- Campos comunes -->
@@ -466,6 +495,15 @@
         elFeedback.style.display = 'block';
     }
 
+    const rutaRequiereFormacion = <?php echo !empty($data['ruta']->requiere_formacion) ? 'true' : 'false'; ?>;
+    const elBloqueFormacion = document.getElementById('bloque_sin_formacion');
+    const elForzar          = document.getElementById('part_forzar');
+
+    function ocultarFormacionOverride() {
+        if (elBloqueFormacion) elBloqueFormacion.style.display = 'none';
+        if (elForzar) elForzar.checked = false;
+    }
+
     elCedula.addEventListener('input', function () {
         const norm = normalizarCedula(this.value);
         if (this.value !== norm) {
@@ -475,6 +513,7 @@
         }
 
         clearFeedback();
+        ocultarFormacionOverride();
         const cedula = this.value.trim();
 
         // Solo buscar si tiene formato mínimo: X-NNNNNNN (al menos 5 dígitos)
@@ -485,14 +524,25 @@
         ajaxTimer = setTimeout(function () {
             fetch(URL_ROOT + '/rutas/buscarPersona?cedula=' + encodeURIComponent(cedula))
                 .then(r => r.json())
-                .then(data => {
-                    if (data.found) {
-                        showFeedback(true, 'Encontrado: <strong>' + data.nombre + '</strong>');
+                .then(result => {
+                    if (result.found) {
+                        if (rutaRequiereFormacion && result.tiene_formacion === false) {
+                            // Persona sin formación — mostrar advertencia + override
+                            showFeedback(false,
+                                'Encontrado: <strong>' + result.nombre + '</strong>' +
+                                ' &mdash; <span style="color:#dc2626; font-weight:600;">Sin formación registrada</span>');
+                            if (elBloqueFormacion) elBloqueFormacion.style.display = 'block';
+                        } else {
+                            showFeedback(true, 'Encontrado: <strong>' + result.nombre + '</strong>' +
+                                (rutaRequiereFormacion ? ' <i class="bi bi-mortarboard-fill" style="color:#059669;" title="Tiene formación previa"></i>' : ''));
+                            ocultarFormacionOverride();
+                        }
                     } else {
                         showFeedback(false, 'No se encontró ninguna persona con esa cédula.');
+                        ocultarFormacionOverride();
                     }
                 })
-                .catch(() => clearFeedback());
+                .catch(() => { clearFeedback(); ocultarFormacionOverride(); });
         }, 500);
     });
 
@@ -505,6 +555,7 @@
         elCedula.required = true;
         elNombre.required = false;
         clearFeedback();
+        ocultarFormacionOverride();
     });
 }());
 
