@@ -17,6 +17,30 @@ class DashboardController extends Controller {
         ];
 
         try {
+            // Helper: rellena períodos mensuales faltantes con cero (ventana completa)
+            $padMonths = function(array $rows, int $n): array {
+                $map = [];
+                foreach ($rows as $r) $map[$r->mes ?? ''] = (int)($r->total ?? 0);
+                $result = [];
+                for ($i = $n - 1; $i >= 0; $i--) {
+                    $key      = date('Y-m', strtotime("-$i months"));
+                    $result[] = (object)['mes' => $key, 'total' => $map[$key] ?? 0];
+                }
+                return $result;
+            };
+
+            // Helper: rellena días faltantes con cero (ventana completa)
+            $padDays = function(array $rows, int $n): array {
+                $map = [];
+                foreach ($rows as $r) $map[$r->dia ?? ''] = (int)($r->total ?? 0);
+                $result = [];
+                for ($i = $n - 1; $i >= 0; $i--) {
+                    $key      = date('Y-m-d', strtotime("-$i days"));
+                    $result[] = (object)['dia' => $key, 'total' => $map[$key] ?? 0];
+                }
+                return $result;
+            };
+
             // Helper: calcula delta % entre período actual y anterior
             $mkDelta = function(int $curr, int $prev, string $label): ?array {
                 if ($prev === 0) return null;
@@ -59,7 +83,7 @@ class DashboardController extends Controller {
                             FROM asistencias a
                             WHERE a.is_active = TRUE AND a.fecha >= (CURRENT_DATE - INTERVAL '4 months')
                             GROUP BY mes ORDER BY mes ASC");
-                $data['asistenciaPorMes'] = $db->resultSet();
+                $data['asistenciaPorMes'] = $padMonths($db->resultSet(), 4);
 
                 $db->query("SELECT d.nombre AS departamento, COUNT(e.id) AS total
                             FROM departamentos d
@@ -104,7 +128,7 @@ class DashboardController extends Controller {
                             FROM visitas
                             WHERE is_active = TRUE AND hora_entrada >= (CURRENT_DATE - INTERVAL '14 days')
                             GROUP BY dia ORDER BY dia ASC");
-                $data['visitasPorDia'] = $db->resultSet();
+                $data['visitasPorDia'] = $padDays($db->resultSet(), 14);
             }
 
             // ══════════════════════════════════════════════════════════════
@@ -175,7 +199,7 @@ class DashboardController extends Controller {
                             FROM talleres WHERE is_active = TRUE
                               AND fecha_inicio >= (CURRENT_DATE - INTERVAL '6 months')
                             GROUP BY mes ORDER BY mes ASC");
-                $data['talleresPorMes'] = $db->resultSet();
+                $data['talleresPorMes'] = $padMonths($db->resultSet(), 6);
             }
 
             // ══════════════════════════════════════════════════════════════

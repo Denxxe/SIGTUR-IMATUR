@@ -135,7 +135,7 @@ $hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades de Formación — últimos 6 meses</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo count($data['talleresPorMes']); ?> períodos</span>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiActividadesActivas']??0); ?> activas ahora</span>
             </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresMes"></div></div>
         </div>
@@ -190,7 +190,7 @@ $hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
         <div class="sig-card">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Flujo de Visitas — últimos 14 días</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiVisitasHoy']??0); ?> visitas hoy</span>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiVisitasSemana']??0); ?> únicos esta semana</span>
             </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartVisitas"></div></div>
         </div>
