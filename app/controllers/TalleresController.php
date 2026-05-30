@@ -44,7 +44,7 @@ class TalleresController extends Controller {
             'hora_fin'               => $_POST['hora_fin'] ?: null,
             'id_ubicacion_formacion' => (int)$_POST['id_ubicacion_formacion'] ?: null,
             'id_facilitador'         => (int)$_POST['id_facilitador'],
-            'cupo_maximo'            => min(200, max(1, (int)$_POST['cupo_maximo'])),
+            'cupo_maximo'            => max(1, (int)$_POST['cupo_maximo']),
             'tipo_actividad'         => $tipoActividad,
             'es_interna'             => $esInterna,
             'tipo_ente'              => $tipoEnte,
@@ -57,6 +57,29 @@ class TalleresController extends Controller {
         ];
 
         try {
+            // Validar fecha_fin >= fecha_inicio cuando está presente
+            if (!empty($data['fecha_fin']) && $data['fecha_fin'] < $data['fecha_inicio']) {
+                throw new Exception('La fecha de finalización no puede ser anterior a la fecha de inicio.');
+            }
+
+            // Validar duración mínima 10 min y máxima 5 horas cuando ambas horas están presentes
+            if (!empty($data['hora_inicio']) && !empty($data['hora_fin'])) {
+                $hi = strtotime('2000-01-01 ' . $data['hora_inicio']);
+                $hf = strtotime('2000-01-01 ' . $data['hora_fin']);
+                if ($hi !== false && $hf !== false) {
+                    if ($hf <= $hi) {
+                        throw new Exception('La hora de finalización debe ser posterior a la hora de inicio.');
+                    }
+                    $durMin = ($hf - $hi) / 60;
+                    if ($durMin < 10) {
+                        throw new Exception('La duración mínima de una actividad formativa es de 10 minutos.');
+                    }
+                    if ($durMin > 300) {
+                        throw new Exception('La duración máxima es de 5 horas. Para sesiones más extensas regístrelas como actividades separadas.');
+                    }
+                }
+            }
+
             if ($esEdicion) {
                 // RN-F13: validar transición de estado
                 $actual = Taller::find($data['id']);
@@ -242,6 +265,20 @@ class TalleresController extends Controller {
                     throw new Exception('El nombre y apellido del participante son requeridos.');
                 }
 
+                // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
+                if ($cedula !== null) {
+                    $cedulaN = strtoupper(preg_replace('/[\s\.\-]/', '', $cedula));
+                    if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
+                        throw new Exception('El formato de cédula no es válido. Ejemplos: V-12345678, E-1234567 o solo los números.');
+                    }
+                }
+
+                // Validar formato de correo electrónico
+                $correoRaw = trim($_POST['correo'] ?? '') ?: null;
+                if ($correoRaw !== null && !filter_var($correoRaw, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                }
+
                 // Buscar persona existente por cédula; si no existe, crear nueva
                 $persona = $cedula ? Taller::buscarPersonaPorCedula($cedula) : null;
 
@@ -286,7 +323,14 @@ class TalleresController extends Controller {
 
                 Taller::inscribir($id_taller, $idPersona, $userId, !empty($_POST['es_brigadista']));
             }
-            flash('global_msg', 'Participante registrado correctamente.');
+            // Advertencia no bloqueante si se alcanzó o superó el cupo estimado
+            $inscritosPost = Taller::countParticipantes($id_taller);
+            $cupoMax       = (int)($tallerActual->cupo_maximo ?? 0);
+            if ($cupoMax > 0 && $inscritosPost >= $cupoMax) {
+                flash('global_msg', 'Participante registrado. Aviso: el cupo estimado de ' . $cupoMax . ' personas ha sido alcanzado o superado.', 'warning');
+            } else {
+                flash('global_msg', 'Participante registrado correctamente.');
+            }
 
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
@@ -338,18 +382,33 @@ class TalleresController extends Controller {
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $mujeres = (int)$_POST['mujeres'];
+            $hombres = (int)$_POST['hombres'];
+            $ninas   = (int)$_POST['ninas'];
+            $ninos   = (int)$_POST['ninos'];
+
             $data = [
                 'id_taller'               => $id_taller,
                 'unidad_estadal'          => trim($_POST['unidad_estadal'] ?? 'Sucre'),
                 'lugar_exacto'            => trim($_POST['lugar_exacto'] ?? ''),
                 'instituciones_presentes' => trim($_POST['instituciones_presentes'] ?? ''),
-                'mujeres'                 => (int)$_POST['mujeres'],
-                'hombres'                 => (int)$_POST['hombres'],
-                'ninas'                   => (int)$_POST['ninas'],
-                'ninos'                   => (int)$_POST['ninos'],
+                'mujeres'                 => $mujeres,
+                'hombres'                 => $hombres,
+                'ninas'                   => $ninas,
+                'ninos'                   => $ninos,
                 'resumen_actividad'       => trim($_POST['resumen_actividad'] ?? '')
             ];
             try {
+                // Validar valores demográficos
+                if ($mujeres < 0 || $hombres < 0 || $ninas < 0 || $ninos < 0) {
+                    throw new Exception('Los valores demográficos no pueden ser negativos.');
+                }
+                if (($mujeres + $hombres + $ninas + $ninos) === 0) {
+                    throw new Exception('Debe registrar al menos un asistente en el informe demográfico.');
+                }
+                if (empty(trim($_POST['resumen_actividad'] ?? ''))) {
+                    throw new Exception('El resumen de la actividad es obligatorio en el informe.');
+                }
                 Taller::saveInforme($data);
                 flash('global_msg', 'Informe guardado correctamente.');
             } catch (Exception $e) {
