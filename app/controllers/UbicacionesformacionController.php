@@ -21,12 +21,26 @@ class UbicacionesformacionController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
 
+            $nombre     = trim($_POST['nombre']    ?? '');
+            $parroquia  = trim($_POST['parroquia'] ?? '');
+
+            if (empty($nombre)) {
+                flash('global_msg', 'El nombre de la sede es obligatorio.', 'danger');
+                header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+                exit();
+            }
+            if (empty($parroquia)) {
+                flash('global_msg', 'La parroquia es obligatoria — es necesaria para el indicador de cobertura territorial (F-4).', 'danger');
+                header('Location: ' . URL_ROOT . '/ubicacionesformacion/index');
+                exit();
+            }
+
             $data = [
-                'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,
-                'nombre' => trim($_POST['nombre']),
-                'tipo' => trim($_POST['tipo']),
-                'direccion' => trim($_POST['direccion']),
-                'id_parroquia' => trim($_POST['parroquia'])
+                'id'          => isset($_POST['id']) ? (int)$_POST['id'] : null,
+                'nombre'      => $nombre,
+                'tipo'        => trim($_POST['tipo']      ?? ''),
+                'direccion'   => trim($_POST['direccion'] ?? ''),
+                'id_parroquia'=> $parroquia,
             ];
 
             $ubi = new UbicacionFormacion($data);
