@@ -324,6 +324,55 @@ class Taller extends Model {
 
     // ── Informe demográfico ──────────────────────────────────────────────────
 
+    // Genera o actualiza el informe demográfico automáticamente desde participantes activos.
+    // Preserva lugar_exacto, instituciones_presentes y resumen si ya fueron editados manualmente.
+    public static function autoGenerarInforme(int $id_taller): void {
+        $db = new Database();
+
+        // Calcular demografía real desde participantes activos
+        $db->query("SELECT
+                        COUNT(CASE WHEN pt.id_persona IS NOT NULL AND p.genero = 'F' THEN 1 END) AS mujeres,
+                        COUNT(CASE WHEN pt.id_persona IS NOT NULL AND p.genero = 'M' THEN 1 END) AS hombres,
+                        COUNT(CASE WHEN pt.id_persona IS NULL AND pt.genero_libre = 'F'  THEN 1 END) AS ninas,
+                        COUNT(CASE WHEN pt.id_persona IS NULL AND pt.genero_libre = 'M'  THEN 1 END) AS ninos
+                    FROM participantes_taller pt
+                    LEFT JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id_taller = :id AND pt.is_active = TRUE");
+        $db->bind(':id', $id_taller);
+        $dem = $db->single();
+
+        $mujeres = (int)($dem->mujeres ?? 0);
+        $hombres = (int)($dem->hombres ?? 0);
+        $ninas   = (int)($dem->ninas   ?? 0);
+        $ninos   = (int)($dem->ninos   ?? 0);
+        $total   = $mujeres + $hombres + $ninas + $ninos;
+
+        // Obtener sede del taller para el campo lugar_exacto
+        $db->query("SELECT uf.nombre AS sede FROM talleres t
+                    LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                    WHERE t.id = :id");
+        $db->bind(':id', $id_taller);
+        $tallerRow = $db->single();
+
+        $existing = self::getInforme($id_taller);
+
+        $dataInforme = [
+            'id_taller'               => $id_taller,
+            'unidad_estadal'          => $existing->unidad_estadal          ?? 'Sucre',
+            'lugar_exacto'            => !empty($existing->lugar_exacto)          ? $existing->lugar_exacto          : ($tallerRow->sede ?? ''),
+            'instituciones_presentes' => $existing->instituciones_presentes ?? '',
+            'mujeres'                 => $mujeres,
+            'hombres'                 => $hombres,
+            'ninas'                   => $ninas,
+            'ninos'                   => $ninos,
+            'resumen_actividad'       => !empty($existing->resumen_actividad)
+                ? $existing->resumen_actividad
+                : 'Actividad finalizada con ' . $total . ' participante(s) registrado(s). Complete el resumen desde Informe Oficial si es necesario.',
+        ];
+
+        self::saveInforme($dataInforme);
+    }
+
     public static function getInforme($id_taller) {
         $db = new Database();
         $db->query("SELECT * FROM taller_informes WHERE id_taller = :id_taller");

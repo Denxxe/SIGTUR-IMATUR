@@ -94,13 +94,6 @@ class TalleresController extends Controller {
                     }
                 }
 
-                // RN-F13: Finalizado requiere informe demográfico
-                if ($data['estado'] === 'Finalizado') {
-                    if (Taller::getInforme($data['id']) === false || Taller::getInforme($data['id']) === null) {
-                        throw new Exception('No se puede finalizar una actividad sin completar el Reporte Oficial de Actividad (informe demográfico). Ir a Detalle → Reporte Oficial.');
-                    }
-                }
-
                 // Finalizado: procesar evidencias adjuntadas en el modal de edición
                 if ($data['estado'] === 'Finalizado' && !empty($_FILES['evidencias']['name'][0])) {
                     $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
@@ -133,6 +126,11 @@ class TalleresController extends Controller {
                 // Finalizado requiere al menos una evidencia (cargada ahora o anteriormente)
                 if ($data['estado'] === 'Finalizado' && Taller::countEvidencias($data['id']) === 0) {
                     throw new Exception('Debe adjuntar al menos una evidencia para finalizar la actividad.');
+                }
+
+                // Auto-generar informe demográfico desde participantes activos (store → edición modal)
+                if ($data['estado'] === 'Finalizado') {
+                    Taller::autoGenerarInforme((int)$data['id']);
                 }
             }
 
@@ -650,10 +648,6 @@ class TalleresController extends Controller {
                 if (Taller::countParticipantes((int)$id) === 0) {
                     throw new Exception('No se puede finalizar sin participantes inscritos (RN-F12).');
                 }
-                if (Taller::getInforme($id) === false || Taller::getInforme($id) === null) {
-                    throw new Exception('Complete el Reporte Oficial de Actividad antes de finalizar.');
-                }
-
                 // Subir archivos de evidencia si se enviaron
                 if (!empty($_FILES['evidencias']['name'][0])) {
                     $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
@@ -688,6 +682,9 @@ class TalleresController extends Controller {
                 if (Taller::countEvidencias((int)$id) === 0) {
                     throw new Exception('Debe subir al menos una evidencia para finalizar la actividad.');
                 }
+
+                // Auto-generar informe demográfico desde participantes activos (cambiarEstado)
+                Taller::autoGenerarInforme((int)$id);
             }
 
             Taller::cambiarEstado((int)$id, $nuevoEstado, $motivo, $userId);

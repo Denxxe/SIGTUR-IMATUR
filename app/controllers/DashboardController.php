@@ -173,6 +173,7 @@ class DashboardController extends Controller {
                                 FROM participantes_taller WHERE is_active = TRUE GROUP BY id_taller
                             ) sub ON sub.id_taller = t.id
                             WHERE t.is_active = TRUE AND t.estado <> 'Cancelado'
+                              AND t.cupo_maximo > 0
                               AND EXTRACT(YEAR FROM t.fecha_inicio) = :anio");
                 $db->bind(':anio', $anio);
                 $oR = $db->single();
