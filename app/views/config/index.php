@@ -111,6 +111,77 @@
         </div>
     </div>
 
+    <!-- ══ Metas Anuales ══ -->
+    <div class="col-12">
+        <div class="sig-card">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-trophy-fill" style="color:var(--warning-500);"></i> Metas Anuales</div>
+                <span style="font-size:12px; color:var(--text-tertiary);">Usadas en los indicadores de gestión para calcular el % de cumplimiento</span>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="sig-field">
+                            <label class="sig-field__label">
+                                <i class="bi bi-mortarboard" style="color:#7C3AED;"></i>
+                                Meta anual de actividades formativas
+                            </label>
+                            <input type="number" name="meta_talleres_anio" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['meta_talleres_anio']['valor'] ?? 0); ?>">
+                            <span class="sig-field__hint">Número de talleres, charlas e inducciones planificados para el año. 0 = sin meta definida.</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="sig-field">
+                            <label class="sig-field__label">
+                                <i class="bi bi-geo-alt-fill" style="color:#D97706;"></i>
+                                Meta anual de rutas turísticas
+                            </label>
+                            <input type="number" name="meta_rutas_anio" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['meta_rutas_anio']['valor'] ?? 0); ?>">
+                            <span class="sig-field__hint">Número de rutas planificadas para operar en el año. 0 = sin meta definida.</span>
+                        </div>
+                    </div>
+                </div>
+                <?php
+                $metaTalleres = (int)($cfg['meta_talleres_anio']['valor'] ?? 0);
+                $metaRutas    = (int)($cfg['meta_rutas_anio']['valor']    ?? 0);
+                if ($metaTalleres > 0 || $metaRutas > 0):
+                ?>
+                <div style="margin-top:var(--sp-4); padding:var(--sp-3) var(--sp-4); background:rgba(var(--brand-rgb,.22,.48,.86),.05); border-radius:8px; font-size:12px; color:var(--text-secondary);">
+                    <i class="bi bi-info-circle" style="color:var(--brand-500);"></i>
+                    Los indicadores de gestión mostrarán el progreso del año actual respecto a estas metas.
+                    Actualiza los valores cada año antes de comenzar la temporada.
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ Alertas del Sistema ══ -->
+    <div class="col-lg-6">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-bell-fill" style="color:var(--danger-500);"></i> Umbrales de Alertas</div>
+                <span style="font-size:12px; color:var(--text-tertiary);">Días de anticipación para las alertas del Panel Principal</span>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+                <div class="sig-field">
+                    <label class="sig-field__label"><i class="bi bi-person-badge" style="color:#3B82F6;"></i> Contratos vencientes (días)</label>
+                    <input type="number" name="dias_preaviso_contrato" class="sig-input" min="1" max="365"
+                           value="<?php echo (int)($cfg['dias_preaviso_contrato']['valor'] ?? 30); ?>">
+                    <span class="sig-field__hint">El dashboard alertará con X días de anticipación sobre contratos que vencen.</span>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label"><i class="bi bi-journal-text" style="color:#0EA5E9;"></i> Pasantes próximos a culminar (días)</label>
+                    <input type="number" name="dias_preaviso_pasante" class="sig-input" min="1" max="365"
+                           value="<?php echo (int)($cfg['dias_preaviso_pasante']['valor'] ?? 15); ?>">
+                    <span class="sig-field__hint">El dashboard alertará con X días de anticipación sobre pasantes que culminan.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Correlativo de oficios -->
     <div class="col-lg-6">
         <div class="sig-card">

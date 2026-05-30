@@ -41,6 +41,17 @@ class DashboardController extends Controller {
                 return $result;
             };
 
+            // Leer umbrales de alerta desde configuracion_sistema
+            $diasContrato = 30;
+            $diasPasante  = 15;
+            try {
+                $db->query("SELECT clave, valor FROM configuracion_sistema WHERE clave IN ('dias_preaviso_contrato','dias_preaviso_pasante')");
+                foreach ($db->resultSet() as $row) {
+                    if ($row->clave === 'dias_preaviso_contrato' && (int)$row->valor > 0) $diasContrato = (int)$row->valor;
+                    if ($row->clave === 'dias_preaviso_pasante'  && (int)$row->valor > 0) $diasPasante  = (int)$row->valor;
+                }
+            } catch (\Exception $ignored) {}
+
             // Helper: calcula delta % entre período actual y anterior
             $mkDelta = function(int $curr, int $prev, string $label): ?array {
                 if ($prev === 0) return null;
@@ -76,7 +87,7 @@ class DashboardController extends Controller {
                 $db->query("SELECT COUNT(*) AS total FROM empleados
                             WHERE is_active = TRUE AND tipo_contrato = 'Contratado'
                               AND fecha_egreso IS NOT NULL
-                              AND fecha_egreso BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '30 days')");
+                              AND fecha_egreso BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasContrato || ' days')::INTERVAL)");
                 $data['kpiContratosVencen'] = (int)($db->single()->total ?? 0);
 
                 $db->query("SELECT TO_CHAR(a.fecha, 'YYYY-MM') AS mes, COUNT(*) AS total
@@ -257,17 +268,17 @@ class DashboardController extends Controller {
                 if (($data['kpiContratosVencen'] ?? 0) > 0) {
                     $n = $data['kpiContratosVencen'];
                     $alertas[] = ['tipo' => 'warning', 'ico' => 'bi-person-badge',
-                        'msg' => "$n contrato(s) contratado(s) vencen en los próximos 30 días"];
+                        'msg' => "$n contrato(s) contratado(s) vencen en los próximos {$diasContrato} días"];
                 }
             }
             if (in_array($rol, [1, 3])) {
                 $db->query("SELECT COUNT(*) AS total FROM pasantes WHERE is_active = TRUE
                             AND estado = 'En Curso' AND fecha_fin IS NOT NULL
-                            AND fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '15 days')");
+                            AND fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasPasante || ' days')::INTERVAL)");
                 $pasantesCulm = (int)($db->single()->total ?? 0);
                 if ($pasantesCulm > 0) {
                     $alertas[] = ['tipo' => 'info', 'ico' => 'bi-journal-text',
-                        'msg' => "$pasantesCulm pasante(s) culminan en los próximos 15 días"];
+                        'msg' => "$pasantesCulm pasante(s) culminan en los próximos {$diasPasante} días"];
                 }
                 if (($data['kpiActividadesActivas'] ?? 0) > 0) {
                     $n = $data['kpiActividadesActivas'];

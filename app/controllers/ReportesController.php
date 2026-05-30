@@ -1193,7 +1193,20 @@ class ReportesController extends Controller {
                               AND EXTRACT(YEAR FROM created_at) = :anio");
                 $db->bind(':anio', $anioActual);
                 $rutasAnio = $db->single();
-            } catch (Exception $ignored) {}
+
+                // ── F-META: Meta anual de formación ────────────────────────
+                $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'meta_talleres_anio' LIMIT 1");
+                $metaTalleres = $db->single();
+
+                $db->query("SELECT COUNT(*) AS total FROM talleres
+                            WHERE is_active = TRUE AND estado = 'Finalizado'
+                              AND EXTRACT(YEAR FROM fecha_inicio) = :anio");
+                $db->bind(':anio', $anioActual);
+                $talleresAnio = $db->single();
+            } catch (Exception $ignored) {
+                $metaTalleres = null;
+                $talleresAnio = null;
+            }
 
             // ── PROP-F01: Tasa de ocupación de actividades (año actual) ──────────────
             $db->query("SELECT
@@ -1268,8 +1281,10 @@ class ReportesController extends Controller {
                 // KPIs nuevos — Turismo
                 'rutasPorTipo'          => $rutasPorTipo,
                 'institucionesRutas'    => $institucionesRutas,
-                'metaRutas'             => (int)($metaRutas->valor ?? 0),
-                'rutasAnio'             => (int)($rutasAnio->total ?? 0),
+                'metaRutas'             => (int)($metaRutas->valor   ?? 0),
+                'rutasAnio'             => (int)($rutasAnio->total  ?? 0),
+                'metaTalleres'          => (int)($metaTalleres->valor ?? 0),
+                'talleresAnio'          => (int)($talleresAnio->total ?? 0),
                 // Indicadores de eficiencia operativa
                 'kpiOcupacion'          => $kpiOcupacion,
                 'kpiEficienciaActs'     => $kpiEficienciaActs,

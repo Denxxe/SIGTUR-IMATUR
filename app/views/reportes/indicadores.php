@@ -299,6 +299,42 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
     <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
 </div>
 
+<?php
+$metaTall  = (int)($data['metaTalleres'] ?? 0);
+$tallAnio  = (int)($data['talleresAnio'] ?? 0);
+$pctTall   = ($metaTall > 0) ? min(100, round(($tallAnio / $metaTall) * 100)) : null;
+$colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pctTall >= 70 ? '#D97706' : '#7C3AED'));
+?>
+<?php if ($metaTall > 0): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4); border-left:3px solid <?php echo $colTall; ?>;">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
+            <div>
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;">
+                    <i class="bi bi-flag-fill" style="color:<?php echo $colTall; ?>;"></i> Meta Anual de Actividades Formativas — <?php echo $data['anioActual']; ?>
+                </div>
+                <div style="font-size:1.5rem;font-weight:800;color:<?php echo $colTall; ?>;line-height:1;">
+                    <?php echo $tallAnio; ?> <span style="font-size:1rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $metaTall; ?></span>
+                </div>
+                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">actividades finalizadas en el año</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colTall; ?>;line-height:1;"><?php echo $pctTall; ?>%</div>
+                <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
+            </div>
+        </div>
+        <div style="margin-top:var(--sp-3);height:8px;background:var(--bg-muted);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:<?php echo $pctTall; ?>%;background:<?php echo $colTall; ?>;border-radius:4px;transition:width 1s;"></div>
+        </div>
+        <?php if ($pctTall >= 100): ?>
+            <div style="margin-top:var(--sp-2);font-size:12px;color:#059669;font-weight:600;"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
+        <?php else: $faltan = $metaTall - $tallAnio; ?>
+            <div style="margin-top:var(--sp-2);font-size:12px;color:var(--text-tertiary);">Faltan <?php echo $faltan; ?> actividad(es) para cumplir la meta</div>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-6">
         <div class="sig-card h-100">
@@ -523,6 +559,42 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
     <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Turismo — Tipo de Ruta y Cobertura</span>
     <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
 </div>
+
+<?php
+$metaR  = (int)($data['metaRutas']  ?? 0);
+$rutasA = (int)($data['rutasAnio']  ?? 0);
+$pctR   = ($metaR > 0) ? min(100, round(($rutasA / $metaR) * 100)) : null;
+$colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 ? '#D97706' : '#DC2626'));
+?>
+<?php if ($metaR > 0): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4); border-left:3px solid <?php echo $colR; ?>;">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
+            <div>
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;">
+                    <i class="bi bi-flag-fill" style="color:<?php echo $colR; ?>;"></i> Meta Anual de Rutas Turísticas — <?php echo $data['anioActual']; ?>
+                </div>
+                <div style="font-size:1.5rem;font-weight:800;color:<?php echo $colR; ?>;line-height:1;">
+                    <?php echo $rutasA; ?> <span style="font-size:1rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $metaR; ?></span>
+                </div>
+                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">rutas creadas este año</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colR; ?>;line-height:1;"><?php echo $pctR; ?>%</div>
+                <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
+            </div>
+        </div>
+        <div style="margin-top:var(--sp-3);height:8px;background:var(--bg-muted);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:<?php echo $pctR; ?>%;background:<?php echo $colR; ?>;border-radius:4px;transition:width 1s;"></div>
+        </div>
+        <?php if ($pctR >= 100): ?>
+            <div style="margin-top:var(--sp-2);font-size:12px;color:#059669;font-weight:600;"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
+        <?php else: $faltanR = $metaR - $rutasA; ?>
+            <div style="margin-top:var(--sp-2);font-size:12px;color:var(--text-tertiary);">Faltan <?php echo $faltanR; ?> ruta(s) para cumplir la meta</div>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-5">
