@@ -17,6 +17,19 @@ class DashboardController extends Controller {
         ];
 
         try {
+            // Helper: calcula delta % entre período actual y anterior
+            $mkDelta = function(int $curr, int $prev, string $label): ?array {
+                if ($prev === 0) return null;
+                $pct = round((($curr - $prev) / $prev) * 100, 1);
+                if (abs($pct) < 0.5) return null;
+                return [
+                    'pct'   => abs($pct),
+                    'arrow' => $pct > 0 ? '↑' : '↓',
+                    'color' => $pct > 0 ? '#059669' : '#DC2626',
+                    'label' => $label,
+                ];
+            };
+
             // ══════════════════════════════════════════════════════════════
             // PERSONAL — roles 1 (Admin) y 2 (RRHH)
             // ══════════════════════════════════════════════════════════════
@@ -28,6 +41,13 @@ class DashboardController extends Controller {
                             WHERE is_active = TRUE
                               AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE)");
                 $data['kpiAsistenciaMes'] = (int)($db->single()->total ?? 0);
+
+                // Delta asistencias: vs mes anterior
+                $db->query("SELECT COUNT(*) AS total FROM asistencias
+                            WHERE is_active = TRUE
+                              AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE - INTERVAL '1 month')");
+                $prevAsist = (int)($db->single()->total ?? 0);
+                $data['deltaAsistenciaMes'] = $mkDelta($data['kpiAsistenciaMes'], $prevAsist, 'vs mes anterior');
 
                 $db->query("SELECT COUNT(*) AS total FROM empleados
                             WHERE is_active = TRUE AND tipo_contrato = 'Contratado'
@@ -56,10 +76,24 @@ class DashboardController extends Controller {
                             WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE");
                 $data['kpiVisitasHoy'] = (int)($db->single()->total ?? 0);
 
+                // Delta visitas hoy: vs ayer
+                $db->query("SELECT COUNT(*) AS total FROM visitas
+                            WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE - 1");
+                $prevVisHoy = (int)($db->single()->total ?? 0);
+                $data['deltaVisitasHoy'] = $mkDelta($data['kpiVisitasHoy'], $prevVisHoy, 'vs ayer');
+
                 $db->query("SELECT COUNT(DISTINCT id_visitante) AS total FROM visitas
                             WHERE is_active = TRUE
                               AND DATE(hora_entrada) >= date_trunc('week', CURRENT_DATE)::date");
                 $data['kpiVisitasSemana'] = (int)($db->single()->total ?? 0);
+
+                // Delta visitantes semana: vs semana anterior
+                $db->query("SELECT COUNT(DISTINCT id_visitante) AS total FROM visitas
+                            WHERE is_active = TRUE
+                              AND DATE(hora_entrada) >= (date_trunc('week', CURRENT_DATE) - INTERVAL '7 days')::date
+                              AND DATE(hora_entrada) <  date_trunc('week', CURRENT_DATE)::date");
+                $prevVisSem = (int)($db->single()->total ?? 0);
+                $data['deltaVisitasSemana'] = $mkDelta($data['kpiVisitasSemana'], $prevVisSem, 'vs semana anterior');
 
                 $db->query("SELECT COUNT(DISTINCT id_visitante) AS total FROM visitas
                             WHERE is_active = TRUE
@@ -88,6 +122,16 @@ class DashboardController extends Controller {
                               AND pt.is_active = TRUE AND t.is_active = TRUE");
                 $db->bind(':anio', $anio);
                 $data['kpiFormadosAnio'] = (int)($db->single()->total ?? 0);
+
+                // Delta formados: vs año anterior
+                $db->query("SELECT COUNT(*) AS total
+                            FROM participantes_taller pt
+                            JOIN talleres t ON pt.id_taller = t.id
+                            WHERE EXTRACT(YEAR FROM t.fecha_inicio) = :anio_prev
+                              AND pt.is_active = TRUE AND t.is_active = TRUE");
+                $db->bind(':anio_prev', $anio - 1);
+                $prevFormados = (int)($db->single()->total ?? 0);
+                $data['deltaFormados'] = $mkDelta($data['kpiFormadosAnio'], $prevFormados, 'vs ' . ($anio - 1));
 
                 $db->query("SELECT COUNT(*) AS total FROM rutas WHERE estado = 'Activa' AND is_active = TRUE");
                 $data['kpiRutas'] = (int)($db->single()->total ?? 0);
@@ -159,6 +203,24 @@ class DashboardController extends Controller {
                             FROM inventario WHERE is_active = TRUE
                             GROUP BY condicion ORDER BY total DESC");
                 $data['invPorCondicion'] = $db->resultSet();
+            }
+
+            // ══════════════════════════════════════════════════════════════
+            // FEED DE ACTIVIDAD RECIENTE — solo Admin (rol 1)
+            // ══════════════════════════════════════════════════════════════
+            if ($rol === 1) {
+                try {
+                    $db->query("SELECT al.tabla_afectada, al.operacion, al.record_id,
+                                       al.fecha, al.datos_nuevos,
+                                       COALESCE(u.username, 'Sistema') AS username
+                                FROM audit_logs al
+                                LEFT JOIN usuarios u ON al.id_usuario = u.id
+                                ORDER BY al.fecha DESC
+                                LIMIT 15");
+                    $data['feedActividad'] = $db->resultSet();
+                } catch (\Exception $ignored) {
+                    $data['feedActividad'] = [];
+                }
             }
 
             // ══════════════════════════════════════════════════════════════

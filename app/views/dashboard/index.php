@@ -17,8 +17,8 @@ $kpiCards = [];
 
 if (in_array($rol, [1, 2])) {
     $kpiCards[] = ['label'=>'Empleados Activos',    'value'=>number_format($data['kpiEmpleados'] ?? 0),       'sub'=>'en nómina institucional',           'icon'=>'bi-people-fill',               'bg'=>'#3B82F6','href'=>URL_ROOT.'/empleados/index'];
-    $kpiCards[] = ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes'] ?? 0),  'sub'=>'registros este mes',                'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index'];
-    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy'] ?? 0),     'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index'];
+    $kpiCards[] = ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes'] ?? 0),  'sub'=>'registros este mes',                'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index','delta'=>$data['deltaAsistenciaMes']??null];
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy'] ?? 0),     'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index','delta'=>$data['deltaVisitasHoy']??null];
     $alContr = ($data['kpiContratosVencen'] ?? 0) > 0;
     $kpiCards[] = ['label'=>'Contratos Vencen',      'value'=>number_format($data['kpiContratosVencen'] ?? 0),'sub'=>'en los próximos 30 días',           'icon'=>'bi-person-badge-fill',         'bg'=>$alContr?'#DC2626':'#64748B','alert'=>$alContr];
 }
@@ -27,7 +27,7 @@ if (in_array($rol, [1, 3])) {
     $colOcup = ($data['tasaOcupacion']??0)>=75?'#059669':(($data['tasaOcupacion']??0)>=50?'#D97706':'#DC2626');
     $colFin  = ($data['tasaFinaliz']  ??0)>=85?'#059669':(($data['tasaFinaliz']  ??0)>=70?'#D97706':'#DC2626');
     $kpiCards[] = ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',           'icon'=>'bi-mortarboard-fill',           'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index'];
-    $kpiCards[] = ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),     'sub'=>'participantes inscritos en el año', 'icon'=>'bi-person-check-fill',         'bg'=>'#059669'];
+    $kpiCards[] = ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),     'sub'=>'participantes inscritos en el año', 'icon'=>'bi-person-check-fill',         'bg'=>'#059669','delta'=>$data['deltaFormados']??null];
     $kpiCards[] = ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),            'sub'=>'en estado Activa',                  'icon'=>'bi-geo-alt-fill',               'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index'];
     $kpiCards[] = ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),         'sub'=>'realizando pasantías',              'icon'=>'bi-journal-text',               'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index'];
     $kpiCards[] = ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',               'sub'=>($data['ocupInscritos']??0).' inscritos / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup];
@@ -44,8 +44,8 @@ if (in_array($rol, [1, 4])) {
 }
 
 if ($rol === 5) {
-    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index'];
-    $kpiCards[] = ['label'=>'Visitantes Semana',     'value'=>number_format($data['kpiVisitasSemana']??0),    'sub'=>'únicos en la semana actual',        'icon'=>'bi-people-fill',                'bg'=>'#7C3AED'];
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index','delta'=>$data['deltaVisitasHoy']??null];
+    $kpiCards[] = ['label'=>'Visitantes Semana',     'value'=>number_format($data['kpiVisitasSemana']??0),    'sub'=>'únicos en la semana actual',        'icon'=>'bi-people-fill',                'bg'=>'#7C3AED','delta'=>$data['deltaVisitasSemana']??null];
     $kpiCards[] = ['label'=>'Visitantes Mes',        'value'=>number_format($data['kpiVisitantesMes']??0),    'sub'=>'únicos en el mes actual',           'icon'=>'bi-calendar-month',             'bg'=>'#059669'];
 }
 ?>
@@ -101,6 +101,11 @@ if ($rol === 5) {
                         <div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['label']); ?></div>
                         <div style="font-size:1.75rem;font-weight:800;color:<?php echo $vColor;?>;line-height:1;margin-bottom:4px;"><?php echo $k['value']; ?></div>
                         <div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['sub']); ?></div>
+                        <?php if (!empty($k['delta'])): $d=$k['delta']; ?>
+                        <div style="font-size:10px;font-weight:700;color:<?php echo $d['color'];?>;margin-top:3px;white-space:nowrap;">
+                            <?php echo $d['arrow']; ?> <?php echo $d['pct']; ?>% <span style="font-weight:400;color:var(--text-tertiary);"><?php echo htmlspecialchars($d['label']); ?></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:<?php echo $k['bg'];?>;display:flex;align-items:center;justify-content:center;">
                         <i class="bi <?php echo $k['icon']; ?>" style="font-size:1.15rem;color:white;"></i>
@@ -213,6 +218,71 @@ if ($rol === 5) {
         </div>
     </div>
 </div>
+
+<?php if (!empty($data['feedActividad'])): ?>
+<!-- Feed de actividad reciente — solo Admin ─────────────────────────────── -->
+<?php
+$tablaNames = [
+    'talleres'             => 'actividad formativa',
+    'participantes_taller' => 'inscripción en actividad',
+    'rutas'                => 'ruta turística',
+    'participantes_ruta'   => 'participante en ruta',
+    'empleados'            => 'empleado',
+    'personas'             => 'persona registrada',
+    'inventario'           => 'bien de inventario',
+    'pasantes'             => 'pasante',
+    'visitas'              => 'visita institucional',
+    'visitantes'           => 'visitante',
+    'asistencias'          => 'registro de asistencia',
+    'taller_evidencias'    => 'evidencia de actividad',
+    'taller_informes'      => 'informe de actividad',
+    'rutas'                => 'ruta turística',
+    'instituciones_externas'=> 'institución externa',
+    'usuarios'             => 'usuario del sistema',
+    'departamentos'        => 'departamento',
+    'ubicaciones_formacion'=> 'sede de formación',
+];
+$opConfig = [
+    'INSERT' => ['ico'=>'bi-plus-circle-fill',  'color'=>'#059669', 'verb'=>'registró'],
+    'UPDATE' => ['ico'=>'bi-pencil-fill',        'color'=>'#D97706', 'verb'=>'actualizó'],
+    'DELETE' => ['ico'=>'bi-trash3-fill',        'color'=>'#DC2626', 'verb'=>'eliminó'],
+];
+?>
+<div class="sig-card mb-6 anim-slide-up">
+    <div class="sig-card__head">
+        <div class="sig-card__title">
+            <i class="bi bi-activity" style="color:var(--brand-500);"></i> Actividad Reciente del Sistema
+        </div>
+        <span style="font-size:12px;color:var(--text-tertiary);">Últimos <?php echo count($data['feedActividad']); ?> registros</span>
+    </div>
+    <div class="sig-card__body" style="padding:0;">
+        <?php foreach ($data['feedActividad'] as $i => $f):
+            $tablaNombre = $tablaNames[$f->tabla_afectada] ?? str_replace('_', ' ', $f->tabla_afectada);
+            $op = $opConfig[$f->operacion] ?? ['ico'=>'bi-dot','color'=>'var(--text-tertiary)','verb'=>'modificó'];
+            $diff = time() - strtotime($f->fecha ?? 'now');
+            if      ($diff < 60)    $timeAgo = 'hace ' . $diff . 's';
+            elseif  ($diff < 3600)  $timeAgo = 'hace ' . floor($diff/60) . ' min';
+            elseif  ($diff < 86400) $timeAgo = 'hace ' . floor($diff/3600) . ' h';
+            else                    $timeAgo = 'hace ' . floor($diff/86400) . ' d';
+        ?>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);<?php echo $i>0?'border-top:1px solid var(--border-subtle);':''; ?>">
+            <div style="width:30px;height:30px;border-radius:50%;background:<?php echo $op['color'];?>1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi <?php echo $op['ico']; ?>" style="font-size:0.75rem;color:<?php echo $op['color']; ?>;"></i>
+            </div>
+            <div style="flex:1;min-width:0;font-size:13px;color:var(--text-primary);">
+                <strong><?php echo htmlspecialchars($f->username ?? 'Sistema'); ?></strong>
+                <span style="color:var(--text-secondary);"> <?php echo $op['verb']; ?> </span>
+                <em style="color:var(--text-secondary);font-style:normal;"><?php echo htmlspecialchars($tablaNombre); ?></em>
+                <?php if ($f->record_id): ?>
+                    <span style="color:var(--text-tertiary);font-size:11px;"> #<?php echo $f->record_id; ?></span>
+                <?php endif; ?>
+            </div>
+            <span style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0;"><?php echo $timeAgo; ?></span>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php
 // ── Preparar datos para JS ────────────────────────────────────────────────
