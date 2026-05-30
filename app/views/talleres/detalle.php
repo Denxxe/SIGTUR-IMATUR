@@ -355,6 +355,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                 <div class="sig-field">
                                     <label class="sig-field__label">Correo electrónico</label>
                                     <input type="email" name="correo" id="insc_correo" class="sig-input" placeholder="ejemplo@correo.com">
+                                    <div class="invalid-feedback" id="msg_correo"></div>
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -616,7 +617,9 @@ function checkInscripcionValid() {
         var visible  = document.getElementById('bloque_datos_persona').style.display !== 'none';
         var nombre   = (document.getElementById('insc_nombre').value   || '').trim();
         var apellido = (document.getElementById('insc_apellido').value || '').trim();
-        btn.disabled = !visible || !nombre || !apellido;
+        var correo   = (document.getElementById('insc_correo').value   || '').trim();
+        var correoOk = !correo || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+        btn.disabled = !visible || !nombre || !apellido || !correoOk;
     }
 }
 
@@ -661,6 +664,12 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
         document.getElementById('bloque_datos_persona').style.display = 'block';
         mostrarStatus('warn', '<i class="bi bi-pencil"></i> Complete los datos para registrar un nuevo participante.');
         checkInscripcionValid(); return;
+    }
+    // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
+    var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
+    if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
+        mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Formato no válido. Use V-12345678, E-1234567 o solo los números.');
+        return;
     }
     btn.disabled = true; ico.className = 'bi bi-hourglass-split';
     fetch('<?php echo URL_ROOT; ?>/talleres/buscarPersona?cedula=' + encodeURIComponent(cedula))
@@ -738,6 +747,40 @@ document.getElementById('libre_fecha_nac').addEventListener('change', function()
 document.getElementById('insc_nombre').addEventListener('input', checkInscripcionValid);
 document.getElementById('insc_apellido').addEventListener('input', checkInscripcionValid);
 document.getElementById('insc_nombre_libre').addEventListener('input', checkInscripcionValid);
+
+// Validación de correo en tiempo real
+document.getElementById('insc_correo').addEventListener('input', function() {
+    var correo = this.value.trim();
+    var msgEl  = document.getElementById('msg_correo');
+    var valid  = !correo || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+    this.classList.toggle('is-invalid', !valid);
+    if (msgEl) msgEl.textContent = valid ? '' : 'Formato de correo no válido (ej: usuario@dominio.com).';
+    checkInscripcionValid();
+});
+
+// Última línea de defensa: validar cédula y correo al enviar el formulario
+document.getElementById('formInscripcion').addEventListener('submit', function(e) {
+    var esLibre = document.getElementById('insc_es_libre').checked;
+    if (esLibre) return;
+
+    var cedula = (document.getElementById('insc_cedula_busqueda').value || '').trim();
+    if (cedula) {
+        var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
+        if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
+            e.preventDefault();
+            mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Formato de cédula no válido. Use V-12345678 o solo los números.');
+            return;
+        }
+    }
+
+    var correo = (document.getElementById('insc_correo').value || '').trim();
+    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+        e.preventDefault();
+        document.getElementById('insc_correo').classList.add('is-invalid');
+        var msgEl = document.getElementById('msg_correo');
+        if (msgEl) msgEl.textContent = 'Formato de correo no válido (ej: usuario@dominio.com).';
+    }
+});
 
 document.getElementById('modalInscripcion').addEventListener('show.bs.modal', function() {
     document.getElementById('insc_es_libre').checked        = false;

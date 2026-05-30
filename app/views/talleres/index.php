@@ -431,11 +431,22 @@ function validarFechas() {
         if (msgFf) msgFf.textContent = 'La fecha de fin no puede ser anterior a la de inicio.';
         return false;
     }
-    // Mismo día (o sin fecha fin): duración mínima 15 minutos
+    // Mismo día (o sin fecha fin): duración mínima 10 min, máxima 5 horas
     if (hi && hf && (!ff || ff === fi)) {
-        if (timeToMin(hf) - timeToMin(hi) < 15) {
+        var dur = timeToMin(hf) - timeToMin(hi);
+        if (dur <= 0) {
             inHf.classList.add('is-invalid');
-            if (msgHf) msgHf.textContent = 'La duración mínima es de 15 minutos.';
+            if (msgHf) msgHf.textContent = 'La hora de fin debe ser posterior a la de inicio.';
+            return false;
+        }
+        if (dur < 10) {
+            inHf.classList.add('is-invalid');
+            if (msgHf) msgHf.textContent = 'La duración mínima es de 10 minutos.';
+            return false;
+        }
+        if (dur > 300) {
+            inHf.classList.add('is-invalid');
+            if (msgHf) msgHf.textContent = 'La duración máxima es de 5 horas (300 min). Registre sesiones adicionales si es necesario.';
             return false;
         }
     }
