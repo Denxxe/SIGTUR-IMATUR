@@ -1127,7 +1127,12 @@ class ReportesController extends Controller {
                         ) pt_cnt ON pt_cnt.id_taller = t.id
                         WHERE t.is_active = TRUE
                           AND EXTRACT(YEAR FROM t.fecha_inicio) = :anio
-                        GROUP BY tipo_ente ORDER BY participantes DESC");
+                        GROUP BY CASE
+                            WHEN t.es_interna = TRUE THEN 'Personal IMATUR'
+                            WHEN t.tipo_ente IS NOT NULL AND t.tipo_ente <> '' THEN t.tipo_ente
+                            ELSE 'Sin especificar'
+                        END
+                        ORDER BY participantes DESC");
             $db->bind(':anio', $anioActual);
             $tipoEntidad = $db->resultSet();
 
