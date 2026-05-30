@@ -1,214 +1,329 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
+<?php
+$rol  = (int)($data['rol']  ?? 0);
+$anio = (int)($data['anio'] ?? date('Y'));
+
+$rolLabel = [1=>'Administrador',2=>'RRHH',3=>'Turismo',4=>'Inventario',5=>'Recepción'][$rol] ?? 'Usuario';
+
+function fmtMesDash(string $ym): string {
+    static $m = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    $p = explode('-', $ym);
+    return count($p) === 2 ? (($m[(int)$p[1]] ?? '?') . ' ' . substr($p[0], 2)) : $ym;
+}
+
+// ── KPI cards según rol ────────────────────────────────────────────────────
+$kpiCards = [];
+
+if (in_array($rol, [1, 2])) {
+    $kpiCards[] = ['label'=>'Empleados Activos',    'value'=>number_format($data['kpiEmpleados'] ?? 0),       'sub'=>'en nómina institucional',           'icon'=>'bi-people-fill',               'bg'=>'#3B82F6','href'=>URL_ROOT.'/empleados/index'];
+    $kpiCards[] = ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes'] ?? 0),  'sub'=>'registros este mes',                'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index'];
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy'] ?? 0),     'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index'];
+    $alContr = ($data['kpiContratosVencen'] ?? 0) > 0;
+    $kpiCards[] = ['label'=>'Contratos Vencen',      'value'=>number_format($data['kpiContratosVencen'] ?? 0),'sub'=>'en los próximos 30 días',           'icon'=>'bi-person-badge-fill',         'bg'=>$alContr?'#DC2626':'#64748B','alert'=>$alContr];
+}
+
+if (in_array($rol, [1, 3])) {
+    $colOcup = ($data['tasaOcupacion']??0)>=75?'#059669':(($data['tasaOcupacion']??0)>=50?'#D97706':'#DC2626');
+    $colFin  = ($data['tasaFinaliz']  ??0)>=85?'#059669':(($data['tasaFinaliz']  ??0)>=70?'#D97706':'#DC2626');
+    $kpiCards[] = ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',           'icon'=>'bi-mortarboard-fill',           'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index'];
+    $kpiCards[] = ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),     'sub'=>'participantes inscritos en el año', 'icon'=>'bi-person-check-fill',         'bg'=>'#059669'];
+    $kpiCards[] = ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),            'sub'=>'en estado Activa',                  'icon'=>'bi-geo-alt-fill',               'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index'];
+    $kpiCards[] = ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),         'sub'=>'realizando pasantías',              'icon'=>'bi-journal-text',               'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index'];
+    $kpiCards[] = ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',               'sub'=>($data['ocupInscritos']??0).' inscritos / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup];
+    $kpiCards[] = ['label'=>'Tasa Finalización',     'value'=>($data['tasaFinaliz']??0).'%',                 'sub'=>'actividades completadas '.$anio,    'icon'=>'bi-check-circle-fill',         'bg'=>$colFin];
+}
+
+if (in_array($rol, [1, 4])) {
+    $colDep = ($data['tasaDeprec']??0)<=10?'#059669':(($data['tasaDeprec']??0)<=15?'#D97706':'#DC2626');
+    $alInv  = ($data['kpiBienesAlerta']??0) > 0;
+    $kpiCards[] = ['label'=>'Bienes Activos',        'value'=>number_format($data['kpiBienes']??0),           'sub'=>'activos registrados',               'icon'=>'bi-box-seam-fill',              'bg'=>'#64748B','href'=>URL_ROOT.'/inventario/index'];
+    $kpiCards[] = ['label'=>'Bienes en Alerta',      'value'=>number_format($data['kpiBienesAlerta']??0),     'sub'=>'dañados o en reparación',           'icon'=>'bi-exclamation-triangle-fill',  'bg'=>'#DC2626','alert'=>$alInv];
+    $kpiCards[] = ['label'=>'Bajas '.$anio,          'value'=>number_format($data['kpiBajasAnio']??0),        'sub'=>'bienes dados de baja este año',     'icon'=>'bi-trash3-fill',                'bg'=>'#94A3B8'];
+    $kpiCards[] = ['label'=>'Depreciación',          'value'=>($data['tasaDeprec']??0).'%',                  'sub'=>'del patrimonio deteriorado',        'icon'=>'bi-graph-down',                 'bg'=>$colDep];
+}
+
+if ($rol === 5) {
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index'];
+    $kpiCards[] = ['label'=>'Visitantes Semana',     'value'=>number_format($data['kpiVisitasSemana']??0),    'sub'=>'únicos en la semana actual',        'icon'=>'bi-people-fill',                'bg'=>'#7C3AED'];
+    $kpiCards[] = ['label'=>'Visitantes Mes',        'value'=>number_format($data['kpiVisitantesMes']??0),    'sub'=>'únicos en el mes actual',           'icon'=>'bi-calendar-month',             'bg'=>'#059669'];
+}
+?>
+
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
-        <div class="page__eyebrow">Institucional · Municipio</div>
-        <h1 class="page__title">Tablero de Gestión Turística</h1>
-        <p class="page__subtitle" style="max-width: 600px;">Panel de control operativo para el monitoreo de personal, bienes públicos, formación comunitaria y rutas turísticas.</p>
+        <div class="page__eyebrow"><?php echo htmlspecialchars($rolLabel); ?> · <?php echo date('d \d\e F \d\e Y'); ?></div>
+        <h1 class="page__title">Panel Principal</h1>
+        <p class="page__subtitle">Métricas operativas en tiempo real — <?php echo date('H:i'); ?></p>
+    </div>
+    <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/reportes/indicadores" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-graph-up-arrow"></i> Indicadores completos
+        </a>
     </div>
 </div>
 
-<!-- KPI Grid -->
-<div class="kpi-grid anim-slide-up">
-    <div class="kpi kpi--brand">
-        <div class="kpi__icon"><i class="bi bi-people" style="font-size:20px"></i></div>
-        <div class="kpi__label">Nómina Activa</div>
-        <div class="kpi__value"><?php echo $data['totalEmpleados'] ?? 0; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/empleados/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Gestionar RRHH →</a>
+<?php if (!empty($data['dash_error'])): ?>
+<div style="background:rgba(239,68,68,.08); border:1px solid var(--danger-300); border-radius:8px; padding:var(--sp-4); margin-bottom:var(--sp-4); font-size:13px; color:var(--danger-700);">
+    <i class="bi bi-exclamation-circle"></i> Algunos datos no pudieron cargarse: <?php echo htmlspecialchars($data['dash_error']); ?>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($data['alertas'])): ?>
+<!-- Alertas ─────────────────────────────────────────────────────────────── -->
+<div style="display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-5);" class="anim-slide-up">
+    <?php
+    $aC = ['warning'=>['rgba(245,158,11,.1)','#D97706','#92400E'],'danger'=>['rgba(239,68,68,.1)','#DC2626','#7F1D1D'],'brand'=>['rgba(124,58,237,.08)','#7C3AED','#4C1D95'],'info'=>['rgba(8,145,178,.08)','#0891B2','#164E63']];
+    foreach ($data['alertas'] as $a):
+        [$bg,$bc,$tc] = $aC[$a['tipo']] ?? $aC['info'];
+    ?>
+    <div style="display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) var(--sp-4);background:<?php echo $bg;?>;border:1px solid <?php echo $bc;?>;border-radius:20px;font-size:12px;font-weight:600;color:<?php echo $tc;?>;">
+        <i class="bi <?php echo $a['ico']; ?>"></i> <?php echo htmlspecialchars($a['msg']); ?>
     </div>
-    <div class="kpi kpi--success">
-        <div class="kpi__icon"><i class="bi bi-box-seam" style="font-size:20px"></i></div>
-        <div class="kpi__label">Patrimonio Público</div>
-        <div class="kpi__value"><?php echo $data['totalInventario'] ?? 0; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/inventario/index" style="font-size:12px;font-weight:600;color:var(--success-600);display:inline-flex;align-items:center;gap:4px">Control de Bienes →</a>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<!-- KPI Cards ────────────────────────────────────────────────────────────── -->
+<?php if (!empty($kpiCards)): ?>
+<div class="row g-3 mb-6 anim-slide-up">
+    <?php foreach ($kpiCards as $k):
+        $isAlert = !empty($k['alert']);
+        $vColor  = $isAlert ? '#DC2626' : 'var(--text-primary)';
+        $border  = $isAlert ? 'border-left:3px solid #DC2626;' : '';
+        $hasHref = !empty($k['href']);
+    ?>
+    <div class="col-6 col-md-3">
+        <div class="sig-card<?php echo $hasHref?' sig-card--hover':''; ?>" style="<?php echo $border; ?>">
+            <?php if ($hasHref): ?><a href="<?php echo $k['href']; ?>" style="display:block;text-decoration:none;color:inherit;padding:var(--sp-4);"><?php else: ?><div style="padding:var(--sp-4);"><?php endif; ?>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);">
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['label']); ?></div>
+                        <div style="font-size:1.75rem;font-weight:800;color:<?php echo $vColor;?>;line-height:1;margin-bottom:4px;"><?php echo $k['value']; ?></div>
+                        <div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['sub']); ?></div>
+                    </div>
+                    <div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:<?php echo $k['bg'];?>;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi <?php echo $k['icon']; ?>" style="font-size:1.15rem;color:white;"></i>
+                    </div>
+                </div>
+            <?php if ($hasHref): ?></a><?php else: ?></div><?php endif; ?>
+        </div>
     </div>
-    <div class="kpi kpi--accent">
-        <div class="kpi__icon"><i class="bi bi-mortarboard" style="font-size:20px"></i></div>
-        <div class="kpi__label">Programas de Formación</div>
-        <div class="kpi__value"><?php echo $data['totalTalleres'] ?? 0; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/talleres/index" style="font-size:12px;font-weight:600;color:var(--accent-600);display:inline-flex;align-items:center;gap:4px">Ver Capacitaciones →</a>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<!-- Gráficas ─────────────────────────────────────────────────────────────── -->
+<div class="row g-4 mb-6 anim-slide-up">
+
+<?php if (in_array($rol,[1,3]) && !empty($data['talleresPorMes'])): ?>
+    <div class="col-md-<?php echo $rol===1?'8':'12'; ?>">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades de Formación — últimos 6 meses</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresMes"></div></div>
+        </div>
     </div>
-    <div class="kpi kpi--teal">
-        <div class="kpi__icon"><i class="bi bi-compass" style="font-size:20px"></i></div>
-        <div class="kpi__label">Atractivos y Destinos</div>
-        <div class="kpi__value"><?php echo $data['totalRutas'] ?? 0; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/rutas/index" style="font-size:12px;font-weight:600;color:var(--teal-600);display:inline-flex;align-items:center;gap:4px">Explorar Rutas →</a>
+<?php endif; ?>
+
+<?php if (in_array($rol,[1,4]) && !empty($data['invPorCondicion'])): ?>
+    <div class="col-md-<?php echo $rol===1?'4':($rol===4?'6':'4'); ?>">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-clipboard-check-fill" style="color:#D97706;"></i> Estado Físico del Patrimonio</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartInvCondicion"></div></div>
+        </div>
     </div>
-    <div class="kpi kpi--accent">
-        <div class="kpi__icon"><i class="bi bi-check2-all" style="font-size:20px"></i></div>
-        <div class="kpi__label">Formación Completada</div>
-        <div class="kpi__value"><?php echo $data['formacionCompletada'] ?? 0; ?></div>
-        <span style="font-size:12px;font-weight:600;color:var(--accent-600);">Este año →</span>
+<?php endif; ?>
+
+<?php if (in_array($rol,[1,2]) && !empty($data['asistenciaPorMes'])): ?>
+    <div class="col-md-<?php echo $rol===1?'6':'12'; ?>">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-calendar-check-fill" style="color:#F59E0B;"></i> Asistencia del Personal — últimos 4 meses</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartAsistencia"></div></div>
+        </div>
     </div>
-    <div class="kpi kpi--brand">
-        <div class="kpi__icon"><i class="bi bi-shield-check" style="font-size:20px"></i></div>
-        <div class="kpi__label">Logs Hoy</div>
-        <div class="kpi__value"><?php echo $data['logsHoy'] ?? 0; ?></div>
-        <a href="<?php echo URL_ROOT; ?>/auditoria/index" style="font-size:12px;font-weight:600;color:var(--brand-600);display:inline-flex;align-items:center;gap:4px">Ver Auditoría →</a>
+<?php endif; ?>
+
+<?php if (in_array($rol,[1,2]) && !empty($data['empPorDepto'])): ?>
+    <div class="col-md-<?php echo $rol===1?'6':'12'; ?>">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill" style="color:#3B82F6;"></i> Empleados por Departamento</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartEmpDepto"></div></div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (in_array($rol,[1,5]) && !empty($data['visitasPorDia'])): ?>
+    <div class="col-12">
+        <div class="sig-card">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Flujo de Visitas — últimos 14 días</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartVisitas"></div></div>
+        </div>
+    </div>
+<?php endif; ?>
+
+</div>
+
+<!-- Acciones rápidas + CTA ──────────────────────────────────────────────── -->
+<div class="row g-4 mb-6 anim-slide-up">
+    <div class="col-md-8">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-lightning-charge-fill" style="color:var(--brand-500);"></i> Acciones Rápidas</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-5);">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:var(--sp-3);">
+                    <?php
+                    $acciones = [];
+                    if (in_array($rol,[1,2]))    $acciones[] = ['Registrar Asistencia','bi-calendar-plus',          URL_ROOT.'/asistencias/index'];
+                    if (in_array($rol,[1,2,5]))  $acciones[] = ['Registrar Visitante', 'bi-person-plus-fill',       URL_ROOT.'/visitantes/index'];
+                    if (in_array($rol,[1,3]))    $acciones[] = ['Nueva Actividad',     'bi-calendar-event',         URL_ROOT.'/talleres/index'];
+                    if (in_array($rol,[1,3]))    $acciones[] = ['Rutas Turísticas',    'bi-geo-alt-fill',           URL_ROOT.'/rutas/index'];
+                    if (in_array($rol,[1,3]))    $acciones[] = ['Pasantes',            'bi-journal-text',           URL_ROOT.'/pasantes/index'];
+                    if (in_array($rol,[1,3]))    $acciones[] = ['Instituciones',       'bi-building',               URL_ROOT.'/institucionesexternas/index'];
+                    if (in_array($rol,[1,4]))    $acciones[] = ['Inventario',          'bi-box-seam-fill',          URL_ROOT.'/inventario/index'];
+                    if (in_array($rol,[1,2]))    $acciones[] = ['Personal',            'bi-people-fill',            URL_ROOT.'/empleados/index'];
+                    if (in_array($rol,[1,2,3,4]))$acciones[] = ['Reportes',            'bi-file-earmark-bar-graph', URL_ROOT.'/reportes/index'];
+                    if ($rol === 1)              $acciones[] = ['Configuración',       'bi-gear-fill',              URL_ROOT.'/config/index'];
+                    foreach ($acciones as [$lbl,$ico,$href]):
+                    ?>
+                    <a href="<?php echo $href; ?>" style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);padding:var(--sp-4);background:var(--bg-muted-subtle);border-radius:10px;border:1px solid var(--border-subtle);text-decoration:none;color:var(--text-primary);font-size:12px;font-weight:600;text-align:center;transition:box-shadow .15s,border-color .15s;"
+                       onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)';this.style.borderColor='var(--brand-300)';"
+                       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border-subtle)';">
+                        <i class="bi <?php echo $ico; ?>" style="font-size:1.5rem;color:var(--brand-500);"></i>
+                        <?php echo htmlspecialchars($lbl); ?>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sig-card h-100" style="background:linear-gradient(135deg,var(--brand-600) 0%,var(--brand-800) 100%);border:none;">
+            <div class="sig-card__body" style="padding:var(--sp-8);display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+                <div>
+                    <i class="bi bi-graph-up-arrow" style="font-size:2.5rem;color:rgba(255,255,255,.7);display:block;margin-bottom:var(--sp-4);"></i>
+                    <h3 style="font-size:1.1rem;font-weight:700;color:white;margin:0 0 var(--sp-2);">Indicadores Completos</h3>
+                    <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0 0 var(--sp-6);line-height:1.6;">
+                        Análisis profundo con demografía, cobertura territorial, tendencias históricas y KPIs de eficiencia operativa.
+                    </p>
+                </div>
+                <a href="<?php echo URL_ROOT; ?>/reportes/indicadores" class="btn-sig"
+                   style="background:rgba(255,255,255,.15);color:white;border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);justify-content:center;">
+                    <i class="bi bi-arrow-right-circle"></i> Ver análisis completo
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Gráficas Fila 1 -->
-<div class="grid-dash anim-slide-up" style="margin-bottom:var(--sp-6)">
-    <div class="sig-card">
-        <div class="sig-card__head">
-            <div class="sig-card__title"><i class="bi bi-bar-chart-fill" style="color:var(--brand-600)"></i> Empleados por Departamento</div>
-        </div>
-        <div class="sig-card__body"><div id="chartEmpleados"></div></div>
-    </div>
-    <div class="sig-card">
-        <div class="sig-card__head">
-            <div class="sig-card__title"><i class="bi bi-pie-chart-fill" style="color:var(--success-600)"></i> Estado del Inventario</div>
-        </div>
-        <div class="sig-card__body"><div id="chartInventario"></div></div>
-    </div>
-</div>
+<?php
+// ── Preparar datos para JS ────────────────────────────────────────────────
+$lblTall=[]; $valTall=[];
+foreach ($data['talleresPorMes']??[] as $t){ $lblTall[]=fmtMesDash($t->mes??''); $valTall[]=(int)($t->total??0); }
 
-<!-- Gráficas Fila 2 -->
-<div class="grid-dash anim-slide-up" style="margin-bottom:var(--sp-6)">
-    <div class="sig-card">
-        <div class="sig-card__head">
-            <div class="sig-card__title"><i class="bi bi-graph-up" style="color:var(--teal-600)"></i> Asistencia — Últimos 7 Días</div>
-        </div>
-        <div class="sig-card__body"><div id="chartAsistencia"></div></div>
-    </div>
-    <div class="sig-card">
-        <div class="sig-card__head">
-            <div class="sig-card__title"><i class="bi bi-mortarboard-fill" style="color:var(--accent-600)"></i> Talleres por Estado</div>
-        </div>
-        <div class="sig-card__body"><div id="chartTalleres"></div></div>
-    </div>
-</div>
+$lblAsist=[]; $valAsist=[];
+foreach ($data['asistenciaPorMes']??[] as $a){ $lblAsist[]=fmtMesDash($a->mes??''); $valAsist[]=(int)($a->total??0); }
 
-<!-- Accesos rápidos -->
-<div class="grid-2 anim-slide-up">
-    <div class="sig-card">
-        <div class="sig-card__head" style="background:var(--slate-900);color:white;border-radius:var(--r-lg) var(--r-lg) 0 0">
-            <div class="sig-card__title" style="color:white"><i class="bi bi-clock-history"></i> Accesos Rápidos — RRHH</div>
-        </div>
-        <div class="sig-card__body--flush">
-            <a href="<?php echo URL_ROOT; ?>/asistencias/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Control de Asistencia</a>
-            <a href="<?php echo URL_ROOT; ?>/empleados/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Gestión de Personal</a>
-            <a href="<?php echo URL_ROOT; ?>/cargos/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Puestos y Cargos</a>
-            <a href="<?php echo URL_ROOT; ?>/departamentos/index" style="display:block;padding:12px 20px;color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Estructura Organizativa</a>
-        </div>
-    </div>
-    <div class="sig-card">
-        <div class="sig-card__head" style="background:var(--slate-900);color:white;border-radius:var(--r-lg) var(--r-lg) 0 0">
-            <div class="sig-card__title" style="color:white"><i class="bi bi-compass"></i> Accesos Rápidos — Turismo</div>
-        </div>
-        <div class="sig-card__body--flush">
-            <a href="<?php echo URL_ROOT; ?>/talleres/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Talleres Comunitarios</a>
-            <a href="<?php echo URL_ROOT; ?>/rutas/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Rutas Turísticas</a>
-            <a href="<?php echo URL_ROOT; ?>/inventario/index" style="display:block;padding:12px 20px;border-bottom:1px solid var(--border-subtle);color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Inventario Institucional</a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/index" style="display:block;padding:12px 20px;color:var(--text-primary);text-decoration:none;transition:background var(--t-fast)" onmouseover="this.style.background='var(--bg-muted)'" onmouseout="this.style.background=''">Centro de Reportes</a>
-        </div>
-    </div>
-</div>
+$lblEmp=[]; $valEmp=[];
+foreach ($data['empPorDepto']??[] as $e){ $lblEmp[]=$e->departamento??'N/A'; $valEmp[]=(int)($e->total??0); }
 
-<!-- ============ ApexCharts Scripts ============ -->
+$lblVis=[]; $valVis=[];
+foreach ($data['visitasPorDia']??[] as $v){
+    $p=explode('-',$v->dia??''); $lblVis[]=isset($p[2],$p[1])?$p[2].'/'.$p[1]:'N/A'; $valVis[]=(int)($v->total??0);
+}
+
+$lblInv=[]; $valInvPct=[]; $totInv=0;
+foreach ($data['invPorCondicion']??[] as $c) $totInv+=(int)($c->total??0);
+foreach ($data['invPorCondicion']??[] as $c){
+    $lblInv[]=$c->condicion??'N/A';
+    $valInvPct[]=$totInv>0?round(((int)($c->total??0)/$totInv)*100):0;
+}
+?>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var gridColor = isDark ? '#1f2740' : '#f1f5f9';
-    var tooltipTheme = isDark ? 'dark' : 'light';
+    var tp  = getComputedStyle(document.body).getPropertyValue('--text-primary').trim();
+    var ts  = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();
+    var bs  = getComputedStyle(document.body).getPropertyValue('--border-subtle').trim();
+    var theme  = { mode: isDark ? 'dark' : 'light' };
+    var grid   = { borderColor: bs, strokeDashArray: 4 };
+    var noData = { text: 'Sin datos', style: { color: ts, fontSize: '12px' } };
+    var axLbl  = { style: { colors: tp, fontSize: '11px' } };
+    var palette= ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#F97316','#64748B'];
 
-    <?php
-        $labelsEmp = []; $valuesEmp = [];
-        foreach ($data['chartEmpleados'] ?? [] as $item) { $labelsEmp[] = $item->label; $valuesEmp[] = (int)$item->value; }
-    ?>
-    new ApexCharts(document.querySelector("#chartEmpleados"), {
-        chart: { type: 'bar', height: 280, toolbar: { show: false }, background: 'transparent' },
-        series: [{ name: 'Empleados', data: <?php echo json_encode($valuesEmp); ?> }],
-        xaxis: { categories: <?php echo json_encode($labelsEmp); ?> },
-        plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%' } },
-        colors: ['#3461f6'],
-        dataLabels: { enabled: true, style: { fontSize: '12px', fontWeight: 700 } },
-        grid: { borderColor: gridColor },
-        tooltip: { theme: tooltipTheme },
-        theme: { mode: isDark ? 'dark' : 'light' }
+<?php if (in_array($rol,[1,3]) && !empty($lblTall)): ?>
+    new ApexCharts(document.querySelector('#chartTalleresMes'), {
+        chart: { type:'area', height:260, background:'transparent', toolbar:{show:false} },
+        series:[{ name:'Actividades', data:<?php echo json_encode($valTall); ?> }],
+        xaxis:{ categories:<?php echo json_encode($lblTall); ?>, labels:axLbl, axisBorder:{show:false} },
+        yaxis:{ labels:{style:{colors:tp}}, min:0 },
+        colors:['#7C3AED'], stroke:{curve:'smooth',width:3},
+        fill:{type:'gradient',gradient:{shadeIntensity:1,opacityFrom:.35,opacityTo:.03,stops:[20,100]}},
+        markers:{size:5,colors:['#7C3AED'],strokeWidth:2,strokeColors:isDark?'#1e1e2d':'#fff'},
+        grid, theme, noData
     }).render();
+<?php endif; ?>
 
-    <?php
-        $labelsInv = []; $valuesInv = [];
-        foreach ($data['chartInventario'] ?? [] as $item) { $labelsInv[] = $item->label; $valuesInv[] = (int)$item->value; }
-    ?>
-    new ApexCharts(document.querySelector("#chartInventario"), {
-        chart: { type: 'donut', height: 300, background: 'transparent' },
-        series: <?php echo json_encode($valuesInv); ?>,
-        labels: <?php echo json_encode($labelsInv); ?>,
-        colors: ['#10b981','#3b82f6','#f59e0b','#ef4444','#1e293b'],
-        legend: { position: 'bottom', fontSize: '13px' },
-        plotOptions: { pie: { donut: { size: '55%', labels: { show: true, total: { show: true, label: 'Total', fontSize: '16px', fontWeight: 700 } } } } },
-        dataLabels: { enabled: true, dropShadow: { enabled: false } },
-        tooltip: { theme: tooltipTheme },
-        theme: { mode: isDark ? 'dark' : 'light' }
+<?php if (in_array($rol,[1,4]) && !empty($lblInv)): ?>
+    new ApexCharts(document.querySelector('#chartInvCondicion'), {
+        chart:{ type:'radialBar', height:280, background:'transparent' },
+        series:<?php echo json_encode($valInvPct); ?>,
+        labels:<?php echo json_encode($lblInv); ?>,
+        colors:['#10B981','#3B82F6','#F59E0B','#EF4444','#64748B'],
+        plotOptions:{ radialBar:{ dataLabels:{
+            name:{fontSize:'11px',color:tp},
+            value:{fontSize:'16px',fontWeight:'800',color:tp,formatter:function(v){return v+'%';}},
+            total:{show:true,label:'BIENES',color:ts,fontSize:'10px',fontWeight:'700'}
+        }, hollow:{size:'32%'}, track:{background:bs} } },
+        legend:{show:true,position:'bottom',labels:{colors:tp},fontSize:'11px'},
+        theme, noData
     }).render();
+<?php endif; ?>
 
-    <?php
-        $labelsAsis = []; $valuesAsis = [];
-        foreach ($data['chartAsistencia'] ?? [] as $item) { $labelsAsis[] = $item->label; $valuesAsis[] = (int)$item->value; }
-    ?>
-    new ApexCharts(document.querySelector("#chartAsistencia"), {
-        chart: { type: 'area', height: 280, toolbar: { show: false }, background: 'transparent' },
-        series: [{ name: 'Registros', data: <?php echo json_encode($valuesAsis); ?> }],
-        xaxis: { categories: <?php echo json_encode($labelsAsis); ?>, labels: { style: { fontSize: '11px' } } },
-        colors: ['#14b8a6'],
-        fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.1 } },
-        stroke: { curve: 'smooth', width: 3 },
-        dataLabels: { enabled: true, style: { fontSize: '12px' } },
-        grid: { borderColor: gridColor },
-        tooltip: { theme: tooltipTheme },
-        theme: { mode: isDark ? 'dark' : 'light' }
+<?php if (in_array($rol,[1,2]) && !empty($lblAsist)): ?>
+    new ApexCharts(document.querySelector('#chartAsistencia'), {
+        chart:{ type:'bar', height:240, background:'transparent', toolbar:{show:false} },
+        series:[{ name:'Registros', data:<?php echo json_encode($valAsist); ?> }],
+        xaxis:{ categories:<?php echo json_encode($lblAsist); ?>, labels:axLbl },
+        yaxis:{ labels:{style:{colors:tp}} },
+        plotOptions:{ bar:{borderRadius:5,columnWidth:'55%'} },
+        colors:['#F59E0B'],
+        dataLabels:{enabled:true,style:{fontWeight:'700',fontSize:'11px'}},
+        grid, theme, noData
     }).render();
+<?php endif; ?>
 
-    <?php
-        $labelsTall = []; $valuesTall = [];
-        foreach ($data['chartTalleres'] ?? [] as $item) { $labelsTall[] = $item->label; $valuesTall[] = (int)$item->value; }
-    ?>
-    new ApexCharts(document.querySelector("#chartTalleres"), {
-        chart: { type: 'polarArea', height: 300, background: 'transparent' },
-        series: <?php echo json_encode($valuesTall); ?>,
-        labels: <?php echo json_encode($labelsTall); ?>,
-        colors: ['#3b82f6','#10b981','#1e293b','#ef4444'],
-        legend: { position: 'bottom', fontSize: '13px' },
-        fill: { opacity: 0.85 },
-        stroke: { width: 1, colors: ['#fff'] },
-        tooltip: { theme: tooltipTheme },
-        theme: { mode: isDark ? 'dark' : 'light' }
+<?php if (in_array($rol,[1,2]) && !empty($lblEmp)): ?>
+    new ApexCharts(document.querySelector('#chartEmpDepto'), {
+        chart:{ type:'bar', height:240, background:'transparent', toolbar:{show:false} },
+        series:[{ name:'Empleados', data:<?php echo json_encode($valEmp); ?> }],
+        xaxis:{ categories:<?php echo json_encode($lblEmp); ?>, labels:{style:{colors:tp,fontSize:'11px'}} },
+        yaxis:{ labels:{style:{colors:tp}} },
+        plotOptions:{ bar:{horizontal:true,borderRadius:4,barHeight:'55%',distributed:true} },
+        colors:palette,
+        dataLabels:{enabled:true,style:{fontWeight:'700',fontSize:'11px'}},
+        legend:{show:false},
+        grid, theme, noData
     }).render();
+<?php endif; ?>
+
+<?php if (in_array($rol,[1,5]) && !empty($lblVis)): ?>
+    new ApexCharts(document.querySelector('#chartVisitas'), {
+        chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
+        series:[{ name:'Visitas', data:<?php echo json_encode($valVis); ?> }],
+        xaxis:{ categories:<?php echo json_encode($lblVis); ?>, labels:axLbl, axisBorder:{show:false} },
+        yaxis:{ labels:{style:{colors:tp}}, min:0 },
+        plotOptions:{ bar:{borderRadius:4,columnWidth:'60%'} },
+        colors:['#0891B2'],
+        dataLabels:{enabled:false},
+        grid, theme, noData
+    }).render();
+<?php endif; ?>
+
 });
 </script>
 
-<?php
-$hayAlertas = !empty($data['alertasContratos']) || !empty($data['alertasPasantes']) || !empty($data['talleresEnCurso']);
-if ($hayAlertas):
-?>
-<div class="sig-card anim-slide-up" style="margin-top:var(--sp-6); border-left: 4px solid var(--warning-500);">
-    <div class="sig-card__head">
-        <div class="sig-card__title"><i class="bi bi-bell-fill" style="color:var(--warning-500);"></i> Alertas del Sistema</div>
-    </div>
-    <div class="sig-card__body" style="padding:var(--sp-4);">
-        <?php foreach ($data['alertasContratos'] ?? [] as $a): ?>
-        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
-            <span class="sig-badge sig-badge--warning">Contrato</span>
-            <span style="font-size:13px;"><?php echo htmlspecialchars($a->nombre . ' ' . $a->apellido); ?> — vence el <?php echo date('d/m/Y', strtotime($a->fecha_egreso)); ?></span>
-        </div>
-        <?php endforeach; ?>
-        <?php foreach ($data['alertasPasantes'] ?? [] as $a): ?>
-        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
-            <span class="sig-badge sig-badge--brand">Pasante</span>
-            <span style="font-size:13px;"><?php echo htmlspecialchars($a->nombre . ' ' . $a->apellido); ?> — culmina el <?php echo date('d/m/Y', strtotime($a->fecha_fin)); ?></span>
-        </div>
-        <?php endforeach; ?>
-        <?php foreach ($data['talleresEnCurso'] ?? [] as $t): ?>
-        <div style="display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) 0;border-bottom:1px solid var(--border-subtle);">
-            <span class="sig-badge sig-badge--success">En Curso</span>
-            <span style="font-size:13px;"><?php echo htmlspecialchars($t->nombre); ?></span>
-        </div>
-        <?php endforeach; ?>
-    </div>
-</div>
-<?php endif; ?>
+<style>
+.sig-card--hover { transition: box-shadow .15s; }
+.sig-card--hover:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+</style>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
