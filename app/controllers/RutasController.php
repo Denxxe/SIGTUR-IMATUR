@@ -72,6 +72,14 @@ class RutasController extends Controller {
         $db->query("SELECT id, nombre, tipo FROM instituciones_externas WHERE is_active = TRUE ORDER BY nombre ASC");
         $instituciones = $db->resultSet();
 
+        // Historial de oficios emitidos para esta ruta
+        $db->query("SELECT numero, fecha, destinatario_nombre, destinatario_cargo, asunto, created_at
+                    FROM oficios_emitidos
+                    WHERE id_ruta = :id AND is_active = TRUE
+                    ORDER BY created_at DESC");
+        $db->bind(':id', $id);
+        $oficiosEmitidos = $db->resultSet();
+
         $data = [
             'titulo'               => 'Ruta: ' . $ruta->nombre,
             'ruta'                 => $ruta,
@@ -80,6 +88,7 @@ class RutasController extends Controller {
             'inventario_asignado'  => $inventario_asignado,
             'inventario_disponible'=> $inventario_disponible,
             'instituciones'        => $instituciones,
+            'oficiosEmitidos'      => $oficiosEmitidos,
         ];
         $this->view('rutas/detalle', $data);
     }
@@ -241,14 +250,22 @@ class RutasController extends Controller {
             $fechaRuta = $dia . ' ' . date('j', $ts) . ' de ' . $meses[(int)date('n', $ts) - 1];
         }
 
+        // Oficios ya emitidos para esta ruta (para mostrar aviso)
+        $dbO = new Database();
+        $dbO->query("SELECT numero, fecha, destinatario_nombre FROM oficios_emitidos
+                     WHERE id_ruta = :id AND is_active = TRUE ORDER BY created_at DESC LIMIT 5");
+        $dbO->bind(':id', $id);
+        $oficiosPrevios = $dbO->resultSet();
+
         $data = [
-            'titulo'         => 'Generar Oficio: ' . $ruta->nombre,
-            'ruta'           => $ruta,
-            'puntos'         => $puntos,
-            'config'         => $config,
-            'fecha_hoy'      => date('j') . ' de ' . $meses[(int)date('n') - 1] . ' de ' . date('Y'),
-            'fecha_ruta_esp' => $fechaRuta,
+            'titulo'              => 'Generar Oficio: ' . $ruta->nombre,
+            'ruta'                => $ruta,
+            'puntos'              => $puntos,
+            'config'              => $config,
+            'fecha_hoy'           => date('j') . ' de ' . $meses[(int)date('n') - 1] . ' de ' . date('Y'),
+            'fecha_ruta_esp'      => $fechaRuta,
             'total_participantes' => $total,
+            'oficiosPrevios'      => $oficiosPrevios,
         ];
         $this->view('rutas/oficio', $data);
     }

@@ -147,6 +147,58 @@
     </div>
 </div>
 
+<!-- ── Oficios Emitidos ── -->
+<?php if (!empty($data['oficiosEmitidos'])): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:3px solid #6366F1;">
+    <div class="sig-card__head" style="background:rgba(99,102,241,.04); border-bottom:1px solid var(--border-subtle);">
+        <div class="sig-card__title">
+            <i class="bi bi-envelope-paper-fill" style="color:#6366F1;"></i> Oficios Emitidos
+        </div>
+        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <i class="bi bi-plus-lg"></i> Nuevo oficio
+        </a>
+    </div>
+    <div class="sig-table-wrap">
+        <table class="sig-table">
+            <thead>
+                <tr>
+                    <th style="width:110px;">N° Oficio</th>
+                    <th style="width:100px;">Fecha</th>
+                    <th>Dirigido a</th>
+                    <th>Cargo / Institución</th>
+                    <th>Asunto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($data['oficiosEmitidos'] as $of): ?>
+                <tr>
+                    <td class="cell-id" style="font-family:var(--font-mono); font-weight:700; color:#6366F1;">
+                        <?php echo htmlspecialchars($of->numero ?? '—'); ?>
+                    </td>
+                    <td style="font-size:12px; color:var(--text-secondary);">
+                        <?php echo $of->fecha ? date('d/m/Y', strtotime($of->fecha)) : '—'; ?>
+                    </td>
+                    <td class="cell-strong"><?php echo htmlspecialchars($of->destinatario_nombre ?? '—'); ?></td>
+                    <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($of->destinatario_cargo ?? '—'); ?></td>
+                    <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($of->asunto ?? '—'); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php else: ?>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp-4);" class="anim-slide-up">
+    <div style="font-size:12px; color:var(--text-tertiary);">
+        <i class="bi bi-envelope-paper" style="color:#6366F1;"></i>
+        No se ha generado ningún oficio para esta ruta.
+    </div>
+    <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+        <i class="bi bi-envelope-paper"></i> Generar oficio
+    </a>
+</div>
+<?php endif; ?>
+
 <!-- ── Paradas ── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">

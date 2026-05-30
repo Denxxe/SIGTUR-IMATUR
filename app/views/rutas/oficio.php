@@ -22,10 +22,36 @@ $ruta = $data['ruta'];
 </div>
 
 <?php
-$faltaConfig = empty($cfg['director_nombre']['valor']) || empty($cfg['resolucion_numero']['valor']);
-$faltaRuta   = empty($ruta->fecha_visita);
-if ($faltaConfig || $faltaRuta):
+$faltaConfig   = empty($cfg['director_nombre']['valor']) || empty($cfg['resolucion_numero']['valor']);
+$faltaRuta     = empty($ruta->fecha_visita);
+$oficiosPrevios = $data['oficiosPrevios'] ?? [];
+
+if (!empty($oficiosPrevios)):
 ?>
+<div class="sig-card anim-slide-up" style="border-left:4px solid #6366F1; margin-bottom:var(--sp-5);">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+        <p style="font-weight:600; color:#4338CA; margin-bottom:var(--sp-3);">
+            <i class="bi bi-info-circle-fill"></i>
+            Ya se ha(n) generado <?php echo count($oficiosPrevios); ?> oficio(s) para esta ruta:
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:var(--sp-2);">
+            <?php foreach ($oficiosPrevios as $op): ?>
+            <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.2); border-radius:20px; font-size:12px; font-weight:600; color:#4338CA;">
+                <i class="bi bi-envelope-paper"></i>
+                <?php echo htmlspecialchars($op->numero); ?>
+                <span style="font-weight:400; color:#6366F1;">— <?php echo htmlspecialchars($op->destinatario_nombre); ?></span>
+                <span style="color:#a5b4fc;">(<?php echo $op->fecha ? date('d/m/Y', strtotime($op->fecha)) : ''; ?>)</span>
+            </span>
+            <?php endforeach; ?>
+        </div>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:var(--sp-2); margin-bottom:0;">
+            Puede generar uno nuevo si la ruta se ejecutará en otra fecha o si el destinatario es diferente.
+        </p>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($faltaConfig || $faltaRuta): ?>
 <div class="sig-card anim-slide-up" style="border-left:4px solid var(--warning-500); margin-bottom:var(--sp-6);">
     <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
         <p style="font-weight:600; color:var(--warning-700); margin-bottom:var(--sp-2);">
