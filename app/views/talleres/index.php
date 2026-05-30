@@ -100,7 +100,7 @@
 <!-- Modal crear/editar actividad -->
 <div class="modal fade" id="modalTaller" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form action="<?php echo URL_ROOT; ?>/talleres/store" method="POST" class="modal-content needs-validation" novalidate>
+        <form action="<?php echo URL_ROOT; ?>/talleres/store" method="POST" enctype="multipart/form-data" class="modal-content needs-validation" novalidate>
             <div class="modal-header">
                 <h5 class="modal-title" id="modalTallerLabel">Programar Actividad</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -235,6 +235,24 @@
                     <!-- Aviso participantes — visible al seleccionar En Curso en edición -->
                     <div id="sec_edit_en_curso" class="col-12" style="display:none;">
                         <div id="edit_en_curso_msg" style="padding:var(--sp-3); border-radius:8px; border-left:3px solid var(--brand-300); font-size:13px;"></div>
+                    </div>
+
+                    <!-- Evidencias — visible al seleccionar Finalizado en edición -->
+                    <div id="sec_edit_finalizado" class="col-12" style="display:none;">
+                        <div style="background:rgba(239,68,68,.06); border-left:3px solid var(--danger-500); border-radius:6px; padding:var(--sp-3) var(--sp-4); font-size:13px; margin-bottom:var(--sp-3);">
+                            <i class="bi bi-exclamation-circle" style="color:var(--danger-600);"></i>
+                            <strong style="color:var(--danger-700);">Finalizar actividad</strong> —
+                            Se requiere al menos una evidencia fotográfica o en PDF.
+                            Si ya las cargó anteriormente, puede continuar sin adjuntar nuevas.
+                        </div>
+                        <div class="sig-field">
+                            <label class="sig-field__label">Adjuntar evidencias <span id="ev_edit_req" style="font-size:11px; color:var(--text-tertiary); font-weight:400;">(obligatorio si no hay evidencias previas)</span></label>
+                            <input type="file" name="evidencias[]" id="ev_edit_files" class="sig-input"
+                                   multiple accept="image/*,application/pdf">
+                            <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">
+                                <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF.
+                            </p>
+                        </div>
                     </div>
 
                 </div>
@@ -455,9 +473,10 @@ function validarFechas() {
 
 // ── Mostrar/ocultar secciones condicionales en modal edición ──────────────
 function actualizarSeccionesEstadoEdit(estado) {
-    var secCancelado = document.getElementById('sec_edit_cancelado');
-    var secEnCurso   = document.getElementById('sec_edit_en_curso');
-    var motivo       = document.getElementById('tal_motivo_cancelacion');
+    var secCancelado  = document.getElementById('sec_edit_cancelado');
+    var secEnCurso    = document.getElementById('sec_edit_en_curso');
+    var secFinalizado = document.getElementById('sec_edit_finalizado');
+    var motivo        = document.getElementById('tal_motivo_cancelacion');
 
     if (estado === 'Cancelado') {
         secCancelado.style.display = 'block';
@@ -481,6 +500,11 @@ function actualizarSeccionesEstadoEdit(estado) {
         secEnCurso.style.display = 'block';
     } else {
         secEnCurso.style.display = 'none';
+    }
+
+    secFinalizado.style.display = (estado === 'Finalizado') ? 'block' : 'none';
+    if (estado !== 'Finalizado') {
+        document.getElementById('ev_edit_files').value = '';
     }
 }
 

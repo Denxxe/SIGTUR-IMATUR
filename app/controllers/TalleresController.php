@@ -101,9 +101,38 @@ class TalleresController extends Controller {
                     }
                 }
 
-                // Finalizado vía modal edición requiere evidencias ya guardadas
+                // Finalizado: procesar evidencias adjuntadas en el modal de edición
+                if ($data['estado'] === 'Finalizado' && !empty($_FILES['evidencias']['name'][0])) {
+                    $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
+                    if (!is_dir($dir)) mkdir($dir, 0755, true);
+                    $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
+                    $archivos = [];
+                    $count = count($_FILES['evidencias']['name']);
+                    for ($i = 0; $i < $count; $i++) {
+                        if ($_FILES['evidencias']['error'][$i] !== UPLOAD_ERR_OK) continue;
+                        $tipo = $_FILES['evidencias']['type'][$i];
+                        if (!in_array($tipo, $allowedTypes)) {
+                            throw new Exception('Tipo de archivo no permitido. Solo imágenes y PDF.');
+                        }
+                        $ext    = strtolower(pathinfo($_FILES['evidencias']['name'][$i], PATHINFO_EXTENSION));
+                        $nombre = 'ev_' . $data['id'] . '_' . time() . '_' . $i . '.' . $ext;
+                        if (!move_uploaded_file($_FILES['evidencias']['tmp_name'][$i], $dir . $nombre)) {
+                            throw new Exception('Error al mover el archivo de evidencia.');
+                        }
+                        $archivos[] = [
+                            'archivo'         => $nombre,
+                            'nombre_original' => $_FILES['evidencias']['name'][$i],
+                            'tipo_archivo'    => $tipo,
+                        ];
+                    }
+                    if (!empty($archivos)) {
+                        Taller::saveEvidencias((int)$data['id'], $archivos, $userId);
+                    }
+                }
+
+                // Finalizado requiere al menos una evidencia (cargada ahora o anteriormente)
                 if ($data['estado'] === 'Finalizado' && Taller::countEvidencias($data['id']) === 0) {
-                    throw new Exception('Debe subir evidencias antes de finalizar. Use "Cambiar Estado" en la tarjeta.');
+                    throw new Exception('Debe adjuntar al menos una evidencia para finalizar la actividad.');
                 }
             }
 
