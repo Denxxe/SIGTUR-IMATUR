@@ -468,7 +468,7 @@ class TalleresController extends Controller {
                         LEFT JOIN personas  p         ON pt.id_persona        = p.id
                         LEFT JOIN parroquia par_libre ON pt.parroquia_id_libre = par_libre.id
                         LEFT JOIN parroquia par_pers  ON p.parroquia_id        = par_pers.id
-                        WHERE pt.id_taller = :id
+                        WHERE pt.id_taller = :id AND pt.is_active = TRUE
                         ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
             $participantes = $db->resultSet();

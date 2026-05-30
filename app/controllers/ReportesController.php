@@ -449,7 +449,7 @@ class ReportesController extends Controller {
                         FROM participantes_taller pt
                         LEFT JOIN personas  p   ON pt.id_persona        = p.id
                         LEFT JOIN parroquia par ON pt.parroquia_id_libre = par.id
-                        WHERE pt.id_taller = :id_taller
+                        WHERE pt.id_taller = :id_taller AND pt.is_active = TRUE
                         ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id_taller', $id_taller);
             $participantes = $db->resultSet();
@@ -519,7 +519,7 @@ class ReportesController extends Controller {
                                COALESCE(pt.cedula_docente, '')            AS cedula_docente
                         FROM participantes_taller pt
                         LEFT JOIN personas p ON pt.id_persona = p.id
-                        WHERE pt.id_taller = :id
+                        WHERE pt.id_taller = :id AND pt.is_active = TRUE
                         ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
             $participantes = $db->resultSet();
@@ -565,7 +565,7 @@ class ReportesController extends Controller {
                                COALESCE(pt.cedula_docente, '') AS cedula_docente
                         FROM participantes_taller pt
                         LEFT JOIN personas p ON pt.id_persona = p.id
-                        WHERE pt.id_taller = :id
+                        WHERE pt.id_taller = :id AND pt.is_active = TRUE
                         ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
             $participantes = $db->resultSet();
