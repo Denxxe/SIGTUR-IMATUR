@@ -12,13 +12,14 @@
         <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
-        <?php if($data['informe']): ?>
-            <button onclick="window.print()" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg, var(--danger-500), var(--danger-700)); box-shadow: var(--sh-glow-danger);">
-                <i class="bi bi-printer"></i> Imprimir Informe
-            </button>
-            <a href="<?php echo URL_ROOT; ?>/talleres/informeImprimible/<?php echo $data['taller']->id; ?>"
-               class="btn-sig btn-sig--success" target="_blank">
-                <i class="bi bi-printer"></i> Vista Imprimible
+        <a href="<?php echo URL_ROOT; ?>/talleres/informeImprimible/<?php echo $data['taller']->id; ?>"
+           class="btn-sig btn-sig--ghost" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> Vista Imprimible / PDF
+        </a>
+        <?php if ($data['informe']): ?>
+            <a href="<?php echo URL_ROOT; ?>/talleres/exportarInformeCsv/<?php echo $data['taller']->id; ?>"
+               class="btn-sig btn-sig--ghost">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar Excel
             </a>
         <?php endif; ?>
     </div>

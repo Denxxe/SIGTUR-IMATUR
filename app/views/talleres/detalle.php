@@ -38,6 +38,10 @@
            class="btn-sig btn-sig--ghost" target="_blank">
             <i class="bi bi-list-check"></i> Lista de Asistencia
         </a>
+        <a href="<?php echo URL_ROOT; ?>/reportes/dossier/<?php echo $data['taller']->id; ?>"
+           class="btn-sig btn-sig--ghost" target="_blank">
+            <i class="bi bi-file-earmark-pdf"></i> Dossier / PDF
+        </a>
         <?php if (!in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado'])): ?>
             <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
                 <i class="bi bi-person-plus"></i> Agregar Participante
@@ -143,6 +147,11 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                           title="Ver historial de actividades">
                                         <?php echo $nombreCompleto; ?>
                                     </span>
+                                    <?php if (!empty($p->telefono)): ?>
+                                        <span style="display:block; font-size:11px; color:var(--text-tertiary); margin-top:1px;">
+                                            <i class="bi bi-telephone" style="font-size:10px;"></i> <?php echo htmlspecialchars($p->telefono); ?>
+                                        </span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                             <td style="font-size:12px; white-space:nowrap;">

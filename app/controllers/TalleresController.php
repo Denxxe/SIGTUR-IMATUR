@@ -428,6 +428,125 @@ class TalleresController extends Controller {
         $this->view('talleres/informe', $data);
     }
 
+    public function exportarInformeCsv($id) {
+        $this->requireRoles([1, 3]);
+        try {
+            $db = new Database();
+
+            $db->query("SELECT t.*, uf.nombre AS sede,
+                               p.nombre AS fac_nombre, p.apellido AS fac_apellido
+                        FROM talleres t
+                        LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                        INNER JOIN empleados e ON t.id_facilitador = e.id
+                        INNER JOIN personas  p ON e.id_persona = p.id
+                        WHERE t.id = :id");
+            $db->bind(':id', $id);
+            $taller = $db->single();
+            if (!$taller) throw new Exception('Actividad no encontrada.');
+
+            $db->query("SELECT * FROM taller_informes WHERE id_taller = :id");
+            $db->bind(':id', $id);
+            $informe = $db->single();
+
+            $db->query("SELECT
+                               CASE WHEN pt.id_persona IS NULL THEN 'Niño/a' ELSE 'Participante' END AS tipo,
+                               COALESCE(p.cedula, pt.cedula_libre, '')    AS cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '')    AS nombre,
+                               COALESCE(p.apellido, pt.apellido_libre, '') AS apellido,
+                               COALESCE(p.telefono, '')                   AS telefono,
+                               CASE WHEN pt.id_persona IS NULL
+                                    THEN CASE pt.genero_libre WHEN 'M' THEN 'Masculino' WHEN 'F' THEN 'Femenino' WHEN 'O' THEN 'Otro' ELSE '' END
+                                    ELSE CASE p.genero      WHEN 'M' THEN 'Masculino' WHEN 'F' THEN 'Femenino' WHEN 'O' THEN 'Otro' ELSE '' END
+                               END AS genero,
+                               pt.asistio,
+                               COALESCE(pt.nombre_docente, '') AS nombre_docente,
+                               COALESCE(pt.cedula_docente, '')  AS cedula_docente,
+                               COALESCE(par_libre.nombre, '')   AS parroquia_libre,
+                               COALESCE(par_pers.nombre, '')    AS parroquia_persona,
+                               COALESCE(pt.direccion_libre, COALESCE(p.direccion, '')) AS direccion
+                        FROM participantes_taller pt
+                        LEFT JOIN personas  p         ON pt.id_persona        = p.id
+                        LEFT JOIN parroquia par_libre ON pt.parroquia_id_libre = par_libre.id
+                        LEFT JOIN parroquia par_pers  ON p.parroquia_id        = par_pers.id
+                        WHERE pt.id_taller = :id
+                        ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
+            $db->bind(':id', $id);
+            $participantes = $db->resultSet();
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar informe: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/informe/' . $id);
+            exit;
+        }
+
+        $nombreArchivo = 'Informe_' . preg_replace('/[^A-Za-z0-9_]/', '_', $taller->nombre ?? 'actividad');
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nombreArchivo . '_' . date('Y-m-d') . '.csv"');
+        header('Pragma: no-cache');
+
+        $out = fopen('php://output', 'w');
+        fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Membrete institucional
+        fputcsv($out, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
+        fputcsv($out, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
+        fputcsv($out, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
+        fputcsv($out, ['Cumaná, Estado Sucre'], ';');
+        fputcsv($out, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
+        fputcsv($out, [''], ';');
+
+        // Ficha de la actividad
+        fputcsv($out, ['DATOS DE LA ACTIVIDAD'], ';');
+        fputcsv($out, ['Actividad',    $taller->nombre], ';');
+        fputcsv($out, ['Tipo',         $taller->tipo_actividad ?? ''], ';');
+        fputcsv($out, ['Ámbito',       !empty($taller->es_interna) ? 'Interna (Personal IMATUR)' : 'Externa · ' . ($taller->tipo_ente ?? '')], ';');
+        fputcsv($out, ['Facilitador',  trim(($taller->fac_nombre ?? '') . ' ' . ($taller->fac_apellido ?? ''))], ';');
+        fputcsv($out, ['Sede',         $taller->sede ?? '—'], ';');
+        fputcsv($out, ['Fecha',        $taller->fecha_inicio ?? ''], ';');
+        fputcsv($out, ['Hora',         $taller->hora_inicio  ?? ''], ';');
+        fputcsv($out, ['Estado',       $taller->estado], ';');
+        fputcsv($out, ['Cupo máximo',  $taller->cupo_maximo ?? 0], ';');
+        fputcsv($out, [''], ';');
+
+        // Informe demográfico
+        if ($informe) {
+            fputcsv($out, ['RESUMEN DEMOGRÁFICO'], ';');
+            fputcsv($out, ['Lugar exacto',            $informe->lugar_exacto            ?? ''], ';');
+            fputcsv($out, ['Instituciones presentes', $informe->instituciones_presentes ?? ''], ';');
+            fputcsv($out, ['Mujeres',                 (int)($informe->mujeres ?? 0)], ';');
+            fputcsv($out, ['Hombres',                 (int)($informe->hombres ?? 0)], ';');
+            fputcsv($out, ['Niñas (5-11 años)',       (int)($informe->ninas   ?? 0)], ';');
+            fputcsv($out, ['Niños (5-11 años)',       (int)($informe->ninos   ?? 0)], ';');
+            fputcsv($out, ['Total atendidos',         (int)($informe->total_atendidas ?? 0)], ';');
+            fputcsv($out, ['Resumen de la actividad', $informe->resumen_actividad ?? ''], ';');
+        } else {
+            fputcsv($out, ['INFORME DEMOGRÁFICO', 'Pendiente de completar'], ';');
+        }
+        fputcsv($out, [''], ';');
+
+        // Listado de participantes
+        fputcsv($out, ['LISTADO DE PARTICIPANTES (' . count($participantes) . ')'], ';');
+        fputcsv($out, ['Tipo', 'Cédula/ID', 'Nombre', 'Apellido', 'Teléfono', 'Género', 'Parroquia', 'Dirección', 'Asistió', 'Docente/Tutor', 'C.I. Docente'], ';');
+        foreach ($participantes as $p) {
+            $parroquia = $p->tipo === 'Niño/a' ? $p->parroquia_libre : $p->parroquia_persona;
+            fputcsv($out, [
+                $p->tipo,
+                $p->cedula,
+                $p->nombre,
+                $p->apellido,
+                $p->telefono,
+                $p->genero,
+                $parroquia,
+                $p->direccion,
+                $p->asistio ? 'Sí' : 'No',
+                $p->nombre_docente,
+                $p->cedula_docente,
+            ], ';');
+        }
+
+        fclose($out);
+        exit;
+    }
+
     public function listaAsistencia($id) {
         $taller = Taller::find($id);
         if (!$taller) {

@@ -35,6 +35,11 @@
         .demo-box { border: 1px solid #999; border-radius: 4px; text-align: center; padding: 8px 4px; }
         .demo-box .demo-label { font-size: 8pt; font-weight: 700; text-transform: uppercase; color: #555; }
         .demo-box .demo-value { font-size: 18pt; font-weight: 800; color: #1a56db; }
+        .part-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9pt; }
+        .part-table th { background: #f1f5f9; padding: 5px 8px; border: 1px solid #555; font-weight: 700; text-transform: uppercase; font-size: 8pt; text-align: center; }
+        .part-table th.left { text-align: left; }
+        .part-table td { border: 1px solid #aaa; padding: 4px 8px; vertical-align: middle; }
+        .part-table td.c { text-align: center; }
         .demo-total { border: 2px solid #1a56db; border-radius: 4px; padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
         .demo-total span { font-weight: 700; font-size: 10pt; }
         .demo-total .total-val { font-size: 22pt; font-weight: 800; color: #1a56db; }
@@ -138,11 +143,11 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
             <div class="demo-value"><?php echo (int)($informe->hombres ?? 0); ?></div>
         </div>
         <div class="demo-box">
-            <div class="demo-label">Niñas</div>
+            <div class="demo-label">Niñas (5-11)</div>
             <div class="demo-value"><?php echo (int)($informe->ninas ?? 0); ?></div>
         </div>
         <div class="demo-box">
-            <div class="demo-label">Niños</div>
+            <div class="demo-label">Niños (5-11)</div>
             <div class="demo-value"><?php echo (int)($informe->ninos ?? 0); ?></div>
         </div>
     </div>
@@ -170,6 +175,47 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
             </div>
         </div>
     </div>
+
+    <?php if ($informe && !empty($data['participantes'])): ?>
+    <div class="section-title" style="margin-top:28px; page-break-before:auto;">
+        Listado de Participantes (<?php echo count($data['participantes']); ?> registrados)
+    </div>
+    <table class="part-table">
+        <thead>
+            <tr>
+                <th class="c" style="width:5%;">N°</th>
+                <th class="c" style="width:18%;">Cédula / ID</th>
+                <th class="left" style="width:30%;">Nombre Completo</th>
+                <th class="c" style="width:8%;">Tipo</th>
+                <th class="c" style="width:8%;">Género</th>
+                <th class="c" style="width:9%;">Asistencia</th>
+                <th class="left">Docente / Tutor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($data['participantes'] as $i => $p):
+                $esLibre = empty($p->id_persona);
+                $nombre  = htmlspecialchars(trim(
+                    ($esLibre ? ($p->nombre_libre ?? '') : ($p->nombre ?? '')) . ' ' .
+                    ($esLibre ? ($p->apellido_libre ?? '') : ($p->apellido ?? ''))
+                ));
+                $cedula  = htmlspecialchars($esLibre ? ($p->cedula_libre ?? '—') : ($p->cedula ?? '—'));
+                $genSrc  = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
+                $genero  = ['M' => 'M', 'F' => 'F', 'O' => 'Otro'][$genSrc] ?? '—';
+            ?>
+            <tr>
+                <td class="c"><?php echo $i + 1; ?></td>
+                <td class="c"><?php echo $cedula; ?></td>
+                <td><?php echo $nombre; ?></td>
+                <td class="c" style="font-size:8pt;"><?php echo $esLibre ? 'Niño/a' : 'Adulto'; ?></td>
+                <td class="c"><?php echo $genero; ?></td>
+                <td class="c"><?php echo $p->asistio ? '✓' : '—'; ?></td>
+                <td style="font-size:8.5pt;"><?php echo !empty($p->nombre_docente) ? htmlspecialchars($p->nombre_docente) : '—'; ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php endif; ?>
 
     <?php endif; ?>
 
