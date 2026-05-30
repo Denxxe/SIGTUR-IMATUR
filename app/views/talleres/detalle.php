@@ -160,6 +160,9 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
+                                <?php if ($esLibre && !empty($p->direccion_libre)): ?>
+                                    <span style="color:var(--text-tertiary); display:block; font-size:11px; font-style:italic; white-space:normal;"><?php echo htmlspecialchars($p->direccion_libre); ?></span>
+                                <?php endif; ?>
                             </td>
                             <td class="text-center">
                                 <?php if ($puedeModificar && !$esLibre): ?>
@@ -186,8 +189,6 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                             <span style="color:var(--text-tertiary);">(<?php echo htmlspecialchars($p->cedula_docente); ?>)</span>
                                         <?php endif; ?>
                                     </span>
-                                <?php elseif (!$esLibre && !empty($p->es_brigadista)): ?>
-                                    <span class="sig-badge sig-badge--brand" style="font-size:10px;">Brigadista</span>
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
@@ -393,14 +394,6 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                 <div class="sig-field">
                                     <label class="sig-field__label">Dirección</label>
                                     <input type="text" name="direccion" id="insc_direccion" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
-                                </div>
-                            </div>
-                            <div class="col-12" style="padding-bottom:4px;">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="insc_brigadista" name="es_brigadista" value="1">
-                                    <label class="form-check-label" for="insc_brigadista" style="font-size:13px;">
-                                        <i class="bi bi-shield-check"></i> Es brigadista de la institución
-                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -630,7 +623,6 @@ function resetBloquePersona() {
     });
     document.getElementById('insc_genero').value = '';    document.getElementById('insc_genero').disabled = false;
     document.getElementById('insc_parroquia').value = ''; document.getElementById('insc_parroquia').disabled = false;
-    document.getElementById('insc_brigadista').checked = false;
     document.getElementById('insc_status').style.display = 'none';
     document.getElementById('bloque_datos_persona').style.display = 'none';
     document.getElementById('insc_edad_label').textContent = '';

@@ -430,13 +430,27 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 3]);
         try {
             $db = new Database();
-            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                               COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
-                               COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
-                               p.telefono, pt.asistio
+            $db->query("SELECT
+                               CASE WHEN pt.id_persona IS NULL THEN 'Niño/a' ELSE 'Participante' END AS tipo,
+                               COALESCE(p.cedula, pt.cedula_libre, '')    AS cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '')    AS nombre,
+                               COALESCE(p.apellido, pt.apellido_libre, '') AS apellido,
+                               COALESCE(p.telefono, '')                   AS telefono,
+                               pt.asistio,
+                               COALESCE(pt.nombre_docente, '')            AS nombre_docente,
+                               COALESCE(pt.cedula_docente, '')            AS cedula_docente,
+                               CASE pt.genero_libre
+                                   WHEN 'M' THEN 'Masculino'
+                                   WHEN 'F' THEN 'Femenino'
+                                   WHEN 'O' THEN 'Otro'
+                                   ELSE '' END                            AS genero_libre,
+                               COALESCE(par.nombre, '')                   AS parroquia_libre,
+                               COALESCE(pt.direccion_libre, '')           AS direccion_libre
                         FROM participantes_taller pt
-                        LEFT JOIN personas p ON pt.id_persona = p.id
-                        WHERE pt.id_taller = :id_taller");
+                        LEFT JOIN personas  p   ON pt.id_persona        = p.id
+                        LEFT JOIN parroquia par ON pt.parroquia_id_libre = par.id
+                        WHERE pt.id_taller = :id_taller
+                        ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id_taller', $id_taller);
             $participantes = $db->resultSet();
 
@@ -444,10 +458,22 @@ class ReportesController extends Controller {
             $db->bind(':id_taller', $id_taller);
             $t = $db->single();
 
-            $headers = ['Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Asistió'];
+            $headers = ['Tipo', 'Cédula/ID', 'Nombre', 'Apellido', 'Teléfono', 'Asistió', 'Docente/Tutor', 'C.I. Docente', 'Género', 'Parroquia', 'Dirección'];
             $rows    = [];
             foreach ($participantes as $p) {
-                $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->telefono, $p->asistio ? 'Sí' : 'No'];
+                $rows[] = [
+                    $p->tipo,
+                    $p->cedula,
+                    $p->nombre,
+                    $p->apellido,
+                    $p->telefono,
+                    $p->asistio ? 'Sí' : 'No',
+                    $p->nombre_docente,
+                    $p->cedula_docente,
+                    $p->genero_libre,
+                    $p->parroquia_libre,
+                    $p->direccion_libre,
+                ];
             }
             $this->exportCsv("Inscritos_" . str_replace(' ', '_', $t->nombre ?? 'taller'), $headers, $rows);
         } catch (Exception $e) {
@@ -483,13 +509,18 @@ class ReportesController extends Controller {
             $db->bind(':id', $id);
             $informe = $db->single();
 
-            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                               COALESCE(p.nombre, pt.nombre_libre, '') as nombre,
-                               COALESCE(p.apellido, pt.apellido_libre, '') as apellido,
-                               pt.asistio
+            $db->query("SELECT
+                               CASE WHEN pt.id_persona IS NULL THEN TRUE ELSE FALSE END AS es_libre,
+                               COALESCE(p.cedula, pt.cedula_libre, '')    AS cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '')    AS nombre,
+                               COALESCE(p.apellido, pt.apellido_libre, '') AS apellido,
+                               pt.asistio,
+                               COALESCE(pt.nombre_docente, '')            AS nombre_docente,
+                               COALESCE(pt.cedula_docente, '')            AS cedula_docente
                         FROM participantes_taller pt
                         LEFT JOIN personas p ON pt.id_persona = p.id
-                        WHERE pt.id_taller = :id ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
+                        WHERE pt.id_taller = :id
+                        ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
             $participantes = $db->resultSet();
 
@@ -525,12 +556,17 @@ class ReportesController extends Controller {
             $db->bind(':id', $id);
             $inf = $db->single();
 
-            $db->query("SELECT COALESCE(p.cedula, pt.cedula_libre, '') as cedula,
-                               COALESCE(p.nombre, pt.nombre_libre, '') || ' ' || COALESCE(p.apellido, pt.apellido_libre, '') as nombre,
-                               pt.asistio
+            $db->query("SELECT
+                               CASE WHEN pt.id_persona IS NULL THEN 'Niño/a' ELSE 'Participante' END AS tipo,
+                               COALESCE(p.cedula, pt.cedula_libre, '')    AS cedula,
+                               COALESCE(p.nombre, pt.nombre_libre, '') || ' ' || COALESCE(p.apellido, pt.apellido_libre, '') AS nombre,
+                               pt.asistio,
+                               COALESCE(pt.nombre_docente, '') AS nombre_docente,
+                               COALESCE(pt.cedula_docente, '') AS cedula_docente
                         FROM participantes_taller pt
                         LEFT JOIN personas p ON pt.id_persona = p.id
-                        WHERE pt.id_taller = :id");
+                        WHERE pt.id_taller = :id
+                        ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
             $participantes = $db->resultSet();
         } catch (Exception $e) {
@@ -561,20 +597,27 @@ class ReportesController extends Controller {
         fputcsv($output, [], ';');
 
         fputcsv($output, ['RESUMEN DEMOGRÁFICO'], ';');
-        fputcsv($output, ['Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'], ';');
+        fputcsv($output, ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)', 'Total Atendidos'], ';');
         fputcsv($output, [
-            $inf->mujeres       ?? 0,
-            $inf->hombres       ?? 0,
-            $inf->ninas         ?? 0,
-            $inf->ninos         ?? 0,
+            $inf->mujeres         ?? 0,
+            $inf->hombres         ?? 0,
+            $inf->ninas           ?? 0,
+            $inf->ninos           ?? 0,
             $inf->total_atendidas ?? 0,
         ], ';');
         fputcsv($output, [], ';');
 
         fputcsv($output, ['LISTADO DE PERSONAS INSCRITAS'], ';');
-        fputcsv($output, ['Cédula', 'Nombre Completo', 'Asistencia'], ';');
+        fputcsv($output, ['Tipo', 'Cédula', 'Nombre Completo', 'Docente/Tutor', 'C.I. Docente', 'Asistencia'], ';');
         foreach ($participantes as $p) {
-            fputcsv($output, [$p->cedula, $p->nombre, $p->asistio ? 'Presente' : 'Ausente'], ';');
+            fputcsv($output, [
+                $p->tipo,
+                $p->cedula,
+                $p->nombre,
+                $p->nombre_docente,
+                $p->cedula_docente,
+                $p->asistio ? 'Presente' : 'Ausente',
+            ], ';');
         }
 
         fclose($output);

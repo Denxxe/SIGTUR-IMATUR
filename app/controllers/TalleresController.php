@@ -321,7 +321,7 @@ class TalleresController extends Controller {
                     ], $userId);
                 }
 
-                Taller::inscribir($id_taller, $idPersona, $userId, !empty($_POST['es_brigadista']));
+                Taller::inscribir($id_taller, $idPersona, $userId, false);
             }
             // Advertencia no bloqueante si se alcanzó o superó el cupo estimado
             $inscritosPost = Taller::countParticipantes($id_taller);

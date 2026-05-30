@@ -166,8 +166,24 @@
                     <?php else: ?>
                         <?php foreach ($data['participantes'] ?? [] as $p): ?>
                             <tr>
-                                <td class="cell-id" style="padding-left:var(--sp-8);"><?php echo $p->cedula ?? 'N/A'; ?></td>
-                                <td class="cell-strong"><?php echo (isset($p->nombre) ? $p->nombre : 'N/A') . ' ' . (isset($p->apellido) ? $p->apellido : ''); ?></td>
+                                <td class="cell-id" style="padding-left:var(--sp-8);">
+                                    <?php echo htmlspecialchars($p->cedula ?? '—'); ?>
+                                    <?php if (!empty($p->es_libre)): ?>
+                                        <span class="sig-badge sig-badge--neutral" style="font-size:9px; display:block; margin-top:2px;">Niño/a</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="cell-strong">
+                                    <?php echo htmlspecialchars(trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''))); ?>
+                                    <?php if (!empty($p->es_libre) && !empty($p->nombre_docente)): ?>
+                                        <span style="display:block; font-size:11px; color:var(--text-secondary); font-weight:400; margin-top:2px;">
+                                            <i class="bi bi-person-badge" style="color:var(--brand-400);"></i>
+                                            <?php echo htmlspecialchars($p->nombre_docente); ?>
+                                            <?php if (!empty($p->cedula_docente)): ?>
+                                                <span style="color:var(--text-tertiary);">(<?php echo htmlspecialchars($p->cedula_docente); ?>)</span>
+                                            <?php endif; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
                                 <td style="text-align:center;">
                                     <?php if (isset($p->asistio) && $p->asistio): ?>
                                         <span class="sig-badge sig-badge--success"><i class="bi bi-check-circle"></i> Presente</span>

@@ -102,18 +102,24 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
             <?php for ($i = 1; $i <= $totalFilas; $i++):
                 $p = $participantes[$i - 1] ?? null;
                 if ($p) {
-                    $esLibre = empty($p->id_persona);
-                    $nombre  = $esLibre
+                    $esLibre  = empty($p->id_persona);
+                    $nombre   = $esLibre
                         ? trim(($p->nombre_libre ?? '') . ' ' . ($p->apellido_libre ?? ''))
                         : trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''));
-                    $cedula  = $esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '');
+                    $cedula   = $esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '');
+                    $docente  = ($esLibre && !empty($p->nombre_docente)) ? $p->nombre_docente : '';
                 } else {
-                    $nombre = ''; $cedula = '';
+                    $nombre = ''; $cedula = ''; $docente = '';
                 }
             ?>
                 <tr>
                     <td class="n"><?php echo $i; ?></td>
-                    <td><?php echo htmlspecialchars($nombre); ?></td>
+                    <td>
+                        <?php echo htmlspecialchars($nombre); ?>
+                        <?php if ($docente): ?>
+                            <br><span style="font-size:7.5pt; color:#555; font-style:italic;">Docente: <?php echo htmlspecialchars($docente); ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td style="text-align:center;"><?php echo htmlspecialchars($cedula); ?></td>
                     <td></td>
                 </tr>
