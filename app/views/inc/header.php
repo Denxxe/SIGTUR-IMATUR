@@ -108,6 +108,9 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/actividadesruta/index">
                 <i class="bi bi-calendar-event"></i> <span>Actividades</span>
             </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/institucionesexternas/index">
+                <i class="bi bi-building"></i> <span>Instituciones</span>
+            </a>
             <?php endif; ?>
 
             <!-- Reportes — todos los roles -->
