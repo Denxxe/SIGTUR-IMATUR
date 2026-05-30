@@ -118,55 +118,85 @@ if ($rol === 5) {
 </div>
 <?php endif; ?>
 
-<!-- Gráficas ─────────────────────────────────────────────────────────────── -->
-<div class="row g-4 mb-6 anim-slide-up">
+<?php
+// Flags de disponibilidad por rol
+$hasActividades = in_array($rol,[1,3]) && !empty($data['talleresPorMes']);
+$hasInv         = in_array($rol,[1,4]) && !empty($data['invPorCondicion']);
+$hasAsist       = in_array($rol,[1,2]) && !empty($data['asistenciaPorMes']);
+$hasEmp         = in_array($rol,[1,2]) && !empty($data['empPorDepto']);
+$hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
+?>
 
-<?php if (in_array($rol,[1,3]) && !empty($data['talleresPorMes'])): ?>
-    <div class="col-md-<?php echo $rol===1?'8':'12'; ?>">
+<!-- Gráficas Fila 1: métricas de actividad principal ──────────────────────── -->
+<?php if ($hasActividades || $hasInv): ?>
+<div class="row g-4 mb-4 anim-slide-up">
+    <?php if ($hasActividades): ?>
+    <div class="<?php echo $hasInv ? 'col-md-8' : 'col-12'; ?>">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades de Formación — últimos 6 meses</div></div>
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades de Formación — últimos 6 meses</div>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo count($data['talleresPorMes']); ?> períodos</span>
+            </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresMes"></div></div>
         </div>
     </div>
-<?php endif; ?>
-
-<?php if (in_array($rol,[1,4]) && !empty($data['invPorCondicion'])): ?>
-    <div class="col-md-<?php echo $rol===1?'4':($rol===4?'6':'4'); ?>">
+    <?php endif; ?>
+    <?php if ($hasInv): ?>
+    <div class="<?php echo $hasActividades ? 'col-md-4' : 'col-md-6 offset-md-3'; ?>">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-clipboard-check-fill" style="color:#D97706;"></i> Estado Físico del Patrimonio</div></div>
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-clipboard-check-fill" style="color:#D97706;"></i> Estado Físico del Patrimonio</div>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiBienes']??0); ?> bienes</span>
+            </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartInvCondicion"></div></div>
         </div>
     </div>
+    <?php endif; ?>
+</div>
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,2]) && !empty($data['asistenciaPorMes'])): ?>
-    <div class="col-md-<?php echo $rol===1?'6':'12'; ?>">
+<!-- Gráficas Fila 2: personal ─────────────────────────────────────────────── -->
+<?php if ($hasAsist || $hasEmp): ?>
+<div class="row g-4 mb-4 anim-slide-up">
+    <?php if ($hasAsist): ?>
+    <div class="col-md-6">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-calendar-check-fill" style="color:#F59E0B;"></i> Asistencia del Personal — últimos 4 meses</div></div>
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-calendar-check-fill" style="color:#F59E0B;"></i> Asistencia del Personal — últimos 4 meses</div>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiAsistenciaMes']??0); ?> registros este mes</span>
+            </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartAsistencia"></div></div>
         </div>
     </div>
-<?php endif; ?>
-
-<?php if (in_array($rol,[1,2]) && !empty($data['empPorDepto'])): ?>
-    <div class="col-md-<?php echo $rol===1?'6':'12'; ?>">
+    <?php endif; ?>
+    <?php if ($hasEmp): ?>
+    <div class="col-md-6">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill" style="color:#3B82F6;"></i> Empleados por Departamento</div></div>
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill" style="color:#3B82F6;"></i> Empleados por Departamento</div>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiEmpleados']??0); ?> empleados activos</span>
+            </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartEmpDepto"></div></div>
         </div>
     </div>
+    <?php endif; ?>
+</div>
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,5]) && !empty($data['visitasPorDia'])): ?>
+<!-- Gráficas Fila 3: flujo de visitas ─────────────────────────────────────── -->
+<?php if ($hasVisitas): ?>
+<div class="row g-4 mb-4 anim-slide-up">
     <div class="col-12">
         <div class="sig-card">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Flujo de Visitas — últimos 14 días</div></div>
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Flujo de Visitas — últimos 14 días</div>
+                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiVisitasHoy']??0); ?> visitas hoy</span>
+            </div>
             <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartVisitas"></div></div>
         </div>
     </div>
-<?php endif; ?>
-
 </div>
+<?php endif; ?>
 
 <!-- Acciones rápidas + CTA ──────────────────────────────────────────────── -->
 <div class="row g-4 mb-6 anim-slide-up">
@@ -320,41 +350,47 @@ document.addEventListener('DOMContentLoaded', function () {
     var palette= ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#F97316','#64748B'];
 
 <?php if (in_array($rol,[1,3]) && !empty($lblTall)): ?>
+    // Área — tipo 'monotoneCubic' cuando hay pocos puntos para evitar spikes
     new ApexCharts(document.querySelector('#chartTalleresMes'), {
-        chart: { type:'area', height:260, background:'transparent', toolbar:{show:false} },
+        chart: { type:'area', height:240, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Actividades', data:<?php echo json_encode($valTall); ?> }],
-        xaxis:{ categories:<?php echo json_encode($lblTall); ?>, labels:axLbl, axisBorder:{show:false} },
-        yaxis:{ labels:{style:{colors:tp}}, min:0 },
-        colors:['#7C3AED'], stroke:{curve:'smooth',width:3},
-        fill:{type:'gradient',gradient:{shadeIntensity:1,opacityFrom:.35,opacityTo:.03,stops:[20,100]}},
-        markers:{size:5,colors:['#7C3AED'],strokeWidth:2,strokeColors:isDark?'#1e1e2d':'#fff'},
+        xaxis:{ categories:<?php echo json_encode($lblTall); ?>, labels:axLbl, axisBorder:{show:false}, tickPlacement:'on' },
+        yaxis:{ labels:{style:{colors:tp}, formatter:function(v){return Math.round(v);}}, min:0, forceNiceScale:true },
+        colors:['#7C3AED'],
+        stroke:{ curve:<?php echo count($valTall) <= 2 ? "'straight'" : "'smooth'"; ?>, width:3 },
+        fill:{type:'gradient',gradient:{shadeIntensity:1,opacityFrom:.30,opacityTo:.02,stops:[0,100]}},
+        markers:{size:<?php echo count($valTall) <= 3 ? 6 : 4; ?>,colors:['#7C3AED'],strokeWidth:2,strokeColors:isDark?'#1e1e2d':'#fff'},
         grid, theme, noData
     }).render();
 <?php endif; ?>
 
 <?php if (in_array($rol,[1,4]) && !empty($lblInv)): ?>
     new ApexCharts(document.querySelector('#chartInvCondicion'), {
-        chart:{ type:'radialBar', height:280, background:'transparent' },
+        chart:{ type:'radialBar', height:240, background:'transparent' },
         series:<?php echo json_encode($valInvPct); ?>,
         labels:<?php echo json_encode($lblInv); ?>,
         colors:['#10B981','#3B82F6','#F59E0B','#EF4444','#64748B'],
-        plotOptions:{ radialBar:{ dataLabels:{
-            name:{fontSize:'11px',color:tp},
-            value:{fontSize:'16px',fontWeight:'800',color:tp,formatter:function(v){return v+'%';}},
-            total:{show:true,label:'BIENES',color:ts,fontSize:'10px',fontWeight:'700'}
-        }, hollow:{size:'32%'}, track:{background:bs} } },
-        legend:{show:true,position:'bottom',labels:{colors:tp},fontSize:'11px'},
+        plotOptions:{ radialBar:{
+            offsetY: -10,
+            dataLabels:{
+                name:{fontSize:'10px',color:tp},
+                value:{fontSize:'15px',fontWeight:'800',color:tp,formatter:function(v){return v+'%';}},
+                total:{show:true,label:'BIENES',color:ts,fontSize:'10px',fontWeight:'700'}
+            },
+            hollow:{size:'30%'}, track:{background:bs}
+        }},
+        legend:{show:true,position:'bottom',labels:{colors:tp},fontSize:'11px',itemMargin:{horizontal:6}},
         theme, noData
     }).render();
 <?php endif; ?>
 
 <?php if (in_array($rol,[1,2]) && !empty($lblAsist)): ?>
     new ApexCharts(document.querySelector('#chartAsistencia'), {
-        chart:{ type:'bar', height:240, background:'transparent', toolbar:{show:false} },
+        chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Registros', data:<?php echo json_encode($valAsist); ?> }],
-        xaxis:{ categories:<?php echo json_encode($lblAsist); ?>, labels:axLbl },
-        yaxis:{ labels:{style:{colors:tp}} },
-        plotOptions:{ bar:{borderRadius:5,columnWidth:'55%'} },
+        xaxis:{ categories:<?php echo json_encode($lblAsist); ?>, labels:axLbl, axisBorder:{show:false} },
+        yaxis:{ labels:{style:{colors:tp}, formatter:function(v){return Math.round(v);}}, min:0, forceNiceScale:true },
+        plotOptions:{ bar:{borderRadius:6, columnWidth:<?php echo count($valAsist) <= 2 ? "'35%'" : "'50%'"; ?>} },
         colors:['#F59E0B'],
         dataLabels:{enabled:true,style:{fontWeight:'700',fontSize:'11px'}},
         grid, theme, noData
@@ -362,12 +398,19 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php endif; ?>
 
 <?php if (in_array($rol,[1,2]) && !empty($lblEmp)): ?>
+    <?php $maxEmp = max(array_merge($valEmp,[1])); ?>
     new ApexCharts(document.querySelector('#chartEmpDepto'), {
-        chart:{ type:'bar', height:240, background:'transparent', toolbar:{show:false} },
+        chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Empleados', data:<?php echo json_encode($valEmp); ?> }],
-        xaxis:{ categories:<?php echo json_encode($lblEmp); ?>, labels:{style:{colors:tp,fontSize:'11px'}} },
+        xaxis:{
+            categories:<?php echo json_encode($lblEmp); ?>,
+            labels:{style:{colors:tp,fontSize:'11px'}},
+            min: 0,
+            tickAmount: <?php echo $maxEmp; ?>,
+            labels:{ style:{colors:tp,fontSize:'11px'}, formatter:function(v){return Number.isInteger(+v)?+v:'';} }
+        },
         yaxis:{ labels:{style:{colors:tp}} },
-        plotOptions:{ bar:{horizontal:true,borderRadius:4,barHeight:'55%',distributed:true} },
+        plotOptions:{ bar:{horizontal:true,borderRadius:5,barHeight:'50%',distributed:true} },
         colors:palette,
         dataLabels:{enabled:true,style:{fontWeight:'700',fontSize:'11px'}},
         legend:{show:false},
@@ -377,11 +420,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <?php if (in_array($rol,[1,5]) && !empty($lblVis)): ?>
     new ApexCharts(document.querySelector('#chartVisitas'), {
-        chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
+        chart:{ type:'bar', height:160, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Visitas', data:<?php echo json_encode($valVis); ?> }],
-        xaxis:{ categories:<?php echo json_encode($lblVis); ?>, labels:axLbl, axisBorder:{show:false} },
-        yaxis:{ labels:{style:{colors:tp}}, min:0 },
-        plotOptions:{ bar:{borderRadius:4,columnWidth:'60%'} },
+        xaxis:{ categories:<?php echo json_encode($lblVis); ?>, labels:{style:{colors:tp,fontSize:'10px'}}, axisBorder:{show:false} },
+        yaxis:{ labels:{style:{colors:tp}, formatter:function(v){return Math.round(v);}}, min:0, forceNiceScale:true },
+        plotOptions:{ bar:{borderRadius:4,columnWidth:'55%'} },
         colors:['#0891B2'],
         dataLabels:{enabled:false},
         grid, theme, noData
