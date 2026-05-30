@@ -12,6 +12,9 @@ class Ruta extends Model {
     private ?int    $id_facilitador;
     private int     $cupo_maximo;
     private bool    $requiere_formacion;
+    private string  $tipo_ruta;
+
+    public static array $TIPOS_RUTA = ['Cumaná Histórica', 'Exploradores de Cumaná', 'Comunitaria', 'General'];
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -28,6 +31,8 @@ class Ruta extends Model {
             $this->id_facilitador      = $data['id_facilitador'] ? (int)$data['id_facilitador'] : null;
             $this->cupo_maximo         = isset($data['cupo_maximo']) ? (int)$data['cupo_maximo'] : 20;
             $this->requiere_formacion  = !empty($data['requiere_formacion']);
+            $this->tipo_ruta           = in_array($data['tipo_ruta'] ?? '', self::$TIPOS_RUTA)
+                                         ? $data['tipo_ruta'] : 'General';
         }
     }
 
@@ -78,6 +83,7 @@ class Ruta extends Model {
                                   id_facilitador=:id_facilitador,
                                   cupo_maximo=:cupo_maximo,
                                   requiere_formacion=:requiere_formacion,
+                                  tipo_ruta=:tipo_ruta,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -85,10 +91,11 @@ class Ruta extends Model {
             $this->db->query("INSERT INTO rutas
                               (nombre, descripcion, duracion_estimada, nivel_dificultad, estado,
                                fecha_visita, hora_visita, id_departamento, id_facilitador,
-                               cupo_maximo, requiere_formacion, created_by)
+                               cupo_maximo, requiere_formacion, tipo_ruta, created_by)
                               VALUES (:nombre, :descripcion, :duracion_estimada, :nivel_dificultad,
                                       :estado, :fecha_visita, :hora_visita, :id_departamento,
-                                      :id_facilitador, :cupo_maximo, :requiere_formacion, :user_id)");
+                                      :id_facilitador, :cupo_maximo, :requiere_formacion,
+                                      :tipo_ruta, :user_id)");
         }
         $this->db->bind(':nombre',             $this->nombre);
         $this->db->bind(':descripcion',        $this->descripcion);
@@ -101,9 +108,10 @@ class Ruta extends Model {
         $this->db->bind(':id_facilitador',     $this->id_facilitador);
         $this->db->bind(':cupo_maximo',        $this->cupo_maximo);
         $this->db->bind(':requiere_formacion', $this->requiere_formacion);
+        $this->db->bind(':tipo_ruta',          $this->tipo_ruta);
         $this->db->bind(':user_id',            $user_id);
         $result = $this->db->execute();
-        $this->audit('rutas', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'nivel_dificultad' => $this->nivel_dificultad, 'fecha_visita' => $this->fecha_visita, 'cupo_maximo' => $this->cupo_maximo, 'requiere_formacion' => $this->requiere_formacion], $user_id);
+        $this->audit('rutas', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'tipo_ruta' => $this->tipo_ruta, 'fecha_visita' => $this->fecha_visita, 'cupo_maximo' => $this->cupo_maximo, 'requiere_formacion' => $this->requiere_formacion], $user_id);
         return $result;
     }
 

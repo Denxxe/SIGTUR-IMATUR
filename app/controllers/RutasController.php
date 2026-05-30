@@ -23,8 +23,9 @@ class RutasController extends Controller {
 
         $nivelesValidos = ['Fácil','Moderado','Difícil','Extremo'];
         $estadosValidos = ['Activa','Inactiva','En Mantenimiento'];
-        $nivel  = in_array($_POST['nivel_dificultad'] ?? '', $nivelesValidos) ? $_POST['nivel_dificultad'] : 'Fácil';
-        $estado = in_array($_POST['estado'] ?? '', $estadosValidos) ? $_POST['estado'] : 'Activa';
+        $nivel   = in_array($_POST['nivel_dificultad'] ?? '', $nivelesValidos) ? $_POST['nivel_dificultad'] : 'Fácil';
+        $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)           ? $_POST['estado']           : 'Activa';
+        $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA)     ? $_POST['tipo_ruta']        : 'General';
 
         $data = [
             'id'                  => $esEdicion ? (int)$_POST['id'] : null,
@@ -39,6 +40,7 @@ class RutasController extends Controller {
             'id_facilitador'      => (int)$_POST['id_facilitador'] ?: null,
             'cupo_maximo'         => min(200, max(1, (int)($_POST['cupo_maximo'] ?? 20))),
             'requiere_formacion'  => !empty($_POST['requiere_formacion']),
+            'tipo_ruta'           => $tipoRuta,
         ];
 
         $ruta = new Ruta($data);

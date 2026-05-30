@@ -141,7 +141,18 @@
                         </div>
                     </div>
 
-                    <!-- Dificultad + Estado -->
+                    <!-- Tipo de ruta + Dificultad + Estado -->
+                    <div class="col-md-4">
+                        <div class="sig-field">
+                            <label class="sig-field__label">Tipo de Ruta <span class="req">*</span></label>
+                            <select name="tipo_ruta" id="rut_tipo" class="sig-select">
+                                <option value="General">General</option>
+                                <option value="Cumaná Histórica">Cumaná Histórica</option>
+                                <option value="Exploradores de Cumaná">Exploradores de Cumaná</option>
+                                <option value="Comunitaria">Comunitaria</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="col-md-4">
                         <div class="sig-field">
                             <label class="sig-field__label">Nivel de Dificultad</label>
@@ -251,6 +262,7 @@ function editarRuta(r) {
     document.getElementById('rut_fecha').value            = r.fecha_visita || '';
     document.getElementById('rut_hora').value             = r.hora_visita ? r.hora_visita.substring(0,5) : '';
     document.getElementById('rut_req_form').checked       = r.requiere_formacion == true || r.requiere_formacion === 't' || r.requiere_formacion === '1';
+    document.getElementById('rut_tipo').value             = r.tipo_ruta || 'General';
     new bootstrap.Modal(document.getElementById('modalRuta')).show();
 }
 </script>
