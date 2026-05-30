@@ -398,6 +398,26 @@ class Taller extends Model {
         self::auditStatic('taller_evidencias', 'INSERT', $id_taller, null, ['id_taller' => $id_taller, 'total_subidas' => count($archivos)], $userId);
     }
 
+    // Auto-transición Programado → En Curso cuando llega la fecha/hora de inicio
+    // Se ejecuta al cargar el índice; solo afecta actividades con al menos 1 participante (RN-F12)
+    public static function autoTransicionarProgramados(): void {
+        $db = new Database();
+        $db->query("UPDATE talleres
+                    SET estado = 'En Curso', updated_at = CURRENT_TIMESTAMP
+                    WHERE estado = 'Programado'
+                      AND is_active = TRUE
+                      AND (
+                          fecha_inicio < CURRENT_DATE
+                          OR (
+                              fecha_inicio = CURRENT_DATE
+                              AND (hora_inicio IS NULL OR hora_inicio::time <= CURRENT_TIME::time)
+                          )
+                      )
+                      AND (SELECT COUNT(*) FROM participantes_taller pt
+                           WHERE pt.id_taller = talleres.id AND pt.is_active = TRUE) > 0");
+        $db->execute();
+    }
+
     // Actualiza solo el estado y el motivo (para el cambio rápido de estado desde la tarjeta)
     public static function cambiarEstado(int $id, string $estado, ?string $motivoCancelacion, $userId): bool {
         $db = new Database();

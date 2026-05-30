@@ -2,6 +2,9 @@
 class TalleresController extends Controller {
 
     public function index() {
+        // Auto-transición: Programado → En Curso cuando la fecha/hora de inicio ya llegó
+        try { Taller::autoTransicionarProgramados(); } catch (\Exception $ignored) {}
+
         $talleres    = Taller::all();
         $empleados   = Empleado::facilitadoresTalleres();
         $ubicaciones = UbicacionFormacion::all();
