@@ -15,39 +15,73 @@ function fmtMesDash(string $ym): string {
 // ── KPI cards según rol ────────────────────────────────────────────────────
 $kpiCards = [];
 
-if (in_array($rol, [1, 2])) {
-    $kpiCards[] = ['label'=>'Empleados Activos',    'value'=>number_format($data['kpiEmpleados'] ?? 0),       'sub'=>'en nómina institucional',           'icon'=>'bi-people-fill',               'bg'=>'#3B82F6','href'=>URL_ROOT.'/empleados/index'];
-    $kpiCards[] = ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes'] ?? 0),  'sub'=>'registros este mes',                'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index','delta'=>$data['deltaAsistenciaMes']??null];
-    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy'] ?? 0),     'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index','delta'=>$data['deltaVisitasHoy']??null];
-    $alContr = ($data['kpiContratosVencen'] ?? 0) > 0;
-    $kpiCards[] = ['label'=>'Contratos Vencen',      'value'=>number_format($data['kpiContratosVencen'] ?? 0),'sub'=>'en los próximos 30 días',           'icon'=>'bi-person-badge-fill',         'bg'=>$alContr?'#DC2626':'#64748B','alert'=>$alContr];
+<?php
+// Helper: calcula estado semáforo
+// $thresholds = [good_threshold, warn_threshold], $lowerIsBetter = true invierte la lógica
+function kpiSt(mixed $v, float $tGood, float $tWarn, bool $inv = false): string {
+    if (!$inv) return $v >= $tGood ? 'good' : ($v >= $tWarn ? 'warning' : 'bad');
+    return $v <= $tGood ? 'good' : ($v <= $tWarn ? 'warning' : 'bad');
 }
+?>
 
-if (in_array($rol, [1, 3])) {
+<?php if (in_array($rol, [1, 2])): ?>
+<?php
+    $alContr = ($data['kpiContratosVencen'] ?? 0) > 0;
+    $kpiCards[] = ['label'=>'Empleados Activos',    'value'=>number_format($data['kpiEmpleados'] ?? 0),       'sub'=>'en nómina institucional',           'icon'=>'bi-people-fill',               'bg'=>'#3B82F6','href'=>URL_ROOT.'/empleados/index',
+        'status' => kpiSt($data['kpiEmpleados']??0, 1, 1)];
+    $kpiCards[] = ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes'] ?? 0),  'sub'=>'registros este mes',                'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index',
+        'delta'  => $data['deltaAsistenciaMes']??null];
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy'] ?? 0),     'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index',
+        'delta'  => $data['deltaVisitasHoy']??null];
+    $kpiCards[] = ['label'=>'Contratos Vencen',      'value'=>number_format($data['kpiContratosVencen'] ?? 0),'sub'=>'en los próximos 30 días',           'icon'=>'bi-person-badge-fill',         'bg'=>$alContr?'#DC2626':'#64748B','alert'=>$alContr,
+        'status' => kpiSt($data['kpiContratosVencen']??0, 0, 2, true)];
+?>
+<?php endif; ?>
+
+<?php if (in_array($rol, [1, 3])): ?>
+<?php
     $colOcup = ($data['tasaOcupacion']??0)>=75?'#059669':(($data['tasaOcupacion']??0)>=50?'#D97706':'#DC2626');
     $colFin  = ($data['tasaFinaliz']  ??0)>=85?'#059669':(($data['tasaFinaliz']  ??0)>=70?'#D97706':'#DC2626');
-    $kpiCards[] = ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',           'icon'=>'bi-mortarboard-fill',           'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index'];
-    $kpiCards[] = ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),     'sub'=>'participantes inscritos en el año', 'icon'=>'bi-person-check-fill',         'bg'=>'#059669','delta'=>$data['deltaFormados']??null];
-    $kpiCards[] = ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),            'sub'=>'en estado Activa',                  'icon'=>'bi-geo-alt-fill',               'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index'];
-    $kpiCards[] = ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),         'sub'=>'realizando pasantías',              'icon'=>'bi-journal-text',               'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index'];
-    $kpiCards[] = ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',               'sub'=>($data['ocupInscritos']??0).' inscritos / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup];
-    $kpiCards[] = ['label'=>'Tasa Finalización',     'value'=>($data['tasaFinaliz']??0).'%',                 'sub'=>'actividades completadas '.$anio,    'icon'=>'bi-check-circle-fill',         'bg'=>$colFin];
-}
+    $kpiCards[] = ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',           'icon'=>'bi-mortarboard-fill',           'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index',
+        'status' => ($data['kpiActividadesActivas']??0) > 0 ? 'good' : 'warning'];
+    $kpiCards[] = ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),     'sub'=>'participantes inscritos en el año', 'icon'=>'bi-person-check-fill',         'bg'=>'#059669',
+        'delta'  => $data['deltaFormados']??null];
+    $kpiCards[] = ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),            'sub'=>'en estado Activa',                  'icon'=>'bi-geo-alt-fill',               'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index',
+        'status' => ($data['kpiRutas']??0) > 0 ? 'good' : 'warning'];
+    $kpiCards[] = ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),         'sub'=>'realizando pasantías',              'icon'=>'bi-journal-text',               'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index',
+        'status' => ($data['kpiPasantes']??0) > 0 ? 'good' : 'neutral'];
+    $kpiCards[] = ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',               'sub'=>($data['ocupInscritos']??0).' inscritos / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup,
+        'status' => kpiSt($data['tasaOcupacion']??0, 75, 50)];
+    $kpiCards[] = ['label'=>'Tasa Finalización',     'value'=>($data['tasaFinaliz']??0).'%',                 'sub'=>'actividades completadas '.$anio,    'icon'=>'bi-check-circle-fill',         'bg'=>$colFin,
+        'status' => kpiSt($data['tasaFinaliz']??0, 85, 70)];
+?>
+<?php endif; ?>
 
-if (in_array($rol, [1, 4])) {
+<?php if (in_array($rol, [1, 4])): ?>
+<?php
     $colDep = ($data['tasaDeprec']??0)<=10?'#059669':(($data['tasaDeprec']??0)<=15?'#D97706':'#DC2626');
     $alInv  = ($data['kpiBienesAlerta']??0) > 0;
-    $kpiCards[] = ['label'=>'Bienes Activos',        'value'=>number_format($data['kpiBienes']??0),           'sub'=>'activos registrados',               'icon'=>'bi-box-seam-fill',              'bg'=>'#64748B','href'=>URL_ROOT.'/inventario/index'];
-    $kpiCards[] = ['label'=>'Bienes en Alerta',      'value'=>number_format($data['kpiBienesAlerta']??0),     'sub'=>'dañados o en reparación',           'icon'=>'bi-exclamation-triangle-fill',  'bg'=>'#DC2626','alert'=>$alInv];
-    $kpiCards[] = ['label'=>'Bajas '.$anio,          'value'=>number_format($data['kpiBajasAnio']??0),        'sub'=>'bienes dados de baja este año',     'icon'=>'bi-trash3-fill',                'bg'=>'#94A3B8'];
-    $kpiCards[] = ['label'=>'Depreciación',          'value'=>($data['tasaDeprec']??0).'%',                  'sub'=>'del patrimonio deteriorado',        'icon'=>'bi-graph-down',                 'bg'=>$colDep];
-}
+    $kpiCards[] = ['label'=>'Bienes Activos',        'value'=>number_format($data['kpiBienes']??0),           'sub'=>'activos registrados',               'icon'=>'bi-box-seam-fill',              'bg'=>'#64748B','href'=>URL_ROOT.'/inventario/index',
+        'status' => ($data['kpiBienes']??0) > 0 ? 'good' : 'warning'];
+    $kpiCards[] = ['label'=>'Bienes en Alerta',      'value'=>number_format($data['kpiBienesAlerta']??0),     'sub'=>'dañados o en reparación',           'icon'=>'bi-exclamation-triangle-fill',  'bg'=>'#DC2626','alert'=>$alInv,
+        'status' => kpiSt($data['kpiBienesAlerta']??0, 0, 3, true)];
+    $kpiCards[] = ['label'=>'Bajas '.$anio,          'value'=>number_format($data['kpiBajasAnio']??0),        'sub'=>'bienes dados de baja este año',     'icon'=>'bi-trash3-fill',                'bg'=>'#94A3B8',
+        'status' => kpiSt($data['kpiBajasAnio']??0, 0, 5, true)];
+    $kpiCards[] = ['label'=>'Depreciación',          'value'=>($data['tasaDeprec']??0).'%',                  'sub'=>'del patrimonio deteriorado',        'icon'=>'bi-graph-down',                 'bg'=>$colDep,
+        'status' => kpiSt($data['tasaDeprec']??0, 10, 15, true)];
+?>
+<?php endif; ?>
 
-if ($rol === 5) {
-    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index','delta'=>$data['deltaVisitasHoy']??null];
-    $kpiCards[] = ['label'=>'Visitantes Semana',     'value'=>number_format($data['kpiVisitasSemana']??0),    'sub'=>'únicos en la semana actual',        'icon'=>'bi-people-fill',                'bg'=>'#7C3AED','delta'=>$data['deltaVisitasSemana']??null];
-    $kpiCards[] = ['label'=>'Visitantes Mes',        'value'=>number_format($data['kpiVisitantesMes']??0),    'sub'=>'únicos en el mes actual',           'icon'=>'bi-calendar-month',             'bg'=>'#059669'];
-}
+<?php if ($rol === 5): ?>
+<?php
+    $kpiCards[] = ['label'=>'Visitas Hoy',           'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',         'icon'=>'bi-door-open-fill',             'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index',
+        'delta'  => $data['deltaVisitasHoy']??null];
+    $kpiCards[] = ['label'=>'Visitantes Semana',     'value'=>number_format($data['kpiVisitasSemana']??0),    'sub'=>'únicos en la semana actual',        'icon'=>'bi-people-fill',                'bg'=>'#7C3AED',
+        'delta'  => $data['deltaVisitasSemana']??null];
+    $kpiCards[] = ['label'=>'Visitantes Mes',        'value'=>number_format($data['kpiVisitantesMes']??0),    'sub'=>'únicos en el mes actual',           'icon'=>'bi-calendar-month',             'bg'=>'#059669',
+        'status' => ($data['kpiVisitantesMes']??0) > 0 ? 'good' : 'neutral'];
+?>
+<?php endif; ?>
 ?>
 
 <div class="page__head anim-slide-up">
@@ -104,6 +138,13 @@ if ($rol === 5) {
                         <?php if (!empty($k['delta'])): $d=$k['delta']; ?>
                         <div style="font-size:10px;font-weight:700;color:<?php echo $d['color'];?>;margin-top:3px;white-space:nowrap;">
                             <?php echo $d['arrow']; ?> <?php echo $d['pct']; ?>% <span style="font-weight:400;color:var(--text-tertiary);"><?php echo htmlspecialchars($d['label']); ?></span>
+                        </div>
+                        <?php elseif (!empty($k['status']) && $k['status'] !== 'neutral'):
+                            $sMap = ['good'=>['#059669','bi-check-circle-fill','Óptimo'],'warning'=>['#D97706','bi-dash-circle-fill','Atención'],'bad'=>['#DC2626','bi-x-circle-fill','Alerta']];
+                            [$sCol,$sIco,$sTxt] = $sMap[$k['status']] ?? ['#64748B','bi-dash','—'];
+                        ?>
+                        <div style="font-size:10px;font-weight:700;color:<?php echo $sCol;?>;margin-top:3px;white-space:nowrap;">
+                            <i class="bi <?php echo $sIco;?>" style="font-size:9px;"></i> <?php echo $sTxt; ?>
                         </div>
                         <?php endif; ?>
                     </div>
