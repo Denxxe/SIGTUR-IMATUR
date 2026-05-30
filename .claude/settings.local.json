@@ -3,7 +3,11 @@
     "allow": [
       "Read(//c/Users/celuc/Downloads/**)",
       "Bash(unzip -p \"DOCUMENTO DE ESPECIFICACIÓN DE REQUISITOS \\(DER\\).odt\" content.xml)",
-      "Bash(sed 's/<[^>]*>//g')"
+      "Bash(sed 's/<[^>]*>//g')",
+      "Bash(Get-ChildItem -Path \"C:\\\\laragon\\\\www\\\\SIGTUR-IMATUR\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(xargs grep -l \"class.*Horario\\\\|class.*Permiso\\\\|class.*Vacacion\")",
+      "Bash(grep -v \"^$\")"
     ]
   }
 }
