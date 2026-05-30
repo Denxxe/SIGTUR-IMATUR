@@ -175,6 +175,13 @@ class TalleresController extends Controller {
         $esInterna = !empty($_POST['es_interna_taller']);
 
         try {
+            // RN-F12: no se pueden inscribir participantes en una actividad ya finalizada
+            $tallerActual = Taller::find($id_taller);
+            if (!$tallerActual) throw new Exception('Actividad no encontrada.');
+            if ($tallerActual->estado === 'Finalizado') {
+                throw new Exception('No se pueden inscribir participantes en una actividad ya finalizada.');
+            }
+
             if ($esInterna) {
                 // Actividad interna: inscribir empleado directamente por id_persona
                 $idPersona = (int)($_POST['id_empleado_persona'] ?? 0);
@@ -435,6 +442,12 @@ class TalleresController extends Controller {
             }
 
             Taller::cambiarEstado((int)$id, $nuevoEstado, $motivo, $userId);
+
+            // RN-F12: al finalizar, todos los participantes activos quedan marcados como asistentes
+            if ($nuevoEstado === 'Finalizado') {
+                Taller::marcarAsistenciaMasiva((int)$id, $userId);
+            }
+
             flash('global_msg', 'Estado actualizado a "' . $nuevoEstado . '" correctamente.');
 
         } catch (Exception $e) {
