@@ -550,6 +550,8 @@ function editarTaller(t) {
 
 function actualizarModoInterno(esInterna) {
     document.getElementById('bloque_tipo_ente').style.display = esInterna ? 'none' : 'flex';
+    // Al pasar a interna, limpiar tipo_ente para que no persista el valor anterior
+    if (esInterna) document.getElementById('tal_tipo_ente').value = '';
     actualizarEstiloToggle(esInterna);
     filtrarSedes(esInterna);
     checkFormValid();
