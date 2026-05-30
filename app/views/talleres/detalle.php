@@ -134,7 +134,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                             <td class="cell-strong" data-buscar="<?php echo $nombreCompleto; ?>">
                                 <?php if ($esLibre): ?>
                                     <?php echo $nombreCompleto; ?>
-                                    <span class="sig-badge sig-badge--neutral" style="font-size:10px; margin-left:4px;">Niño/a</span>
+                                    <span class="sig-badge sig-badge--neutral" style="font-size:10px; margin-left:4px;"><?php echo ($edad !== null && $edad >= 12) ? 'Adolesc.' : 'Niño/a'; ?></span>
                                 <?php else: ?>
                                     <span style="cursor:pointer; text-decoration:underline dotted; color:inherit;"
                                           class="link-historial"
@@ -306,7 +306,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="insc_es_libre" name="tipo_participante_libre" value="1">
                         <label class="form-check-label" for="insc_es_libre" style="font-size:13px; cursor:pointer; user-select:none;">
-                            <i class="bi bi-person-x"></i> Participante sin cédula (niño/a sin documento de identidad)
+                            <i class="bi bi-person-x"></i> Menor de edad sin cédula <span style="color:var(--text-tertiary); font-weight:400;">(5 a 11 años)</span>
                         </label>
                     </div>
                 </div>
@@ -423,8 +423,11 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field">
-                                <label class="sig-field__label">Fecha de nacimiento <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
-                                <input type="date" name="fecha_nac_libre" id="libre_fecha_nac" class="sig-input">
+                                <label class="sig-field__label">Fecha de nacimiento <span class="req">*</span> <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                <input type="date" name="fecha_nac_libre" id="libre_fecha_nac" class="sig-input" required
+                                       max="<?php echo date('Y-m-d', strtotime('-5 years')); ?>"
+                                       min="<?php echo date('Y-m-d', strtotime('-12 years +1 day')); ?>">
+                                <span id="libre_edad_error" style="display:none; font-size:11px; color:var(--danger-600); margin-top:2px;"></span>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -604,7 +607,11 @@ function checkInscripcionValid() {
     var esLibre = document.getElementById('insc_es_libre').checked;
     var btn = document.getElementById('btn_insc_submit');
     if (esLibre) {
-        btn.disabled = (document.getElementById('insc_nombre_libre').value || '').trim() === '';
+        var nombre = (document.getElementById('insc_nombre_libre').value || '').trim();
+        var fecha  = (document.getElementById('libre_fecha_nac').value  || '').trim();
+        var edadV  = fecha ? calcularEdad(fecha) : null;
+        var edadOk = edadV !== null && edadV >= 5 && edadV < 12;
+        btn.disabled = !nombre || !fecha || !edadOk;
     } else {
         var visible  = document.getElementById('bloque_datos_persona').style.display !== 'none';
         var nombre   = (document.getElementById('insc_nombre').value   || '').trim();
@@ -709,8 +716,23 @@ document.getElementById('insc_fecha_nac').addEventListener('change', function() 
 });
 
 document.getElementById('libre_fecha_nac').addEventListener('change', function() {
-    var edad = calcularEdad(this.value);
-    document.getElementById('libre_edad_label').textContent = edad !== null ? '· ' + edad + ' años' : '';
+    var edad    = calcularEdad(this.value);
+    var labelEl = document.getElementById('libre_edad_label');
+    var errorEl = document.getElementById('libre_edad_error');
+    errorEl.style.display = 'none';
+    if (edad === null) { labelEl.textContent = ''; checkInscripcionValid(); return; }
+    if (edad < 5) {
+        labelEl.textContent = '· ' + edad + ' años';
+        errorEl.textContent = 'El participante debe tener al menos 5 años para inscribirse.';
+        errorEl.style.display = 'block';
+    } else if (edad >= 12) {
+        labelEl.textContent = '· ' + edad + ' años';
+        errorEl.textContent = 'Participantes de 12 años o más deben registrarse con cédula en el formulario estándar.';
+        errorEl.style.display = 'block';
+    } else {
+        labelEl.textContent = '· ' + edad + ' años (Niño/a)';
+    }
+    checkInscripcionValid();
 });
 
 document.getElementById('insc_nombre').addEventListener('input', checkInscripcionValid);

@@ -60,34 +60,51 @@
                 </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
+            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-4); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
                 <i class="bi bi-people" style="font-size:20px; color:var(--brand-500);"></i>
                 <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Demografía de Asistentes</h3>
             </div>
+
+            <?php if (($data['totalSugeridos'] ?? 0) > 0): ?>
+            <div style="background:rgba(var(--brand-rgb,.22,.48,.86),.06); border-left:3px solid var(--brand-500); border-radius:6px; padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-5); font-size:13px; color:var(--text-secondary);">
+                <i class="bi bi-calculator" style="color:var(--brand-500);"></i>
+                <strong style="color:var(--text-primary);">Sugerencia desde participantes registrados</strong>
+                (<?php echo $data['totalSugeridos']; ?> inscritos con datos):
+                <span style="margin-left:var(--sp-2);">
+                    Mujeres <strong><?php echo $data['sugeridos']['mujeres']; ?></strong> ·
+                    Hombres <strong><?php echo $data['sugeridos']['hombres']; ?></strong> ·
+                    Niñas <strong><?php echo $data['sugeridos']['ninas']; ?></strong> ·
+                    Niños <strong><?php echo $data['sugeridos']['ninos']; ?></strong>
+                </span>
+                <button type="button" onclick="aplicarSugeridos()" class="btn-sig btn-sig--ghost btn-sig--sm" style="margin-left:var(--sp-3);">
+                    <i class="bi bi-arrow-down-circle"></i> Aplicar
+                </button>
+            </div>
+            <?php endif; ?>
 
             <div class="row g-4 mb-8" style="align-items:flex-end;">
                 <div class="col-md-2">
                     <div class="sig-field">
                         <label class="sig-field__label">Mujeres</label>
-                        <input type="number" name="mujeres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->mujeres ?? 0; ?>" required>
+                        <input type="number" id="inf_mujeres" name="mujeres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->mujeres ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
                         <label class="sig-field__label">Hombres</label>
-                        <input type="number" name="hombres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->hombres ?? 0; ?>" required>
+                        <input type="number" id="inf_hombres" name="hombres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->hombres ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Niñas</label>
-                        <input type="number" name="ninas" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninas ?? 0; ?>" required>
+                        <label class="sig-field__label">Niñas <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
+                        <input type="number" id="inf_ninas" name="ninas" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninas ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Niños</label>
-                        <input type="number" name="ninos" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninos ?? 0; ?>" required>
+                        <label class="sig-field__label">Niños <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
+                        <input type="number" id="inf_ninos" name="ninos" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninos ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -193,5 +210,16 @@
         </div>
     </div>
 </div>
+
+<?php if (($data['totalSugeridos'] ?? 0) > 0): ?>
+<script>
+function aplicarSugeridos() {
+    document.getElementById('inf_mujeres').value = <?php echo (int)$data['sugeridos']['mujeres']; ?>;
+    document.getElementById('inf_hombres').value = <?php echo (int)$data['sugeridos']['hombres']; ?>;
+    document.getElementById('inf_ninas').value   = <?php echo (int)$data['sugeridos']['ninas']; ?>;
+    document.getElementById('inf_ninos').value   = <?php echo (int)$data['sugeridos']['ninos']; ?>;
+}
+</script>
+<?php endif; ?>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

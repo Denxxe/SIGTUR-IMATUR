@@ -198,10 +198,27 @@ class TalleresController extends Controller {
                 if (empty($nombre)) {
                     throw new Exception('El nombre del participante es requerido.');
                 }
-                $fechaNacLibre = trim($_POST['fecha_nac_libre'] ?? '') ?: null;
-                if ($fechaNacLibre && \DateTime::createFromFormat('Y-m-d', $fechaNacLibre) === false) {
-                    $fechaNacLibre = null;
+                // RN-F16: fecha de nacimiento obligatoria y en rango válido (5-11 años)
+                $fechaNacLibreRaw = trim($_POST['fecha_nac_libre'] ?? '');
+                if (empty($fechaNacLibreRaw)) {
+                    throw new Exception('La fecha de nacimiento es obligatoria para participantes sin cédula de identidad.');
                 }
+                if (\DateTime::createFromFormat('Y-m-d', $fechaNacLibreRaw) === false) {
+                    throw new Exception('El formato de fecha de nacimiento no es válido.');
+                }
+                $fnacDt    = new \DateTime($fechaNacLibreRaw);
+                $hoyDt     = new \DateTime();
+                if ($fnacDt >= $hoyDt) {
+                    throw new Exception('La fecha de nacimiento no puede ser una fecha futura.');
+                }
+                $edadAnios = (int)$hoyDt->diff($fnacDt)->y;
+                if ($edadAnios < 5) {
+                    throw new Exception('El participante debe tener al menos 5 años para inscribirse en una actividad formativa.');
+                }
+                if ($edadAnios >= 12) {
+                    throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula de identidad en el formulario estándar.');
+                }
+                $fechaNacLibre = $fechaNacLibreRaw;
                 Taller::inscribirLibre($id_taller, [
                     'nombre_libre'      => $nombre,
                     'apellido_libre'    => trim($_POST['apellido_libre'] ?? ''),
@@ -297,6 +314,26 @@ class TalleresController extends Controller {
 
         $informe = Taller::getInforme($id_taller);
 
+        // Pre-calcular conteo demográfico sugerido desde participantes registrados
+        $sugeridos      = ['mujeres' => 0, 'hombres' => 0, 'ninas' => 0, 'ninos' => 0];
+        $totalSugeridos = 0;
+        foreach (Taller::getParticipantes($id_taller) as $p) {
+            $esLibre  = empty($p->id_persona);
+            $genero   = $esLibre ? ($p->genero_libre  ?? '') : ($p->genero          ?? '');
+            $fechaNac = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
+            $edadV    = !empty($fechaNac)
+                ? (int)(new \DateTime())->diff(new \DateTime($fechaNac))->y
+                : 99; // Sin fecha → adulto
+            $totalSugeridos++;
+            if ($edadV < 12) {
+                if ($genero === 'F') $sugeridos['ninas']++;
+                else                 $sugeridos['ninos']++;
+            } else {
+                if ($genero === 'F') $sugeridos['mujeres']++;
+                else                 $sugeridos['hombres']++;
+            }
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'id_taller'               => $id_taller,
@@ -320,9 +357,11 @@ class TalleresController extends Controller {
         }
 
         $data = [
-            'titulo'  => 'Reporte Oficial de Actividad',
-            'taller'  => $taller,
-            'informe' => $informe
+            'titulo'         => 'Reporte Oficial de Actividad',
+            'taller'         => $taller,
+            'informe'        => $informe,
+            'sugeridos'      => $sugeridos,
+            'totalSugeridos' => $totalSugeridos,
         ];
         $this->view('talleres/informe', $data);
     }
