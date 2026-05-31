@@ -40,7 +40,16 @@ class AuditLog extends Model
         if ($tabla == 'municipio') $identificador = "nombre || ' - ' || codigo_postal";
         if ($tabla == 'parroquia') $identificador = "nombre";
 
-        $sql = "SELECT *, ($identificador) as display_name FROM $tabla WHERE is_active = FALSE ORDER BY deleted_at DESC";
+        // Nombre real de quien eliminó: usuarios → empleados → personas.
+        // Si no hay persona vinculada, cae al username; si no hay usuario, queda NULL (→ 'Sistema' en la vista).
+        $deletedByName = "(SELECT COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username)
+                           FROM usuarios u
+                           LEFT JOIN empleados e   ON u.id_empleado = e.id
+                           LEFT JOIN personas per  ON e.id_persona  = per.id
+                           WHERE u.id = deleted_by)";
+
+        $sql = "SELECT *, ($identificador) as display_name, $deletedByName as deleted_by_name
+                FROM $tabla WHERE is_active = FALSE ORDER BY deleted_at DESC";
         $db->query($sql);
         return $db->resultSet();
     }

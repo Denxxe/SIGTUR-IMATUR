@@ -6,7 +6,11 @@ class RolesController extends Controller {
      * Devuelve [id_rol => '*'] para acceso total o [id_rol => [ctrl, ...]] para limitado.
      * Router.php llama este método en cada request.
      */
+    /** Caché por request para evitar consultas repetidas (header, router, controladores). */
+    private static $cacheRbac = null;
+
     public static function getMapaRbac(): array {
+        if (self::$cacheRbac !== null) return self::$cacheRbac;
         try {
             $db = new Database();
             $db->query("SELECT id_rol, modulo FROM permisos_rol ORDER BY id_rol, modulo");
@@ -20,11 +24,24 @@ class RolesController extends Controller {
                     $mapa[$rolId][] = $row->modulo;
                 }
             }
+            self::$cacheRbac = $mapa;
             return $mapa;
         } catch (Exception $e) {
             // Fallback mínimo si la BD no responde
             return [1 => '*'];
         }
+    }
+
+    /**
+     * ¿El rol de la sesión actual tiene acceso a un módulo/token dado?
+     * El Administrador (marcador '*') tiene acceso a todo.
+     */
+    public static function roleHasModulo(string $modulo): bool {
+        $rolId      = (int)($_SESSION['user_rol'] ?? 0);
+        $mapa       = self::getMapaRbac();
+        $permitidos = $mapa[$rolId] ?? [];
+        if ($permitidos === '*') return true;
+        return is_array($permitidos) && in_array($modulo, $permitidos);
     }
 
     /**
@@ -39,19 +56,19 @@ class RolesController extends Controller {
             'CargosController'                => ['label' => 'Cargos',                'icon' => 'bi-briefcase',         'grupo' => 'RRHH'],
             'DepartamentosController'         => ['label' => 'Departamentos',         'icon' => 'bi-diagram-3',         'grupo' => 'RRHH'],
             'AsistenciasController'           => ['label' => 'Asistencias',           'icon' => 'bi-calendar-check',   'grupo' => 'RRHH'],
-            'VisitantesController'            => ['label' => 'Visitantes',            'icon' => 'bi-people',            'grupo' => 'Atención'],
-            'VisitasController'               => ['label' => 'Visitas',               'icon' => 'bi-journal-text',      'grupo' => 'Atención'],
+            'VisitantesController'            => ['label' => 'Recepción (Visitas)',  'icon' => 'bi-door-open',         'grupo' => 'Recepción'],
+            'TalleresController'              => ['label' => 'Talleres/Formación',    'icon' => 'bi-mortarboard',       'grupo' => 'Formación'],
+            'UbicacionesformacionController'  => ['label' => 'Sedes de Formación',    'icon' => 'bi-geo-alt',           'grupo' => 'Formación'],
+            'PasantesController'              => ['label' => 'Pasantes',              'icon' => 'bi-person-workspace',  'grupo' => 'Formación'],
             'RutasController'                 => ['label' => 'Rutas Turísticas',      'icon' => 'bi-map',               'grupo' => 'Turismo'],
-            'TalleresController'              => ['label' => 'Talleres/Formación',    'icon' => 'bi-mortarboard',       'grupo' => 'Turismo'],
-            'ActividadesrutaController'       => ['label' => 'Actividades de Ruta',   'icon' => 'bi-pin-map',           'grupo' => 'Turismo'],
-            'UbicacionesformacionController'  => ['label' => 'Lugares de Formación',  'icon' => 'bi-geo-alt',           'grupo' => 'Turismo'],
-            'PasantesController'              => ['label' => 'Pasantes',              'icon' => 'bi-person-workspace',  'grupo' => 'Turismo'],
             'InventarioController'            => ['label' => 'Inventario',            'icon' => 'bi-box-seam',          'grupo' => 'Inventario'],
             'CategoriasController'            => ['label' => 'Categorías',            'icon' => 'bi-tags',              'grupo' => 'Inventario'],
             'UbicacionesController'           => ['label' => 'Ubicaciones',           'icon' => 'bi-building',          'grupo' => 'Inventario'],
             'ActividadesinventarioController' => ['label' => 'Movimientos de Bienes', 'icon' => 'bi-arrow-left-right',  'grupo' => 'Inventario'],
             'UsuariosController'              => ['label' => 'Usuarios del Sistema',  'icon' => 'bi-shield-lock',       'grupo' => 'Sistema'],
             'RolesController'                 => ['label' => 'Roles y Permisos',      'icon' => 'bi-key',               'grupo' => 'Sistema'],
+            'AuditoriaController'             => ['label' => 'Bitácora / Auditoría',  'icon' => 'bi-clipboard-data',    'grupo' => 'Sistema'],
+            'AuditoriaPapelera'               => ['label' => 'Papelera de Reciclaje', 'icon' => 'bi-recycle',           'grupo' => 'Sistema'],
         ];
     }
 

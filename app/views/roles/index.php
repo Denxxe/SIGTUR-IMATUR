@@ -24,7 +24,8 @@ $roles   = $data['roles']   ?? [];
 $coloresGrupo = [
     'General'    => ['bg' => '#f0f9ff', 'color' => '#0369a1', 'border' => '#bae6fd', 'check' => '#0284c7'],
     'RRHH'       => ['bg' => '#fdf4ff', 'color' => '#7e22ce', 'border' => '#e9d5ff', 'check' => '#9333ea'],
-    'Atención'   => ['bg' => '#f0fdf4', 'color' => '#15803d', 'border' => '#bbf7d0', 'check' => '#16a34a'],
+    'Recepción'  => ['bg' => '#f0fdf4', 'color' => '#15803d', 'border' => '#bbf7d0', 'check' => '#16a34a'],
+    'Formación'  => ['bg' => '#f5f3ff', 'color' => '#6d28d9', 'border' => '#ddd6fe', 'check' => '#7c3aed'],
     'Turismo'    => ['bg' => '#fff7ed', 'color' => '#c2410c', 'border' => '#fed7aa', 'check' => '#ea580c'],
     'Inventario' => ['bg' => '#fefce8', 'color' => '#92400e', 'border' => '#fde68a', 'check' => '#d97706'],
     'Sistema'    => ['bg' => '#fef2f2', 'color' => '#991b1b', 'border' => '#fecaca', 'check' => '#dc2626'],

@@ -113,16 +113,21 @@
                 <i class="bi bi-bar-chart-line"></i> <span>Reportes</span>
             </a>
 
-            <!-- Configuración — Admin (1) y RRHH (2) -->
-            <?php if(in_array($rol, [1, 2])): ?>
+            <!-- Sistema — Configuración, administración y recuperación (gating por permiso) -->
+            <?php
+            $canConfig   = in_array($rol, [1, 2]);
+            $canSysAdmin = ($rol == 1);
+            $canBitacora = ($rol == 1) || RolesController::roleHasModulo('AuditoriaController');
+            $canPapelera = ($rol == 1) || RolesController::roleHasModulo('AuditoriaPapelera');
+            if ($canConfig || $canSysAdmin || $canBitacora || $canPapelera):
+            ?>
             <div class="sidebar__group-label">Sistema</div>
+            <?php if ($canConfig): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/config/index">
                 <i class="bi bi-gear"></i> <span>Configuración</span>
             </a>
             <?php endif; ?>
-
-            <!-- Sistema — solo Administrador (1) -->
-            <?php if($rol == 1): ?>
+            <?php if ($canSysAdmin): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/usuarios/index">
                 <i class="bi bi-people"></i> <span>Usuarios</span>
             </a>
@@ -135,12 +140,17 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/parroquia/index">
                 <i class="bi bi-signpost"></i> <span>Parroquias</span>
             </a>
+            <?php endif; ?>
+            <?php if ($canBitacora): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/auditoria/index">
                 <i class="bi bi-shield-check"></i> <span>Auditoría</span>
             </a>
+            <?php endif; ?>
+            <?php if ($canPapelera): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
                 <i class="bi bi-recycle"></i> <span>Papelera</span>
             </a>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
 
