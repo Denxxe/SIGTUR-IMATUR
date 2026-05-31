@@ -84,6 +84,20 @@ function auditNorm($v): string {
     return trim((string)$v);
 }
 
+/** Traduce un nombre de controlador (token RBAC) a etiqueta amigable. */
+function auditCtrlLabel(string $ctrl): string {
+    static $map = null;
+    if ($map === null) {
+        $map = [];
+        if (class_exists('RolesController')) {
+            foreach (RolesController::getModulos() as $k => $v) $map[$k] = $v['label'] ?? $k;
+        }
+    }
+    if (isset($map[$ctrl])) return $map[$ctrl];
+    $base = preg_replace('/Controller$/', '', $ctrl);
+    return $base !== '' ? $base : $ctrl;
+}
+
 /** Campos internos que no aportan nada al usuario. */
 function auditOcultar(): array {
     return ['id','created_at','updated_at','deleted_at','created_by','updated_by','deleted_by',
@@ -311,12 +325,45 @@ function auditUrl(array $filtros, int $p): string {
                                             <thead><tr><th>Campo</th><th>Antes</th><th></th><th>Después</th></tr></thead>
                                             <tbody>
                                             <?php foreach ($cambios as $k => $par): ?>
+                                                <?php if ($k === 'modulos'):
+                                                    // Lista de permisos: mostrar qué se agregó / quitó, con etiquetas amigables
+                                                    $prevArr   = array_filter(array_map('trim', explode(',', (string)$par[0])));
+                                                    $newArr    = array_filter(array_map('trim', explode(',', (string)$par[1])));
+                                                    $agregados = array_diff($newArr, $prevArr);
+                                                    $quitados  = array_diff($prevArr, $newArr);
+                                                ?>
+                                                <tr>
+                                                    <th><?php echo htmlspecialchars(auditCampo($k)); ?></th>
+                                                    <td colspan="3">
+                                                        <?php if ($agregados): ?>
+                                                            <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                                                                <span style="font-size:11px;font-weight:700;color:#047857;">Agregados:</span>
+                                                                <?php foreach ($agregados as $c): ?>
+                                                                    <span class="sig-badge sig-badge--success"><i class="bi bi-plus-lg"></i> <?php echo htmlspecialchars(auditCtrlLabel($c)); ?></span>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <?php if ($quitados): ?>
+                                                            <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                                                                <span style="font-size:11px;font-weight:700;color:#b91c1c;">Quitados:</span>
+                                                                <?php foreach ($quitados as $c): ?>
+                                                                    <span class="sig-badge sig-badge--danger"><i class="bi bi-dash-lg"></i> <?php echo htmlspecialchars(auditCtrlLabel($c)); ?></span>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                        <?php if (!$agregados && !$quitados): ?>
+                                                            <span style="color:var(--text-tertiary);">Sin cambios en la lista.</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                                <?php else: ?>
                                                 <tr>
                                                     <th><?php echo htmlspecialchars(auditCampo($k)); ?></th>
                                                     <td class="audit-kv__before"><?php echo htmlspecialchars(auditValor($par[0])); ?></td>
                                                     <td style="text-align:center;color:var(--text-tertiary);"><i class="bi bi-arrow-right"></i></td>
                                                     <td class="audit-kv__after"><?php echo htmlspecialchars(auditValor($par[1])); ?></td>
                                                 </tr>
+                                                <?php endif; ?>
                                             <?php endforeach; ?>
                                             </tbody>
                                         </table>
