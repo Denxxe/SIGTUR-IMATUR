@@ -48,7 +48,6 @@ class TalleresController extends Controller {
             'tipo_actividad'         => $tipoActividad,
             'es_interna'             => $esInterna,
             'tipo_ente'              => $tipoEnte,
-            'id_oficio'              => null,
             'estado'                 => $esEdicion
                                         ? $_POST['estado']
                                         : (in_array($_POST['estado'] ?? '', ['Programado','Cancelado'])
@@ -757,6 +756,74 @@ class TalleresController extends Controller {
             flash('global_msg', $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/talleres/detalle/' . (int)$ref);
+    }
+
+    // Editar datos de un participante ya inscrito (RN-F16 + datos de persona)
+    public function actualizarParticipante() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        $_POST     = $this->sanitizePost();
+        $id_pt     = (int)($_POST['id_pt']     ?? 0);
+        $id_taller = (int)($_POST['id_taller'] ?? 0);
+        $userId    = $this->getUserId();
+
+        try {
+            $pt = Taller::getParticipante($id_pt);
+            if (!$pt) throw new Exception('Participante no encontrado.');
+            $esLibre = empty($pt->id_persona);
+
+            if ($esLibre) {
+                $nombre = trim($_POST['nombre_libre'] ?? '');
+                if (empty($nombre)) throw new Exception('El nombre del participante es requerido.');
+
+                $fechaRaw = trim($_POST['fecha_nac_libre'] ?? '');
+                if (empty($fechaRaw)) throw new Exception('La fecha de nacimiento es obligatoria.');
+                if (\DateTime::createFromFormat('Y-m-d', $fechaRaw) === false) {
+                    throw new Exception('El formato de fecha de nacimiento no es válido.');
+                }
+                $edad = (int)(new \DateTime())->diff(new \DateTime($fechaRaw))->y;
+                if ($edad < 5)  throw new Exception('El participante debe tener al menos 5 años.');
+                if ($edad >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con cédula.');
+
+                Taller::actualizarParticipanteLibre($id_pt, [
+                    'nombre_libre'       => $nombre,
+                    'apellido_libre'     => trim($_POST['apellido_libre'] ?? '') ?: null,
+                    'cedula_libre'       => trim($_POST['cedula_libre']   ?? '') ?: null,
+                    'nombre_docente'     => trim($_POST['nombre_docente'] ?? '') ?: null,
+                    'cedula_docente'     => trim($_POST['cedula_docente'] ?? '') ?: null,
+                    'fecha_nac_libre'    => $fechaRaw,
+                    'genero_libre'       => trim($_POST['genero_libre']   ?? '') ?: null,
+                    'parroquia_id_libre' => (int)($_POST['parroquia_id_libre'] ?? 0) ?: null,
+                    'direccion_libre'    => trim($_POST['direccion_libre'] ?? '') ?: null,
+                ], $userId);
+            } else {
+                $nombre   = trim($_POST['nombre']   ?? '');
+                $apellido = trim($_POST['apellido'] ?? '');
+                if (empty($nombre) || empty($apellido)) {
+                    throw new Exception('El nombre y apellido son requeridos.');
+                }
+                $correo = trim($_POST['correo'] ?? '') ?: null;
+                if ($correo !== null && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                }
+                $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
+                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) $fechaNac = null;
+
+                Taller::actualizarPersona((int)$pt->id_persona, [
+                    'nombre'           => $nombre,
+                    'apellido'         => $apellido,
+                    'telefono'         => trim($_POST['telefono'] ?? '') ?: null,
+                    'correo'           => $correo,
+                    'genero'           => trim($_POST['genero'] ?? '') ?: null,
+                    'fecha_nacimiento' => $fechaNac,
+                    'parroquia_id'     => (int)($_POST['parroquia_id'] ?? 0) ?: null,
+                    'direccion'        => trim($_POST['direccion'] ?? '') ?: null,
+                ], $userId);
+            }
+            flash('global_msg', 'Datos del participante actualizados correctamente.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/talleres/detalle/' . $id_taller);
     }
 
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────

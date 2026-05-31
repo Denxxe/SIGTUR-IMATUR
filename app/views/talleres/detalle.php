@@ -203,9 +203,14 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                 <?php endif; ?>
                             </td>
                             <?php if ($puedeModificar): ?>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space:nowrap;">
+                                <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" title="Editar datos"
+                                        style="padding:2px 6px;"
+                                        onclick='editarParticipante(<?php echo htmlspecialchars(json_encode($p), ENT_QUOTES); ?>)'>
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 <form method="POST" action="<?php echo URL_ROOT; ?>/talleres/desinscribir/<?php echo $p->id; ?>"
-                                      onsubmit="return confirm('¿Desinscribir a este participante?');" style="margin:0;">
+                                      onsubmit="return confirm('¿Desinscribir a este participante?');" style="margin:0; display:inline;">
                                     <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
                                     <button type="submit" class="btn-sig btn-sig--danger btn-sig--sm" title="Desinscribir" style="padding:2px 6px;">
                                         <i class="bi bi-person-dash"></i>
@@ -604,6 +609,73 @@ document.querySelectorAll('.link-historial').forEach(function(el) {
     });
 });
 
+// ── Editar participante ───────────────────────────────────────────────────
+function editarParticipante(p) {
+    var esLibre = !p.id_persona;
+    document.getElementById('ep_id_pt').value = p.id;
+    document.getElementById('ep_bloque_persona').style.display = esLibre ? 'none' : 'block';
+    document.getElementById('ep_bloque_libre').style.display   = esLibre ? 'block' : 'none';
+
+    if (esLibre) {
+        document.getElementById('ep_nombre_libre').value     = p.nombre_libre   || '';
+        document.getElementById('ep_apellido_libre').value   = p.apellido_libre || '';
+        document.getElementById('ep_fecha_nac_libre').value  = p.fecha_nac_libre|| '';
+        document.getElementById('ep_genero_libre').value     = p.genero_libre   || '';
+        document.getElementById('ep_cedula_libre').value     = p.cedula_libre   || '';
+        document.getElementById('ep_parroquia_libre').value  = p.parroquia_id_libre || '';
+        document.getElementById('ep_direccion_libre').value  = p.direccion_libre|| '';
+        document.getElementById('ep_nombre_docente').value   = p.nombre_docente || '';
+        document.getElementById('ep_cedula_docente').value   = p.cedula_docente || '';
+        epActualizarEdad();
+    } else {
+        document.getElementById('ep_cedula').value    = p.cedula    || '';
+        document.getElementById('ep_nombre').value    = p.nombre    || '';
+        document.getElementById('ep_apellido').value  = p.apellido  || '';
+        document.getElementById('ep_telefono').value  = p.telefono  || '';
+        document.getElementById('ep_correo').value    = p.correo    || '';
+        document.getElementById('ep_genero').value    = p.genero    || '';
+        document.getElementById('ep_fecha_nac').value = p.fecha_nacimiento || '';
+        document.getElementById('ep_parroquia').value = p.parroquia_id || '';
+        document.getElementById('ep_direccion').value = p.direccion  || '';
+    }
+    new bootstrap.Modal(document.getElementById('modalEditarParticipante')).show();
+}
+
+function epActualizarEdad() {
+    var f = document.getElementById('ep_fecha_nac_libre').value;
+    var edad = calcularEdad(f);
+    var lbl = document.getElementById('ep_edad_label');
+    var err = document.getElementById('ep_edad_error');
+    err.style.display = 'none';
+    if (edad === null) { lbl.textContent = ''; return; }
+    if (edad < 5)      { lbl.textContent = '· ' + edad + ' años'; err.textContent = 'Debe tener al menos 5 años.'; err.style.display = 'block'; }
+    else if (edad >= 12){ lbl.textContent = '· ' + edad + ' años'; err.textContent = 'De 12 años o más debe usar cédula.'; err.style.display = 'block'; }
+    else                { lbl.textContent = '· ' + edad + ' años (Niño/a)'; }
+}
+document.getElementById('ep_fecha_nac_libre').addEventListener('change', epActualizarEdad);
+document.getElementById('ep_correo').addEventListener('input', function() {
+    var v = this.value.trim();
+    var ok = !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    this.classList.toggle('is-invalid', !ok);
+    document.getElementById('ep_msg_correo').textContent = ok ? '' : 'Formato de correo no válido.';
+});
+document.getElementById('formEditarPart').addEventListener('submit', function(e) {
+    var esLibre = document.getElementById('ep_bloque_libre').style.display !== 'none';
+    if (esLibre) {
+        var edad = calcularEdad(document.getElementById('ep_fecha_nac_libre').value);
+        if (edad === null || edad < 5 || edad >= 12) {
+            e.preventDefault(); epActualizarEdad();
+        }
+    } else {
+        var c = document.getElementById('ep_correo').value.trim();
+        if (c && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) {
+            e.preventDefault();
+            document.getElementById('ep_correo').classList.add('is-invalid');
+            document.getElementById('ep_msg_correo').textContent = 'Formato de correo no válido.';
+        }
+    }
+});
+
 <?php if (!$esInterna): ?>
 // ── Modal de inscripción (actividad externa) ──────────────────────────────
 function checkInscripcionValid() {
@@ -798,6 +870,134 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
 });
 <?php endif; ?>
 </script>
+
+<!-- Modal: Editar Participante -->
+<div class="modal fade" id="modalEditarParticipante" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form action="<?php echo URL_ROOT; ?>/talleres/actualizarParticipante" method="POST" class="modal-content" id="formEditarPart">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Participante</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_pt" id="ep_id_pt">
+                <input type="hidden" name="id_taller" value="<?php echo $data['taller']->id; ?>">
+
+                <!-- ── Bloque con cédula ── -->
+                <div id="ep_bloque_persona" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Cédula</label>
+                                <input type="text" id="ep_cedula" class="sig-input" readonly style="background:var(--bg-muted-subtle);">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                <input type="text" name="nombre" id="ep_nombre" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Apellido <span class="req">*</span></label>
+                                <input type="text" name="apellido" id="ep_apellido" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Teléfono</label>
+                                <input type="text" name="telefono" id="ep_telefono" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="sig-field"><label class="sig-field__label">Correo</label>
+                                <input type="email" name="correo" id="ep_correo" class="sig-input">
+                                <div class="invalid-feedback" id="ep_msg_correo"></div></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="sig-field"><label class="sig-field__label">Género</label>
+                                <select name="genero" id="ep_genero" class="sig-select">
+                                    <option value="">—</option><option value="M">Masculino</option>
+                                    <option value="F">Femenino</option><option value="O">Otro</option>
+                                </select></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Fecha de nacimiento</label>
+                                <input type="date" name="fecha_nacimiento" id="ep_fecha_nac" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="sig-field"><label class="sig-field__label">Parroquia</label>
+                                <select name="parroquia_id" id="ep_parroquia" class="sig-select">
+                                    <option value="">— Seleccione —</option>
+                                    <?php foreach ($data['parroquias'] ?? [] as $par): ?>
+                                        <option value="<?php echo $par->id; ?>"><?php echo htmlspecialchars($par->nombre); ?><?php if (!empty($par->municipio)): ?> (<?php echo htmlspecialchars($par->municipio); ?>)<?php endif; ?></option>
+                                    <?php endforeach; ?>
+                                </select></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="sig-field"><label class="sig-field__label">Dirección</label>
+                                <input type="text" name="direccion" id="ep_direccion" class="sig-input"></div>
+                        </div>
+                    </div>
+                    <p style="font-size:11px; color:var(--text-tertiary); margin-top:var(--sp-2);">
+                        <i class="bi bi-info-circle"></i> Estos datos pertenecen al registro global de la persona; los cambios se reflejan en todo el sistema.
+                    </p>
+                </div>
+
+                <!-- ── Bloque libre (menor) ── -->
+                <div id="ep_bloque_libre" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                <input type="text" name="nombre_libre" id="ep_nombre_libre" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="sig-field"><label class="sig-field__label">Apellido</label>
+                                <input type="text" name="apellido_libre" id="ep_apellido_libre" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Fecha de nacimiento <span class="req">*</span> <span id="ep_edad_label" style="color:var(--text-tertiary);font-weight:400;"></span></label>
+                                <input type="date" name="fecha_nac_libre" id="ep_fecha_nac_libre" class="sig-input"
+                                       max="<?php echo date('Y-m-d', strtotime('-5 years')); ?>"
+                                       min="<?php echo date('Y-m-d', strtotime('-12 years +1 day')); ?>">
+                                <span id="ep_edad_error" style="display:none;font-size:11px;color:var(--danger-600);"></span></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">Género</label>
+                                <select name="genero_libre" id="ep_genero_libre" class="sig-select">
+                                    <option value="">—</option><option value="M">Masculino</option>
+                                    <option value="F">Femenino</option><option value="O">Otro</option>
+                                </select></div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field"><label class="sig-field__label">N° ID Escolar</label>
+                                <input type="text" name="cedula_libre" id="ep_cedula_libre" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="sig-field"><label class="sig-field__label">Parroquia</label>
+                                <select name="parroquia_id_libre" id="ep_parroquia_libre" class="sig-select">
+                                    <option value="">— Seleccione —</option>
+                                    <?php foreach ($data['parroquias'] ?? [] as $par): ?>
+                                        <option value="<?php echo $par->id; ?>"><?php echo htmlspecialchars($par->nombre); ?><?php if (!empty($par->municipio)): ?> (<?php echo htmlspecialchars($par->municipio); ?>)<?php endif; ?></option>
+                                    <?php endforeach; ?>
+                                </select></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="sig-field"><label class="sig-field__label">Dirección</label>
+                                <input type="text" name="direccion_libre" id="ep_direccion_libre" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="sig-field"><label class="sig-field__label">Docente / tutor</label>
+                                <input type="text" name="nombre_docente" id="ep_nombre_docente" class="sig-input"></div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="sig-field"><label class="sig-field__label">Cédula del docente</label>
+                                <input type="text" name="cedula_docente" id="ep_cedula_docente" class="sig-input"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" id="ep_submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Modal historial de participante -->
 <div class="modal fade" id="modalHistorial" tabindex="-1">

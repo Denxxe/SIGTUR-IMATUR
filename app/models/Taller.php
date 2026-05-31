@@ -12,7 +12,6 @@ class Taller extends Model {
     private int     $cupo_maximo;
     private string  $estado;
     private string  $tipo_actividad;
-    private ?int    $id_oficio;
     private bool    $es_interna;
     private ?string $tipo_ente;
     private ?string $motivo_cancelacion;
@@ -32,7 +31,6 @@ class Taller extends Model {
             $this->cupo_maximo            = $data['cupo_maximo'] ?? 30;
             $this->estado                 = $data['estado'] ?? 'Programado';
             $this->tipo_actividad         = $data['tipo_actividad'] ?? 'Taller';
-            $this->id_oficio              = $data['id_oficio'] ?? null;
             $this->es_interna             = !empty($data['es_interna']);
             $this->tipo_ente              = $data['tipo_ente'] ?? null;
             $this->motivo_cancelacion     = $data['motivo_cancelacion'] ?? null;
@@ -88,13 +86,12 @@ class Taller extends Model {
                               (nombre, descripcion, fecha_inicio, fecha_fin,
                                hora_inicio, hora_fin, id_ubicacion_formacion,
                                id_facilitador, cupo_maximo, estado, tipo_actividad,
-                               es_interna, tipo_ente, id_oficio, motivo_cancelacion, created_by)
+                               es_interna, tipo_ente, motivo_cancelacion, created_by)
                               VALUES
                               (:nombre, :descripcion, :fecha_inicio, :fecha_fin,
                                :hora_inicio, :hora_fin, :id_ubicacion_formacion,
                                :id_facilitador, :cupo_maximo, :estado, :tipo_actividad,
-                               :es_interna, :tipo_ente, :id_oficio, :motivo_cancelacion, :user_id)");
-            $this->db->bind(':id_oficio', $this->id_oficio);
+                               :es_interna, :tipo_ente, :motivo_cancelacion, :user_id)");
         }
         $this->db->bind(':nombre',                 $this->nombre);
         $this->db->bind(':descripcion',            $this->descripcion);
@@ -307,19 +304,41 @@ class Taller extends Model {
         $db->execute();
     }
 
-    // Crear registro de oficio para actividad externa y retornar su ID (RN-F06)
-    public static function crearOficio(array $data, $user_id): int {
+    // Devuelve un participante puntual (para edición)
+    public static function getParticipante(int $id_pt) {
         $db = new Database();
-        $db->query("INSERT INTO oficios (numero, fecha, id_institucion, asunto, created_by)
-                    VALUES (:numero, :fecha, :inst, :asunto, :uid)
-                    RETURNING id");
-        $db->bind(':numero', $data['numero'] ?: null);
-        $db->bind(':fecha',  $data['fecha']);
-        $db->bind(':inst',   $data['id_institucion']);
-        $db->bind(':asunto', $data['asunto'] ?: null);
-        $db->bind(':uid',    $user_id);
-        $row = $db->single();
-        return (int)$row->id;
+        $db->query("SELECT pt.*, p.cedula, p.nombre, p.apellido, p.telefono, p.correo,
+                           p.genero, p.fecha_nacimiento, p.parroquia_id, p.direccion
+                    FROM participantes_taller pt
+                    LEFT JOIN personas p ON pt.id_persona = p.id
+                    WHERE pt.id = :id AND pt.is_active = TRUE");
+        $db->bind(':id', $id_pt);
+        return $db->single();
+    }
+
+    // Actualiza los campos libres de un participante sin cédula (RN-F16)
+    public static function actualizarParticipanteLibre(int $id_pt, array $datos, $userId): void {
+        $db = new Database();
+        $db->query("UPDATE participantes_taller
+                    SET nombre_libre=:nom, apellido_libre=:ape, cedula_libre=:ced,
+                        nombre_docente=:ndoc, cedula_docente=:cdoc,
+                        fecha_nac_libre=:fnac, genero_libre=:gen,
+                        parroquia_id_libre=:parr, direccion_libre=:dir,
+                        updated_at=NOW(), updated_by=:uid
+                    WHERE id=:id AND id_persona IS NULL AND is_active=TRUE");
+        $db->bind(':nom',  $datos['nombre_libre']);
+        $db->bind(':ape',  $datos['apellido_libre'] ?? null);
+        $db->bind(':ced',  $datos['cedula_libre']   ?? null);
+        $db->bind(':ndoc', $datos['nombre_docente'] ?? null);
+        $db->bind(':cdoc', $datos['cedula_docente'] ?? null);
+        $db->bind(':fnac', $datos['fecha_nac_libre'] ?? null);
+        $db->bind(':gen',  $datos['genero_libre']    ?? null);
+        $db->bind(':parr', $datos['parroquia_id_libre'] ?? null);
+        $db->bind(':dir',  $datos['direccion_libre'] ?? null);
+        $db->bind(':uid',  $userId);
+        $db->bind(':id',   $id_pt);
+        $db->execute();
+        self::auditStatic('participantes_taller', 'UPDATE', $id_pt, null, ['nombre_libre' => $datos['nombre_libre']], $userId);
     }
 
     // ── Informe demográfico ──────────────────────────────────────────────────

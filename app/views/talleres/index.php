@@ -250,8 +250,9 @@
                             <input type="file" name="evidencias[]" id="ev_edit_files" class="sig-input"
                                    multiple accept="image/*,application/pdf">
                             <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">
-                                <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF.
+                                <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF. Verifique la previsualización antes de finalizar.
                             </p>
+                            <div id="ev_edit_preview" class="ev-preview-grid"></div>
                         </div>
                     </div>
 
@@ -310,8 +311,9 @@
                         <input type="file" id="ce_evidencias" name="evidencias[]" class="sig-input"
                                multiple accept="image/*,application/pdf">
                         <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">
-                            <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF. Puede seleccionar varios archivos.
+                            <i class="bi bi-info-circle"></i> Imágenes (JPG, PNG, WebP) o PDF. Verifique la previsualización antes de finalizar.
                         </p>
+                        <div id="ce_evidencias_preview" class="ev-preview-grid"></div>
                         <div id="ce_evidencias_existentes" data-count="0" style="font-size:12px; color:var(--text-secondary); margin-top:var(--sp-1);"></div>
                     </div>
                 </div>
@@ -345,8 +347,53 @@
     cursor: not-allowed;
     pointer-events: none;
 }
+.ev-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: var(--sp-2);
+    margin-top: var(--sp-3);
+}
+.ev-preview-item {
+    position: relative;
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-muted-subtle);
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--sp-2);
+}
+.ev-preview-item img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.ev-preview-item .ev-pdf { font-size: 1.8rem; color: var(--danger-500); }
+.ev-preview-item .ev-name {
+    font-size: 9px; color: var(--text-secondary); text-align: center;
+    word-break: break-all; line-height: 1.2; margin-top: 4px; z-index: 1;
+}
 </style>
 <script>
+// ── Previsualización de evidencias antes de subir ─────────────────────────
+function renderEvPreview(input, contId) {
+    var cont = document.getElementById(contId);
+    if (!cont) return;
+    cont.innerHTML = '';
+    Array.from(input.files).forEach(function(file) {
+        var item = document.createElement('div');
+        item.className = 'ev-preview-item';
+        if (file.type.startsWith('image/')) {
+            var img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.onload = function() { URL.revokeObjectURL(this.src); };
+            item.appendChild(img);
+        } else {
+            item.innerHTML = '<i class="bi bi-file-earmark-pdf ev-pdf"></i>' +
+                             '<span class="ev-name">' + file.name.replace(/[<>&]/g,'') + '</span>';
+        }
+        cont.appendChild(item);
+    });
+}
 // ── Captura inicial de todas las opciones de sede ─────────────────────────
 var sedesData = [];
 (function() {
@@ -505,6 +552,8 @@ function actualizarSeccionesEstadoEdit(estado) {
     secFinalizado.style.display = (estado === 'Finalizado') ? 'block' : 'none';
     if (estado !== 'Finalizado') {
         document.getElementById('ev_edit_files').value = '';
+        var prev = document.getElementById('ev_edit_preview');
+        if (prev) prev.innerHTML = '';
     }
 }
 
@@ -615,6 +664,7 @@ function abrirCambioEstado(id, estadoActual, totalInscritos) {
     document.getElementById('sec_ce_finalizado').style.display = 'none';
     document.getElementById('ce_motivo').value  = '';
     document.getElementById('ce_evidencias').value = '';
+    document.getElementById('ce_evidencias_preview').innerHTML = '';
     document.getElementById('ce_evidencias_existentes').innerHTML  = '';
     document.getElementById('ce_evidencias_existentes').dataset.count = '0';
     document.getElementById('btn_ce_guardar').disabled = true;
@@ -689,7 +739,16 @@ document.getElementById('ce_nuevo_estado').addEventListener('change', function()
     checkCambioEstadoValid();
 });
 document.getElementById('ce_motivo').addEventListener('input', checkCambioEstadoValid);
-document.getElementById('ce_evidencias').addEventListener('change', checkCambioEstadoValid);
+document.getElementById('ce_evidencias').addEventListener('change', function() {
+    renderEvPreview(this, 'ce_evidencias_preview');
+    checkCambioEstadoValid();
+});
+var evEditInput = document.getElementById('ev_edit_files');
+if (evEditInput) {
+    evEditInput.addEventListener('change', function() {
+        renderEvPreview(this, 'ev_edit_preview');
+    });
+}
 
 document.querySelector('#modalTaller form').addEventListener('submit', function(e) {
     if (!validarFechas()) e.preventDefault();
