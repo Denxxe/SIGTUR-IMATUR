@@ -489,28 +489,10 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
 
                 <hr style="margin:0; border-color:var(--border-subtle);">
 
-                <!-- Campos comunes -->
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Institución <small style="color:var(--text-tertiary);">(opcional)</small></label>
-                            <select name="id_institucion" class="sig-select">
-                                <option value="">— Sin institución —</option>
-                                <?php foreach ($data['instituciones'] ?? [] as $inst): ?>
-                                <option value="<?php echo $inst->id; ?>">
-                                    <?php echo htmlspecialchars($inst->nombre); ?>
-                                    <?php if ($inst->tipo): ?> (<?php echo htmlspecialchars($inst->tipo); ?>)<?php endif; ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Observaciones <small style="color:var(--text-tertiary);">(opcional)</small></label>
-                            <input type="text" name="observaciones" class="sig-input" placeholder="Notas adicionales">
-                        </div>
-                    </div>
+                <!-- Observaciones -->
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label">Observaciones <small style="color:var(--text-tertiary);">(opcional)</small></label>
+                    <input type="text" name="observaciones" class="sig-input" placeholder="Notas adicionales sobre este participante">
                 </div>
             </div>
             <div class="modal-footer">

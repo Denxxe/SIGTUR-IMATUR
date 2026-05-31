@@ -99,10 +99,6 @@ class RutasController extends Controller {
         $inventario_asignado  = RutaInventario::getByRuta($id);
         $inventario_disponible= Inventario::all();
 
-        $db = new Database();
-        $db->query("SELECT id, nombre, tipo FROM instituciones_externas WHERE is_active = TRUE ORDER BY nombre ASC");
-        $instituciones = $db->resultSet();
-
         require_once '../app/models/Parroquia.php';
         $parroquias = Parroquia::all();
 
@@ -121,7 +117,6 @@ class RutasController extends Controller {
             'participantes'        => $participantes,
             'inventario_asignado'  => $inventario_asignado,
             'inventario_disponible'=> $inventario_disponible,
-            'instituciones'        => $instituciones,
             'parroquias'           => $parroquias,
             'oficiosEmitidos'      => $oficiosEmitidos,
         ];
@@ -170,7 +165,6 @@ class RutasController extends Controller {
         $userId  = $this->getUserId();
         $esLibre = !empty($_POST['tipo_participante_libre']);
 
-        $id_institucion = (int)($_POST['id_institucion'] ?? 0) ?: null;
         $observaciones  = trim($_POST['observaciones'] ?? '') ?: null;
 
         require_once '../app/models/Taller.php';
@@ -201,7 +195,7 @@ class RutasController extends Controller {
                     'cedula_libre'   => trim($_POST['cedula_libre']   ?? '') ?: null,
                     'genero_libre'   => trim($_POST['genero_libre']   ?? '') ?: null,
                     'fecha_nac_libre'=> $fechaNacLibreRaw,
-                    'id_institucion' => $id_institucion,
+                    'id_institucion' => null,
                     'observaciones'  => $observaciones,
                 ], $userId);
 
@@ -271,7 +265,7 @@ class RutasController extends Controller {
                     }
                 }
 
-                Ruta::inscribir($id_ruta, $idPersona, $userId, $id_institucion, $observaciones);
+                Ruta::inscribir($id_ruta, $idPersona, $userId, null, $observaciones);
             }
 
             flash('global_msg', 'Participante registrado correctamente.');
