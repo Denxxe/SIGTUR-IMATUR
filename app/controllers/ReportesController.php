@@ -1188,9 +1188,10 @@ class ReportesController extends Controller {
                 $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'meta_rutas_anio' LIMIT 1");
                 $metaRutas = $db->single();
 
+                // Meta = rutas EJECUTADAS (Finalizadas) en el año, por fecha de visita
                 $db->query("SELECT COUNT(*) as total FROM rutas
-                            WHERE is_active = TRUE
-                              AND EXTRACT(YEAR FROM created_at) = :anio");
+                            WHERE is_active = TRUE AND estado = 'Finalizada'
+                              AND EXTRACT(YEAR FROM COALESCE(fecha_visita, created_at)) = :anio");
                 $db->bind(':anio', $anioActual);
                 $rutasAnio = $db->single();
 

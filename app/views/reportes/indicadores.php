@@ -577,7 +577,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                 <div style="font-size:1.5rem;font-weight:800;color:<?php echo $colR; ?>;line-height:1;">
                     <?php echo $rutasA; ?> <span style="font-size:1rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $metaR; ?></span>
                 </div>
-                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">rutas creadas este año</div>
+                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">rutas finalizadas (ejecutadas) este año</div>
             </div>
             <div style="text-align:right;">
                 <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colR; ?>;line-height:1;"><?php echo $pctR; ?>%</div>

@@ -27,9 +27,11 @@
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
                     <?php
                         $statusClass = 'sig-badge--neutral';
-                        if ($r->estado == 'Activa')           $statusClass = 'sig-badge--success';
-                        elseif ($r->estado == 'Inactiva')     $statusClass = 'sig-badge--danger';
+                        if ($r->estado == 'Activa')               $statusClass = 'sig-badge--success';
+                        elseif ($r->estado == 'Inactiva')         $statusClass = 'sig-badge--danger';
                         elseif ($r->estado == 'En Mantenimiento') $statusClass = 'sig-badge--warning';
+                        elseif ($r->estado == 'Finalizada')       $statusClass = 'sig-badge--brand';
+                        $rutaFinalizada = ($r->estado === 'Finalizada');
                     ?>
                     <span class="sig-badge <?php echo $statusClass; ?>"><?php echo $r->estado; ?></span>
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">#<?php echo $r->id; ?></span>
@@ -89,10 +91,12 @@
                         <i class="bi bi-geo"></i> Ver Ruta
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
+                        <?php if (!$rutaFinalizada): ?>
                         <button class="row-action row-action--edit"
                                 onclick='editarRuta(<?php echo htmlspecialchars(json_encode($r), ENT_QUOTES, "UTF-8"); ?>)'>
                             <i class="bi bi-pencil"></i>
                         </button>
+                        <?php endif; ?>
                         <a href="<?php echo URL_ROOT; ?>/rutas/delete/<?php echo $r->id; ?>"
                            class="row-action row-action--del delete-btn">
                             <i class="bi bi-trash"></i>
@@ -180,7 +184,11 @@
                                 <option value="Activa">Activa</option>
                                 <option value="Inactiva">Inactiva</option>
                                 <option value="En Mantenimiento">En Mantenimiento</option>
+                                <option value="Finalizada">Finalizada (ejecutada)</option>
                             </select>
+                            <span class="sig-field__hint" id="rut_estado_hint" style="display:none; color:var(--danger-600);">
+                                <i class="bi bi-exclamation-triangle"></i> Finalizada es definitiva: la ruta no podrá editarse después.
+                            </span>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -305,6 +313,8 @@ function editarRuta(r) {
 // Mostrar/ocultar motivo al cambiar estado en el selector
 document.getElementById('rut_estado').addEventListener('change', function() {
     toggleMotivoMant(this.value);
+    var hint = document.getElementById('rut_estado_hint');
+    if (hint) hint.style.display = (this.value === 'Finalizada') ? 'block' : 'none';
 });
 
 // Validación de duración en formato H:MM

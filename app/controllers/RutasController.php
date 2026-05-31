@@ -22,10 +22,20 @@ class RutasController extends Controller {
         $esEdicion = !empty($_POST['id']);
 
         $nivelesValidos = ['Fácil','Moderado','Difícil','Extremo'];
-        $estadosValidos = ['Activa','Inactiva','En Mantenimiento'];
+        $estadosValidos = ['Activa','Inactiva','En Mantenimiento','Finalizada'];
         $nivel   = in_array($_POST['nivel_dificultad'] ?? '', $nivelesValidos) ? $_POST['nivel_dificultad'] : 'Fácil';
         $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)           ? $_POST['estado']           : 'Activa';
         $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA)     ? $_POST['tipo_ruta']        : 'General';
+
+        // Máquina de estados: una ruta Finalizada es TERMINAL, no admite edición ni cambio
+        if ($esEdicion) {
+            $rutaActual = Ruta::find((int)$_POST['id']);
+            if ($rutaActual && $rutaActual->estado === 'Finalizada') {
+                flash('global_msg', 'La ruta está Finalizada (estado definitivo) y no puede modificarse. Cada ejecución es un registro independiente.', 'danger');
+                header('Location: ' . URL_ROOT . '/rutas/index');
+                exit;
+            }
+        }
 
         // Validaciones generales de la ruta
         $nombre = trim($_POST['nombre'] ?? '');
@@ -36,7 +46,8 @@ class RutasController extends Controller {
         }
 
         $fechaVisita = $_POST['fecha_visita'] ?: null;
-        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d')) {
+        // Solo se valida fecha futura al crear o si la ruta aún no está Finalizada
+        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d') && $estado !== 'Finalizada') {
             flash('global_msg', 'La fecha de visita no puede ser anterior a hoy.', 'danger');
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;
@@ -45,6 +56,14 @@ class RutasController extends Controller {
         $duracion = trim($_POST['duracion_estimada'] ?? '');
         if (!empty($duracion) && !preg_match('/^\d{1,2}:\d{2}$/', $duracion)) {
             flash('global_msg', 'La duración debe estar en formato H:MM (ej: 2:30 para 2 horas y media).', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
+        // Validar formato de hora_visita en servidor (HH:MM o HH:MM:SS)
+        $horaVisita = trim($_POST['hora_visita'] ?? '');
+        if (!empty($horaVisita) && !preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $horaVisita)) {
+            flash('global_msg', 'La hora de visita no tiene un formato válido (HH:MM).', 'danger');
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;
         }
