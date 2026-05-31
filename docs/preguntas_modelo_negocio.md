@@ -1,6 +1,6 @@
 # Preguntas Pendientes de Modelo de Negocio — SIGTUR-IMATUR
 
-**Última actualización:** 2026-05-22  
+**Última actualización:** 2026-05-31  
 **Propósito:** Listado LIMPIO de preguntas sin respuesta que condicionan el desarrollo. Las preguntas respondidas viven en `DECISIONES_PENDIENTES.md`.
 
 **Leyenda:**
@@ -56,6 +56,28 @@
 | D-NEW03 | Turismo | ¿El facilitador externo (`nombre_facilitador_externo`) debe ser lista gestionada o texto libre cada vez? | Tabla de guías externos registrados |
 | D-NEW04 | RRHH | ¿Los tipos de permisos son los estándar venezolanos (Médico/Personal/Duelo/Maternidad/Sindical/Estudio) u otros? | Enum final en `permisos_laborales.tipo_permiso` |
 | D-NEW05 | RRHH | ¿Los días de vacaciones según LOTTT (15 días + 1 día/año adicional) aplican a IMATUR como ente municipal? | Fórmula en VacacionesController |
+
+---
+
+## 🔎 NUEVAS — Auditoría de ingeniería 2026-05-31
+
+Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar un hallazgo (H-xx).
+
+| ID | Módulo | Pregunta | Desbloquea |
+|----|--------|----------|------------|
+| D-UB01 | Inventario | ❓ ¿Una **ubicación** debe pertenecer a un **departamento**? La columna `"departamento _d"` es NOT NULL pero no hay UI para elegirlo → hoy **no se pueden crear ubicaciones nuevas** (H-01). | Arreglar alta de ubicaciones (UI+modelo) o relajar la columna |
+| D-IN10 | Inventario | ❓ ¿Registrar un movimiento **Baja**/**Mantenimiento** debe cambiar automáticamente la `condicion` del bien (p. ej. a "Dañado")? Hoy no lo hace (H-04). | Sincronizar `actividad_inventario` → `inventario.condicion` |
+| D-IN11 | Inventario | ❓ ¿`codigo_bn` y `serial` son obligatorios? ¿Validar unicidad con mensaje claro antes de guardar? (H-05) | Validación de unicidad en `InventarioController` |
+| D-FO06 | Formación | ❓ ¿Se gestionan los **oficios base** (tabla `oficios`) con CRUD y se vinculan al taller (`talleres.id_oficio`)? ¿Para qué (solicitud de sede, autorización)? | OficiosController + flujo oficio→taller (H-09/H-10) |
+| D-FO07 | Formación | ❓ ¿La tabla `taller_inventario` (materiales prestados al taller) se va a usar? ¿Es obligatorio? ¿Se controla devolución? | UI de materiales por taller |
+| D-FO08 | Formación | ❓ ¿Qué significa `es_brigadista` en un participante? ¿Implica rol/beneficio? Hoy el campo no se usa. | Definir uso o eliminar campo |
+| D-FO09 | Formación | ❓ ¿Cuándo se marca la **asistencia** (durante o después del taller)? ¿Se permite marcar tras "Finalizado"? | Reglas de asistencia + máquina de estados |
+| D-RT03 | Turismo | ❓ Al pasar una ruta a **Finalizada**, ¿debe generarse informe y/o oficio **automáticamente**? Hoy todo es manual. | Cierre de ruta automatizado |
+| D-RE03 | Recepción | ❓ ¿Una **visita sin `hora_salida`** debe cerrarse automáticamente al fin del día? ¿Es **obligatorio** registrar el empleado que recibe? | Job de cierre + obligatoriedad `id_empleado` |
+| D-RE04 | Recepción | ❓ ¿Los **motivos de visita** deben ser un catálogo configurable? Hoy están fijos en el código. | Tabla/config de motivos |
+| D-US06 | Sistema | ❓ ¿Política de **contraseñas** (longitud mínima, complejidad, expiración, forzar cambio en primer ingreso)? | Validación en `UsuariosController` + `password_debe_cambiar` |
+| D-TX04 | Transversal | ⚠️ Deuda técnica: normalizar nomenclatura de `parroquia` (`create_at`→`created_at`) y las operaciones de auditoría a inglés (`ACTUALIZAR`→`UPDATE`). ¿Se hace ahora o se difiere? (H-02) | Bitácora consistente + re-fetch de UPDATE en parroquia |
+| D-RH15 | RRHH | ❓ ¿Se usa el género **"Otro" ('O')**? La BD lo permite pero la UI solo ofrece M/F (H-11). | Opción "Otro" en formularios de personas/empleados |
 
 ---
 

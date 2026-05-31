@@ -180,8 +180,20 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 009 | `009_fix_sequences.sql` | ✅ Ejecutado | Resincroniza las 36 secuencias SERIAL desincronizadas por inserts con ID explícito en seeds |
 | 010 | `010_taller_evidencias.sql` | ✅ Ejecutado | Tabla `taller_evidencias`; campo `talleres.motivo_cancelacion` |
 | 011 | `011_visitantes_persona.sql` | ✅ Ejecutado | `visitantes.id_persona FK personas`; `nombre`/`apellido` nullable; migración de datos existentes |
+| 012 | `012_participantes_libre_campos.sql` | ✅ Ejecutado | Campos demográficos para participantes libres (talleres) |
+| 013 | `013_tipo_ruta_meta.sql` | ✅ Ejecutado | `rutas.tipo_ruta` + metas anuales |
+| 014 | `014_config_metas_alertas.sql` | ✅ Ejecutado | Metas anuales + umbrales de alerta en `configuracion_sistema` |
+| 015 | `015_rutas_motivo_mantenimiento.sql` | ✅ Ejecutado | `rutas.motivo_mantenimiento` |
+| 016 | `016_puntos_ruta_orden_unico.sql` | ✅ Ejecutado | Índice único `(id_ruta, orden)` en `puntos_ruta` |
+| 017 | `017_participantes_ruta_demograficos.sql` | ✅ Ejecutado | `genero_libre`/`fecha_nac_libre` en `participantes_ruta` |
+| 018 | `018_ruta_informes.sql` | ✅ Ejecutado | Tabla `ruta_informes` (demografía post-visita) |
+| 019 | `019_drop_ruta_inventario.sql` | ✅ Ejecutado | DROP TABLE `ruta_inventario` |
+| 020 | `020_rutas_estado_finalizada.sql` | ✅ Ejecutado | Estado `Finalizada` (terminal) en `rutas` |
+| 021 | `021_drop_nivel_dificultad.sql` | ✅ Ejecutado | DROP COLUMN `rutas.nivel_dificultad` |
 
-Para ejecutar una migración: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-021 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). Para instalar desde cero usar **ese** archivo.
+
+Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
 
 ---
@@ -366,8 +378,8 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar schema completo consolidado (schema base + migraciones 001-011):
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.sql
+# 3. Importar el esquema consolidado (schema base + migraciones 001-021 + seeds):
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -376,7 +388,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_completo.sql` cubre schema base + migraciones 001-011. No se necesitan migraciones adicionales en una instalación limpia.
+> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-021 + seeds de sistema. No se necesitan migraciones adicionales en una instalación limpia. (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
 
 ---
 
@@ -413,5 +425,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_completo.sql` |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-021 + seeds) |
+| Auditoría senior + deuda técnica | `docs/AUDITORIA_SENIOR_2026-05-31.md` |
+| Preguntas de negocio abiertas | `docs/preguntas_modelo_negocio.md` |
 | Schema base original (historial) | `database/schema.sql` |
