@@ -695,34 +695,56 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
 }());
 
 // ── Validación del formulario de punto ─────────────────────────────────────
+
+function _parseCoord(val) { return val.trim() === '' ? null : parseFloat(val); }
+
 function checkPuntoValid() {
-    var nombre = (document.getElementById('pt_nombre').value || '').trim();
-    var orden  = parseInt(document.getElementById('pt_orden').value || '0', 10);
-    var btn    = document.getElementById('btn_guardar_punto');
-    if (btn) btn.disabled = !(nombre.length >= 1 && orden >= 1);
+    var nombre  = (document.getElementById('pt_nombre').value || '').trim();
+    var orden   = parseInt(document.getElementById('pt_orden').value || '0', 10);
+    var latRaw  = document.getElementById('pt_lat').value;
+    var lngRaw  = document.getElementById('pt_lng').value;
+    var lat     = _parseCoord(latRaw);
+    var lng     = _parseCoord(lngRaw);
+
+    var nombreOk = nombre.length >= 1;
+    var ordenOk  = orden >= 1;
+    // Lat y Lng son opcionales, pero si se ingresan deben estar en rango
+    var latOk    = lat === null || (lat >= -90  && lat <= 90);
+    var lngOk    = lng === null || (lng >= -180 && lng <= 180);
+
+    // Marcar is-invalid en coords si están fuera de rango
+    document.getElementById('pt_lat').classList.toggle('is-invalid', lat !== null && !latOk);
+    document.getElementById('pt_lng').classList.toggle('is-invalid', lng !== null && !lngOk);
+
+    var todo = nombreOk && ordenOk && latOk && lngOk;
+    var btn  = document.getElementById('btn_guardar_punto');
+    if (btn) btn.disabled = !todo;
+
+    // Actualizar feedback de coordenadas
+    var fb = document.getElementById('coord_feedback');
+    if (!fb) return;
+    if (!latOk || !lngOk) {
+        fb.innerHTML = '<i class="bi bi-exclamation-triangle-fill" style="color:#dc2626;"></i> '
+            + (!latOk ? 'Latitud fuera de rango (-90 a 90). ' : '')
+            + (!lngOk ? 'Longitud fuera de rango (-180 a 180).' : '');
+        fb.style.cssText = 'display:block;color:#dc2626;background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);';
+    } else if (lat !== null && lng !== null) {
+        fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas: <strong>' + lat.toFixed(6) + '</strong>, <strong>' + lng.toFixed(6) + '</strong>';
+        fb.style.cssText = 'display:block;color:#0d9488;background:rgba(13,148,136,.08);border-color:rgba(13,148,136,.2);';
+    } else {
+        fb.style.display = 'none';
+    }
 }
 
 function resetFeedbackCoord() {
     var fb = document.getElementById('coord_feedback');
     if (fb) fb.style.display = 'none';
+    document.getElementById('pt_lat').classList.remove('is-invalid');
+    document.getElementById('pt_lng').classList.remove('is-invalid');
 }
 
-document.getElementById('pt_nombre').addEventListener('input', checkPuntoValid);
-document.getElementById('pt_orden').addEventListener('input',  checkPuntoValid);
-// Al escribir lat/lng a mano, actualizar feedback
-document.getElementById('pt_lat').addEventListener('input', function() {
-    var lat = this.value.trim(), lng = (document.getElementById('pt_lng').value || '').trim();
-    if (lat && lng) {
-        var fb = document.getElementById('coord_feedback');
-        if (fb) { fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas: ' + lat + ', ' + lng; fb.style.display='block'; }
-    } else resetFeedbackCoord();
-});
-document.getElementById('pt_lng').addEventListener('input', function() {
-    var lng = this.value.trim(), lat = (document.getElementById('pt_lat').value || '').trim();
-    if (lat && lng) {
-        var fb = document.getElementById('coord_feedback');
-        if (fb) { fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas: ' + lat + ', ' + lng; fb.style.display='block'; }
-    } else resetFeedbackCoord();
+['pt_nombre','pt_orden','pt_lat','pt_lng'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', checkPuntoValid);
 });
 
 function nuevoPunto() {
