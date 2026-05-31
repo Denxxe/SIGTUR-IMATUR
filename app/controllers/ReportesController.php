@@ -331,6 +331,7 @@ class ReportesController extends Controller {
                 'titulo'            => 'Reporte de Rutas Turísticas',
                 'rutas'             => $rutas,
                 'stats'             => $stats,
+                'statsPorTipo'      => $this->statsRutasPorTipo(),
                 'filtro_estado'     => $filtroEstado,
                 'filtro_dificultad' => $filtroDificultad,
             ];
@@ -344,21 +345,36 @@ class ReportesController extends Controller {
     public function exportarRutasCsv() {
         $this->requireRoles([1, 3]);
         try {
-            $rutas   = $this->queryRutas();
-            $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Dificultad', 'Estado', 'Participantes', 'Paradas', 'Equipos'];
+            $estado     = trim($_GET['estado']           ?? '');
+            $dificultad = trim($_GET['nivel_dificultad'] ?? '');
+            $rutas      = $this->queryRutas($estado, $dificultad);
+            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Dificultad', 'Estado',
+                        'Paradas', 'Participantes', 'Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'];
             $rows    = [];
+            $tpInsc = 0; $tpAt = 0;
             foreach ($rutas as $r) {
+                $tpInsc += (int)$r->total_participantes;
+                $tpAt   += (int)($r->total_atendidos ?? 0);
                 $rows[] = [
                     $r->nombre,
+                    $r->tipo_ruta ?? 'General',
                     $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                    $r->hora_visita ? substr($r->hora_visita, 0, 5) : '-',
                     $r->departamento_nombre ?? '-',
+                    $r->facilitador_nombre ?? '-',
                     $r->nivel_dificultad,
                     $r->estado,
-                    (int)$r->total_participantes,
                     (int)$r->total_puntos,
-                    (int)$r->total_equipos,
+                    (int)$r->total_participantes,
+                    (int)($r->mujeres ?? 0),
+                    (int)($r->hombres ?? 0),
+                    (int)($r->ninas ?? 0),
+                    (int)($r->ninos ?? 0),
+                    (int)($r->total_atendidos ?? 0),
                 ];
             }
+            // Fila de totales
+            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
             $this->exportCsv('reporte_rutas', $headers, $rows);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
@@ -369,26 +385,31 @@ class ReportesController extends Controller {
     public function exportarRutasPdf() {
         $this->requireRoles([1, 3]);
         try {
-            $rutas  = $this->queryRutas();
+            $estado     = trim($_GET['estado']           ?? '');
+            $dificultad = trim($_GET['nivel_dificultad'] ?? '');
+            $rutas  = $this->queryRutas($estado, $dificultad);
             $stats  = $this->statsRutas();
 
-            $headers = ['Ruta', 'Fecha Visita', 'Departamento', 'Estado', 'Participantes', 'Paradas'];
+            $headers = ['Ruta', 'Tipo', 'Fecha', 'Guía', 'Estado', 'Paradas', 'Particip.', 'Atendidos'];
             $rows    = [];
             foreach ($rutas as $r) {
                 $rows[] = [
                     $r->nombre,
+                    $r->tipo_ruta ?? 'General',
                     $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
-                    $r->departamento_nombre ?? '-',
+                    $r->facilitador_nombre ?? '-',
                     $r->estado,
-                    (int)$r->total_participantes,
                     (int)$r->total_puntos,
+                    (int)$r->total_participantes,
+                    (int)($r->total_atendidos ?? 0),
                 ];
             }
             $kpis = [
-                'Total Rutas'    => $stats->total_rutas,
-                'Activas'        => $stats->activas,
-                'Inactivas'      => $stats->inactivas,
+                'Total Rutas'      => $stats->total_rutas,
+                'Activas'          => $stats->activas,
+                'Finalizadas'      => $stats->finalizadas,
                 'En Mantenimiento' => $stats->mantenimiento,
+                'Inactivas'        => $stats->inactivas,
             ];
             $this->exportPdf("Reporte de Rutas Turísticas", "IMATUR — Gestión Turística", $headers, $rows, $kpis);
         } catch (Exception $e) {
@@ -404,13 +425,17 @@ class ReportesController extends Controller {
         if ($dificultad) $where .= " AND r.nivel_dificultad = :dificultad";
         $db->query("SELECT r.*,
                            d.nombre AS departamento_nombre,
+                           p.nombre || ' ' || p.apellido AS facilitador_nombre,
                            (SELECT COUNT(*) FROM puntos_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) as total_puntos,
-                           (SELECT COUNT(*) FROM participantes_ruta par WHERE par.id_ruta = r.id) as total_participantes,
-                           (SELECT COUNT(*) FROM ruta_inventario ri WHERE ri.id_ruta = r.id) as total_equipos
+                           (SELECT COUNT(*) FROM participantes_ruta par WHERE par.id_ruta = r.id AND par.is_active = TRUE) as total_participantes,
+                           ri.mujeres, ri.hombres, ri.ninas, ri.ninos, ri.total_atendidos
                     FROM rutas r
-                    LEFT JOIN departamentos d ON r.id_departamento = d.id
+                    LEFT JOIN departamentos d   ON r.id_departamento = d.id
+                    LEFT JOIN empleados e        ON r.id_facilitador = e.id
+                    LEFT JOIN personas p         ON e.id_persona = p.id
+                    LEFT JOIN ruta_informes ri   ON ri.id_ruta = r.id
                     WHERE {$where}
-                    ORDER BY r.created_at DESC");
+                    ORDER BY r.fecha_visita DESC NULLS LAST, r.created_at DESC");
         if ($estado)     $db->bind(':estado', $estado);
         if ($dificultad) $db->bind(':dificultad', $dificultad);
         return $db->resultSet();
@@ -419,11 +444,31 @@ class ReportesController extends Controller {
     private function statsRutas() {
         $db = new Database();
         $db->query("SELECT COUNT(*) as total_rutas,
-                        COUNT(CASE WHEN estado = 'Activa'          THEN 1 END) as activas,
-                        COUNT(CASE WHEN estado = 'Inactiva'        THEN 1 END) as inactivas,
-                        COUNT(CASE WHEN estado = 'En Mantenimiento' THEN 1 END) as mantenimiento
+                        COUNT(CASE WHEN estado = 'Activa'           THEN 1 END) as activas,
+                        COUNT(CASE WHEN estado = 'Inactiva'         THEN 1 END) as inactivas,
+                        COUNT(CASE WHEN estado = 'En Mantenimiento' THEN 1 END) as mantenimiento,
+                        COUNT(CASE WHEN estado = 'Finalizada'       THEN 1 END) as finalizadas
                     FROM rutas WHERE is_active = TRUE");
         return $db->single();
+    }
+
+    // Demografía agregada de rutas (desde informes) por tipo de ruta
+    private function statsRutasPorTipo() {
+        $db = new Database();
+        $db->query("SELECT COALESCE(r.tipo_ruta, 'General') AS tipo_ruta,
+                           COUNT(DISTINCT r.id) AS rutas,
+                           COUNT(CASE WHEN r.estado = 'Finalizada' THEN 1 END) AS finalizadas,
+                           COALESCE(SUM(ri.mujeres), 0) AS mujeres,
+                           COALESCE(SUM(ri.hombres), 0) AS hombres,
+                           COALESCE(SUM(ri.ninas), 0)   AS ninas,
+                           COALESCE(SUM(ri.ninos), 0)   AS ninos,
+                           COALESCE(SUM(ri.total_atendidos), 0) AS total_atendidos
+                    FROM rutas r
+                    LEFT JOIN ruta_informes ri ON ri.id_ruta = r.id
+                    WHERE r.is_active = TRUE
+                    GROUP BY COALESCE(r.tipo_ruta, 'General')
+                    ORDER BY total_atendidos DESC");
+        return $db->resultSet();
     }
 
     public function exportarParticipantesCsv($id_taller) {

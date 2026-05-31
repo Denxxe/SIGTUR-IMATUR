@@ -48,10 +48,10 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="sig-card" style="border-bottom: 3px solid var(--slate-400);">
+        <div class="sig-card" style="border-bottom: 3px solid var(--brand-500);">
             <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Inactivas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--text-secondary);"><?php echo $data['stats']->inactivas ?? 0; ?></span>
+                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Finalizadas</span>
+                <span style="font-size:28px; font-weight:800; color:var(--brand-600);"><?php echo $data['stats']->finalizadas ?? 0; ?></span>
             </div>
         </div>
     </div>
@@ -60,6 +60,14 @@
             <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
                 <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">En Mantenimiento</span>
                 <span style="font-size:28px; font-weight:800; color:var(--warning-600);"><?php echo $data['stats']->mantenimiento ?? 0; ?></span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="sig-card" style="border-bottom: 3px solid var(--slate-400);">
+            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
+                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Inactivas</span>
+                <span style="font-size:28px; font-weight:800; color:var(--text-secondary);"><?php echo $data['stats']->inactivas ?? 0; ?></span>
             </div>
         </div>
     </div>
@@ -132,30 +140,88 @@
     </div>
 </div>
 
+<!-- Demografía agregada por tipo de ruta -->
+<?php if (!empty($data['statsPorTipo'])): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:3px solid #D97706;">
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-diagram-3-fill" style="color:#D97706;"></i> Demografía Consolidada por Tipo de Ruta</div>
+        <span style="font-size:11px; color:var(--text-tertiary);">Suma de informes de visita registrados</span>
+    </div>
+    <div class="sig-table-wrap">
+        <table class="sig-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Ruta</th>
+                    <th style="text-align:center;">Rutas</th>
+                    <th style="text-align:center;">Finalizadas</th>
+                    <th style="text-align:center;">Mujeres</th>
+                    <th style="text-align:center;">Hombres</th>
+                    <th style="text-align:center;">Niñas</th>
+                    <th style="text-align:center;">Niños</th>
+                    <th style="text-align:center;">Total Atendidos</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $gM=0;$gH=0;$gNa=0;$gNo=0;$gT=0;$gR=0;$gF=0;
+                foreach ($data['statsPorTipo'] as $st):
+                    $gM+=(int)$st->mujeres; $gH+=(int)$st->hombres; $gNa+=(int)$st->ninas;
+                    $gNo+=(int)$st->ninos; $gT+=(int)$st->total_atendidos;
+                    $gR+=(int)$st->rutas; $gF+=(int)$st->finalizadas;
+                ?>
+                <tr>
+                    <td class="cell-strong"><?php echo htmlspecialchars($st->tipo_ruta); ?></td>
+                    <td style="text-align:center;"><?php echo (int)$st->rutas; ?></td>
+                    <td style="text-align:center; color:#7C3AED; font-weight:700;"><?php echo (int)$st->finalizadas; ?></td>
+                    <td style="text-align:center;"><?php echo (int)$st->mujeres; ?></td>
+                    <td style="text-align:center;"><?php echo (int)$st->hombres; ?></td>
+                    <td style="text-align:center;"><?php echo (int)$st->ninas; ?></td>
+                    <td style="text-align:center;"><?php echo (int)$st->ninos; ?></td>
+                    <td style="text-align:center; font-weight:800; color:var(--success-600);"><?php echo (int)$st->total_atendidos; ?></td>
+                </tr>
+                <?php endforeach; ?>
+                <tr style="background:var(--bg-muted-subtle); font-weight:800;">
+                    <td>TOTAL</td>
+                    <td style="text-align:center;"><?php echo $gR; ?></td>
+                    <td style="text-align:center; color:#7C3AED;"><?php echo $gF; ?></td>
+                    <td style="text-align:center;"><?php echo $gM; ?></td>
+                    <td style="text-align:center;"><?php echo $gH; ?></td>
+                    <td style="text-align:center;"><?php echo $gNa; ?></td>
+                    <td style="text-align:center;"><?php echo $gNo; ?></td>
+                    <td style="text-align:center; color:var(--success-600);"><?php echo $gT; ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Tabla de Resultados -->
 <div class="sig-table-wrap anim-slide-up">
     <table class="sig-table">
         <thead>
             <tr>
                 <th>Nombre de la Ruta</th>
+                <th>Tipo</th>
                 <th>Fecha Visita</th>
-                <th>Departamento</th>
+                <th>Guía</th>
                 <th>Dificultad</th>
                 <th>Estado</th>
-                <th style="text-align:center;">Participantes</th>
                 <th style="text-align:center;">Paradas</th>
-                <th style="text-align:center;">Equipamiento</th>
+                <th style="text-align:center;">Particip.</th>
+                <th style="text-align:center;">Atendidos</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="8" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="9" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($r->nombre); ?></td>
+                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->tipo_ruta ?? 'General'); ?></td>
                         <td style="font-size:12px; color:var(--text-secondary);">
                             <?php if ($r->fecha_visita): ?>
                                 <?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?>
@@ -164,7 +230,7 @@
                                 <span style="color:var(--text-tertiary);">—</span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
+                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->facilitador_nombre ?? '—'); ?></td>
                         <td>
                             <?php
                             $diffBadge = 'sig-badge--neutral';
@@ -181,12 +247,13 @@
                             if ($r->estado == 'Activa') $statusBadge = 'sig-badge--success';
                             elseif ($r->estado == 'Inactiva') $statusBadge = 'sig-badge--danger';
                             elseif ($r->estado == 'En Mantenimiento') $statusBadge = 'sig-badge--warning';
+                            elseif ($r->estado == 'Finalizada') $statusBadge = 'sig-badge--brand';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
                         </td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_equipos; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--success-600);"><?php echo (int)($r->total_atendidos ?? 0); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -254,7 +321,7 @@
         $nR = [];
         $puntosR = [];
         $partR = [];
-        $eqR = [];
+        $atR = [];
         if (!empty($data['rutas'])) {
             $cnt = 0;
             foreach ($data['rutas'] as $r) {
@@ -263,7 +330,7 @@
                 $nR[]      = $lbl;
                 $puntosR[] = (int)$r->total_puntos;
                 $partR[]   = (int)$r->total_participantes;
-                $eqR[]     = (int)$r->total_equipos;
+                $atR[]     = (int)($r->total_atendidos ?? 0);
                 $cnt++;
             }
         }
@@ -276,7 +343,7 @@
                 toolbar: { show: false }
             },
             series: [{
-                    name: 'Puntos de Interés',
+                    name: 'Paradas',
                     data: <?php echo json_encode($puntosR); ?>
                 },
                 {
@@ -284,8 +351,8 @@
                     data: <?php echo json_encode($partR); ?>
                 },
                 {
-                    name: 'Equipamiento',
-                    data: <?php echo json_encode($eqR); ?>
+                    name: 'Atendidos (informe)',
+                    data: <?php echo json_encode($atR); ?>
                 }
             ],
             xaxis: {

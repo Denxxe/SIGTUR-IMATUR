@@ -26,7 +26,7 @@ VALUES
 ON CONFLICT (clave) DO NOTHING;
 
 -- 4. RBAC — Módulo Instituciones Externas (roles 1=Admin, 3=Turismo)
-INSERT INTO permisos_rol (id_rol, controlador) VALUES
+INSERT INTO permisos_rol (id_rol, modulo) VALUES
     (1, 'InstitucionesexternasController'),
     (3, 'InstitucionesexternasController')
-ON CONFLICT (id_rol, controlador) DO NOTHING;
+ON CONFLICT (id_rol, modulo) DO NOTHING;
