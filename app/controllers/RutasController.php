@@ -27,6 +27,28 @@ class RutasController extends Controller {
         $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)           ? $_POST['estado']           : 'Activa';
         $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA)     ? $_POST['tipo_ruta']        : 'General';
 
+        // Validaciones generales de la ruta
+        $nombre = trim($_POST['nombre'] ?? '');
+        if (mb_strlen($nombre) < 3) {
+            flash('global_msg', 'El nombre de la ruta debe tener al menos 3 caracteres.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
+        $fechaVisita = $_POST['fecha_visita'] ?: null;
+        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d')) {
+            flash('global_msg', 'La fecha de visita no puede ser anterior a hoy.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
+        $duracion = trim($_POST['duracion_estimada'] ?? '');
+        if (!empty($duracion) && !preg_match('/^\d{1,2}:\d{2}$/', $duracion)) {
+            flash('global_msg', 'La duración debe estar en formato H:MM (ej: 2:30 para 2 horas y media).', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
         // RT-02: motivo obligatorio al pasar a En Mantenimiento
         $motivoMant = trim($_POST['motivo_mantenimiento'] ?? '');
         if ($estado === 'En Mantenimiento' && empty($motivoMant)) {
@@ -151,6 +173,11 @@ class RutasController extends Controller {
             } else {
                 $cedula = trim($_POST['cedula_busqueda'] ?? '');
                 if (empty($cedula)) throw new Exception('Ingrese la cédula del participante.');
+                // Validar formato de cédula venezolana
+                $cedulaN = strtoupper(preg_replace('/[\s.\-]/', '', $cedula));
+                if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
+                    throw new Exception('Formato de cédula no válido. Use V-12345678, E-1234567 o solo los números.');
+                }
                 $persona = Ruta::buscarPersonaPorCedula($cedula);
                 if (!$persona) throw new Exception("No se encontró ninguna persona con cédula '{$cedula}'.");
 
@@ -285,14 +312,56 @@ class RutasController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
         $_POST = $this->sanitizePost();
 
+        $pNombre  = trim($_POST['punto_nombre'] ?? '');
+        $pOrden   = (int)$_POST['orden'];
+        $pIdRuta  = (int)$_POST['id_ruta'];
+        $pId      = isset($_POST['punto_id']) ? (int)$_POST['punto_id'] : null;
+        $pLat     = trim($_POST['latitud']  ?? '') ?: null;
+        $pLng     = trim($_POST['longitud'] ?? '') ?: null;
+
+        if (empty($pNombre)) {
+            flash('global_msg', 'El nombre de la parada es requerido.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
+            exit;
+        }
+        if ($pOrden < 1) {
+            flash('global_msg', 'El orden de la parada debe ser un número positivo.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
+            exit;
+        }
+        // Validar rango de coordenadas
+        if ($pLat !== null && ((float)$pLat < -90 || (float)$pLat > 90)) {
+            flash('global_msg', 'La latitud debe estar entre -90 y 90.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
+            exit;
+        }
+        if ($pLng !== null && ((float)$pLng < -180 || (float)$pLng > 180)) {
+            flash('global_msg', 'La longitud debe estar entre -180 y 180.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
+            exit;
+        }
+        // RT-07: verificar unicidad de orden dentro de la ruta (excluyendo el registro actual)
+        $dbCheck = new Database();
+        $dbCheck->query("SELECT 1 FROM puntos_ruta
+                         WHERE id_ruta = :r AND orden = :o AND is_active = TRUE
+                           AND (:eid = 0 OR id <> :eid)");
+        $dbCheck->bind(':r',   $pIdRuta);
+        $dbCheck->bind(':o',   $pOrden);
+        $dbCheck->bind(':eid', $pId ?? 0);
+        if ($dbCheck->single()) {
+            flash('global_msg', "Ya existe una parada con el orden {$pOrden} en esta ruta. Elija un número diferente.", 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
+            exit;
+        }
+
         $data = [
-            'id'          => isset($_POST['punto_id']) ? (int)$_POST['punto_id'] : null,
-            'id_ruta'     => (int)$_POST['id_ruta'],
-            'nombre'      => trim($_POST['punto_nombre']),
-            'descripcion' => trim($_POST['punto_descripcion']),
-            'orden'       => (int)$_POST['orden'],
-            'latitud'     => $_POST['latitud'] ?: null,
-            'longitud'    => $_POST['longitud'] ?: null,
+            'id'          => $pId,
+            'id_ruta'     => $pIdRuta,
+            'nombre'      => $pNombre,
+            'descripcion' => trim($_POST['punto_descripcion'] ?? ''),
+            'orden'       => $pOrden,
+            'latitud'     => $pLat,
+            'longitud'    => $pLng,
         ];
         $punto = new PuntoRuta($data);
         try {

@@ -121,14 +121,17 @@
                         <div class="sig-field">
                             <label class="sig-field__label">Nombre de la Ruta <span class="req">*</span></label>
                             <input type="text" name="nombre" id="rut_nombre" class="sig-input" required
-                                   placeholder="Ej: Ruta Histórica de Cumaná">
+                                   minlength="3" placeholder="Ej: Ruta Histórica de Cumaná">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Duración Estimada</label>
+                            <label class="sig-field__label">Duración <span style="font-size:11px;font-weight:400;color:var(--text-tertiary);">H:MM</span></label>
                             <input type="text" name="duracion_estimada" id="rut_duracion" class="sig-input"
-                                   placeholder="Ej: 3 horas">
+                                   pattern="^\d{1,2}:\d{2}$"
+                                   placeholder="Ej: 2:30"
+                                   title="Formato H:MM — Ej: 2:30 para 2h y media, 0:45 para 45 min">
+                            <div class="invalid-feedback" id="msg_duracion">Formato requerido: H:MM (ej: 2:30)</div>
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -211,7 +214,9 @@
                     <div class="col-md-3">
                         <div class="sig-field">
                             <label class="sig-field__label">Fecha de Visita</label>
-                            <input type="date" name="fecha_visita" id="rut_fecha" class="sig-input">
+                            <input type="date" name="fecha_visita" id="rut_fecha" class="sig-input"
+                                   min="<?php echo date('Y-m-d'); ?>">
+                            <div class="invalid-feedback" id="msg_fecha_ruta">La fecha no puede ser anterior a hoy.</div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -300,6 +305,39 @@ function editarRuta(r) {
 // Mostrar/ocultar motivo al cambiar estado en el selector
 document.getElementById('rut_estado').addEventListener('change', function() {
     toggleMotivoMant(this.value);
+});
+
+// Validación de duración en formato H:MM
+document.getElementById('rut_duracion').addEventListener('input', function() {
+    var val = this.value.trim();
+    var msgEl = document.getElementById('msg_duracion');
+    var ok = !val || /^\d{1,2}:\d{2}$/.test(val);
+    this.classList.toggle('is-invalid', !ok);
+    if (msgEl) msgEl.style.display = ok ? 'none' : 'block';
+});
+
+// Validación de fecha de visita >= hoy
+document.getElementById('rut_fecha').addEventListener('change', function() {
+    var val   = this.value;
+    var hoy   = '<?php echo date('Y-m-d'); ?>';
+    var msgEl = document.getElementById('msg_fecha_ruta');
+    var ok    = !val || val >= hoy;
+    this.classList.toggle('is-invalid', !ok);
+    if (msgEl) msgEl.style.display = ok ? 'none' : 'block';
+});
+
+// Submit: bloquear si hay campos inválidos
+document.querySelector('#modalRuta form').addEventListener('submit', function(e) {
+    var durVal  = document.getElementById('rut_duracion').value.trim();
+    var fechaVal = document.getElementById('rut_fecha').value;
+    var hoy     = '<?php echo date('Y-m-d'); ?>';
+    var errDur  = durVal && !/^\d{1,2}:\d{2}$/.test(durVal);
+    var errFecha = fechaVal && fechaVal < hoy;
+    if (errDur || errFecha) {
+        e.preventDefault();
+        if (errDur)   { document.getElementById('rut_duracion').classList.add('is-invalid'); document.getElementById('msg_duracion').style.display='block'; }
+        if (errFecha) { document.getElementById('rut_fecha').classList.add('is-invalid');    document.getElementById('msg_fecha_ruta').style.display='block'; }
+    }
 });
 </script>
 

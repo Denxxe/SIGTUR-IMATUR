@@ -200,54 +200,80 @@
 <?php endif; ?>
 
 <!-- ── Paradas ── -->
+<?php
+// Detectar órdenes duplicados
+$ordenesPuntos = array_column((array)($data['puntos'] ?? []), 'orden');
+$duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
+?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">
-        <div class="sig-card__title">Paradas de la Ruta (Orden de recorrido)</div>
+        <div class="sig-card__title">
+            <i class="bi bi-signpost-split" style="color:var(--teal-500);"></i>
+            Itinerario de Paradas
+        </div>
+        <span style="font-size:11px;color:var(--text-tertiary);"><?php echo count($data['puntos'] ?? []); ?> parada(s) · orden de recorrido</span>
     </div>
-    <div class="sig-table-wrap">
-        <table class="sig-table">
-            <thead>
-                <tr>
-                    <th style="width:80px; text-align:center;">#</th>
-                    <th>Nombre del Punto</th>
-                    <th>Descripción</th>
-                    <th>Coordenadas</th>
-                    <th class="col-actions">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($data['puntos'])): ?>
-                    <tr><td colspan="5" class="sig-table-empty">Esta ruta aún no tiene paradas definidas.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($data['puntos'] as $p): ?>
-                        <tr>
-                            <td style="text-align:center;">
-                                <div style="width:32px; height:32px; background:var(--teal-100); color:var(--teal-700); border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:14px; margin:0 auto; border:2px solid var(--teal-200);">
-                                    <?php echo $p->orden ?? ''; ?>
-                                </div>
-                            </td>
-                            <td class="cell-strong"><?php echo htmlspecialchars($p->nombre ?? ''); ?></td>
-                            <td style="font-size:13px; color:var(--text-secondary);"><?php echo htmlspecialchars($p->descripcion ?? '—'); ?></td>
-                            <td style="font-family:var(--font-mono); font-size:12px; color:var(--text-tertiary);">
-                                <?php if ($p->latitud && $p->longitud): ?>
-                                    <i class="bi bi-geo-alt"></i> <?php echo $p->latitud . ', ' . $p->longitud; ?>
-                                <?php else: ?> — <?php endif; ?>
-                            </td>
-                            <td class="col-actions">
-                                <button class="row-action row-action--edit" onclick='editarPunto(<?php echo json_encode($p); ?>)'>
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <a href="<?php echo URL_ROOT; ?>/rutas/deletePunto/<?php echo $p->id; ?>/<?php echo $data['ruta']->id; ?>"
-                                   class="row-action row-action--del delete-btn">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+    <?php if (!empty($duplicados)): ?>
+    <div style="padding:var(--sp-2) var(--sp-4); background:rgba(239,68,68,.07); border-bottom:1px solid rgba(239,68,68,.15); font-size:12px; color:var(--danger-700);">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Existen paradas con órdenes duplicados (<?php echo implode(', ', array_unique($duplicados)); ?>). Edite las paradas para corregirlo.
+    </div>
+    <?php endif; ?>
+    <?php if (empty($data['puntos'])): ?>
+    <div style="padding:var(--sp-8); text-align:center; color:var(--text-tertiary);">
+        <i class="bi bi-signpost" style="font-size:2rem; display:block; margin-bottom:var(--sp-3);"></i>
+        <p style="font-size:13px; margin:0;">Esta ruta aún no tiene paradas definidas. Use "Agregar Parada" para crear el itinerario.</p>
+    </div>
+    <?php else: ?>
+    <div style="padding:var(--sp-4) var(--sp-5);">
+        <?php foreach ($data['puntos'] as $i => $p):
+            $esUltimo = ($i === count($data['puntos']) - 1);
+            $tieneCoordenadas = $p->latitud && $p->longitud;
+        ?>
+        <div style="display:flex; gap:var(--sp-4); <?php echo !$esUltimo ? 'padding-bottom:var(--sp-4);' : ''; ?>">
+            <!-- Indicador de orden (timeline) -->
+            <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                <div style="width:36px; height:36px; border-radius:50%; background:var(--teal-500); color:white; display:grid; place-items:center; font-weight:800; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,150,136,.25);">
+                    <?php echo $p->orden ?? $i+1; ?>
+                </div>
+                <?php if (!$esUltimo): ?>
+                <div style="width:2px; flex:1; background:linear-gradient(to bottom, var(--teal-300), var(--border-subtle)); margin:4px 0;"></div>
                 <?php endif; ?>
-            </tbody>
-        </table>
+            </div>
+            <!-- Contenido -->
+            <div style="flex:1; min-width:0; padding-bottom:<?php echo !$esUltimo?'var(--sp-2)':'0'; ?>;">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3);">
+                    <div style="min-width:0;">
+                        <div style="font-weight:700; font-size:14px; color:var(--text-primary); margin-bottom:2px;">
+                            <?php echo htmlspecialchars($p->nombre ?? ''); ?>
+                        </div>
+                        <?php if (!empty($p->descripcion)): ?>
+                        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;">
+                            <?php echo htmlspecialchars($p->descripcion); ?>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($tieneCoordenadas): ?>
+                        <div style="font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono);">
+                            <i class="bi bi-geo-alt" style="color:var(--teal-500);"></i>
+                            <?php echo $p->latitud; ?>, <?php echo $p->longitud; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <button class="row-action row-action--edit" onclick='editarPunto(<?php echo htmlspecialchars(json_encode($p), ENT_QUOTES); ?>)' title="Editar parada">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <a href="<?php echo URL_ROOT; ?>/rutas/deletePunto/<?php echo $p->id; ?>/<?php echo $data['ruta']->id; ?>"
+                           class="row-action row-action--del delete-btn" title="Eliminar parada">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- ── Equipos ── -->
@@ -568,8 +594,12 @@
         ocultarFormacionOverride();
         const cedula = this.value.trim();
 
-        // Solo buscar si tiene formato mínimo: X-NNNNNNN (al menos 5 dígitos)
-        if (!/^[VEve]-\d{5,10}$/.test(cedula)) return;
+        // Validar formato venezolano: prefijo opcional + 6-9 dígitos
+        var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
+        if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
+            showFeedback(false, '<i class="bi bi-exclamation-circle"></i> Formato no válido. Use V-12345678, E-1234567 o solo números.');
+            return;
+        }
 
         clearTimeout(ajaxTimer);
         elSpinner.style.display = 'inline';
