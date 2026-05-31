@@ -103,6 +103,9 @@ class RutasController extends Controller {
         $db->query("SELECT id, nombre, tipo FROM instituciones_externas WHERE is_active = TRUE ORDER BY nombre ASC");
         $instituciones = $db->resultSet();
 
+        require_once '../app/models/Parroquia.php';
+        $parroquias = Parroquia::all();
+
         // Historial de oficios emitidos para esta ruta
         $db->query("SELECT numero, fecha, destinatario_nombre, destinatario_cargo, asunto, created_at
                     FROM oficios_emitidos
@@ -119,6 +122,7 @@ class RutasController extends Controller {
             'inventario_asignado'  => $inventario_asignado,
             'inventario_disponible'=> $inventario_disponible,
             'instituciones'        => $instituciones,
+            'parroquias'           => $parroquias,
             'oficiosEmitidos'      => $oficiosEmitidos,
         ];
         $this->view('rutas/detalle', $data);
@@ -136,9 +140,19 @@ class RutasController extends Controller {
             require_once '../app/models/Taller.php';
             echo json_encode([
                 'found'          => true,
-                'nombre'         => htmlspecialchars($persona->nombre . ' ' . ($persona->apellido ?? '')),
-                'cedula'         => htmlspecialchars($persona->cedula),
                 'tiene_formacion'=> Taller::personaRecibioFormacion((int)$persona->id),
+                'persona'        => [
+                    'id'               => $persona->id,
+                    'cedula'           => $persona->cedula,
+                    'nombre'           => $persona->nombre,
+                    'apellido'         => $persona->apellido    ?? '',
+                    'telefono'         => $persona->telefono    ?? '',
+                    'correo'           => $persona->correo      ?? '',
+                    'genero'           => $persona->genero      ?? '',
+                    'fecha_nacimiento' => $persona->fecha_nacimiento ?? '',
+                    'parroquia_id'     => $persona->parroquia_id ?? '',
+                    'direccion'        => $persona->direccion   ?? '',
+                ],
             ]);
         } else {
             echo json_encode(['found' => false]);
@@ -151,51 +165,115 @@ class RutasController extends Controller {
     public function inscribir() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
-        $_POST = $this->sanitizePost();
-        $id_ruta   = (int)$_POST['id_ruta'];
-        $userId    = $this->getUserId();
-        $esLibre   = !empty($_POST['tipo_participante_libre']);
+        $_POST  = $this->sanitizePost();
+        $id_ruta = (int)$_POST['id_ruta'];
+        $userId  = $this->getUserId();
+        $esLibre = !empty($_POST['tipo_participante_libre']);
 
         $id_institucion = (int)($_POST['id_institucion'] ?? 0) ?: null;
         $observaciones  = trim($_POST['observaciones'] ?? '') ?: null;
 
+        require_once '../app/models/Taller.php';
+
         try {
+            // ── Flujo libre: participante sin cédula (menor 5-11 años) ──────────
             if ($esLibre) {
                 $nombre = trim($_POST['nombre_libre'] ?? '');
                 if (empty($nombre)) throw new Exception('El nombre del participante es requerido.');
+
+                $fechaNacLibreRaw = trim($_POST['fecha_nac_libre'] ?? '');
+                if (empty($fechaNacLibreRaw)) {
+                    throw new Exception('La fecha de nacimiento es obligatoria para participantes sin cédula.');
+                }
+                if (\DateTime::createFromFormat('Y-m-d', $fechaNacLibreRaw) === false) {
+                    throw new Exception('El formato de fecha de nacimiento no es válido.');
+                }
+                $fnacDt    = new \DateTime($fechaNacLibreRaw);
+                $hoyDt     = new \DateTime();
+                if ($fnacDt >= $hoyDt) throw new Exception('La fecha de nacimiento no puede ser una fecha futura.');
+                $edadAnios = (int)$hoyDt->diff($fnacDt)->y;
+                if ($edadAnios < 5)  throw new Exception('El participante debe tener al menos 5 años.');
+                if ($edadAnios >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula.');
+
                 Ruta::inscribirLibre($id_ruta, [
                     'nombre_libre'   => $nombre,
-                    'apellido_libre' => trim($_POST['apellido_libre'] ?? ''),
-                    'cedula_libre'   => trim($_POST['cedula_libre'] ?? '') ?: null,
+                    'apellido_libre' => trim($_POST['apellido_libre'] ?? '') ?: null,
+                    'cedula_libre'   => trim($_POST['cedula_libre']   ?? '') ?: null,
+                    'genero_libre'   => trim($_POST['genero_libre']   ?? '') ?: null,
+                    'fecha_nac_libre'=> $fechaNacLibreRaw,
                     'id_institucion' => $id_institucion,
                     'observaciones'  => $observaciones,
                 ], $userId);
+
+            // ── Flujo con cédula: buscar o crear en personas ─────────────────
             } else {
                 $cedula = trim($_POST['cedula_busqueda'] ?? '');
                 if (empty($cedula)) throw new Exception('Ingrese la cédula del participante.');
-                // Validar formato de cédula venezolana
+
                 $cedulaN = strtoupper(preg_replace('/[\s.\-]/', '', $cedula));
                 if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
                     throw new Exception('Formato de cédula no válido. Use V-12345678, E-1234567 o solo los números.');
                 }
+
+                $nombre   = trim($_POST['nombre']   ?? '');
+                $apellido = trim($_POST['apellido']  ?? '');
+                if (empty($nombre) || empty($apellido)) {
+                    throw new Exception('El nombre y apellido del participante son requeridos.');
+                }
+
+                // Correo: validar formato si está presente
+                $correoRaw = trim($_POST['correo'] ?? '') ?: null;
+                if ($correoRaw !== null && !filter_var($correoRaw, FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                }
+
+                $fechaNac   = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
+                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) $fechaNac = null;
+                $parroquiaId = (int)($_POST['parroquia_id'] ?? 0) ?: null;
+
                 $persona = Ruta::buscarPersonaPorCedula($cedula);
-                if (!$persona) throw new Exception("No se encontró ninguna persona con cédula '{$cedula}'.");
+
+                if ($persona) {
+                    // Persona encontrada: completar campos vacíos
+                    $actualizacion = [];
+                    if (empty($persona->telefono)         && !empty($_POST['telefono']))  $actualizacion['telefono']         = trim($_POST['telefono']);
+                    if (empty($persona->correo)           && $correoRaw)                  $actualizacion['correo']            = $correoRaw;
+                    if (empty($persona->genero)           && !empty($_POST['genero']))     $actualizacion['genero']            = trim($_POST['genero']);
+                    if (empty($persona->fecha_nacimiento) && $fechaNac)                   $actualizacion['fecha_nacimiento']  = $fechaNac;
+                    if (empty($persona->parroquia_id)     && $parroquiaId)                $actualizacion['parroquia_id']      = $parroquiaId;
+                    if (empty($persona->direccion)        && !empty($_POST['direccion']))  $actualizacion['direccion']         = trim($_POST['direccion']);
+                    if (!empty($actualizacion)) Taller::actualizarPersona((int)$persona->id, $actualizacion, $userId);
+                    $idPersona = (int)$persona->id;
+                } else {
+                    // Persona no encontrada: crear nueva en personas
+                    $idPersona = Taller::crearPersona([
+                        'cedula'           => $cedula,
+                        'nombre'           => $nombre,
+                        'apellido'         => $apellido,
+                        'telefono'         => trim($_POST['telefono'] ?? '') ?: null,
+                        'correo'           => $correoRaw,
+                        'genero'           => trim($_POST['genero']   ?? '') ?: null,
+                        'fecha_nacimiento' => $fechaNac,
+                        'parroquia_id'     => $parroquiaId,
+                        'direccion'        => trim($_POST['direccion'] ?? '') ?: null,
+                    ], $userId);
+                }
 
                 // RN-F12: verificar prerequisito de formación si la ruta lo requiere
-                $ruta         = Ruta::find($id_ruta);
-                $forzar       = !empty($_POST['forzar_inscripcion']);
+                $ruta   = Ruta::find($id_ruta);
+                $forzar = !empty($_POST['forzar_inscripcion']);
                 if ($ruta && !empty($ruta->requiere_formacion)) {
-                    if (!Taller::personaRecibioFormacion((int)$persona->id) && !$forzar) {
-                        $nombreP = htmlspecialchars(trim(($persona->nombre ?? '') . ' ' . ($persona->apellido ?? '')));
+                    if (!Taller::personaRecibioFormacion($idPersona) && !$forzar) {
                         throw new Exception(
-                            "{$nombreP} no tiene actividades de formación completadas. Esta ruta requiere formación previa (RN-F12). " .
-                            'Si es un caso excepcional, marque "Inscribir sin formación" en el formulario.'
+                            "{$nombre} {$apellido} no tiene actividades de formación completadas. " .
+                            'Marque "Inscribir sin formación" si es un caso excepcional.'
                         );
                     }
                 }
 
-                Ruta::inscribir($id_ruta, $persona->id, $userId, $id_institucion, $observaciones);
+                Ruta::inscribir($id_ruta, $idPersona, $userId, $id_institucion, $observaciones);
             }
+
             flash('global_msg', 'Participante registrado correctamente.');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');

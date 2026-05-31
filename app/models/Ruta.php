@@ -196,17 +196,26 @@ class Ruta extends Model {
 
     public static function inscribirLibre(int $id_ruta, array $datos, int $user_id) {
         $db = new Database();
-        $db->query("INSERT INTO participantes_ruta (id_ruta, nombre_libre, apellido_libre, cedula_libre, id_institucion, observaciones, created_by)
-                    VALUES (:r, :nom, :ape, :ced, :inst, :obs, :u)");
+        $db->query("INSERT INTO participantes_ruta
+                        (id_ruta, nombre_libre, apellido_libre, cedula_libre,
+                         genero_libre, fecha_nac_libre, id_institucion, observaciones, created_by)
+                    VALUES (:r, :nom, :ape, :ced, :gen, :fnac, :inst, :obs, :u)");
         $db->bind(':r',    $id_ruta);
         $db->bind(':nom',  $datos['nombre_libre']);
-        $db->bind(':ape',  $datos['apellido_libre'] ?? null);
-        $db->bind(':ced',  $datos['cedula_libre'] ?? null);
-        $db->bind(':inst', $datos['id_institucion'] ?? null);
-        $db->bind(':obs',  $datos['observaciones'] ?? null);
+        $db->bind(':ape',  $datos['apellido_libre']  ?? null);
+        $db->bind(':ced',  $datos['cedula_libre']    ?? null);
+        $db->bind(':gen',  $datos['genero_libre']    ?? null);
+        $db->bind(':fnac', $datos['fecha_nac_libre'] ?? null);
+        $db->bind(':inst', $datos['id_institucion']  ?? null);
+        $db->bind(':obs',  $datos['observaciones']   ?? null);
         $db->bind(':u',    $user_id);
         $result = $db->execute();
-        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'nombre_libre' => $datos['nombre_libre'], 'cedula_libre' => $datos['cedula_libre'] ?? null], $user_id);
+        self::auditStatic('participantes_ruta', 'INSERT', null, null, [
+            'id_ruta'      => $id_ruta,
+            'nombre_libre' => $datos['nombre_libre'],
+            'cedula_libre' => $datos['cedula_libre'] ?? null,
+            'genero_libre' => $datos['genero_libre'] ?? null,
+        ], $user_id);
         return $result;
     }
 
