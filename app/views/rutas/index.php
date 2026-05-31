@@ -73,16 +73,11 @@
                             <span><?php echo (int)$r->total_puntos; ?> paradas &nbsp;·&nbsp;
                                   <?php echo (int)$r->total_participantes; ?> participantes</span>
                         </div>
-                        <?php
-                        $diffClass = 'sig-badge--neutral';
-                        if ($r->nivel_dificultad == 'Fácil')    $diffClass = 'sig-badge--success';
-                        elseif ($r->nivel_dificultad == 'Moderado') $diffClass = 'sig-badge--info';
-                        elseif ($r->nivel_dificultad == 'Difícil')  $diffClass = 'sig-badge--warning';
-                        elseif ($r->nivel_dificultad == 'Extremo')  $diffClass = 'sig-badge--danger';
-                        ?>
+                        <?php if (!empty($r->tipo_ruta) && $r->tipo_ruta !== 'General'): ?>
                         <div>
-                            <span class="sig-badge sig-badge--sm <?php echo $diffClass; ?>"><?php echo $r->nivel_dificultad; ?></span>
+                            <span class="sig-badge sig-badge--sm sig-badge--info"><?php echo htmlspecialchars($r->tipo_ruta); ?></span>
                         </div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="sig-card__footer" style="padding:var(--sp-4); border-top:1px solid var(--border-subtle); display:flex; gap:var(--sp-2); justify-content:space-between; background:var(--bg-muted-subtle);">
@@ -163,17 +158,6 @@
                                 <option value="Cumaná Histórica">Cumaná Histórica</option>
                                 <option value="Exploradores de Cumaná">Exploradores de Cumaná</option>
                                 <option value="Comunitaria">Comunitaria</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="sig-field">
-                            <label class="sig-field__label">Nivel de Dificultad</label>
-                            <select name="nivel_dificultad" id="rut_dificultad" class="sig-select">
-                                <option value="Fácil">Fácil</option>
-                                <option value="Moderado">Moderado</option>
-                                <option value="Difícil">Difícil</option>
-                                <option value="Extremo">Extremo</option>
                             </select>
                         </div>
                     </div>
@@ -295,7 +279,6 @@ function editarRuta(r) {
     document.getElementById('rut_nombre').value           = r.nombre;
     document.getElementById('rut_descripcion').value      = r.descripcion;
     document.getElementById('rut_duracion').value         = r.duracion_estimada;
-    document.getElementById('rut_dificultad').value       = r.nivel_dificultad;
     document.getElementById('rut_estado').value           = r.estado;
     document.getElementById('rut_cupo').value             = r.cupo_maximo || 20;
     document.getElementById('rut_depto').value            = r.id_departamento || '';

@@ -4,7 +4,6 @@ class Ruta extends Model {
     private string $nombre;
     private string $descripcion;
     private string $duracion_estimada;
-    private string $nivel_dificultad;
     private string $estado;
     private ?string $fecha_visita;
     private ?string $hora_visita;
@@ -24,7 +23,6 @@ class Ruta extends Model {
             $this->nombre              = $data['nombre'] ?? '';
             $this->descripcion         = $data['descripcion'] ?? '';
             $this->duracion_estimada   = $data['duracion_estimada'] ?? '';
-            $this->nivel_dificultad    = $data['nivel_dificultad'] ?? 'Fácil';
             $this->estado              = $data['estado'] ?? 'Activa';
             $this->fecha_visita        = $data['fecha_visita'] ?: null;
             $this->hora_visita         = $data['hora_visita'] ?: null;
@@ -78,8 +76,7 @@ class Ruta extends Model {
             $previos = self::find($this->id);
             $this->db->query("UPDATE rutas
                               SET nombre=:nombre, descripcion=:descripcion,
-                                  duracion_estimada=:duracion_estimada,
-                                  nivel_dificultad=:nivel_dificultad, estado=:estado,
+                                  duracion_estimada=:duracion_estimada, estado=:estado,
                                   fecha_visita=:fecha_visita, hora_visita=:hora_visita,
                                   id_departamento=:id_departamento,
                                   id_facilitador=:id_facilitador,
@@ -92,10 +89,10 @@ class Ruta extends Model {
             $this->db->bind(':id', $this->id);
         } else {
             $this->db->query("INSERT INTO rutas
-                              (nombre, descripcion, duracion_estimada, nivel_dificultad, estado,
+                              (nombre, descripcion, duracion_estimada, estado,
                                fecha_visita, hora_visita, id_departamento, id_facilitador,
                                cupo_maximo, requiere_formacion, tipo_ruta, created_by)
-                              VALUES (:nombre, :descripcion, :duracion_estimada, :nivel_dificultad,
+                              VALUES (:nombre, :descripcion, :duracion_estimada,
                                       :estado, :fecha_visita, :hora_visita, :id_departamento,
                                       :id_facilitador, :cupo_maximo, :requiere_formacion,
                                       :tipo_ruta, :user_id)");
@@ -103,7 +100,6 @@ class Ruta extends Model {
         $this->db->bind(':nombre',             $this->nombre);
         $this->db->bind(':descripcion',        $this->descripcion);
         $this->db->bind(':duracion_estimada',  $this->duracion_estimada);
-        $this->db->bind(':nivel_dificultad',   $this->nivel_dificultad);
         $this->db->bind(':estado',             $this->estado);
         $this->db->bind(':fecha_visita',       $this->fecha_visita);
         $this->db->bind(':hora_visita',        $this->hora_visita);
@@ -160,18 +156,13 @@ class Ruta extends Model {
     }
 
     public static function buscarPersonaPorCedula(string $cedula) {
+        // Devuelve SIEMPRE los datos de personas (id de personas, no de empleados)
         $db = new Database();
-        $db->query("SELECT p.*, per.cedula, per.nombre, per.apellido, per.telefono
-                    FROM personas per
-                    LEFT JOIN empleados p ON per.id = p.id_persona
-                    WHERE per.cedula = :cedula AND per.is_active = TRUE LIMIT 1");
+        $db->query("SELECT id, cedula, nombre, apellido, telefono, correo, genero,
+                           fecha_nacimiento, parroquia_id, direccion
+                    FROM personas WHERE cedula = :cedula AND is_active = TRUE LIMIT 1");
         $db->bind(':cedula', $cedula);
-        $row = $db->single();
-        if ($row) return $row;
-        // Buscar en personas directamente
-        $db->query("SELECT * FROM personas WHERE cedula = :cedula AND is_active = TRUE LIMIT 1");
-        $db->bind(':cedula', $cedula);
-        return $db->single();
+        return $db->single() ?: null;
     }
 
     public static function inscribir(int $id_ruta, int $id_persona, int $user_id, ?int $id_institucion = null, ?string $observaciones = null) {

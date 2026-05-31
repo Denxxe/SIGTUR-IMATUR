@@ -105,9 +105,6 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/rutas/index">
                 <i class="bi bi-compass"></i> <span>Rutas Turísticas</span>
             </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/institucionesexternas/index">
-                <i class="bi bi-building"></i> <span>Instituciones</span>
-            </a>
             <?php endif; ?>
 
             <!-- Reportes — todos los roles -->

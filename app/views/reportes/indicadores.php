@@ -660,58 +660,6 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     SECCIÓN: TURISMO — INSTITUCIONES PARTICIPANTES EN RUTAS (T-3)
-════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0EA5E9;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Turismo — Instituciones Participantes en Rutas</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
-</div>
-
-<div class="row g-4 mb-6 anim-slide-up">
-    <div class="col-12">
-        <div class="sig-card">
-            <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-building" style="color:#0EA5E9;"></i> Instituciones con participación en rutas</div>
-                <a href="<?php echo URL_ROOT; ?>/institucionesexternas/index" class="btn-sig btn-sig--ghost btn-sig--sm">
-                    <i class="bi bi-arrow-right"></i> Gestionar
-                </a>
-            </div>
-            <div class="sig-table-wrap">
-                <table class="sig-table">
-                    <thead>
-                        <tr>
-                            <th>Institución</th>
-                            <th>Tipo</th>
-                            <th>Municipio</th>
-                            <th style="text-align:center;">Rutas</th>
-                            <th style="text-align:center;">Participantes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($data['institucionesRutas'])): ?>
-                            <tr><td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">
-                                Sin registros. Asigne instituciones al inscribir participantes en rutas.
-                            </td></tr>
-                        <?php else: ?>
-                            <?php foreach ($data['institucionesRutas'] as $ir): ?>
-                            <tr>
-                                <td class="cell-strong"><?php echo htmlspecialchars($ir->institucion ?? '—'); ?></td>
-                                <td><span class="sig-badge sig-badge--sm sig-badge--neutral"><?php echo htmlspecialchars($ir->tipo ?? '—'); ?></span></td>
-                                <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($ir->municipio ?? '—'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#D97706;"><?php echo (int)($ir->rutas_participadas ?? 0); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#0EA5E9;"><?php echo number_format((int)($ir->participantes ?? 0)); ?></td>
-                            </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: TURISMO — DEMOGRAFÍA DE PARTICIPANTES (T-DEMO)
 ════════════════════════════════════════════════════════════════════════ -->
 <?php

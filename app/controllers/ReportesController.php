@@ -322,9 +322,8 @@ class ReportesController extends Controller {
     public function rutas() {
         $this->requireRoles([1, 3]);
         try {
-            $filtroEstado     = trim($_GET['estado']            ?? '');
-            $filtroDificultad = trim($_GET['nivel_dificultad']  ?? '');
-            $rutas            = $this->queryRutas($filtroEstado, $filtroDificultad);
+            $filtroEstado     = trim($_GET['estado'] ?? '');
+            $rutas            = $this->queryRutas($filtroEstado);
             $stats            = $this->statsRutas();
 
             $data = [
@@ -333,7 +332,6 @@ class ReportesController extends Controller {
                 'stats'             => $stats,
                 'statsPorTipo'      => $this->statsRutasPorTipo(),
                 'filtro_estado'     => $filtroEstado,
-                'filtro_dificultad' => $filtroDificultad,
             ];
             $this->view('reportes/rutas', $data);
         } catch (Exception $e) {
@@ -345,10 +343,9 @@ class ReportesController extends Controller {
     public function exportarRutasCsv() {
         $this->requireRoles([1, 3]);
         try {
-            $estado     = trim($_GET['estado']           ?? '');
-            $dificultad = trim($_GET['nivel_dificultad'] ?? '');
-            $rutas      = $this->queryRutas($estado, $dificultad);
-            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Dificultad', 'Estado',
+            $estado     = trim($_GET['estado'] ?? '');
+            $rutas      = $this->queryRutas($estado);
+            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Estado',
                         'Paradas', 'Participantes', 'Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'];
             $rows    = [];
             $tpInsc = 0; $tpAt = 0;
@@ -362,7 +359,6 @@ class ReportesController extends Controller {
                     $r->hora_visita ? substr($r->hora_visita, 0, 5) : '-',
                     $r->departamento_nombre ?? '-',
                     $r->facilitador_nombre ?? '-',
-                    $r->nivel_dificultad,
                     $r->estado,
                     (int)$r->total_puntos,
                     (int)$r->total_participantes,
@@ -374,7 +370,7 @@ class ReportesController extends Controller {
                 ];
             }
             // Fila de totales
-            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
+            $rows[] = ['TOTALES', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
             $this->exportCsv('reporte_rutas', $headers, $rows);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
@@ -385,9 +381,8 @@ class ReportesController extends Controller {
     public function exportarRutasPdf() {
         $this->requireRoles([1, 3]);
         try {
-            $estado     = trim($_GET['estado']           ?? '');
-            $dificultad = trim($_GET['nivel_dificultad'] ?? '');
-            $rutas  = $this->queryRutas($estado, $dificultad);
+            $estado = trim($_GET['estado'] ?? '');
+            $rutas  = $this->queryRutas($estado);
             $stats  = $this->statsRutas();
 
             $headers = ['Ruta', 'Tipo', 'Fecha', 'Guía', 'Estado', 'Paradas', 'Particip.', 'Atendidos'];
@@ -418,11 +413,10 @@ class ReportesController extends Controller {
         }
     }
 
-    private function queryRutas(string $estado = '', string $dificultad = '') {
+    private function queryRutas(string $estado = '') {
         $db    = new Database();
         $where = "r.is_active = TRUE";
         if ($estado)     $where .= " AND r.estado = :estado";
-        if ($dificultad) $where .= " AND r.nivel_dificultad = :dificultad";
         $db->query("SELECT r.*,
                            d.nombre AS departamento_nombre,
                            p.nombre || ' ' || p.apellido AS facilitador_nombre,
@@ -437,7 +431,6 @@ class ReportesController extends Controller {
                     WHERE {$where}
                     ORDER BY r.fecha_visita DESC NULLS LAST, r.created_at DESC");
         if ($estado)     $db->bind(':estado', $estado);
-        if ($dificultad) $db->bind(':dificultad', $dificultad);
         return $db->resultSet();
     }
 
@@ -1202,7 +1195,6 @@ class ReportesController extends Controller {
 
             // ── T-2: Participantes por tipo de ruta ───────────────────────
             $rutasPorTipo   = [];
-            $institucionesRutas = [];
             $metaRutas      = null;
             $rutasAnio      = null;
             try {
@@ -1214,20 +1206,6 @@ class ReportesController extends Controller {
                             WHERE r.is_active = TRUE
                             GROUP BY r.tipo_ruta ORDER BY participantes DESC");
                 $rutasPorTipo = $db->resultSet();
-
-                // ── T-3: Instituciones participantes en rutas ──────────────
-                $db->query("SELECT ie.nombre as institucion,
-                                   ie.tipo, ie.municipio,
-                                   COUNT(pr.id) as participantes,
-                                   COUNT(DISTINCT pr.id_ruta) as rutas_participadas
-                            FROM participantes_ruta pr
-                            JOIN instituciones_externas ie ON pr.id_institucion = ie.id
-                            JOIN rutas r ON pr.id_ruta = r.id
-                            WHERE pr.is_active = TRUE AND r.is_active = TRUE AND ie.is_active = TRUE
-                            GROUP BY ie.nombre, ie.tipo, ie.municipio
-                            ORDER BY participantes DESC
-                            LIMIT 10");
-                $institucionesRutas = $db->resultSet();
 
                 // ── T-1: Meta cobertura rutas ──────────────────────────────
                 $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'meta_rutas_anio' LIMIT 1");
@@ -1345,7 +1323,6 @@ class ReportesController extends Controller {
                 'capacitadores'         => $capacitadores,
                 // KPIs nuevos — Turismo
                 'rutasPorTipo'          => $rutasPorTipo,
-                'institucionesRutas'    => $institucionesRutas,
                 'metaRutas'             => (int)($metaRutas->valor   ?? 0),
                 'rutasAnio'             => (int)($rutasAnio->total  ?? 0),
                 'metaTalleres'          => (int)($metaTalleres->valor ?? 0),

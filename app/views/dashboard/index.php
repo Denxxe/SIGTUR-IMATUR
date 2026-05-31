@@ -246,7 +246,6 @@ $hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
                     if (in_array($rol,[1,3]))    $acciones[] = ['Nueva Actividad',     'bi-calendar-event',         URL_ROOT.'/talleres/index'];
                     if (in_array($rol,[1,3]))    $acciones[] = ['Rutas Turísticas',    'bi-geo-alt-fill',           URL_ROOT.'/rutas/index'];
                     if (in_array($rol,[1,3]))    $acciones[] = ['Pasantes',            'bi-journal-text',           URL_ROOT.'/pasantes/index'];
-                    if (in_array($rol,[1,3]))    $acciones[] = ['Instituciones',       'bi-building',               URL_ROOT.'/institucionesexternas/index'];
                     if (in_array($rol,[1,4]))    $acciones[] = ['Inventario',          'bi-box-seam-fill',          URL_ROOT.'/inventario/index'];
                     if (in_array($rol,[1,2]))    $acciones[] = ['Personal',            'bi-people-fill',            URL_ROOT.'/empleados/index'];
                     if (in_array($rol,[1,2,3,4]))$acciones[] = ['Reportes',            'bi-file-earmark-bar-graph', URL_ROOT.'/reportes/index'];

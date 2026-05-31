@@ -21,11 +21,9 @@ class RutasController extends Controller {
         $userId    = $this->getUserId();
         $esEdicion = !empty($_POST['id']);
 
-        $nivelesValidos = ['Fácil','Moderado','Difícil','Extremo'];
         $estadosValidos = ['Activa','Inactiva','En Mantenimiento','Finalizada'];
-        $nivel   = in_array($_POST['nivel_dificultad'] ?? '', $nivelesValidos) ? $_POST['nivel_dificultad'] : 'Fácil';
-        $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)           ? $_POST['estado']           : 'Activa';
-        $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA)     ? $_POST['tipo_ruta']        : 'General';
+        $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)       ? $_POST['estado']    : 'Activa';
+        $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA) ? $_POST['tipo_ruta'] : 'General';
 
         // Máquina de estados: una ruta Finalizada es TERMINAL, no admite edición ni cambio
         if ($esEdicion) {
@@ -35,6 +33,17 @@ class RutasController extends Controller {
                 header('Location: ' . URL_ROOT . '/rutas/index');
                 exit;
             }
+            // Validación al FINALIZAR: requiere al menos 1 participante inscrito
+            if ($estado === 'Finalizada' && $rutaActual && $rutaActual->estado !== 'Finalizada') {
+                if (Ruta::countParticipantes((int)$_POST['id']) === 0) {
+                    flash('global_msg', 'No se puede finalizar una ruta sin participantes inscritos. Registre los participantes de la visita antes de finalizarla.', 'danger');
+                    header('Location: ' . URL_ROOT . '/rutas/index');
+                    exit;
+                }
+            }
+        } elseif ($estado === 'Finalizada') {
+            // No se puede crear una ruta directamente como Finalizada (no tendría participantes)
+            $estado = 'Activa';
         }
 
         // Validaciones generales de la ruta
@@ -81,7 +90,6 @@ class RutasController extends Controller {
             'nombre'                => trim($_POST['nombre']),
             'descripcion'           => trim($_POST['descripcion'] ?? ''),
             'duracion_estimada'     => trim($_POST['duracion_estimada'] ?? ''),
-            'nivel_dificultad'      => $nivel,
             'estado'                => $estado,
             'fecha_visita'          => $_POST['fecha_visita'] ?: null,
             'hora_visita'           => $_POST['hora_visita'] ?: null,

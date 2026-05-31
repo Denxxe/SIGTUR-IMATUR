@@ -11,8 +11,7 @@
     <div class="page__actions">
         <?php
         $qsR = http_build_query(array_filter([
-            'estado'           => $data['filtro_estado']     ?? '',
-            'nivel_dificultad' => $data['filtro_dificultad'] ?? '',
+            'estado' => $data['filtro_estado'] ?? '',
         ]));
         ?>
         <div style="display:flex; gap:var(--sp-2);">
@@ -89,21 +88,10 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="sig-field" style="margin:0; min-width:170px;">
-                    <label class="sig-field__label">Dificultad</label>
-                    <select name="nivel_dificultad" class="sig-select">
-                        <option value="">Todas</option>
-                        <?php foreach (['Fácil','Moderado','Difícil','Extremo'] as $opt): ?>
-                            <option value="<?php echo $opt; ?>" <?php if (($data['filtro_dificultad'] ?? '') === $opt) echo 'selected'; ?>>
-                                <?php echo $opt; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
                 <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm">
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
-                <?php if (!empty($data['filtro_estado']) || !empty($data['filtro_dificultad'])): ?>
+                <?php if (!empty($data['filtro_estado'])): ?>
                 <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--ghost btn-sig--sm">
                     <i class="bi bi-x-circle"></i> Limpiar
                 </a>
@@ -205,7 +193,6 @@
                 <th>Tipo</th>
                 <th>Fecha Visita</th>
                 <th>Guía</th>
-                <th>Dificultad</th>
                 <th>Estado</th>
                 <th style="text-align:center;">Paradas</th>
                 <th style="text-align:center;">Particip.</th>
@@ -215,7 +202,7 @@
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="9" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="8" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
@@ -231,16 +218,6 @@
                             <?php endif; ?>
                         </td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->facilitador_nombre ?? '—'); ?></td>
-                        <td>
-                            <?php
-                            $diffBadge = 'sig-badge--neutral';
-                            if ($r->nivel_dificultad == 'Fácil') $diffBadge = 'sig-badge--success';
-                            elseif ($r->nivel_dificultad == 'Moderado') $diffBadge = 'sig-badge--info';
-                            elseif ($r->nivel_dificultad == 'Difícil') $diffBadge = 'sig-badge--warning';
-                            elseif ($r->nivel_dificultad == 'Extremo') $diffBadge = 'sig-badge--danger';
-                            ?>
-                            <span class="sig-badge sig-badge--sm <?php echo $diffBadge; ?>"><?php echo $r->nivel_dificultad; ?></span>
-                        </td>
                         <td>
                             <?php
                             $statusBadge = 'sig-badge--neutral';

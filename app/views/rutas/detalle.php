@@ -52,11 +52,15 @@
             <?php if ($data['ruta']->facilitador_nombre): ?>
             <span><strong>Guía:</strong> <?php echo htmlspecialchars($data['ruta']->facilitador_nombre . ' ' . ($data['ruta']->facilitador_apellido ?? '')); ?></span>
             <?php endif; ?>
-            <span><strong>Dificultad:</strong>
-                <span class="sig-badge sig-badge--sm sig-badge--neutral"><?php echo $data['ruta']->nivel_dificultad ?? ''; ?></span>
+            <?php if (!empty($data['ruta']->tipo_ruta) && $data['ruta']->tipo_ruta !== 'General'): ?>
+            <span><strong>Tipo:</strong>
+                <span class="sig-badge sig-badge--sm sig-badge--info"><?php echo htmlspecialchars($data['ruta']->tipo_ruta); ?></span>
             </span>
+            <?php endif; ?>
             <span><strong>Estado:</strong>
-                <?php $sc = $data['ruta']->estado == 'Activa' ? 'sig-badge--success' : 'sig-badge--neutral'; ?>
+                <?php
+                $sc = ['Activa'=>'sig-badge--success','Finalizada'=>'sig-badge--brand','En Mantenimiento'=>'sig-badge--warning'][$data['ruta']->estado ?? ''] ?? 'sig-badge--neutral';
+                ?>
                 <span class="sig-badge sig-badge--sm <?php echo $sc; ?>"><?php echo $data['ruta']->estado ?? ''; ?></span>
             </span>
         </div>
