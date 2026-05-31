@@ -710,18 +710,30 @@ function editarPunto(p) {
 }
 
 // ── Leaflet — Selección de coordenadas ───────────────────────────────────────
-// Fix rutas de íconos (Leaflet no puede detectar automáticamente con CSS externo)
-if (typeof L !== 'undefined') {
-    delete L.Icon.Default.prototype._getIconUrl;
-    L.Icon.Default.mergeOptions({
-        iconRetinaUrl : URL_ROOT + '/assets/css/images/marker-icon-2x.png',
-        iconUrl       : URL_ROOT + '/assets/css/images/marker-icon.png',
-        shadowUrl     : URL_ROOT + '/assets/css/images/marker-shadow.png',
-    });
-}
-
 var _mapaLeaflet = null;
 var _mapaMarker  = null;
+
+// Ícono SVG personalizado — pin teal con centro blanco, sin texto ni sombra
+var _pinIcon = null;
+if (typeof L !== 'undefined') {
+    _pinIcon = L.divIcon({
+        className : '',          // sin clase extra (evita estilos por defecto)
+        html      : '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40">' +
+                        '<filter id="dropshadow" x="-30%" y="-10%" width="160%" height="160%">' +
+                            '<feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,.35)"/>' +
+                        '</filter>' +
+                        '<path d="M15 0C6.72 0 0 6.72 0 15c0 10.5 15 25 15 25s15-14.5 15-25C30 6.72 23.28 0 15 0z"' +
+                              ' fill="#0d9488" filter="url(#dropshadow)"/>' +
+                        '<path d="M15 2C7.82 2 2 7.82 2 15c0 9.5 13 22.5 13 22.5S28 24.5 28 15C28 7.82 22.18 2 15 2z"' +
+                              ' fill="none" stroke="white" stroke-width="1.5"/>' +
+                        '<circle cx="15" cy="14.5" r="5.5" fill="white"/>' +
+                        '<circle cx="15" cy="14.5" r="3" fill="#0d9488"/>' +
+                    '</svg>',
+        iconSize    : [30, 40],
+        iconAnchor  : [15, 40],   // punta del pin en el centro-inferior
+        popupAnchor : [0, -40],
+    });
+}
 
 function abrirMapa() {
     var latExist = parseFloat(document.getElementById('pt_lat').value) || null;
@@ -758,7 +770,7 @@ function abrirMapa() {
         }).addTo(_mapaLeaflet);
 
         if (tieneCoords) {
-            _mapaMarker = L.marker([cLat, cLng]).addTo(_mapaLeaflet);
+            _mapaMarker = L.marker([cLat, cLng], { icon: _pinIcon }).addTo(_mapaLeaflet);
         }
 
         _mapaLeaflet.on('click', function(e) {
@@ -768,7 +780,7 @@ function abrirMapa() {
             if (_mapaMarker) {
                 _mapaMarker.setLatLng(e.latlng);
             } else {
-                _mapaMarker = L.marker(e.latlng).addTo(_mapaLeaflet);
+                _mapaMarker = L.marker(e.latlng, { icon: _pinIcon }).addTo(_mapaLeaflet);
             }
             document.getElementById('mapa_lat_preview').textContent = lat;
             document.getElementById('mapa_lng_preview').textContent = lng;
