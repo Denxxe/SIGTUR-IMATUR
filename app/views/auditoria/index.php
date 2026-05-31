@@ -105,36 +105,89 @@ function auditOcultar(): array {
 </div>
 
 <?php
-$logs = $data['logs'] ?? [];
-// Conteos por operación para los chips de resumen
-$cnt = ['INSERT' => 0, 'UPDATE' => 0, 'DELETE' => 0, 'RESTORE' => 0];
-foreach ($logs as $l) { if (isset($cnt[$l->operacion])) $cnt[$l->operacion]++; }
+$logs         = $data['logs'] ?? [];
+$filtros      = $data['filtros'] ?? ['fecha_inicio'=>'','fecha_fin'=>'','modulo'=>'','operacion'=>'','buscar'=>''];
+$modulosF     = $data['modulos'] ?? [];
+$pagina       = (int)($data['pagina'] ?? 1);
+$totalPaginas = (int)($data['total_paginas'] ?? 1);
+$total        = (int)($data['total'] ?? count($logs));
+$porPagina    = (int)($data['por_pagina'] ?? 50);
+$desde        = $total === 0 ? 0 : (($pagina - 1) * $porPagina) + 1;
+$hasta        = min($total, $pagina * $porPagina);
+$hayFiltro    = ($filtros['fecha_inicio'] || $filtros['fecha_fin'] || $filtros['modulo'] || $filtros['operacion'] || $filtros['buscar']);
+
 $opMeta = [
     'INSERT'  => ['Creación',     'sig-badge--success', 'bi-plus-circle-fill',          '#059669'],
     'UPDATE'  => ['Edición',      'sig-badge--info',    'bi-pencil-fill',               '#2563EB'],
     'DELETE'  => ['Eliminación',  'sig-badge--danger',  'bi-trash-fill',                '#DC2626'],
     'RESTORE' => ['Restauración', 'sig-badge--brand',   'bi-arrow-counterclockwise',    '#7C3AED'],
 ];
+
+/** URL de una página preservando los filtros activos. */
+function auditUrl(array $filtros, int $p): string {
+    $q = array_filter($filtros, fn($v) => $v !== '' && $v !== null);
+    $q['p'] = $p;
+    return URL_ROOT . '/auditoria/index?' . http_build_query($q);
+}
 ?>
 
-<!-- Barra de filtros + resumen -->
-<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;">
-        <div style="position:relative;flex:1;min-width:220px;">
-            <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;"></i>
-            <input type="text" id="auditSearch" class="sig-input" placeholder="Buscar por usuario, módulo o acción…" style="padding-left:34px;" oninput="filtrarAudit()">
+<!-- Barra de filtros (server-side) -->
+<form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/auditoria/index" style="margin-bottom:var(--sp-4);">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);display:flex;align-items:flex-end;gap:var(--sp-3);flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
+            <div style="position:relative;">
+                <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;"></i>
+                <input type="text" name="buscar" class="sig-input" placeholder="Responsable o módulo…" style="padding-left:34px;" value="<?php echo htmlspecialchars($filtros['buscar']); ?>">
+            </div>
         </div>
-        <select id="auditOp" class="sig-input" style="max-width:200px;" onchange="filtrarAudit()">
-            <option value="">Todas las acciones</option>
-            <option value="INSERT">Creación (<?php echo $cnt['INSERT']; ?>)</option>
-            <option value="UPDATE">Edición (<?php echo $cnt['UPDATE']; ?>)</option>
-            <option value="DELETE">Eliminación (<?php echo $cnt['DELETE']; ?>)</option>
-            <option value="RESTORE">Restauración (<?php echo $cnt['RESTORE']; ?>)</option>
-        </select>
-        <span class="sig-badge sig-badge--neutral" id="auditCount" style="font-weight:700;">
-            <?php echo count($logs); ?> registros
-        </span>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Desde</label>
+            <input type="date" name="fecha_inicio" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio']); ?>">
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
+            <input type="date" name="fecha_fin" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_fin']); ?>">
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Módulo</label>
+            <select name="modulo" class="sig-input" style="max-width:200px;">
+                <option value="">Todos</option>
+                <?php foreach ($modulosF as $m): ?>
+                    <option value="<?php echo htmlspecialchars($m->tabla_afectada); ?>" <?php echo $filtros['modulo'] === $m->tabla_afectada ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars(auditModulo($m->tabla_afectada)); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Acción</label>
+            <select name="operacion" class="sig-input" style="max-width:170px;">
+                <option value="">Todas</option>
+                <?php foreach ($opMeta as $opKey => $opInfo): ?>
+                    <option value="<?php echo $opKey; ?>" <?php echo $filtros['operacion'] === $opKey ? 'selected' : ''; ?>><?php echo $opInfo[0]; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
+            <?php if ($hayFiltro): ?>
+            <a href="<?php echo URL_ROOT; ?>/auditoria/index" class="btn-sig btn-sig--ghost" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+            <?php endif; ?>
+        </div>
     </div>
+</form>
+
+<!-- Resumen de resultados -->
+<div class="anim-slide-up" style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap;">
+    <span style="font-size:13px;color:var(--text-secondary);">
+        <?php if ($total > 0): ?>
+            Mostrando <strong><?php echo $desde; ?>–<?php echo $hasta; ?></strong> de <strong><?php echo number_format($total); ?></strong> registros<?php echo $hayFiltro ? ' (filtrados)' : ''; ?>
+        <?php else: ?>
+            Sin registros<?php echo $hayFiltro ? ' para el filtro aplicado' : ''; ?>
+        <?php endif; ?>
+    </span>
+    <span class="sig-badge sig-badge--neutral" style="font-weight:700;">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
 </div>
 
 <div class="sig-table-wrap anim-slide-up">
@@ -152,14 +205,16 @@ $opMeta = [
         <tbody>
             <?php if (empty($logs)): ?>
                 <tr>
-                    <td colspan="6" class="sig-table-empty">No se han registrado acciones de auditoría.</td>
+                    <td colspan="6" class="sig-table-empty">
+                        <i class="bi bi-search" style="opacity:.5;margin-right:6px;"></i>
+                        <?php echo $hayFiltro ? 'No hay registros que coincidan con el filtro.' : 'No se han registrado acciones de auditoría.'; ?>
+                    </td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($logs as $log):
                     $actor = $log->actor_name ?: 'Sistema';
                     $esSistema = empty($log->actor_name);
                     [$opLbl, $opCls, $opIco] = $opMeta[$log->operacion] ?? [$log->operacion, 'sig-badge--neutral', 'bi-dot'];
-                    $busca = mb_strtolower($actor . ' ' . auditModulo($log->tabla_afectada) . ' ' . $opLbl . ' ' . $log->operacion);
 
                     // ── Construir detalle humano ──────────────────────────────
                     $prev = json_decode($log->datos_previos ?? 'null', true);
@@ -168,7 +223,7 @@ $opMeta = [
                     $new  = is_array($new)  ? $new  : [];
                     $ocultar = auditOcultar();
                 ?>
-                    <tr data-search="<?php echo htmlspecialchars($busca); ?>" data-op="<?php echo $log->operacion; ?>">
+                    <tr>
                         <td class="cell-strong" style="white-space:nowrap"><i class="bi bi-clock-history" style="opacity:.45;margin-right:5px;"></i><?php echo date('d/m/Y H:i:s', strtotime($log->fecha)); ?></td>
                         <td>
                             <span class="sig-badge sig-badge--neutral">
@@ -270,11 +325,34 @@ $opMeta = [
             <?php endif; ?>
         </tbody>
     </table>
-    <div id="auditNoResults" style="display:none;text-align:center;padding:var(--sp-6);color:var(--text-tertiary);">
-        <i class="bi bi-search" style="font-size:1.5rem;display:block;margin-bottom:var(--sp-2);"></i>
-        No hay registros que coincidan con el filtro.
-    </div>
 </div>
+
+<!-- Paginación -->
+<?php if ($totalPaginas > 1):
+    $win = 2;
+    $ini = max(1, $pagina - $win);
+    $fin = min($totalPaginas, $pagina + $win);
+?>
+<nav class="anim-slide-up" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:var(--sp-4);flex-wrap:wrap;">
+    <?php if ($pagina > 1): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, 1); ?>" title="Primera"><i class="bi bi-chevron-double-left"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $pagina - 1); ?>"><i class="bi bi-chevron-left"></i> Anterior</a>
+    <?php endif; ?>
+    <?php if ($ini > 1): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php for ($n = $ini; $n <= $fin; $n++): ?>
+        <?php if ($n === $pagina): ?>
+            <span class="btn-sig btn-sig--primary btn-sig--sm" style="pointer-events:none;min-width:38px;justify-content:center;"><?php echo $n; ?></span>
+        <?php else: ?>
+            <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $n); ?>" style="min-width:38px;justify-content:center;"><?php echo $n; ?></a>
+        <?php endif; ?>
+    <?php endfor; ?>
+    <?php if ($fin < $totalPaginas): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php if ($pagina < $totalPaginas): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $pagina + 1); ?>">Siguiente <i class="bi bi-chevron-right"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $totalPaginas); ?>" title="Última"><i class="bi bi-chevron-double-right"></i></a>
+    <?php endif; ?>
+</nav>
+<?php endif; ?>
 
 <style>
 .audit-detail { background:var(--bg-muted); border:1px solid var(--border-subtle); border-radius:10px; padding:var(--sp-3) var(--sp-4); max-width:720px; }
@@ -289,24 +367,5 @@ $opMeta = [
 .audit-kv__before { color:#b91c1c; text-decoration:line-through; opacity:.85; padding-right:10px; }
 .audit-kv__after  { color:#047857; font-weight:600; padding-left:10px; }
 </style>
-
-<script>
-function filtrarAudit() {
-    const q  = (document.getElementById('auditSearch').value || '').toLowerCase().trim();
-    const op = document.getElementById('auditOp').value;
-    const rows = document.querySelectorAll('#auditTable tbody tr');
-    let visibles = 0;
-    rows.forEach(function (tr) {
-        if (!tr.dataset.search) return; // fila vacía
-        const okText = !q  || tr.dataset.search.indexOf(q) !== -1;
-        const okOp   = !op || tr.dataset.op === op;
-        const show = okText && okOp;
-        tr.style.display = show ? '' : 'none';
-        if (show) visibles++;
-    });
-    document.getElementById('auditCount').textContent = visibles + ' registros';
-    document.getElementById('auditNoResults').style.display = visibles === 0 ? 'block' : 'none';
-}
-</script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

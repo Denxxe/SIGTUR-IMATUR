@@ -21,6 +21,63 @@ class AuditLog extends Model
         return $db->resultSet();
     }
 
+    /**
+     * Bitácora paginada con filtros server-side.
+     * @param int   $pagina    1-based
+     * @param int   $porPagina tamaño de página
+     * @param array $f         filtros: fecha_inicio, fecha_fin, modulo, operacion, buscar
+     * @return array ['items' => [...], 'total' => int]
+     */
+    public static function paginate(int $pagina, int $porPagina, array $f = []): array
+    {
+        $db     = new Database();
+        $pagina = max(1, $pagina);
+        $offset = ($pagina - 1) * $porPagina;
+
+        $joins = "LEFT JOIN usuarios u   ON a.id_usuario  = u.id
+                  LEFT JOIN empleados e  ON u.id_empleado = e.id
+                  LEFT JOIN personas per ON e.id_persona  = per.id";
+
+        $where = "1=1";
+        $binds = [];
+        if (!empty($f['fecha_inicio'])) { $where .= " AND a.fecha >= :fi"; $binds[':fi'] = $f['fecha_inicio'] . ' 00:00:00'; }
+        if (!empty($f['fecha_fin']))    { $where .= " AND a.fecha <= :ff"; $binds[':ff'] = $f['fecha_fin'] . ' 23:59:59'; }
+        if (!empty($f['modulo']))       { $where .= " AND a.tabla_afectada = :mod"; $binds[':mod'] = $f['modulo']; }
+        if (!empty($f['operacion']))    { $where .= " AND a.operacion = :op"; $binds[':op'] = $f['operacion']; }
+        if (!empty($f['buscar'])) {
+            $where .= " AND (a.tabla_afectada ILIKE :q OR u.username ILIKE :q
+                        OR (COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')) ILIKE :q)";
+            $binds[':q'] = '%' . $f['buscar'] . '%';
+        }
+
+        // Total de registros que cumplen el filtro
+        $db->query("SELECT COUNT(*) AS total FROM audit_logs a {$joins} WHERE {$where}");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $total = (int)($db->single()->total ?? 0);
+
+        // Página solicitada
+        $db->query("SELECT a.*, u.username,
+                           COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username) AS actor_name
+                    FROM audit_logs a {$joins}
+                    WHERE {$where}
+                    ORDER BY a.fecha DESC
+                    LIMIT :limit OFFSET :offset");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $db->bind(':limit', (int)$porPagina);
+        $db->bind(':offset', (int)$offset);
+        $items = $db->resultSet();
+
+        return ['items' => $items, 'total' => $total];
+    }
+
+    /** Módulos (tablas) que efectivamente tienen registros en la bitácora — para el filtro. */
+    public static function modulosDistintos(): array
+    {
+        $db = new Database();
+        $db->query("SELECT DISTINCT tabla_afectada FROM audit_logs WHERE tabla_afectada IS NOT NULL ORDER BY tabla_afectada");
+        return $db->resultSet();
+    }
+
     public static function byTabla($tabla)
     {
         $db = new Database();

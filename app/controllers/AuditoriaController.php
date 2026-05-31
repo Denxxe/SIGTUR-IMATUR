@@ -68,10 +68,31 @@ class AuditoriaController extends Controller {
 
     public function index() {
         $this->guard('AuditoriaController');
-        $logs = AuditLog::all();
+
+        $porPagina = 50;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
+            'fecha_inicio' => trim($_GET['fecha_inicio'] ?? ''),
+            'fecha_fin'    => trim($_GET['fecha_fin']    ?? ''),
+            'modulo'       => trim($_GET['modulo']       ?? ''),
+            'operacion'    => trim($_GET['operacion']    ?? ''),
+            'buscar'       => trim($_GET['buscar']       ?? ''),
+        ];
+
+        $res          = AuditLog::paginate($pagina, $porPagina, $filtros);
+        $total        = $res['total'];
+        $totalPaginas = max(1, (int)ceil($total / $porPagina));
+        if ($pagina > $totalPaginas) $pagina = $totalPaginas;
+
         $data = [
-            'titulo' => 'Bitácora y Trazabilidad de Acciones',
-            'logs' => $logs
+            'titulo'        => 'Bitácora y Trazabilidad de Acciones',
+            'logs'          => $res['items'],
+            'total'         => $total,
+            'pagina'        => $pagina,
+            'por_pagina'    => $porPagina,
+            'total_paginas' => $totalPaginas,
+            'filtros'       => $filtros,
+            'modulos'       => AuditLog::modulosDistintos(),
         ];
         $this->view('auditoria/index', $data);
     }
