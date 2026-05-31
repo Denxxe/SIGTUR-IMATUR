@@ -50,6 +50,9 @@ function auditCampo(string $k): string {
         'orden' => 'Orden', 'latitud' => 'Latitud', 'longitud' => 'Longitud', 'nivel' => 'Nivel',
         'nombre_libre' => 'Nombre', 'apellido_libre' => 'Apellido', 'cedula_libre' => 'Documento',
         'genero_libre' => 'Género', 'fecha_nac_libre' => 'Fecha de nacimiento', 'nombre_docente' => 'Docente',
+        'id_taller' => 'Taller (ID)', 'id_ruta' => 'Ruta (ID)', 'id_facilitador' => 'Facilitador (ID)',
+        'id_visitante' => 'Visitante (ID)', 'id_empleado' => 'Empleado (ID)', 'id_oficio' => 'Oficio (ID)',
+        'id_ubicacion_formacion' => 'Sede (ID)', 'ubicacion' => 'Ubicación', 'cargo' => 'Cargo', 'sueldo' => 'Sueldo',
     ];
     return $map[$k] ?? ucfirst(str_replace('_', ' ', $k));
 }
@@ -284,12 +287,14 @@ function auditUrl(array $filtros, int $p): string {
                                 <?php
                                 // ── UPDATE (diff) ─────────────────────────────
                                 else:
-                                    $keys = array_unique(array_merge(array_keys($prev), array_keys($new)));
+                                    // Solo es un cambio real si el campo existe en AMBOS lados y su valor difiere.
+                                    // (datos_nuevos suele traer solo el subconjunto editado; los campos
+                                    //  presentes solo en 'previo' no se modificaron en esta acción.)
                                     $cambios = [];
-                                    foreach ($keys as $k) {
+                                    foreach ($new as $k => $b) {
                                         if (in_array($k, $ocultar)) continue;
-                                        $a = $prev[$k] ?? null;
-                                        $b = $new[$k]  ?? null;
+                                        if (!array_key_exists($k, $prev)) continue; // sin contraparte previa comparable
+                                        $a = $prev[$k];
                                         if (auditNorm($a) !== auditNorm($b)) $cambios[$k] = [$a, $b];
                                     }
                                     // ¿Solo cambió is_active? → restauración / desactivación
