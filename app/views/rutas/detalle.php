@@ -473,14 +473,19 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                             <i class="bi bi-map"></i> Seleccionar en mapa
                         </button>
                         <span style="font-size:11px; color:var(--text-tertiary); margin-left:var(--sp-2);">
-                            Clic en el mapa para fijar la coordenada. Tiles cacheados para uso offline.
+                            Tiles cacheados para uso offline.
                         </span>
+                        <!-- Feedback de coordenadas seleccionadas -->
+                        <div id="coord_feedback" style="display:none; margin-top:var(--sp-2); font-size:12px; font-weight:600; color:#0d9488; padding:var(--sp-2) var(--sp-3); background:rgba(13,148,136,.08); border:1px solid rgba(13,148,136,.2); border-radius:6px;">
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn-sig btn-sig--primary" style="background:var(--teal-600);"><i class="bi bi-check-lg"></i> Guardar Punto</button>
+                <button type="submit" id="btn_guardar_punto" class="btn-sig btn-sig--primary" style="background:var(--teal-600);" disabled>
+                    <i class="bi bi-check-lg"></i> Guardar Punto
+                </button>
             </div>
         </form>
     </div>
@@ -552,7 +557,8 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                 <div style="display:flex; gap:var(--sp-2);">
                     <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" id="btn_aplicar_coords" class="btn-sig btn-sig--primary"
-                            style="background:var(--teal-600);" onclick="aplicarCoordenadas()" disabled>
+                            style="background:var(--teal-600);" onclick="aplicarCoordenadas()" disabled
+                            title="Selecciona un punto en el mapa primero">
                         <i class="bi bi-check-lg"></i> Aplicar coordenadas
                     </button>
                 </div>
@@ -688,24 +694,66 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
     });
 }());
 
+// ── Validación del formulario de punto ─────────────────────────────────────
+function checkPuntoValid() {
+    var nombre = (document.getElementById('pt_nombre').value || '').trim();
+    var orden  = parseInt(document.getElementById('pt_orden').value || '0', 10);
+    var btn    = document.getElementById('btn_guardar_punto');
+    if (btn) btn.disabled = !(nombre.length >= 1 && orden >= 1);
+}
+
+function resetFeedbackCoord() {
+    var fb = document.getElementById('coord_feedback');
+    if (fb) fb.style.display = 'none';
+}
+
+document.getElementById('pt_nombre').addEventListener('input', checkPuntoValid);
+document.getElementById('pt_orden').addEventListener('input',  checkPuntoValid);
+// Al escribir lat/lng a mano, actualizar feedback
+document.getElementById('pt_lat').addEventListener('input', function() {
+    var lat = this.value.trim(), lng = (document.getElementById('pt_lng').value || '').trim();
+    if (lat && lng) {
+        var fb = document.getElementById('coord_feedback');
+        if (fb) { fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas: ' + lat + ', ' + lng; fb.style.display='block'; }
+    } else resetFeedbackCoord();
+});
+document.getElementById('pt_lng').addEventListener('input', function() {
+    var lng = this.value.trim(), lat = (document.getElementById('pt_lat').value || '').trim();
+    if (lat && lng) {
+        var fb = document.getElementById('coord_feedback');
+        if (fb) { fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas: ' + lat + ', ' + lng; fb.style.display='block'; }
+    } else resetFeedbackCoord();
+});
+
 function nuevoPunto() {
     document.getElementById('modalPuntoLabel').innerText = 'Agregar Parada';
-    document.getElementById('pt_id').value = '';
-    document.getElementById('pt_nombre').value = '';
+    document.getElementById('pt_id').value          = '';
+    document.getElementById('pt_nombre').value      = '';
     document.getElementById('pt_descripcion').value = '';
-    document.getElementById('pt_orden').value = <?php echo count($data['puntos'] ?? []) + 1; ?>;
-    document.getElementById('pt_lat').value = '';
-    document.getElementById('pt_lng').value = '';
+    document.getElementById('pt_orden').value       = <?php echo count($data['puntos'] ?? []) + 1; ?>;
+    document.getElementById('pt_lat').value         = '';
+    document.getElementById('pt_lng').value         = '';
+    resetFeedbackCoord();
+    checkPuntoValid();
 }
 
 function editarPunto(p) {
-    document.getElementById('modalPuntoLabel').innerText = 'Editar: ' + p.nombre;
-    document.getElementById('pt_id').value = p.id;
-    document.getElementById('pt_nombre').value = p.nombre;
-    document.getElementById('pt_descripcion').value = p.descripcion;
-    document.getElementById('pt_orden').value = p.orden;
-    document.getElementById('pt_lat').value = p.latitud || '';
-    document.getElementById('pt_lng').value = p.longitud || '';
+    document.getElementById('modalPuntoLabel').innerText    = 'Editar: ' + p.nombre;
+    document.getElementById('pt_id').value                  = p.id;
+    document.getElementById('pt_nombre').value              = p.nombre;
+    document.getElementById('pt_descripcion').value         = p.descripcion;
+    document.getElementById('pt_orden').value               = p.orden;
+    document.getElementById('pt_lat').value                 = p.latitud || '';
+    document.getElementById('pt_lng').value                 = p.longitud || '';
+    // Mostrar feedback de coords si el punto ya las tiene
+    var fb = document.getElementById('coord_feedback');
+    if (fb && p.latitud && p.longitud) {
+        fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas actuales: ' + p.latitud + ', ' + p.longitud;
+        fb.style.display = 'block';
+    } else if (fb) {
+        fb.style.display = 'none';
+    }
+    checkPuntoValid();
     new bootstrap.Modal(document.getElementById('modalPunto')).show();
 }
 
@@ -795,9 +843,22 @@ function abrirMapa() {
 function aplicarCoordenadas() {
     var lat = document.getElementById('mapa_lat_val').value;
     var lng = document.getElementById('mapa_lng_val').value;
+
+    // Cerrar el modal del mapa programáticamente (data-bs-dismiss no funciona
+    // de forma fiable con backdrop=static en modales apilados)
+    var mapaModal = bootstrap.Modal.getInstance(document.getElementById('modalMapa'));
+    if (mapaModal) mapaModal.hide();
+
     if (lat && lng) {
         document.getElementById('pt_lat').value = lat;
         document.getElementById('pt_lng').value = lng;
+        // Mostrar feedback de coordenadas aplicadas en el formulario del punto
+        var fb = document.getElementById('coord_feedback');
+        if (fb) {
+            fb.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Coordenadas seleccionadas: <strong>' + lat + '</strong>, <strong>' + lng + '</strong>';
+            fb.style.display = 'block';
+        }
+        checkPuntoValid();
     }
 }
 </script>
