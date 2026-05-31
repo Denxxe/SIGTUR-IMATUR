@@ -315,41 +315,4 @@ class Ruta extends Model {
         $db->bind(':res',     $data['resumen_visita'] ?? '');
         return $db->execute();
     }
-
-    public static function autoGenerarInforme(int $id_ruta): void {
-        $db = new Database();
-        $db->query("SELECT
-                        COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'F' THEN 1 END) AS mujeres,
-                        COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'M' THEN 1 END) AS hombres,
-                        COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'F'  THEN 1 END) AS ninas,
-                        COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'M'  THEN 1 END) AS ninos
-                    FROM participantes_ruta pr
-                    LEFT JOIN personas p ON pr.id_persona = p.id
-                    WHERE pr.id_ruta = :id AND pr.is_active = TRUE");
-        $db->bind(':id', $id_ruta);
-        $dem = $db->single();
-
-        $db->query("SELECT r.nombre, r.fecha_visita FROM rutas r WHERE r.id = :id");
-        $db->bind(':id', $id_ruta);
-        $ruta = $db->single();
-
-        $existing = self::getInforme($id_ruta);
-        $m  = (int)($dem->mujeres ?? 0);
-        $h  = (int)($dem->hombres ?? 0);
-        $ni = (int)($dem->ninas   ?? 0);
-        $no = (int)($dem->ninos   ?? 0);
-
-        self::saveInforme([
-            'id_ruta'       => $id_ruta,
-            'lugar_exacto'  => !empty($existing->lugar_exacto) ? $existing->lugar_exacto : ($ruta->nombre ?? ''),
-            'mujeres'       => $m,
-            'hombres'       => $h,
-            'ninas'         => $ni,
-            'ninos'         => $no,
-            'observaciones' => $existing->observaciones ?? '',
-            'resumen_visita'=> !empty($existing->resumen_visita)
-                ? $existing->resumen_visita
-                : 'Visita finalizada con ' . ($m+$h+$ni+$no) . ' participante(s). Complete el resumen si es necesario.',
-        ]);
-    }
 }

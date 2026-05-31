@@ -45,10 +45,6 @@
                 data-bs-toggle="modal" data-bs-target="#modalPunto" onclick="nuevoPunto()">
             <i class="bi bi-pin-map"></i> Agregar Parada
         </button>
-        <button type="button" class="btn-sig btn-sig--primary"
-                data-bs-toggle="modal" data-bs-target="#modalInventario">
-            <i class="bi bi-box-seam"></i> Asignar Equipo
-        </button>
     </div>
 </div>
 
@@ -289,47 +285,6 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
-</div>
-
-<!-- ── Equipos ── -->
-<div class="sig-card anim-slide-up" style="border-top: 4px solid var(--brand-500);">
-    <div class="sig-card__head">
-        <div class="sig-card__title"><i class="bi bi-box-seam" style="color:var(--brand-500);"></i> Bienes y Equipos Asignados</div>
-    </div>
-    <div class="sig-table-wrap">
-        <table class="sig-table">
-            <thead>
-                <tr>
-                    <th>Código / Bien</th><th>Condición</th>
-                    <th class="text-center">Cantidad</th><th>Observaciones</th>
-                    <th class="col-actions">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($data['inventario_asignado'])): ?>
-                    <tr><td colspan="5" class="sig-table-empty">No se han asignado bienes a esta ruta.</td></tr>
-                <?php else: ?>
-                    <?php foreach ($data['inventario_asignado'] as $inv): ?>
-                        <tr>
-                            <td>
-                                <div class="cell-strong"><?php echo htmlspecialchars($inv->item_nombre); ?></div>
-                                <div class="cell-id"><?php echo $inv->codigo_bn ?: 'Sin Código'; ?></div>
-                            </td>
-                            <td><span class="sig-badge sig-badge--info"><?php echo $inv->condicion; ?></span></td>
-                            <td class="text-center" style="font-weight:700;"><?php echo $inv->cantidad; ?></td>
-                            <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($inv->observaciones ?? '—'); ?></td>
-                            <td class="col-actions">
-                                <a href="<?php echo URL_ROOT; ?>/rutas/deleteInventario/<?php echo $inv->id; ?>/<?php echo $data['ruta']->id; ?>"
-                                   class="row-action row-action--del delete-btn">
-                                    <i class="bi bi-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
 </div>
 
 <!-- ── Modal: Añadir Participante ── -->
@@ -575,44 +530,6 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                 <button type="submit" id="btn_guardar_punto" class="btn-sig btn-sig--primary" style="background:var(--teal-600);" disabled>
                     <i class="bi bi-check-lg"></i> Guardar Punto
                 </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- ── Modal: Inventario ── -->
-<div class="modal fade" id="modalInventario" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="<?php echo URL_ROOT; ?>/rutas/storeInventario" method="POST" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Asignar Equipamiento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id ?? ''; ?>">
-                <div class="sig-field mb-4">
-                    <label class="sig-field__label">Bien a Asignar <span class="req">*</span></label>
-                    <select name="id_inventario" class="sig-select" required>
-                        <option value="">Seleccione un bien...</option>
-                        <?php foreach ($data['inventario_disponible'] ?? [] as $item): ?>
-                            <option value="<?php echo $item->id; ?>">
-                                <?php echo ($item->codigo_bn ? $item->codigo_bn . ' — ' : '') . htmlspecialchars($item->nombre); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="sig-field mb-4">
-                    <label class="sig-field__label">Cantidad <span class="req">*</span></label>
-                    <input type="number" name="cantidad" class="sig-input" value="1" min="1" required>
-                </div>
-                <div class="sig-field">
-                    <label class="sig-field__label">Observaciones</label>
-                    <textarea name="observaciones" class="sig-textarea" rows="2"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Asignar Bien</button>
             </div>
         </form>
     </div>

@@ -96,8 +96,6 @@ class RutasController extends Controller {
         }
         $puntos               = Ruta::getPuntos($id);
         $participantes        = Ruta::getParticipantes($id);
-        $inventario_asignado  = RutaInventario::getByRuta($id);
-        $inventario_disponible= Inventario::all();
 
         require_once '../app/models/Parroquia.php';
         $parroquias = Parroquia::all();
@@ -116,8 +114,6 @@ class RutasController extends Controller {
             'ruta'                 => $ruta,
             'puntos'               => $puntos,
             'participantes'        => $participantes,
-            'inventario_asignado'  => $inventario_asignado,
-            'inventario_disponible'=> $inventario_disponible,
             'parroquias'           => $parroquias,
             'oficiosEmitidos'      => $oficiosEmitidos,
         ];
@@ -269,7 +265,16 @@ class RutasController extends Controller {
                 Ruta::inscribir($id_ruta, $idPersona, $userId, null, $observaciones);
             }
 
-            flash('global_msg', 'Participante registrado correctamente.');
+            // Advertencia no bloqueante de cupo (mismo criterio que talleres):
+            // cupo_maximo es estimación de planificación, no límite rígido.
+            $rutaCupo  = Ruta::find($id_ruta);
+            $cupoMax   = (int)($rutaCupo->cupo_maximo ?? 0);
+            $inscritos = Ruta::countParticipantes($id_ruta);
+            if ($cupoMax > 0 && $inscritos >= $cupoMax) {
+                flash('global_msg', 'Participante registrado. Aviso: el cupo estimado de ' . $cupoMax . ' personas ha sido alcanzado o superado.', 'warning');
+            } else {
+                flash('global_msg', 'Participante registrado correctamente.');
+            }
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
@@ -620,35 +625,5 @@ class RutasController extends Controller {
             flash('global_msg', $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/rutas/index');
-    }
-
-    public function storeInventario() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
-        $_POST = $this->sanitizePost();
-
-        $id_ruta       = (int)$_POST['id_ruta'];
-        $id_inventario = (int)$_POST['id_inventario'];
-        $cantidad      = (int)$_POST['cantidad'];
-        $observaciones = trim($_POST['observaciones']);
-        try {
-            if (RutaInventario::asignar($id_ruta, $id_inventario, $cantidad, $observaciones, $this->getUserId())) {
-                flash('global_msg', 'Equipamiento asignado.');
-            } else {
-                throw new Exception('Error al asignar recurso.');
-            }
-        } catch (Exception $e) {
-            flash('global_msg', $e->getMessage(), 'danger');
-        }
-        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
-    }
-
-    public function deleteInventario($id_asignacion, $id_ruta) {
-        try {
-            if (RutaInventario::remover($id_asignacion)) flash('global_msg', 'Asignación removida.', 'info');
-            else throw new Exception('No se pudo desvincular el recurso.');
-        } catch (Exception $e) {
-            flash('global_msg', $e->getMessage(), 'danger');
-        }
-        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
     }
 }
