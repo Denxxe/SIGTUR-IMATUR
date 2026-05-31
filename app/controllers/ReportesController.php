@@ -1203,9 +1203,28 @@ class ReportesController extends Controller {
                               AND EXTRACT(YEAR FROM fecha_inicio) = :anio");
                 $db->bind(':anio', $anioActual);
                 $talleresAnio = $db->single();
+
+                // ── T-DEMO: Demografía de participantes en rutas ────────────
+                $db->query("SELECT
+                                COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'F' THEN 1 END) AS mujeres,
+                                COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'M' THEN 1 END) AS hombres,
+                                COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'F'  THEN 1 END) AS ninas,
+                                COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'M'  THEN 1 END) AS ninos,
+                                COUNT(*) AS total
+                            FROM participantes_ruta pr
+                            LEFT JOIN personas p ON pr.id_persona = p.id
+                            WHERE pr.is_active = TRUE
+                              AND EXISTS (
+                                  SELECT 1 FROM rutas r
+                                  WHERE r.id = pr.id_ruta AND r.is_active = TRUE
+                                    AND EXTRACT(YEAR FROM COALESCE(r.fecha_visita, r.created_at)) = :anio
+                              )");
+                $db->bind(':anio', $anioActual);
+                $demografiaRutas = $db->single();
             } catch (Exception $ignored) {
-                $metaTalleres = null;
-                $talleresAnio = null;
+                $metaTalleres    = null;
+                $talleresAnio    = null;
+                $demografiaRutas = null;
             }
 
             // ── PROP-F01: Tasa de ocupación de actividades (año actual) ──────────────
@@ -1285,6 +1304,7 @@ class ReportesController extends Controller {
                 'rutasAnio'             => (int)($rutasAnio->total  ?? 0),
                 'metaTalleres'          => (int)($metaTalleres->valor ?? 0),
                 'talleresAnio'          => (int)($talleresAnio->total ?? 0),
+                'demografiaRutas'       => $demografiaRutas   ?? null,
                 // Indicadores de eficiencia operativa
                 'kpiOcupacion'          => $kpiOcupacion,
                 'kpiEficienciaActs'     => $kpiEficienciaActs,

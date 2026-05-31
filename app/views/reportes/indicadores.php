@@ -712,6 +712,66 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
+     SECCIÓN: TURISMO — DEMOGRAFÍA DE PARTICIPANTES (T-DEMO)
+════════════════════════════════════════════════════════════════════════ -->
+<?php
+$dr     = $data['demografiaRutas'] ?? null;
+$drTot  = (int)($dr->total ?? 0);
+$drMuj  = (int)($dr->mujeres ?? 0);
+$drHom  = (int)($dr->hombres ?? 0);
+$drNia  = (int)($dr->ninas   ?? 0);
+$drNio  = (int)($dr->ninos   ?? 0);
+function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
+?>
+<?php if ($drTot > 0): ?>
+<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
+    <div style="width:4px;height:20px;border-radius:2px;background:#D97706;flex-shrink:0;"></div>
+    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Turismo — Demografía de Participantes <?php echo $data['anioActual']; ?></span>
+    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+</div>
+<div class="row g-3 mb-4 anim-slide-up">
+    <?php foreach ([
+        ['Mujeres', $drMuj, '#EC4899', 'bi-gender-female'],
+        ['Hombres', $drHom, '#3B82F6', 'bi-gender-male'],
+        ['Niñas (5-11)', $drNia, '#F59E0B', 'bi-person-heart'],
+        ['Niños (5-11)', $drNio, '#10B981', 'bi-person'],
+        ['Total', $drTot, '#D97706', 'bi-people-fill'],
+    ] as [$lbl,$val,$color,$ico]): ?>
+    <div class="col-md col-4">
+        <div class="sig-card" style="border-bottom:3px solid <?php echo $color; ?>;">
+            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
+                <i class="bi <?php echo $ico; ?>" style="color:<?php echo $color; ?>;font-size:1.2rem;"></i>
+                <div style="font-size:1.5rem;font-weight:900;color:var(--text-primary);margin:4px 0;"><?php echo number_format($val); ?></div>
+                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;"><?php echo $lbl; ?></div>
+                <?php if ($lbl !== 'Total' && $drTot > 0): ?>
+                    <div style="font-size:10px;color:<?php echo $color; ?>;font-weight:700;"><?php echo pctDR($val,$drTot); ?>%</div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<div class="row g-4 mb-6 anim-slide-up">
+    <div class="col-md-5">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-pie-chart-fill" style="color:#D97706;"></i> Distribución por Género y Grupo</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartDemografiaRutas"></div></div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="sig-card h-100">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-info-circle" style="color:#D97706;"></i> Notas sobre los datos</div></div>
+            <div class="sig-card__body" style="padding:var(--sp-5);font-size:13px;color:var(--text-secondary);line-height:1.8;">
+                <p><i class="bi bi-check-circle" style="color:#059669;"></i> <strong>Mujeres y Hombres</strong>: adultos con cédula registrados en el sistema (género del perfil de personas).</p>
+                <p><i class="bi bi-check-circle" style="color:#059669;"></i> <strong>Niñas y Niños (5-11)</strong>: participantes libres con género y fecha de nacimiento capturados al inscribirse.</p>
+                <p><i class="bi bi-exclamation-circle" style="color:#D97706;"></i> Participantes sin género registrado o sin fecha de nacimiento no se contabilizan en esta gráfica.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: INVENTARIO DE BIENES
 ════════════════════════════════════════════════════════════════════════ -->
 <div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
@@ -1069,6 +1129,21 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: false },
         theme, noData
     }).render();
+
+    // ── T-DEMO: Demografía de participantes en rutas (donut) ─────────────────
+    <?php if (!empty($drTot)): ?>
+    new ApexCharts(document.querySelector('#chartDemografiaRutas'), {
+        chart: { type: 'donut', height: 280, background: 'transparent' },
+        series: [<?php echo $drMuj; ?>, <?php echo $drHom; ?>, <?php echo $drNia; ?>, <?php echo $drNio; ?>],
+        labels: ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)'],
+        colors: ['#EC4899', '#3B82F6', '#F59E0B', '#10B981'],
+        legend: { position: 'bottom', labels: { colors: tp }, fontSize: '11px' },
+        stroke: { show: false },
+        plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
+        dataLabels: { enabled: false },
+        theme, noData
+    }).render();
+    <?php endif; ?>
 
     // ── PROP-P01: Tipo de contrato (donut) ────────────────────────────
     <?php

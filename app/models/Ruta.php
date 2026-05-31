@@ -258,4 +258,98 @@ class Ruta extends Model {
         $db->bind(':id', $id_ruta);
         return $db->single() ?: null;
     }
+
+    // ── Asistencia ───────────────────────────────────────────────────────────
+
+    public static function marcarAsistencia(int $id_participante, bool $asistio, $userId): void {
+        $db = new Database();
+        $db->query("UPDATE participantes_ruta SET asistio = :a, updated_at = NOW(), updated_by = :u WHERE id = :id AND is_active = TRUE");
+        $db->bind(':a', $asistio);
+        $db->bind(':u', $userId);
+        $db->bind(':id', $id_participante);
+        $db->execute();
+    }
+
+    public static function marcarAsistenciaMasiva(int $id_ruta, $userId): void {
+        $db = new Database();
+        $db->query("UPDATE participantes_ruta SET asistio = TRUE, updated_at = NOW(), updated_by = :u WHERE id_ruta = :r AND is_active = TRUE AND asistio = FALSE");
+        $db->bind(':u', $userId);
+        $db->bind(':r', $id_ruta);
+        $db->execute();
+    }
+
+    // ── Informe post-visita ──────────────────────────────────────────────────
+
+    public static function getInforme(int $id_ruta): ?object {
+        $db = new Database();
+        $db->query("SELECT * FROM ruta_informes WHERE id_ruta = :id");
+        $db->bind(':id', $id_ruta);
+        return $db->single() ?: null;
+    }
+
+    public static function saveInforme(array $data): bool {
+        $db     = new Database();
+        $userId = $_SESSION['user_id'] ?? null;
+        $inf    = self::getInforme($data['id_ruta']);
+        $total  = (int)$data['mujeres'] + (int)$data['hombres'] + (int)$data['ninas'] + (int)$data['ninos'];
+        if ($inf) {
+            $db->query("UPDATE ruta_informes
+                        SET lugar_exacto=:lugar, mujeres=:m, hombres=:h, ninas=:ni, ninos=:no,
+                            total_atendidos=:tot, observaciones=:obs, resumen_visita=:res,
+                            updated_at=CURRENT_TIMESTAMP
+                        WHERE id_ruta=:id_ruta");
+        } else {
+            $db->query("INSERT INTO ruta_informes
+                        (id_ruta, lugar_exacto, mujeres, hombres, ninas, ninos, total_atendidos, observaciones, resumen_visita, created_by)
+                        VALUES (:id_ruta, :lugar, :m, :h, :ni, :no, :tot, :obs, :res, :uid)");
+            $db->bind(':uid', $userId);
+        }
+        $db->bind(':id_ruta', $data['id_ruta']);
+        $db->bind(':lugar',   $data['lugar_exacto']  ?? '');
+        $db->bind(':m',       (int)$data['mujeres']);
+        $db->bind(':h',       (int)$data['hombres']);
+        $db->bind(':ni',      (int)$data['ninas']);
+        $db->bind(':no',      (int)$data['ninos']);
+        $db->bind(':tot',     $total);
+        $db->bind(':obs',     $data['observaciones']  ?? null);
+        $db->bind(':res',     $data['resumen_visita'] ?? '');
+        return $db->execute();
+    }
+
+    public static function autoGenerarInforme(int $id_ruta): void {
+        $db = new Database();
+        $db->query("SELECT
+                        COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'F' THEN 1 END) AS mujeres,
+                        COUNT(CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'M' THEN 1 END) AS hombres,
+                        COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'F'  THEN 1 END) AS ninas,
+                        COUNT(CASE WHEN pr.id_persona IS NULL AND pr.genero_libre = 'M'  THEN 1 END) AS ninos
+                    FROM participantes_ruta pr
+                    LEFT JOIN personas p ON pr.id_persona = p.id
+                    WHERE pr.id_ruta = :id AND pr.is_active = TRUE");
+        $db->bind(':id', $id_ruta);
+        $dem = $db->single();
+
+        $db->query("SELECT r.nombre, r.fecha_visita FROM rutas r WHERE r.id = :id");
+        $db->bind(':id', $id_ruta);
+        $ruta = $db->single();
+
+        $existing = self::getInforme($id_ruta);
+        $m  = (int)($dem->mujeres ?? 0);
+        $h  = (int)($dem->hombres ?? 0);
+        $ni = (int)($dem->ninas   ?? 0);
+        $no = (int)($dem->ninos   ?? 0);
+
+        self::saveInforme([
+            'id_ruta'       => $id_ruta,
+            'lugar_exacto'  => !empty($existing->lugar_exacto) ? $existing->lugar_exacto : ($ruta->nombre ?? ''),
+            'mujeres'       => $m,
+            'hombres'       => $h,
+            'ninas'         => $ni,
+            'ninos'         => $no,
+            'observaciones' => $existing->observaciones ?? '',
+            'resumen_visita'=> !empty($existing->resumen_visita)
+                ? $existing->resumen_visita
+                : 'Visita finalizada con ' . ($m+$h+$ni+$no) . ' participante(s). Complete el resumen si es necesario.',
+        ]);
+    }
 }

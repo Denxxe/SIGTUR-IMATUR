@@ -293,6 +293,162 @@ class RutasController extends Controller {
         header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
     }
 
+    // ── Asistencia ───────────────────────────────────────────────────────────
+
+    public function marcarAsistencia() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['ok'=>false]); exit; }
+        $id      = (int)($_POST['id']     ?? 0);
+        $asistio = !empty($_POST['asistio']) && $_POST['asistio'] !== '0';
+        $userId  = $this->getUserId();
+        try {
+            Ruta::marcarAsistencia($id, $asistio, $userId);
+            echo json_encode(['ok' => true, 'asistio' => $asistio]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function marcarAsistenciaMasiva() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['ok'=>false]); exit; }
+        $idRuta = (int)($_POST['id_ruta'] ?? 0);
+        $userId = $this->getUserId();
+        try {
+            Ruta::marcarAsistenciaMasiva($idRuta, $userId);
+            echo json_encode(['ok' => true]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    // ── Informe post-visita ───────────────────────────────────────────────────
+
+    public function informe($id) {
+        $ruta = Ruta::find($id);
+        if (!$ruta) { header('Location: ' . URL_ROOT . '/rutas/index'); exit; }
+
+        // Sugerencia demográfica desde participantes activos
+        $sugeridos = ['mujeres'=>0,'hombres'=>0,'ninas'=>0,'ninos'=>0];
+        $totalSug  = 0;
+        $db = new Database();
+        $db->query("SELECT
+                        CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'F' THEN 'mujeres'
+                             WHEN pr.id_persona IS NOT NULL AND p.genero = 'M' THEN 'hombres'
+                             WHEN pr.id_persona IS NULL AND pr.genero_libre = 'F' THEN 'ninas'
+                             WHEN pr.id_persona IS NULL AND pr.genero_libre = 'M' THEN 'ninos'
+                             ELSE 'hombres' END AS categoria,
+                        COUNT(*) AS total
+                    FROM participantes_ruta pr
+                    LEFT JOIN personas p ON pr.id_persona = p.id
+                    WHERE pr.id_ruta = :id AND pr.is_active = TRUE
+                    GROUP BY categoria");
+        $db->bind(':id', $id);
+        foreach ($db->resultSet() as $row) {
+            if (isset($sugeridos[$row->categoria])) {
+                $sugeridos[$row->categoria] = (int)$row->total;
+                $totalSug += (int)$row->total;
+            }
+        }
+
+        $informe = Ruta::getInforme((int)$id);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $mujeres = max(0, (int)$_POST['mujeres']);
+            $hombres = max(0, (int)$_POST['hombres']);
+            $ninas   = max(0, (int)$_POST['ninas']);
+            $ninos   = max(0, (int)$_POST['ninos']);
+            try {
+                if (($mujeres + $hombres + $ninas + $ninos) === 0) {
+                    throw new Exception('Debe registrar al menos un participante en el informe.');
+                }
+                if (empty(trim($_POST['resumen_visita'] ?? ''))) {
+                    throw new Exception('El resumen de la visita es obligatorio.');
+                }
+                Ruta::saveInforme([
+                    'id_ruta'       => $id,
+                    'lugar_exacto'  => trim($_POST['lugar_exacto']  ?? ''),
+                    'mujeres'       => $mujeres,
+                    'hombres'       => $hombres,
+                    'ninas'         => $ninas,
+                    'ninos'         => $ninos,
+                    'observaciones' => trim($_POST['observaciones']  ?? '') ?: null,
+                    'resumen_visita'=> trim($_POST['resumen_visita'] ?? ''),
+                ]);
+                flash('global_msg', 'Informe guardado correctamente.');
+            } catch (Exception $e) {
+                flash('global_msg', $e->getMessage(), 'danger');
+            }
+            header('Location: ' . URL_ROOT . '/rutas/informe/' . $id);
+            exit;
+        }
+
+        $this->view('rutas/informe', [
+            'titulo'        => 'Informe de Visita',
+            'ruta'          => $ruta,
+            'informe'       => $informe,
+            'sugeridos'     => $sugeridos,
+            'totalSugeridos'=> $totalSug,
+        ]);
+    }
+
+    public function exportarInformeCsv($id) {
+        $ruta = Ruta::find($id);
+        if (!$ruta) { header('Location: ' . URL_ROOT . '/rutas/index'); exit; }
+        $informe       = Ruta::getInforme((int)$id);
+        $participantes = Ruta::getParticipantes((int)$id);
+
+        $nombre = 'Informe_Ruta_' . preg_replace('/[^A-Za-z0-9_]/', '_', $ruta->nombre ?? 'ruta');
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $nombre . '_' . date('Y-m-d') . '.csv"');
+        $out = fopen('php://output', 'w');
+        fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        fputcsv($out, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
+        fputcsv($out, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
+        fputcsv($out, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF. G-20008498-7'], ';');
+        fputcsv($out, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '  Fecha: ' . date('d/m/Y H:i')], ';');
+        fputcsv($out, [''], ';');
+        fputcsv($out, ['INFORME DE VISITA TURÍSTICA'], ';');
+        fputcsv($out, ['Ruta',     $ruta->nombre], ';');
+        fputcsv($out, ['Tipo',     $ruta->tipo_ruta ?? ''], ';');
+        fputcsv($out, ['Fecha',    $ruta->fecha_visita ?? ''], ';');
+        fputcsv($out, ['Estado',   $ruta->estado], ';');
+        fputcsv($out, [''], ';');
+
+        if ($informe) {
+            fputcsv($out, ['RESUMEN DEMOGRÁFICO'], ';');
+            fputcsv($out, ['Lugar',    $informe->lugar_exacto ?? ''], ';');
+            fputcsv($out, ['Mujeres',  $informe->mujeres  ?? 0], ';');
+            fputcsv($out, ['Hombres',  $informe->hombres  ?? 0], ';');
+            fputcsv($out, ['Niñas (5-11)', $informe->ninas ?? 0], ';');
+            fputcsv($out, ['Niños (5-11)', $informe->ninos ?? 0], ';');
+            fputcsv($out, ['Total',    $informe->total_atendidos ?? 0], ';');
+            fputcsv($out, ['Resumen',  $informe->resumen_visita ?? ''], ';');
+            fputcsv($out, [''], ';');
+        }
+
+        fputcsv($out, ['LISTADO DE PARTICIPANTES (' . count($participantes) . ')'], ';');
+        fputcsv($out, ['Tipo','Cédula/ID','Nombre','Apellido','Género','Asistió','Observaciones'], ';');
+        foreach ($participantes as $p) {
+            $esLibre = empty($p->id_persona);
+            $genero  = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
+            $genMap  = ['M'=>'Masculino','F'=>'Femenino','O'=>'Otro'];
+            fputcsv($out, [
+                $esLibre ? 'Niño/a' : 'Adulto',
+                $esLibre ? ($p->cedula_libre ?? '—') : ($p->cedula ?? '—'),
+                $esLibre ? ($p->nombre_libre ?? '') : ($p->nombre ?? ''),
+                $esLibre ? ($p->apellido_libre ?? '') : ($p->apellido ?? ''),
+                $genMap[$genero] ?? $genero,
+                $p->asistio ? 'Sí' : 'No',
+                $p->observaciones ?? '',
+            ], ';');
+        }
+        fclose($out); exit;
+    }
+
     // ── Oficio ───────────────────────────────────────────────────────────────
 
     public function oficio($id) {

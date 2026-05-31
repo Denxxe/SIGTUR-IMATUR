@@ -32,6 +32,9 @@
         <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
+        <a href="<?php echo URL_ROOT; ?>/rutas/informe/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-file-earmark-text"></i> Informe de Visita
+        </a>
         <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-envelope-paper"></i> Generar Oficio
         </a>
@@ -74,9 +77,17 @@
 
 <!-- ── Participantes ── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:4px solid var(--teal-500);">
-    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="sig-card__title">
-            <i class="bi bi-people" style="color:var(--teal-500);"></i> Participantes
+    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3);">
+        <div style="display:flex; align-items:center; gap:var(--sp-3);">
+            <div class="sig-card__title">
+                <i class="bi bi-people" style="color:var(--teal-500);"></i> Participantes
+            </div>
+            <?php if (!empty($data['participantes'])): ?>
+            <button type="button" id="btn_asistencia_masiva_ruta" class="btn-sig btn-sig--ghost btn-sig--sm"
+                    data-ruta="<?php echo $data['ruta']->id; ?>">
+                <i class="bi bi-check2-all"></i> Marcar todos asistieron
+            </button>
+            <?php endif; ?>
         </div>
         <?php
         $inscritos  = count($data['participantes'] ?? []);
@@ -128,11 +139,14 @@
                             </td>
                             <td><?php echo $esLibre ? '—' : htmlspecialchars($p->telefono ?? '—'); ?></td>
                             <td class="text-center">
-                                <?php if ($p->asistio): ?>
-                                    <span class="sig-badge sig-badge--success">Asistió</span>
-                                <?php else: ?>
-                                    <span class="sig-badge sig-badge--neutral">Pendiente</span>
-                                <?php endif; ?>
+                                <button type="button"
+                                    class="btn-asistencia-ruta sig-badge <?php echo $p->asistio ? 'sig-badge--success' : 'sig-badge--neutral'; ?>"
+                                    data-id="<?php echo $p->id; ?>"
+                                    data-asistio="<?php echo $p->asistio ? '1' : '0'; ?>"
+                                    style="cursor:pointer; border:none; background:none; padding:0;"
+                                    title="Clic para cambiar asistencia">
+                                    <?php echo $p->asistio ? 'Asistió' : 'Pendiente'; ?>
+                                </button>
                             </td>
                             <td class="col-actions">
                                 <a href="<?php echo URL_ROOT; ?>/rutas/desinscribir/<?php echo $p->id; ?>"
@@ -795,6 +809,49 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
         elSubmit.disabled=true;
     });
 }());
+
+// ── Asistencia de participantes ───────────────────────────────────────────
+document.querySelectorAll('.btn-asistencia-ruta').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var id     = this.dataset.id;
+        var actual = this.dataset.asistio === '1';
+        var nuevo  = actual ? '0' : '1';
+        var self   = this;
+        var fd     = new FormData(); fd.append('id', id); fd.append('asistio', nuevo);
+        fetch('<?php echo URL_ROOT; ?>/rutas/marcarAsistencia', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    self.dataset.asistio = res.asistio ? '1' : '0';
+                    self.className = 'btn-asistencia-ruta sig-badge ' + (res.asistio ? 'sig-badge--success' : 'sig-badge--neutral');
+                    self.textContent = res.asistio ? 'Asistió' : 'Pendiente';
+                }
+            });
+    });
+});
+
+var btnMasivaRuta = document.getElementById('btn_asistencia_masiva_ruta');
+if (btnMasivaRuta) {
+    btnMasivaRuta.addEventListener('click', function() {
+        if (!confirm('¿Marcar como "Asistió" a todos los participantes pendientes?')) return;
+        var self = this;
+        var fd   = new FormData(); fd.append('id_ruta', this.dataset.ruta);
+        self.disabled = true;
+        fetch('<?php echo URL_ROOT; ?>/rutas/marcarAsistenciaMasiva', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    document.querySelectorAll('.btn-asistencia-ruta[data-asistio="0"]').forEach(function(btn) {
+                        btn.dataset.asistio = '1';
+                        btn.className = 'btn-asistencia-ruta sig-badge sig-badge--success';
+                        btn.textContent = 'Asistió';
+                    });
+                    self.style.opacity = '0.4';
+                }
+                self.disabled = false;
+            });
+    });
+}
 
 // ── Validación del formulario de punto ─────────────────────────────────────
 
