@@ -205,10 +205,16 @@ class RutasController extends Controller {
                 if ($edadAnios < 5)  throw new Exception('El participante debe tener al menos 5 años.');
                 if ($edadAnios >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula.');
 
+                // cedula_libre (ID escolar) es opcional, pero si se proporciona valida formato alfanumérico
+                $cedulaLibre = trim($_POST['cedula_libre'] ?? '') ?: null;
+                if ($cedulaLibre !== null && !preg_match('/^[A-Za-z0-9\-]{3,20}$/', $cedulaLibre)) {
+                    throw new Exception('El N° ID escolar solo admite letras, números y guiones (3 a 20 caracteres).');
+                }
+
                 Ruta::inscribirLibre($id_ruta, [
                     'nombre_libre'   => $nombre,
                     'apellido_libre' => trim($_POST['apellido_libre'] ?? '') ?: null,
-                    'cedula_libre'   => trim($_POST['cedula_libre']   ?? '') ?: null,
+                    'cedula_libre'   => $cedulaLibre,
                     'genero_libre'   => trim($_POST['genero_libre']   ?? '') ?: null,
                     'fecha_nac_libre'=> $fechaNacLibreRaw,
                     'id_institucion' => null,

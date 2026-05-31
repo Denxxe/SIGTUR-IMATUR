@@ -1,5 +1,38 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/leaflet.min.css">
+<style>
+/* ── Botón de asistencia táctil (escritorio + móvil) ── */
+.btn-asistencia-ruta {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; border: 1px solid transparent;
+    font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    transition: background .15s, border-color .15s, transform .1s;
+    min-height: 34px;
+}
+.btn-asistencia-ruta:active { transform: scale(.96); }
+.btn-asistencia-ruta i { font-size: 14px; }
+.btn-asistencia-ruta.is-asistio  { background: rgba(16,185,129,.12); color: #059669; border-color: rgba(16,185,129,.35); }
+.btn-asistencia-ruta.is-pendiente{ background: var(--bg-muted-subtle); color: var(--text-secondary); border-color: var(--border-subtle); }
+.btn-asistencia-ruta.is-asistio:hover  { background: rgba(16,185,129,.20); }
+.btn-asistencia-ruta.is-pendiente:hover{ background: var(--bg-muted); }
+
+/* Acciones de fila más táctiles */
+.ruta-participantes .row-action { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+
+/* ── Responsividad de la tabla de participantes en móvil ── */
+@media (max-width: 640px) {
+    .ruta-participantes table, .ruta-participantes thead, .ruta-participantes tbody,
+    .ruta-participantes th, .ruta-participantes td, .ruta-participantes tr { display: block; }
+    .ruta-participantes thead { display: none; }
+    .ruta-participantes tr {
+        border: 1px solid var(--border-subtle); border-radius: 10px;
+        margin-bottom: var(--sp-3); padding: var(--sp-3); background: var(--bg-surface);
+    }
+    .ruta-participantes td { border: none !important; padding: 4px 0 !important; display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); }
+    .ruta-participantes td::before { content: attr(data-label); font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-tertiary); letter-spacing: .04em; }
+    .ruta-participantes td.text-center, .ruta-participantes td.col-actions { justify-content: flex-start; }
+}
+</style>
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
@@ -100,7 +133,7 @@
             </div>
         </div>
     </div>
-    <div class="sig-table-wrap">
+    <div class="sig-table-wrap ruta-participantes">
         <table class="sig-table">
             <thead>
                 <tr>
@@ -118,14 +151,14 @@
                     <?php foreach ($data['participantes'] as $p): ?>
                         <?php $esLibre = empty($p->id_persona); ?>
                         <tr>
-                            <td class="cell-id">
+                            <td class="cell-id" data-label="Cédula / ID">
                                 <?php if ($esLibre): ?>
                                     <?php echo $p->cedula_libre ? htmlspecialchars($p->cedula_libre) : '<em style="color:var(--text-tertiary);">Sin cédula</em>'; ?>
                                 <?php else: ?>
                                     <?php echo htmlspecialchars($p->cedula ?? '—'); ?>
                                 <?php endif; ?>
                             </td>
-                            <td class="cell-strong">
+                            <td class="cell-strong" data-label="Nombre">
                                 <?php if ($esLibre): ?>
                                     <?php echo htmlspecialchars(trim(($p->nombre_libre ?? '') . ' ' . ($p->apellido_libre ?? ''))); ?>
                                     <span class="sig-badge sig-badge--neutral" style="font-size:10px; margin-left:4px;">Niño/a</span>
@@ -133,18 +166,18 @@
                                     <?php echo htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? '')); ?>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo $esLibre ? '—' : htmlspecialchars($p->telefono ?? '—'); ?></td>
-                            <td class="text-center">
+                            <td data-label="Teléfono"><?php echo $esLibre ? '—' : htmlspecialchars($p->telefono ?? '—'); ?></td>
+                            <td class="text-center" data-label="Asistencia">
                                 <button type="button"
-                                    class="btn-asistencia-ruta sig-badge <?php echo $p->asistio ? 'sig-badge--success' : 'sig-badge--neutral'; ?>"
+                                    class="btn-asistencia-ruta <?php echo $p->asistio ? 'is-asistio' : 'is-pendiente'; ?>"
                                     data-id="<?php echo $p->id; ?>"
                                     data-asistio="<?php echo $p->asistio ? '1' : '0'; ?>"
-                                    style="cursor:pointer; border:none; background:none; padding:0;"
                                     title="Clic para cambiar asistencia">
-                                    <?php echo $p->asistio ? 'Asistió' : 'Pendiente'; ?>
+                                    <i class="bi <?php echo $p->asistio ? 'bi-check-circle-fill' : 'bi-circle'; ?>"></i>
+                                    <span><?php echo $p->asistio ? 'Asistió' : 'Pendiente'; ?></span>
                                 </button>
                             </td>
-                            <td class="col-actions">
+                            <td class="col-actions" data-label="Acciones">
                                 <a href="<?php echo URL_ROOT; ?>/rutas/desinscribir/<?php echo $p->id; ?>"
                                    class="row-action row-action--del delete-btn" title="Quitar participante">
                                     <i class="bi bi-person-dash"></i>
@@ -212,9 +245,11 @@
 
 <!-- ── Paradas ── -->
 <?php
-// Detectar órdenes duplicados
+// Detectar órdenes duplicados: contar ocurrencias y quedarse con los que aparecen >1 vez
 $ordenesPuntos = array_column((array)($data['puntos'] ?? []), 'orden');
-$duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
+$conteoOrden   = array_count_values(array_map('strval', $ordenesPuntos));
+$duplicados    = array_keys(array_filter($conteoOrden, fn($c) => $c > 1));
+sort($duplicados, SORT_NUMERIC);
 ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">
@@ -227,7 +262,7 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
     <?php if (!empty($duplicados)): ?>
     <div style="padding:var(--sp-2) var(--sp-4); background:rgba(239,68,68,.07); border-bottom:1px solid rgba(239,68,68,.15); font-size:12px; color:var(--danger-700);">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        Existen paradas con órdenes duplicados (<?php echo implode(', ', array_unique($duplicados)); ?>). Edite las paradas para corregirlo.
+        Existen paradas con órdenes duplicados (<?php echo implode(', ', $duplicados); ?>). Edite las paradas para corregirlo.
     </div>
     <?php endif; ?>
     <?php if (empty($data['puntos'])): ?>
@@ -264,9 +299,19 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                         </div>
                         <?php endif; ?>
                         <?php if ($tieneCoordenadas): ?>
-                        <div style="font-size:11px; color:var(--text-tertiary); font-family:var(--font-mono);">
-                            <i class="bi bi-geo-alt" style="color:var(--teal-500);"></i>
-                            <?php echo $p->latitud; ?>, <?php echo $p->longitud; ?>
+                        <div style="font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="font-family:var(--font-mono);">
+                                <i class="bi bi-geo-alt-fill" style="color:var(--teal-500);"></i>
+                                <?php echo htmlspecialchars($p->latitud); ?>, <?php echo htmlspecialchars($p->longitud); ?>
+                            </span>
+                            <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" style="padding:1px 8px; font-size:10px; color:var(--teal-600);"
+                                    onclick="verEnMapa(<?php echo (float)$p->latitud; ?>, <?php echo (float)$p->longitud; ?>, '<?php echo htmlspecialchars(addslashes($p->nombre ?? ''), ENT_QUOTES); ?>')">
+                                <i class="bi bi-map"></i> Ver en mapa
+                            </button>
+                        </div>
+                        <?php else: ?>
+                        <div style="font-size:11px; color:var(--text-tertiary); font-style:italic;">
+                            <i class="bi bi-geo"></i> Sin coordenadas registradas
                         </div>
                         <?php endif; ?>
                     </div>
@@ -435,7 +480,8 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                         <div class="col-md-4">
                             <div class="sig-field" style="margin:0;">
                                 <label class="sig-field__label">N° ID Escolar <small style="color:var(--text-tertiary);">(opcional)</small></label>
-                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene ID escolar">
+                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene ID escolar"
+                                       pattern="^[A-Za-z0-9\-]{3,20}$" title="Letras, números y guiones (3 a 20 caracteres)">
                             </div>
                         </div>
                     </div>
@@ -728,22 +774,22 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
 }());
 
 // ── Asistencia de participantes ───────────────────────────────────────────
+function pintarAsistencia(btn, asistio) {
+    btn.dataset.asistio = asistio ? '1' : '0';
+    btn.className = 'btn-asistencia-ruta ' + (asistio ? 'is-asistio' : 'is-pendiente');
+    btn.innerHTML = '<i class="bi ' + (asistio ? 'bi-check-circle-fill' : 'bi-circle') + '"></i><span>' +
+                    (asistio ? 'Asistió' : 'Pendiente') + '</span>';
+}
+
 document.querySelectorAll('.btn-asistencia-ruta').forEach(function(btn) {
     btn.addEventListener('click', function() {
         var id     = this.dataset.id;
-        var actual = this.dataset.asistio === '1';
-        var nuevo  = actual ? '0' : '1';
+        var nuevo  = this.dataset.asistio === '1' ? '0' : '1';
         var self   = this;
         var fd     = new FormData(); fd.append('id', id); fd.append('asistio', nuevo);
         fetch('<?php echo URL_ROOT; ?>/rutas/marcarAsistencia', { method: 'POST', body: fd })
             .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.ok) {
-                    self.dataset.asistio = res.asistio ? '1' : '0';
-                    self.className = 'btn-asistencia-ruta sig-badge ' + (res.asistio ? 'sig-badge--success' : 'sig-badge--neutral');
-                    self.textContent = res.asistio ? 'Asistió' : 'Pendiente';
-                }
-            });
+            .then(function(res) { if (res.ok) pintarAsistencia(self, res.asistio); });
     });
 });
 
@@ -759,9 +805,7 @@ if (btnMasivaRuta) {
             .then(function(res) {
                 if (res.ok) {
                     document.querySelectorAll('.btn-asistencia-ruta[data-asistio="0"]').forEach(function(btn) {
-                        btn.dataset.asistio = '1';
-                        btn.className = 'btn-asistencia-ruta sig-badge sig-badge--success';
-                        btn.textContent = 'Asistió';
+                        pintarAsistencia(btn, true);
                     });
                     self.style.opacity = '0.4';
                 }
@@ -958,6 +1002,34 @@ function aplicarCoordenadas() {
         }
         checkPuntoValid();
     }
+}
+
+// ── Ver una parada en el mapa (solo lectura) ──────────────────────────────
+function verEnMapa(lat, lng, nombre) {
+    document.getElementById('mapa_lat_preview').textContent = lat.toFixed(6);
+    document.getElementById('mapa_lng_preview').textContent = lng.toFixed(6);
+    document.getElementById('mapa_instruccion').style.display = 'none';
+    document.getElementById('btn_aplicar_coords').style.display = 'none'; // modo solo lectura
+
+    var modalMapaEl = document.getElementById('modalMapa');
+    var modalMapa   = new bootstrap.Modal(modalMapaEl, { keyboard: true });
+    modalMapa.show();
+
+    modalMapaEl.addEventListener('shown.bs.modal', function _initView() {
+        modalMapaEl.removeEventListener('shown.bs.modal', _initView);
+        if (_mapaLeaflet) { _mapaLeaflet.remove(); _mapaLeaflet = null; _mapaMarker = null; }
+        _mapaLeaflet = L.map('mapa_leaflet').setView([lat, lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        }).addTo(_mapaLeaflet);
+        _mapaMarker = L.marker([lat, lng], { icon: _pinIcon }).addTo(_mapaLeaflet);
+        if (nombre) _mapaMarker.bindPopup(nombre).openPopup();
+    });
+    // Restaurar el botón Aplicar al cerrar (para el modo edición posterior)
+    modalMapaEl.addEventListener('hidden.bs.modal', function _restore() {
+        modalMapaEl.removeEventListener('hidden.bs.modal', _restore);
+        document.getElementById('btn_aplicar_coords').style.display = '';
+    });
 }
 </script>
 
