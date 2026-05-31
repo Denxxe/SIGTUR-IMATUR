@@ -100,12 +100,12 @@ class Parroquia extends Model
 
         if ($this->id) {
             $result = $this->db->execute();
-            $this->audit('parroquia', 'ACTUALIZAR', $this->id, $previos, ['nombre' => $this->nombre, 'id_municipio' => $this->id_municipio], $user_id);
+            $this->audit('parroquia', 'UPDATE', $this->id, $previos, ['nombre' => $this->nombre, 'id_municipio' => $this->id_municipio], $user_id);
             return $result;
         } else {
             $row = $this->db->single();
             $newId = $row->id ?? null;
-            $this->audit('parroquia', 'INSERTAR', $newId, null, ['nombre' => $this->nombre, 'id_municipio' => $this->id_municipio], $user_id);
+            $this->audit('parroquia', 'INSERT', $newId, null, ['nombre' => $this->nombre, 'id_municipio' => $this->id_municipio], $user_id);
             return true;
         }
     }
@@ -125,7 +125,7 @@ class Parroquia extends Model
         $db->bind(':id', $id);
         $db->bind(':user_id', $user_id);
         $result = $db->execute();
-        self::auditStatic('parroquia', 'ELIMINAR', $id, $previos, null, $user_id);
+        self::auditStatic('parroquia', 'DELETE', $id, $previos, null, $user_id);
         return $result;
     }
 }

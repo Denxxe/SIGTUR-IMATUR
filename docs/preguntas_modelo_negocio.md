@@ -65,7 +65,7 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 
 | ID | Módulo | Pregunta | Desbloquea |
 |----|--------|----------|------------|
-| D-UB01 | Inventario | ❓ ¿Una **ubicación** debe pertenecer a un **departamento**? La columna `"departamento _d"` es NOT NULL pero no hay UI para elegirlo → hoy **no se pueden crear ubicaciones nuevas** (H-01). | Arreglar alta de ubicaciones (UI+modelo) o relajar la columna |
+| ~~D-UB01~~ | Inventario | ✅ **RESPONDIDA (2026-05-31):** sí, la ubicación pertenece a un departamento (obligatorio). Implementado: select en UI + `id_departamento` en modelo/controlador. H-01 cerrado. | — |
 | D-IN10 | Inventario | ❓ ¿Registrar un movimiento **Baja**/**Mantenimiento** debe cambiar automáticamente la `condicion` del bien (p. ej. a "Dañado")? Hoy no lo hace (H-04). | Sincronizar `actividad_inventario` → `inventario.condicion` |
 | D-IN11 | Inventario | ❓ ¿`codigo_bn` y `serial` son obligatorios? ¿Validar unicidad con mensaje claro antes de guardar? (H-05) | Validación de unicidad en `InventarioController` |
 | D-FO06 | Formación | ❓ ¿Se gestionan los **oficios base** (tabla `oficios`) con CRUD y se vinculan al taller (`talleres.id_oficio`)? ¿Para qué (solicitud de sede, autorización)? | OficiosController + flujo oficio→taller (H-09/H-10) |
@@ -76,7 +76,7 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 | D-RE03 | Recepción | ❓ ¿Una **visita sin `hora_salida`** debe cerrarse automáticamente al fin del día? ¿Es **obligatorio** registrar el empleado que recibe? | Job de cierre + obligatoriedad `id_empleado` |
 | D-RE04 | Recepción | ❓ ¿Los **motivos de visita** deben ser un catálogo configurable? Hoy están fijos en el código. | Tabla/config de motivos |
 | D-US06 | Sistema | ❓ ¿Política de **contraseñas** (longitud mínima, complejidad, expiración, forzar cambio en primer ingreso)? | Validación en `UsuariosController` + `password_debe_cambiar` |
-| D-TX04 | Transversal | ⚠️ Deuda técnica: normalizar nomenclatura de `parroquia` (`create_at`→`created_at`) y las operaciones de auditoría a inglés (`ACTUALIZAR`→`UPDATE`). ¿Se hace ahora o se difiere? (H-02) | Bitácora consistente + re-fetch de UPDATE en parroquia |
+| D-TX04 | Transversal | ⚠️ Deuda técnica: operaciones de auditoría de parroquia ✅ **normalizadas a inglés (2026-05-31, H-02 cerrado)**. Queda pendiente decidir si se renombran las columnas `create_at`→`created_at` de `parroquia` (cambio de esquema mayor, bajo impacto). | Esquema consistente (opcional) |
 | D-RH15 | RRHH | ❓ ¿Se usa el género **"Otro" ('O')**? La BD lo permite pero la UI solo ofrece M/F (H-11). | Opción "Otro" en formularios de personas/empleados |
 
 ---

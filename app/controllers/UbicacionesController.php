@@ -8,7 +8,8 @@ class UbicacionesController extends Controller {
         $ubicaciones = Ubicacion::all();
         $data = [
             'titulo' => 'Configuración: Sedes y Almacenes',
-            'ubicaciones' => $ubicaciones
+            'ubicaciones'  => $ubicaciones,
+            'departamentos' => Departamento::all(),
         ];
         $this->view('ubicaciones/index', $data);
     }
@@ -20,10 +21,19 @@ class UbicacionesController extends Controller {
             $data = [
                 'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,
                 'nombre' => trim($_POST['nombre']),
-                'descripcion' => trim($_POST['descripcion'])
+                'descripcion' => trim($_POST['descripcion']),
+                'id_departamento' => isset($_POST['id_departamento']) ? (int)$_POST['id_departamento'] : 0,
             ];
 
             $esEdicion = !empty($data['id']);
+
+            // El departamento es obligatorio (la columna es NOT NULL).
+            if (empty($data['id_departamento'])) {
+                flash('global_msg', 'Debe seleccionar el departamento al que pertenece la ubicación.', 'danger');
+                header('Location: ' . URL_ROOT . '/ubicaciones/index');
+                return;
+            }
+
             $ubi = new Ubicacion($data);
 
             try {

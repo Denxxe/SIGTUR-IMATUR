@@ -10,14 +10,18 @@
 
 ## 🔴 ALTA — Defectos de correctitud (afectan operación o datos)
 
-### H-01 · No se pueden crear nuevas Ubicaciones de inventario
+### H-01 · No se pueden crear nuevas Ubicaciones de inventario — ✅ RESUELTO (2026-05-31)
+> **Resuelto:** la ubicación ahora se asocia a un **departamento** (obligatorio). `Ubicacion` mapea la columna `"departamento _d"`, `all()`/`find()` la exponen como `id_departamento` + nombre por JOIN, el controlador valida que sea obligatoria y la vista tiene un select de departamentos. Verificado con INSERT real. Decisión `D-UB01` respondida: **sí, la ubicación pertenece a un departamento**.
+
 - **Dónde:** `app/models/Ubicacion.php:39` (INSERT).
 - **Hecho verificado:** la tabla `ubicaciones` tiene la columna **`"departamento _d"` `NOT NULL` sin valor por defecto**, pero el `INSERT` del modelo solo escribe `(nombre, descripcion, created_by)`. Toda alta nueva de ubicación **falla** con violación de `NOT NULL`.
 - **Impacto:** el catálogo de ubicaciones de inventario es de facto inmutable (solo existen las sembradas). El módulo Inventario depende de él.
 - **Causa raíz / decisión de negocio:** ¿las ubicaciones deben pertenecer a un departamento? La columna lo exige pero no hay UI para elegirlo (ver `D-UB01`). 
 - **Opciones de arreglo:** (a) agregar selección de departamento en UI+controlador+modelo; (b) si ya no aplica, volver la columna `NULL`/con default y renombrarla a `id_departamento` (limpia también el nombre con espacio).
 
-### H-02 · La auditoría de Parroquia se registra en español
+### H-02 · La auditoría de Parroquia se registra en español — ✅ RESUELTO (2026-05-31)
+> **Resuelto:** `Parroquia::save()/delete()` ahora usan `UPDATE/INSERT/DELETE`. La bitácora filtra y muestra correctamente, y el re-fetch de estado completo en UPDATE ya aplica a parroquia.
+
 - **Dónde:** `app/models/Parroquia.php:103` (`'ACTUALIZAR'`), `:108` (`'INSERTAR'`), `:128` (`'ELIMINAR'`).
 - **Hecho verificado:** todas las demás tablas registran `INSERT/UPDATE/DELETE` (inglés); `audit_logs` no contiene hoy ninguna operación en español (nunca se ha editado una parroquia con este código).
 - **Impacto:** (1) el **filtro por acción** de la nueva Bitácora no reconoce `ACTUALIZAR/...` → se muestran con badge neutro y no filtran; (2) la mejora de **registrar el estado completo en UPDATE** (`Model::audit`, 2026-05-31) solo se dispara con `'UPDATE'`, así que parroquia seguiría con log parcial.

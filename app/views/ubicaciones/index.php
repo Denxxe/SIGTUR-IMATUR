@@ -18,6 +18,7 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre de Sede/Almacén</th>
+                <th>Departamento</th>
                 <th>Referencia</th>
                 <th class="col-actions">Acciones</th>
             </tr>
@@ -27,6 +28,13 @@
                 <tr>
                     <td><span class="cell-id"><?php echo $ubi->id; ?></span></td>
                     <td class="cell-strong"><?php echo $ubi->nombre; ?></td>
+                    <td>
+                        <?php if (!empty($ubi->departamento_nombre)): ?>
+                            <span class="sig-badge sig-badge--info"><i class="bi bi-building"></i> <?php echo htmlspecialchars($ubi->departamento_nombre); ?></span>
+                        <?php else: ?>
+                            <span style="color:var(--text-tertiary);font-style:italic;">Sin departamento</span>
+                        <?php endif; ?>
+                    </td>
                     <td style="color:var(--text-secondary);font-size:13px"><?php echo $ubi->descripcion; ?></td>
                     <td class="col-actions">
                         <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($ubi); ?>)'><i class="bi bi-pencil"></i> Editar</button>
@@ -47,6 +55,15 @@
             <div class="modal-body">
                 <input type="hidden" name="id" id="ubi_id">
                 <div class="sig-field mb-3"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="ubi_nombre" class="sig-input" required placeholder="Ej: Mezzanina - Oficina RRHH"></div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Departamento <span class="req">*</span></label>
+                    <select name="id_departamento" id="ubi_departamento" class="sig-input" required>
+                        <option value="">— Seleccione —</option>
+                        <?php foreach ($data['departamentos'] ?? [] as $dep): ?>
+                            <option value="<?php echo $dep->id; ?>"><?php echo htmlspecialchars($dep->nombre); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="sig-field mb-3"><label class="sig-field__label">Referencia</label><textarea name="descripcion" id="ubi_descripcion" class="sig-textarea" rows="3"></textarea></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button><button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button></div>
@@ -65,7 +82,8 @@
         document.getElementById('modalUbiLabel').innerText = 'Editar: ' + ubi.nombre;
         document.getElementById('ubi_id').value = ubi.id;
         document.getElementById('ubi_nombre').value = ubi.nombre;
-        document.getElementById('ubi_descripcion').value = ubi.descripcion;
+        document.getElementById('ubi_descripcion').value = ubi.descripcion || '';
+        document.getElementById('ubi_departamento').value = ubi.id_departamento || '';
         new bootstrap.Modal(document.getElementById('modalUbi')).show();
     }
 </script>
