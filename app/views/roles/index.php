@@ -87,10 +87,16 @@ foreach ($modulos as $ctrl => $meta) {
                     onclick='editarRol(<?php echo json_encode($rol); ?>)'>
                 <i class="bi bi-pencil"></i> Editar
             </button>
+            <?php if (!$esAdmin): ?>
             <a href="<?php echo URL_ROOT; ?>/roles/delete/<?php echo $rolId; ?>"
                class="row-action row-action--del delete-btn">
                 <i class="bi bi-trash"></i>
             </a>
+            <?php else: ?>
+            <span class="row-action" style="opacity:.5;cursor:not-allowed;" title="El rol Administrador es inmutable">
+                <i class="bi bi-lock"></i>
+            </span>
+            <?php endif; ?>
         </div>
     </div>
 

@@ -72,6 +72,11 @@ class UsuariosController extends Controller {
     }
 
     public function delete($id) {
+        if ((int)$id === (int)$this->getUserId()) {
+            flash('global_msg', 'No puedes suspender tu propia cuenta de usuario.', 'danger');
+            header('Location: ' . URL_ROOT . '/usuarios/index');
+            return;
+        }
         try {
             if (Usuario::delete($id, $this->getUserId())) {
                 flash('global_msg', 'Cuenta suspendida correctamente.', 'warning');

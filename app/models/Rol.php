@@ -81,6 +81,9 @@ class Rol extends Model {
      * Borrado lógico
      */
     public static function delete($id, $user_id = null) {
+        if ((int)$id === 1) {
+            throw new Exception('El rol Administrador es inmutable y no puede eliminarse.');
+        }
         $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE roles SET 

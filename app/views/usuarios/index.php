@@ -61,10 +61,16 @@
                                 onclick='editarUsuario(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, "UTF-8"); ?>)'>
                             <i class="bi bi-key"></i> Credenciales
                         </button>
+                        <?php if ((int)$user->id !== (int)($_SESSION['user_id'] ?? 0)): ?>
                         <a href="<?php echo URL_ROOT; ?>/usuarios/delete/<?php echo $user->id; ?>"
                            class="row-action row-action--del delete-btn">
                             <i class="bi bi-slash-circle"></i> Suspender
                         </a>
+                        <?php else: ?>
+                        <span class="row-action" style="opacity:.5;cursor:not-allowed;" title="No puedes suspender tu propia cuenta">
+                            <i class="bi bi-person-fill-check"></i> Tu cuenta
+                        </span>
+                        <?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>

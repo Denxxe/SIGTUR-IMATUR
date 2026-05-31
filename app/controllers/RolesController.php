@@ -183,6 +183,11 @@ class RolesController extends Controller {
     }
 
     public function delete($id) {
+        if ((int)$id === 1) {
+            flash('global_msg', 'El rol Administrador es inmutable y no puede eliminarse.', 'danger');
+            header('Location: ' . URL_ROOT . '/roles/index');
+            return;
+        }
         try {
             if (Rol::delete($id, $this->getUserId())) {
                 flash('global_msg', 'Rol eliminado.', 'warning');
