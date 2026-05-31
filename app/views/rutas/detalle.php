@@ -1,4 +1,5 @@
 <?php require_once '../app/views/inc/header.php'; ?>
+<link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/leaflet.min.css">
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
@@ -457,15 +458,23 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Latitud</label>
-                            <input type="text" name="latitud" id="pt_lat" class="sig-input">
+                            <label class="sig-field__label">Latitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-90 a 90)</span></label>
+                            <input type="text" name="latitud" id="pt_lat" class="sig-input" placeholder="Ej: 10.4594" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Longitud</label>
-                            <input type="text" name="longitud" id="pt_lng" class="sig-input">
+                            <label class="sig-field__label">Longitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-180 a 180)</span></label>
+                            <input type="text" name="longitud" id="pt_lng" class="sig-input" placeholder="Ej: -64.1741" autocomplete="off">
                         </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="abrirMapa()" style="color:var(--teal-600); border-color:var(--teal-200);">
+                            <i class="bi bi-map"></i> Seleccionar en mapa
+                        </button>
+                        <span style="font-size:11px; color:var(--text-tertiary); margin-left:var(--sp-2);">
+                            Clic en el mapa para fijar la coordenada. Tiles cacheados para uso offline.
+                        </span>
                     </div>
                 </div>
             </div>
@@ -515,6 +524,44 @@ $duplicados    = array_diff_key($ordenesPuntos, array_unique($ordenesPuntos));
     </div>
 </div>
 
+<!-- ── Modal: Mapa de coordenadas ── -->
+<div class="modal fade" id="modalMapa" tabindex="-1" data-bs-backdrop="static" style="z-index:1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom:1px solid var(--border-subtle);">
+                <h5 class="modal-title">
+                    <i class="bi bi-map" style="color:var(--teal-500);"></i>
+                    Seleccionar coordenadas — haz clic en el mapa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:0; position:relative;">
+                <div id="mapa_leaflet" style="height:460px; width:100%; z-index:1;"></div>
+                <div id="mapa_instruccion" style="position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:2; background:rgba(0,0,0,.68); color:white; padding:6px 18px; border-radius:20px; font-size:13px; font-weight:600; pointer-events:none; white-space:nowrap;">
+                    <i class="bi bi-cursor-fill"></i> Haz clic para fijar la coordenada
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between; align-items:center; border-top:1px solid var(--border-subtle); padding:var(--sp-3) var(--sp-5);">
+                <div style="font-size:13px; color:var(--text-secondary); display:flex; align-items:center; gap:var(--sp-3);">
+                    <i class="bi bi-geo-alt-fill" style="color:var(--teal-500);"></i>
+                    Lat: <strong id="mapa_lat_preview" style="color:var(--teal-700); font-family:var(--font-mono);">—</strong>
+                    &ensp; Lng: <strong id="mapa_lng_preview" style="color:var(--teal-700); font-family:var(--font-mono);">—</strong>
+                    <input type="hidden" id="mapa_lat_val">
+                    <input type="hidden" id="mapa_lng_val">
+                </div>
+                <div style="display:flex; gap:var(--sp-2);">
+                    <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btn_aplicar_coords" class="btn-sig btn-sig--primary"
+                            style="background:var(--teal-600);" onclick="aplicarCoordenadas()" disabled>
+                        <i class="bi bi-check-lg"></i> Aplicar coordenadas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="<?php echo URL_ROOT; ?>/assets/js/leaflet.min.js"></script>
 <script>
 (function () {
     const URL_ROOT = '<?php echo URL_ROOT; ?>';
@@ -660,6 +707,86 @@ function editarPunto(p) {
     document.getElementById('pt_lat').value = p.latitud || '';
     document.getElementById('pt_lng').value = p.longitud || '';
     new bootstrap.Modal(document.getElementById('modalPunto')).show();
+}
+
+// ── Leaflet — Selección de coordenadas ───────────────────────────────────────
+// Fix rutas de íconos (Leaflet no puede detectar automáticamente con CSS externo)
+if (typeof L !== 'undefined') {
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl : URL_ROOT + '/assets/css/images/marker-icon-2x.png',
+        iconUrl       : URL_ROOT + '/assets/css/images/marker-icon.png',
+        shadowUrl     : URL_ROOT + '/assets/css/images/marker-shadow.png',
+    });
+}
+
+var _mapaLeaflet = null;
+var _mapaMarker  = null;
+
+function abrirMapa() {
+    var latExist = parseFloat(document.getElementById('pt_lat').value) || null;
+    var lngExist = parseFloat(document.getElementById('pt_lng').value) || null;
+    var tieneCoords = latExist !== null && lngExist !== null;
+
+    // Inicializar estado del modal
+    document.getElementById('mapa_lat_preview').textContent = tieneCoords ? latExist.toFixed(6) : '—';
+    document.getElementById('mapa_lng_preview').textContent = tieneCoords ? lngExist.toFixed(6) : '—';
+    document.getElementById('mapa_lat_val').value           = tieneCoords ? latExist.toFixed(6) : '';
+    document.getElementById('mapa_lng_val').value           = tieneCoords ? lngExist.toFixed(6) : '';
+    document.getElementById('btn_aplicar_coords').disabled  = !tieneCoords;
+    document.getElementById('mapa_instruccion').style.display = 'block';
+
+    var modalMapaEl = document.getElementById('modalMapa');
+    var modalMapa   = new bootstrap.Modal(modalMapaEl, { keyboard: false });
+    modalMapa.show();
+
+    modalMapaEl.addEventListener('shown.bs.modal', function _initMap() {
+        modalMapaEl.removeEventListener('shown.bs.modal', _initMap);
+
+        // Destruir instancia anterior si existe
+        if (_mapaLeaflet) { _mapaLeaflet.remove(); _mapaLeaflet = null; _mapaMarker = null; }
+
+        var cLat  = tieneCoords ? latExist  : 10.4594;   // Cumaná por defecto
+        var cLng  = tieneCoords ? lngExist  : -64.1741;
+        var zoom  = tieneCoords ? 16 : 13;
+
+        _mapaLeaflet = L.map('mapa_leaflet').setView([cLat, cLng], zoom);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom     : 19
+        }).addTo(_mapaLeaflet);
+
+        if (tieneCoords) {
+            _mapaMarker = L.marker([cLat, cLng]).addTo(_mapaLeaflet);
+        }
+
+        _mapaLeaflet.on('click', function(e) {
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+
+            if (_mapaMarker) {
+                _mapaMarker.setLatLng(e.latlng);
+            } else {
+                _mapaMarker = L.marker(e.latlng).addTo(_mapaLeaflet);
+            }
+            document.getElementById('mapa_lat_preview').textContent = lat;
+            document.getElementById('mapa_lng_preview').textContent = lng;
+            document.getElementById('mapa_lat_val').value           = lat;
+            document.getElementById('mapa_lng_val').value           = lng;
+            document.getElementById('btn_aplicar_coords').disabled  = false;
+            document.getElementById('mapa_instruccion').style.display = 'none';
+        });
+    });
+}
+
+function aplicarCoordenadas() {
+    var lat = document.getElementById('mapa_lat_val').value;
+    var lng = document.getElementById('mapa_lng_val').value;
+    if (lat && lng) {
+        document.getElementById('pt_lat').value = lat;
+        document.getElementById('pt_lng').value = lng;
+    }
 }
 </script>
 
