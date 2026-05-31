@@ -103,6 +103,7 @@ class RutasController extends Controller {
         $parroquias = Parroquia::all();
 
         // Historial de oficios emitidos para esta ruta
+        $db = new Database();
         $db->query("SELECT numero, fecha, destinatario_nombre, destinatario_cargo, asunto, created_at
                     FROM oficios_emitidos
                     WHERE id_ruta = :id AND is_active = TRUE
