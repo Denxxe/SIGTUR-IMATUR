@@ -40,27 +40,36 @@
         @media print {
             body { background: #fff; }
             .ctrl-bar { display: none !important; }
-            .page-wrap { margin: 0; box-shadow: none; padding: 20px 28px 28px; max-width: 100%; border-radius: 0; }
+            .page-wrap { margin: 0; box-shadow: none; padding: 20px 28px 28px; max-width: 100%; border-radius: 0; page-break-after: always; }
+            .page-wrap:last-child { page-break-after: auto; }
             @page { size: A4 portrait; margin: 1.2cm 1.5cm; }
         }
+        .hoja-indicador { font-size: 8pt; color: #888; text-align: right; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 <?php
-$taller = $data['taller'];
+$taller        = $data['taller'];
 $participantes = $data['participantes'] ?? [];
-$totalFilas = 40;
-$fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller->fecha_inicio)) : '';
+$filasPorHoja  = 40;
+$totalP        = count($participantes);
+$numHojas      = max(1, (int)ceil($totalP / $filasPorHoja));
+$fechaFormato  = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller->fecha_inicio)) : '';
 ?>
 
 <div class="ctrl-bar">
-    <span>Lista de Asistencia — <strong><?php echo htmlspecialchars($taller->nombre ?? ''); ?></strong></span>
+    <span>Lista de Asistencia — <strong><?php echo htmlspecialchars($taller->nombre ?? ''); ?></strong>
+        <?php if ($totalP > 0): ?>(<?php echo $totalP; ?> participante<?php echo $totalP === 1 ? '' : 's'; ?>)<?php endif; ?>
+    </span>
     <div>
         <button class="ctrl-btn ctrl-btn--ghost" onclick="window.history.back()">← Volver</button>
         <button class="ctrl-btn ctrl-btn--primary" onclick="window.print()">🖨 Imprimir</button>
     </div>
 </div>
 
+<?php for ($hoja = 0; $hoja < $numHojas; $hoja++):
+    $inicio = $hoja * $filasPorHoja;   // índice base 0 de la primera fila de esta hoja
+?>
 <div class="page-wrap">
 
     <div class="header">
@@ -77,6 +86,10 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
         <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
     </div>
     <hr class="divider">
+
+    <?php if ($numHojas > 1): ?>
+    <div class="hoja-indicador">Hoja <?php echo $hoja + 1; ?> de <?php echo $numHojas; ?></div>
+    <?php endif; ?>
 
     <div class="fields">
         <div class="field-row">
@@ -99,21 +112,23 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
             </tr>
         </thead>
         <tbody>
-            <?php for ($i = 1; $i <= $totalFilas; $i++):
-                $p = $participantes[$i - 1] ?? null;
+            <?php for ($f = 0; $f < $filasPorHoja; $f++):
+                $idx = $inicio + $f;              // índice global base 0
+                $num = $idx + 1;
+                $p   = $participantes[$idx] ?? null;
                 if ($p) {
-                    $esLibre  = empty($p->id_persona);
-                    $nombre   = $esLibre
+                    $esLibre = empty($p->id_persona);
+                    $nombre  = $esLibre
                         ? trim(($p->nombre_libre ?? '') . ' ' . ($p->apellido_libre ?? ''))
                         : trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''));
-                    $cedula   = $esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '');
-                    $docente  = ($esLibre && !empty($p->nombre_docente)) ? $p->nombre_docente : '';
+                    $cedula  = $esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '');
+                    $docente = ($esLibre && !empty($p->nombre_docente)) ? $p->nombre_docente : '';
                 } else {
                     $nombre = ''; $cedula = ''; $docente = '';
                 }
             ?>
                 <tr>
-                    <td class="n"><?php echo $i; ?></td>
+                    <td class="n"><?php echo $num; ?></td>
                     <td>
                         <?php echo htmlspecialchars($nombre); ?>
                         <?php if ($docente): ?>
@@ -128,5 +143,6 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
     </table>
 
 </div>
+<?php endfor; ?>
 </body>
 </html>

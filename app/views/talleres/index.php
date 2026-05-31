@@ -455,11 +455,12 @@ function actualizarEstiloToggle(esInterna) {
 }
 
 // ── Transiciones válidas de estado (RN-F13) ───────────────────────────────
+// Finalizado y Cancelado son terminales: sin transiciones de salida
 const TRANSICIONES = {
     'Programado': ['Programado', 'En Curso', 'Cancelado'],
     'En Curso':   ['En Curso', 'Finalizado', 'Cancelado'],
-    'Finalizado': ['Finalizado'],
-    'Cancelado':  ['Cancelado']
+    'Finalizado': [],
+    'Cancelado':  []
 };
 
 function setOpcionesEstado(estadoActual) {

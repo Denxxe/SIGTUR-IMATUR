@@ -224,6 +224,15 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
             </tbody>
         </table>
     </div>
+    <!-- Controles de paginación (50 por página) -->
+    <div id="part_paginacion" style="display:none; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--border-subtle); flex-wrap:wrap;">
+        <span id="part_pag_info" style="font-size:12px; color:var(--text-secondary);"></span>
+        <div style="display:flex; gap:var(--sp-2); align-items:center;">
+            <button type="button" id="part_pag_prev" class="btn-sig btn-sig--ghost btn-sig--sm"><i class="bi bi-chevron-left"></i> Anterior</button>
+            <span id="part_pag_actual" style="font-size:12px; font-weight:700; color:var(--text-primary); min-width:80px; text-align:center;"></span>
+            <button type="button" id="part_pag_next" class="btn-sig btn-sig--ghost btn-sig--sm">Siguiente <i class="bi bi-chevron-right"></i></button>
+        </div>
+    </div>
 </div>
 
 <?php if (($data['taller']->estado ?? '') === 'Cancelado' && !empty($data['taller']->motivo_cancelacion)): ?>
@@ -525,19 +534,60 @@ function calcularEdad(fechaNac) {
     return a >= 0 ? a : null;
 }
 
-// ── Filtro de tabla ───────────────────────────────────────────────────────
-var filtroInput = document.getElementById('filtro_participantes');
-if (filtroInput) {
-    filtroInput.addEventListener('input', function() {
-        var q = this.value.toLowerCase();
-        document.querySelectorAll('tr.fila-participante').forEach(function(tr) {
-            var textos = Array.from(tr.querySelectorAll('[data-buscar]')).map(function(el) {
-                return el.dataset.buscar.toLowerCase();
-            }).join(' ');
-            tr.style.display = textos.includes(q) ? '' : 'none';
-        });
-    });
-}
+// ── Filtro + paginación de participantes (50 por página) ──────────────────
+(function() {
+    var PAGE_SIZE   = 50;
+    var paginaActual = 1;
+    var filtroInput = document.getElementById('filtro_participantes');
+    var filas       = Array.prototype.slice.call(document.querySelectorAll('tr.fila-participante'));
+    var pagWrap     = document.getElementById('part_paginacion');
+    var pagInfo     = document.getElementById('part_pag_info');
+    var pagActual   = document.getElementById('part_pag_actual');
+    var btnPrev     = document.getElementById('part_pag_prev');
+    var btnNext     = document.getElementById('part_pag_next');
+
+    if (!filas.length) return;
+
+    function coincide(tr, q) {
+        if (!q) return true;
+        return Array.prototype.slice.call(tr.querySelectorAll('[data-buscar]'))
+            .map(function(el) { return (el.dataset.buscar || '').toLowerCase(); })
+            .join(' ').includes(q);
+    }
+
+    function render() {
+        var q = filtroInput ? filtroInput.value.toLowerCase().trim() : '';
+        var visibles = filas.filter(function(tr) { return coincide(tr, q); });
+        var total    = visibles.length;
+        var totalPag = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        if (paginaActual > totalPag) paginaActual = totalPag;
+
+        // Ocultar todas, luego mostrar solo la ventana de la página
+        filas.forEach(function(tr) { tr.style.display = 'none'; });
+        var ini = (paginaActual - 1) * PAGE_SIZE;
+        visibles.slice(ini, ini + PAGE_SIZE).forEach(function(tr) { tr.style.display = ''; });
+
+        // Controles solo si hay más de una página
+        if (total > PAGE_SIZE) {
+            pagWrap.style.display = 'flex';
+            var hasta = Math.min(ini + PAGE_SIZE, total);
+            pagInfo.textContent   = 'Mostrando ' + (total ? ini + 1 : 0) + '–' + hasta + ' de ' + total;
+            pagActual.textContent = 'Página ' + paginaActual + ' / ' + totalPag;
+            btnPrev.disabled = paginaActual <= 1;
+            btnNext.disabled = paginaActual >= totalPag;
+            btnPrev.style.opacity = btnPrev.disabled ? '0.4' : '1';
+            btnNext.style.opacity = btnNext.disabled ? '0.4' : '1';
+        } else {
+            pagWrap.style.display = 'none';
+        }
+    }
+
+    if (filtroInput) filtroInput.addEventListener('input', function() { paginaActual = 1; render(); });
+    if (btnPrev) btnPrev.addEventListener('click', function() { if (paginaActual > 1) { paginaActual--; render(); } });
+    if (btnNext) btnNext.addEventListener('click', function() { paginaActual++; render(); });
+
+    render();
+}());
 
 // ── Marcado masivo de asistencia ─────────────────────────────────────────
 var btnMasiva = document.getElementById('btn_asistencia_masiva');

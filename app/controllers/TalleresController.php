@@ -349,7 +349,11 @@ class TalleresController extends Controller {
 
                 Taller::inscribir($id_taller, $idPersona, $userId, false);
             }
-            // Advertencia no bloqueante si se alcanzó o superó el cupo estimado
+            // REGLA DE NEGOCIO (decisión confirmada): el cupo_maximo es una ESTIMACIÓN
+            // de planificación, NO un límite rígido. El sistema permite el overbooking
+            // y solo emite una ADVERTENCIA no bloqueante al alcanzar o superar el cupo.
+            // Esto es intencional: en actividades comunitarias la asistencia real puede
+            // exceder lo planificado y no debe impedirse el registro. Mismo criterio en rutas.
             $inscritosPost = Taller::countParticipantes($id_taller);
             $cupoMax       = (int)($tallerActual->cupo_maximo ?? 0);
             if ($cupoMax > 0 && $inscritosPost >= $cupoMax) {
@@ -480,20 +484,24 @@ class TalleresController extends Controller {
                                COALESCE(p.nombre, pt.nombre_libre, '')    AS nombre,
                                COALESCE(p.apellido, pt.apellido_libre, '') AS apellido,
                                COALESCE(p.telefono, '')                   AS telefono,
+                               COALESCE(p.correo, '')                     AS correo,
                                CASE WHEN pt.id_persona IS NULL
                                     THEN CASE pt.genero_libre WHEN 'M' THEN 'Masculino' WHEN 'F' THEN 'Femenino' WHEN 'O' THEN 'Otro' ELSE '' END
                                     ELSE CASE p.genero      WHEN 'M' THEN 'Masculino' WHEN 'F' THEN 'Femenino' WHEN 'O' THEN 'Otro' ELSE '' END
                                END AS genero,
+                               COALESCE(p.fecha_nacimiento::text, pt.fecha_nac_libre::text, '') AS fecha_nac,
                                pt.asistio,
                                COALESCE(pt.nombre_docente, '') AS nombre_docente,
                                COALESCE(pt.cedula_docente, '')  AS cedula_docente,
-                               COALESCE(par_libre.nombre, '')   AS parroquia_libre,
-                               COALESCE(par_pers.nombre, '')    AS parroquia_persona,
+                               CASE WHEN pt.id_persona IS NULL THEN COALESCE(par_libre.nombre, '') ELSE COALESCE(par_pers.nombre, '') END AS parroquia,
+                               CASE WHEN pt.id_persona IS NULL THEN COALESCE(mun_libre.nombre, '') ELSE COALESCE(mun_pers.nombre, '') END AS municipio,
                                COALESCE(pt.direccion_libre, COALESCE(p.direccion, '')) AS direccion
                         FROM participantes_taller pt
                         LEFT JOIN personas  p         ON pt.id_persona        = p.id
                         LEFT JOIN parroquia par_libre ON pt.parroquia_id_libre = par_libre.id
                         LEFT JOIN parroquia par_pers  ON p.parroquia_id        = par_pers.id
+                        LEFT JOIN municipio mun_libre ON par_libre.id_municipio = mun_libre.id
+                        LEFT JOIN municipio mun_pers  ON par_pers.id_municipio  = mun_pers.id
                         WHERE pt.id_taller = :id AND pt.is_active = TRUE
                         ORDER BY COALESCE(p.apellido, pt.apellido_libre) ASC");
             $db->bind(':id', $id);
@@ -551,23 +559,37 @@ class TalleresController extends Controller {
 
         // Listado de participantes
         fputcsv($out, ['LISTADO DE PARTICIPANTES (' . count($participantes) . ')'], ';');
-        fputcsv($out, ['Tipo', 'Cédula/ID', 'Nombre', 'Apellido', 'Teléfono', 'Género', 'Parroquia', 'Dirección', 'Asistió', 'Docente/Tutor', 'C.I. Docente'], ';');
+        fputcsv($out, ['N°', 'Tipo', 'Cédula/ID', 'Nombre', 'Apellido', 'Teléfono', 'Correo', 'Género', 'Fecha Nac.', 'Edad', 'Parroquia', 'Municipio', 'Dirección', 'Asistió', 'Docente/Tutor', 'C.I. Docente'], ';');
+        $n = 0;
         foreach ($participantes as $p) {
-            $parroquia = $p->tipo === 'Niño/a' ? $p->parroquia_libre : $p->parroquia_persona;
+            $n++;
+            $edad = '';
+            if (!empty($p->fecha_nac)) {
+                try { $edad = (new DateTime())->diff(new DateTime($p->fecha_nac))->y; } catch (Exception $e) { $edad = ''; }
+            }
             fputcsv($out, [
+                $n,
                 $p->tipo,
                 $p->cedula,
                 $p->nombre,
                 $p->apellido,
                 $p->telefono,
+                $p->correo,
                 $p->genero,
-                $parroquia,
+                $p->fecha_nac,
+                $edad,
+                $p->parroquia,
+                $p->municipio,
                 $p->direccion,
                 $p->asistio ? 'Sí' : 'No',
                 $p->nombre_docente,
                 $p->cedula_docente,
             ], ';');
         }
+        fputcsv($out, [''], ';');
+        $totalAsist = 0; foreach ($participantes as $p) { if ($p->asistio) $totalAsist++; }
+        fputcsv($out, ['Total inscritos', count($participantes)], ';');
+        fputcsv($out, ['Total asistieron', $totalAsist], ';');
 
         fclose($out);
         exit;
@@ -829,12 +851,16 @@ class TalleresController extends Controller {
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────
 
     private function validarTransicion(string $desde, string $hacia): void {
+        // Finalizado y Cancelado son estados TERMINALES: no admiten ningún cambio posterior
         $permitidas = [
             'Programado' => ['Programado', 'En Curso', 'Cancelado'],
             'En Curso'   => ['En Curso', 'Finalizado', 'Cancelado'],
-            'Finalizado' => ['Finalizado'],
-            'Cancelado'  => ['Cancelado'],
+            'Finalizado' => [],
+            'Cancelado'  => [],
         ];
+        if (in_array($desde, ['Finalizado', 'Cancelado'], true)) {
+            throw new Exception("La actividad está en estado '{$desde}', que es definitivo y no admite cambios de estado.");
+        }
         if (!isset($permitidas[$desde]) || !in_array($hacia, $permitidas[$desde])) {
             throw new Exception("Cambio de estado no permitido: '{$desde}' → '{$hacia}'.");
         }

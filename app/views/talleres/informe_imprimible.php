@@ -183,12 +183,14 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
     <table class="part-table">
         <thead>
             <tr>
-                <th class="c" style="width:5%;">N°</th>
-                <th class="c" style="width:18%;">Cédula / ID</th>
-                <th class="left" style="width:30%;">Nombre Completo</th>
-                <th class="c" style="width:8%;">Tipo</th>
-                <th class="c" style="width:8%;">Género</th>
-                <th class="c" style="width:9%;">Asistencia</th>
+                <th class="c" style="width:4%;">N°</th>
+                <th class="c" style="width:13%;">Cédula / ID</th>
+                <th class="left" style="width:22%;">Nombre Completo</th>
+                <th class="c" style="width:7%;">Tipo</th>
+                <th class="c" style="width:6%;">Gén.</th>
+                <th class="c" style="width:5%;">Edad</th>
+                <th class="left" style="width:17%;">Parroquia / Municipio</th>
+                <th class="c" style="width:8%;">Asist.</th>
                 <th class="left">Docente / Tutor</th>
             </tr>
         </thead>
@@ -202,6 +204,12 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
                 $cedula  = htmlspecialchars($esLibre ? ($p->cedula_libre ?? '—') : ($p->cedula ?? '—'));
                 $genSrc  = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
                 $genero  = ['M' => 'M', 'F' => 'F', 'O' => 'Otro'][$genSrc] ?? '—';
+                $fnac    = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
+                $edad    = '';
+                if (!empty($fnac)) { try { $edad = (new DateTime())->diff(new DateTime($fnac))->y; } catch (Exception $e) { $edad = ''; } }
+                $parr    = $esLibre ? ($p->parroquia_libre_nombre ?? '') : ($p->parroquia_nombre ?? '');
+                $muni    = $esLibre ? ($p->municipio_libre_nombre ?? '') : ($p->municipio_nombre ?? '');
+                $ubic    = trim($parr . ($muni ? ' / ' . $muni : ''));
             ?>
             <tr>
                 <td class="c"><?php echo $i + 1; ?></td>
@@ -209,6 +217,8 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
                 <td><?php echo $nombre; ?></td>
                 <td class="c" style="font-size:8pt;"><?php echo $esLibre ? 'Niño/a' : 'Adulto'; ?></td>
                 <td class="c"><?php echo $genero; ?></td>
+                <td class="c"><?php echo $edad !== '' ? $edad : '—'; ?></td>
+                <td style="font-size:8pt;"><?php echo $ubic !== '' ? htmlspecialchars($ubic) : '—'; ?></td>
                 <td class="c"><?php echo $p->asistio ? '✓' : '—'; ?></td>
                 <td style="font-size:8.5pt;"><?php echo !empty($p->nombre_docente) ? htmlspecialchars($p->nombre_docente) : '—'; ?></td>
             </tr>
