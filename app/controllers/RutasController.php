@@ -27,20 +27,29 @@ class RutasController extends Controller {
         $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)           ? $_POST['estado']           : 'Activa';
         $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA)     ? $_POST['tipo_ruta']        : 'General';
 
+        // RT-02: motivo obligatorio al pasar a En Mantenimiento
+        $motivoMant = trim($_POST['motivo_mantenimiento'] ?? '');
+        if ($estado === 'En Mantenimiento' && empty($motivoMant)) {
+            flash('global_msg', 'Debe indicar el motivo por el que la ruta pasa a mantenimiento.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
         $data = [
-            'id'                  => $esEdicion ? (int)$_POST['id'] : null,
-            'nombre'              => trim($_POST['nombre']),
-            'descripcion'         => trim($_POST['descripcion'] ?? ''),
-            'duracion_estimada'   => trim($_POST['duracion_estimada'] ?? ''),
-            'nivel_dificultad'    => $nivel,
-            'estado'              => $estado,
-            'fecha_visita'        => $_POST['fecha_visita'] ?: null,
-            'hora_visita'         => $_POST['hora_visita'] ?: null,
-            'id_departamento'     => (int)$_POST['id_departamento'] ?: null,
-            'id_facilitador'      => (int)$_POST['id_facilitador'] ?: null,
-            'cupo_maximo'         => min(200, max(1, (int)($_POST['cupo_maximo'] ?? 20))),
-            'requiere_formacion'  => !empty($_POST['requiere_formacion']),
-            'tipo_ruta'           => $tipoRuta,
+            'id'                    => $esEdicion ? (int)$_POST['id'] : null,
+            'nombre'                => trim($_POST['nombre']),
+            'descripcion'           => trim($_POST['descripcion'] ?? ''),
+            'duracion_estimada'     => trim($_POST['duracion_estimada'] ?? ''),
+            'nivel_dificultad'      => $nivel,
+            'estado'                => $estado,
+            'fecha_visita'          => $_POST['fecha_visita'] ?: null,
+            'hora_visita'           => $_POST['hora_visita'] ?: null,
+            'id_departamento'       => (int)$_POST['id_departamento'] ?: null,
+            'id_facilitador'        => (int)$_POST['id_facilitador'] ?: null,
+            'cupo_maximo'           => min(200, max(1, (int)($_POST['cupo_maximo'] ?? 20))),
+            'requiere_formacion'    => !empty($_POST['requiere_formacion']),
+            'tipo_ruta'             => $tipoRuta,
+            'motivo_mantenimiento'  => $estado === 'En Mantenimiento' ? $motivoMant : null,
         ];
 
         $ruta = new Ruta($data);

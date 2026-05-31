@@ -13,6 +13,7 @@ class Ruta extends Model {
     private int     $cupo_maximo;
     private bool    $requiere_formacion;
     private string  $tipo_ruta;
+    private ?string $motivo_mantenimiento;
 
     public static array $TIPOS_RUTA = ['Cumaná Histórica', 'Exploradores de Cumaná', 'Comunitaria', 'General'];
 
@@ -33,6 +34,7 @@ class Ruta extends Model {
             $this->requiere_formacion  = !empty($data['requiere_formacion']);
             $this->tipo_ruta           = in_array($data['tipo_ruta'] ?? '', self::$TIPOS_RUTA)
                                          ? $data['tipo_ruta'] : 'General';
+            $this->motivo_mantenimiento = $data['motivo_mantenimiento'] ?? null;
         }
     }
 
@@ -84,6 +86,7 @@ class Ruta extends Model {
                                   cupo_maximo=:cupo_maximo,
                                   requiere_formacion=:requiere_formacion,
                                   tipo_ruta=:tipo_ruta,
+                                  motivo_mantenimiento=:motivo_mant,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -109,6 +112,7 @@ class Ruta extends Model {
         $this->db->bind(':cupo_maximo',        $this->cupo_maximo);
         $this->db->bind(':requiere_formacion', $this->requiere_formacion);
         $this->db->bind(':tipo_ruta',          $this->tipo_ruta);
+        $this->db->bind(':motivo_mant',        $this->motivo_mantenimiento);
         $this->db->bind(':user_id',            $user_id);
         $result = $this->db->execute();
         $this->audit('rutas', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'estado' => $this->estado, 'tipo_ruta' => $this->tipo_ruta, 'fecha_visita' => $this->fecha_visita, 'cupo_maximo' => $this->cupo_maximo, 'requiere_formacion' => $this->requiere_formacion], $user_id);

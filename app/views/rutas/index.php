@@ -34,6 +34,12 @@
                     <span class="sig-badge <?php echo $statusClass; ?>"><?php echo $r->estado; ?></span>
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">#<?php echo $r->id; ?></span>
                 </div>
+                <?php if ($r->estado === 'En Mantenimiento' && !empty($r->motivo_mantenimiento)): ?>
+                <div style="padding:var(--sp-2) var(--sp-4); background:rgba(245,158,11,.07); border-bottom:1px solid rgba(245,158,11,.15); font-size:11px; color:#92400E; display:flex; align-items:flex-start; gap:var(--sp-2);">
+                    <i class="bi bi-tools" style="flex-shrink:0; margin-top:1px;"></i>
+                    <span><?php echo htmlspecialchars($r->motivo_mantenimiento); ?></span>
+                </div>
+                <?php endif; ?>
                 <div class="sig-card__body" style="flex:1;">
                     <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;">
                         <?php echo htmlspecialchars($r->nombre ?? ''); ?>
@@ -228,6 +234,18 @@
                         </div>
                     </div>
 
+                    <!-- Motivo de mantenimiento — solo visible cuando estado = En Mantenimiento -->
+                    <div id="sec_motivo_mant" class="col-12" style="display:none;">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">
+                                <i class="bi bi-tools" style="color:#F59E0B;"></i>
+                                Motivo de Mantenimiento <span class="req">*</span>
+                            </label>
+                            <textarea name="motivo_mantenimiento" id="rut_motivo_mant" class="sig-textarea" rows="2"
+                                      placeholder="Describa el motivo por el que la ruta pasa a mantenimiento (ej: reparación de sendero, revisión de seguridad)..."></textarea>
+                        </div>
+                    </div>
+
                 </div>
             </div>
             <div class="modal-footer">
@@ -241,11 +259,21 @@
 </div>
 
 <script>
+function toggleMotivoMant(estado) {
+    var sec  = document.getElementById('sec_motivo_mant');
+    var txt  = document.getElementById('rut_motivo_mant');
+    var esMant = (estado === 'En Mantenimiento');
+    sec.style.display = esMant ? 'block' : 'none';
+    txt.required      = esMant;
+    if (!esMant) txt.value = '';
+}
+
 function nuevaRuta() {
     document.getElementById('modalRutaLabel').innerText = 'Nueva Ruta Turística';
     document.getElementById('rut_id').value = '';
     document.querySelector('#modalRuta form').reset();
     document.getElementById('rut_cupo').value = '20';
+    toggleMotivoMant('Activa');
 }
 
 function editarRuta(r) {
@@ -263,8 +291,16 @@ function editarRuta(r) {
     document.getElementById('rut_hora').value             = r.hora_visita ? r.hora_visita.substring(0,5) : '';
     document.getElementById('rut_req_form').checked       = r.requiere_formacion == true || r.requiere_formacion === 't' || r.requiere_formacion === '1';
     document.getElementById('rut_tipo').value             = r.tipo_ruta || 'General';
+    // Pre-rellenar motivo de mantenimiento
+    document.getElementById('rut_motivo_mant').value      = r.motivo_mantenimiento || '';
+    toggleMotivoMant(r.estado);
     new bootstrap.Modal(document.getElementById('modalRuta')).show();
 }
+
+// Mostrar/ocultar motivo al cambiar estado en el selector
+document.getElementById('rut_estado').addEventListener('change', function() {
+    toggleMotivoMant(this.value);
+});
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
