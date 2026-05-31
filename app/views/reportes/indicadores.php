@@ -92,7 +92,139 @@ $totalBienes  = (int)($data['kpiDepreciacion']->total        ?? 0);
 $deteriorados = (int)($data['kpiDepreciacion']->deteriorados  ?? 0);
 $tasaDeprec   = $totalBienes > 0 ? round(($deteriorados / $totalBienes) * 100, 1) : 0;
 $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' : '#DC2626');
+
+// ── Metas (para el semáforo institucional) ────────────────────────────────
+$semMetaTall  = (int)($data['metaTalleres'] ?? 0);
+$semTallAnio  = (int)($data['talleresAnio'] ?? 0);
+$semPctTall   = $semMetaTall > 0 ? min(100, round(($semTallAnio / $semMetaTall) * 100)) : null;
+$semMetaRut   = (int)($data['metaRutas'] ?? 0);
+$semRutAnio   = (int)($data['rutasAnio'] ?? 0);
+$semPctRut    = $semMetaRut > 0 ? min(100, round(($semRutAnio / $semMetaRut) * 100)) : null;
+
+// ── Helper de semáforo: traduce un estado a color, ícono y veredicto ──────
+function semaforo(string $estado): array {
+    $map = [
+        'ok'      => ['#059669', 'bi-check-circle-fill',        'Óptimo',    '🟢'],
+        'warn'    => ['#D97706', 'bi-exclamation-triangle-fill', 'Atención',  '🟡'],
+        'crit'    => ['#DC2626', 'bi-x-octagon-fill',            'Crítico',   '🔴'],
+        'nodata'  => ['#64748B', 'bi-dash-circle',               'Sin datos', '⚪'],
+        'nometa'  => ['#64748B', 'bi-flag',                      'Sin meta',  '⚪'],
+    ];
+    return $map[$estado] ?? $map['nodata'];
+}
+
+// ── Helper: pill de veredicto según el color del umbral ya calculado ──────
+function verdictPill(string $color): string {
+    if ($color === '#059669') { $txt = 'Óptimo';   $ico = 'bi-check-circle-fill'; }
+    elseif ($color === '#D97706') { $txt = 'Aceptable'; $ico = 'bi-exclamation-triangle-fill'; }
+    else { $txt = 'Crítico'; $ico = 'bi-x-octagon-fill'; }
+    return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;'
+         . 'text-transform:uppercase;letter-spacing:.03em;color:' . $color . ';background:' . $color . '18;'
+         . 'padding:2px 7px;border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
+}
+
+// ── Evaluación de cada área estratégica ───────────────────────────────────
+$semTiles = [];
+
+// 1. Eficacia formativa (tasa de finalización)
+$semTiles[] = [
+    'area'   => 'Eficacia Formativa',
+    'icon'   => 'bi-mortarboard-fill',
+    'estado' => $totalActs === 0 ? 'nodata' : ($tasaFinaliz >= 85 ? 'ok' : ($tasaFinaliz >= 70 ? 'warn' : 'crit')),
+    'metric' => $totalActs === 0 ? '— sin actividades' : $tasaFinaliz . '% finalizadas',
+    'hint'   => 'Meta ≥ 85%',
+];
+// 2. Ocupación de cupos
+$semTiles[] = [
+    'area'   => 'Ocupación de Cupos',
+    'icon'   => 'bi-people-fill',
+    'estado' => $totalCupos === 0 ? 'nodata' : ($tasaOcupacion >= 75 ? 'ok' : ($tasaOcupacion >= 50 ? 'warn' : 'crit')),
+    'metric' => $totalCupos === 0 ? '— sin cupos definidos' : $tasaOcupacion . '% ocupación',
+    'hint'   => 'Meta ≥ 75%',
+];
+// 3. Control de cancelaciones
+$semTiles[] = [
+    'area'   => 'Control de Cancelaciones',
+    'icon'   => 'bi-x-circle-fill',
+    'estado' => $totalActs === 0 ? 'nodata' : ($tasaCancel <= 5 ? 'ok' : ($tasaCancel <= 10 ? 'warn' : 'crit')),
+    'metric' => $totalActs === 0 ? '— sin actividades' : $tasaCancel . '% canceladas',
+    'hint'   => 'Umbral < 10%',
+];
+// 4. Meta anual de formación
+$semTiles[] = [
+    'area'   => 'Meta de Formación',
+    'icon'   => 'bi-flag-fill',
+    'estado' => $semPctTall === null ? 'nometa' : ($semPctTall >= 100 ? 'ok' : ($semPctTall >= 70 ? 'warn' : 'crit')),
+    'metric' => $semPctTall === null ? '— meta no definida' : $semPctTall . '% (' . $semTallAnio . '/' . $semMetaTall . ')',
+    'hint'   => 'Actividades ejecutadas',
+];
+// 5. Meta anual de rutas
+$semTiles[] = [
+    'area'   => 'Meta de Rutas',
+    'icon'   => 'bi-geo-alt-fill',
+    'estado' => $semPctRut === null ? 'nometa' : ($semPctRut >= 100 ? 'ok' : ($semPctRut >= 70 ? 'warn' : 'crit')),
+    'metric' => $semPctRut === null ? '— meta no definida' : $semPctRut . '% (' . $semRutAnio . '/' . $semMetaRut . ')',
+    'hint'   => 'Rutas ejecutadas',
+];
+// 6. Salud del patrimonio (inverso de la depreciación)
+$semTiles[] = [
+    'area'   => 'Salud del Patrimonio',
+    'icon'   => 'bi-box-seam-fill',
+    'estado' => $totalBienes === 0 ? 'nodata' : ($tasaDeprec <= 10 ? 'ok' : ($tasaDeprec <= 15 ? 'warn' : 'crit')),
+    'metric' => $totalBienes === 0 ? '— sin bienes' : $tasaDeprec . '% deteriorado',
+    'hint'   => 'Umbral < 15%',
+];
+
+// Conteo global para el resumen del encabezado
+$semOk = $semWarn = $semCrit = 0;
+foreach ($semTiles as $st) {
+    if ($st['estado'] === 'ok') $semOk++;
+    elseif ($st['estado'] === 'warn') $semWarn++;
+    elseif ($st['estado'] === 'crit') $semCrit++;
+}
 ?>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SEMÁFORO DE GESTIÓN INSTITUCIONAL — lectura ejecutiva de un vistazo
+════════════════════════════════════════════════════════════════════════ -->
+<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;flex-wrap:wrap;">
+    <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
+    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Semáforo de Gestión Institucional — <?php echo $data['anioActual']; ?></span>
+    <div style="flex:1;height:1px;background:var(--border-subtle);min-width:20px;"></div>
+    <div style="display:flex;gap:var(--sp-2);flex-shrink:0;">
+        <span class="sig-badge" style="background:#05966922;color:#059669;font-weight:700;"><i class="bi bi-check-circle-fill"></i> <?php echo $semOk; ?> óptimo</span>
+        <span class="sig-badge" style="background:#D9770622;color:#D97706;font-weight:700;"><i class="bi bi-exclamation-triangle-fill"></i> <?php echo $semWarn; ?> atención</span>
+        <span class="sig-badge" style="background:#DC262622;color:#DC2626;font-weight:700;"><i class="bi bi-x-octagon-fill"></i> <?php echo $semCrit; ?> crítico</span>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 anim-slide-up">
+    <?php foreach ($semTiles as $st):
+        [$sColor, $sIcon, $sLabel, $sDot] = semaforo($st['estado']);
+    ?>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="sig-card h-100" style="border-top:3px solid <?php echo $sColor; ?>;position:relative;overflow:hidden;">
+            <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-3);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2);">
+                    <i class="bi <?php echo $st['icon']; ?>" style="font-size:1.05rem;color:<?php echo $sColor; ?>;"></i>
+                    <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:<?php echo $sColor; ?>;box-shadow:0 0 0 3px <?php echo $sColor; ?>33;"></span>
+                    </span>
+                </div>
+                <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-secondary);line-height:1.25;min-height:2.3em;">
+                    <?php echo htmlspecialchars($st['area']); ?>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px;margin:6px 0 2px 0;">
+                    <i class="bi <?php echo $sIcon; ?>" style="color:<?php echo $sColor; ?>;font-size:0.9rem;"></i>
+                    <span style="font-size:0.95rem;font-weight:800;color:<?php echo $sColor; ?>;"><?php echo $sLabel; ?></span>
+                </div>
+                <div style="font-size:0.7rem;color:var(--text-primary);font-weight:600;"><?php echo htmlspecialchars($st['metric']); ?></div>
+                <div style="font-size:0.62rem;color:var(--text-tertiary);margin-top:2px;"><?php echo htmlspecialchars($st['hint']); ?></div>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: EFICIENCIA OPERATIVA
@@ -112,6 +244,7 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
                         <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Ocupación de Actividades</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colOcup; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaOcupacion; ?>%</div>
                         <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $totalInscritos; ?> inscritos / <?php echo $totalCupos; ?> cupos</div>
+                        <div style="margin-top:5px;"><?php echo verdictPill($colOcup); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colOcup; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-people-fill" style="font-size:1rem;color:<?php echo $colOcup; ?>;"></i>
@@ -134,6 +267,7 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
                         <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Finalización de Actividades</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colFinaliz; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaFinaliz; ?>%</div>
                         <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $finalizadas; ?> finalizadas de <?php echo $totalActs; ?></div>
+                        <div style="margin-top:5px;"><?php echo verdictPill($colFinaliz); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colFinaliz; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-check-circle-fill" style="font-size:1rem;color:<?php echo $colFinaliz; ?>;"></i>
@@ -156,6 +290,7 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
                         <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Tasa de Cancelación</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colCancel; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaCancel; ?>%</div>
                         <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $canceladas; ?> canceladas de <?php echo $totalActs; ?></div>
+                        <div style="margin-top:5px;"><?php echo verdictPill($colCancel); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colCancel; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-x-circle-fill" style="font-size:1rem;color:<?php echo $colCancel; ?>;"></i>
@@ -178,6 +313,7 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
                         <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Depreciación del Patrimonio</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colDeprec; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaDeprec; ?>%</div>
                         <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $deteriorados; ?> deteriorados de <?php echo $totalBienes; ?></div>
+                        <div style="margin-top:5px;"><?php echo verdictPill($colDeprec); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colDeprec; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-exclamation-circle-fill" style="font-size:1rem;color:<?php echo $colDeprec; ?>;"></i>
@@ -192,6 +328,51 @@ $colDeprec    = $tasaDeprec <= 10 ? '#059669' : ($tasaDeprec <= 15 ? '#D97706' :
             </div>
         </div>
     </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     INDICADORES DERIVADOS DE PRODUCTIVIDAD
+════════════════════════════════════════════════════════════════════════ -->
+<?php
+$totalActsYear = (int)($data['kpiEficienciaActs']->total ?? 0);
+$avgPartAct    = $totalActsYear > 0 ? round((int)$data['kpiFormadosAnio'] / $totalActsYear, 1) : 0;
+$numCap        = count($data['capacitadores'] ?? []);
+$avgPorCap     = $numCap > 0 ? round((int)$data['kpiFormadosAnio'] / $numCap) : 0;
+$sumVis = 0; foreach ($data['visitasPorDia'] ?? [] as $v) $sumVis += (int)($v->total ?? 0);
+$avgVisDia = round($sumVis / 14, 1);
+$ctD       = $data['coberturaTerrForma'] ?? null;
+$cobPctD   = (int)($ctD->total_municipios ?? 0) > 0
+           ? round(((int)($ctD->municipios_cubiertos ?? 0) / (int)$ctD->total_municipios) * 100) : 0;
+
+$derivados = [
+    ['Participantes / Actividad', $avgPartAct,         'promedio de inscritos por actividad', 'bi-people',          '#7C3AED'],
+    ['Formados / Capacitador',    number_format($avgPorCap), 'carga formativa por facilitador',     'bi-person-badge',    '#059669'],
+    ['Visitas / Día',             $avgVisDia,          'promedio diario (últimos 14 días)',   'bi-door-open',       '#0891B2'],
+    ['Cobertura Territorial',     $cobPctD . '%',      'municipios del estado con actividad', 'bi-geo-alt',         '#D97706'],
+];
+?>
+<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
+    <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
+    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Indicadores Derivados de Productividad — <?php echo $data['anioActual']; ?></span>
+    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+</div>
+<div class="row g-3 mb-6 anim-slide-up">
+    <?php foreach ($derivados as [$lbl, $val, $sub, $ico, $col]): ?>
+    <div class="col-6 col-md-3">
+        <div class="sig-card h-100">
+            <div class="sig-card__body" style="padding:var(--sp-4);display:flex;align-items:center;gap:var(--sp-3);">
+                <div style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:<?php echo $col; ?>18;display:flex;align-items:center;justify-content:center;">
+                    <i class="bi <?php echo $ico; ?>" style="font-size:1.25rem;color:<?php echo $col; ?>;"></i>
+                </div>
+                <div style="min-width:0;">
+                    <div style="font-size:1.5rem;font-weight:900;color:<?php echo $col; ?>;line-height:1;"><?php echo $val; ?></div>
+                    <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:3px 0 1px;"><?php echo htmlspecialchars($lbl); ?></div>
+                    <div style="font-size:0.62rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($sub); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
 </div>
 
 <!-- PROP-P01: Tipo de Contrato -->
@@ -606,7 +787,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                 <?php if (empty($data['rutasPorTipo'])): ?>
                     <div style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);font-size:12px;">
                         <i class="bi bi-info-circle" style="font-size:1.5rem;display:block;margin-bottom:var(--sp-2);"></i>
-                        Ejecute la migración 013 para activar este indicador.
+                        Aún no hay rutas con participantes registrados.
                     </div>
                 <?php else: ?>
                     <div id="chartRutasTipo"></div>
@@ -633,7 +814,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                         <?php
                         $totalPartRutas = array_sum(array_column((array)$data['rutasPorTipo'], 'participantes'));
                         if (empty($data['rutasPorTipo'])): ?>
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin datos — migración 013 requerida</td></tr>
+                            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Aún no hay rutas con participantes registrados</td></tr>
                         <?php else:
                             foreach ($data['rutasPorTipo'] as $rt):
                                 $pctRt = $totalPartRutas > 0 ? round(($rt->participantes / $totalPartRutas) * 100) : 0;

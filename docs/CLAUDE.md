@@ -392,6 +392,10 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_completo.
 | `docs/REGLAS_NEGOCIO_Visitantes.md` | Visitantes y Control de Visitas |
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
 | `docs/preguntas_modelo_negocio.md` | 160 preguntas con estado ✅ ⚠️ ❓ |
+| `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
+| `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` | Análisis funcional de Formación y Turismo (estado, reglas, validaciones, backlog) |
+
+> **Nota (2026-05-31):** migraciones aplicadas hasta la **021**. Cambios recientes en Turismo: `nivel_dificultad` eliminado (021), estado `Finalizada` (020), `ruta_inventario` eliminado (019), `ruta_informes` (018); módulos **Instituciones externas** y **Actividades de ruta** retirados del sistema. Ver `INDICADORES_GESTION.md` y la memoria interna para el detalle.
 
 ---
 
