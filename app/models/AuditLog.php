@@ -9,9 +9,14 @@ class AuditLog extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT a.*, u.username 
+        // actor_name = nombre real de la persona (usuarios → empleados → personas);
+        // si no hay persona vinculada, cae al username.
+        $db->query("SELECT a.*, u.username,
+                           COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username) AS actor_name
                     FROM audit_logs a
-                    LEFT JOIN usuarios u ON a.id_usuario = u.id
+                    LEFT JOIN usuarios u   ON a.id_usuario  = u.id
+                    LEFT JOIN empleados e  ON u.id_empleado = e.id
+                    LEFT JOIN personas per ON e.id_persona  = per.id
                     ORDER BY a.fecha DESC LIMIT 500");
         return $db->resultSet();
     }
