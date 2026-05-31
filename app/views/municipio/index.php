@@ -20,13 +20,14 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Código Postal</th>
+                <th>Registrado por</th>
                 <th class="col-actions">Acciones</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['municipio'])): ?>
                 <tr>
-                    <td colspan="4" class="sig-table-empty">No hay municipios registrados.</td>
+                    <td colspan="5" class="sig-table-empty">No hay municipios registrados.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['municipio'] as $mun): ?>
@@ -34,6 +35,13 @@
                         <td><span class="cell-id"><?php echo $mun->id; ?></span></td>
                         <td class="cell-strong"><?php echo $mun->nombre; ?></td>
                         <td><?php echo $mun->codigo_postal; ?></td>
+                        <td>
+                            <?php if (!empty($mun->creado_por)): ?>
+                                <span class="sig-badge sig-badge--neutral"><i class="bi bi-person"></i> <?php echo htmlspecialchars($mun->creado_por); ?></span>
+                            <?php else: ?>
+                                <span style="color:var(--text-tertiary);font-style:italic;">Sistema</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarMunicipio(<?php echo json_encode($mun); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar

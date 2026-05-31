@@ -47,8 +47,13 @@ class Municipio extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT id, nombre, codigo_postal, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
-            FROM public.municipio WHERE is_active = TRUE ORDER BY nombre ASC");
+        $db->query("SELECT mu.id, mu.nombre, mu.codigo_postal, mu.is_active, mu.created_at, mu.updated_at, mu.deleted_at, mu.created_by, mu.updated_by, mu.deleted_by,
+                           (SELECT COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username)
+                            FROM usuarios u
+                            LEFT JOIN empleados e  ON u.id_empleado = e.id
+                            LEFT JOIN personas per ON e.id_persona  = per.id
+                            WHERE u.id = mu.created_by) AS creado_por
+            FROM public.municipio mu WHERE mu.is_active = TRUE ORDER BY mu.nombre ASC");
         return $db->resultSet();
     }
 

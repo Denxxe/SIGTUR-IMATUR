@@ -47,10 +47,15 @@ class Parroquia extends Model
     public static function all()
     {
         $db = new Database();
-        $db->query("SELECT p.id, p.nombre, p.id_municipio, m.nombre AS municipio, p.is_active, p.create_by, p.update_by, p.delete_by, p.create_at, p.update_at, p.delete_at
+        $db->query("SELECT p.id, p.nombre, p.id_municipio, m.nombre AS municipio, p.is_active, p.create_by, p.update_by, p.delete_by, p.create_at, p.update_at, p.delete_at,
+                           (SELECT COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username)
+                            FROM usuarios u
+                            LEFT JOIN empleados e  ON u.id_empleado = e.id
+                            LEFT JOIN personas per ON e.id_persona  = per.id
+                            WHERE u.id = p.create_by) AS creado_por
         FROM public.parroquia p
-        LEFT JOIN public.municipio m ON p.id_municipio = m.id 
-        WHERE p.is_active = TRUE AND m.is_active = TRUE 
+        LEFT JOIN public.municipio m ON p.id_municipio = m.id
+        WHERE p.is_active = TRUE AND m.is_active = TRUE
         ORDER BY p.nombre ASC");
         return $db->resultSet();
     }

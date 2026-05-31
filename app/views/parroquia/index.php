@@ -20,13 +20,14 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Municipio</th>
+                <th>Registrado por</th>
                 <th class="col-actions">Acciones</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['parroquia'])): ?>
                 <tr>
-                    <td colspan="4" class="sig-table-empty">No hay parroquias registradas.</td>
+                    <td colspan="5" class="sig-table-empty">No hay parroquias registradas.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['parroquia'] as $par): ?>
@@ -34,6 +35,13 @@
                         <td><span class="cell-id"><?php echo $par->id; ?></span></td>
                         <td class="cell-strong"><?php echo $par->nombre; ?></td>
                         <td><span class="sig-badge sig-badge--brand"><?php echo $par->municipio; ?></span></td>
+                        <td>
+                            <?php if (!empty($par->creado_por)): ?>
+                                <span class="sig-badge sig-badge--neutral"><i class="bi bi-person"></i> <?php echo htmlspecialchars($par->creado_por); ?></span>
+                            <?php else: ?>
+                                <span style="color:var(--text-tertiary);font-style:italic;">Sistema</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarParroquia(<?php echo json_encode($par); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
