@@ -311,8 +311,13 @@ function auditUrl(array $filtros, int $p): string {
                                         $a = $prev[$k];
                                         if (auditNorm($a) !== auditNorm($b)) $cambios[$k] = [$a, $b];
                                     }
-                                    // ¿Solo cambió is_active? → restauración / desactivación
-                                    $soloActivo = empty($cambios) && (auditNorm($prev['is_active'] ?? null) !== auditNorm($new['is_active'] ?? null));
+                                    // ¿Solo cambió is_active? → restauración / desactivación.
+                                    // Requiere que is_active exista en AMBOS lados; si datos_nuevos no la trae
+                                    // (log parcial), NO es un cambio real (evita falsos "Se desactivó").
+                                    $soloActivo = empty($cambios)
+                                        && array_key_exists('is_active', $prev)
+                                        && array_key_exists('is_active', $new)
+                                        && auditNorm($prev['is_active']) !== auditNorm($new['is_active']);
                                 ?>
                                     <div class="audit-detail audit-detail--upd">
                                         <div class="audit-detail__title" style="color:#2563EB;"><i class="bi bi-pencil-fill"></i> Cambios realizados</div>
