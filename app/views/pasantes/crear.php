@@ -76,6 +76,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-md-12">
+                    <div class="sig-field">
+                        <label class="sig-field__label">
+                            Responsable externo
+                            <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Persona en la institución a quien se dirige la carta de aceptación</span>
+                        </label>
+                        <input type="text" name="tutor_externo" class="sig-input"
+                               placeholder="Ej: Prof. Rosa Rincón, Responsable de Gestión de Proyecto">
+                    </div>
+                </div>
                 <div class="col-md-3">
                     <div class="sig-field">
                         <label class="sig-field__label">Fecha Inicio</label>

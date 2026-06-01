@@ -56,8 +56,9 @@ class PasantesController extends Controller {
             }
 
             $pasanteData = [
-                'institucion'            => trim($_POST['institucion'] ?? ''),
-                'carrera'                => trim($_POST['carrera']     ?? ''),
+                'institucion'            => trim($_POST['institucion']   ?? ''),
+                'carrera'                => trim($_POST['carrera']       ?? ''),
+                'tutor_externo'          => trim($_POST['tutor_externo'] ?? '') ?: null,
                 'id_tutor_institucional' => !empty($_POST['id_tutor_institucional']) ? (int)$_POST['id_tutor_institucional'] : null,
                 'fecha_inicio'           => $fechaInicio,
                 'fecha_fin'              => $fechaFin,
@@ -133,6 +134,7 @@ class PasantesController extends Controller {
                 'id'                     => $id,
                 'institucion'            => trim($_POST['institucion'] ?? ''),
                 'carrera'                => trim($_POST['carrera']     ?? ''),
+                'tutor_externo'          => trim($_POST['tutor_externo'] ?? '') ?: null,
                 'id_tutor_institucional' => !empty($_POST['id_tutor_institucional']) ? (int)$_POST['id_tutor_institucional'] : null,
                 'fecha_inicio'           => $fechaInicioEd,
                 'fecha_fin'              => $fechaFinEd,
@@ -140,6 +142,16 @@ class PasantesController extends Controller {
                 'evaluacion'             => trim($_POST['evaluacion'] ?? ''),
                 'nota'                   => $_POST['nota'] ?? ''
             ];
+
+            // Agrupamiento manual: si el admin editó el oficio_aceptacion, actualizarlo.
+            $oficioEditado = trim($_POST['oficio_aceptacion'] ?? '');
+            if ($oficioEditado !== '') {
+                $db2 = new Database();
+                $db2->query("UPDATE pasantes SET oficio_aceptacion = :o WHERE id = :id");
+                $db2->bind(':o', $oficioEditado);
+                $db2->bind(':id', $id);
+                $db2->execute();
+            }
 
             try {
                 // RN-PS01: Solo el Administrador puede aprobar (Postulado → Aceptado)
@@ -150,21 +162,17 @@ class PasantesController extends Controller {
                     if ($rolActual !== 1) {
                         throw new Exception('Solo el Administrador puede aprobar el paso de Postulado a Aceptado (RN-PS01).');
                     }
-                    // Generar (o reusar) correlativo de carta de aceptación.
-                    // Si ya hay otro pasante de la misma institución con oficio asignado → reusar.
-                    $db2 = new Database();
-                    $db2->query("SELECT oficio_aceptacion FROM pasantes
-                                 WHERE LOWER(TRIM(institucion)) = LOWER(TRIM(:inst))
-                                   AND oficio_aceptacion IS NOT NULL AND is_active = TRUE
-                                 LIMIT 1");
-                    $db2->bind(':inst', $pasanteData['institucion'] ?: $pasante->institucion);
-                    $existente = $db2->single();
-                    $oficio = $existente ? $existente->oficio_aceptacion
-                                         : ConfigSistema::generarNumeroOficio('pasante');
-                    $db2->query("UPDATE pasantes SET oficio_aceptacion = :o WHERE id = :id");
-                    $db2->bind(':o', $oficio);
-                    $db2->bind(':id', $id);
-                    $db2->execute();
+                    // Cada aceptación genera su propio correlativo. Si el admin quiere agrupar
+                    // varios pasantes en una misma carta, puede editar oficio_aceptacion manualmente
+                    // para asignarles el mismo número (campo editable en el formulario de edición).
+                    if (empty($pasante->oficio_aceptacion)) {
+                        $oficio = ConfigSistema::generarNumeroOficio('pasante');
+                        $db2 = new Database();
+                        $db2->query("UPDATE pasantes SET oficio_aceptacion = :o WHERE id = :id");
+                        $db2->bind(':o', $oficio);
+                        $db2->bind(':id', $id);
+                        $db2->execute();
+                    }
                 }
 
                 $this->pasanteModel->updatePersona($idPersona, $personaData, $userId);

@@ -90,20 +90,21 @@ class Pasante extends Model {
     public function create($idPersona, $data, $userId) {
         $this->db->query("
             INSERT INTO pasantes
-                (id_persona, institucion, carrera, id_tutor_institucional,
+                (id_persona, institucion, carrera, tutor_externo, id_tutor_institucional,
                  fecha_inicio, fecha_fin, estado, created_by)
             VALUES
-                (:id_persona, :institucion, :carrera, :id_tutor,
+                (:id_persona, :institucion, :carrera, :tutor_externo, :id_tutor,
                  :fecha_inicio, :fecha_fin, :estado, :uid)
         ");
-        $this->db->bind(':id_persona',   $idPersona);
-        $this->db->bind(':institucion',  $data['institucion']);
-        $this->db->bind(':carrera',      $data['carrera']);
-        $this->db->bind(':id_tutor',     $data['id_tutor_institucional'] ?: null);
-        $this->db->bind(':fecha_inicio', $data['fecha_inicio'] ?: null);
-        $this->db->bind(':fecha_fin',    $data['fecha_fin'] ?: null);
-        $this->db->bind(':estado',       $data['estado'] ?? 'Postulado');
-        $this->db->bind(':uid',          $userId);
+        $this->db->bind(':id_persona',     $idPersona);
+        $this->db->bind(':institucion',    $data['institucion']);
+        $this->db->bind(':carrera',        $data['carrera']);
+        $this->db->bind(':tutor_externo',  $data['tutor_externo'] ?? null);
+        $this->db->bind(':id_tutor',       $data['id_tutor_institucional'] ?: null);
+        $this->db->bind(':fecha_inicio',   $data['fecha_inicio'] ?: null);
+        $this->db->bind(':fecha_fin',      $data['fecha_fin'] ?: null);
+        $this->db->bind(':estado',         $data['estado'] ?? 'Postulado');
+        $this->db->bind(':uid',            $userId);
         $result = $this->db->execute();
         $this->audit('pasantes', 'INSERT', null, null, ['id_persona' => $idPersona, 'estado' => $data['estado'] ?? 'Postulado', 'institucion' => $data['institucion'], 'carrera' => $data['carrera']], $userId);
         return $result;
@@ -115,6 +116,7 @@ class Pasante extends Model {
             UPDATE pasantes SET
                 institucion            = :institucion,
                 carrera                = :carrera,
+                tutor_externo          = :tutor_externo,
                 id_tutor_institucional = :id_tutor,
                 fecha_inicio           = :fecha_inicio,
                 fecha_fin              = :fecha_fin,
@@ -125,10 +127,11 @@ class Pasante extends Model {
                 updated_by             = :uid
             WHERE id = :id
         ");
-        $this->db->bind(':id',           $data['id']);
-        $this->db->bind(':institucion',  $data['institucion']);
-        $this->db->bind(':carrera',      $data['carrera']);
-        $this->db->bind(':id_tutor',     $data['id_tutor_institucional'] ?: null);
+        $this->db->bind(':id',            $data['id']);
+        $this->db->bind(':institucion',   $data['institucion']);
+        $this->db->bind(':carrera',       $data['carrera']);
+        $this->db->bind(':tutor_externo', $data['tutor_externo'] ?? null);
+        $this->db->bind(':id_tutor',      $data['id_tutor_institucional'] ?: null);
         $this->db->bind(':fecha_inicio', $data['fecha_inicio'] ?: null);
         $this->db->bind(':fecha_fin',    $data['fecha_fin'] ?: null);
         $this->db->bind(':estado',       $data['estado']);
