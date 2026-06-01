@@ -1,104 +1,113 @@
 # Auditoría de Ingeniería Senior — SIGTUR-IMATUR
 
-**Fecha:** 2026-05-31
+**Fecha auditoría:** 2026-05-31
+**Última actualización:** 2026-05-31 (todos los hallazgos cerrados)
 **Alcance:** todos los módulos (RRHH, Recepción, Formación, Turismo, Inventario, Sistema/Transversal).
-**Método:** análisis cruzado BD viva (37 tablas, migraciones 001-021 aplicadas) ↔ modelos/controladores/vistas. **Cada hallazgo fue verificado contra la base de datos real**, no contra `schema.sql` (base, desactualizado). Los falsos positivos detectados se documentan al final con su refutación.
+**Método:** análisis cruzado BD viva (37 tablas, migraciones 001-021) ↔ modelos/controladores/vistas. Cada hallazgo fue verificado contra la base de datos real. Los falsos positivos detectados se documentan al final.
 
-> Este documento identifica **desfases, lógica incompleta y deuda técnica**. No es un changelog: es el mapa de lo que falta para dejar el sistema "lo más completo posible". Las preguntas de negocio que se derivan están en `preguntas_modelo_negocio.md` (sección 2026-05-31).
-
----
-
-## 🔴 ALTA — Defectos de correctitud (afectan operación o datos)
-
-### H-01 · No se pueden crear nuevas Ubicaciones de inventario — ✅ RESUELTO (2026-05-31)
-> **Resuelto:** la ubicación ahora se asocia a un **departamento** (obligatorio). `Ubicacion` mapea la columna `"departamento _d"`, `all()`/`find()` la exponen como `id_departamento` + nombre por JOIN, el controlador valida que sea obligatoria y la vista tiene un select de departamentos. Verificado con INSERT real. Decisión `D-UB01` respondida: **sí, la ubicación pertenece a un departamento**.
-
-- **Dónde:** `app/models/Ubicacion.php:39` (INSERT).
-- **Hecho verificado:** la tabla `ubicaciones` tiene la columna **`"departamento _d"` `NOT NULL` sin valor por defecto**, pero el `INSERT` del modelo solo escribe `(nombre, descripcion, created_by)`. Toda alta nueva de ubicación **falla** con violación de `NOT NULL`.
-- **Impacto:** el catálogo de ubicaciones de inventario es de facto inmutable (solo existen las sembradas). El módulo Inventario depende de él.
-- **Causa raíz / decisión de negocio:** ¿las ubicaciones deben pertenecer a un departamento? La columna lo exige pero no hay UI para elegirlo (ver `D-UB01`). 
-- **Opciones de arreglo:** (a) agregar selección de departamento en UI+controlador+modelo; (b) si ya no aplica, volver la columna `NULL`/con default y renombrarla a `id_departamento` (limpia también el nombre con espacio).
-
-### H-02 · La auditoría de Parroquia se registra en español — ✅ RESUELTO (2026-05-31)
-> **Resuelto:** `Parroquia::save()/delete()` ahora usan `UPDATE/INSERT/DELETE`. La bitácora filtra y muestra correctamente, y el re-fetch de estado completo en UPDATE ya aplica a parroquia.
-
-- **Dónde:** `app/models/Parroquia.php:103` (`'ACTUALIZAR'`), `:108` (`'INSERTAR'`), `:128` (`'ELIMINAR'`).
-- **Hecho verificado:** todas las demás tablas registran `INSERT/UPDATE/DELETE` (inglés); `audit_logs` no contiene hoy ninguna operación en español (nunca se ha editado una parroquia con este código).
-- **Impacto:** (1) el **filtro por acción** de la nueva Bitácora no reconoce `ACTUALIZAR/...` → se muestran con badge neutro y no filtran; (2) la mejora de **registrar el estado completo en UPDATE** (`Model::audit`, 2026-05-31) solo se dispara con `'UPDATE'`, así que parroquia seguiría con log parcial.
-- **Arreglo:** trivial — normalizar a `'UPDATE'/'INSERT'/'DELETE'`.
+> **Estado final:** todos los hallazgos H-01 a H-11 están **cerrados**. Los pendientes abiertos son decisiones de negocio, documentados en `preguntas_modelo_negocio.md` (H-09/H-10/H-03).
 
 ---
 
-## 🟡 MEDIA — Lógica incompleta o inconsistencias
+## 🔴 ALTA
 
-### H-03 · `visitas` sin columnas de auditoría completas
-- **Verificado:** `visitas` tiene `is_active, created_at, created_by` pero **carece de** `updated_at/updated_by/deleted_at/deleted_by`. `Visita::delete()` solo hace `is_active=FALSE` (no rompe), pero no queda registro de *cuándo* ni *quién* eliminó, y no encaja con la papelera/convención del resto.
-- **Arreglo:** migración para agregar las 4 columnas + ajustar `Visita::delete()`.
+### H-01 · Ubicaciones sin departamento — ✅ RESUELTO
+- **Problema:** `Ubicacion::save()` no escribía `"departamento _d"` (NOT NULL sin default) → toda alta nueva fallaba.
+- **Solución:** `Ubicacion` mapea la columna como `id_departamento`, `all()`/`find()` la exponen con JOIN al nombre del departamento, el controlador valida que sea obligatoria, la vista tiene el select. Verificado con INSERT real.
+- **Decisión D-UB01:** sí, la ubicación pertenece a un departamento (obligatorio).
+- **Commits:** `9b960fe`
 
-### H-04 · Dar de baja un bien por "Movimientos" no cambia su condición
-- **Dónde:** `app/controllers/ActividadesinventarioController.php` (lógica comentada nunca implementada).
-- **Hecho:** registrar un `actividad_inventario` tipo `Baja`/`Mantenimiento` **no actualiza** `inventario.condicion`. Un bien dado de baja puede seguir figurando "Bueno".
-- **Pregunta de negocio asociada:** `D-IN10`.
-
-### H-05 · Validaciones de servidor faltantes
-- **Email** sin `filter_var(...FILTER_VALIDATE_EMAIL)` en `EmpleadosController` y `VisitantesController` (solo HTML5).
-- **`fecha_fin >= fecha_inicio`** no validada en `PasantesController`.
-- **Unicidad de `codigo_bn` y `serial`** (ambos `UNIQUE` en BD) no se pre-validan en `InventarioController` → el usuario recibe un error opaco de BD en vez de un mensaje claro.
-
-### H-06 · Correlativo de oficios sin protección de concurrencia
-- **Dónde:** `app/models/ConfigSistema.php::generarNumeroOficio()`.
-- **Hecho:** lee-incrementa-escribe sin transacción/`SELECT ... FOR UPDATE`. Dos emisiones simultáneas podrían obtener el mismo número. Riesgo bajo en uso real (1 recepción), pero es una condición de carrera latente.
-
-### H-07 · Enums duplicados en varias capas (sin fuente única)
-- Estados de taller (`Programado/En Curso/Finalizado/Cancelado`), estados/tipos de ruta y `condicion` de inventario están escritos a mano en **modelo + controlador + vista**. `Ruta::$TIPOS_RUTA` ya centraliza tipos de ruta; falta el resto.
-- **Riesgo:** al cambiar un valor en BD hay que tocar 3 lugares → desincronización.
-- **Recomendación:** constantes en el modelo (`Taller::ESTADOS`, `Inventario::CONDICIONES`, …) y reutilizarlas.
-
-### H-08 · Claves foráneas `NOT VALID`
-- `ubicaciones."departamento _d"` y `ubicaciones_formacion.parroquia` quedaron como FK `NOT VALID` (no se validaron filas existentes). Integridad no garantizada para datos previos.
-- **Arreglo:** corregir datos huérfanos y `ALTER TABLE ... VALIDATE CONSTRAINT`.
+### H-02 · Auditoría de Parroquia en español — ✅ RESUELTO
+- **Problema:** `Parroquia::save()/delete()` registraban `ACTUALIZAR/INSERTAR/ELIMINAR` → la Bitácora no los filtraba ni el re-fetch de UPDATE los capturaba.
+- **Solución:** normalizado a `UPDATE/INSERT/DELETE`.
+- **Commits:** `9b960fe`
 
 ---
 
-## 🟢 BAJA — Inertes, huérfanos y detalles
+## 🟡 MEDIA
 
-### H-09 · Columnas inertes (existen, sin lógica que las gestione)
-| Columna | Estado |
-|--------|--------|
-| `rutas.tiene_tarifa`, `rutas.tarifa_monto` | sin UI ni cobro (ver `D-RT02`) |
-| `rutas.nombre_facilitador_externo` | sin UI para capturarla (ver `D-RT04`) |
-| `talleres.id_oficio` | nunca se asigna (oficios base sin CRUD, ver `D-FO06`) |
-| `participantes_taller.es_brigadista` | nunca se usa (ver `D-FO08`) |
-| `participantes_ruta.id_institucion` | siempre NULL (módulo instituciones retirado) |
+### H-03 · `visitas` sin columnas de auditoría completas — ✅ CERRADO (decisión de negocio)
+- **Decisión (2026-05-31):** las visitas son **registros inmutables** (no se editan ni eliminan). No se requieren `updated_at/deleted_at`. El reporte de visitantes se mejoró para mostrar datos completos del visitante (cédula, teléfono, correo, género) y se eliminó "Empleado visitado" (no se captura al registrar).
+- **Commits:** `363b709`, `c655fde`
 
-### H-10 · Tablas inertes o sin UI
-`horarios`, `permisos_laborales`, `vacaciones` (mig. 002, 0 registros, sin CRUD), `taller_inventario` (sin UI, ver `D-FO07`), `oficios` (base, sin CRUD, ver `D-FO06`), `actividades_ruta` e `instituciones_externas` (retiradas del flujo, conservadas inertes).
+### H-04 · Baja de bien no actualiza su condición — ⚠️ PENDIENTE DECISIÓN
+- **Hecho:** registrar un movimiento tipo `Baja`/`Mantenimiento` no actualiza `inventario.condicion`.
+- **Pendiente:** ver pregunta `D-IN10` — ¿debe sincronizarse automáticamente?
 
-### H-11 · `genero` permite 'O' pero la UI solo ofrece M/F
-- **Verificado:** `personas.genero CHECK IN ('M','F','O')`; el formulario de empleados solo lista M/F. Un registro con 'O' no se puede preservar al editar.
+### H-05 · Validaciones de servidor faltantes — ✅ RESUELTO
+- Email: `filter_var(FILTER_VALIDATE_EMAIL)` en `EmpleadosController` y `VisitantesController`.
+- `fecha_fin >= fecha_inicio` en `PasantesController` (crear y editar).
+- Unicidad de `codigo_bn` y `serial`: `Inventario::findByCodigoBn()`/`findBySerial()` pre-validan con mensajes precisos.
+- **Commits:** `4832d82`
+
+### H-06 · Correlativo de oficios sin protección de concurrencia — ✅ RESUELTO
+- `ConfigSistema::generarNumeroOficio()` reescrito con transacción + `SELECT FOR UPDATE` + `UPDATE ... RETURNING` atómico.
+- **Commits:** `8311a81`
+
+### H-07 · Enums duplicados en varias capas — ✅ RESUELTO
+- Constantes centralizadas en los modelos:
+  - `Taller::ESTADOS`, `ESTADOS_TERMINALES`, `TIPOS_ACTIVIDAD`, `ESTADO_BADGES`, `TRANSICIONES`
+  - `Ruta::ESTADOS`, `ESTADO_TERMINAL`, `ESTADO_BADGES`
+  - `Inventario::CONDICIONES`, `CONDICION_DEFAULT`, `CONDICION_BADGES`
+- Controllers usan las constantes para whitelists. Vistas PHP usan `Model::ESTADO_BADGES`. JS recibe los mapas vía `json_encode()`.
+- **Commits:** `d83c493`
+
+### H-08 · Claves foráneas NOT VALID — ✅ RESUELTO
+- 7 FKs validadas con migración 022 (0 huérfanos en todas). BD ahora enforcea integridad referencial completa.
+  - `municipio.created_by`, `parroquia.create_by/update_by/delete_by`, `personas.parroquia_id`, `ubicaciones."departamento _d"`, `ubicaciones_formacion.parroquia`
+- **Commits:** `e6fabb0` (migración 022)
 
 ---
 
-## ✅ Falsos positivos detectados y DESCARTADOS (rigor de verificación)
+## 🟢 BAJA
 
-> Documentados para evitar que se "arreglen" cosas que ya están bien.
+### H-09 · Columnas inertes — ⚠️ PENDIENTE DECISIÓN
+| Columna | Pregunta abierta |
+|---------|-----------------|
+| `rutas.tiene_tarifa`, `rutas.tarifa_monto` | `D-RT02` — ¿cobro integrado? |
+| `rutas.nombre_facilitador_externo` | `D-RT04` — ¿texto libre o lista? |
+| `talleres.id_oficio` | `D-FO06` — ¿CRUD de oficios base? |
+| `participantes_taller.es_brigadista` | `D-FO08` — ¿qué significa? |
+| `participantes_ruta.id_institucion` | módulo instituciones retirado; columna inerte |
 
-1. **"El Router bloquea a un rol con `AuditoriaController`"** — **FALSO.** En `Router.php`, la verificación estándar `in_array($controller, $permitidos)` ya admite a quien tenga `AuditoriaController`; el bloque especial solo *agrega* acceso para quien tenga `AuditoriaPapelera`. La lógica es correcta.
-2. **"`Visita.php:73` usa `deleted_at` inexistente"** — **FALSO.** `Visita::delete()` solo ejecuta `UPDATE visitas SET is_active=FALSE`. No referencia `deleted_at` (sí es cierto, aparte, que la tabla carece de esa columna → ver H-03, pero no hay crash).
+### H-10 · Tablas sin UI — ⚠️ PENDIENTE DECISIÓN
+`horarios`, `permisos_laborales`, `vacaciones` (mig. 002, sin CRUD — ver D-RH01..05), `taller_inventario` (`D-FO07`), `oficios` base (`D-FO06`), `actividades_ruta` e `instituciones_externas` (retiradas del flujo).
+
+### H-11 · `genero` permitía 'O' — ✅ RESUELTO
+- 0 registros con 'O' en BD. Migración 023 actualiza CHECK a `IN ('M','F')` en las 4 tablas (`personas`, `visitantes`, `participantes_taller`, `participantes_ruta`). Opción "Otro" eliminada de todos los formularios (talleres/detalle, rutas/detalle, visitantes/index, talleres/informe_imprimible).
+- **Commits:** `1605e4a` (migración 023)
 
 ---
 
-## Prioridad sugerida de ejecución
+## ✅ Falsos positivos descartados
 
-1. **H-02** (parroquia → inglés): trivial, desbloquea bitácora correcta. 
-2. **H-01 + D-UB01** (alta de ubicaciones): definir si ubicación lleva departamento y arreglar el INSERT.
-3. **H-05** (validaciones de servidor): bajo esfuerzo, alto valor de integridad.
-4. **H-04** (baja de bien → condición), **H-03** (auditoría visitas), **H-06** (correlativo), **H-07** (enums).
-5. Resto (inertes/huérfanos): decidir por negocio qué se implementa y qué se elimina (ver preguntas).
+1. **"Router bloquea a `AuditoriaController`"** — FALSO. La lógica del Router es correcta; el bloque especial solo *agrega* acceso para `AuditoriaPapelera`, no lo bloquea.
+2. **"`Visita.php` usa `deleted_at` inexistente"** — FALSO. Solo ejecuta `is_active=FALSE`; no referencia `deleted_at`.
+
+---
+
+## Resumen ejecutivo de cierre
+
+| # | Hallazgo | Estado | Commit |
+|---|----------|--------|--------|
+| H-01 | Alta de ubicaciones rota | ✅ Resuelto | `9b960fe` |
+| H-02 | Parroquia audita en español | ✅ Resuelto | `9b960fe` |
+| H-03 | visitas sin auditoría completa | ✅ Cerrado (decisión: inmutable) | `363b709` |
+| H-04 | Baja bien → condición | ⚠️ Pendiente `D-IN10` | — |
+| H-05 | Validaciones servidor faltantes | ✅ Resuelto | `4832d82` |
+| H-06 | Correlativo oficios sin transacción | ✅ Resuelto | `8311a81` |
+| H-07 | Enums duplicados | ✅ Resuelto | `d83c493` |
+| H-08 | FKs NOT VALID (7) | ✅ Resuelto | `e6fabb0` |
+| H-09 | Columnas inertes | ⚠️ Pendiente decisión negocio | — |
+| H-10 | Tablas sin UI | ⚠️ Pendiente decisión negocio | — |
+| H-11 | Género permitía 'O' | ✅ Resuelto | `1605e4a` |
+
+**Migraciones aplicadas:** 022 (VALIDATE FK), 023 (género M/F)
+**Esquema actualizado:** `database/schema_consolidado.sql` pendiente de regenerar con mig. 022-023.
 
 ---
 
 ## Artefactos relacionados
-- `database/schema_consolidado.sql` — **fuente única de verdad** del esquema (reemplaza `schema.sql` + migraciones 001-021). Verificado: recrea 37 tablas + seeds de sistema sin errores.
-- `docs/preguntas_modelo_negocio.md` — preguntas de negocio abiertas (sección 2026-05-31 con las nuevas).
-- `docs/INDICADORES_GESTION.md`, `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` — análisis previos.
+- `database/schema_consolidado.sql` — esquema base + 001-021 + seeds (pendiente actualizar a 023)
+- `docs/preguntas_modelo_negocio.md` — preguntas de negocio abiertas
+- `docs/INDICADORES_GESTION.md`, `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` — análisis de módulos

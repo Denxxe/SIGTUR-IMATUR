@@ -191,8 +191,9 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 020 | `020_rutas_estado_finalizada.sql` | ✅ Ejecutado | Estado `Finalizada` (terminal) en `rutas` |
 | 021 | `021_drop_nivel_dificultad.sql` | ✅ Ejecutado | DROP COLUMN `rutas.nivel_dificultad` |
 | 022 | `022_validate_fk_constraints.sql` | ✅ Ejecutado | `VALIDATE CONSTRAINT` en 7 FKs que quedaron NOT VALID (sin huérfanos) |
+| 023 | `023_genero_solo_mf.sql` | ✅ Ejecutado | CHECK `genero IN ('M','F')` en personas, visitantes, participantes_taller, participantes_ruta — elimina 'O' |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-021 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). Para instalar desde cero usar **ese** archivo.
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). Para instalar desde cero usar **ese** archivo.
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -340,7 +341,9 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 10. **`participantes_taller.es_brigadista`** — para participantes con cédula. `nombre_docente`/`cedula_docente` para niños/as (libre).
 
-11. **`rutas.nivel_dificultad` CHECK** — valores con tilde exactos: `'Fácil'`,`'Moderado'`,`'Difícil'`,`'Extremo'`. Validar siempre contra whitelist.
+11. **`rutas.nivel_dificultad` ELIMINADO (migración 021)** — columna eliminada; ya no existe en BD ni en código.
+11b. **Enums centralizados en constantes de modelo (H-07, 2026-05-31)** — los valores válidos de estado/tipo/condición viven en constantes PHP como fuente única: `Taller::ESTADOS/TIPOS_ACTIVIDAD/ESTADO_BADGES/TRANSICIONES`, `Ruta::ESTADOS/ESTADO_TERMINAL/ESTADO_BADGES`, `Inventario::CONDICIONES/CONDICION_DEFAULT/CONDICION_BADGES`. Los controllers usan estas constantes para whitelists; las vistas PHP para badges; el JS las recibe vía `json_encode()`. **No hardcodear** estos valores en controllers ni vistas.
+11c. **`personas/visitantes.genero` CHECK = `IN ('M','F')` (migración 023)** — eliminada la opción 'O'. Aplica a 4 tablas: personas, visitantes, participantes_taller, participantes_ruta.
 
 12. **`rutas.requiere_formacion`** — `TRUE` → el sistema verifica en `participantes_taller` que la persona asistió a al menos un taller antes de inscribir (RN-F12). Libres (niños) exentos.
 

@@ -67,7 +67,7 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 |----|--------|----------|------------|
 | ~~D-UB01~~ | Inventario | ✅ **RESPONDIDA (2026-05-31):** sí, la ubicación pertenece a un departamento (obligatorio). Implementado: select en UI + `id_departamento` en modelo/controlador. H-01 cerrado. | — |
 | D-IN10 | Inventario | ❓ ¿Registrar un movimiento **Baja**/**Mantenimiento** debe cambiar automáticamente la `condicion` del bien (p. ej. a "Dañado")? Hoy no lo hace (H-04). | Sincronizar `actividad_inventario` → `inventario.condicion` |
-| D-IN11 | Inventario | ❓ ¿`codigo_bn` y `serial` son obligatorios? ¿Validar unicidad con mensaje claro antes de guardar? (H-05) | Validación de unicidad en `InventarioController` |
+| ~~D-IN11~~ | Inventario | ✅ **RESUELTA (2026-05-31, H-05):** validación de unicidad implementada en `InventarioController` con mensajes precisos (`Inventario::findByCodigoBn/findBySerial`). | — |
 | D-FO06 | Formación | ❓ ¿Se gestionan los **oficios base** (tabla `oficios`) con CRUD y se vinculan al taller (`talleres.id_oficio`)? ¿Para qué (solicitud de sede, autorización)? | OficiosController + flujo oficio→taller (H-09/H-10) |
 | D-FO07 | Formación | ❓ ¿La tabla `taller_inventario` (materiales prestados al taller) se va a usar? ¿Es obligatorio? ¿Se controla devolución? | UI de materiales por taller |
 | D-FO08 | Formación | ❓ ¿Qué significa `es_brigadista` en un participante? ¿Implica rol/beneficio? Hoy el campo no se usa. | Definir uso o eliminar campo |
@@ -77,7 +77,7 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 | D-RE04 | Recepción | ❓ ¿Los **motivos de visita** deben ser un catálogo configurable? Hoy están fijos en el código. | Tabla/config de motivos |
 | D-US06 | Sistema | ❓ ¿Política de **contraseñas** (longitud mínima, complejidad, expiración, forzar cambio en primer ingreso)? | Validación en `UsuariosController` + `password_debe_cambiar` |
 | D-TX04 | Transversal | ⚠️ Deuda técnica: operaciones de auditoría de parroquia ✅ **normalizadas a inglés (2026-05-31, H-02 cerrado)**. Queda pendiente decidir si se renombran las columnas `create_at`→`created_at` de `parroquia` (cambio de esquema mayor, bajo impacto). | Esquema consistente (opcional) |
-| D-RH15 | RRHH | ❓ ¿Se usa el género **"Otro" ('O')**? La BD lo permite pero la UI solo ofrece M/F (H-11). | Opción "Otro" en formularios de personas/empleados |
+| ~~D-RH15~~ | RRHH | ✅ **RESUELTA (2026-05-31, H-11):** decisión — solo M/F. Migración 023 actualiza CHECK en 4 tablas. Opción "Otro" eliminada de todos los formularios. | — |
 
 ---
 

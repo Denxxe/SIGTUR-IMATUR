@@ -17,20 +17,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
--- ============================================================================
--- SIGTUR-IMATUR — ESQUEMA CONSOLIDADO (fuente única de verdad)
--- ----------------------------------------------------------------------------
--- Generado 2026-05-31 desde la BD viva. Reemplaza schema.sql + migraciones
--- 001 a 021. Estructura completa (37 tablas) + seeds de sistema (roles,
--- permisos_rol, configuracion_sistema).
--- Instalación limpia:
---   createdb -U postgres "SIGTUR-IMATUR"
---   psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
--- Deuda técnica conservada (ver docs/AUDITORIA_SENIOR_2026-05-31.md):
---   ubicaciones."departamento _d" (espacio, NOT NULL) · parroquia create_at/by
---   sin "d" · FKs NOT VALID en ubicaciones y ubicaciones_formacion.
--- ============================================================================
-
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
 --
@@ -705,7 +691,7 @@ CREATE TABLE public.participantes_ruta (
     id_institucion integer,
     genero_libre character(1),
     fecha_nac_libre date,
-    CONSTRAINT participantes_ruta_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar, 'O'::bpchar]))),
+    CONSTRAINT participantes_ruta_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
     CONSTRAINT pr_participante_req CHECK (((id_persona IS NOT NULL) OR (nombre_libre IS NOT NULL)))
 );
 
@@ -757,7 +743,7 @@ CREATE TABLE public.participantes_taller (
     genero_libre character(1),
     parroquia_id_libre integer,
     direccion_libre text,
-    CONSTRAINT participantes_taller_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar, 'O'::bpchar]))),
+    CONSTRAINT participantes_taller_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
     CONSTRAINT pt_participante_requerido CHECK (((id_persona IS NOT NULL) OR (nombre_libre IS NOT NULL)))
 );
 
@@ -973,7 +959,7 @@ CREATE TABLE public.personas (
     updated_by integer,
     deleted_by integer,
     parroquia_id integer,
-    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar, 'O'::bpchar])))
+    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar])))
 );
 
 
@@ -1537,7 +1523,7 @@ CREATE TABLE public.visitantes (
     updated_by integer,
     deleted_by integer,
     id_persona integer,
-    CONSTRAINT visitantes_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar, 'O'::bpchar])))
+    CONSTRAINT visitantes_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar])))
 );
 
 
@@ -2671,7 +2657,7 @@ ALTER TABLE ONLY public.usuarios
 --
 
 ALTER TABLE ONLY public.municipio
-    ADD CONSTRAINT municipio_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.usuarios(id) NOT VALID;
+    ADD CONSTRAINT municipio_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.usuarios(id);
 
 
 --
@@ -2695,7 +2681,7 @@ ALTER TABLE ONLY public.oficios
 --
 
 ALTER TABLE ONLY public.parroquia
-    ADD CONSTRAINT parroquia_create_by_fkey FOREIGN KEY (create_by) REFERENCES public.usuarios(id) NOT VALID;
+    ADD CONSTRAINT parroquia_create_by_fkey FOREIGN KEY (create_by) REFERENCES public.usuarios(id);
 
 
 --
@@ -2703,7 +2689,7 @@ ALTER TABLE ONLY public.parroquia
 --
 
 ALTER TABLE ONLY public.parroquia
-    ADD CONSTRAINT parroquia_delete_by_fkey FOREIGN KEY (delete_by) REFERENCES public.usuarios(id) NOT VALID;
+    ADD CONSTRAINT parroquia_delete_by_fkey FOREIGN KEY (delete_by) REFERENCES public.usuarios(id);
 
 
 --
@@ -2719,7 +2705,7 @@ ALTER TABLE ONLY public.parroquia
 --
 
 ALTER TABLE ONLY public.parroquia
-    ADD CONSTRAINT parroquia_update_by_fkey FOREIGN KEY (update_by) REFERENCES public.usuarios(id) NOT VALID;
+    ADD CONSTRAINT parroquia_update_by_fkey FOREIGN KEY (update_by) REFERENCES public.usuarios(id);
 
 
 --
@@ -2791,7 +2777,7 @@ ALTER TABLE ONLY public.permisos_rol
 --
 
 ALTER TABLE ONLY public.personas
-    ADD CONSTRAINT personas_parroquia_id_fkey FOREIGN KEY (parroquia_id) REFERENCES public.parroquia(id) NOT VALID;
+    ADD CONSTRAINT personas_parroquia_id_fkey FOREIGN KEY (parroquia_id) REFERENCES public.parroquia(id);
 
 
 --
@@ -2863,7 +2849,7 @@ ALTER TABLE ONLY public.talleres
 --
 
 ALTER TABLE ONLY public.ubicaciones
-    ADD CONSTRAINT "ubicaciones_departamento _d_fkey" FOREIGN KEY ("departamento _d") REFERENCES public.departamentos(id) NOT VALID;
+    ADD CONSTRAINT "ubicaciones_departamento _d_fkey" FOREIGN KEY ("departamento _d") REFERENCES public.departamentos(id);
 
 
 --
@@ -2871,7 +2857,7 @@ ALTER TABLE ONLY public.ubicaciones
 --
 
 ALTER TABLE ONLY public.ubicaciones_formacion
-    ADD CONSTRAINT ubicaciones_formacion_parroquia_fkey FOREIGN KEY (parroquia) REFERENCES public.parroquia(id) NOT VALID;
+    ADD CONSTRAINT ubicaciones_formacion_parroquia_fkey FOREIGN KEY (parroquia) REFERENCES public.parroquia(id);
 
 
 --
@@ -2912,9 +2898,7 @@ ALTER TABLE ONLY public.visitas
 
 
 -- ============================================================================
--- SEEDS DE SISTEMA (RBAC + configuración). Datos operativos (empleados,
--- talleres, etc.) NO se incluyen: este archivo recrea la ESTRUCTURA + el
--- arranque mínimo del sistema.
+-- SEEDS DE SISTEMA (roles, permisos_rol, configuracion_sistema)
 -- ============================================================================
 --
 -- PostgreSQL database dump
