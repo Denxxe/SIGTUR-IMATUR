@@ -39,35 +39,43 @@ class ConfigSistema extends Model {
     public static function generarNumeroOficio(string $modulo = 'ruta'): string {
         $claveCorr = 'correlativo_oficio_' . $modulo;
         $claveAnio = 'ano_correlativo_'    . $modulo;
-
-        $anioActual   = (int)date('Y');
-        $anioGuardado = (int)(self::get($claveAnio) ?: $anioActual);
-
-        if ($anioActual !== $anioGuardado) {
-            $db = new Database();
-            $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = :clave");
-            $db->bind(':ano', (string)$anioActual);
-            $db->bind(':clave', $claveAnio);
-            $db->execute();
-
-            $db->query("UPDATE configuracion_sistema SET valor = '0' WHERE clave = :clave");
-            $db->bind(':clave', $claveCorr);
-            $db->execute();
-        }
-
-        $corrActual = (int)(self::get($claveCorr) ?: 0);
-        $correlativo = $corrActual + 1;
+        $anioActual = (int)date('Y');
 
         $db = new Database();
-        $db->query("UPDATE configuracion_sistema SET valor = :val WHERE clave = :clave");
-        $db->bind(':val', (string)$correlativo);
-        $db->bind(':clave', $claveCorr);
-        $db->execute();
+        $db->beginTransaction();
+        try {
+            // Leer año guardado con bloqueo para evitar race condition
+            $db->query("SELECT valor FROM configuracion_sistema WHERE clave = :clave FOR UPDATE");
+            $db->bind(':clave', $claveAnio);
+            $rowAnio      = $db->single();
+            $anioGuardado = (int)(($rowAnio->valor ?? '') ?: $anioActual);
 
-        $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = :clave");
-        $db->bind(':ano', (string)$anioActual);
-        $db->bind(':clave', $claveAnio);
-        $db->execute();
+            if ($anioActual !== $anioGuardado) {
+                // Año nuevo: reiniciar correlativo a 0 y actualizar año
+                $db->query("UPDATE configuracion_sistema SET valor = '0' WHERE clave = :clave");
+                $db->bind(':clave', $claveCorr);
+                $db->execute();
+
+                $db->query("UPDATE configuracion_sistema SET valor = :ano WHERE clave = :clave");
+                $db->bind(':ano', (string)$anioActual);
+                $db->bind(':clave', $claveAnio);
+                $db->execute();
+            }
+
+            // Incremento atómico: UPDATE + RETURNING en una sola operación
+            $db->query("UPDATE configuracion_sistema
+                        SET valor = (CAST(valor AS INTEGER) + 1)::TEXT
+                        WHERE clave = :clave
+                        RETURNING CAST(valor AS INTEGER) AS nuevo");
+            $db->bind(':clave', $claveCorr);
+            $row = $db->single();
+            $correlativo = (int)($row->nuevo ?? 1);
+
+            $db->endTransaction();
+        } catch (\Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
 
         return str_pad($correlativo, 3, '0', STR_PAD_LEFT) . '/' . $anioActual;
     }
