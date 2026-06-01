@@ -150,12 +150,29 @@ class PasantesController extends Controller {
                     if ($rolActual !== 1) {
                         throw new Exception('Solo el Administrador puede aprobar el paso de Postulado a Aceptado (RN-PS01).');
                     }
+                    // Generar (o reusar) correlativo de carta de aceptación.
+                    // Si ya hay otro pasante de la misma institución con oficio asignado → reusar.
+                    $db2 = new Database();
+                    $db2->query("SELECT oficio_aceptacion FROM pasantes
+                                 WHERE LOWER(TRIM(institucion)) = LOWER(TRIM(:inst))
+                                   AND oficio_aceptacion IS NOT NULL AND is_active = TRUE
+                                 LIMIT 1");
+                    $db2->bind(':inst', $pasanteData['institucion'] ?: $pasante->institucion);
+                    $existente = $db2->single();
+                    $oficio = $existente ? $existente->oficio_aceptacion
+                                         : ConfigSistema::generarNumeroOficio('pasante');
+                    $db2->query("UPDATE pasantes SET oficio_aceptacion = :o WHERE id = :id");
+                    $db2->bind(':o', $oficio);
+                    $db2->bind(':id', $id);
+                    $db2->execute();
                 }
 
                 $this->pasanteModel->updatePersona($idPersona, $personaData, $userId);
 
                 if ($this->pasanteModel->update($pasanteData, $userId)) {
-                    flash('global_msg', 'Expediente actualizado correctamente.');
+                    $msgAdicional = ($estadoNuevo === 'Aceptado' && $estadoActual === 'Postulado')
+                        ? ' La carta de aceptación ya está disponible.' : '';
+                    flash('global_msg', 'Expediente actualizado correctamente.' . $msgAdicional);
                     header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id);
                 } else {
                     throw new Exception("Error al actualizar el expediente.");
@@ -206,6 +223,72 @@ class PasantesController extends Controller {
             'fecha_hoy' => $this->fechaEspanol(date('d'), date('n'), date('Y')),
         ];
         $this->view('pasantes/carta_culminacion', $data);
+    }
+
+    /**
+     * Carta de Aceptación de Pasantes (generada al pasar Postulado → Aceptado).
+     * Agrupa en una sola carta todos los pasantes de la misma institución
+     * que comparten el mismo oficio_aceptacion.
+     */
+    public function cartaAceptacion($id) {
+        $id = (int)$id;
+
+        $db = new Database();
+        // Datos del pasante de referencia
+        $db->query("SELECT p.*, per.nombre, per.apellido, per.cedula,
+                           COALESCE(tp.nombre||' '||tp.apellido,'') AS tutor_nombre,
+                           d.nombre AS tutor_departamento
+                    FROM pasantes p
+                    JOIN personas per ON p.id_persona = per.id
+                    LEFT JOIN empleados e  ON p.id_tutor_institucional = e.id
+                    LEFT JOIN personas tp  ON e.id_persona = tp.id
+                    LEFT JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE p.id = :id AND p.is_active = TRUE");
+        $db->bind(':id', $id);
+        $ref = $db->single();
+
+        if (!$ref || !$ref->oficio_aceptacion) {
+            flash('global_msg', 'Este pasante aún no tiene carta de aceptación generada. Apruébelo primero (Postulado → Aceptado).', 'danger');
+            header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id);
+            exit;
+        }
+
+        // Todos los pasantes del mismo grupo (misma institución + mismo oficio)
+        $db->query("SELECT p.*, per.nombre, per.apellido, per.cedula,
+                           COALESCE(tp.nombre||' '||tp.apellido,'') AS tutor_nombre,
+                           d.nombre AS tutor_departamento
+                    FROM pasantes p
+                    JOIN personas per ON p.id_persona = per.id
+                    LEFT JOIN empleados e  ON p.id_tutor_institucional = e.id
+                    LEFT JOIN personas tp  ON e.id_persona = tp.id
+                    LEFT JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE p.oficio_aceptacion = :oficio
+                      AND LOWER(TRIM(p.institucion)) = LOWER(TRIM(:inst))
+                      AND p.is_active = TRUE
+                    ORDER BY per.apellido, per.nombre");
+        $db->bind(':oficio', $ref->oficio_aceptacion);
+        $db->bind(':inst',   $ref->institucion ?? '');
+        $grupo = $db->resultSet();
+
+        // Calcular duración en semanas
+        $semanas = null;
+        if (!empty($ref->fecha_inicio) && !empty($ref->fecha_fin)) {
+            $ini = new DateTime($ref->fecha_inicio);
+            $fin = new DateTime($ref->fecha_fin);
+            $semanas = (int)round($ini->diff($fin)->days / 7);
+        }
+
+        $config = ConfigSistema::getAll();
+
+        $data = [
+            'titulo'   => 'Carta de Aceptación',
+            'ref'      => $ref,
+            'grupo'    => $grupo,
+            'semanas'  => $semanas,
+            'config'   => $config,
+            'fecha_hoy' => $this->fechaEspanol((int)date('d'), (int)date('n'), (int)date('Y')),
+        ];
+        $this->view('pasantes/carta_aceptacion', $data);
     }
 
     private function fechaEspanol(int $dia, int $mes, int $year): string {

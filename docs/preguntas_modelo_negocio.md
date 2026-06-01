@@ -36,7 +36,7 @@
 | D-RH14 | RRHH | ¿Existe "bono vacacional"? ¿El sistema debe calcularlo o solo registrarlo? | Campo en `vacaciones` o cálculo de nómina |
 | D-FO05 | Formación | ¿La planificación semanal de Formación debe registrarse en el sistema? | Módulo de planificación + comparativo vs ejecutado |
 | D-IN09 | Inventario | ¿El sistema debe registrar costo de adquisición, fecha de compra y proveedor? | Campos adicionales en tabla `inventario` |
-| D-TX01 | Transversal | ⚠️ ¿Qué otras operaciones requieren aprobación formal de un superior? | Flujos de aprobación adicionales |
+| ~~D-TX01~~ | Transversal | ✅ **RESUELTA (2026-06-01):** Al pasar Postulado → Aceptado, el sistema genera automáticamente una **Carta de Aceptación** (oficio con correlativo PAST-NNN/AAAA). Pasantes de la misma institución comparten un solo número de oficio. Implementado: migración 024, `PasantesController::cartaAceptacion()`, vista `carta_aceptacion.php`, botón en detalle del pasante. Datos: `oficio_aceptacion`, `tutor_externo` en la tabla `pasantes`. | — |
 | ~~D-US03~~ | Sistema | ✅ **RESUELTA (2026-06-01):** Rol 6 renombrado a "Solo Lectura". Permisos: Dashboard, Reportes, Visitantes. Implementado en BD (INSERT permisos_rol). | — |
 | ~~D-US05~~ | Sistema | ✅ **RESUELTA (2026-06-01):** Contraseña default = cédula del empleado (auto-rellena en el formulario). Módulo "Mi Perfil" (`/perfil/index`) implementado: el usuario puede cambiar username y contraseña (mín. 6 chars). Accesible para todos los roles (exento de RBAC en Router.php). | — |
 
