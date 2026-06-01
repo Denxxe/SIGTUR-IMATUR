@@ -15,7 +15,11 @@
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
             <i class="bi bi-cloud-upload"></i> Subir Documento
         </button>
-        <?php if (!empty($data['pasante']->oficio_aceptacion)): ?>
+        <?php if ($data['pasante']->estado === 'Postulado'): ?>
+        <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalAprobar">
+            <i class="bi bi-person-check-fill"></i> Aprobar Pasante
+        </button>
+        <?php elseif (!empty($data['pasante']->oficio_aceptacion)): ?>
         <a href="<?php echo URL_ROOT; ?>/pasantes/cartaAceptacion/<?php echo $data['pasante']->id; ?>"
            class="btn-sig btn-sig--primary" target="_blank">
             <i class="bi bi-file-earmark-check"></i> Carta de Aceptación
@@ -202,5 +206,118 @@
     </div>
   </div>
 </div>
+
+<!-- ══ Modal: Aprobar Pasante (individual o en grupo) ══════════════════════ -->
+<?php if ($data['pasante']->estado === 'Postulado'): ?>
+<div class="modal fade" id="modalAprobar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/pasantes/aprobar/<?php echo $data['pasante']->id; ?>" method="POST" id="formAprobar" onsubmit="return validarGrupo()">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-check-fill" style="color:var(--brand-600);"></i> Aprobar Pasante</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div style="background:var(--bg-muted-subtle);border-radius:8px;padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);font-size:13px;">
+                        <strong><?php echo htmlspecialchars(($data['pasante']->nombre ?? '') . ' ' . ($data['pasante']->apellido ?? '')); ?></strong><br>
+                        <span style="color:var(--text-secondary);"><?php echo htmlspecialchars($data['pasante']->institucion ?? ''); ?> · <?php echo htmlspecialchars($data['pasante']->carrera ?? ''); ?></span>
+                    </div>
+
+                    <div class="sig-field mb-4">
+                        <label class="sig-field__label">Tipo de aceptación</label>
+                        <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                                <input type="radio" name="tipo" value="individual" checked onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
+                                <span><strong>Individual</strong> — carta solo para este pasante</span>
+                            </label>
+                        </div>
+                        <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+                                <input type="radio" name="tipo" value="grupo" onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
+                                <span><strong>En grupo</strong> — compartirá la carta con otros pasantes (máx. 4 total)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="seccionGrupo" style="display:none;">
+                        <div class="sig-field">
+                            <label class="sig-field__label">
+                                Selecciona los demás pasantes del grupo
+                                <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — máximo 3 adicionales (4 en total)</span>
+                            </label>
+                            <?php if (empty($data['postulados'])): ?>
+                                <div style="padding:var(--sp-3);background:var(--bg-muted);border-radius:6px;font-size:13px;color:var(--text-secondary);">
+                                    <i class="bi bi-info-circle"></i> No hay otros pasantes en estado Postulado disponibles.
+                                </div>
+                            <?php else: ?>
+                            <div style="border:1px solid var(--border-default);border-radius:8px;max-height:200px;overflow-y:auto;padding:var(--sp-2);">
+                                <?php foreach ($data['postulados'] as $p): ?>
+                                <label style="display:flex;align-items:flex-start;gap:10px;padding:var(--sp-2) var(--sp-3);border-radius:6px;cursor:pointer;font-size:13px;"
+                                       onmouseover="this.style.background='var(--bg-muted-subtle)'" onmouseout="this.style.background=''">
+                                    <input type="checkbox" name="grupo_ids[]"
+                                           value="<?php echo $p->id; ?>"
+                                           onchange="contarSeleccionados()"
+                                           style="accent-color:var(--brand-600);margin-top:2px;flex-shrink:0;">
+                                    <span>
+                                        <strong><?php echo htmlspecialchars($p->apellido . ', ' . $p->nombre); ?></strong><br>
+                                        <span style="color:var(--text-tertiary);font-size:11px;"><?php echo htmlspecialchars($p->institucion . ' · ' . $p->carrera); ?></span>
+                                    </span>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <small id="limiteGrupo" style="color:var(--text-tertiary);font-size:11px;margin-top:4px;display:block;">
+                                <i class="bi bi-people"></i> <span id="cuentaGrupo">0</span> seleccionados (máx. 3 adicionales)
+                            </small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:#fefce8;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Al aprobar se generará automáticamente la <strong>Carta de Aceptación</strong> con correlativo único. Esta acción cambia el estado a <strong>Aceptado</strong>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn-sig btn-sig--primary">
+                        <i class="bi bi-check-circle-fill"></i> Confirmar Aprobación
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleGrupo(val) {
+    document.getElementById('seccionGrupo').style.display = val === 'grupo' ? 'block' : 'none';
+    if (val === 'individual') {
+        document.querySelectorAll('#seccionGrupo input[type=checkbox]').forEach(cb => cb.checked = false);
+        document.getElementById('cuentaGrupo').textContent = '0';
+    }
+}
+
+function contarSeleccionados() {
+    const checks = document.querySelectorAll('#seccionGrupo input[type=checkbox]:checked');
+    const n = checks.length;
+    document.getElementById('cuentaGrupo').textContent = n;
+    // Deshabilitar los no marcados si ya hay 3 seleccionados
+    document.querySelectorAll('#seccionGrupo input[type=checkbox]').forEach(cb => {
+        if (!cb.checked) cb.disabled = (n >= 3);
+    });
+}
+
+function validarGrupo() {
+    const esGrupo = document.querySelector('input[name=tipo]:checked')?.value === 'grupo';
+    if (esGrupo) {
+        const n = document.querySelectorAll('#seccionGrupo input[type=checkbox]:checked').length;
+        if (n === 0) { alert('Selecciona al menos un pasante adicional para el grupo, o elige "Individual".'); return false; }
+        if (n > 3)   { alert('El grupo no puede tener más de 3 pasantes adicionales (4 en total).'); return false; }
+    }
+    return true;
+}
+</script>
+<?php endif; ?>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

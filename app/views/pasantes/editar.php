@@ -99,17 +99,12 @@
                 <?php if (!empty($data['pasante']->oficio_aceptacion)): ?>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">
-                            N° Carta de aceptación
-                            <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Editar para agrupar con otro pasante en la misma carta</span>
-                        </label>
-                        <input type="text" name="oficio_aceptacion" class="sig-input"
+                        <label class="sig-field__label">N° Carta de aceptación</label>
+                        <input type="text" class="sig-input" readonly
                                value="<?php echo htmlspecialchars($data['pasante']->oficio_aceptacion ?? ''); ?>"
-                               placeholder="Ej: PAST-001/2026"
-                               style="font-family:var(--font-mono);">
+                               style="font-family:var(--font-mono);background:var(--bg-muted);cursor:default;">
                         <small style="color:var(--text-tertiary);font-size:11px;">
-                            <i class="bi bi-info-circle"></i>
-                            Para incluir otro pasante en esta carta, edita su expediente y coloca el mismo número aquí.
+                            <i class="bi bi-lock"></i> El agrupamiento se gestiona desde el botón "Aprobar" en el detalle.
                         </small>
                     </div>
                 </div>

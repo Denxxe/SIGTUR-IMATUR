@@ -22,6 +22,7 @@ class PasantesController extends Controller {
     }
 
     public function detalle($id) {
+        $id = (int)$id;
         $pasante = $this->pasanteModel->getPasanteUnico($id);
         if (!$pasante) {
             flash('global_msg', 'El pasante solicitado no existe.', 'danger');
@@ -29,12 +30,88 @@ class PasantesController extends Controller {
             exit;
         }
 
+        // Pasantes disponibles para agrupar en la aprobación (solo Postulados, excluyendo el actual)
+        $db = new Database();
+        $db->query("SELECT p.id, per.nombre, per.apellido, p.institucion, p.carrera
+                    FROM pasantes p JOIN personas per ON p.id_persona=per.id
+                    WHERE p.estado='Postulado' AND p.is_active=TRUE AND p.id <> :id
+                    ORDER BY per.apellido, per.nombre");
+        $db->bind(':id', $id);
+        $postulados = $db->resultSet();
+
         $data = [
             'titulo'     => 'Detalle del Pasante',
             'pasante'    => $pasante,
-            'documentos' => $this->pasanteModel->getDocumentos($id)
+            'documentos' => $this->pasanteModel->getDocumentos($id),
+            'postulados' => $postulados,
         ];
         $this->view('pasantes/detalle', $data);
+    }
+
+    /**
+     * Aprobar un pasante (Postulado → Aceptado), individual o en grupo (máx. 4 total).
+     * Genera un único oficio de aceptación para todo el grupo.
+     */
+    public function aprobar($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URL_ROOT . '/pasantes/detalle/' . (int)$id); return;
+        }
+        $id     = (int)$id;
+        $userId = $this->getUserId();
+        $tipo   = $_POST['tipo'] ?? 'individual';
+
+        // Construir lista de IDs: el pasante actual + seleccionados (si grupo)
+        $ids = [$id];
+        if ($tipo === 'grupo' && !empty($_POST['grupo_ids'])) {
+            foreach ((array)$_POST['grupo_ids'] as $gid) {
+                $gid = (int)$gid;
+                if ($gid > 0 && $gid !== $id) $ids[] = $gid;
+            }
+        }
+        if (count($ids) > 4) {
+            flash('global_msg', 'El grupo no puede tener más de 4 pasantes.', 'danger');
+            header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id); return;
+        }
+
+        // Verificar que todos estén en estado Postulado
+        $db = new Database();
+        foreach ($ids as $pid) {
+            $db->query("SELECT estado FROM pasantes WHERE id=:id AND is_active=TRUE");
+            $db->bind(':id', $pid);
+            $row = $db->single();
+            if (!$row || $row->estado !== 'Postulado') {
+                flash('global_msg', "El pasante #$pid no está en estado Postulado.", 'danger');
+                header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id); return;
+            }
+        }
+
+        // Generar UN solo correlativo para el grupo
+        $oficio = ConfigSistema::generarNumeroOficio('pasante');
+
+        // Aprobar a todos con el mismo oficio
+        $db->beginTransaction();
+        try {
+            foreach ($ids as $pid) {
+                $db->query("UPDATE pasantes SET estado='Aceptado', oficio_aceptacion=:o,
+                                updated_at=CURRENT_TIMESTAMP, updated_by=:uid WHERE id=:id");
+                $db->bind(':o',   $oficio);
+                $db->bind(':uid', $userId);
+                $db->bind(':id',  $pid);
+                $db->execute();
+            }
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            flash('global_msg', 'Error al aprobar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id); return;
+        }
+
+        $n = count($ids);
+        $msg = $n > 1
+            ? "$n pasantes aprobados. Oficio $oficio generado para el grupo."
+            : "Pasante aprobado. Oficio $oficio generado.";
+        flash('global_msg', $msg . ' La carta de aceptación ya está disponible.');
+        header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $id);
     }
 
     public function crear() {
@@ -215,6 +292,7 @@ class PasantesController extends Controller {
     }
 
     public function carta($id) {
+        $id = (int)$id;
         $pasante = $this->pasanteModel->getPasanteUnico($id);
         if (!$pasante || $pasante->estado !== 'Culminado') {
             flash('global_msg', 'La carta de culminación solo está disponible para pasantes en estado Culminado.', 'danger');
@@ -222,13 +300,25 @@ class PasantesController extends Controller {
             exit;
         }
 
-        $configModel = $this->model('ConfigSistema');
-        $config = $configModel->getAll();
+        // Cargar el grupo si tiene oficio_aceptacion (compañeros de la misma aceptación)
+        $grupo = [$pasante];
+        if (!empty($pasante->oficio_aceptacion)) {
+            $db = new Database();
+            $db->query("SELECT p.*, per.nombre, per.apellido, per.cedula
+                        FROM pasantes p JOIN personas per ON p.id_persona=per.id
+                        WHERE p.oficio_aceptacion=:o AND p.is_active=TRUE
+                        ORDER BY per.apellido, per.nombre");
+            $db->bind(':o', $pasante->oficio_aceptacion);
+            $grp = $db->resultSet();
+            if (count($grp) > 1) $grupo = $grp;
+        }
 
+        $config = ConfigSistema::getAll();
         $data = [
-            'pasante' => $pasante,
-            'config'  => $config,
-            'fecha_hoy' => $this->fechaEspanol(date('d'), date('n'), date('Y')),
+            'pasante'   => $pasante,
+            'grupo'     => $grupo,
+            'config'    => $config,
+            'fecha_hoy' => $this->fechaEspanol((int)date('d'), (int)date('n'), (int)date('Y')),
         ];
         $this->view('pasantes/carta_culminacion', $data);
     }
@@ -261,7 +351,7 @@ class PasantesController extends Controller {
             exit;
         }
 
-        // Todos los pasantes del mismo grupo (misma institución + mismo oficio)
+        // Todos los pasantes del mismo grupo (solo por oficio_aceptacion — el grupo es explícito)
         $db->query("SELECT p.*, per.nombre, per.apellido, per.cedula,
                            COALESCE(tp.nombre||' '||tp.apellido,'') AS tutor_nombre,
                            d.nombre AS tutor_departamento
@@ -270,12 +360,9 @@ class PasantesController extends Controller {
                     LEFT JOIN empleados e  ON p.id_tutor_institucional = e.id
                     LEFT JOIN personas tp  ON e.id_persona = tp.id
                     LEFT JOIN departamentos d ON e.id_departamento = d.id
-                    WHERE p.oficio_aceptacion = :oficio
-                      AND LOWER(TRIM(p.institucion)) = LOWER(TRIM(:inst))
-                      AND p.is_active = TRUE
+                    WHERE p.oficio_aceptacion = :oficio AND p.is_active = TRUE
                     ORDER BY per.apellido, per.nombre");
         $db->bind(':oficio', $ref->oficio_aceptacion);
-        $db->bind(':inst',   $ref->institucion ?? '');
         $grupo = $db->resultSet();
 
         // Calcular duración en semanas
