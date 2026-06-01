@@ -97,12 +97,11 @@
 <?php
 $totalV  = (int)($data['stats']->total_visitas    ?? 0);
 $unicosV = (int)($data['stats']->visitantes_unicos ?? 0);
-$totalReg = count($data['registros'] ?? []);
-$conSalida   = 0; $sinSalida = 0; $masc = 0; $fem = 0;
+$masc = 0; $fem = 0; $conContacto = 0;
 foreach ($data['registros'] ?? [] as $r) {
-    if (!empty($r->hora_salida)) $conSalida++; else $sinSalida++;
     if (($r->genero ?? '') === 'M') $masc++;
     elseif (($r->genero ?? '') === 'F') $fem++;
+    if (!empty($r->telefono) || !empty($r->correo)) $conContacto++;
 }
 ?>
 <div class="row g-3 mb-5 anim-slide-up">
@@ -136,15 +135,11 @@ foreach ($data['registros'] ?? [] as $r) {
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="sig-card" style="border-bottom:3px solid <?php echo $sinSalida > 0 ? '#D97706' : '#059669'; ?>;">
+        <div class="sig-card" style="border-bottom:3px solid #7C3AED;">
             <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Con Salida Registrada</div>
-                <div style="font-size:2rem;font-weight:900;color:<?php echo $sinSalida > 0 ? '#D97706' : '#059669'; ?>;"><?php echo $conSalida; ?></div>
-                <?php if ($sinSalida > 0): ?>
-                <div style="font-size:11px;color:#D97706;"><?php echo $sinSalida; ?> sin salida registrada</div>
-                <?php else: ?>
-                <div style="font-size:11px;color:#059669;">todas con salida registrada</div>
-                <?php endif; ?>
+                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Con Datos de Contacto</div>
+                <div style="font-size:2rem;font-weight:900;color:#7C3AED;"><?php echo $conContacto; ?></div>
+                <div style="font-size:11px;color:var(--text-tertiary);">tienen teléfono o correo</div>
             </div>
         </div>
     </div>
@@ -155,7 +150,7 @@ foreach ($data['registros'] ?? [] as $r) {
     <table class="sig-table">
         <thead>
             <tr>
-                <th>Fecha / Hora</th>
+                <th>Fecha y Hora</th>
                 <th>Visitante</th>
                 <th>Contacto</th>
                 <th>Procedencia</th>
@@ -178,18 +173,9 @@ foreach ($data['registros'] ?? [] as $r) {
                     <tr>
                         <td style="white-space:nowrap;">
                             <div style="font-weight:700;font-size:13px;"><?php echo date('d/m/Y', strtotime($r->fecha ?? $r->hora_entrada)); ?></div>
-                            <div style="display:flex;flex-direction:column;gap:2px;margin-top:3px;">
-                                <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);font-size:10px;">
-                                    <i class="bi bi-arrow-right-circle"></i> <?php echo date('H:i', strtotime($r->hora_entrada)); ?>
-                                </span>
-                                <?php if (!empty($r->hora_salida)): ?>
-                                <span class="sig-badge sig-badge--neutral" style="font-family:var(--font-mono);font-size:10px;">
-                                    <i class="bi bi-arrow-left-circle"></i> <?php echo date('H:i', strtotime($r->hora_salida)); ?>
-                                </span>
-                                <?php else: ?>
-                                <span class="sig-badge" style="font-size:10px;background:#FEF9C3;color:#92400E;">Sin salida</span>
-                                <?php endif; ?>
-                            </div>
+                            <span class="sig-badge sig-badge--neutral" style="font-family:var(--font-mono);font-size:10px;margin-top:3px;display:inline-block;">
+                                <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_entrada)); ?>
+                            </span>
                         </td>
                         <td>
                             <div style="display:flex;flex-direction:column;gap:2px;">

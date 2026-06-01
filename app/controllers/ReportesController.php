@@ -803,13 +803,12 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         try {
             $registros = $this->queryVisitantes();
-            $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Motivo', 'Observaciones'];
+            $headers   = ['Fecha', 'Hora Entrada', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Motivo', 'Observaciones'];
             $rows      = [];
             foreach ($registros as $r) {
                 $rows[] = [
-                    $r->fecha          ?? date('Y-m-d', strtotime($r->hora_entrada)),
+                    $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
-                    $r->hora_salida    ? date('H:i', strtotime($r->hora_salida)) : '—',
                     $r->cedula         ?? '',
                     $r->nombre         ?? '',
                     $r->apellido       ?? '',
@@ -879,7 +878,7 @@ class ReportesController extends Controller {
                                         OR COALESCE(pe2.apellido, vis.apellido) ILIKE :buscar
                                         OR COALESCE(pe2.cedula, vis.cedula) ILIKE :buscar)";
 
-        $db->query("SELECT v.hora_entrada, v.hora_salida, v.motivo, v.observaciones,
+        $db->query("SELECT v.hora_entrada, v.motivo, v.observaciones,
                            DATE(v.hora_entrada) AS fecha,
                            COALESCE(pe2.cedula,    vis.cedula)    AS cedula,
                            COALESCE(pe2.nombre,    vis.nombre)    AS nombre,
