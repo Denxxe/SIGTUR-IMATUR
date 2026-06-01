@@ -113,7 +113,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <?php
                         $esLibre = empty($p->id_persona);
                         $generoSrc = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
-                        $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.', 'O' => 'Otro'][$generoSrc] ?? '—';
+                        $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.'][$generoSrc] ?? '—';
                         $fechaNacSrc = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
                         $edad = null;
                         if (!empty($fechaNacSrc)) {
@@ -389,7 +389,6 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                         <option value="">—</option>
                                         <option value="M">Masculino</option>
                                         <option value="F">Femenino</option>
-                                        <option value="O">Otro</option>
                                     </select>
                                 </div>
                             </div>
@@ -454,7 +453,6 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                     <option value="">—</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
-                                    <option value="O">Otro</option>
                                 </select>
                             </div>
                         </div>
@@ -962,7 +960,7 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                             <div class="sig-field"><label class="sig-field__label">Género</label>
                                 <select name="genero" id="ep_genero" class="sig-select">
                                     <option value="">—</option><option value="M">Masculino</option>
-                                    <option value="F">Femenino</option><option value="O">Otro</option>
+                                    <option value="F">Femenino</option>
                                 </select></div>
                         </div>
                         <div class="col-md-4">
@@ -1010,7 +1008,7 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                             <div class="sig-field"><label class="sig-field__label">Género</label>
                                 <select name="genero_libre" id="ep_genero_libre" class="sig-select">
                                     <option value="">—</option><option value="M">Masculino</option>
-                                    <option value="F">Femenino</option><option value="O">Otro</option>
+                                    <option value="F">Femenino</option>
                                 </select></div>
                         </div>
                         <div class="col-md-4">

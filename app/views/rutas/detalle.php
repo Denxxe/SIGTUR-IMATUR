@@ -412,7 +412,6 @@ sort($duplicados, SORT_NUMERIC);
                                         <option value="">—</option>
                                         <option value="M">Masculino</option>
                                         <option value="F">Femenino</option>
-                                        <option value="O">Otro</option>
                                     </select>
                                 </div>
                             </div>
@@ -477,7 +476,6 @@ sort($duplicados, SORT_NUMERIC);
                                     <option value="">—</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
-                                    <option value="O">Otro</option>
                                 </select>
                             </div>
                         </div>

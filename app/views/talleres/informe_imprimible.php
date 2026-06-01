@@ -203,7 +203,7 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
                 ));
                 $cedula  = htmlspecialchars($esLibre ? ($p->cedula_libre ?? '—') : ($p->cedula ?? '—'));
                 $genSrc  = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
-                $genero  = ['M' => 'M', 'F' => 'F', 'O' => 'Otro'][$genSrc] ?? '—';
+                $genero  = ['M' => 'M', 'F' => 'F'][$genSrc] ?? '—';
                 $fnac    = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
                 $edad    = '';
                 if (!empty($fnac)) { try { $edad = (new DateTime())->diff(new DateTime($fnac))->y; } catch (Exception $e) { $edad = ''; } }
