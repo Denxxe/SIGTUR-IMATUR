@@ -1,6 +1,6 @@
 # Preguntas Pendientes de Modelo de Negocio — SIGTUR-IMATUR
 
-**Última actualización:** 2026-05-31  
+**Última actualización:** 2026-06-01  
 **Propósito:** Listado LIMPIO de preguntas sin respuesta que condicionan el desarrollo. Las preguntas respondidas viven en `DECISIONES_PENDIENTES.md`.
 
 **Leyenda:**
@@ -50,7 +50,7 @@
 | D-IN05 | Inventario | ¿Bienes fungibles (papel, tóner) y durables (equipos) se manejan diferente? | Campo `tipo_bien` + lógica diferenciada |
 | D-RH10 | RRHH | ¿Hay personal sin ser empleado formal (voluntarios, servicio comunitario)? | Tipo contrato adicional o tabla separada |
 | D-RH11 | RRHH | ¿El `sueldo_base` es igual para todos en el mismo cargo o puede variar por empleado? | Mover `sueldo_base` de `cargos` a `empleados` |
-| D-TX03 | Transversal | ⚠️ ¿Hay datos históricos en Excel o papel que migrar al sistema? | Script de importación masiva CSV/Excel |
+| D-TX03 | Transversal | ⚠️ **CONFIRMADO (2026-06-01):** Sí hay antecedentes históricos en Excel y papel a migrar. El formato exacto depende del módulo (visitas, bienes, etc.) — se define módulo a módulo cuando se aborde cada importación. Pendiente: definir qué módulos tienen datos históricos y obtener los archivos fuente para diseñar los scripts de importación. | Scripts de importación CSV por módulo |
 | D-NEW01 | Formación | ¿El correlativo de oficios de formación se activa en UI o solo infraestructura preparada? | Activar correlativo FORM-XXX en vista de talleres |
 | D-NEW02 | Turismo | ¿`instituciones_externas` necesita un CRUD dedicado o solo se usa como lookup al registrar participantes? | InstitucionesExternasController + vista |
 | D-NEW03 | Turismo | ¿El facilitador externo (`nombre_facilitador_externo`) debe ser lista gestionada o texto libre cada vez? | Tabla de guías externos registrados |
@@ -76,7 +76,7 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 | D-RE03 | Recepción | ❓ ¿Una **visita sin `hora_salida`** debe cerrarse automáticamente al fin del día? ¿Es **obligatorio** registrar el empleado que recibe? | Job de cierre + obligatoriedad `id_empleado` |
 | D-RE04 | Recepción | ❓ ¿Los **motivos de visita** deben ser un catálogo configurable? Hoy están fijos en el código. | Tabla/config de motivos |
 | D-US06 | Sistema | ❓ ¿Política de **contraseñas** (longitud mínima, complejidad, expiración, forzar cambio en primer ingreso)? | Validación en `UsuariosController` + `password_debe_cambiar` |
-| D-TX04 | Transversal | ⚠️ Deuda técnica: operaciones de auditoría de parroquia ✅ **normalizadas a inglés (2026-05-31, H-02 cerrado)**. Queda pendiente decidir si se renombran las columnas `create_at`→`created_at` de `parroquia` (cambio de esquema mayor, bajo impacto). | Esquema consistente (opcional) |
+| ~~D-TX04~~ | Transversal | ✅ **RESUELTA (2026-06-01):** NO se renombran las columnas `create_at/update_at/delete_at` de `parroquia`. Bajo impacto, no justifica migración de esquema. El quirk queda documentado en CLAUDE.md. | — |
 | ~~D-RH15~~ | RRHH | ✅ **RESUELTA (2026-05-31, H-11):** decisión — solo M/F. Migración 023 actualiza CHECK en 4 tablas. Opción "Otro" eliminada de todos los formularios. | — |
 
 ---
