@@ -152,6 +152,23 @@ class TalleresController extends Controller {
                 }
             }
 
+            // Anti-duplicado: solo al crear (en edición el propio registro daría falso positivo)
+            if (!$esEdicion && !empty($data['id_facilitador'])) {
+                $dup = Taller::findDuplicate(
+                    $data['nombre'],
+                    $data['fecha_inicio'],
+                    (int)$data['id_facilitador']
+                );
+                if ($dup) {
+                    throw new Exception(
+                        'Ya existe una actividad con el mismo nombre, fecha y facilitador '
+                        . '(ID #' . $dup->id . ' — "' . $dup->nombre . '", '
+                        . date('d/m/Y', strtotime($dup->fecha_inicio)) . ', estado: ' . $dup->estado . '). '
+                        . 'Si es una actividad distinta, cambia el nombre o la fecha para diferenciarla.'
+                    );
+                }
+            }
+
             // Aplica para creación y edición: Cancelado requiere motivo
             if ($data['estado'] === 'Cancelado') {
                 $motivo = trim($_POST['motivo_cancelacion'] ?? '');
@@ -872,6 +889,35 @@ class TalleresController extends Controller {
     }
 
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────
+
+    /**
+     * AJAX: verifica si ya existe un taller con el mismo nombre+fecha+facilitador.
+     * Devuelve JSON: { duplicate: bool, id, nombre, fecha, estado }
+     */
+    public function verificarDuplicado() {
+        header('Content-Type: application/json');
+        $nombre    = trim($_GET['nombre']   ?? '');
+        $fecha     = trim($_GET['fecha']    ?? '');
+        $facId     = (int)($_GET['id_fac']  ?? 0);
+        $excludeId = (int)($_GET['excl_id'] ?? 0) ?: null;
+
+        if ($nombre === '' || $fecha === '' || $facId === 0) {
+            echo json_encode(['duplicate' => false]); exit;
+        }
+        $dup = Taller::findDuplicate($nombre, $fecha, $facId, $excludeId);
+        if ($dup) {
+            echo json_encode([
+                'duplicate' => true,
+                'id'        => $dup->id,
+                'nombre'    => $dup->nombre,
+                'fecha'     => date('d/m/Y', strtotime($dup->fecha_inicio)),
+                'estado'    => $dup->estado,
+            ]);
+        } else {
+            echo json_encode(['duplicate' => false]);
+        }
+        exit;
+    }
 
     private function validarTransicion(string $desde, string $hacia): void {
         if (in_array($desde, Taller::ESTADOS_TERMINALES, true)) {

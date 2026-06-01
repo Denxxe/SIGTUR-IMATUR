@@ -264,8 +264,12 @@ function esAtrasada($t): bool {
                     <div class="col-md-6">
                         <div class="sig-field">
                             <label class="sig-field__label">Nombre <span class="req">*</span></label>
-                            <input type="text" name="nombre" id="tal_nombre" class="sig-input" required placeholder="Ej: Taller de Turismo Sostenible">
+                            <input type="text" name="nombre" id="tal_nombre" class="sig-input" required placeholder="Ej: Taller de Turismo Sostenible" oninput="checkFormValid();checkDuplicado();">
                         </div>
+                    </div>
+                    <!-- Aviso de duplicado (visible si AJAX detecta coincidencia) -->
+                    <div class="col-12">
+                        <div id="aviso_duplicado" style="display:none; padding:var(--sp-3); background:rgba(234,179,8,.12); border-left:3px solid #D97706; border-radius:6px; font-size:13px; color:#92400E;"></div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
@@ -827,8 +831,9 @@ document.getElementById('tal_estado').addEventListener('change', function() {
     checkFormValid();
 });
 document.getElementById('tal_nombre').addEventListener('input', checkFormValid);
-document.getElementById('tal_facilitador').addEventListener('change', checkFormValid);
-document.getElementById('tal_fecha_inicio').addEventListener('change', checkFormValid);
+document.getElementById('tal_nombre').addEventListener('change', checkDuplicado);
+document.getElementById('tal_facilitador').addEventListener('change', function() { checkFormValid(); checkDuplicado(); });
+document.getElementById('tal_fecha_inicio').addEventListener('change', function() { checkFormValid(); checkDuplicado(); });
 document.getElementById('tal_fecha_fin').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_inicio').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_fin').addEventListener('change', checkFormValid);
@@ -869,6 +874,37 @@ if (evEditInput) {
     evEditInput.addEventListener('change', function() {
         renderEvPreview(this, 'ev_edit_preview');
     });
+}
+
+// ── Verificación de duplicado en tiempo real ────────────────────────────
+var dupTimer = null;
+function checkDuplicado() {
+    clearTimeout(dupTimer);
+    dupTimer = setTimeout(function() {
+        var nombre = (document.getElementById('tal_nombre').value || '').trim();
+        var fecha  = document.getElementById('tal_fecha_inicio').value;
+        var facId  = document.getElementById('tal_facilitador').value;
+        var talId  = document.getElementById('tal_id').value;
+        var aviso  = document.getElementById('aviso_duplicado');
+        if (!nombre || !fecha || !facId) { aviso.style.display = 'none'; return; }
+        var url = '<?php echo URL_ROOT; ?>/talleres/verificarDuplicado?nombre='
+                  + encodeURIComponent(nombre)
+                  + '&fecha=' + encodeURIComponent(fecha)
+                  + '&id_fac=' + encodeURIComponent(facId)
+                  + (talId ? '&excl_id=' + encodeURIComponent(talId) : '');
+        fetch(url).then(function(r) { return r.json(); }).then(function(res) {
+            if (res.duplicate) {
+                aviso.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> '
+                    + '<strong>Posible duplicado:</strong> ya existe "'
+                    + res.nombre.replace(/[<>&]/g,'') + '" el ' + res.fecha
+                    + ' (ID #' + res.id + ', estado: ' + res.estado + '). '
+                    + 'Si es una actividad distinta, cambia el nombre o la fecha.';
+                aviso.style.display = 'block';
+            } else {
+                aviso.style.display = 'none';
+            }
+        }).catch(function() { aviso.style.display = 'none'; });
+    }, 500);
 }
 
 // Guard contra doble envío del formulario de taller

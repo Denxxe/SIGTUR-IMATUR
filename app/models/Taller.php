@@ -73,6 +73,32 @@ class Taller extends Model {
     }
 
     /**
+     * Busca un posible duplicado: mismo nombre (normalizado) + misma fecha_inicio + mismo facilitador.
+     * En edición pasar $excludeId para excluir el propio registro.
+     * Retorna el taller existente (con id y nombre) o null si no hay duplicado.
+     */
+    /**
+     * Busca duplicados: mismo nombre (ILIKE, sin distinguir mayúsculas ni tildes en PHP),
+     * misma fecha_inicio y mismo facilitador.
+     * En edición pasar $excludeId para excluir el propio registro.
+     */
+    public static function findDuplicate(string $nombre, string $fechaInicio, int $idFacilitador, ?int $excludeId = null): ?object {
+        $db  = new Database();
+        $sql = "SELECT id, nombre, fecha_inicio, estado FROM talleres
+                WHERE TRIM(nombre) ILIKE :nombre
+                  AND fecha_inicio = :fi
+                  AND id_facilitador = :fac
+                  AND is_active = TRUE";
+        if ($excludeId) $sql .= " AND id <> :excl";
+        $db->query($sql);
+        $db->bind(':nombre', trim($nombre));   // ILIKE = case-insensitive nativo en PostgreSQL
+        $db->bind(':fi',     $fechaInicio);
+        $db->bind(':fac',    $idFacilitador);
+        if ($excludeId) $db->bind(':excl', $excludeId);
+        return $db->single() ?: null;
+    }
+
+    /**
      * Listado paginado con filtros para el index.
      */
     public static function paginate(int $pagina, int $porPagina, array $f = []): array {
