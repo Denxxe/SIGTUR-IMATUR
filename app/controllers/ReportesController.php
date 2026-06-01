@@ -782,13 +782,15 @@ class ReportesController extends Controller {
             $stats     = $this->statsVisitantes();
 
             $data = [
-                'titulo'          => 'Reporte de Visitantes',
-                'registros'       => $registros,
-                'stats'           => $stats,
-                'fecha_inicio'    => $_GET['fecha_inicio'] ?? date('Y-m-01'),
-                'fecha_fin'       => $_GET['fecha_fin']    ?? date('Y-m-d'),
-                'filtro_motivo'   => $_GET['motivo']       ?? '',
-                'filtro_empleado' => $_GET['empleado']     ?? '',
+                'titulo'        => 'Reporte de Visitantes',
+                'registros'     => $registros,
+                'stats'         => $stats,
+                'fecha_inicio'  => $_GET['fecha_inicio'] ?? date('Y-m-01'),
+                'fecha_fin'     => $_GET['fecha_fin']    ?? date('Y-m-d'),
+                'filtro_motivo' => $_GET['motivo']       ?? '',
+                'filtro_cedula' => $_GET['cedula']       ?? '',
+                'filtro_genero' => $_GET['genero']       ?? '',
+                'filtro_buscar' => $_GET['buscar']       ?? '',
             ];
             $this->view('reportes/visitantes', $data);
         } catch (Exception $e) {
@@ -801,19 +803,22 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         try {
             $registros = $this->queryVisitantes();
-            $headers   = ['Fecha', 'Hora Entrada', 'Cédula', 'Nombre', 'Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado', 'Observaciones'];
+            $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Motivo', 'Observaciones'];
             $rows      = [];
             foreach ($registros as $r) {
                 $rows[] = [
-                    $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
+                    $r->fecha          ?? date('Y-m-d', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
-                    $r->cedula      ?? '',
-                    $r->nombre      ?? '',
-                    $r->apellido    ?? '',
-                    $r->procedencia ?? '',
-                    $r->motivo      ?? '',
-                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: 'N/A',
-                    $r->observaciones ?? '',
+                    $r->hora_salida    ? date('H:i', strtotime($r->hora_salida)) : '—',
+                    $r->cedula         ?? '',
+                    $r->nombre         ?? '',
+                    $r->apellido       ?? '',
+                    match($r->genero ?? '') { 'M' => 'Masculino', 'F' => 'Femenino', default => '' },
+                    $r->telefono       ?? '',
+                    $r->correo         ?? '',
+                    $r->procedencia    ?? '',
+                    $r->motivo         ?? '',
+                    $r->observaciones  ?? '',
                 ];
             }
             $this->exportCsv('reporte_visitantes', $headers, $rows);
@@ -831,17 +836,18 @@ class ReportesController extends Controller {
             $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
             $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-            $headers = ['Fecha', 'Hora Entrada', 'Cédula', 'Nombre y Apellido', 'Procedencia', 'Motivo', 'Empleado Visitado'];
+            $headers = ['Fecha', 'Hora', 'Cédula', 'Nombre y Apellido', 'Género', 'Teléfono', 'Procedencia', 'Motivo'];
             $rows    = [];
             foreach ($registros as $r) {
                 $rows[] = [
-                    $r->fecha ?? '-',
+                    $r->fecha ?? date('d/m/Y', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
-                    $r->cedula ?? '-',
+                    $r->cedula ?? '—',
                     trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
-                    $r->procedencia ?? '-',
-                    $r->motivo ?? '-',
-                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '-',
+                    match($r->genero ?? '') { 'M' => 'M', 'F' => 'F', default => '—' },
+                    $r->telefono    ?? '—',
+                    $r->procedencia ?? '—',
+                    $r->motivo      ?? '—',
                 ];
             }
             $kpis = [
@@ -857,35 +863,42 @@ class ReportesController extends Controller {
     }
 
     private function queryVisitantes() {
-        $db       = new Database();
-        $fi       = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $ff       = $_GET['fecha_fin']    ?? date('Y-m-d');
-        $motivo   = trim($_GET['motivo']   ?? '');
-        $empleado = trim($_GET['empleado'] ?? '');
+        $db     = new Database();
+        $fi     = $_GET['fecha_inicio'] ?? date('Y-m-01');
+        $ff     = $_GET['fecha_fin']    ?? date('Y-m-d');
+        $motivo = trim($_GET['motivo']  ?? '');
+        $cedula = trim($_GET['cedula']  ?? '');
+        $genero = trim($_GET['genero']  ?? '');
+        $buscar = trim($_GET['buscar']  ?? '');
 
         $where = "v.is_active = TRUE AND DATE(v.hora_entrada) BETWEEN :fi AND :ff";
-        if ($motivo   !== '') $where .= " AND v.motivo ILIKE :motivo";
-        if ($empleado !== '') $where .= " AND (pe.nombre ILIKE :empleado OR pe.apellido ILIKE :empleado)";
+        if ($motivo !== '') $where .= " AND v.motivo ILIKE :motivo";
+        if ($cedula !== '') $where .= " AND COALESCE(pe2.cedula, vis.cedula) ILIKE :cedula";
+        if ($genero !== '') $where .= " AND COALESCE(pe2.genero, vis.genero) = :genero";
+        if ($buscar !== '') $where .= " AND (COALESCE(pe2.nombre, vis.nombre) ILIKE :buscar
+                                        OR COALESCE(pe2.apellido, vis.apellido) ILIKE :buscar
+                                        OR COALESCE(pe2.cedula, vis.cedula) ILIKE :buscar)";
 
         $db->query("SELECT v.hora_entrada, v.hora_salida, v.motivo, v.observaciones,
                            DATE(v.hora_entrada) AS fecha,
-                           COALESCE(pe2.cedula,   vis.cedula)   AS cedula,
-                           COALESCE(pe2.nombre,   vis.nombre)   AS nombre,
-                           COALESCE(pe2.apellido, vis.apellido) AS apellido,
-                           vis.procedencia,
-                           pe.nombre   AS emp_nombre,
-                           pe.apellido AS emp_apellido
+                           COALESCE(pe2.cedula,    vis.cedula)    AS cedula,
+                           COALESCE(pe2.nombre,    vis.nombre)    AS nombre,
+                           COALESCE(pe2.apellido,  vis.apellido)  AS apellido,
+                           COALESCE(pe2.telefono,  vis.telefono)  AS telefono,
+                           COALESCE(pe2.correo,    vis.correo)    AS correo,
+                           COALESCE(pe2.genero,    vis.genero)    AS genero,
+                           vis.procedencia
                     FROM visitas v
                     INNER JOIN visitantes vis ON v.id_visitante = vis.id
                     LEFT  JOIN personas pe2  ON vis.id_persona  = pe2.id
-                    LEFT  JOIN empleados e   ON v.id_empleado   = e.id
-                    LEFT  JOIN personas pe   ON e.id_persona    = pe.id
                     WHERE {$where}
                     ORDER BY v.hora_entrada DESC");
         $db->bind(':fi', $fi);
         $db->bind(':ff', $ff);
-        if ($motivo   !== '') $db->bind(':motivo',   '%' . $motivo . '%');
-        if ($empleado !== '') $db->bind(':empleado', '%' . $empleado . '%');
+        if ($motivo !== '') $db->bind(':motivo', '%' . $motivo . '%');
+        if ($cedula !== '') $db->bind(':cedula', '%' . $cedula . '%');
+        if ($genero !== '') $db->bind(':genero', $genero);
+        if ($buscar !== '') $db->bind(':buscar', '%' . $buscar . '%');
         return $db->resultSet();
     }
 
