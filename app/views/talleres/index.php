@@ -1,5 +1,30 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
+<?php
+$filtros      = $data['filtros'] ?? [];
+$pagina       = (int)($data['pagina'] ?? 1);
+$totalPaginas = (int)($data['total_paginas'] ?? 1);
+$total        = (int)($data['total'] ?? 0);
+$porPagina    = (int)($data['por_pagina'] ?? 20);
+$hayFiltro    = array_filter($filtros, fn($v) => $v !== '');
+
+function tallerUrl(array $filtros, int $p): string {
+    $q = array_filter($filtros, fn($v) => $v !== '' && $v !== null);
+    $q['p'] = $p;
+    return URL_ROOT . '/talleres/index?' . http_build_query($q);
+}
+// Helper: detectar si una actividad Programada está atrasada (fecha/hora de inicio ya pasó)
+function esAtrasada($t): bool {
+    if (($t->estado ?? '') !== 'Programado') return false;
+    $hoy  = date('Y-m-d');
+    $hora = date('H:i:s');
+    $fi   = $t->fecha_inicio ?? '';
+    if ($fi < $hoy) return true;
+    if ($fi === $hoy && !empty($t->hora_inicio) && $t->hora_inicio < $hora) return true;
+    return false;
+}
+?>
+
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Formación · Capacitación</div>
@@ -13,22 +38,106 @@
     </div>
 </div>
 
-<div class="anim-slide-up" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:var(--sp-6); margin-bottom:var(--sp-8);">
+<!-- Filtros -->
+<form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/talleres/index" style="margin-bottom:var(--sp-4);">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5); display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
+            <div style="position:relative;">
+                <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;pointer-events:none;"></i>
+                <input type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre o facilitador…" value="<?php echo htmlspecialchars($filtros['buscar'] ?? ''); ?>">
+            </div>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Estado</label>
+            <select name="estado" class="sig-input" style="min-width:140px;">
+                <option value="">Todos</option>
+                <?php foreach (Taller::ESTADOS as $est): ?>
+                <option value="<?php echo $est; ?>" <?php echo ($filtros['estado'] ?? '') === $est ? 'selected' : ''; ?>><?php echo $est; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Tipo</label>
+            <select name="tipo" class="sig-input" style="min-width:130px;">
+                <option value="">Todos</option>
+                <?php foreach (Taller::TIPOS_ACTIVIDAD as $tp): ?>
+                <option value="<?php echo $tp; ?>" <?php echo ($filtros['tipo'] ?? '') === $tp ? 'selected' : ''; ?>><?php echo $tp; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Ámbito</label>
+            <select name="es_interna" class="sig-input" style="min-width:120px;">
+                <option value="">Todos</option>
+                <option value="1" <?php echo ($filtros['es_interna'] ?? '') === '1' ? 'selected' : ''; ?>>Interna</option>
+                <option value="0" <?php echo ($filtros['es_interna'] ?? '') === '0' ? 'selected' : ''; ?>>Externa</option>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Desde</label>
+            <input type="date" name="fecha_inicio" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio'] ?? ''); ?>">
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
+            <input type="date" name="fecha_fin" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_fin'] ?? ''); ?>">
+        </div>
+        <div style="display:flex; gap:var(--sp-2);">
+            <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
+            <?php if ($hayFiltro): ?>
+            <a href="<?php echo URL_ROOT; ?>/talleres/index" class="btn-sig btn-sig--ghost" style="height:42px; padding:0 var(--sp-3);" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+            <?php endif; ?>
+        </div>
+    </div>
+</form>
+
+<!-- Resumen + leyenda de colores -->
+<div style="display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-4); flex-wrap:wrap;" class="anim-slide-up">
+    <span style="font-size:13px; color:var(--text-secondary);">
+        <?php if ($total > 0): ?>
+            Mostrando <strong><?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($total, $pagina*$porPagina); ?></strong> de <strong><?php echo number_format($total); ?></strong> actividades<?php echo $hayFiltro ? ' (filtradas)' : ''; ?>
+        <?php else: ?> Sin actividades<?php echo $hayFiltro ? ' para el filtro aplicado' : ''; ?><?php endif; ?>
+    </span>
+    <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap; font-size:11px; align-items:center;">
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#DC2626;display:inline-block;"></span> Atrasada</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#F59E0B;display:inline-block;"></span> Interna</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#3B82F6;display:inline-block;"></span> Programada</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#7C3AED;display:inline-block;"></span> En Curso</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#059669;display:inline-block;"></span> Finalizada</span>
+        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#64748B;display:inline-block;"></span> Cancelada</span>
+    </div>
+</div>
+
+<div class="anim-slide-up" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:var(--sp-5); margin-bottom:var(--sp-6);">
     <?php if (empty($data['talleres'])): ?>
         <div style="grid-column:1/-1; text-align:center; padding:var(--sp-12); color:var(--text-tertiary);">
             <i class="bi bi-mortarboard" style="font-size:48px; display:block; margin-bottom:var(--sp-4);"></i>
-            <p>No hay actividades registradas actualmente.</p>
+            <p><?php echo $hayFiltro ? 'Sin actividades que coincidan con el filtro.' : 'No hay actividades registradas actualmente.'; ?></p>
         </div>
     <?php else: ?>
-        <?php foreach ($data['talleres'] as $t): ?>
-            <div class="sig-card h-100" style="display:flex; flex-direction:column;">
+        <?php foreach ($data['talleres'] as $t):
+            $atrasada = esAtrasada($t);
+            $esInterna = !empty($t->es_interna) && $t->es_interna !== 'f';
+
+            // Color del borde izquierdo de la tarjeta según estado/condición
+            if ($atrasada)                               $cardBorder = '#DC2626'; // rojo — atrasada
+            elseif ($esInterna)                          $cardBorder = '#F59E0B'; // ámbar — interna
+            elseif ($t->estado === 'En Curso')           $cardBorder = '#7C3AED'; // morado — en curso
+            elseif ($t->estado === 'Programado')         $cardBorder = '#3B82F6'; // azul — programada a tiempo
+            elseif ($t->estado === 'Finalizado')         $cardBorder = '#059669'; // verde — finalizada
+            else                                         $cardBorder = '#94A3B8'; // gris — cancelada/otro
+        ?>
+            <div class="sig-card h-100" style="display:flex; flex-direction:column; border-left:4px solid <?php echo $cardBorder; ?>;">
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
                     <?php $badgeClass = Taller::ESTADO_BADGES[$t->estado ?? ''] ?? 'sig-badge--neutral'; ?>
                     <div style="display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap;">
                         <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $t->estado; ?></span>
+                        <?php if ($atrasada): ?>
+                            <span class="sig-badge sig-badge--danger" style="font-size:10px;"><i class="bi bi-clock-fill"></i> Atrasada</span>
+                        <?php endif; ?>
                         <span class="sig-badge sig-badge--neutral" style="font-size:10px;"><?php echo $t->tipo_actividad ?? 'Taller'; ?></span>
-                        <?php if (!empty($t->es_interna)): ?>
-                            <span class="sig-badge sig-badge--brand" style="font-size:10px;">Interna</span>
+                        <?php if ($esInterna): ?>
+                            <span class="sig-badge" style="font-size:10px;background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;">Interna</span>
                         <?php else: ?>
                             <span class="sig-badge sig-badge--neutral" style="font-size:10px; color:var(--text-secondary);">
                                 <?php echo $t->tipo_ente ? htmlspecialchars($t->tipo_ente) : 'Externa'; ?>
@@ -90,6 +199,33 @@
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
+
+<!-- Paginación -->
+<?php if ($totalPaginas > 1):
+    $win = 2;
+    $ini = max(1, $pagina - $win);
+    $fin = min($totalPaginas, $pagina + $win);
+?>
+<nav class="anim-slide-up" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:var(--sp-8);flex-wrap:wrap;">
+    <?php if ($pagina > 1): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo tallerUrl($filtros, 1); ?>"><i class="bi bi-chevron-double-left"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo tallerUrl($filtros, $pagina - 1); ?>"><i class="bi bi-chevron-left"></i> Anterior</a>
+    <?php endif; ?>
+    <?php if ($ini > 1): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php for ($n = $ini; $n <= $fin; $n++): ?>
+        <?php if ($n === $pagina): ?>
+            <span class="btn-sig btn-sig--primary btn-sig--sm" style="pointer-events:none;min-width:38px;justify-content:center;"><?php echo $n; ?></span>
+        <?php else: ?>
+            <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo tallerUrl($filtros, $n); ?>" style="min-width:38px;justify-content:center;"><?php echo $n; ?></a>
+        <?php endif; ?>
+    <?php endfor; ?>
+    <?php if ($fin < $totalPaginas): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php if ($pagina < $totalPaginas): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo tallerUrl($filtros, $pagina + 1); ?>">Siguiente <i class="bi bi-chevron-right"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo tallerUrl($filtros, $totalPaginas); ?>"><i class="bi bi-chevron-double-right"></i></a>
+    <?php endif; ?>
+</nav>
+<?php endif; ?>
 
 <!-- Modal crear/editar actividad -->
 <div class="modal fade" id="modalTaller" tabindex="-1">

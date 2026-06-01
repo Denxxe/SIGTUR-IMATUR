@@ -72,6 +72,53 @@ class Taller extends Model {
         return $db->resultSet();
     }
 
+    /**
+     * Listado paginado con filtros para el index.
+     */
+    public static function paginate(int $pagina, int $porPagina, array $f = []): array {
+        $db     = new Database();
+        $binds  = [];
+        $where  = "t.is_active = TRUE";
+
+        if (!empty($f['estado']))      { $where .= " AND t.estado = :estado";            $binds[':estado'] = $f['estado']; }
+        if (!empty($f['tipo']))        { $where .= " AND t.tipo_actividad = :tipo";       $binds[':tipo']   = $f['tipo']; }
+        if (!empty($f['es_interna']) && $f['es_interna'] !== '') {
+                                         $where .= " AND t.es_interna = :esi";
+                                         $binds[':esi'] = ($f['es_interna'] === '1'); }
+        if (!empty($f['fecha_inicio'])) { $where .= " AND t.fecha_inicio >= :fi";        $binds[':fi']     = $f['fecha_inicio']; }
+        if (!empty($f['fecha_fin']))    { $where .= " AND t.fecha_inicio <= :ff";        $binds[':ff']     = $f['fecha_fin']; }
+        if (!empty($f['buscar'])) {
+            $where .= " AND (t.nombre ILIKE :q OR (p.nombre||' '||p.apellido) ILIKE :q)";
+            $binds[':q'] = '%' . $f['buscar'] . '%';
+        }
+
+        $offset = ($pagina - 1) * $porPagina;
+        $base   = "FROM talleres t
+                   LEFT JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                   LEFT JOIN empleados e  ON t.id_facilitador = e.id
+                   LEFT JOIN personas p   ON e.id_persona = p.id
+                   WHERE {$where}";
+
+        $db->query("SELECT COUNT(*) AS total {$base}");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $total = (int)($db->single()->total ?? 0);
+
+        $db->query("SELECT t.*, uf.nombre AS ubicacion, uf.es_sede_propia,
+                           p.nombre AS facilitador_nombre, p.apellido AS facilitador_apellido,
+                           (SELECT COUNT(*) FROM participantes_taller pt WHERE pt.id_taller = t.id AND pt.is_active=TRUE) AS total_inscritos,
+                           (SELECT COUNT(*) FROM taller_evidencias   te WHERE te.id_taller = t.id AND te.is_active=TRUE) AS total_evidencias
+                    {$base}
+                    ORDER BY
+                        CASE t.estado WHEN 'En Curso' THEN 0 WHEN 'Programado' THEN 1 ELSE 2 END,
+                        t.fecha_inicio DESC
+                    LIMIT :lim OFFSET :off");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $db->bind(':lim', $porPagina);
+        $db->bind(':off', $offset);
+
+        return ['items' => $db->resultSet(), 'total' => $total];
+    }
+
     public static function find($id) {
         $db = new Database();
         $db->query("SELECT t.*, uf.nombre AS ubicacion, uf.es_sede_propia,

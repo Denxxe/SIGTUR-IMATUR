@@ -5,15 +5,35 @@ class TalleresController extends Controller {
         // Auto-transición: Programado → En Curso cuando la fecha/hora de inicio ya llegó
         try { Taller::autoTransicionarProgramados(); } catch (\Exception $ignored) {}
 
-        $talleres    = Taller::all();
+        $porPagina = 20;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
+            'buscar'      => trim($_GET['buscar']      ?? ''),
+            'estado'      => trim($_GET['estado']      ?? ''),
+            'tipo'        => trim($_GET['tipo']        ?? ''),
+            'es_interna'  => $_GET['es_interna']       ?? '',
+            'fecha_inicio'=> trim($_GET['fecha_inicio'] ?? ''),
+            'fecha_fin'   => trim($_GET['fecha_fin']   ?? ''),
+        ];
+
+        $res          = Taller::paginate($pagina, $porPagina, $filtros);
+        $total        = $res['total'];
+        $totalPaginas = max(1, (int)ceil($total / $porPagina));
+        if ($pagina > $totalPaginas) $pagina = $totalPaginas;
+
         $empleados   = Empleado::facilitadoresTalleres();
         $ubicaciones = UbicacionFormacion::all();
 
         $data = [
-            'titulo'      => 'Formación: Talleres y Charlas',
-            'talleres'    => $talleres,
-            'empleados'   => $empleados,
-            'ubicaciones' => $ubicaciones
+            'titulo'        => 'Formación: Talleres y Charlas',
+            'talleres'      => $res['items'],
+            'total'         => $total,
+            'pagina'        => $pagina,
+            'total_paginas' => $totalPaginas,
+            'por_pagina'    => $porPagina,
+            'filtros'       => $filtros,
+            'empleados'     => $empleados,
+            'ubicaciones'   => $ubicaciones,
         ];
         $this->view('talleres/index', $data);
     }
@@ -606,7 +626,11 @@ class TalleresController extends Controller {
             'taller'        => $taller,
             'participantes' => $participantes,
         ];
-        $this->view('talleres/lista_asistencia', $data);
+        // Actividades externas usan el formato CONTROL DE ASISTENCIA (institución/empresa)
+        $vista = (!empty($taller->es_interna) && $taller->es_interna !== 'f')
+                 ? 'talleres/lista_asistencia'
+                 : 'talleres/lista_asistencia_externa';
+        $this->view($vista, $data);
     }
 
     public function informeImprimible($id) {
