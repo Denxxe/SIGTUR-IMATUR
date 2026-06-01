@@ -190,6 +190,7 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 019 | `019_drop_ruta_inventario.sql` | ✅ Ejecutado | DROP TABLE `ruta_inventario` |
 | 020 | `020_rutas_estado_finalizada.sql` | ✅ Ejecutado | Estado `Finalizada` (terminal) en `rutas` |
 | 021 | `021_drop_nivel_dificultad.sql` | ✅ Ejecutado | DROP COLUMN `rutas.nivel_dificultad` |
+| 022 | `022_validate_fk_constraints.sql` | ✅ Ejecutado | `VALIDATE CONSTRAINT` en 7 FKs que quedaron NOT VALID (sin huérfanos) |
 
 > **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-021 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). Para instalar desde cero usar **ese** archivo.
 
