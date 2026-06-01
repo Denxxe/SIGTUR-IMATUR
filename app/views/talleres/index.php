@@ -735,9 +735,23 @@ if (evEditInput) {
     });
 }
 
-document.querySelector('#modalTaller form').addEventListener('submit', function(e) {
-    if (!validarFechas()) e.preventDefault();
-});
+// Guard contra doble envío del formulario de taller
+(function() {
+    var form = document.querySelector('#modalTaller form');
+    var btn  = document.getElementById('btn_guardar');
+    var enviado = false;
+    form.addEventListener('submit', function(e) {
+        if (!validarFechas()) { e.preventDefault(); return; }
+        if (enviado) { e.preventDefault(); return; }
+        enviado = true;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando…';
+    });
+    // Reset al cerrar el modal (por si cancela y vuelve a abrir)
+    document.getElementById('modalTaller').addEventListener('hidden.bs.modal', function() {
+        enviado = false;
+    });
+}());
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

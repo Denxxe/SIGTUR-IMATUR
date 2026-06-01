@@ -355,7 +355,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                     </div>
                     <div id="insc_status" style="display:none;"></div>
-                    <div id="bloque_datos_persona" style="display:none;">
+                    <div id="bloque_datos_persona">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="sig-field">
@@ -736,12 +736,11 @@ function checkInscripcionValid() {
         var edadOk = edadV !== null && edadV >= 5 && edadV < 12;
         btn.disabled = !nombre || !fecha || !edadOk;
     } else {
-        var visible  = document.getElementById('bloque_datos_persona').style.display !== 'none';
         var nombre   = (document.getElementById('insc_nombre').value   || '').trim();
         var apellido = (document.getElementById('insc_apellido').value || '').trim();
         var correo   = (document.getElementById('insc_correo').value   || '').trim();
         var correoOk = !correo || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-        btn.disabled = !visible || !nombre || !apellido || !correoOk;
+        btn.disabled = !nombre || !apellido || !correoOk;
     }
 }
 
@@ -753,7 +752,7 @@ function resetBloquePersona() {
     document.getElementById('insc_genero').value = '';    document.getElementById('insc_genero').disabled = false;
     document.getElementById('insc_parroquia').value = ''; document.getElementById('insc_parroquia').disabled = false;
     document.getElementById('insc_status').style.display = 'none';
-    document.getElementById('bloque_datos_persona').style.display = 'none';
+    // bloque_datos_persona siempre visible — no se oculta
     document.getElementById('insc_edad_label').textContent = '';
     checkInscripcionValid();
 }
@@ -839,6 +838,18 @@ document.getElementById('insc_es_libre').addEventListener('change', function() {
     if (!esLibre) { document.getElementById('insc_cedula_busqueda').value = ''; resetBloquePersona(); }
     checkInscripcionValid();
 });
+
+// Limpiar el modal de inscripción al abrirse, para empezar siempre limpio
+var modalInsc = document.getElementById('modalInscripcion');
+if (modalInsc) {
+    modalInsc.addEventListener('show.bs.modal', function() {
+        document.getElementById('insc_cedula_busqueda').value = '';
+        document.getElementById('insc_es_libre').checked = false;
+        document.getElementById('bloque_persona').style.display = 'block';
+        document.getElementById('bloque_libre').style.display   = 'none';
+        resetBloquePersona();
+    });
+}
 
 document.getElementById('insc_fecha_nac').addEventListener('change', function() {
     var edad = calcularEdad(this.value);
