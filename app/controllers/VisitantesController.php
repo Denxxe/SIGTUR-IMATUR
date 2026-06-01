@@ -67,6 +67,11 @@ class VisitantesController extends Controller {
                 throw new Exception('El nombre y apellido son requeridos.');
             }
 
+            $correo = trim($_POST['correo'] ?? '');
+            if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception('El correo "' . htmlspecialchars($correo) . '" no es válido. Verifica el formato (ejemplo: nombre@dominio.com).');
+            }
+
             // Find existing visitante by cédula, or create one
             $visitante = $cedula ? Visitante::buscarPorCedula($cedula) : null;
 

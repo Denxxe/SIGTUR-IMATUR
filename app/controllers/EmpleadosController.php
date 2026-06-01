@@ -52,6 +52,13 @@ class EmpleadosController extends Controller {
                 'id_horario'     => !empty($_POST['id_horario']) ? (int)$_POST['id_horario'] : null,
             ];
 
+            // Validación de correo electrónico
+            if (!empty($data['correo']) && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
+                flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido. Por favor verifica el formato (ejemplo: nombre@dominio.com).', 'danger');
+                header('Location: ' . URL_ROOT . '/empleados/index');
+                return;
+            }
+
             $esEdicion = !empty($data['id']);
             $empleado = new Empleado($data);
 

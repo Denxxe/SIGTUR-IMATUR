@@ -50,6 +50,34 @@ class Inventario extends Model {
         return $db->single();
     }
 
+    /**
+     * Verifica si ya existe un bien con ese codigo_bn (excluyendo el propio registro en edición).
+     * Retorna el id existente o null.
+     */
+    public static function findByCodigoBn(string $codigo, ?int $excludeId = null): ?int {
+        if ($codigo === '') return null;
+        $db = new Database();
+        $db->query("SELECT id FROM inventario WHERE codigo_bn = :codigo AND is_active = TRUE" . ($excludeId ? " AND id <> :excl" : ""));
+        $db->bind(':codigo', $codigo);
+        if ($excludeId) $db->bind(':excl', $excludeId);
+        $row = $db->single();
+        return $row ? (int)$row->id : null;
+    }
+
+    /**
+     * Verifica si ya existe un bien con ese serial (excluyendo el propio registro en edición).
+     * Retorna el id existente o null.
+     */
+    public static function findBySerial(string $serial, ?int $excludeId = null): ?int {
+        if ($serial === '') return null;
+        $db = new Database();
+        $db->query("SELECT id FROM inventario WHERE serial = :serial AND is_active = TRUE" . ($excludeId ? " AND id <> :excl" : ""));
+        $db->bind(':serial', $serial);
+        if ($excludeId) $db->bind(':excl', $excludeId);
+        $row = $db->single();
+        return $row ? (int)$row->id : null;
+    }
+
     public function save($user_id = null) {
         $previos = null;
         if ($this->id) {

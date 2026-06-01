@@ -40,7 +40,29 @@ class InventarioController extends Controller {
                 'observaciones' => trim($_POST['observaciones'])
             ];
 
-            $esEdicion = !empty($data['id']);
+            $esEdicion  = !empty($data['id']);
+            $excludeId  = $esEdicion ? (int)$data['id'] : null;
+
+            // Unicidad de Código BN (campo UNIQUE en BD)
+            if ($data['codigo_bn'] !== '') {
+                $dupBN = Inventario::findByCodigoBn($data['codigo_bn'], $excludeId);
+                if ($dupBN) {
+                    flash('global_msg', 'El Código BN "' . htmlspecialchars($data['codigo_bn']) . '" ya está registrado en otro bien (ID #' . $dupBN . '). Verifica el código antes de continuar.', 'danger');
+                    header('Location: ' . URL_ROOT . '/inventario/index');
+                    return;
+                }
+            }
+
+            // Unicidad de Serial (campo UNIQUE en BD)
+            if ($data['serial'] !== '') {
+                $dupSer = Inventario::findBySerial($data['serial'], $excludeId);
+                if ($dupSer) {
+                    flash('global_msg', 'El número de serial "' . htmlspecialchars($data['serial']) . '" ya está asignado a otro bien (ID #' . $dupSer . '). Verifica el serial antes de continuar.', 'danger');
+                    header('Location: ' . URL_ROOT . '/inventario/index');
+                    return;
+                }
+            }
+
             $item = new Inventario($data);
 
             try {

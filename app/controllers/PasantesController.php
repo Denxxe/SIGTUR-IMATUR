@@ -46,12 +46,21 @@ class PasantesController extends Controller {
             $apellido  = trim($_POST['apellido']  ?? '');
             $userId    = $this->getUserId();
 
+            $fechaInicio = !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : null;
+            $fechaFin    = !empty($_POST['fecha_fin'])    ? $_POST['fecha_fin']    : null;
+
+            if ($fechaInicio && $fechaFin && $fechaFin < $fechaInicio) {
+                flash('global_msg', 'La fecha de fin (' . date('d/m/Y', strtotime($fechaFin)) . ') no puede ser anterior a la fecha de inicio (' . date('d/m/Y', strtotime($fechaInicio)) . ').', 'danger');
+                header('Location: ' . URL_ROOT . '/pasantes/crear');
+                return;
+            }
+
             $pasanteData = [
                 'institucion'            => trim($_POST['institucion'] ?? ''),
                 'carrera'                => trim($_POST['carrera']     ?? ''),
                 'id_tutor_institucional' => !empty($_POST['id_tutor_institucional']) ? (int)$_POST['id_tutor_institucional'] : null,
-                'fecha_inicio'           => !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : null,
-                'fecha_fin'              => !empty($_POST['fecha_fin'])    ? $_POST['fecha_fin']    : null,
+                'fecha_inicio'           => $fechaInicio,
+                'fecha_fin'              => $fechaFin,
                 'estado'                 => 'Postulado'
             ];
 
@@ -111,13 +120,22 @@ class PasantesController extends Controller {
                 'apellido' => trim($_POST['apellido'] ?? '')
             ];
 
+            $fechaInicioEd = !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : null;
+            $fechaFinEd    = !empty($_POST['fecha_fin'])    ? $_POST['fecha_fin']    : null;
+
+            if ($fechaInicioEd && $fechaFinEd && $fechaFinEd < $fechaInicioEd) {
+                flash('global_msg', 'La fecha de fin (' . date('d/m/Y', strtotime($fechaFinEd)) . ') no puede ser anterior a la fecha de inicio (' . date('d/m/Y', strtotime($fechaInicioEd)) . ').', 'danger');
+                header('Location: ' . URL_ROOT . '/pasantes/editar/' . $id);
+                return;
+            }
+
             $pasanteData = [
                 'id'                     => $id,
                 'institucion'            => trim($_POST['institucion'] ?? ''),
                 'carrera'                => trim($_POST['carrera']     ?? ''),
                 'id_tutor_institucional' => !empty($_POST['id_tutor_institucional']) ? (int)$_POST['id_tutor_institucional'] : null,
-                'fecha_inicio'           => !empty($_POST['fecha_inicio']) ? $_POST['fecha_inicio'] : null,
-                'fecha_fin'              => !empty($_POST['fecha_fin'])    ? $_POST['fecha_fin']    : null,
+                'fecha_inicio'           => $fechaInicioEd,
+                'fecha_fin'              => $fechaFinEd,
                 'estado'                 => $_POST['estado']    ?? 'Postulado',
                 'evaluacion'             => trim($_POST['evaluacion'] ?? ''),
                 'nota'                   => $_POST['nota'] ?? ''
