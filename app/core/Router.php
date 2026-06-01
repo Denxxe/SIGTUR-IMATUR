@@ -34,14 +34,15 @@ class Router {
             $permisos   = RolesController::getMapaRbac();
             $permitidos = $permisos[$rolId] ?? [];
             if ($permitidos !== '*' && !in_array($this->currentController, $permitidos)) {
-                // Caso especial: AuditoriaController tiene permisos a nivel de método.
-                // El token 'AuditoriaController' habilita la Bitácora; 'AuditoriaPapelera' la Papelera.
-                // Aquí solo permitimos llegar al controlador si tiene cualquiera de los dos;
-                // cada método aplica su propio guard internamente.
+                // PerfilController: accesible por cualquier usuario autenticado (gestión propia de cuenta).
+                $accesoSiempre = $this->currentController === 'PerfilController';
+
+                // AuditoriaController tiene permisos a nivel de método.
                 $accesoAuditoria = $this->currentController === 'AuditoriaController'
                     && is_array($permitidos)
                     && in_array('AuditoriaPapelera', $permitidos);
-                if (!$accesoAuditoria) {
+
+                if (!$accesoSiempre && !$accesoAuditoria) {
                     $this->currentController = 'DashboardController';
                     $this->currentMethod = 'accesoDenegado';
                     $url = [];

@@ -185,12 +185,12 @@
                 <button class="sig-header__icon-btn" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
                     <i class="bi bi-moon" id="themeIcon" style="font-size:17px;"></i>
                 </button>
-                <div class="sig-header__user-pill">
+                <a href="<?php echo URL_ROOT; ?>/perfil/index" class="sig-header__user-pill" style="text-decoration:none;color:inherit;" title="Mi perfil">
                     <div class="sig-header__user-avatar">
                         <?php echo strtoupper(substr($_SESSION['user_username'] ?? 'A', 0, 1)); ?>
                     </div>
                     <div class="sig-header__user-name">Hola, <?php echo $_SESSION['user_username'] ?? 'Admin'; ?></div>
-                </div>
+                </a>
                 <a href="<?php echo URL_ROOT; ?>/auth/logout" class="btn-sig btn-sig--danger btn-sig--sm" style="font-size:12px;">
                     <i class="bi bi-power"></i> <span class="sig-header__logout-text">Salir</span>
                 </a>

@@ -37,8 +37,8 @@
 | D-FO05 | Formación | ¿La planificación semanal de Formación debe registrarse en el sistema? | Módulo de planificación + comparativo vs ejecutado |
 | D-IN09 | Inventario | ¿El sistema debe registrar costo de adquisición, fecha de compra y proveedor? | Campos adicionales en tabla `inventario` |
 | D-TX01 | Transversal | ⚠️ ¿Qué otras operaciones requieren aprobación formal de un superior? | Flujos de aprobación adicionales |
-| D-US03 | Sistema | ⚠️ Rol "Solo Lectura" a múltiples módulos: ¿cuál es el alcance exacto de lo que ve? | Rol 6 + versiones de solo lectura de vistas |
-| D-US05 | Sistema | ⚠️ ¿La contraseña por defecto es la cédula del empleado? ¿Cuando el usuario no tiene empleado? | Lógica de creación de usuario con `password_debe_cambiar` |
+| ~~D-US03~~ | Sistema | ✅ **RESUELTA (2026-06-01):** Rol 6 renombrado a "Solo Lectura". Permisos: Dashboard, Reportes, Visitantes. Implementado en BD (INSERT permisos_rol). | — |
+| ~~D-US05~~ | Sistema | ✅ **RESUELTA (2026-06-01):** Contraseña default = cédula del empleado (auto-rellena en el formulario). Módulo "Mi Perfil" (`/perfil/index`) implementado: el usuario puede cambiar username y contraseña (mín. 6 chars). Accesible para todos los roles (exento de RBAC en Router.php). | — |
 
 ---
 
@@ -73,9 +73,9 @@ Derivadas de `docs/AUDITORIA_SENIOR_2026-05-31.md`. Cada una desbloquea cerrar u
 | D-FO08 | Formación | ❓ ¿Qué significa `es_brigadista` en un participante? ¿Implica rol/beneficio? Hoy el campo no se usa. | Definir uso o eliminar campo |
 | D-FO09 | Formación | ❓ ¿Cuándo se marca la **asistencia** (durante o después del taller)? ¿Se permite marcar tras "Finalizado"? | Reglas de asistencia + máquina de estados |
 | D-RT03 | Turismo | ❓ Al pasar una ruta a **Finalizada**, ¿debe generarse informe y/o oficio **automáticamente**? Hoy todo es manual. | Cierre de ruta automatizado |
-| D-RE03 | Recepción | ❓ ¿Una **visita sin `hora_salida`** debe cerrarse automáticamente al fin del día? ¿Es **obligatorio** registrar el empleado que recibe? | Job de cierre + obligatoriedad `id_empleado` |
-| D-RE04 | Recepción | ❓ ¿Los **motivos de visita** deben ser un catálogo configurable? Hoy están fijos en el código. | Tabla/config de motivos |
-| D-US06 | Sistema | ❓ ¿Política de **contraseñas** (longitud mínima, complejidad, expiración, forzar cambio en primer ingreso)? | Validación en `UsuariosController` + `password_debe_cambiar` |
+| ~~D-RE03~~ | Recepción | ✅ **RESUELTA (2026-06-01):** Visitas = bitácora inmutable sin hora de salida. El toggle de registro solo considera visitas abiertas del **día actual** (fix en `Visita::registrar()`): visitas de días anteriores no bloquean nuevas entradas. Empleado que recibe: NO obligatorio. | — |
+| ~~D-RE04~~ | Recepción | ✅ **RESUELTA (2026-06-01):** Motivos de visita quedan fijos en el código por ahora. | — |
+| ~~D-US06~~ | Sistema | ✅ **RESUELTA (2026-06-01):** Mínimo 6 caracteres, sin caducidad, sin complejidad obligatoria. Implementado en servidor (UsuariosController + PerfilController) y en UI (minlength + validación JS). | — |
 | ~~D-TX04~~ | Transversal | ✅ **RESUELTA (2026-06-01):** NO se renombran las columnas `create_at/update_at/delete_at` de `parroquia`. Bajo impacto, no justifica migración de esquema. El quirk queda documentado en CLAUDE.md. | — |
 | ~~D-RH15~~ | RRHH | ✅ **RESUELTA (2026-05-31, H-11):** decisión — solo M/F. Migración 023 actualiza CHECK en 4 tablas. Opción "Otro" eliminada de todos los formularios. | — |
 

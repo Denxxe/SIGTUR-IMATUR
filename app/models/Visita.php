@@ -38,9 +38,12 @@ class Visita extends Model {
      */
     public static function registrar($data, $userId) {
         $db = new Database();
+        // Solo considera visitas ABIERTAS del día actual para el toggle.
+        // Las visitas de días anteriores son registros inmutables (bitácora).
         $db->query("
             SELECT id FROM visitas
             WHERE id_visitante = :id_visitante AND hora_salida IS NULL AND is_active = TRUE
+              AND DATE(hora_entrada) = CURRENT_DATE
             ORDER BY hora_entrada DESC LIMIT 1
         ");
         $db->bind(':id_visitante', $data['id_visitante']);

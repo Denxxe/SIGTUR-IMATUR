@@ -96,7 +96,7 @@
                     <select name="id_empleado" id="user_id_empleado" class="sig-select">
                         <option value="">Seleccione al empleado...</option>
                         <?php foreach ($data['empleados_sin_cuenta'] ?? [] as $e): ?>
-                            <option value="<?php echo $e->id; ?>">
+                            <option value="<?php echo $e->id; ?>" data-cedula="<?php echo htmlspecialchars($e->cedula ?? ''); ?>">
                                 <?php echo htmlspecialchars($e->nombre . ' ' . $e->apellido); ?>
                                 (<?php echo htmlspecialchars($e->cedula); ?>)
                             </option>
@@ -127,7 +127,10 @@
                 <div class="sig-field mb-2">
                     <label class="sig-field__label">Contraseña <span class="req" id="pass_req_star">*</span></label>
                     <input type="password" name="password" id="user_password" class="sig-input"
-                           placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                           placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6">
+                    <small id="pass_default_hint" style="color:var(--text-secondary);font-size:11px;display:none;">
+                        <i class="bi bi-key"></i> Por defecto se usa la cédula del empleado como contraseña.
+                    </small>
                 </div>
 
                 <div class="sig-field mb-3" id="div_confirmar">
@@ -161,8 +164,27 @@ function nuevoUsuario() {
     document.getElementById('user_password').required = true;
     document.getElementById('pass_req_star').style.display = 'inline';
     document.getElementById('pass_notice').style.display = 'none';
+    document.getElementById('pass_default_hint').style.display = 'none';
     document.querySelector('#formUsuario').reset();
 }
+
+// Al seleccionar empleado: auto-rellena la contraseña con su cédula
+document.getElementById('user_id_empleado').addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    const cedula = opt ? (opt.dataset.cedula || '') : '';
+    const passField = document.getElementById('user_password');
+    const pass2Field = document.getElementById('user_password2');
+    const hint = document.getElementById('pass_default_hint');
+    if (cedula) {
+        passField.value = cedula;
+        pass2Field.value = cedula;
+        hint.style.display = 'block';
+    } else {
+        passField.value = '';
+        pass2Field.value = '';
+        hint.style.display = 'none';
+    }
+});
 
 function editarUsuario(user) {
     document.getElementById('modalUsuarioLabel').innerText = 'Actualizar: ' + user.username;
