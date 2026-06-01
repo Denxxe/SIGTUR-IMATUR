@@ -701,7 +701,8 @@ function checkFormValid() {
     var enCursoOk    = estado !== 'En Curso' || totalInsc > 0;
 
     document.getElementById('btn_guardar').disabled =
-        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && motivoOk && cupoOk && enCursoOk);
+        !(nombre !== '' && fechaInicio !== '' && facil !== '' && fechasOk && motivoOk && cupoOk && enCursoOk)
+        || hasDuplicado;
 }
 
 // ── Abrir modal — nueva actividad ─────────────────────────────────────────
@@ -834,6 +835,7 @@ document.getElementById('tal_nombre').addEventListener('input', checkFormValid);
 document.getElementById('tal_nombre').addEventListener('change', checkDuplicado);
 document.getElementById('tal_facilitador').addEventListener('change', function() { checkFormValid(); checkDuplicado(); });
 document.getElementById('tal_fecha_inicio').addEventListener('change', function() { checkFormValid(); checkDuplicado(); });
+document.getElementById('tal_ubicacion').addEventListener('change', checkDuplicado);
 document.getElementById('tal_fecha_fin').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_inicio').addEventListener('change', checkFormValid);
 document.getElementById('tal_hora_fin').addEventListener('change', checkFormValid);
@@ -877,33 +879,48 @@ if (evEditInput) {
 }
 
 // ── Verificación de duplicado en tiempo real ────────────────────────────
-var dupTimer = null;
+var dupTimer    = null;
+var hasDuplicado = false;  // estado global: hay duplicado detectado?
+
+function setDuplicado(val) {
+    hasDuplicado = val;
+    checkFormValid();  // re-evalúa el botón Guardar
+}
+
 function checkDuplicado() {
     clearTimeout(dupTimer);
     dupTimer = setTimeout(function() {
         var nombre = (document.getElementById('tal_nombre').value || '').trim();
         var fecha  = document.getElementById('tal_fecha_inicio').value;
         var facId  = document.getElementById('tal_facilitador').value;
+        var ubiId  = document.getElementById('tal_ubicacion').value;
         var talId  = document.getElementById('tal_id').value;
         var aviso  = document.getElementById('aviso_duplicado');
-        if (!nombre || !fecha || !facId) { aviso.style.display = 'none'; return; }
+        if (!nombre || !fecha || !facId) {
+            aviso.style.display = 'none';
+            setDuplicado(false);
+            return;
+        }
         var url = '<?php echo URL_ROOT; ?>/talleres/verificarDuplicado?nombre='
                   + encodeURIComponent(nombre)
-                  + '&fecha=' + encodeURIComponent(fecha)
-                  + '&id_fac=' + encodeURIComponent(facId)
+                  + '&fecha='   + encodeURIComponent(fecha)
+                  + '&id_fac='  + encodeURIComponent(facId)
+                  + (ubiId ? '&id_ubi=' + encodeURIComponent(ubiId) : '')
                   + (talId ? '&excl_id=' + encodeURIComponent(talId) : '');
         fetch(url).then(function(r) { return r.json(); }).then(function(res) {
             if (res.duplicate) {
                 aviso.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> '
-                    + '<strong>Posible duplicado:</strong> ya existe "'
-                    + res.nombre.replace(/[<>&]/g,'') + '" el ' + res.fecha
-                    + ' (ID #' + res.id + ', estado: ' + res.estado + '). '
-                    + 'Si es una actividad distinta, cambia el nombre o la fecha.';
+                    + '<strong>Duplicado detectado:</strong> ya existe "'
+                    + res.nombre.replace(/[<>&]/g, '') + '" el ' + res.fecha
+                    + ' con el mismo facilitador y sede (ID #' + res.id + ', estado: ' + res.estado + '). '
+                    + 'Para registrar una actividad distinta, cambia el nombre, la fecha o la sede.';
                 aviso.style.display = 'block';
+                setDuplicado(true);
             } else {
                 aviso.style.display = 'none';
+                setDuplicado(false);
             }
-        }).catch(function() { aviso.style.display = 'none'; });
+        }).catch(function() { aviso.style.display = 'none'; setDuplicado(false); });
     }, 500);
 }
 
@@ -922,6 +939,8 @@ function checkDuplicado() {
     // Reset al cerrar el modal (por si cancela y vuelve a abrir)
     document.getElementById('modalTaller').addEventListener('hidden.bs.modal', function() {
         enviado = false;
+        hasDuplicado = false;
+        document.getElementById('aviso_duplicado').style.display = 'none';
     });
 }());
 </script>

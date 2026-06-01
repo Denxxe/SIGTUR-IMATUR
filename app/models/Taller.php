@@ -82,19 +82,36 @@ class Taller extends Model {
      * misma fecha_inicio y mismo facilitador.
      * En edición pasar $excludeId para excluir el propio registro.
      */
-    public static function findDuplicate(string $nombre, string $fechaInicio, int $idFacilitador, ?int $excludeId = null): ?object {
+    /**
+     * Busca duplicados: mismo nombre (ILIKE) + misma fecha_inicio + mismo facilitador
+     * + misma sede de formación.
+     * Un mismo taller con distinta sede = evento diferente (permitido).
+     * En edición pasar $excludeId para no bloquearse a sí mismo.
+     */
+    public static function findDuplicate(
+        string $nombre,
+        string $fechaInicio,
+        int    $idFacilitador,
+        ?int   $idUbicacion = null,
+        ?int   $excludeId   = null
+    ): ?object {
         $db  = new Database();
         $sql = "SELECT id, nombre, fecha_inicio, estado FROM talleres
                 WHERE TRIM(nombre) ILIKE :nombre
                   AND fecha_inicio = :fi
                   AND id_facilitador = :fac
                   AND is_active = TRUE";
+        // Si se indica sede, la añadimos al criterio (NULL == sin sede asignada)
+        if ($idUbicacion !== null) {
+            $sql .= " AND id_ubicacion_formacion = :ubi";
+        }
         if ($excludeId) $sql .= " AND id <> :excl";
         $db->query($sql);
-        $db->bind(':nombre', trim($nombre));   // ILIKE = case-insensitive nativo en PostgreSQL
+        $db->bind(':nombre', trim($nombre));
         $db->bind(':fi',     $fechaInicio);
         $db->bind(':fac',    $idFacilitador);
-        if ($excludeId) $db->bind(':excl', $excludeId);
+        if ($idUbicacion !== null) $db->bind(':ubi', $idUbicacion);
+        if ($excludeId)            $db->bind(':excl', $excludeId);
         return $db->single() ?: null;
     }
 

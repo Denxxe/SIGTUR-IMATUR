@@ -154,17 +154,19 @@ class TalleresController extends Controller {
 
             // Anti-duplicado: solo al crear (en edición el propio registro daría falso positivo)
             if (!$esEdicion && !empty($data['id_facilitador'])) {
-                $dup = Taller::findDuplicate(
+                $ubiId = !empty($data['id_ubicacion_formacion']) ? (int)$data['id_ubicacion_formacion'] : null;
+                $dup   = Taller::findDuplicate(
                     $data['nombre'],
                     $data['fecha_inicio'],
-                    (int)$data['id_facilitador']
+                    (int)$data['id_facilitador'],
+                    $ubiId
                 );
                 if ($dup) {
                     throw new Exception(
-                        'Ya existe una actividad con el mismo nombre, fecha y facilitador '
+                        'Ya existe una actividad con el mismo nombre, fecha, facilitador y sede '
                         . '(ID #' . $dup->id . ' — "' . $dup->nombre . '", '
                         . date('d/m/Y', strtotime($dup->fecha_inicio)) . ', estado: ' . $dup->estado . '). '
-                        . 'Si es una actividad distinta, cambia el nombre o la fecha para diferenciarla.'
+                        . 'Si es una actividad distinta, cambia el nombre, la fecha o la sede.'
                     );
                 }
             }
@@ -899,12 +901,13 @@ class TalleresController extends Controller {
         $nombre    = trim($_GET['nombre']   ?? '');
         $fecha     = trim($_GET['fecha']    ?? '');
         $facId     = (int)($_GET['id_fac']  ?? 0);
+        $ubiId     = !empty($_GET['id_ubi']) ? (int)$_GET['id_ubi'] : null;
         $excludeId = (int)($_GET['excl_id'] ?? 0) ?: null;
 
         if ($nombre === '' || $fecha === '' || $facId === 0) {
             echo json_encode(['duplicate' => false]); exit;
         }
-        $dup = Taller::findDuplicate($nombre, $fecha, $facId, $excludeId);
+        $dup = Taller::findDuplicate($nombre, $fecha, $facId, $ubiId, $excludeId);
         if ($dup) {
             echo json_encode([
                 'duplicate' => true,
