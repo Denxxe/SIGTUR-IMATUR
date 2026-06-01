@@ -28,49 +28,53 @@ function fmtMes(string $ym): string {
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     RESUMEN EJECUTIVO — 8 KPI Cards
+     RESUMEN EJECUTIVO — KPI por Área
 ════════════════════════════════════════════════════════════════════════ -->
 <?php
-$kpiCards = [
-    ['label' => 'Empleados activos',    'value' => $data['kpiEmpleados'],          'sub' => 'en nómina institucional',       'icon' => 'bi-people-fill',              'bg' => '#3B82F6', 'alert' => false],
-    ['label' => 'Visitas hoy',          'value' => $data['kpiVisitasHoy'],          'sub' => 'registradas esta jornada',      'icon' => 'bi-door-open-fill',           'bg' => '#0891B2', 'alert' => false],
-    ['label' => 'Actividades activas',  'value' => $data['kpiActividadesActivas'],  'sub' => 'en curso o programadas',        'icon' => 'bi-mortarboard-fill',         'bg' => '#7C3AED', 'alert' => false],
-    ['label' => 'Formados ' . date('Y'),'value' => $data['kpiFormadosAnio'],        'sub' => 'inscripciones activas en el año','icon' => 'bi-person-check-fill',       'bg' => '#059669', 'alert' => false],
-    ['label' => 'Rutas operativas',     'value' => $data['kpiRutasActivas'],        'sub' => 'en estado Activa',              'icon' => 'bi-geo-alt-fill',             'bg' => '#D97706', 'alert' => false],
-    ['label' => 'Pasantes en curso',    'value' => $data['kpiPasantesEnCurso'],     'sub' => 'realizando pasantías',          'icon' => 'bi-journal-text',             'bg' => '#0EA5E9', 'alert' => false],
-    ['label' => 'Bienes en inventario', 'value' => $data['kpiBienesActivos'],       'sub' => 'activos registrados',           'icon' => 'bi-box-seam-fill',            'bg' => '#64748B', 'alert' => false],
-    ['label' => 'Bienes en alerta',     'value' => $data['kpiBienesAlerta'],        'sub' => 'dañados o en reparación',       'icon' => 'bi-exclamation-triangle-fill','bg' => '#DC2626', 'alert' => true ],
-];
+// Helper para renderizar una tarjeta KPI de resumen
+function kpiCard(array $k): void {
+    $isAlert  = !empty($k['alert']) && $k['value'] > 0;
+    $valColor = $isAlert ? '#DC2626' : 'var(--text-primary)';
+    $border   = $isAlert ? 'border-left:3px solid #DC2626;' : '';
+    echo '<div class="sig-card" style="' . $border . '">';
+    echo '<div class="sig-card__body" style="padding:var(--sp-4);">';
+    echo '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);">';
+    echo '<div style="min-width:0;flex:1;">';
+    echo '<div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">' . htmlspecialchars($k['label']) . '</div>';
+    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $valColor . ';line-height:1;margin-bottom:4px;">' . number_format($k['value']) . '</div>';
+    echo '<div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' . htmlspecialchars($k['sub']) . '</div>';
+    echo '</div>';
+    echo '<div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:' . $k['bg'] . ';display:flex;align-items:center;justify-content:center;">';
+    echo '<i class="bi ' . $k['icon'] . '" style="font-size:1.15rem;color:white;"></i></div>';
+    echo '</div></div></div>';
+}
+
+// Helper separador de área (mini-versión)
+function areaSep(string $label, string $color, string $icon): void {
+    echo '<div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);" class="anim-slide-up">';
+    echo '<div style="width:3px;height:16px;border-radius:2px;background:' . $color . ';flex-shrink:0;"></div>';
+    echo '<span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">';
+    echo '<i class="bi ' . $icon . '" style="color:' . $color . ';margin-right:3px;"></i>' . htmlspecialchars($label);
+    echo '</span><div style="flex:1;height:1px;background:var(--border-subtle);"></div></div>';
+}
 ?>
-<div class="row g-3 mb-6 anim-slide-up">
-    <?php foreach ($kpiCards as $k):
-        $isAlert  = !empty($k['alert']) && $k['value'] > 0;
-        $valColor = $isAlert ? '#DC2626' : 'var(--text-primary)';
-        $border   = $isAlert ? 'border-left:3px solid #DC2626;' : '';
-    ?>
-    <div class="col-6 col-md-3">
-        <div class="sig-card" style="<?php echo $border; ?>">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">
-                            <?php echo htmlspecialchars($k['label']); ?>
-                        </div>
-                        <div style="font-size:1.875rem;font-weight:800;color:<?php echo $valColor; ?>;line-height:1;margin-bottom:4px;">
-                            <?php echo number_format($k['value']); ?>
-                        </div>
-                        <div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            <?php echo htmlspecialchars($k['sub']); ?>
-                        </div>
-                    </div>
-                    <div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:<?php echo $k['bg']; ?>;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi <?php echo $k['icon']; ?>" style="font-size:1.15rem;color:white;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php endforeach; ?>
+
+<!-- Fila 1: Recursos Humanos + Recepción ──────────────────────────────── -->
+<?php areaSep('Recursos Humanos y Recepción', '#3B82F6', 'bi-people'); ?>
+<div class="row g-3 mb-5 anim-slide-up">
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Empleados Activos',  'value'=>$data['kpiEmpleados'],       'sub'=>'en nómina institucional',   'icon'=>'bi-people-fill',     'bg'=>'#3B82F6']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Visitas Hoy',         'value'=>$data['kpiVisitasHoy'],      'sub'=>'registradas esta jornada',  'icon'=>'bi-door-open-fill',  'bg'=>'#0891B2']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Pasantes en Curso',   'value'=>$data['kpiPasantesEnCurso'], 'sub'=>'realizando pasantías',      'icon'=>'bi-journal-text',    'bg'=>'#0EA5E9']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes Activos',      'value'=>$data['kpiBienesActivos'],   'sub'=>'activos registrados',       'icon'=>'bi-box-seam-fill',   'bg'=>'#64748B']); ?></div>
+</div>
+
+<!-- Fila 2: Formación y Turismo ───────────────────────────────────────── -->
+<?php areaSep('Formación y Turismo', '#7C3AED', 'bi-mortarboard'); ?>
+<div class="row g-3 mb-5 anim-slide-up">
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Actividades Activas', 'value'=>$data['kpiActividadesActivas'], 'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',  'bg'=>'#7C3AED']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Formados '.date('Y'), 'value'=>$data['kpiFormadosAnio'],       'sub'=>'inscripciones activas en el año','icon'=>'bi-person-check-fill', 'bg'=>'#059669']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Rutas Operativas',    'value'=>$data['kpiRutasActivas'],       'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',      'bg'=>'#D97706']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes en Alerta',    'value'=>$data['kpiBienesAlerta'],       'sub'=>'dañados o en reparación',        'icon'=>'bi-exclamation-triangle-fill','bg'=>'#DC2626','alert'=>true]); ?></div>
 </div>
 
 <?php
@@ -227,16 +231,13 @@ foreach ($semTiles as $st) {
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
-     SECCIÓN: EFICIENCIA OPERATIVA
+     SECCIÓN: EFICIENCIA OPERATIVA (por área)
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Eficiencia Operativa — <?php echo $data['anioActual']; ?></span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
-</div>
 
+<!-- Sub-área: Formación ─────────────────────────────────────────────── -->
+<?php areaSep('Eficiencia · Formación — ' . $data['anioActual'], '#7C3AED', 'bi-mortarboard'); ?>
 <div class="row g-3 mb-4 anim-slide-up">
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colOcup; ?>;">
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
@@ -259,7 +260,7 @@ foreach ($semTiles as $st) {
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colFinaliz; ?>;">
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
@@ -282,7 +283,7 @@ foreach ($semTiles as $st) {
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
+    <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colCancel; ?>;">
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
@@ -305,7 +306,12 @@ foreach ($semTiles as $st) {
             </div>
         </div>
     </div>
-    <div class="col-6 col-md-3">
+</div>
+
+<!-- Sub-área: Inventario y Patrimonio ───────────────────────────────── -->
+<?php areaSep('Eficiencia · Inventario y Patrimonio', '#64748B', 'bi-box-seam'); ?>
+<div class="row g-3 mb-4 anim-slide-up">
+    <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colDeprec; ?>;">
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
@@ -375,7 +381,8 @@ $derivados = [
     <?php endforeach; ?>
 </div>
 
-<!-- PROP-P01: Tipo de Contrato -->
+<!-- PROP-P01: Tipo de Contrato — RRHH -->
+<?php areaSep('Recursos Humanos', '#3B82F6', 'bi-people'); ?>
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-5">
         <div class="sig-card h-100">
