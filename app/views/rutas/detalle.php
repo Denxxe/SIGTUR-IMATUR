@@ -59,7 +59,7 @@
             <?php endif; ?>
             <span><strong>Estado:</strong>
                 <?php
-                $sc = ['Activa'=>'sig-badge--success','Finalizada'=>'sig-badge--brand','En Mantenimiento'=>'sig-badge--warning'][$data['ruta']->estado ?? ''] ?? 'sig-badge--neutral';
+                $sc = Ruta::ESTADO_BADGES[$data['ruta']->estado ?? ''] ?? 'sig-badge--neutral';
                 ?>
                 <span class="sig-badge sig-badge--sm <?php echo $sc; ?>"><?php echo $data['ruta']->estado ?? ''; ?></span>
             </span>

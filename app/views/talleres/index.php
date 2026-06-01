@@ -23,13 +23,7 @@
         <?php foreach ($data['talleres'] as $t): ?>
             <div class="sig-card h-100" style="display:flex; flex-direction:column;">
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                    <?php
-                        $badgeClass = 'sig-badge--neutral';
-                        if ($t->estado == 'Programado') $badgeClass = 'sig-badge--warning';
-                        elseif ($t->estado == 'En Curso') $badgeClass = 'sig-badge--brand';
-                        elseif ($t->estado == 'Finalizado') $badgeClass = 'sig-badge--success';
-                        elseif ($t->estado == 'Cancelado') $badgeClass = 'sig-badge--danger';
-                    ?>
+                    <?php $badgeClass = Taller::ESTADO_BADGES[$t->estado ?? ''] ?? 'sig-badge--neutral'; ?>
                     <div style="display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap;">
                         <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $t->estado; ?></span>
                         <span class="sig-badge sig-badge--neutral" style="font-size:10px;"><?php echo $t->tipo_actividad ?? 'Taller'; ?></span>
@@ -141,9 +135,9 @@
                         <div class="sig-field">
                             <label class="sig-field__label">Tipo <span class="req">*</span></label>
                             <select name="tipo_actividad" id="tal_tipo" class="sig-select" required>
-                                <option value="Taller">Taller</option>
-                                <option value="Charla">Charla / Conversatorio</option>
-                                <option value="Inducción">Inducción</option>
+                                <?php foreach (Taller::TIPOS_ACTIVIDAD as $t): ?>
+                                <option value="<?php echo $t; ?>"><?php echo $t; ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -454,14 +448,8 @@ function actualizarEstiloToggle(esInterna) {
     }
 }
 
-// ── Transiciones válidas de estado (RN-F13) ───────────────────────────────
-// Finalizado y Cancelado son terminales: sin transiciones de salida
-const TRANSICIONES = {
-    'Programado': ['Programado', 'En Curso', 'Cancelado'],
-    'En Curso':   ['En Curso', 'Finalizado', 'Cancelado'],
-    'Finalizado': [],
-    'Cancelado':  []
-};
+// ── Transiciones válidas de estado (RN-F13) — generadas desde Taller::TRANSICIONES ──
+const TRANSICIONES = <?php echo json_encode(Taller::TRANSICIONES); ?>;
 
 function setOpcionesEstado(estadoActual) {
     var sel = document.getElementById('tal_estado');
@@ -632,14 +620,10 @@ function actualizarModoInterno(esInterna) {
 }
 
 // ── Cambio rápido de estado ───────────────────────────────────────────────
+// Badges de estado generados desde Taller::ESTADO_BADGES
+const ESTADO_BADGES_TALLER = <?php echo json_encode(Taller::ESTADO_BADGES); ?>;
 function estadoBadgeClass(estado) {
-    var map = {
-        'Programado': 'sig-badge--warning',
-        'En Curso':   'sig-badge--brand',
-        'Finalizado': 'sig-badge--success',
-        'Cancelado':  'sig-badge--danger'
-    };
-    return map[estado] || 'sig-badge--neutral';
+    return ESTADO_BADGES_TALLER[estado] || 'sig-badge--neutral';
 }
 
 function abrirCambioEstado(id, estadoActual, totalInscritos) {

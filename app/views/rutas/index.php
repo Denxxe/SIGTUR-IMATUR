@@ -26,12 +26,8 @@
             <div class="sig-card h-100" style="display:flex; flex-direction:column;">
                 <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
                     <?php
-                        $statusClass = 'sig-badge--neutral';
-                        if ($r->estado == 'Activa')               $statusClass = 'sig-badge--success';
-                        elseif ($r->estado == 'Inactiva')         $statusClass = 'sig-badge--danger';
-                        elseif ($r->estado == 'En Mantenimiento') $statusClass = 'sig-badge--warning';
-                        elseif ($r->estado == 'Finalizada')       $statusClass = 'sig-badge--brand';
-                        $rutaFinalizada = ($r->estado === 'Finalizada');
+                        $statusClass = Ruta::ESTADO_BADGES[$r->estado ?? ''] ?? 'sig-badge--neutral';
+                        $rutaFinalizada = ($r->estado === Ruta::ESTADO_TERMINAL);
                     ?>
                     <span class="sig-badge <?php echo $statusClass; ?>"><?php echo $r->estado; ?></span>
                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">#<?php echo $r->id; ?></span>
@@ -165,10 +161,9 @@
                         <div class="sig-field">
                             <label class="sig-field__label">Estado</label>
                             <select name="estado" id="rut_estado" class="sig-select">
-                                <option value="Activa">Activa</option>
-                                <option value="Inactiva">Inactiva</option>
-                                <option value="En Mantenimiento">En Mantenimiento</option>
-                                <option value="Finalizada">Finalizada (ejecutada)</option>
+                                <?php foreach (Ruta::ESTADOS as $est): ?>
+                                <option value="<?php echo $est; ?>"><?php echo $est === Ruta::ESTADO_TERMINAL ? $est . ' (ejecutada)' : $est; ?></option>
+                                <?php endforeach; ?>
                             </select>
                             <span class="sig-field__hint" id="rut_estado_hint" style="display:none; color:var(--danger-600);">
                                 <i class="bi bi-exclamation-triangle"></i> Finalizada es definitiva: la ruta no podrá editarse después.

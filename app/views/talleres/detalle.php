@@ -21,7 +21,7 @@
             <span><strong>Estado:</strong>
                 <?php
                 $e = $data['taller']->estado ?? '';
-                $cls = ['Programado'=>'sig-badge--warning','En Curso'=>'sig-badge--brand','Finalizado'=>'sig-badge--success','Cancelado'=>'sig-badge--danger'][$e] ?? 'sig-badge--neutral';
+                $cls = Taller::ESTADO_BADGES[$e] ?? 'sig-badge--neutral';
                 echo "<span class='sig-badge {$cls}'>{$e}</span>";
                 ?>
             </span>

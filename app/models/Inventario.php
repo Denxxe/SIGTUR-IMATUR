@@ -3,6 +3,19 @@
  * Clase Inventario: Modelo para la gestión de bienes institucionales
  */
 class Inventario extends Model {
+
+    // ── Fuente única de verdad para enums de este módulo ─────────────────────
+    const CONDICIONES       = ['Nuevo', 'Bueno', 'Regular', 'Dañado', 'En Reparación'];
+    const CONDICION_DEFAULT = 'Bueno';
+    /** CSS class por condición (para vistas) */
+    const CONDICION_BADGES  = [
+        'Nuevo'         => 'sig-badge--success',
+        'Bueno'         => 'sig-badge--info',
+        'Regular'       => 'sig-badge--warning',
+        'Dañado'        => 'sig-badge--danger',
+        'En Reparación' => 'sig-badge--warning',
+    ];
+
     private ?int $id;
     private ?int $id_categoria;
     private ?int $id_ubicacion;

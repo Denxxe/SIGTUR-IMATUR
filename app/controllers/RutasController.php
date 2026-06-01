@@ -21,27 +21,26 @@ class RutasController extends Controller {
         $userId    = $this->getUserId();
         $esEdicion = !empty($_POST['id']);
 
-        $estadosValidos = ['Activa','Inactiva','En Mantenimiento','Finalizada'];
-        $estado  = in_array($_POST['estado'] ?? '', $estadosValidos)       ? $_POST['estado']    : 'Activa';
+        $estado  = in_array($_POST['estado'] ?? '', Ruta::ESTADOS) ? $_POST['estado'] : Ruta::ESTADOS[0];
         $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA) ? $_POST['tipo_ruta'] : 'General';
 
         // Máquina de estados: una ruta Finalizada es TERMINAL, no admite edición ni cambio
         if ($esEdicion) {
             $rutaActual = Ruta::find((int)$_POST['id']);
-            if ($rutaActual && $rutaActual->estado === 'Finalizada') {
+            if ($rutaActual && $rutaActual->estado === Ruta::ESTADO_TERMINAL) {
                 flash('global_msg', 'La ruta está Finalizada (estado definitivo) y no puede modificarse. Cada ejecución es un registro independiente.', 'danger');
                 header('Location: ' . URL_ROOT . '/rutas/index');
                 exit;
             }
             // Validación al FINALIZAR: requiere al menos 1 participante inscrito
-            if ($estado === 'Finalizada' && $rutaActual && $rutaActual->estado !== 'Finalizada') {
+            if ($estado === Ruta::ESTADO_TERMINAL && $rutaActual && $rutaActual->estado !== Ruta::ESTADO_TERMINAL) {
                 if (Ruta::countParticipantes((int)$_POST['id']) === 0) {
                     flash('global_msg', 'No se puede finalizar una ruta sin participantes inscritos. Registre los participantes de la visita antes de finalizarla.', 'danger');
                     header('Location: ' . URL_ROOT . '/rutas/index');
                     exit;
                 }
             }
-        } elseif ($estado === 'Finalizada') {
+        } elseif ($estado === Ruta::ESTADO_TERMINAL) {
             // No se puede crear una ruta directamente como Finalizada (no tendría participantes)
             $estado = 'Activa';
         }
@@ -56,7 +55,7 @@ class RutasController extends Controller {
 
         $fechaVisita = $_POST['fecha_visita'] ?: null;
         // Solo se valida fecha futura al crear o si la ruta aún no está Finalizada
-        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d') && $estado !== 'Finalizada') {
+        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d') && $estado !== Ruta::ESTADO_TERMINAL) {
             flash('global_msg', 'La fecha de visita no puede ser anterior a hoy.', 'danger');
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;

@@ -26,9 +26,8 @@ class TalleresController extends Controller {
         $esEdicion = !empty($_POST['id']);
         $esInterna = !empty($_POST['es_interna']);
 
-        $tiposValidos  = ['Taller', 'Charla', 'Inducción'];
-        $tipoActividad = in_array($_POST['tipo_actividad'] ?? '', $tiposValidos)
-            ? $_POST['tipo_actividad'] : 'Taller';
+        $tipoActividad = in_array($_POST['tipo_actividad'] ?? '', Taller::TIPOS_ACTIVIDAD)
+            ? $_POST['tipo_actividad'] : Taller::TIPOS_ACTIVIDAD[0];
 
         $tiposEnteValidos = ['Escuela','Liceo','Comunidad','Prestador de Servicio','IMATUR'];
         $tipoEnte = (!$esInterna && in_array($_POST['tipo_ente'] ?? '', $tiposEnteValidos))
@@ -50,8 +49,8 @@ class TalleresController extends Controller {
             'tipo_ente'              => $tipoEnte,
             'estado'                 => $esEdicion
                                         ? $_POST['estado']
-                                        : (in_array($_POST['estado'] ?? '', ['Programado','Cancelado'])
-                                            ? $_POST['estado'] : 'Programado'),
+                                        : (in_array($_POST['estado'] ?? '', Taller::ESTADOS)
+                                            ? $_POST['estado'] : Taller::ESTADOS[0]),
             'motivo_cancelacion'     => null,
         ];
 
@@ -851,16 +850,10 @@ class TalleresController extends Controller {
     // ── RN-F13: Máquina de estados ───────────────────────────────────────────
 
     private function validarTransicion(string $desde, string $hacia): void {
-        // Finalizado y Cancelado son estados TERMINALES: no admiten ningún cambio posterior
-        $permitidas = [
-            'Programado' => ['Programado', 'En Curso', 'Cancelado'],
-            'En Curso'   => ['En Curso', 'Finalizado', 'Cancelado'],
-            'Finalizado' => [],
-            'Cancelado'  => [],
-        ];
-        if (in_array($desde, ['Finalizado', 'Cancelado'], true)) {
+        if (in_array($desde, Taller::ESTADOS_TERMINALES, true)) {
             throw new Exception("La actividad está en estado '{$desde}', que es definitivo y no admite cambios de estado.");
         }
+        $permitidas = Taller::TRANSICIONES;
         if (!isset($permitidas[$desde]) || !in_array($hacia, $permitidas[$desde])) {
             throw new Exception("Cambio de estado no permitido: '{$desde}' → '{$hacia}'.");
         }

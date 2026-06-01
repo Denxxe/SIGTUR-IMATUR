@@ -14,6 +14,17 @@ class Ruta extends Model {
     private string  $tipo_ruta;
     private ?string $motivo_mantenimiento;
 
+    // ── Fuente única de verdad para enums de este módulo ─────────────────────
+    const ESTADOS        = ['Activa', 'Inactiva', 'En Mantenimiento', 'Finalizada'];
+    const ESTADO_TERMINAL= 'Finalizada';
+    /** CSS class por estado (para vistas) */
+    const ESTADO_BADGES  = [
+        'Activa'           => 'sig-badge--success',
+        'Inactiva'         => 'sig-badge--danger',
+        'En Mantenimiento' => 'sig-badge--warning',
+        'Finalizada'       => 'sig-badge--brand',
+    ];
+
     public static array $TIPOS_RUTA = ['Cumaná Histórica', 'Exploradores de Cumaná', 'Comunitaria', 'General'];
 
     public function __construct(array $data = []) {

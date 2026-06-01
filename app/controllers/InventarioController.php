@@ -23,8 +23,8 @@ class InventarioController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
             
-            $condicionesValidas = ['Nuevo', 'Bueno', 'Regular', 'Dañado', 'En Reparación'];
-            $condicion = in_array($_POST['condicion'] ?? '', $condicionesValidas) ? $_POST['condicion'] : 'Bueno';
+            $condicion = in_array($_POST['condicion'] ?? '', Inventario::CONDICIONES)
+                ? $_POST['condicion'] : Inventario::CONDICION_DEFAULT;
 
             $data = [
                 'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,

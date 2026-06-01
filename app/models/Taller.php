@@ -1,5 +1,25 @@
 <?php
 class Taller extends Model {
+
+    // ── Fuente única de verdad para enums de este módulo ─────────────────────
+    const ESTADOS           = ['Programado', 'En Curso', 'Finalizado', 'Cancelado'];
+    const ESTADOS_TERMINALES= ['Finalizado', 'Cancelado'];
+    const TIPOS_ACTIVIDAD   = ['Taller', 'Charla', 'Inducción'];
+    /** CSS class por estado (para vistas) */
+    const ESTADO_BADGES     = [
+        'Programado' => 'sig-badge--warning',
+        'En Curso'   => 'sig-badge--brand',
+        'Finalizado' => 'sig-badge--success',
+        'Cancelado'  => 'sig-badge--danger',
+    ];
+    /** Transiciones válidas de la máquina de estados */
+    const TRANSICIONES      = [
+        'Programado' => ['Programado', 'En Curso', 'Cancelado'],
+        'En Curso'   => ['En Curso', 'Finalizado', 'Cancelado'],
+        'Finalizado' => [],
+        'Cancelado'  => [],
+    ];
+
     private ?int    $id;
     private string  $nombre;
     private string  $descripcion;
