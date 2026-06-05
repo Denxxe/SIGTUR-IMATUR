@@ -65,51 +65,51 @@
 
 **D-RH01** ❓ ¿Los horarios de trabajo están definidos formalmente? ¿Cuántos turnos existen? ¿Cómo se llaman (Matutino, Vespertino, otro)?
 > **Desbloquea:** Datos semilla de `horarios` + UI de HorariosController (tablas ya existen)
-> **RESPUESTA:**
+> **RESPUESTA:** El horario actual es uno fijo que normalmente es de 
 
-**D-RH02** ❓ ¿Qué tipos de permisos laborales existen? (médico, personal, duelo, maternidad/paternidad, sindical, otro)
+**D-RH02** ❓ ¿Qué tipos de permisos laborales existen? (médico, personal, duelo, maternidad/paternidad )
 > **Desbloquea:** Enum/lista en `permisos_laborales.tipo_permiso` + PermisosLaboralesController
-> **RESPUESTA:**
+> **RESPUESTA:** si médico, personal, duelo, maternidad/paternidad
 
 **D-RH03** ❓ ¿Los permisos laborales requieren aprobación de un superior, o RRHH los registra directamente sin flujo de aprobación?
 > **Desbloquea:** Si `permisos_laborales.estado` tiene un flujo (Solicitado→Aprobado) o es directo
-> **RESPUESTA:**
+> **RESPUESTA:** si, con permiso de jefe inmediato, talento humano y presidencia.
 
 **D-RH04** ❓ ¿Las vacaciones se calculan por días hábiles o días calendario? ¿Cuántos días corresponden por año de servicio?
 > **Desbloquea:** Lógica de cálculo en `VacacionesController` + fórmula de saldo disponible
-> **RESPUESTA:**
+> **RESPUESTA:** 
 
 **D-RH05** ❓ ¿El saldo de vacaciones se calcula automáticamente año a año, o RRHH lo registra manualmente y el sistema solo registra los días tomados?
 > **Desbloquea:** Si la tabla `vacaciones` necesita auto-cálculo o es solo registro manual
-> **RESPUESTA:**
+> **RESPUESTA:** Vacaciones cuando son asignadas, a menso que tengas vencida
 
 ### 🟡 Funcionalidades importantes
 
 **D-RH06** ❓ ¿Los días de vacaciones no disfrutados se acumulan al año siguiente o se pierden?
 > **Desbloquea:** Lógica de arrastre de saldo en cierre de año
-> **RESPUESTA:**
+> **RESPUESTA:** se acumulan a menos que las disfrutes.
 
 **D-RH07** ❓ ¿Los empleados contratados tienen fecha de vencimiento de contrato que el sistema deba alertar cuando esté próxima a vencer?
 > **Desbloquea:** Alerta en Dashboard para contratos que vencen en los próximos 30 días
-> **RESPUESTA:**
+> **RESPUESTA:** Contratados de Imatur tinen distinto tiempo de contrato (30 días, 3 mese, 1 año, 3 años... etc), contratados por Alcaldía o gobernacion por lo general es un año de contrato a vencer con posible revolución de contrato antes del tiempo , se puede hacer renovacion de los contratos a los empleados siempre y cuando se requiera, si el sistema debe notificar los empleados proximos a vencer contrato. 
 
 **D-RH08** ❓ ¿Los horarios son fijos para todos (8am-4pm) o hay turnos diferentes por departamento?
 > **Desbloquea:** Si cada empleado tiene su propio turno o hay un turno global
-> **RESPUESTA:**
+> **RESPUESTA:** turno global con diferencias a dichos empleados por grupo, decidido por talento Humano y bajo que grupo van a trabajar.
 
 **D-RH09** ❓ ¿El sistema debe calcular reportes de puntualidad o ausentismo? ¿Se usa para nómina?
 > **Desbloquea:** Columnas calculadas en el reporte de asistencia (tardanzas, % asistencia)
-> **RESPUESTA:**
+> **RESPUESTA:** si debe.
 
 ### 🟢 Mejoras menores
 
 **D-RH10** ❓ ¿Hay personal que preste servicios sin ser empleado formal (voluntarios, servicio comunitario)? ¿Deben estar en el sistema?
 > **Desbloquea:** Tipo de contrato adicional o tabla separada
-> **RESPUESTA:**
+> **RESPUESTA:** No, solo por los pasantes y ya tiene su modulo dedicado. 
 
 **D-RH11** ❓ ¿Los cargos tienen el mismo sueldo base para todos los empleados en ese cargo, o puede variar por empleado?
 > **Desbloquea:** Si `sueldo_base` debe moverse de `cargos` a `empleados`
-> **RESPUESTA:**
+> **RESPUESTA:** por lo general tiene el mismo sueldo, a excepción El cargo de responsabilidad  (Directores y algunos coordinadores) se le hace un calculo aparte
 
 ---
 

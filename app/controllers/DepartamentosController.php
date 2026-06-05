@@ -18,10 +18,17 @@ class DepartamentosController extends Controller {
             $_POST = $this->sanitizePost();
             
             $id = isset($_POST['id']) ? (int)$_POST['id'] : null;
+            $tipoUnidad = in_array($_POST['tipo_unidad'] ?? '', Departamento::TIPOS_UNIDAD, true)
+                          ? $_POST['tipo_unidad'] : null;
+            $idPadre = !empty($_POST['id_padre']) ? (int)$_POST['id_padre'] : null;
+            // Una unidad no puede ser su propio padre
+            if ($id && $idPadre === $id) { $idPadre = null; }
             $data = [
                 'id' => $id,
                 'nombre' => trim($_POST['nombre']),
-                'descripcion' => trim($_POST['descripcion'])
+                'descripcion' => trim($_POST['descripcion']),
+                'tipo_unidad' => $tipoUnidad,
+                'id_padre' => $idPadre
             ];
 
             $esEdicion = !empty($id);

@@ -1,11 +1,21 @@
 <?php
 /**
- * Clase Departamento: Modelo para la tabla departamentos
+ * Clase Departamento: Modelo para la tabla departamentos (jerárquica desde mig.027)
  */
 class Departamento extends Model {
+    // Tipos de unidad organizativa (fuente única — patrón H-07)
+    const TIPOS_UNIDAD = ['Presidencia', 'Junta Directiva', 'Dirección', 'Coordinación', 'Oficina', 'Unidad'];
+    // Orden jerárquico para listados
+    const ORDEN_TIPO = [
+        'Presidencia' => 1, 'Junta Directiva' => 2, 'Dirección' => 3,
+        'Oficina' => 4, 'Coordinación' => 5, 'Unidad' => 6,
+    ];
+
     private ?int $id;
     private string $nombre;
     private string $descripcion;
+    private ?int $id_padre;
+    private ?string $tipo_unidad;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -13,6 +23,8 @@ class Departamento extends Model {
             $this->id = $data['id'] ?? null;
             $this->nombre = $data['nombre'] ?? '';
             $this->descripcion = $data['descripcion'] ?? '';
+            $this->id_padre = !empty($data['id_padre']) ? (int)$data['id_padre'] : null;
+            $this->tipo_unidad = !empty($data['tipo_unidad']) ? $data['tipo_unidad'] : null;
         }
     }
 
@@ -22,39 +34,55 @@ class Departamento extends Model {
     public function getDescripcion() { return $this->descripcion; }
     public function setDescripcion($descripcion) { $this->descripcion = $descripcion; }
 
+    /** Listado con nombre del padre y tipo, ordenado jerárquicamente. */
     public static function all() {
         $db = new Database();
-        $db->query("SELECT * FROM departamentos WHERE is_active = TRUE ORDER BY nombre ASC");
+        $db->query("SELECT d.*, pa.nombre AS padre
+                    FROM departamentos d
+                    LEFT JOIN departamentos pa ON d.id_padre = pa.id
+                    WHERE d.is_active = TRUE
+                    ORDER BY COALESCE(d.id_padre, d.id), d.id");
         return $db->resultSet();
     }
 
     public static function find($id) {
         $db = new Database();
-        $db->query("SELECT * FROM departamentos WHERE id = :id AND is_active = TRUE");
+        $db->query("SELECT d.*, pa.nombre AS padre
+                    FROM departamentos d
+                    LEFT JOIN departamentos pa ON d.id_padre = pa.id
+                    WHERE d.id = :id AND d.is_active = TRUE");
         $db->bind(':id', $id);
         return $db->single();
     }
 
     public function save($user_id = null) {
         $previos = null;
+        // Evitar que una unidad sea su propio padre
+        if ($this->id && $this->id_padre === $this->id) {
+            $this->id_padre = null;
+        }
         if ($this->id) {
             $previos = self::find($this->id);
-            $this->db->query("UPDATE departamentos SET 
-                                nombre = :nombre, 
-                                descripcion = :descripcion, 
+            $this->db->query("UPDATE departamentos SET
+                                nombre = :nombre,
+                                descripcion = :descripcion,
+                                id_padre = :id_padre,
+                                tipo_unidad = :tipo_unidad,
                                 updated_at = CURRENT_TIMESTAMP,
-                                updated_by = :user_id 
+                                updated_by = :user_id
                               WHERE id = :id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO departamentos (nombre, descripcion, created_by) 
-                              VALUES (:nombre, :descripcion, :user_id)");
+            $this->db->query("INSERT INTO departamentos (nombre, descripcion, id_padre, tipo_unidad, created_by)
+                              VALUES (:nombre, :descripcion, :id_padre, :tipo_unidad, :user_id)");
         }
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':descripcion', $this->descripcion);
+        $this->db->bind(':id_padre', $this->id_padre);
+        $this->db->bind(':tipo_unidad', $this->tipo_unidad);
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->execute();
-        $this->audit('departamentos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre], $user_id);
+        $this->audit('departamentos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'tipo_unidad' => $this->tipo_unidad], $user_id);
         return $result;
     }
 

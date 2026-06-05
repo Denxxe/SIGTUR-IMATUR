@@ -264,6 +264,23 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-12">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4); padding:var(--sp-3) var(--sp-4); background:var(--bg-muted-subtle); border-radius:8px; border:1px solid var(--border-subtle);">
+                            <div>
+                                <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:2px;">
+                                    <i class="bi bi-alarm" style="color:#EF4444;"></i> Tolerancia de puntualidad
+                                </div>
+                                <div style="font-size:11px;color:var(--text-tertiary);">Minutos tras la hora de entrada antes de marcar impuntualidad</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                                <input type="number" name="minutos_tolerancia_puntualidad" class="sig-input"
+                                       style="width:72px;text-align:center;font-weight:700;font-size:15px;padding:var(--sp-1) var(--sp-2);"
+                                       min="0" max="120"
+                                       value="<?php echo (int)($cfg['minutos_tolerancia_puntualidad']['valor'] ?? 15); ?>">
+                                <span style="font-size:12px;color:var(--text-secondary);">min</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

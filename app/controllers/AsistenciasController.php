@@ -5,19 +5,57 @@
 class AsistenciasController extends Controller {
 
     public function index() {
+        $hoy = date('Y-m-d');
         try {
             $asistencias = Asistencia::all();
             $empleados   = Empleado::all();
+            $tolerancia  = Asistencia::toleranciaPuntualidad();
+
+            // Resumen del día
+            $presentesHoy = Asistencia::presentesDia($hoy);
+            $enActividad  = Asistencia::empleadosEnActividad($hoy);   // [id_empleado]
+            $idsPresentes = array_map(fn($a) => (int)$a->id_empleado, $presentesHoy);
+            $idsActividad = array_map('intval', $enActividad);
+
+            $impuntuales = 0;
+            foreach ($presentesHoy as $a) {
+                if ($a->minutos_tarde !== null && (int)$a->minutos_tarde > $tolerancia) $impuntuales++;
+            }
+
+            // Ausentes = activos que ni marcaron ni están en actividad
+            $ausentes = [];
+            $actividadDetalle = [];
+            foreach ($empleados as $e) {
+                $eid = (int)$e->id;
+                if (in_array($eid, $idsActividad, true)) {
+                    $actividadDetalle[] = $e;
+                } elseif (!in_array($eid, $idsPresentes, true)) {
+                    $ausentes[] = $e;
+                }
+            }
+
+            $resumen = [
+                'activos'      => count($empleados),
+                'presentes'    => count($idsPresentes),
+                'impuntuales'  => $impuntuales,
+                'en_actividad' => count($idsActividad),
+                'ausentes'     => count($ausentes),
+            ];
         } catch (Exception $e) {
-            $asistencias = [];
-            $empleados   = [];
+            $asistencias = []; $empleados = []; $tolerancia = 15;
+            $resumen = ['activos'=>0,'presentes'=>0,'impuntuales'=>0,'en_actividad'=>0,'ausentes'=>0];
+            $ausentes = []; $actividadDetalle = [];
             flash('global_msg', 'Error al cargar datos: ' . $e->getMessage(), 'danger');
         }
 
         $data = [
-            'titulo'      => 'Control de Asistencia Biométrico (Manual)',
-            'asistencias' => $asistencias,
-            'empleados'   => $empleados,
+            'titulo'           => 'Control de Asistencia',
+            'asistencias'      => $asistencias,
+            'empleados'        => $empleados,
+            'tolerancia'       => $tolerancia,
+            'resumen'          => $resumen,
+            'ausentes'         => $ausentes,
+            'actividadDetalle' => $actividadDetalle,
         ];
 
         $this->view('asistencias/index', $data);
@@ -44,15 +82,27 @@ class AsistenciasController extends Controller {
                     $asistencia->save($user_id);
                     flash('global_msg', 'Salida registrada correctamente.');
                 } else {
+                    $horaEntrada = date('H:i:s');
+                    $minutosTarde = Asistencia::calcularMinutosTarde($id_empleado, $horaEntrada);
+                    $tol = Asistencia::toleranciaPuntualidad();
+                    $obs = 'Marcaje de entrada automático';
+                    if ($minutosTarde !== null && $minutosTarde > $tol) {
+                        $obs .= ' — Impuntual (' . $minutosTarde . ' min)';
+                    }
                     $data = [
-                        'id_empleado'  => $id_empleado,
-                        'fecha'        => date('Y-m-d'),
-                        'hora_entrada' => date('H:i:s'),
-                        'observacion'  => 'Marcaje de entrada automático',
+                        'id_empleado'   => $id_empleado,
+                        'fecha'         => date('Y-m-d'),
+                        'hora_entrada'  => $horaEntrada,
+                        'observacion'   => $obs,
+                        'minutos_tarde' => $minutosTarde,
                     ];
                     $asistencia = new Asistencia($data);
                     $asistencia->save($user_id);
-                    flash('global_msg', 'Entrada registrada correctamente.');
+                    if ($minutosTarde !== null && $minutosTarde > $tol) {
+                        flash('global_msg', 'Entrada registrada — impuntual (' . $minutosTarde . ' min de retraso).', 'warning');
+                    } else {
+                        flash('global_msg', 'Entrada registrada correctamente.');
+                    }
                 }
             } catch (Exception $e) {
                 flash('global_msg', 'Error al registrar marcaje: ' . $e->getMessage(), 'danger');

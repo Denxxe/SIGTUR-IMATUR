@@ -128,7 +128,8 @@ CREATE TABLE public.asistencias (
     deleted_at timestamp without time zone,
     created_by integer,
     updated_by integer,
-    deleted_by integer
+    deleted_by integer,
+    minutos_tarde integer
 );
 
 
@@ -315,7 +316,11 @@ CREATE TABLE public.departamentos (
     deleted_at timestamp without time zone,
     created_by integer,
     updated_by integer,
-    deleted_by integer
+    deleted_by integer,
+    id_padre integer,
+    tipo_unidad character varying(30),
+    CONSTRAINT departamentos_id_padre_fkey FOREIGN KEY (id_padre) REFERENCES public.departamentos(id) ON DELETE SET NULL,
+    CONSTRAINT departamentos_tipo_unidad_check CHECK ((tipo_unidad IS NULL OR (tipo_unidad)::text = ANY ((ARRAY['Presidencia'::character varying, 'Junta Directiva'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Oficina'::character varying, 'Unidad'::character varying])::text[])))
 );
 
 
@@ -357,10 +362,21 @@ CREATE TABLE public.empleados (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    tipo_contrato character varying(30) DEFAULT 'Fijo'::character varying,
+    tipo_contrato character varying(30) DEFAULT 'Contratado'::character varying,
     fecha_egreso date,
     id_horario integer,
-    CONSTRAINT empleados_tipo_contrato_check CHECK (((tipo_contrato)::text = ANY ((ARRAY['Fijo'::character varying, 'Contratado'::character varying, 'Suplente'::character varying, 'Comisión de Servicio'::character varying])::text[])))
+    institucion_origen character varying(20) DEFAULT 'IMATUR'::character varying,
+    es_comision_servicio boolean DEFAULT false,
+    clasificacion character varying(20),
+    grupo_rotacion character(1),
+    uniforme boolean DEFAULT false,
+    talla_camisa character varying(10),
+    talla_pantalon character varying(10),
+    talla_zapato character varying(10),
+    CONSTRAINT empleados_tipo_contrato_check CHECK (((tipo_contrato)::text = ANY ((ARRAY['Fijo'::character varying, 'Contratado'::character varying])::text[]))),
+    CONSTRAINT empleados_institucion_origen_check CHECK (((institucion_origen)::text = ANY ((ARRAY['Alcaldía'::character varying, 'Gobernación'::character varying, 'IMATUR'::character varying])::text[]))),
+    CONSTRAINT empleados_clasificacion_check CHECK ((clasificacion IS NULL OR (clasificacion)::text = ANY ((ARRAY['Empleado'::character varying, 'Obrero'::character varying])::text[]))),
+    CONSTRAINT empleados_grupo_rotacion_check CHECK ((grupo_rotacion IS NULL OR grupo_rotacion IN ('A', 'B')))
 );
 
 
@@ -879,8 +895,11 @@ CREATE TABLE public.permisos_laborales (
     created_by integer,
     updated_by integer,
     deleted_by integer,
+    categoria character varying(20),
+    duracion character varying(40),
     CONSTRAINT permisos_estado_check CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Aprobado'::character varying, 'Rechazado'::character varying, 'Anulado'::character varying])::text[]))),
-    CONSTRAINT permisos_tipo_check CHECK (((tipo_permiso)::text = ANY ((ARRAY['Médico'::character varying, 'Personal'::character varying, 'Duelo'::character varying, 'Lactancia'::character varying, 'Estudio'::character varying, 'Otro'::character varying])::text[])))
+    CONSTRAINT permisos_categoria_check CHECK ((categoria IS NULL OR (categoria)::text = ANY ((ARRAY['Reposo'::character varying, 'Permiso'::character varying, 'Vacaciones'::character varying])::text[]))),
+    CONSTRAINT permisos_tipo_check CHECK (((tipo_permiso)::text = ANY ((ARRAY['Reposo médico'::character varying, 'Médico familiar'::character varying, 'Diligencia'::character varying, 'Duelo'::character varying, 'Maternidad/Paternidad'::character varying, 'Personal'::character varying, 'Estudios'::character varying, 'Otro'::character varying])::text[])))
 );
 
 
@@ -959,7 +978,20 @@ CREATE TABLE public.personas (
     updated_by integer,
     deleted_by integer,
     parroquia_id integer,
-    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar])))
+    rif character varying(20),
+    estado_civil character varying(20),
+    discapacidad boolean DEFAULT false,
+    discapacidad_detalle character varying(150),
+    nivel_academico character varying(50),
+    profesion character varying(120),
+    titulo character varying(150),
+    fecha_graduacion date,
+    institucion_academica character varying(150),
+    centro_votacion character varying(150),
+    consejo_comunal character varying(150),
+    comuna character varying(150),
+    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
+    CONSTRAINT personas_estado_civil_check CHECK ((estado_civil IS NULL OR (estado_civil)::text = ANY ((ARRAY['Soltero'::character varying, 'Casado'::character varying, 'Concubinato'::character varying, 'Divorciado'::character varying, 'Viudo'::character varying])::text[])))
 );
 
 

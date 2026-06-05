@@ -64,7 +64,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | Rol ID | Nombre | Controladores permitidos (seed 008) |
 |--------|--------|--------------------------------------|
 | 1 | Administrador | `'*'` — acceso total sin restricción |
-| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Asistencias, Visitantes, Visitas, Reportes, Config |
+| 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Horarios, Amonestaciones, Permisos, Asistencias, Visitantes, Visitas, Reportes, Config |
 | 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 | 5 | Recepción | Dashboard, Visitantes, Visitas, Asistencias |
@@ -113,15 +113,22 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | Tabla | Descripción |
 |-------|-------------|
 | `personas` | Entidad base; FK a `parroquia` |
-| `departamentos` | Unidades organizativas (plana, sin jerarquía) |
+| `departamentos` | Unidades organizativas **jerárquicas** (`id_padre` auto-FK + `tipo_unidad`); seed del organigrama oficial *(027)* |
 | `cargos` | Puestos con sueldo_base |
 | `empleados` | 1:1 con personas; FK a cargo/departamento/horario; `tipo_contrato`, `fecha_egreso` |
 | `asistencias` | Marcaje diario entrada/salida (patrón toggle) |
-| `horarios` *(002, sin UI)* | Turnos de trabajo |
-| `permisos_laborales` *(002, sin UI)* | Permisos y ausencias |
+| `horarios` *(002; UI + seed en 028)* | Catálogo de turnos asignables (Estándar, OAC Matutino/Vespertino, Servicios Generales, personalizados) |
+| `permisos_laborales` *(002; UI + categoría/duración en 032)* | Permisos y reposos: `categoria` (Reposo/Permiso), `tipo_permiso` (taxonomía), fechas, `estado` aprobación |
 | `vacaciones` *(002, sin UI)* | Control anual de días |
+| `carga_familiar` *(026)* | Familiares del empleado (FK `id_persona`); bloque de la Ficha Técnica |
+| `cursos_realizados` *(026)* | Cursos por persona (FK `id_persona`); bloque de la Ficha Técnica |
+| `experiencia_laboral` *(026)* | Trabajos anteriores (FK `id_persona`); bloque de la Ficha Técnica |
+| `expediente_documentos` *(033)* | Recaudos subidos del expediente (FK `id_empleado`); checklist + faltantes |
+| `faltas` *(031)* | Faltas injustificadas por empleado (RRHH); el sistema las cuenta |
+| `amonestaciones` *(031)* | Amonestaciones por empleado (RRHH); 3 activas = causa de despido |
+| `constancias` *(034)* | Historial de constancias de trabajo emitidas (FK `id_empleado`); correlativo CONST-NNN/AAAA |
 
-Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 002. Sin UI. Pendiente respuestas D-RH01–D-RH11.
+Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 002. Sin UI. Pendiente respuestas D-RH01–D-RH11. Las tablas hijas de la Ficha Técnica (`carga_familiar`/`cursos_realizados`/`experiencia_laboral`) ya tienen UI en el expediente del empleado (`/empleados/detalle/{id}`).
 
 #### Inventario
 | Tabla | Descripción |
@@ -192,8 +199,19 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 021 | `021_drop_nivel_dificultad.sql` | ✅ Ejecutado | DROP COLUMN `rutas.nivel_dificultad` |
 | 022 | `022_validate_fk_constraints.sql` | ✅ Ejecutado | `VALIDATE CONSTRAINT` en 7 FKs que quedaron NOT VALID (sin huérfanos) |
 | 023 | `023_genero_solo_mf.sql` | ✅ Ejecutado | CHECK `genero IN ('M','F')` en personas, visitantes, participantes_taller, participantes_ruta — elimina 'O' |
+| 024 | `024_pasantes_carta_aceptacion.sql` | ✅ Ejecutado | `pasantes.oficio_aceptacion`/`tutor_externo` (carta de aceptación PAST-NNN/AAAA) |
+| 025 | `025_empleados_contrato_origen.sql` | ✅ Ejecutado | `empleados`: DEFAULT `tipo_contrato`→'Contratado'; CHECK solo (Fijo,Contratado); deprecadas 'Suplente'/'Comisión de Servicio'; +`institucion_origen` (Alcaldía/Gobernación/IMATUR) +`es_comision_servicio` bool (R-3 RRHH) |
+| 026 | `026_empleado_ficha_tecnica.sql` | ✅ Ejecutado | `personas` +rif/estado_civil/discapacidad(+detalle)/nivel_academico/profesion/titulo/fecha_graduacion/institucion_academica; `empleados` +clasificacion (Empleado/Obrero); nuevas tablas `carga_familiar`, `cursos_realizados`, `experiencia_laboral` (R-2 RRHH — Ficha Técnica) |
+| 027 | `027_departamentos_jerarquia.sql` | ✅ Ejecutado | `departamentos` +id_padre (auto-FK) +tipo_unidad (Presidencia/Dirección/Coordinación/Oficina/Unidad); seed del organigrama oficial (Presidencia→3 Direcciones→Coordinaciones+staff); cargos +Presidenta/Coordinador (R-1 RRHH) |
+| 028 | `028_horarios_grupos.sql` | ✅ Ejecutado | seed `horarios` (Estándar, OAC Matutino/Vespertino, Servicios Generales); `empleados` +grupo_rotacion (A/B); `configuracion_sistema` +minutos_tolerancia_puntualidad=15; RBAC +HorariosController (rol 2) (R-6 RRHH) |
+| 029 | `029_asistencia_puntualidad.sql` | ✅ Ejecutado | `asistencias` +minutos_tarde (retraso vs horario asignado, calculado al marcar entrada) (R-7 RRHH) |
+| 030 | `030_uniforme_comunitarios.sql` | ✅ Ejecutado | `personas` +centro_votacion/consejo_comunal/comuna; `empleados` +uniforme/talla_camisa/talla_pantalon/talla_zapato (R-2b RRHH — campos del wizard) |
+| 031 | `031_faltas_amonestaciones.sql` | ✅ Ejecutado | tablas `faltas` y `amonestaciones` (FK id_empleado); RBAC +AmonestacionesController (rol 2) (R-9 RRHH) |
+| 032 | `032_permisos_reposos.sql` | ✅ Ejecutado | `permisos_laborales` +categoria (Reposo/Permiso/Vacaciones) +duracion; nueva taxonomía `tipo_permiso`; RBAC +PermisosController (rol 2) (R-8 RRHH — sin vacaciones) |
+| 033 | `033_expediente_documentos.sql` | ✅ Ejecutado | tabla `expediente_documentos` (recaudos subidos por empleado, FK id_empleado) (R-5 RRHH) |
+| 034 | `034_constancias.sql` | ✅ Ejecutado | tabla `constancias` (FK id_empleado) + claves correlativo `*_constancia`; genera CONST-NNN/AAAA (R-10 RRHH) |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). Para instalar desde cero usar **ese** archivo.
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–032** (columnas/constraints). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–034** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias).
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -357,7 +375,25 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 17. **Máquina de estados de talleres (RN-F13)** — `TalleresController::validarTransicion()`. Terminales: Finalizado, Cancelado. No se puede Finalizar sin participantes.
 
-18. **`empleados.tipo_contrato`** — valores: `'Fijo'`,`'Contratado'`,`'Suplente'`,`'Comisión de Servicio'`. DEFAULT `'Fijo'`.
+18. **`empleados` modelo de contrato (migración 025)** — `tipo_contrato` = estabilidad: solo `'Fijo'`/`'Contratado'`, DEFAULT `'Contratado'` (todo nuevo es Contratado). `'Suplente'` y `'Comisión de Servicio'` **deprecados** (ya no son valores válidos). El origen se modela aparte: `institucion_origen` ∈ `'Alcaldía'`/`'Gobernación'`/`'IMATUR'` (DEFAULT 'IMATUR') + `es_comision_servicio BOOLEAN` (solo aplica si origen ≠ IMATUR). Enums centralizados en `Empleado::TIPOS_CONTRATO` / `Empleado::INSTITUCIONES_ORIGEN` (patrón H-07). Ver `docs/MODELO_NEGOCIO_RRHH.md` 2.2 (D-RH27).
+
+18j. **Constancias de trabajo (migración 034, R-10)** — dentro del módulo Empleados. `Constancia::crear($idEmpleado)` genera correlativo `CONST-` + `ConfigSistema::generarNumeroOficio('constancia')` → `CONST-NNN/AAAA` (claves `correlativo_oficio_constancia`/`ano_correlativo_constancia` sembradas en 034). `EmpleadosController::generarConstancia($id)` (crea + redirige a imprimible), `constancia($idConst)` (vista imprimible `empleados/constancia.php`, carta institucional con firmante de ConfigSistema), `eliminarConstancia()`. Historial en la sección "Constancias / Documentos generados" del expediente. RIF en la constancia = G-20008498-7 (igual que la ficha; difiere de carta_aceptacion — unificar vía ConfigSistema).
+
+18i. **Recaudos del expediente (migración 033, R-5)** — dentro del módulo Empleados (sin RBAC nuevo). `ExpedienteDocumento::RECAUDOS` = catálogo (clave→[etiqueta, obligatorio]); `recaudosEstado($id)` arma el checklist y cuenta faltantes obligatorios. Subida en `EmpleadosController::subirDocumento()` (valida PDF/JPG/PNG ≤5MB; nombre `Tipo_Empleado_{id}_{ts}.ext`; guarda en `public/uploads/expedientes/`; URL relativa `/uploads/expedientes/...`). Sección "Recaudos del Expediente" en `empleados/detalle.php` (estado entregado/falta, descarga, eliminar, aviso de faltantes). La Ficha Técnica generada (R-2) es un recaudo más del catálogo.
+
+18h. **Permisos y reposos (migración 032, R-8)** — `PermisosController` (rol 2 + sidebar RRHH) sobre `permisos_laborales`. `PermisoLaboral::CATEGORIAS` (Reposo/Permiso) + `TIPOS` (cascada categoría→tipo en la UI) + `ESTADOS` (Pendiente/Aprobado/Rechazado/Anulado). Reposo y Permiso se distinguen por `categoria` (select, D-RH32). El estatus **En curso/Concluido** se DERIVA de `fecha_fin` vs hoy (no se almacena); `dias_solicitados` se calcula del rango; `duracion` es texto libre ("72 horas"/"6 meses"). Flujo: registrar (Pendiente) → aprobar/rechazar/anular. **Vacaciones NO incluido** (fórmula pendiente — D-RH04/05/NEW05). `tipo_permiso` CHECK = Reposo médico/Médico familiar/Diligencia/Duelo/Maternidad-Paternidad/Personal/Estudios/Otro.
+
+18g. **Faltas y amonestaciones (migración 031, R-9)** — `AmonestacionesController` (rol 2 + sidebar RRHH): roster de empleados con conteo de `faltas` y `amonestaciones` activas + semáforo (`Amonestacion::roster()`), y detalle por empleado (`empleado($id)`). RRHH registra ambas manualmente (el sistema solo cuenta/notifica, D-RH28). `Amonestacion::LIMITE_DESPIDO = 3` → a las 3 amonestaciones activas se muestra "Causa de despido" (aplica a Contratado). Las `faltas` injustificadas son distintas de los permisos/ausencias justificadas (R-8, pendiente). Modelos `Falta`/`Amonestacion` (porEmpleado/save/delete, auditados).
+
+18f. **Registro de empleado = asistente multi-paso (migración 030, R-2b)** — el alta/edición de empleado NO usa modal: es un wizard de página completa `empleados/form.php` (5 pasos: personales → formación → institucionales → carga familiar → resumen), servido por `EmpleadosController::nuevo()` y `editar($id)`, posteado a `store()`. Persiste el borrador en `localStorage` (solo alta), valida por paso, y muestra resumen antes de guardar. La carga familiar se recolecta en arrays `cf_nombre[]/cf_cedula[]/cf_fnac[]/cf_parentesco[]` e inserta tras crear la persona (`guardarCargaFamiliarInicial()`); en edición enlaza al expediente. Campos nuevos: `personas.centro_votacion/consejo_comunal/comuna`, `empleados.uniforme/talla_camisa/talla_pantalon/talla_zapato` (uniforme solo se registra, D-RH35). `Empleado::getId()/getIdPersona()` exponen los IDs tras `save()`.
+
+18e. **Asistencia: puntualidad y ausentismo (migración 029)** — al marcar entrada, `AsistenciasController::marcar()` calcula `asistencias.minutos_tarde` vía `Asistencia::calcularMinutosTarde()` (hora real − hora del horario asignado); impuntual si `minutos_tarde > minutos_tolerancia_puntualidad` (config, default 15, editable en `/config`). `Asistencia::empleadosEnActividad($fecha)` detecta empleados en ruta (`rutas.fecha_visita` + `participantes_ruta`) o formación externa (`talleres.es_interna=FALSE` + rango fechas + `participantes_taller`) por `id_persona` → no cuentan como ausentes (RN-RH15). El index muestra resumen del día (activos/presentes/impuntuales/en actividad/ausentes) + horas trabajadas (derivadas, solo reporte; NO afectan pago). Sin horario asignado → `minutos_tarde` NULL ("sin horario").
+
+18d. **Horarios y grupos (migración 028)** — `horarios` tiene CRUD (`HorariosController` + modelo `Horario` + `horarios/index.php`), accesible RRHH/Admin (sidebar bajo RRHH). Seed de modalidades: Estándar 08–14, OAC Matutino 07–12, OAC Vespertino 10–14, Servicios Generales 08–14 (rotación A/B). `empleados.grupo_rotacion` (A/B, `Empleado::GRUPOS_ROTACION`) solo para Servicios Generales. Config `minutos_tolerancia_puntualidad` (default 15) preparada para R-7 (puntualidad). `EmpleadosController` usa `Horario::all()` (ya no query inline).
+
+18c. **`departamentos` jerárquico (migración 027)** — `id_padre` (auto-FK, ON DELETE SET NULL) + `tipo_unidad` ∈ Presidencia/Junta Directiva/Dirección/Coordinación/Oficina/Unidad. Estructura oficial sembrada (Presidencia → 3 Direcciones [Planificación y Gestión Turística, Administración, Talento Humano] → Coordinaciones + unidades staff). Enum en `Departamento::TIPOS_UNIDAD`; `Departamento::all()/find()` traen `padre` (nombre) y ordenan por jerarquía. El liderazgo Director/Coordinador se **deriva del cargo** del empleado (cargos `Director`/`Coordinador`/`Presidenta`), no hay campo responsable. Ver `MODELO_NEGOCIO_RRHH.md` 7.1 (D-RH30).
+
+18b. **Ficha Técnica del Trabajador (migración 026)** — `Empleado::find()` trae nombres por LEFT JOIN (cargo, departamento, parroquia, horario) y `Empleado::all()` incluye los campos extra de `personas` para el modal de edición. Enums `Empleado::CLASIFICACIONES` (Empleado/Obrero), `ESTADOS_CIVILES`, `NIVELES_ACADEMICOS`. Tablas hijas claveadas por `id_persona` con modelos `CargaFamiliar`/`CursoRealizado`/`ExperienciaLaboral` (métodos `porPersona/save/delete`, auditados). Expediente en `EmpleadosController::detalle($id)`; documento imprimible en `fichaTecnica($id)` → `empleados/ficha_tecnica.php`. **RIF institucional en la ficha = G-20008498-7** (según el formato físico; difiere del usado en `pasantes/carta_aceptacion.php` G-20009499-7 — discrepancia a unificar, idealmente vía `ConfigSistema`).
 
 19. **`configuracion_sistema` correlativos por módulo** — claves `correlativo_oficio_ruta`/`ano_correlativo_ruta` (renombradas desde 007). `ConfigSistema::generarNumeroOficio($modulo)` acepta parámetro de módulo. Formato resultado: `RUTA-007/2026` o `FORM-001/2026`.
 
@@ -382,8 +418,21 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar el esquema consolidado (schema base + migraciones 001-021 + seeds):
+# 3. Importar el esquema consolidado (schema base + migraciones 001-023 + seeds):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
+
+# 4. Aplicar las migraciones posteriores al consolidado (024 a 034):
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/024_pasantes_carta_aceptacion.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/025_empleados_contrato_origen.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/026_empleado_ficha_tecnica.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/027_departamentos_jerarquia.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/028_horarios_grupos.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/029_asistencia_puntualidad.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/030_uniforme_comunitarios.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/031_faltas_amonestaciones.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/032_permisos_reposos.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/033_expediente_documentos.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_constancias.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -392,7 +441,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-021 + seeds de sistema. No se necesitan migraciones adicionales en una instalación limpia. (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
+> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 034** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
 
 ---
 
@@ -403,11 +452,13 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 | `docs/REGLAS_NEGOCIO_Formacion.md` | Talleres, Charlas, Inducciones |
 | `docs/REGLAS_NEGOCIO_Rutas.md` | Rutas Turísticas |
 | `docs/REGLAS_NEGOCIO_Pasantes.md` | Pasantes |
-| `docs/REGLAS_NEGOCIO_RRHH.md` | Empleados, Asistencias, Permisos, Vacaciones |
+| `docs/REGLAS_NEGOCIO_RRHH.md` | Empleados, Asistencias, Permisos, Vacaciones (estado técnico + brechas) |
+| `docs/MODELO_NEGOCIO_RRHH.md` | **Modelo de negocio RRHH** consolidado: horarios/grupos, tipos de empleado, expediente, carga familiar, permisos/reposos/vacaciones, organigrama, hoja de ruta R-1…R-11 |
 | `docs/REGLAS_NEGOCIO_Inventario.md` | Bienes e Inventario |
 | `docs/REGLAS_NEGOCIO_Visitantes.md` | Visitantes y Control de Visitas |
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
-| `docs/preguntas_modelo_negocio.md` | 160 preguntas con estado ✅ ⚠️ ❓ |
+| `docs/preguntas_modelo_negocio.md` | **Fuente única de preguntas abiertas por módulo** (consolida preguntas + auditoría H-xx + backlogs B-xx de reglas). RRHH completo salvo Vacaciones/Nómina; ~24 abiertas |
+| `docs/DECISIONES_PENDIENTES.md` | Q&A detallado con respuestas e impacto técnico (archivo de decisiones tomadas) |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
 | `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` | Análisis funcional de Formación y Turismo (estado, reglas, validaciones, backlog) |
 
@@ -429,7 +480,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-021 + seeds) |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-034 encima) |
 | Auditoría senior + deuda técnica | `docs/AUDITORIA_SENIOR_2026-05-31.md` |
 | Preguntas de negocio abiertas | `docs/preguntas_modelo_negocio.md` |
 | Schema base original (historial) | `database/schema.sql` |

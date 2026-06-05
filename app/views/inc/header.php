@@ -53,6 +53,15 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/departamentos/index">
                 <i class="bi bi-building"></i> <span>Departamentos</span>
             </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/horarios/index">
+                <i class="bi bi-clock"></i> <span>Horarios</span>
+            </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/amonestaciones/index">
+                <i class="bi bi-flag"></i> <span>Amonestaciones</span>
+            </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/permisos/index">
+                <i class="bi bi-calendar2-week"></i> <span>Permisos y Reposos</span>
+            </a>
             <?php endif; ?>
             <?php if(in_array($rol, [1, 2, 5])): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/asistencias/index">

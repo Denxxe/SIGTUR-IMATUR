@@ -70,8 +70,10 @@
 | `participantes_taller.es_brigadista` | `D-FO08` — ¿qué significa? |
 | `participantes_ruta.id_institucion` | módulo instituciones retirado; columna inerte |
 
-### H-10 · Tablas sin UI — ⚠️ PENDIENTE DECISIÓN
-`horarios`, `permisos_laborales`, `vacaciones` (mig. 002, sin CRUD — ver D-RH01..05), `taller_inventario` (`D-FO07`), `oficios` base (`D-FO06`), `actividades_ruta` e `instituciones_externas` (retiradas del flujo).
+### H-10 · Tablas sin UI — ⚠️ PARCIALMENTE RESUELTO
+- ✅ `horarios` (UI + seed, mig. 028 — R-6), `permisos_laborales` (UI, mig. 032 — R-8).
+- ⚠️ Pendientes: `vacaciones` (D-RH04/05 — fórmula), `taller_inventario` (`D-FO07`), `oficios` base (`D-FO06`).
+- Retiradas del flujo: `actividades_ruta`, `instituciones_externas`.
 
 ### H-11 · `genero` permitía 'O' — ✅ RESUELTO
 - 0 registros con 'O' en BD. Migración 023 actualiza CHECK a `IN ('M','F')` en las 4 tablas (`personas`, `visitantes`, `participantes_taller`, `participantes_ruta`). Opción "Otro" eliminada de todos los formularios (talleres/detalle, rutas/detalle, visitantes/index, talleres/informe_imprimible).
@@ -99,7 +101,7 @@
 | H-07 | Enums duplicados | ✅ Resuelto | `d83c493` |
 | H-08 | FKs NOT VALID (7) | ✅ Resuelto | `e6fabb0` |
 | H-09 | Columnas inertes | ⚠️ Pendiente decisión negocio | — |
-| H-10 | Tablas sin UI | ⚠️ Pendiente decisión negocio | — |
+| H-10 | Tablas sin UI | ⚠️ Parcial — horarios/permisos ✅ (mig.028/032); falta vacaciones/taller_inventario/oficios | — |
 | H-11 | Género permitía 'O' | ✅ Resuelto | `1605e4a` |
 
 **Migraciones aplicadas:** 022 (VALIDATE FK), 023 (género M/F)
