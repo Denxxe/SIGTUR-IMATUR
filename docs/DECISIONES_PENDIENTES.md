@@ -1,5 +1,7 @@
 # DECISIONES PENDIENTES — SIGTUR-IMATUR
 
+> 📎 **Archivo de DETALLE histórico (Q&A con impacto técnico).** La **fuente única viva** es `REGISTRO_NEGOCIO.md` (preguntas abiertas + decisiones + auditoría + backlog). Este documento se conserva por el detalle de respuestas anterior a 2026-06; varias respuestas RRHH fueron **superadas** por el relevamiento de junio (ver `MODELO_NEGOCIO_RRHH.md`).
+
 **Última actualización:** 2026-05-22  
 **Propósito:** Documento de trabajo — Q&A de modelo de negocio con respuestas e impacto técnico. Las preguntas **sin responder** están también en `preguntas_modelo_negocio.md` como resumen ejecutivo.
 

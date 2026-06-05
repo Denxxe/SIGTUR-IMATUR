@@ -457,8 +457,9 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_c
 | `docs/REGLAS_NEGOCIO_Inventario.md` | Bienes e Inventario |
 | `docs/REGLAS_NEGOCIO_Visitantes.md` | Visitantes y Control de Visitas |
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
-| `docs/preguntas_modelo_negocio.md` | **Fuente única de preguntas abiertas por módulo** (consolida preguntas + auditoría H-xx + backlogs B-xx de reglas). RRHH completo salvo Vacaciones/Nómina; ~24 abiertas |
-| `docs/DECISIONES_PENDIENTES.md` | Q&A detallado con respuestas e impacto técnico (archivo de decisiones tomadas) |
+| **`docs/REGISTRO_NEGOCIO.md`** | **FUENTE ÚNICA** — preguntas abiertas (A) + decisiones tomadas (B) + auditoría H-xx (C) + backlog (D), por módulo. Consolida preguntas + decisiones + auditoría |
+| `docs/DECISIONES_PENDIENTES.md` | Archivo de DETALLE histórico (Q&A con impacto técnico) — la fuente viva es REGISTRO_NEGOCIO.md |
+| `docs/preguntas_modelo_negocio.md` | (redirección a REGISTRO_NEGOCIO.md) |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
 | `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` | Análisis funcional de Formación y Turismo (estado, reglas, validaciones, backlog) |
 
@@ -482,5 +483,5 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_c
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
 | Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-034 encima) |
 | Auditoría senior + deuda técnica | `docs/AUDITORIA_SENIOR_2026-05-31.md` |
-| Preguntas de negocio abiertas | `docs/preguntas_modelo_negocio.md` |
+| Preguntas/decisiones/auditoría (fuente única) | `docs/REGISTRO_NEGOCIO.md` |
 | Schema base original (historial) | `database/schema.sql` |

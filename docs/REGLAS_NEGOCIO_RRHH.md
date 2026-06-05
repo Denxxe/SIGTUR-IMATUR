@@ -2,7 +2,7 @@
 
 **Última actualización:** 2026-06-04
 
-> **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente) y a su hoja de ruta (sección 12 del modelo). Preguntas abiertas: `docs/preguntas_modelo_negocio.md` (D-RH16–D-RH36).
+> **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente) y a su hoja de ruta (sección 12 del modelo). Preguntas abiertas/decisiones (fuente única): `docs/REGISTRO_NEGOCIO.md`.
 
 ## Contexto institucional
 

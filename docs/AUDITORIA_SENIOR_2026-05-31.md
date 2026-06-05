@@ -5,7 +5,7 @@
 **Alcance:** todos los módulos (RRHH, Recepción, Formación, Turismo, Inventario, Sistema/Transversal).
 **Método:** análisis cruzado BD viva (37 tablas, migraciones 001-021) ↔ modelos/controladores/vistas. Cada hallazgo fue verificado contra la base de datos real. Los falsos positivos detectados se documentan al final.
 
-> **Estado final:** todos los hallazgos H-01 a H-11 están **cerrados**. Los pendientes abiertos son decisiones de negocio, documentados en `preguntas_modelo_negocio.md` (H-09/H-10/H-03).
+> **Estado final:** H-01,02,03,05,06,07,08,11 ✅ cerrados; **H-04, H-09 abiertos** y **H-10 parcial** (decisiones de negocio). El seguimiento vivo de los pendientes está en la fuente única **`REGISTRO_NEGOCIO.md`** (Parte C). Este documento conserva el detalle técnico y los commits.
 
 ---
 
@@ -111,5 +111,5 @@
 
 ## Artefactos relacionados
 - `database/schema_consolidado.sql` — esquema base + 001-021 + seeds (pendiente actualizar a 023)
-- `docs/preguntas_modelo_negocio.md` — preguntas de negocio abiertas
+- `docs/REGISTRO_NEGOCIO.md` — fuente única de preguntas/decisiones/auditoría
 - `docs/INDICADORES_GESTION.md`, `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` — análisis de módulos
