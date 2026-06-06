@@ -49,7 +49,11 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                     <option value="F" <?php echo $sel('genero','F'); ?>>Femenino</option>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de nacimiento <span class="req">*</span></label>
-                <input type="date" name="fecha_nacimiento" class="sig-input" required value="<?php echo $val('fecha_nacimiento'); ?>"></div></div>
+                <input type="date" name="fecha_nacimiento" id="emp_fecha_nac" class="sig-input js-edad" required
+                       data-edad-min="18" data-edad-max="65" data-edad-target="emp_edad_badge"
+                       value="<?php echo $val('fecha_nacimiento'); ?>">
+                <small id="emp_edad_badge" style="display:block;margin-top:4px;font-weight:600;"></small>
+                <small style="color:var(--text-tertiary)">18–65 años · comisión de servicio: 18–70.</small></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Teléfono</label>
                 <input type="text" name="telefono" class="sig-input" value="<?php echo $val('telefono'); ?>"></div></div>
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Correo electrónico</label>
@@ -143,14 +147,14 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                     <?php endforeach; ?>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Institución / Nómina <span class="req">*</span></label>
-                <select name="institucion_origen" id="wz_origen" class="sig-select" required onchange="wzToggleComision()">
+                <select name="institucion_origen" id="wz_origen" class="sig-select" required onchange="wzOrigenCambio()">
                     <?php foreach (Empleado::INSTITUCIONES_ORIGEN as $io): ?>
                         <option value="<?php echo $io; ?>" <?php echo $isEdit ? $sel('institucion_origen',$io) : ($io === Empleado::INSTITUCION_ORIGEN_DEFAULT ? 'selected' : ''); ?>><?php echo $io; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field" id="wz_comision_wrap" style="display:none"><label class="sig-field__label">Comisión de servicio</label>
-                <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="es_comision_servicio" id="wz_comision" value="1" <?php echo $chk('es_comision_servicio'); ?>>
-                    <label class="form-check-label" for="wz_comision">Prestado a IMATUR por su institución de origen</label></div></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Comisión de servicio</label>
+                <div style="padding-top:8px"><span id="wz_comision_info" class="sig-badge sig-badge--neutral">—</span>
+                    <small style="display:block;color:var(--text-tertiary);margin-top:2px">Se determina por la institución de origen.</small></div></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Horario asignado</label>
                 <select name="id_horario" class="sig-select">
                     <option value="">— Sin horario —</option>
@@ -269,11 +273,18 @@ function wzToggleDisc() {
     const on = document.getElementById('wz_disc').checked;
     document.getElementById('wz_disc_wrap').style.display = on ? '' : 'none';
 }
-function wzToggleComision() {
+// Comisión de servicio = el empleado viene de Alcaldía o Gobernación (IMATUR = no comisión).
+// La edad máxima depende del origen: IMATUR 65, comisión (Alcaldía/Gobernación) 70.
+function wzOrigenCambio() {
     const origen = document.getElementById('wz_origen').value;
-    const aplica = origen && origen !== 'IMATUR';
-    document.getElementById('wz_comision_wrap').style.display = aplica ? '' : 'none';
-    if (!aplica) document.getElementById('wz_comision').checked = false;
+    const esComision = origen && origen !== 'IMATUR';
+    const info = document.getElementById('wz_comision_info');
+    if (info) {
+        info.textContent = origen ? (esComision ? 'Sí (comisión de servicio)' : 'No (personal IMATUR)') : '—';
+        info.className = 'sig-badge ' + (esComision ? 'sig-badge--info' : 'sig-badge--neutral');
+    }
+    const f = document.getElementById('emp_fecha_nac');
+    if (f) { f.dataset.edadMax = esComision ? '70' : '65'; f.dispatchEvent(new Event('edad:refresh')); }
 }
 function wzToggleUniforme() {
     const on = document.getElementById('wz_uniforme').checked;
@@ -291,13 +302,14 @@ function cfAddRow(d) {
     row.innerHTML = `
         <div class="col-md-4"><input type="text" name="cf_nombre[]" class="sig-input" placeholder="Nombre y apellido"></div>
         <div class="col-md-3"><input type="text" name="cf_cedula[]" class="sig-input" placeholder="Cédula"></div>
-        <div class="col-md-2"><input type="date" name="cf_fnac[]" class="sig-input"></div>
+        <div class="col-md-2"><input type="date" name="cf_fnac[]" class="sig-input js-edad"></div>
         <div class="col-md-2"><select name="cf_parentesco[]" class="sig-select">
             <option value="">Parentesco</option>
             <?php foreach (CargaFamiliar::PARENTESCOS as $p): ?><option value="<?php echo $p; ?>"><?php echo $p; ?></option><?php endforeach; ?>
         </select></div>
         <div class="col-md-1"><button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="this.closest('.row').remove()"><i class="bi bi-x"></i></button></div>`;
     wrap.appendChild(row);
+    if (typeof initSigturValidations === 'function') initSigturValidations(); // conecta edad/cédula de la fila nueva
 }
 
 // Resumen
@@ -309,7 +321,7 @@ function wzBuildResumen() {
         ['Cédula', get('cedula')], ['RIF', get('rif')],
         ['Cargo', get('id_cargo')], ['Departamento', get('id_departamento')],
         ['Tipo de contrato', get('tipo_contrato')], ['Clasificación', get('clasificacion')],
-        ['Institución/Nómina', get('institucion_origen')], ['Comisión de servicio', get('es_comision_servicio')],
+        ['Institución/Nómina', get('institucion_origen')], ['Comisión de servicio', (get('institucion_origen') && get('institucion_origen') !== 'IMATUR') ? 'Sí' : 'No'],
         ['Horario', get('id_horario')], ['Grupo', get('grupo_rotacion')],
         ['Expediente', get('nro_expediente')], ['Fecha de ingreso', get('fecha_ingreso')],
     ];
@@ -338,7 +350,7 @@ function wzRestore() {
 
 document.addEventListener('DOMContentLoaded', () => {
     wzRestore();
-    wzToggleDisc(); wzToggleComision(); wzToggleUniforme();
+    wzToggleDisc(); wzOrigenCambio(); wzToggleUniforme();
     wzShow(0);
     wzForm.addEventListener('input', wzSave);
     wzForm.addEventListener('submit', () => { try { localStorage.removeItem(LS_KEY); } catch (e) {} });

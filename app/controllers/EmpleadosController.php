@@ -118,8 +118,9 @@ class EmpleadosController extends Controller {
             $institucionOrigen = in_array($_POST['institucion_origen'] ?? '', Empleado::INSTITUCIONES_ORIGEN, true)
                                  ? $_POST['institucion_origen'] : Empleado::INSTITUCION_ORIGEN_DEFAULT;
 
-            // Comisión de servicio: solo aplica a Alcaldía/Gobernación
-            $esComisionServicio = !empty($_POST['es_comision_servicio']) && $institucionOrigen !== 'IMATUR';
+            // Comisión de servicio = el empleado viene de Alcaldía o Gobernación (IMATUR = no comisión).
+            // Se DERIVA del origen; no es una decisión manual.
+            $esComisionServicio = ($institucionOrigen !== 'IMATUR');
 
             // Clasificación, estado civil y nivel académico (whitelists; vacío permitido)
             $clasificacion = in_array($_POST['clasificacion'] ?? '', Empleado::CLASIFICACIONES, true)
@@ -185,6 +186,21 @@ class EmpleadosController extends Controller {
                 flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido (ejemplo: nombre@dominio.com).', 'danger');
                 header('Location: ' . $volverForm);
                 return;
+            }
+
+            // Validación de edad (RN: 18–65; hasta 70 solo por comisión de servicio)
+            if (!empty($data['fecha_nacimiento'])) {
+                $nac = new DateTime($data['fecha_nacimiento']);
+                $edad = $nac->diff(new DateTime('today'))->y;
+                $errEdad = null;
+                if ($edad < 18)          $errEdad = "El empleado debe ser mayor de 18 años (edad: {$edad}).";
+                elseif ($edad > 70)      $errEdad = "La edad no puede superar los 70 años (edad: {$edad}).";
+                elseif ($edad > 65 && !$esComisionServicio) $errEdad = "Personal IMATUR: máximo 65 años; los 66–70 solo aplican a comisión de servicio (Alcaldía/Gobernación). Edad: {$edad}.";
+                if ($errEdad) {
+                    flash('global_msg', $errEdad, 'danger');
+                    header('Location: ' . $volverForm);
+                    return;
+                }
             }
 
             $empleado = new Empleado($data);

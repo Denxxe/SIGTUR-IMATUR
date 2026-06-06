@@ -258,7 +258,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label">Cédula</label>
                         <input type="text" name="cedula" class="sig-input"></div></div>
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label">F. Nacimiento</label>
-                        <input type="date" name="fecha_nacimiento" class="sig-input"></div></div>
+                        <input type="date" name="fecha_nacimiento" id="cf_fnac_modal" class="sig-input js-edad"></div></div>
                 </div>
                 <div class="sig-field mt-3"><label class="sig-field__label">Parentesco <span class="req">*</span></label>
                     <select name="parentesco" class="sig-select" required>

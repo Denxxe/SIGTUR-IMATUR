@@ -68,15 +68,90 @@ function initSigturValidations() {
             input.addEventListener('input', formatTelefono);
         }
 
-        // FECHAS FECHAS DE NACIMIENTO
-        if (type === 'date' && (name.includes('nacimiento') || id.includes('nacimiento'))) {
+        // FECHAS DE NACIMIENTO
+        if (type === 'date' && (name.includes('nacimiento') || id.includes('nacimiento') || input.classList.contains('js-edad'))) {
             // No permitir fechas futuras
             const today = new Date().toISOString().split('T')[0];
             input.setAttribute('max', today);
+            // Cálculo de edad + validación (opt-in con clase .js-edad)
+            if (input.classList.contains('js-edad')) {
+                initEdadInput(input);
+            }
         }
 
         input.dataset.formatAttached = 'true';
     });
+}
+
+/**
+ * Calcula la edad (años cumplidos) a partir de una fecha 'YYYY-MM-DD'.
+ * Devuelve null si la fecha es vacía o inválida.
+ */
+function sigturEdad(fechaStr) {
+    if (!fechaStr) return null;
+    const f = new Date(fechaStr + 'T00:00:00');
+    if (isNaN(f.getTime())) return null;
+    const h = new Date();
+    let edad = h.getFullYear() - f.getFullYear();
+    const m = h.getMonth() - f.getMonth();
+    if (m < 0 || (m === 0 && h.getDate() < f.getDate())) edad--;
+    return edad;
+}
+// Expuesto por si algún módulo lo necesita (no pisa definiciones locales existentes).
+if (typeof window.sigturEdad === 'undefined') window.sigturEdad = sigturEdad;
+
+/**
+ * Conecta un <input type="date" class="js-edad"> con cálculo de edad en vivo
+ * y validación opcional de rango (data-edad-min / data-edad-max).
+ * Muestra "N años" bajo el campo (o en data-edad-target) y bloquea fuera de rango.
+ */
+function initEdadInput(input) {
+    if (input.dataset.edadAttached) return;
+    input.dataset.edadAttached = 'true';
+
+    // Elemento donde mostrar la edad: data-edad-target, #<id>_edad, o uno creado al vuelo
+    let badge = null;
+    if (input.dataset.edadTarget) badge = document.getElementById(input.dataset.edadTarget);
+    if (!badge && input.id) badge = document.getElementById(input.id + '_edad');
+    if (!badge) {
+        badge = document.createElement('small');
+        if (input.id) badge.id = input.id + '_edad';
+        badge.style.display = 'block';
+        badge.style.marginTop = '4px';
+        badge.style.fontWeight = '600';
+        input.insertAdjacentElement('afterend', badge);
+    }
+
+    // update() relee data-edad-min/max en cada cambio → permite ajustar el rango en vivo
+    const update = () => {
+        const min = input.dataset.edadMin ? parseInt(input.dataset.edadMin, 10) : null;
+        const max = input.dataset.edadMax ? parseInt(input.dataset.edadMax, 10) : null;
+        const hoy = new Date();
+        // Restricciones nativas del datepicker (refuerzan la validación)
+        if (min !== null) {
+            input.setAttribute('max', new Date(hoy.getFullYear() - min, hoy.getMonth(), hoy.getDate()).toISOString().split('T')[0]);
+        } else {
+            input.setAttribute('max', hoy.toISOString().split('T')[0]); // sin futuras
+        }
+        if (max !== null) {
+            input.setAttribute('min', new Date(hoy.getFullYear() - max - 1, hoy.getMonth(), hoy.getDate() + 1).toISOString().split('T')[0]);
+        } else {
+            input.removeAttribute('min');
+        }
+        const edad = sigturEdad(input.value);
+        if (edad === null) { badge.textContent = ''; input.setCustomValidity(''); return; }
+        let msg = '';
+        if (min !== null && edad < min) msg = 'Debe tener al menos ' + min + ' años.';
+        else if (max !== null && edad > max) msg = 'No puede superar ' + max + ' años.';
+        input.setCustomValidity(msg);
+        badge.textContent = edad + ' año' + (edad === 1 ? '' : 's') + (msg ? ' — ' + msg : '');
+        badge.style.color = msg ? 'var(--danger, #EF4444)' : 'var(--text-secondary)';
+    };
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+    // Permite forzar revalidación tras cambiar data-edad-* externamente
+    input.addEventListener('edad:refresh', update);
+    update();
 }
 
 /** 

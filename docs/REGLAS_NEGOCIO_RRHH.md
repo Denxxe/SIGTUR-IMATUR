@@ -27,14 +27,15 @@ Un empleado debe tener un cargo y un departamento asignado. Los cargos tienen un
 **Estado actual (BD, migración 025 — 2026-06-04):** la estabilidad y el origen quedaron separados en 3 campos:
 - `tipo_contrato` ∈ `'Fijo'`/`'Contratado'`, DEFAULT `'Contratado'` (todo nuevo es Contratado).
 - `institucion_origen` ∈ `'Alcaldía'`/`'Gobernación'`/`'IMATUR'`, DEFAULT `'IMATUR'`.
-- `es_comision_servicio` BOOLEAN (solo aplica si `institucion_origen ≠ 'IMATUR'`).
+- `es_comision_servicio` BOOLEAN **derivado** = (`institucion_origen ≠ 'IMATUR'`). Comisión de servicio ⟺ viene de Alcaldía/Gobernación; IMATUR ⇒ no comisión. No es un campo manual.
+- **Edad:** comisión de servicio (Alcaldía/Gobernación) 18–70; personal IMATUR 18–65 (validado en cliente y `EmpleadosController`).
 
 Enums centralizados en `Empleado::TIPOS_CONTRATO` / `Empleado::INSTITUCIONES_ORIGEN` (patrón H-07); el controller y la vista los consumen.
 
 **Reglas de negocio que implementa (confirmadas 2026-06-04):**
 - **Todo empleado nuevo entra como `'Contratado'`** (DEFAULT) (D-RH19/2.1).
 - **`'Suplente'` y `'Comisión de Servicio'` deprecados** como `tipo_contrato` — no existen suplentes; comisión de servicio es designación ortogonal de origen (`es_comision_servicio`).
-- Un empleado en comisión de servicio puede ser Fijo *o* Contratado según su estatus en la institución de origen (D-RH27/D-RH31).
+- Comisión de servicio **se deriva del origen** (Alcaldía/Gobernación ⇒ Sí; IMATUR ⇒ No); un empleado en comisión puede ser Fijo *o* Contratado (D-RH27/D-RH31).
 - Única forma de ingresar como **Fijo**: venir ya fijo desde Alcaldía/Gobernación (con carta de asignación si aún no cumple el tiempo). Origen IMATUR llega a Fijo solo por tiempo de servicio.
 
 Reglas vigentes de baja:

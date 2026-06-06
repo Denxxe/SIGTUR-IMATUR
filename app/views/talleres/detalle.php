@@ -395,7 +395,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                             <div class="col-md-4">
                                 <div class="sig-field">
                                     <label class="sig-field__label">Fecha de nacimiento <span id="insc_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
-                                    <input type="date" name="fecha_nacimiento" id="insc_fecha_nac" class="sig-input">
+                                    <input type="date" name="fecha_nacimiento" id="insc_fecha_nac" class="sig-input js-edad" data-edad-target="insc_edad_label">
                                 </div>
                             </div>
                             <div class="col-md-8">

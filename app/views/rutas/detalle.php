@@ -418,7 +418,7 @@ sort($duplicados, SORT_NUMERIC);
                             <div class="col-md-4">
                                 <div class="sig-field" style="margin:0;">
                                     <label class="sig-field__label">Fecha de nacimiento <span id="part_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
-                                    <input type="date" name="fecha_nacimiento" id="part_fecha_nac" class="sig-input">
+                                    <input type="date" name="fecha_nacimiento" id="part_fecha_nac" class="sig-input js-edad" data-edad-target="part_edad_label">
                                 </div>
                             </div>
                             <div class="col-md-8">

@@ -76,7 +76,7 @@ Sustituye y consolida a `preguntas_modelo_negocio.md` + `DECISIONES_PENDIENTES.m
 ## B.1 RRHH — resumen
 RRHH se relevó a fondo (2026-06-02→05) y se implementó completo (migraciones 025–034). **Todas las preguntas D-RH01…D-RH36 están resueltas** salvo Vacaciones (A.1) y Nómina (A.1). Decisiones clave:
 - Horarios: Estándar 8–2pm; Servicios Generales grupos A/B (rotación diaria); OAC sub-grupos 7–12 / 10–2 (D-RH01/08).
-- Contrato: todo nuevo Contratado; Fijo solo desde origen; comisión de servicio = designación ortogonal (D-RH19/27/31).
+- Contrato: todo nuevo Contratado; Fijo solo desde origen; **comisión de servicio = origen Alcaldía/Gobernación (derivado, no manual); IMATUR = no comisión**. Edad: comisión 18–70, IMATUR 18–65 (D-RH19/27/31).
 - Permisos: TH oficializa, especiales→Dirección General; reposo/permiso separados por categoría (D-RH02/03/24/32).
 - Asistencia: puntualidad con tolerancia configurable; horas solo para reporte; "En Ruta" no es falta (D-RH09/17/33).
 - Amonestaciones: sistema cuenta, RRHH registra; 3 = despido (D-RH28). Expediente híbrido + ficha técnica (D-RH22). Constancias con correlativo (RN-RH14).

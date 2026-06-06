@@ -111,20 +111,21 @@ El departamento se denomina oficialmente **OAC — Oficina de Atención al Ciuda
 
 ### 2.2 Modelo de Tipo de Contrato + Comisión de Servicio — ✅ Confirmado (con corrección de modelo)
 
-**Corrección importante respecto a la versión anterior:** "Comisión de Servicio" **NO** es un tipo de contrato mutuamente excluyente con Fijo/Contratado. Es una **designación ortogonal** de origen.
+**Regla (aclarada 2026-06-06):** "Comisión de Servicio" **NO** es un tipo de contrato ni una decisión manual: **se deriva del origen**. Un empleado **es comisión de servicio si y solo si proviene de Alcaldía o Gobernación**; si proviene de **IMATUR**, no es comisión. Es ortogonal a la estabilidad (Fijo/Contratado).
 
 - **Tipo de contrato (estabilidad):** `Fijo` o `Contratado`.
-- **Comisión de servicio:** indica que el empleado **proviene de un ente gubernamental** (Alcaldía o Gobernación) y está prestado a IMATUR. Un empleado en comisión de servicio puede ser **Fijo o Contratado**, según el estatus que tenía en su institución de origen.
-  - Ejemplo: un empleado de comisión de servicio de la Alcaldía puede ser *Contratado*, y otro de la Alcaldía puede ser *Fijo*.
-- **No existen "Suplentes"** en IMATUR (D-RH19 cerrada: el tipo `'Suplente'` debe eliminarse/deprecarse).
+- **Comisión de servicio = (`institucion_origen` ∈ {Alcaldía, Gobernación})**. Un empleado en comisión puede ser **Fijo o Contratado** según su estatus en el ente de origen.
+- **No existen "Suplentes"** en IMATUR (D-RH19: `'Suplente'` deprecado).
 
-> Esto implica que el modelo de datos necesita **separar** la estabilidad (`tipo_contrato`: Fijo/Contratado) del **origen / nómina** (Alcaldía / Gobernación / IMATUR) y de la condición de **comisión de servicio**. ✅ **Implementado (migración 025, 2026-06-04):** `empleados.tipo_contrato` (Fijo/Contratado, DEFAULT Contratado) + `institucion_origen` (Alcaldía/Gobernación/IMATUR) + `es_comision_servicio` bool. Ver D-RH27.
+> ✅ **Implementado (migración 025; regla afinada 2026-06-06):** `empleados.tipo_contrato` (Fijo/Contratado, DEFAULT Contratado) + `institucion_origen` (Alcaldía/Gobernación/IMATUR). `es_comision_servicio` **se deriva** del origen (`origen ≠ IMATUR`) en `EmpleadosController` — ya no es un checkbox manual; en el asistente se muestra como indicador de solo lectura. Ver D-RH27/D-RH31.
 
 | Concepto | Valores | Nota |
 |----------|---------|------|
 | Tipo de contrato (estabilidad) | Fijo · Contratado | Todo nuevo entra Contratado |
 | Origen / Institución (nómina) | Alcaldía · Gobernación · IMATUR | De dónde proviene y quién paga |
-| Comisión de servicio | Sí / No | Solo aplica a Alcaldía/Gobernación |
+| Comisión de servicio | **Derivado** | = (origen ≠ IMATUR). Alcaldía/Gobernación ⇒ Sí; IMATUR ⇒ No |
+
+**Edad permitida (aclarada 2026-06-06):** comisión de servicio (Alcaldía/Gobernación) **18–70**; personal IMATUR **18–65**. Mínimo 18 siempre.
 
 **Diferencias clave Contratado vs Fijo:**
 - El **Fijo** goza del derecho a **retornar a su institución de origen** (Alcaldía/Gobernación).
@@ -481,11 +482,11 @@ El sistema debe **generar y/o registrar** los siguientes documentos, guardando *
 | D-RH24 | Permisos | ✅ Cerrada | Tipos: médico-familiar, diligencia, duelo, maternidad/paternidad, personal, estudios (+ reposo, vacaciones, sin justificar). |
 | ~~D-RH25~~ | Datos empleado | ✅ Resuelta | Campos Ficha + extras (mig.026) + tallas de uniforme y datos comunitarios (mig.030). **Asistente multi-paso implementado** (`empleados/form.php`, 5 pasos con `localStorage` + resumen final). R-2b completo. |
 | ~~D-RH26~~ | Datos empleado | ✅ Resuelta | **Clasificación Empleado/Obrero** = campo separado (`empleados.clasificacion`), **implementado mig.026**. Sus implicaciones en prestaciones/uniforme se definirán con D-RH35 y vacaciones. |
-| ~~D-RH27~~ | Contrato | ✅ Resuelta | 3 campos separados (decisión 2026-06-04): `tipo_contrato` (Fijo/Contratado) + `institucion_origen` (Alcaldía/Gobernación/IMATUR) + `es_comision_servicio` bool. **Implementado migración 025.** |
+| ~~D-RH27~~ | Contrato | ✅ Resuelta (afinada 2026-06-06) | `tipo_contrato` (Fijo/Contratado) + `institucion_origen` (Alcaldía/Gobernación/IMATUR). **`es_comision_servicio` se deriva del origen** (= origen ≠ IMATUR), no es campo manual. Migración 025. |
 | ~~D-RH28~~ | Amonestaciones | ✅ Resuelta | El sistema **registra y cuenta amonestaciones** por empleado. Referencia: 3 faltas injustificadas ≈ 1 amonestación, pero el sistema **solo notifica las faltas**; las **amonestaciones las crea RRHH manualmente** según corresponda. **3 amonestaciones = despido** (Contratado). |
 | ~~D-RH29~~ | Carga familiar | ✅ Resuelta | El sistema **solo almacena los datos** de carga familiar para reportes; **no calcula** beneficios (bono escolaridad, etc.). |
 | ~~D-RH30~~ | Organigrama | ✅ Recibido (Manual Descriptivo de Cargos, abril 2024) | Jerarquía oficial: **Presidencia → 3 Direcciones** (Planificación y Gestión Turística · Administración · Talento Humano) **→ Coordinaciones**; + unidades de staff bajo Presidencia (Dirección General, OAC, Secretaría, Consultoría Jurídica, Auditoría Interna, Relaciones Inter-Institucionales). Listo para modelar jerarquía (R-1). |
-| ~~D-RH31~~ | Datos empleado | ✅ Resuelta | Institución = Nómina (decisión 2026-06-04): un solo campo `institucion_origen`. No se agrega campo `nomina` separado. |
+| ~~D-RH31~~ | Datos empleado | ✅ Resuelta | Institución = Nómina: un solo campo `institucion_origen` (Alcaldía/Gobernación/IMATUR). De él se deriva la comisión de servicio (≠ IMATUR) y el tope de edad (65 IMATUR / 70 comisión). |
 | ~~D-RH32~~ | Permisos | ✅ Resuelta (implementado mig.032) | Reposo y Permiso diferenciados por `categoria` (select) en `permisos_laborales`; taxonomía en `tipo_permiso`. Módulo `PermisosController`. |
 | ~~D-RH33~~ | Asistencia | ✅ Resuelta | Horas trabajadas se calculan **por día y por semana** (según el caso, solo para reporte/indicadores). **Puntualidad:** se compara la hora de marcaje de entrada contra el horario asignado + **15 min de tolerancia** (por defecto); pasado ese margen se marca **impuntualidad**. La tolerancia es **configurable** en Configuración (p. ej. 5/15/30 min). |
 | **D-RH34** | Nómina | ❓ Abierta | ¿El sistema debe generar la nómina para Alcaldía/Gobernación? ¿Formato? (alto impacto, futuro) |
