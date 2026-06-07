@@ -43,6 +43,7 @@ class ReportesController extends Controller {
                 'fecha_fin'     => $_GET['fecha_fin']     ?? date('Y-m-d'),
                 'filtro_depto'  => $_GET['departamento']  ?? '',
                 'filtro_busca'  => $_GET['buscar']        ?? '',
+                'tolerancia'    => Asistencia::toleranciaPuntualidad(),
             ];
             $this->view('reportes/asistencia', $data);
         } catch (Exception $e) {
@@ -55,9 +56,11 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         try {
             $registros = $this->queryAsistencia();
-            $headers   = ['Fecha', 'Cédula', 'Nombre', 'Apellido', 'Departamento', 'Tipo Contrato', 'Entrada', 'Salida', 'Observación'];
+            $tol       = Asistencia::toleranciaPuntualidad();
+            $headers   = ['Fecha', 'Cédula', 'Nombre', 'Apellido', 'Departamento', 'Tipo Contrato', 'Entrada', 'Salida', 'Horas', 'Puntualidad', 'Observación'];
             $rows      = [];
             foreach ($registros as $r) {
+                $punt = $r->minutos_tarde === null ? 'Sin horario' : ((int)$r->minutos_tarde > $tol ? 'Impuntual (' . $r->minutos_tarde . ' min)' : 'Puntual');
                 $rows[] = [
                     $r->fecha,
                     $r->cedula,
@@ -67,6 +70,8 @@ class ReportesController extends Controller {
                     $r->tipo_contrato ?? '-',
                     $r->hora_entrada,
                     $r->hora_salida ?? '',
+                    $r->horas !== null ? $r->horas : '',
+                    $punt,
                     $r->observacion ?? '',
                 ];
             }
@@ -85,23 +90,27 @@ class ReportesController extends Controller {
             $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
             $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-            $headers = ['Fecha', 'Empleado', 'Cédula', 'Departamento', 'Tipo Contrato', 'Entrada', 'Salida'];
+            $tol     = Asistencia::toleranciaPuntualidad();
+            $headers = ['Fecha', 'Empleado', 'Cédula', 'Departamento', 'Entrada', 'Salida', 'Horas', 'Puntualidad'];
             $rows    = [];
             foreach ($registros as $r) {
+                $punt = $r->minutos_tarde === null ? 'Sin horario' : ((int)$r->minutos_tarde > $tol ? 'Impuntual' : 'Puntual');
                 $rows[] = [
                     $r->fecha,
                     $r->nombre . ' ' . $r->apellido,
                     $r->cedula,
                     $r->departamento,
-                    $r->tipo_contrato ?? '-',
                     $r->hora_entrada,
                     $r->hora_salida ?? '-',
+                    $r->horas !== null ? $r->horas : '-',
+                    $punt,
                 ];
             }
             $kpis = [
                 'Total Registros'    => $stats->total,
                 'Empleados con Reg.' => $stats->empleados_unicos,
-                'Días con Registros' => $stats->dias_con_registros,
+                'Impuntuales'        => $stats->impuntuales,
+                'Horas totales'      => $stats->horas_totales,
                 'Período'            => "$fi a $ff",
             ];
             $this->exportPdf("Reporte de Asistencia", "Período: $fi — $ff", $headers, $rows, $kpis);
@@ -122,7 +131,10 @@ class ReportesController extends Controller {
         if ($depto) $where .= " AND e.id_departamento = :depto";
         if ($busca) $where .= " AND (p.nombre ILIKE :busca OR p.apellido ILIKE :busca OR p.cedula ILIKE :busca)";
 
-        $db->query("SELECT a.fecha, a.hora_entrada, a.hora_salida, a.observacion,
+        $db->query("SELECT a.fecha, a.hora_entrada, a.hora_salida, a.observacion, a.minutos_tarde,
+                           CASE WHEN a.hora_salida IS NOT NULL
+                                THEN ROUND(EXTRACT(EPOCH FROM (a.hora_salida - a.hora_entrada))/3600.0, 2)
+                           END AS horas,
                            p.nombre, p.apellido, p.cedula,
                            d.nombre as departamento, e.tipo_contrato
                     FROM asistencias a
@@ -150,16 +162,92 @@ class ReportesController extends Controller {
         if ($depto) $where .= " AND e.id_departamento = :depto";
         if ($busca) $where .= " AND (p.nombre ILIKE :busca OR p.apellido ILIKE :busca OR p.cedula ILIKE :busca)";
 
+        $tol = Asistencia::toleranciaPuntualidad();
         $db->query("SELECT COUNT(*) as total,
                            COUNT(DISTINCT a.id_empleado) as empleados_unicos,
-                           COUNT(DISTINCT a.fecha) as dias_con_registros
+                           COUNT(DISTINCT a.fecha) as dias_con_registros,
+                           COUNT(CASE WHEN a.minutos_tarde > :tol THEN 1 END) as impuntuales,
+                           COALESCE(ROUND(SUM(CASE WHEN a.hora_salida IS NOT NULL
+                                THEN EXTRACT(EPOCH FROM (a.hora_salida - a.hora_entrada))/3600.0 END)::numeric, 1), 0) as horas_totales
                     FROM asistencias a {$joins}
                     WHERE {$where}");
         $db->bind(':fi', $fi);
         $db->bind(':ff', $ff);
+        $db->bind(':tol', $tol);
         if ($depto) $db->bind(':depto', (int)$depto);
         if ($busca) $db->bind(':busca', '%' . $busca . '%');
         return $db->single();
+    }
+
+    // =========================================================================
+    // Reporte de Permisos y Reposos (R-8)
+    // =========================================================================
+    public function permisos() {
+        $this->requireRoles([1, 2]);
+        try {
+            $registros = $this->queryPermisos();
+            $data = [
+                'titulo'        => 'Reporte de Permisos y Reposos',
+                'registros'     => $registros,
+                'fecha_inicio'  => $_GET['fecha_inicio'] ?? date('Y-01-01'),
+                'fecha_fin'     => $_GET['fecha_fin']    ?? date('Y-m-d'),
+                'filtro_cat'    => $_GET['categoria']    ?? '',
+                'filtro_estado' => $_GET['estado']       ?? '',
+            ];
+            $this->view('reportes/permisos', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de permisos: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarPermisosCsv() {
+        $this->requireRoles([1, 2]);
+        try {
+            $registros = $this->queryPermisos();
+            $headers = ['Empleado', 'Cédula', 'Departamento', 'Categoría', 'Tipo', 'Desde', 'Hasta', 'Duración', 'Período', 'Estado'];
+            $rows = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                    $r->cedula, $r->departamento, $r->categoria, $r->tipo_permiso,
+                    $r->fecha_inicio, $r->fecha_fin,
+                    $r->duracion ?? ($r->dias_solicitados . ' días'),
+                    $r->estatus_periodo, $r->estado,
+                ];
+            }
+            $this->exportCsv('reporte_permisos_reposos', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    private function queryPermisos() {
+        $db  = new Database();
+        $fi  = $_GET['fecha_inicio'] ?? date('Y-01-01');
+        $ff  = $_GET['fecha_fin']    ?? date('Y-m-d');
+        $cat = trim($_GET['categoria'] ?? '');
+        $est = trim($_GET['estado']    ?? '');
+
+        // Solapamiento de período: el permiso intersecta el rango [fi, ff]
+        $where = "pl.is_active = TRUE AND pl.fecha_inicio <= :ff AND pl.fecha_fin >= :fi";
+        if ($cat) $where .= " AND pl.categoria = :cat";
+        if ($est) $where .= " AND pl.estado = :est";
+
+        $db->query("SELECT pl.*, p.nombre, p.apellido, p.cedula, d.nombre AS departamento,
+                           CASE WHEN pl.fecha_fin >= CURRENT_DATE THEN 'En curso' ELSE 'Concluido' END AS estatus_periodo
+                    FROM permisos_laborales pl
+                    INNER JOIN empleados e     ON pl.id_empleado    = e.id
+                    INNER JOIN personas p      ON e.id_persona      = p.id
+                    LEFT  JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE {$where}
+                    ORDER BY pl.fecha_inicio DESC, pl.id DESC");
+        $db->bind(':fi', $fi);
+        $db->bind(':ff', $ff);
+        if ($cat) $db->bind(':cat', $cat);
+        if ($est) $db->bind(':est', $est);
+        return $db->resultSet();
     }
 
     // =========================================================================
@@ -1305,6 +1393,42 @@ class ReportesController extends Controller {
                         ORDER BY total DESC");
             $empPorContrato = $db->resultSet();
 
+            // ── RRHH: distribución por clasificación (Empleado/Obrero) ────────────────
+            $db->query("SELECT COALESCE(NULLIF(TRIM(clasificacion), ''), 'Sin especificar') AS clasificacion,
+                               COUNT(*) AS total
+                        FROM empleados WHERE is_active = TRUE
+                        GROUP BY COALESCE(NULLIF(TRIM(clasificacion), ''), 'Sin especificar')
+                        ORDER BY total DESC");
+            $empPorClasificacion = $db->resultSet();
+
+            // ── RRHH: permisos/reposos vigentes hoy (aprobados, en curso) + pendientes ─
+            $db->query("SELECT COALESCE(categoria, '—') AS categoria, COUNT(*) AS total
+                        FROM permisos_laborales
+                        WHERE is_active = TRUE AND estado = 'Aprobado'
+                          AND CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin
+                        GROUP BY categoria ORDER BY total DESC");
+            $permisosVigentes = $db->resultSet();
+            $db->query("SELECT COUNT(*) AS total FROM permisos_laborales WHERE is_active = TRUE AND estado = 'Pendiente'");
+            $permisosPendientes = (int)($db->single()->total ?? 0);
+
+            // ── RRHH: amonestaciones (empleados con ≥1 y empleados en causa de despido ≥3) ─
+            $db->query("SELECT COUNT(*) AS total, COUNT(DISTINCT id_empleado) AS empleados
+                        FROM amonestaciones WHERE is_active = TRUE");
+            $amonResumen = $db->single();
+            $db->query("SELECT COUNT(*) AS total FROM (
+                            SELECT id_empleado FROM amonestaciones WHERE is_active = TRUE
+                            GROUP BY id_empleado HAVING COUNT(*) >= :lim) q");
+            $db->bind(':lim', Amonestacion::LIMITE_DESPIDO);
+            $amonDespido = (int)($db->single()->total ?? 0);
+
+            // ── RRHH: impuntualidad del mes actual ────────────────────────────────────
+            $db->query("SELECT COUNT(CASE WHEN minutos_tarde IS NOT NULL THEN 1 END) AS con_horario,
+                               COUNT(CASE WHEN minutos_tarde > :tol THEN 1 END) AS impuntuales
+                        FROM asistencias
+                        WHERE is_active = TRUE AND fecha >= date_trunc('month', CURRENT_DATE)");
+            $db->bind(':tol', Asistencia::toleranciaPuntualidad());
+            $puntualidadMes = $db->single();
+
             $data = [
                 'titulo'                => 'Indicadores de Gestión',
                 'anioActual'            => $anioActual,
@@ -1345,6 +1469,14 @@ class ReportesController extends Controller {
                 'kpiEficienciaActs'     => $kpiEficienciaActs,
                 'kpiDepreciacion'       => $kpiDepreciacion,
                 'empPorContrato'        => $empPorContrato,
+                // KPIs nuevos — RRHH (módulos 025-034)
+                'empPorClasificacion'   => $empPorClasificacion,
+                'permisosVigentes'      => $permisosVigentes,
+                'permisosPendientes'    => $permisosPendientes,
+                'amonResumen'           => $amonResumen,
+                'amonDespido'           => $amonDespido,
+                'puntualidadMes'        => $puntualidadMes,
+                'tolPunt'               => Asistencia::toleranciaPuntualidad(),
             ];
             $this->view('reportes/indicadores', $data);
         } catch (Exception $e) {

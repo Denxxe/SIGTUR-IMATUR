@@ -168,7 +168,8 @@ No requieren decisión de negocio; implementables cuando se prioricen.
 
 | Módulo | Mejora | Origen |
 |--------|--------|--------|
-| RRHH | Reporte de **permisos/reposos** por tipo/empleado/período (datos ya existen tras R-8) | CLAUDE.md · BRH-06 |
+| RRHH | ✅ **Hecho:** Reporte de **permisos/reposos** (`reportes/permisos` + CSV) por categoría/estado/período | BRH-06 |
+| RRHH | ✅ **Hecho:** Reporte de **asistencia** con puntualidad + horas; **indicadores** RRHH (clasificación, permisos vigentes, amonestaciones, impuntualidad del mes) | R-7/R-8/R-9 |
 | RRHH | Reporte de **saldo de vacaciones** (depende de D-RH04/05) | BRH-07 |
 | RRHH | Alerta "empleados en permiso/reposo hoy" en Dashboard | CLAUDE.md |
 | RRHH | Réplica imprimible del **formato físico de asistencia** | MOD-RRHH 6.2 |

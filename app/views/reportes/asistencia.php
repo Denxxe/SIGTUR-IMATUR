@@ -83,17 +83,18 @@ $qs = http_build_query(array_filter([
 </div>
 
 <!-- KPIs -->
+<?php $tol = (int)($data['tolerancia'] ?? 15); ?>
 <div class="row g-3 mb-6 anim-slide-up">
-    <div class="col-md-4 col-6">
+    <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--brand-500);">
             <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
                 <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total Registros</div>
                 <div style="font-size:28px;font-weight:900;color:var(--brand-600);"><?php echo number_format($data['stats']->total ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">en el período seleccionado</div>
+                <div style="font-size:11px;color:var(--text-tertiary);">en el período</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-6">
+    <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--success-500);">
             <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
                 <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Empleados con Registro</div>
@@ -102,12 +103,21 @@ $qs = http_build_query(array_filter([
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-6">
-        <div class="sig-card" style="border-bottom:3px solid var(--warning-500);">
+    <div class="col-md-3 col-6">
+        <div class="sig-card" style="border-bottom:3px solid #EF4444;">
             <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Días con Registros</div>
-                <div style="font-size:28px;font-weight:900;color:var(--warning-600);"><?php echo number_format($data['stats']->dias_con_registros ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">días laborables cubiertos</div>
+                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Impuntuales</div>
+                <div style="font-size:28px;font-weight:900;color:#EF4444;"><?php echo number_format($data['stats']->impuntuales ?? 0); ?></div>
+                <div style="font-size:11px;color:var(--text-tertiary);">tolerancia <?php echo $tol; ?> min</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="sig-card" style="border-bottom:3px solid #7C3AED;">
+            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
+                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Horas Totales</div>
+                <div style="font-size:28px;font-weight:900;color:#7C3AED;"><?php echo number_format($data['stats']->horas_totales ?? 0, 1); ?></div>
+                <div style="font-size:11px;color:var(--text-tertiary);">solo reporte (no nómina)</div>
             </div>
         </div>
     </div>
@@ -124,12 +134,14 @@ $qs = http_build_query(array_filter([
                 <th>Tipo Contrato</th>
                 <th style="text-align:center;">Entrada</th>
                 <th style="text-align:center;">Salida</th>
+                <th style="text-align:center;">Horas</th>
+                <th style="text-align:center;">Puntualidad</th>
                 <th>Observación</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['registros'])): ?>
-                <tr><td colspan="7" class="sig-table-empty">Sin registros en el rango y filtros seleccionados.</td></tr>
+                <tr><td colspan="9" class="sig-table-empty">Sin registros en el rango y filtros seleccionados.</td></tr>
             <?php else: ?>
                 <?php foreach ($data['registros'] as $r): ?>
                     <tr>
@@ -157,6 +169,19 @@ $qs = http_build_query(array_filter([
                             <?php else: ?>
                                 <span style="color:var(--text-tertiary);font-size:11px;">—</span>
                             <?php endif; ?>
+                        </td>
+                        <td style="text-align:center;font-family:var(--font-mono);font-size:12px;"><?php echo $r->horas !== null ? number_format((float)$r->horas, 2) : '—'; ?></td>
+                        <td style="text-align:center;">
+                            <?php
+                            $mt = $r->minutos_tarde;
+                            if ($mt === null) {
+                                echo '<span class="sig-badge sig-badge--neutral">— sin horario</span>';
+                            } elseif ((int)$mt > $tol) {
+                                echo '<span class="sig-badge sig-badge--danger">Impuntual (' . (int)$mt . ' min)</span>';
+                            } else {
+                                echo '<span class="sig-badge sig-badge--success">Puntual</span>';
+                            }
+                            ?>
                         </td>
                         <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->observacion ?? '—'); ?></td>
                     </tr>

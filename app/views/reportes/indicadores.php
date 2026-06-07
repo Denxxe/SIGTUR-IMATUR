@@ -451,6 +451,54 @@ $derivados = [
     <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
 </div>
 
+<!-- RRHH: clasificación, permisos/reposos, amonestaciones, puntualidad (módulos 025-034) -->
+<?php
+$clasifTxt = [];
+foreach ($data['empPorClasificacion'] ?? [] as $c) $clasifTxt[] = $c->clasificacion . ': ' . (int)$c->total;
+$permVig = 0; foreach ($data['permisosVigentes'] ?? [] as $pv) $permVig += (int)$pv->total;
+$pm = $data['puntualidadMes'] ?? null;
+$pmCon = (int)($pm->con_horario ?? 0); $pmImp = (int)($pm->impuntuales ?? 0);
+$pmPct = $pmCon > 0 ? round($pmImp * 100 / $pmCon) : 0;
+$amDesp = (int)($data['amonDespido'] ?? 0);
+?>
+<div class="row g-3 mb-4 anim-slide-up">
+    <div class="col-md-3 col-6">
+        <div class="sig-card h-100" style="border-top:3px solid #3B82F6;">
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-people-fill" style="color:#3B82F6;"></i> Clasificación</div>
+                <div style="font-size:13px;font-weight:600;margin-top:6px;line-height:1.6;"><?php echo $clasifTxt ? htmlspecialchars(implode(' · ', $clasifTxt)) : '—'; ?></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="sig-card h-100" style="border-top:3px solid #059669;">
+            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-calendar2-week" style="color:#059669;"></i> Permisos/Reposos hoy</div>
+                <div style="font-size:26px;font-weight:900;color:#059669;"><?php echo $permVig; ?></div>
+                <div style="font-size:11px;color:var(--text-tertiary);"><?php echo (int)($data['permisosPendientes'] ?? 0); ?> pendiente(s) de aprobar</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="sig-card h-100" style="border-top:3px solid <?php echo $amDesp > 0 ? '#EF4444' : '#D97706'; ?>;">
+            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-flag-fill" style="color:#D97706;"></i> Amonestaciones</div>
+                <div style="font-size:26px;font-weight:900;color:var(--text-primary);"><?php echo (int)($data['amonResumen']->empleados ?? 0); ?></div>
+                <div style="font-size:11px;color:<?php echo $amDesp > 0 ? '#EF4444' : 'var(--text-tertiary)'; ?>;font-weight:<?php echo $amDesp > 0 ? '700' : '400'; ?>;"><?php echo $amDesp; ?> en causa de despido</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="sig-card h-100" style="border-top:3px solid <?php echo $pmPct >= 25 ? '#EF4444' : ($pmPct >= 10 ? '#D97706' : '#059669'); ?>;">
+            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-alarm" style="color:#EF4444;"></i> Impuntualidad (mes)</div>
+                <div style="font-size:26px;font-weight:900;color:var(--text-primary);"><?php echo $pmPct; ?>%</div>
+                <div style="font-size:11px;color:var(--text-tertiary);"><?php echo $pmImp; ?> de <?php echo $pmCon; ?> marcajes</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-8">
         <div class="sig-card h-100">

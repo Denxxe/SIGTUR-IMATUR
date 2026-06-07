@@ -77,6 +77,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `visitantes`, `exportarVisitantesCsv/Pdf` | [1, 2] |
 | `talleres`, `exportarTalleresCsv/Pdf`, `rutas`, `exportarRutasCsv/Pdf`, `exportarParticipantesCsv`, `dossier`, `exportarDossierCsv`, `pasantes`, `exportarPasantesCsv/Pdf` | [1, 3] |
 | `inventario`, `exportarInventarioCsv/Pdf`, `bajasInventario`, `exportarBajasInventarioCsv` | [1, 4] |
+| `permisos`, `exportarPermisosCsv` | [1, 2] |
 | `indicadores`, `index` | todos |
 
 ### Sidebar por rol (header.php)
@@ -235,7 +236,8 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 
 | Reporte | Roles | Export |
 |---------|-------|--------|
-| Asistencia con filtro de fechas | 1, 2 | CSV + PDF |
+| Asistencia con filtro de fechas (+ puntualidad y horas) | 1, 2 | CSV + PDF |
+| Permisos y reposos por tipo/estado/período | 1, 2 | CSV |
 | Visitantes con filtro fecha/motivo | 1, 2 | CSV + PDF |
 | Talleres con filtros estado/tipo | 1, 3 | CSV + PDF |
 | Dossier integral de taller | 1, 3 | CSV |
@@ -246,11 +248,14 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 | Bienes dados de baja | 1, 4 | CSV |
 | Indicadores KPIs (4 gráficas ApexCharts) | todos | — |
 
+### Reportes / indicadores RRHH (módulos 025-034)
+- **Reporte de Asistencia** ahora incluye **puntualidad** (impuntual vs tolerancia) y **horas** trabajadas + KPIs (impuntuales, horas totales).
+- **Reporte de Permisos y Reposos** (`reportes/permisos`, CSV) por categoría/estado/período.
+- **Indicadores** (`reportes/indicadores`) sección Personal: clasificación (Empleado/Obrero), permisos/reposos vigentes hoy + pendientes, amonestaciones (empleados + en causa de despido), impuntualidad del mes.
+
 ### Reportes pendientes de implementar
-- Permisos laborales por tipo/empleado/período
-- Saldo de vacaciones por empleado
+- Saldo de vacaciones por empleado (bloqueado: fórmula D-RH04/05)
 - Informe trimestral de Formación (metas, logros, actividades)
-- Indicadores ampliados: visitas activas, empleados en permiso hoy
 
 ---
 

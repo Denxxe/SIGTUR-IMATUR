@@ -126,6 +126,10 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | **Empleados por departamento** | Distribución organizativa de la plantilla. | `COUNT(empleados)` por departamento (incluye departamentos con 0). | `departamentos` ⟕ `empleados` |
 | **Asistencias por mes (4 meses)** | Tendencia de marcaje. | `COUNT(*)` agrupado por `YYYY-MM`, últimos 4 meses. | `asistencias` |
 | **PROP-P01 — Distribución por tipo de contrato** | Composición contractual de la plantilla (estabilidad laboral). | `COUNT(*)` empleados agrupado por `tipo_contrato` (NULL/'' → "Sin especificar"). | `empleados` |
+| **Clasificación (Empleado/Obrero)** | Composición por clasificación laboral. | `COUNT(*)` empleados por `clasificacion`. | `empleados` |
+| **Permisos/reposos vigentes hoy** | Personal ausente justificado hoy + pendientes de aprobar. | Aprobados con `CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin` (por categoría) + conteo de `estado='Pendiente'`. | `permisos_laborales` |
+| **Amonestaciones** | Empleados con amonestaciones activas y en causa de despido (≥3). | `COUNT(DISTINCT id_empleado)` activos + subconteo con `HAVING COUNT(*) >= 3`. | `amonestaciones` |
+| **Impuntualidad del mes** | % de marcajes impuntuales en el mes actual. | `impuntuales (minutos_tarde > tolerancia) / marcajes con horario`, mes en curso. | `asistencias` + config `minutos_tolerancia_puntualidad` |
 
 ### 3.3 Sección Formación
 
@@ -181,7 +185,14 @@ Cada reporte muestra tarjetas-resumen calculadas por su función `stats*()`. Res
 |-----|---------|--------|
 | Total registros | `COUNT(*)` de asistencias en el rango y filtros. | `asistencias` ⋈ `empleados` ⋈ `personas` |
 | Empleados con registro | `COUNT(DISTINCT id_empleado)`. | idem |
-| Días con registros | `COUNT(DISTINCT fecha)`. | idem |
+| Impuntuales | `COUNT(minutos_tarde > tolerancia)`. | idem + config `minutos_tolerancia_puntualidad` |
+| Horas totales | `SUM(hora_salida - hora_entrada)` en horas (solo reporte, no nómina). | idem |
+
+La tabla incluye columnas **Horas** y **Puntualidad** (Puntual / Impuntual +min / sin horario).
+
+### 4.1b Reporte de Permisos y Reposos — `queryPermisos()` · roles 1, 2
+
+Lista permisos/reposos que **se solapan** con el período (`fecha_inicio ≤ hasta AND fecha_fin ≥ desde`), filtrable por categoría/estado. KPIs: total, aprobados, en curso hoy, reposos. Columnas: empleado, categoría, tipo, desde/hasta, duración, período (En curso/Concluido), estado. Export CSV.
 
 ### 4.2 Reporte de Talleres — `statsTalleres()` · roles 1, 3
 
