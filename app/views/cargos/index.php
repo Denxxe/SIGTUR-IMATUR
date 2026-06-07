@@ -4,7 +4,7 @@
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Organización</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Cargos'; ?></h1>
-        <p class="page__subtitle">Administración de puestos y servicios institucionales.</p>
+        <p class="page__subtitle">Puestos institucionales ordenados por jerarquía: Presidencia → Dirección → Coordinación → Adscrito.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalCargo" onclick="nuevoCargo()">
@@ -18,9 +18,9 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Nivel jerárquico</th>
                 <th>Nombre</th>
                 <th>Descripción</th>
-                <th>Sueldo Base</th>
                 <th class="col-actions">Acciones</th>
             </tr>
         </thead>
@@ -30,12 +30,14 @@
                     <td colspan="5" class="sig-table-empty">No hay cargos registrados.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($data['cargos'] as $cargo): ?>
+                <?php
+                $nivelBadge = ['Presidencia'=>'sig-badge--danger','Dirección'=>'sig-badge--info','Coordinación'=>'sig-badge--success','Adscrito'=>'sig-badge--neutral'];
+                foreach ($data['cargos'] as $cargo): ?>
                     <tr>
                         <td><span class="cell-id"><?php echo $cargo->id; ?></span></td>
+                        <td><span class="sig-badge <?php echo $nivelBadge[$cargo->nivel_jerarquico] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($cargo->nivel_jerarquico ?? '—'); ?></span></td>
                         <td class="cell-strong"><?php echo $cargo->nombre; ?></td>
                         <td style="color:var(--text-secondary);font-size:13px"><?php echo $cargo->descripcion; ?></td>
-                        <td><span class="sig-badge sig-badge--success"><?php echo number_format($cargo->sueldo_base, 2); ?></span></td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
@@ -71,8 +73,13 @@
                         <textarea class="sig-textarea" name="descripcion" id="cargo_descripcion" rows="3" placeholder="Funciones del cargo..."></textarea>
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Sueldo Base <span class="req">*</span></label>
-                        <input type="number" step="0.01" class="sig-input" name="sueldo_base" id="cargo_sueldo" required value="0.00">
+                        <label class="sig-field__label">Nivel jerárquico <span class="req">*</span></label>
+                        <select class="sig-select" name="nivel_jerarquico" id="cargo_nivel" required>
+                            <?php foreach (Cargo::NIVELES as $nv): ?>
+                                <option value="<?php echo $nv; ?>"<?php echo $nv === Cargo::NIVEL_DEFAULT ? ' selected' : ''; ?>><?php echo $nv; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small style="color:var(--text-tertiary)">Sucesión de responsabilidad según el organigrama.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -90,7 +97,7 @@
         document.getElementById('cargo_id').value = '';
         document.getElementById('cargo_nombre').value = '';
         document.getElementById('cargo_descripcion').value = '';
-        document.getElementById('cargo_sueldo').value = '0.00';
+        document.getElementById('cargo_nivel').value = '<?php echo Cargo::NIVEL_DEFAULT; ?>';
     }
 
     function editarCargo(cargo) {
@@ -98,7 +105,7 @@
         document.getElementById('cargo_id').value = cargo.id;
         document.getElementById('cargo_nombre').value = cargo.nombre;
         document.getElementById('cargo_descripcion').value = cargo.descripcion;
-        document.getElementById('cargo_sueldo').value = cargo.sueldo_base;
+        document.getElementById('cargo_nivel').value = cargo.nivel_jerarquico || '<?php echo Cargo::NIVEL_DEFAULT; ?>';
         new bootstrap.Modal(document.getElementById('modalCargo')).show();
     }
 </script>

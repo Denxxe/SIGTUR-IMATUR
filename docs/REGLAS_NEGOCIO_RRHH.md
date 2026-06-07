@@ -18,7 +18,9 @@ Todo empleado debe existir previamente en la tabla `personas`. La creación de u
 
 ## RN-RH02 — Cargo y Departamento obligatorios
 
-Un empleado debe tener un cargo y un departamento asignado. Los cargos tienen un `sueldo_base` de referencia. Un mismo cargo puede existir en distintos departamentos.
+Un empleado debe tener un cargo y un departamento asignado. Un mismo cargo puede existir en distintos departamentos.
+
+**Cargos por jerarquía (migración 035, D-RH11):** IMATUR **no distingue sueldo base por cargo** (todos cobran el mismo base salvo casos notorios) → se eliminó `cargos.sueldo_base`. En su lugar, cada cargo tiene `nivel_jerarquico` ∈ **Presidencia · Dirección · Coordinación · Adscrito** (sucesión de responsabilidad del organigrama; `Cargo::NIVELES`/`ORDEN_NIVEL`). La vista de Cargos los ordena por nivel; al crear uno nuevo se elige su escalón.
 
 ---
 

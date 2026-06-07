@@ -199,14 +199,15 @@ CREATE TABLE public.cargos (
     id integer NOT NULL,
     nombre character varying(100) NOT NULL,
     descripcion text,
-    sueldo_base numeric(12,2) DEFAULT 0,
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone,
     deleted_at timestamp without time zone,
     created_by integer,
     updated_by integer,
-    deleted_by integer
+    deleted_by integer,
+    nivel_jerarquico character varying(20) DEFAULT 'Adscrito'::character varying,
+    CONSTRAINT cargos_nivel_jerarquico_check CHECK ((nivel_jerarquico IS NULL OR (nivel_jerarquico)::text = ANY ((ARRAY['Presidencia'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Adscrito'::character varying])::text[])))
 );
 
 

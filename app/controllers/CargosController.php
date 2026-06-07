@@ -19,11 +19,13 @@ class CargosController extends Controller {
             $_POST = $this->sanitizePost();
             $id = isset($_POST['id']) ? (int)$_POST['id'] : null;
             
+            $nivel = in_array($_POST['nivel_jerarquico'] ?? '', Cargo::NIVELES, true)
+                     ? $_POST['nivel_jerarquico'] : Cargo::NIVEL_DEFAULT;
             $data = [
                 'id' => $id,
                 'nombre' => trim($_POST['nombre']),
                 'descripcion' => trim($_POST['descripcion']),
-                'sueldo_base' => (float)$_POST['sueldo_base']
+                'nivel_jerarquico' => $nivel
             ];
 
             $esEdicion = !empty($id);

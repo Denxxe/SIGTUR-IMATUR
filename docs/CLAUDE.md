@@ -115,7 +115,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 |-------|-------------|
 | `personas` | Entidad base; FK a `parroquia` |
 | `departamentos` | Unidades organizativas **jerárquicas** (`id_padre` auto-FK + `tipo_unidad`); seed del organigrama oficial *(027)* |
-| `cargos` | Puestos con sueldo_base |
+| `cargos` | Puestos por **nivel jerárquico** (Presidencia/Dirección/Coordinación/Adscrito); sin sueldo_base *(035)* |
 | `empleados` | 1:1 con personas; FK a cargo/departamento/horario; `tipo_contrato`, `fecha_egreso` |
 | `asistencias` | Marcaje diario entrada/salida (patrón toggle) |
 | `horarios` *(002; UI + seed en 028)* | Catálogo de turnos asignables (Estándar, OAC Matutino/Vespertino, Servicios Generales, personalizados) |
@@ -211,8 +211,9 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 032 | `032_permisos_reposos.sql` | ✅ Ejecutado | `permisos_laborales` +categoria (Reposo/Permiso/Vacaciones) +duracion; nueva taxonomía `tipo_permiso`; RBAC +PermisosController (rol 2) (R-8 RRHH — sin vacaciones) |
 | 033 | `033_expediente_documentos.sql` | ✅ Ejecutado | tabla `expediente_documentos` (recaudos subidos por empleado, FK id_empleado) (R-5 RRHH) |
 | 034 | `034_constancias.sql` | ✅ Ejecutado | tabla `constancias` (FK id_empleado) + claves correlativo `*_constancia`; genera CONST-NNN/AAAA (R-10 RRHH) |
+| 035 | `035_cargos_jerarquia.sql` | ✅ Ejecutado | `cargos`: **DROP `sueldo_base`** (IMATUR no distingue sueldo por cargo, D-RH11) + `nivel_jerarquico` (Presidencia/Dirección/Coordinación/Adscrito); seed de niveles |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–032** (columnas/constraints). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–034** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias).
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–035** (columnas/constraints). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–035** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos).
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -428,7 +429,7 @@ createdb -U postgres "SIGTUR-IMATUR"
 # 3. Importar el esquema consolidado (schema base + migraciones 001-023 + seeds):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
-# 4. Aplicar las migraciones posteriores al consolidado (024 a 034):
+# 4. Aplicar las migraciones posteriores al consolidado (024 a 035):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/024_pasantes_carta_aceptacion.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/025_empleados_contrato_origen.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/026_empleado_ficha_tecnica.sql
@@ -440,6 +441,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/031_f
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/032_permisos_reposos.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/033_expediente_documentos.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_constancias.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/035_cargos_jerarquia.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -448,7 +450,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_c
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 034** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
+> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 035** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
 
 ---
 
@@ -488,7 +490,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_c
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-034 encima) |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-035 encima) |
 | Auditoría senior + deuda técnica | `docs/AUDITORIA_SENIOR_2026-05-31.md` |
 | Preguntas/decisiones/auditoría (fuente única) | `docs/REGISTRO_NEGOCIO.md` |
 | Schema base original (historial) | `database/schema.sql` |

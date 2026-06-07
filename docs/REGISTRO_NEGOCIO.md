@@ -24,7 +24,6 @@ Sustituye y consolida a `preguntas_modelo_negocio.md` + `DECISIONES_PENDIENTES.m
 | D-RH04 / D-RH05 / D-NEW05 | 🔴 | ⚠️ | **Vacaciones — fórmula.** Días por años de servicio (¿LOTTT 15+1?), ¿saldo automático o manual? (Confirmado: descanso = fin de semana; acumulables sin expirar; comisión coordinada con ente origen.) | VacacionesController | MOD-RRHH 5 · AUD H-10 |
 | D-RH14 | 🟡 | ❓ | **Bono vacacional:** ¿el sistema lo calcula o solo lo registra? | Campo en `vacaciones` / nómina | DECISIONES |
 | D-RH34 | 🟡 | ❓ | **Nómina** para Alcaldía/Gobernación: ¿generar? ¿formato? | Módulo nómina | MOD-RRHH 8 |
-| D-RH11 | 🟢 | ⚠️ | Sueldo igual por cargo **salvo cargos de responsabilidad** (Directores/algunos Coordinadores) que llevan cálculo aparte. ¿Modelar sueldo variable por empleado para esos casos? | `sueldo_base` en `empleados` | DECISIONES |
 
 ## A.2 Inventario
 | ID | Prio | Estado | Pregunta | Desbloquea | Origen |
@@ -82,6 +81,7 @@ RRHH se relevó a fondo (2026-06-02→05) y se implementó completo (migraciones
 - Amonestaciones: sistema cuenta, RRHH registra; 3 = despido (D-RH28). Expediente híbrido + ficha técnica (D-RH22). Constancias con correlativo (RN-RH14).
 - **D-RH07** ✅ contratos con vencimiento variable → alerta en Dashboard (implementada).
 - **D-RH10** ✅ no hay personal no-formal salvo pasantes (módulo propio).
+- **D-RH11** ✅ IMATUR no distingue sueldo base por cargo → se eliminó `cargos.sueldo_base`; los cargos se clasifican por `nivel_jerarquico` (Presidencia/Dirección/Coordinación/Adscrito) según el organigrama (migración 035).
 - Detalle: `MODELO_NEGOCIO_RRHH.md` §10–11 y `REGLAS_NEGOCIO_RRHH.md`.
 
 ## B.2 Inventario

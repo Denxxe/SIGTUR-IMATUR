@@ -3,10 +3,16 @@
  * Clase Cargo: Modelo para la tabla cargos
  */
 class Cargo extends Model {
+    // Niveles de jerarquía (sucesión de responsabilidad, de mayor a menor) — patrón H-07.
+    const NIVELES = ['Presidencia', 'Dirección', 'Coordinación', 'Adscrito'];
+    const NIVEL_DEFAULT = 'Adscrito';
+    // Orden de la sucesión (1 = mayor responsabilidad) para ordenar/agrupar.
+    const ORDEN_NIVEL = ['Presidencia' => 1, 'Dirección' => 2, 'Coordinación' => 3, 'Adscrito' => 4];
+
     private ?int $id;
     private string $nombre;
     private string $descripcion;
-    private float $sueldo_base;
+    private ?string $nivel_jerarquico;
     private bool $is_active;
 
     public function __construct(array $data = []) {
@@ -15,7 +21,7 @@ class Cargo extends Model {
             $this->id = $data['id'] ?? null;
             $this->nombre = $data['nombre'] ?? '';
             $this->descripcion = $data['descripcion'] ?? '';
-            $this->sueldo_base = $data['sueldo_base'] ?? 0;
+            $this->nivel_jerarquico = !empty($data['nivel_jerarquico']) ? $data['nivel_jerarquico'] : self::NIVEL_DEFAULT;
             $this->is_active = $data['is_active'] ?? true;
         }
     }
@@ -26,15 +32,18 @@ class Cargo extends Model {
     public function setNombre($nombre) { $this->nombre = $nombre; }
     public function getDescripcion() { return $this->descripcion; }
     public function setDescripcion($descripcion) { $this->descripcion = $descripcion; }
-    public function getSueldoBase() { return $this->sueldo_base; }
-    public function setSueldoBase($sueldo) { $this->sueldo_base = $sueldo; }
+    public function getNivel() { return $this->nivel_jerarquico; }
 
     /**
-     * Obtener todos los cargos activos
+     * Obtener todos los cargos activos, ordenados por jerarquía (Presidencia→Adscrito) y nombre.
      */
     public static function all() {
         $db = new Database();
-        $db->query("SELECT * FROM cargos WHERE is_active = TRUE ORDER BY nombre ASC");
+        $db->query("SELECT * FROM cargos WHERE is_active = TRUE
+                    ORDER BY CASE nivel_jerarquico
+                                WHEN 'Presidencia' THEN 1 WHEN 'Dirección' THEN 2
+                                WHEN 'Coordinación' THEN 3 WHEN 'Adscrito' THEN 4 ELSE 5 END,
+                             nombre ASC");
         return $db->resultSet();
     }
 
@@ -55,24 +64,24 @@ class Cargo extends Model {
         $previos = null;
         if ($this->id) {
             $previos = self::find($this->id);
-            $this->db->query("UPDATE cargos SET 
-                                nombre = :nombre, 
-                                descripcion = :descripcion, 
-                                sueldo_base = :sueldo, 
+            $this->db->query("UPDATE cargos SET
+                                nombre = :nombre,
+                                descripcion = :descripcion,
+                                nivel_jerarquico = :nivel,
                                 updated_at = CURRENT_TIMESTAMP,
-                                updated_by = :user_id 
+                                updated_by = :user_id
                               WHERE id = :id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO cargos (nombre, descripcion, sueldo_base, created_by) 
-                              VALUES (:nombre, :descripcion, :sueldo, :user_id)");
+            $this->db->query("INSERT INTO cargos (nombre, descripcion, nivel_jerarquico, created_by)
+                              VALUES (:nombre, :descripcion, :nivel, :user_id)");
         }
         $this->db->bind(':nombre', $this->nombre);
         $this->db->bind(':descripcion', $this->descripcion);
-        $this->db->bind(':sueldo', $this->sueldo_base);
+        $this->db->bind(':nivel', $this->nivel_jerarquico);
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->execute();
-        $this->audit('cargos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'sueldo_base' => $this->sueldo_base], $user_id);
+        $this->audit('cargos', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'nivel_jerarquico' => $this->nivel_jerarquico], $user_id);
         return $result;
     }
 

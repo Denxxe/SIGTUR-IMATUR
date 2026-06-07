@@ -38,7 +38,7 @@ function auditCampo(string $k): string {
         'tutor' => 'Tutor', 'observaciones' => 'Observaciones', 'condicion' => 'Condición', 'marca' => 'Marca',
         'modelo' => 'Modelo', 'serial' => 'Serial', 'codigo_bn' => 'Código BN', 'id_categoria' => 'Categoría',
         'id_ubicacion' => 'Ubicación', 'id_departamento' => 'Departamento', 'id_cargo' => 'Cargo',
-        'tipo_contrato' => 'Tipo de contrato', 'fecha_egreso' => 'Fecha de egreso', 'sueldo_base' => 'Sueldo base',
+        'tipo_contrato' => 'Tipo de contrato', 'fecha_egreso' => 'Fecha de egreso', 'nivel_jerarquico' => 'Nivel jerárquico',
         'tipo_ruta' => 'Tipo de ruta', 'requiere_formacion' => 'Requiere formación', 'tarifa_monto' => 'Tarifa',
         'duracion_estimada' => 'Duración estimada', 'motivo' => 'Motivo', 'motivo_mantenimiento' => 'Motivo de mantenimiento',
         'parroquia_id' => 'Parroquia', 'parroquia' => 'Parroquia', 'municipio' => 'Municipio',
