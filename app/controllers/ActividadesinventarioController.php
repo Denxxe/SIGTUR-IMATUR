@@ -33,22 +33,31 @@ class ActividadesinventarioController extends Controller {
                 'id_empleado_responsable' => !empty($_POST['id_empleado_responsable']) ? (int)$_POST['id_empleado_responsable'] : null
             ];
 
-            $actividad = new ActividadInventario($data);
-            if ($actividad->save($this->getUserId())) { // Cambiaremos el 1 al user_id de Auth
-                
-                // Si es necesario dar de baja o reparar, opcionalmente actualizar condicion de inventario.
-                // Como plus, interceptar cambios crudos (ej. Si tipo_movimiento es "Baja", Inventory status => "Inservible")
-                
-                header('Location: ' . URL_ROOT . '/actividadesinventario/index');
-            } else {
-                die('Error al registrar movimiento del bien.');
+            $esEdicion = !empty($data['id']);
+            try {
+                $actividad = new ActividadInventario($data);
+                if ($actividad->save($this->getUserId())) {
+                    flash('global_msg', $esEdicion ? 'Movimiento del bien actualizado correctamente.' : 'Movimiento del bien registrado correctamente.');
+                } else {
+                    throw new Exception('No se pudo registrar el movimiento del bien.');
+                }
+            } catch (Exception $e) {
+                flash('global_msg', 'Error al registrar el movimiento: ' . $e->getMessage(), 'danger');
             }
+            header('Location: ' . URL_ROOT . '/actividadesinventario/index');
         }
     }
 
     public function delete($id) {
-        if (ActividadInventario::delete($id, $this->getUserId())) {
-            header('Location: ' . URL_ROOT . '/actividadesinventario/index');
+        try {
+            if (ActividadInventario::delete($id, $this->getUserId())) {
+                flash('global_msg', 'Movimiento de inventario eliminado.', 'warning');
+            } else {
+                throw new Exception('No se pudo eliminar el movimiento.');
+            }
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al eliminar: ' . $e->getMessage(), 'danger');
         }
+        header('Location: ' . URL_ROOT . '/actividadesinventario/index');
     }
 }
