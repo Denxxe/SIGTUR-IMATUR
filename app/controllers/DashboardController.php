@@ -101,6 +101,31 @@ class DashboardController extends Controller {
                             LEFT JOIN empleados e ON d.id = e.id_departamento AND e.is_active = TRUE
                             WHERE d.is_active = TRUE GROUP BY d.nombre ORDER BY total DESC LIMIT 8");
                 $data['empPorDepto'] = $db->resultSet();
+
+                // Permisos/reposos vigentes hoy (aprobados, en curso) + pendientes de aprobar
+                $db->query("SELECT COUNT(*) AS total FROM permisos_laborales
+                            WHERE is_active = TRUE AND estado = 'Aprobado'
+                              AND CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin");
+                $data['kpiPermisosVigentes'] = (int)($db->single()->total ?? 0);
+                $db->query("SELECT COUNT(*) AS total FROM permisos_laborales WHERE is_active = TRUE AND estado = 'Pendiente'");
+                $data['kpiPermisosPendientes'] = (int)($db->single()->total ?? 0);
+
+                // Amonestaciones: empleados en causa de despido (>= límite)
+                $db->query("SELECT COUNT(*) AS total FROM (
+                                SELECT id_empleado FROM amonestaciones WHERE is_active = TRUE
+                                GROUP BY id_empleado HAVING COUNT(*) >= :lim) q");
+                $db->bind(':lim', Amonestacion::LIMITE_DESPIDO);
+                $data['kpiAmonDespido'] = (int)($db->single()->total ?? 0);
+
+                // Impuntualidad del mes actual
+                $db->query("SELECT COUNT(CASE WHEN minutos_tarde IS NOT NULL THEN 1 END) AS con,
+                                   COUNT(CASE WHEN minutos_tarde > :tol THEN 1 END) AS imp
+                            FROM asistencias
+                            WHERE is_active = TRUE AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE)");
+                $db->bind(':tol', Asistencia::toleranciaPuntualidad());
+                $pm = $db->single();
+                $data['kpiImpuntualMes'] = (int)($pm->imp ?? 0);
+                $data['kpiImpuntualPct'] = ((int)($pm->con ?? 0) > 0) ? (int)round((int)$pm->imp * 100 / (int)$pm->con) : 0;
             }
 
             // ══════════════════════════════════════════════════════════════
@@ -269,6 +294,16 @@ class DashboardController extends Controller {
                     $n = $data['kpiContratosVencen'];
                     $alertas[] = ['tipo' => 'warning', 'ico' => 'bi-person-badge',
                         'msg' => "$n contrato(s) contratado(s) vencen en los próximos {$diasContrato} días"];
+                }
+                if (($data['kpiAmonDespido'] ?? 0) > 0) {
+                    $n = $data['kpiAmonDespido'];
+                    $alertas[] = ['tipo' => 'danger', 'ico' => 'bi-flag-fill',
+                        'msg' => "$n empleado(s) con 3+ amonestaciones (causa de despido)"];
+                }
+                if (($data['kpiPermisosPendientes'] ?? 0) > 0) {
+                    $n = $data['kpiPermisosPendientes'];
+                    $alertas[] = ['tipo' => 'info', 'ico' => 'bi-calendar2-week',
+                        'msg' => "$n permiso(s)/reposo(s) pendiente(s) de aprobar"];
                 }
             }
             if (in_array($rol, [1, 3])) {

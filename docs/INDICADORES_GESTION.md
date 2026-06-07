@@ -49,6 +49,9 @@ El dashboard es **role-aware**: cada bloque solo se calcula y muestra según el 
 | **Contratos por vencer** | Anticipar renovaciones/egresos de personal contratado. | `COUNT(*)` de empleados `tipo_contrato='Contratado'` con `fecha_egreso BETWEEN hoy AND hoy + dias_preaviso_contrato`. | `empleados` + `configuracion_sistema` |
 | **Asistencia por mes (4 meses)** | Mini-tendencia de marcaje. | `COUNT(*)` agrupado por `YYYY-MM`, últimos 4 meses (meses sin datos se rellenan con 0). | `asistencias` |
 | **Empleados por departamento (top 8)** | Distribución de la plantilla. | `COUNT(empleados)` por departamento, orden descendente, límite 8. | `departamentos` ⟕ `empleados` |
+| **Permisos/Reposos hoy** | Personal ausente justificado hoy + pendientes de aprobar. | `COUNT(*)` aprobados con `CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin`; subtexto = `COUNT(estado='Pendiente')`. | `permisos_laborales` |
+| **Amonestaciones (causa de despido)** | Empleados con 3+ amonestaciones activas. | Subconteo `HAVING COUNT(*) >= 3` por empleado. | `amonestaciones` |
+| **Impuntualidad del mes** | % de marcajes impuntuales del mes. | `impuntuales (minutos_tarde > tolerancia) / marcajes con horario`. Color verde/ámbar/rojo (10/25 %). | `asistencias` + config `minutos_tolerancia_puntualidad` |
 
 ### 2.2 Bloque VISITAS — roles 1, 2, 5 (Recepción)
 
@@ -96,6 +99,8 @@ El dashboard es **role-aware**: cada bloque solo se calcula y muestra según el 
 | Alerta | Condición que la dispara | Roles |
 |--------|--------------------------|-------|
 | Contratos por vencer | `kpiContratosVencen > 0` (ver 2.1) | 1, 2 |
+| Amonestaciones (causa de despido) | `kpiAmonDespido > 0` (empleados con 3+ amonestaciones) | 1, 2 |
+| Permisos/reposos pendientes | `kpiPermisosPendientes > 0` | 1, 2 |
 | Pasantes próximos a culminar | Pasantes `En Curso` con `fecha_fin` dentro de `dias_preaviso_pasante` | 1, 3 |
 | Actividades de formación vigentes | `actividades_activas > 0` | 1, 3 |
 | Bienes en estado de alerta | `bienes_alerta > 0` | 1, 4 |
