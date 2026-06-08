@@ -62,10 +62,9 @@ function initSigturValidations() {
             input.addEventListener('input', formatNombreApellido);
         }
 
-        // TELÉFONOS
-        if (name.includes('telefono') || type === 'tel') {
-            input.setAttribute('pattern', '^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$');
-            input.addEventListener('input', formatTelefono);
+        // TELÉFONOS — prefijo venezolano (select) + 7 dígitos
+        if (name.includes('telefono') || id.includes('telefono') || type === 'tel') {
+            initTelefonoInput(input);
         }
 
         // FECHAS DE NACIMIENTO
@@ -203,10 +202,111 @@ function formatNombreApellido(e) {
 }
 
 /**
- * Lógica de formato de teléfono (Solo admite +, -, () y números)
+ * Lógica de formato de teléfono (Solo admite +, -, () y números) — legado, sin uso.
  */
 function formatTelefono(e) {
     let val = e.target.value;
     val = val.replace(/[^0-9+\-()\s]/g, '');
     e.target.value = val;
+}
+
+// ── Teléfonos venezolanos: prefijo (select) + 7 dígitos ──────────────────────
+// Formato nacional: 0XXX + 7 dígitos = 11 dígitos.
+const TEL_MOVILES = ['0412', '0414', '0416', '0424', '0426'];
+const TEL_FIJOS = [
+    '0212', '0234', '0235', '0238', '0239', '0241', '0242', '0243', '0244', '0245',
+    '0246', '0247', '0248', '0249', '0251', '0252', '0253', '0254', '0255', '0256',
+    '0257', '0258', '0259', '0261', '0262', '0263', '0264', '0265', '0266', '0267',
+    '0268', '0269', '0271', '0272', '0273', '0274', '0275', '0276', '0277', '0278',
+    '0281', '0282', '0283', '0284', '0285', '0286', '0287', '0288', '0291', '0292',
+    '0293', '0294', '0295'
+];
+const TEL_TODOS = TEL_MOVILES.concat(TEL_FIJOS);
+const TEL_PREFIJO_DEFAULT = '0414';
+// Descriptor nativo de .value para detectar asignaciones programáticas (lookup AJAX).
+const _telValueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+
+/**
+ * Convierte un input de teléfono en: [select de prefijo] + [input de 7 dígitos].
+ * El input original queda oculto y conserva el valor combinado (prefijo+7) para el POST.
+ */
+function initTelefonoInput(input) {
+    if (input.dataset.telAttached) return;
+    input.dataset.telAttached = 'true';
+
+    const requerido = input.hasAttribute('required');
+    input.removeAttribute('required');   // el visible (numero) llevará la validación
+    input.removeAttribute('pattern');
+
+    // Construir UI
+    const combo = document.createElement('div');
+    combo.style.display = 'flex';
+    combo.style.gap = '6px';
+
+    const sel = document.createElement('select');
+    sel.className = 'sig-select';
+    sel.style.maxWidth = '108px';
+    sel.innerHTML =
+        '<optgroup label="Móviles">' + TEL_MOVILES.map(p => `<option value="${p}">${p}</option>`).join('') + '</optgroup>' +
+        '<optgroup label="Fijos">' + TEL_FIJOS.map(p => `<option value="${p}">${p}</option>`).join('') + '</optgroup>';
+
+    const num = document.createElement('input');
+    num.type = 'text';
+    num.className = 'sig-input';
+    num.style.flex = '1';
+    num.setAttribute('inputmode', 'numeric');
+    num.setAttribute('maxlength', '7');
+    num.setAttribute('placeholder', '7 dígitos');
+    if (requerido) num.setAttribute('required', '');
+
+    combo.appendChild(sel);
+    combo.appendChild(num);
+    input.insertAdjacentElement('afterend', combo);
+    input.type = 'hidden';
+
+    const setOriginal = (v) => { _telValueDesc.set.call(input, v); }; // sin disparar el sync
+
+    const aplicar = () => {
+        // Sanear los 7 dígitos
+        num.value = num.value.replace(/\D/g, '').slice(0, 7);
+        const completo = num.value.length === 7;
+        if (num.value.length === 0) {
+            setOriginal('');
+            num.setCustomValidity(requerido ? 'Ingrese el número (7 dígitos).' : '');
+        } else if (!completo) {
+            setOriginal('');
+            num.setCustomValidity('El número debe tener exactamente 7 dígitos.');
+        } else {
+            setOriginal(sel.value + num.value);
+            num.setCustomValidity('');
+        }
+    };
+
+    // Parsear el valor original (incluye prefijos no listados) hacia el combo
+    const sincronizar = () => {
+        const d = (_telValueDesc.get.call(input) || '').replace(/\D/g, '');
+        let pref = TEL_PREFIJO_DEFAULT, resto = '';
+        if (d.length === 11 && d[0] === '0') { pref = d.slice(0, 4); resto = d.slice(4, 11); }
+        else if (d.length === 10) { pref = '0' + d.slice(0, 3); resto = d.slice(3, 10); }
+        else if (d.length === 7) { resto = d; }
+        else if (d.length > 0) { resto = d.slice(-7); }
+        if (resto && !TEL_TODOS.includes(pref) && !Array.from(sel.options).some(o => o.value === pref)) {
+            const opt = document.createElement('option'); opt.value = pref; opt.textContent = pref; sel.appendChild(opt);
+        }
+        sel.value = TEL_TODOS.includes(pref) || Array.from(sel.options).some(o => o.value === pref) ? pref : TEL_PREFIJO_DEFAULT;
+        num.value = resto;
+        num.setCustomValidity('');
+    };
+
+    sel.addEventListener('change', aplicar);
+    num.addEventListener('input', aplicar);
+
+    // Interceptar asignaciones programáticas a .value (p. ej. autocompletar por cédula)
+    Object.defineProperty(input, 'value', {
+        configurable: true,
+        get() { return _telValueDesc.get.call(this); },
+        set(v) { _telValueDesc.set.call(this, v); sincronizar(); }
+    });
+
+    sincronizar(); // estado inicial (modo edición / valor precargado)
 }
