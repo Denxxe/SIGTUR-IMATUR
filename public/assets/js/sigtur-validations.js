@@ -5,12 +5,24 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initSigturValidations();
-    
+
     // Listener asíncrono para Modales (Bootstrap) en caso de que los forms se generen dinámicamente
     document.addEventListener('shown.bs.modal', function() {
         initSigturValidations();
+        sigturRefreshButtons();
     });
 });
+
+/**
+ * Recalcula el estado (habilitado/deshabilitado) de los botones submit de todos
+ * los formularios según su validez. Útil tras cambios programáticos o navegación.
+ */
+function sigturRefreshButtons() {
+    document.querySelectorAll('form.needs-validation').forEach(f => {
+        if (typeof f.__sigToggle === 'function') f.__sigToggle();
+    });
+}
+window.sigturRefreshButtons = sigturRefreshButtons;
 
 function initSigturValidations() {
     // 1. Inicializar Validaciones de Boostrap (Submits)
@@ -31,7 +43,29 @@ function initSigturValidations() {
             }
             form.classList.add('was-validated');
         }, false);
-        
+
+        // Botón submit deshabilitado hasta que el formulario sea válido (campos requeridos OK).
+        // Excepción: forms marcados data-no-toggle (p. ej. filtros) no se tocan.
+        if (!form.hasAttribute('data-no-toggle')) {
+            const toggleBtns = () => {
+                // Validez considerando sólo campos visibles y habilitados:
+                // evita que un required dentro de un bloque oculto (display:none)
+                // deje el botón bloqueado para siempre.
+                let ok = true;
+                form.querySelectorAll('input, select, textarea').forEach(el => {
+                    if (el.disabled) return;
+                    if (el.offsetParent === null) return; // no visible (incluye type=hidden)
+                    if (!el.checkValidity()) ok = false;
+                });
+                form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(b => {
+                    b.disabled = !ok;
+                });
+            };
+            form.__sigToggle = toggleBtns;
+            form.addEventListener('input', toggleBtns);
+            form.addEventListener('change', toggleBtns);
+        }
+
         form.dataset.validationAttached = 'true';
     });
 
@@ -80,6 +114,9 @@ function initSigturValidations() {
 
         input.dataset.formatAttached = 'true';
     });
+
+    // Estado inicial de los botones submit (tras enganchar validaciones/realces)
+    sigturRefreshButtons();
 }
 
 /**

@@ -207,6 +207,12 @@
   user-select: none; cursor: pointer; text-decoration: none;
 }
 .btn-sig:active { transform: translateY(1px); }
+.btn-sig:disabled,
+.btn-sig[disabled],
+button:disabled,
+button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; filter: grayscale(35%); }
+.btn-sig:disabled:hover,
+.btn-sig[disabled]:hover { transform: none; }
 .btn-sig--primary {
   background: linear-gradient(180deg, var(--brand-500), var(--brand-600));
   color: white; box-shadow: var(--sh-glow-brand);

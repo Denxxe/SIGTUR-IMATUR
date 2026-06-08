@@ -251,6 +251,23 @@ function wzShow(n) {
     document.getElementById('wzSubmit').style.display = n === totalSteps - 1 ? '' : 'none';
     if (n === totalSteps - 1) wzBuildResumen();
     wzCur = n;
+    wzUpdateNav();
+}
+
+// Validez del paso (sin mostrar burbujas) — para habilitar/deshabilitar "Siguiente".
+function wzStepValido(n) {
+    const step = wzSteps[n];
+    for (const f of step.querySelectorAll('input, select, textarea')) {
+        if (f.offsetParent !== null && !f.checkValidity()) return false;
+    }
+    return true;
+}
+
+// Habilita "Siguiente" sólo si el paso actual es válido; refresca el submit (último paso).
+function wzUpdateNav() {
+    const next = document.getElementById('wzNext');
+    if (next) next.disabled = !wzStepValido(wzCur);
+    if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
 }
 
 function wzValidateStep(n) {
@@ -353,6 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
     wzToggleDisc(); wzOrigenCambio(); wzToggleUniforme();
     wzShow(0);
     wzForm.addEventListener('input', wzSave);
+    wzForm.addEventListener('input', wzUpdateNav);
+    wzForm.addEventListener('change', wzUpdateNav);
     wzForm.addEventListener('submit', () => { try { localStorage.removeItem(LS_KEY); } catch (e) {} });
 });
 </script>
