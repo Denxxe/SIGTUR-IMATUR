@@ -28,7 +28,7 @@
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label">Cédula de Identidad <span class="req">*</span></label>
-                        <input type="text" name="cedula" class="sig-input" placeholder="V-00.000.000" required>
+                        <input type="text" name="cedula" class="sig-input" placeholder="12345678 (solo números)" required>
                     </div>
                 </div>
                 <div class="col-md-4">

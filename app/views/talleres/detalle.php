@@ -345,7 +345,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— busca si ya está registrado, o completa para registrar</span>
                                 </label>
                                 <input type="text" id="insc_cedula_busqueda" name="cedula_participante"
-                                       class="sig-input" placeholder="Ej: V-12345678" autocomplete="off">
+                                       class="sig-input" placeholder="Ej: 12345678 (solo números)" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-md-4" style="display:flex; align-items:flex-end;">
@@ -497,7 +497,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <div class="col-md-5">
                             <div class="sig-field">
                                 <label class="sig-field__label">Cédula del docente</label>
-                                <input type="text" name="cedula_docente" class="sig-input" placeholder="V-12345678">
+                                <input type="text" name="cedula_docente" class="sig-input" placeholder="12345678 (solo números)">
                             </div>
                         </div>
                     </div>
@@ -788,7 +788,7 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
     // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
     var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
     if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
-        mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Formato no válido. Use V-12345678, E-1234567 o solo los números.');
+        mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Cédula no válida. Use solo números (6 a 8 dígitos).');
         return;
     }
     btn.disabled = true; ico.className = 'bi bi-hourglass-split';
@@ -900,7 +900,7 @@ document.getElementById('formInscripcion').addEventListener('submit', function(e
         var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
         if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
             e.preventDefault();
-            mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Formato de cédula no válido. Use V-12345678 o solo los números.');
+            mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Cédula no válida. Use solo números (6 a 8 dígitos).');
             return;
         }
     }

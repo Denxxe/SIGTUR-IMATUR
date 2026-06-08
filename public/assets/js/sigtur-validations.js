@@ -80,10 +80,14 @@ function initSigturValidations() {
         const id = (input.id || '').toLowerCase();
         const type = input.type;
         
-        // CÉDULAS
-        if (name.includes('cedula') || id.includes('cedula')) {
-            input.setAttribute('pattern', '^[VEve]-\\d{7,9}$');
-            input.title = "Formato admitido: V-12345678 o E-12345678";
+        // CÉDULAS — solo números, máximo 8 dígitos
+        // Excepción: campos "libre" (ID escolar / extranjeros sin cédula venezolana)
+        // que pueden contener letras u otra longitud.
+        if ((name.includes('cedula') || id.includes('cedula')) && !name.includes('libre') && !id.includes('libre')) {
+            input.setAttribute('pattern', '^\\d{6,8}$');
+            input.setAttribute('maxlength', '8');
+            input.setAttribute('inputmode', 'numeric');
+            input.title = "Solo números (6 a 8 dígitos).";
             input.addEventListener('input', formatCedula);
             if(input.value) formatCedula({target: input}); // Format existing
         }
@@ -191,32 +195,11 @@ function initEdadInput(input) {
 }
 
 /** 
- * Lógica de Formateo de Cédulas: Fuerza comienzo V- o E- y bloquea texto 
+ * Lógica de Formateo de Cédulas: solo dígitos, máximo 8 (sin letras ni símbolos).
  */
 function formatCedula(e) {
-    let val = e.target.value.toUpperCase();
-    
-    // Quita todo lo que no sea V, E, un guion o un dígito
-    val = val.replace(/[^VE0-9-]/g, '');
-    
-    // Si la persona inserta números directamente, anteponer V-
-    if (/^[0-9]/.test(val)) {
-        val = 'V-' + val;
-    }
-    // Si la persona inserta solo la V o E, agregar el guion
-    else if (/^[VE][0-9]/.test(val)) {
-        val = val.charAt(0) + '-' + val.slice(1);
-    }
-    
-    // Arreglar duplicación de guiones (V--123)
-    val = val.replace(/-+/g, '-');
-    
-    // Limitar longitud
-    if (val.length > 11) {
-        val = val.slice(0, 11);
-    }
-    
-    e.target.value = val;
+    // Quita todo lo que no sea dígito y limita a 8 caracteres
+    e.target.value = (e.target.value || '').replace(/\D/g, '').slice(0, 8);
 }
 
 /**

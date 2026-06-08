@@ -367,7 +367,7 @@ sort($duplicados, SORT_NUMERIC);
                                     <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— busca si ya está registrado</span>
                                 </label>
                                 <input type="text" id="part_cedula" name="cedula_busqueda" class="sig-input"
-                                       placeholder="Ej: V-12345678" autocomplete="off" style="text-transform:uppercase;">
+                                       placeholder="Ej: 12345678 (solo números)" autocomplete="off">
                             </div>
                         </div>
                         <div class="col-md-4" style="display:flex; align-items:flex-end;">
@@ -712,7 +712,7 @@ sort($duplicados, SORT_NUMERIC);
         }
         var cn=cedula.toUpperCase().replace(/[\s.\-]/g,'');
         if (!/^[VEJGCP]?\d{6,9}$/.test(cn)) {
-            feedback('err','<i class="bi bi-exclamation-circle"></i> Formato no válido. Use V-12345678 o solo números.');
+            feedback('err','<i class="bi bi-exclamation-circle"></i> Cédula no válida. Use solo números (6 a 8 dígitos).');
             return;
         }
         btn.disabled=true; ico.className='bi bi-hourglass-split';
