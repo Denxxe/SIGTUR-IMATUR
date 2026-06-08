@@ -196,6 +196,32 @@ class Ruta extends Model {
         return $result;
     }
 
+    /**
+     * ¿Ya hay un participante SIN cédula (libre) equivalente en esta ruta?
+     * Mismo nombre + apellido + fecha de nacimiento, o misma cédula_libre.
+     */
+    public static function estaInscritoLibre(int $id_ruta, string $nombre, ?string $apellido, ?string $fnac, ?string $cedulaLibre = null): bool {
+        $db = new Database();
+        $tieneCed = $cedulaLibre !== null && trim($cedulaLibre) !== '';
+        $sql = "SELECT 1 FROM participantes_ruta
+                WHERE id_ruta = :r AND is_active = TRUE AND id_persona IS NULL
+                  AND (
+                        ( lower(trim(nombre_libre)) = lower(trim(:nom))
+                          AND lower(trim(COALESCE(apellido_libre,''))) = lower(trim(:ape))
+                          AND COALESCE(fecha_nac_libre::text,'') = COALESCE(:fnac,'') )";
+        if ($tieneCed) {
+            $sql .= " OR ( cedula_libre IS NOT NULL AND lower(trim(cedula_libre)) = lower(trim(:ced)) )";
+        }
+        $sql .= " ) LIMIT 1";
+        $db->query($sql);
+        $db->bind(':r', $id_ruta);
+        $db->bind(':nom', $nombre);
+        $db->bind(':ape', $apellido ?? '');
+        $db->bind(':fnac', $fnac ?: null);
+        if ($tieneCed) $db->bind(':ced', $cedulaLibre);
+        return (bool)$db->single();
+    }
+
     public static function inscribirLibre(int $id_ruta, array $datos, int $user_id) {
         $db = new Database();
         $db->query("INSERT INTO participantes_ruta

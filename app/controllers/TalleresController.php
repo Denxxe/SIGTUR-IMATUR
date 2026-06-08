@@ -309,10 +309,16 @@ class TalleresController extends Controller {
                     throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula de identidad en el formulario estándar.');
                 }
                 $fechaNacLibre = $fechaNacLibreRaw;
+                $cedulaLibre   = trim($_POST['cedula_libre'] ?? '') ?: null;
+                $apellidoLibre = trim($_POST['apellido_libre'] ?? '');
+                // Anti-duplicado en la MISMA actividad (mismo niño/a sin cédula)
+                if (Taller::estaInscritoLibre($id_taller, $nombre, $apellidoLibre, $fechaNacLibre, $cedulaLibre)) {
+                    throw new Exception('Ya hay un participante con ese nombre y fecha de nacimiento inscrito en esta actividad.');
+                }
                 Taller::inscribirLibre($id_taller, [
                     'nombre_libre'      => $nombre,
-                    'apellido_libre'    => trim($_POST['apellido_libre'] ?? ''),
-                    'cedula_libre'      => trim($_POST['cedula_libre'] ?? '') ?: null,
+                    'apellido_libre'    => $apellidoLibre,
+                    'cedula_libre'      => $cedulaLibre,
                     'nombre_docente'    => trim($_POST['nombre_docente'] ?? '') ?: null,
                     'cedula_docente'    => trim($_POST['cedula_docente'] ?? '') ?: null,
                     'fecha_nac_libre'   => $fechaNacLibre,
@@ -333,8 +339,10 @@ class TalleresController extends Controller {
                 if ($cedula !== null) {
                     $cedulaN = strtoupper(preg_replace('/[\s\.\-]/', '', $cedula));
                     if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
-                        throw new Exception('El formato de cédula no es válido. Ejemplos: V-12345678, E-1234567 o solo los números.');
+                        throw new Exception('La cédula no es válida. Use solo números (6 a 8 dígitos).');
                     }
+                    // Guardar/buscar siempre con solo dígitos (formato normalizado)
+                    $cedula = preg_replace('/\D/', '', $cedula);
                 }
 
                 // Validar formato de correo electrónico

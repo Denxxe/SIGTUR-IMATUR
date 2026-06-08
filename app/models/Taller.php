@@ -267,6 +267,34 @@ class Taller extends Model {
         return (bool)$db->single();
     }
 
+    /**
+     * ¿Ya hay un participante SIN cédula (libre) equivalente en esta actividad?
+     * Criterio: mismo nombre + apellido + fecha de nacimiento (normalizados), o
+     * misma cédula_libre (ID escolar) cuando se proporciona. Sirve para evitar
+     * registrar dos veces al mismo niño/a en el mismo taller.
+     */
+    public static function estaInscritoLibre(int $idTaller, string $nombre, ?string $apellido, ?string $fnac, ?string $cedulaLibre = null): bool {
+        $db = new Database();
+        $tieneCed = $cedulaLibre !== null && trim($cedulaLibre) !== '';
+        $sql = "SELECT 1 FROM participantes_taller
+                WHERE id_taller = :t AND is_active = TRUE AND id_persona IS NULL
+                  AND (
+                        ( lower(trim(nombre_libre)) = lower(trim(:nom))
+                          AND lower(trim(COALESCE(apellido_libre,''))) = lower(trim(:ape))
+                          AND COALESCE(fecha_nac_libre::text,'') = COALESCE(:fnac,'') )";
+        if ($tieneCed) {
+            $sql .= " OR ( cedula_libre IS NOT NULL AND lower(trim(cedula_libre)) = lower(trim(:ced)) )";
+        }
+        $sql .= " ) LIMIT 1";
+        $db->query($sql);
+        $db->bind(':t', $idTaller);
+        $db->bind(':nom', $nombre);
+        $db->bind(':ape', $apellido ?? '');
+        $db->bind(':fnac', $fnac ?: null);
+        if ($tieneCed) $db->bind(':ced', $cedulaLibre);
+        return (bool)$db->single();
+    }
+
     public static function marcarAsistencia(int $id, bool $asistio, $userId): void {
         $db = new Database();
         $db->query("UPDATE participantes_taller SET asistio = :a, updated_at = NOW(), updated_by = :u WHERE id = :id AND is_active = TRUE");

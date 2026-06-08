@@ -218,9 +218,15 @@ class RutasController extends Controller {
                     throw new Exception('El N° ID escolar solo admite letras, números y guiones (3 a 20 caracteres).');
                 }
 
+                $apellidoLibre = trim($_POST['apellido_libre'] ?? '') ?: null;
+                // Anti-duplicado en la MISMA ruta (mismo niño/a sin cédula)
+                if (Ruta::estaInscritoLibre($id_ruta, $nombre, $apellidoLibre, $fechaNacLibreRaw, $cedulaLibre)) {
+                    throw new Exception('Ya hay un participante con ese nombre y fecha de nacimiento inscrito en esta ruta.');
+                }
+
                 Ruta::inscribirLibre($id_ruta, [
                     'nombre_libre'   => $nombre,
-                    'apellido_libre' => trim($_POST['apellido_libre'] ?? '') ?: null,
+                    'apellido_libre' => $apellidoLibre,
                     'cedula_libre'   => $cedulaLibre,
                     'genero_libre'   => trim($_POST['genero_libre']   ?? '') ?: null,
                     'fecha_nac_libre'=> $fechaNacLibreRaw,
@@ -235,8 +241,10 @@ class RutasController extends Controller {
 
                 $cedulaN = strtoupper(preg_replace('/[\s.\-]/', '', $cedula));
                 if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
-                    throw new Exception('Formato de cédula no válido. Use V-12345678, E-1234567 o solo los números.');
+                    throw new Exception('La cédula no es válida. Use solo números (6 a 8 dígitos).');
                 }
+                // Guardar/buscar siempre con solo dígitos (formato normalizado)
+                $cedula = preg_replace('/\D/', '', $cedula);
 
                 $nombre   = trim($_POST['nombre']   ?? '');
                 $apellido = trim($_POST['apellido']  ?? '');

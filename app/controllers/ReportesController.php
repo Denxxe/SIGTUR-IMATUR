@@ -1124,6 +1124,71 @@ class ReportesController extends Controller {
     // =========================================================================
     // RF30: Indicadores Generales de Gestión
     // =========================================================================
+    // =========================================================================
+    // Posibles duplicados de participantes (control de registros basura)
+    // =========================================================================
+    public function duplicados() {
+        $this->requireRoles([1, 3]);
+        $db = new Database();
+
+        // 1) Personas con la MISMA cédula normalizada (incluye colisiones que la
+        //    normalización no pudo unificar y cédulas "basura" repetidas).
+        $db->query("SELECT regexp_replace(cedula,'\\D','','g') AS cedula_norm,
+                           COUNT(*) AS total,
+                           string_agg(nombre || ' ' || apellido || ' (#' || id || ' · ' || cedula || ')', '  |  ' ORDER BY id) AS detalle
+                    FROM personas
+                    WHERE is_active = TRUE AND cedula IS NOT NULL
+                      AND regexp_replace(cedula,'\\D','','g') <> ''
+                    GROUP BY 1 HAVING COUNT(*) > 1
+                    ORDER BY total DESC, cedula_norm");
+        $dupCedula = $db->resultSet() ?: [];
+
+        // 2) Personas (con cédula) que coinciden en nombre + apellido + fecha de
+        //    nacimiento → posible misma persona registrada dos veces.
+        $db->query("SELECT count(*) AS total, fecha_nacimiento AS fnac,
+                           string_agg(nombre || ' ' || apellido || ' (#' || id || ' · C.I. ' || COALESCE(cedula,'—') || ')', '  |  ' ORDER BY id) AS detalle
+                    FROM personas
+                    WHERE is_active = TRUE AND fecha_nacimiento IS NOT NULL
+                      AND nombre IS NOT NULL AND apellido IS NOT NULL
+                    GROUP BY lower(trim(nombre)), lower(trim(apellido)), fecha_nacimiento
+                    HAVING COUNT(*) > 1
+                    ORDER BY total DESC");
+        $dupPersona = $db->resultSet() ?: [];
+
+        // 3) Participantes SIN cédula (libre) repetidos por nombre + apellido +
+        //    fecha de nacimiento, unificando talleres y rutas. Estos no tienen un
+        //    identificador único, por lo que requieren revisión humana.
+        $db->query("WITH libre AS (
+                        SELECT trim(pt.nombre_libre) AS nom, trim(COALESCE(pt.apellido_libre,'')) AS ape,
+                               pt.fecha_nac_libre AS fnac,
+                               'Taller: ' || t.nombre AS actividad, t.fecha_inicio AS fecha
+                        FROM participantes_taller pt JOIN talleres t ON pt.id_taller = t.id
+                        WHERE pt.is_active = TRUE AND pt.id_persona IS NULL AND t.is_active = TRUE
+                          AND pt.nombre_libre IS NOT NULL
+                        UNION ALL
+                        SELECT trim(pr.nombre_libre), trim(COALESCE(pr.apellido_libre,'')),
+                               pr.fecha_nac_libre,
+                               'Ruta: ' || r.nombre, r.fecha_visita
+                        FROM participantes_ruta pr JOIN rutas r ON pr.id_ruta = r.id
+                        WHERE pr.is_active = TRUE AND pr.id_persona IS NULL AND r.is_active = TRUE
+                          AND pr.nombre_libre IS NOT NULL
+                    )
+                    SELECT count(*) AS total, fnac,
+                           string_agg(nom || ' ' || ape || ' — ' || actividad || ' (' || COALESCE(to_char(fecha,'DD/MM/YYYY'),'s/f') || ')', '  |  ' ORDER BY fecha) AS detalle
+                    FROM libre
+                    GROUP BY lower(nom), lower(ape), fnac
+                    HAVING COUNT(*) > 1
+                    ORDER BY total DESC");
+        $dupLibre = $db->resultSet() ?: [];
+
+        $this->view('reportes/duplicados', [
+            'titulo'     => 'Posibles duplicados de participantes',
+            'dupCedula'  => $dupCedula,
+            'dupPersona' => $dupPersona,
+            'dupLibre'   => $dupLibre,
+        ]);
+    }
+
     public function indicadores() {
         try {
             $db = new Database();

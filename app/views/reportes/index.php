@@ -57,6 +57,13 @@ $rol = (int)($_SESSION['user_rol'] ?? 0);
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Control de practicantes, tutores y documentos</p>
         <a href="<?php echo URL_ROOT; ?>/reportes/pasantes" class="btn-sig btn-sig--ghost">Generar</a>
     </div>
+
+    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:48px;margin-bottom:12px">🧹</div>
+        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Posibles duplicados</h5>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Detecta participantes repetidos (con o sin cédula) para depurar registros basura</p>
+        <a href="<?php echo URL_ROOT; ?>/reportes/duplicados" class="btn-sig btn-sig--ghost">Revisar</a>
+    </div>
     <?php endif; ?>
 
     <?php if(in_array($rol, [1, 4])): ?>
