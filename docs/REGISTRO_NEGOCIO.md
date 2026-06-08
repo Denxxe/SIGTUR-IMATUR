@@ -82,6 +82,7 @@ RRHH se relevó a fondo (2026-06-02→05) y se implementó completo (migraciones
 - **D-RH07** ✅ contratos con vencimiento variable → alerta en Dashboard (implementada).
 - **D-RH10** ✅ no hay personal no-formal salvo pasantes (módulo propio).
 - **D-RH11** ✅ IMATUR no distingue sueldo base por cargo → se eliminó `cargos.sueldo_base`; los cargos se clasifican por `nivel_jerarquico` (Presidencia/Dirección/Coordinación/Adscrito) según el organigrama (migración 035).
+- **R-12 Egreso/desincorporación** ✅ (migración 036) Dar de baja (renuncia/despido/jubilación/fin de contrato/fallecimiento/otro) **no borra**: marca `fecha_egreso`+`motivo_egreso`, sale de nómina activa pero queda como **histórico consultable** (pestaña "Egresados") con acceso a su expediente, **tiempo de servicio** calculado y **constancias** (redacción en pasado). `is_active=FALSE` queda solo para papelera (registro creado por error). **Reingreso con historial** (`empleados_egresos`); índice único impide doble egreso abierto.
 - Detalle: `MODELO_NEGOCIO_RRHH.md` §10–11 y `REGLAS_NEGOCIO_RRHH.md`.
 
 ## B.2 Inventario

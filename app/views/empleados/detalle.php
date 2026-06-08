@@ -4,6 +4,9 @@ $eid = (int)$e->id;
 $ffecha = fn($f) => !empty($f) ? date('d/m/Y', strtotime($f)) : '—';
 $val    = fn($v) => !empty($v) ? htmlspecialchars($v) : '—';
 $esBool = fn($v) => ($v === true || $v === 't' || $v === '1');
+$egresado = !empty($e->fecha_egreso);
+$motivos  = $data['motivos'] ?? [];
+$tiempoServicio = $data['tiempo_servicio'] ?? '—';
 ?>
 
 <div class="page__head anim-slide-up">
@@ -16,11 +19,37 @@ $esBool = fn($v) => ($v === true || $v === 't' || $v === '1');
         <a href="<?php echo URL_ROOT; ?>/empleados/fichaTecnica/<?php echo $eid; ?>" target="_blank" class="btn-sig btn-sig--primary">
             <i class="bi bi-file-earmark-text"></i> Ficha Técnica
         </a>
-        <a href="<?php echo URL_ROOT; ?>/empleados/index" class="btn-sig btn-sig--ghost">
+        <?php if ($egresado): ?>
+            <button type="button" class="btn-sig btn-sig--success" data-bs-toggle="modal" data-bs-target="#modalReingreso">
+                <i class="bi bi-arrow-counterclockwise"></i> Reingreso
+            </button>
+        <?php else: ?>
+            <button type="button" class="btn-sig btn-sig--danger" data-bs-toggle="modal" data-bs-target="#modalEgreso">
+                <i class="bi bi-box-arrow-right"></i> Procesar egreso
+            </button>
+        <?php endif; ?>
+        <a href="<?php echo URL_ROOT; ?>/empleados/index<?php echo $egresado ? '?ver=egresados' : ''; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
     </div>
 </div>
+
+<?php if ($egresado): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:20px;border-left:4px solid var(--warning-500,#f59e0b);">
+    <div class="sig-card__body" style="display:flex;align-items:center;gap:14px;">
+        <i class="bi bi-archive" style="font-size:1.6rem;color:var(--warning-600,#d97706);"></i>
+        <div>
+            <strong>Empleado egresado</strong> — registro histórico (no aparece en la nómina activa).<br>
+            <span style="font-size:13px;color:var(--text-secondary);">
+                Egresó el <strong><?php echo $ffecha($e->fecha_egreso); ?></strong>
+                por <strong><?php echo $val($e->motivo_egreso); ?></strong>.
+                Tiempo de servicio: <strong><?php echo htmlspecialchars($tiempoServicio); ?></strong>.
+                <?php if (!empty($e->observacion_egreso)): ?><br>Observación: <?php echo htmlspecialchars($e->observacion_egreso); ?><?php endif; ?>
+            </span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Resumen de datos -->
 <div class="sig-card anim-slide-up" style="margin-bottom:20px;">
@@ -58,6 +87,11 @@ $esBool = fn($v) => ($v === true || $v === 't' || $v === '1');
                     <dt>Clasificación</dt><dd><?php echo $val($e->clasificacion); ?></dd>
                     <dt>Institución / Nómina</dt><dd><?php echo $val($e->institucion_origen); ?><?php echo $esBool($e->es_comision_servicio) ? ' (Comisión de servicio)' : ''; ?></dd>
                     <dt>F. Ingreso</dt><dd><?php echo $ffecha($e->fecha_ingreso); ?></dd>
+                    <dt>Tiempo de servicio</dt><dd><?php echo htmlspecialchars($tiempoServicio); ?><?php echo $egresado ? '' : ' (a la fecha)'; ?></dd>
+                    <?php if ($egresado): ?>
+                        <dt>F. Egreso</dt><dd><?php echo $ffecha($e->fecha_egreso); ?></dd>
+                        <dt>Motivo de egreso</dt><dd><?php echo $val($e->motivo_egreso); ?></dd>
+                    <?php endif; ?>
                     <dt>Horario</dt><dd><?php echo $val($e->horario); ?></dd>
                 </dl>
             </div>
@@ -331,5 +365,97 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
         </form>
     </div>
 </div>
+
+<?php
+// ── Historial de egresos / reingresos ──
+$hist = $data['historial_egresos'] ?? [];
+if (!empty($hist)): ?>
+<div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
+    <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-clock-history"></i> Historial de egresos / reingresos</h5></div>
+    <table class="sig-table">
+        <thead><tr><th>F. Egreso</th><th>Motivo</th><th>Observación</th><th>F. Reingreso</th></tr></thead>
+        <tbody>
+            <?php foreach ($hist as $h): ?>
+                <tr>
+                    <td><?php echo $ffecha($h->fecha_egreso); ?></td>
+                    <td><span class="sig-badge sig-badge--warning"><?php echo htmlspecialchars($h->motivo_egreso); ?></span></td>
+                    <td style="font-size:13px;"><?php echo $val($h->observacion); ?></td>
+                    <td><?php echo !empty($h->fecha_reingreso) ? $ffecha($h->fecha_reingreso) : '<span class="text-muted">— vigente —</span>'; ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
+
+<?php if (!$egresado): ?>
+<!-- Modal: Procesar egreso -->
+<div class="modal fade" id="modalEgreso" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/egresar" method="POST" class="modal-content needs-validation" novalidate>
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-arrow-right"></i> Procesar egreso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <p class="text-muted" style="font-size:13px;">
+                    El expediente se conserva en el histórico de egresados (no se elimina) y seguirá
+                    disponible para constancias y tiempo de servicio.
+                </p>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Fecha de egreso <span class="req">*</span></label>
+                    <input type="date" name="fecha_egreso" class="sig-input" required
+                           min="<?php echo htmlspecialchars($e->fecha_ingreso ?? ''); ?>" max="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Motivo <span class="req">*</span></label>
+                    <select name="motivo_egreso" class="sig-input" required>
+                        <option value="">— Seleccione —</option>
+                        <?php foreach ($motivos as $m): ?>
+                            <option value="<?php echo htmlspecialchars($m); ?>"><?php echo htmlspecialchars($m); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field mb-2">
+                    <label class="sig-field__label">Observación</label>
+                    <textarea name="observacion_egreso" class="sig-input" rows="2" placeholder="N° de oficio, detalle del motivo, etc. (opcional)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--danger"><i class="bi bi-box-arrow-right"></i> Confirmar egreso</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php else: ?>
+<!-- Modal: Reingreso -->
+<div class="modal fade" id="modalReingreso" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/reingresar" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-counterclockwise"></i> Reingreso de empleado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <p class="text-muted" style="font-size:13px;">
+                    Vas a reincorporar a este empleado a la nómina activa. El egreso anterior
+                    queda guardado en su historial.
+                </p>
+                <div class="sig-field mb-2">
+                    <label class="sig-field__label">Observación</label>
+                    <textarea name="reingreso_observacion" class="sig-input" rows="2" placeholder="Motivo del reingreso (opcional)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-arrow-counterclockwise"></i> Confirmar reingreso</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

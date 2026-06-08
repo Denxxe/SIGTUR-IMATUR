@@ -533,6 +533,7 @@ Cambios al sistema derivados de este modelo, agrupados por sección. El orden su
 | R-9 | **Amonestaciones** ✅ **HECHO (mig.031)** | Tablas `faltas` y `amonestaciones` (registro manual RRHH); roster con conteos + semáforo; detalle por empleado; alerta "causa de despido" a las 3 amonestaciones | ✅ Resuelto (D-RH28) |
 | R-10 | **Documentos generados / Constancias** ✅ **HECHO (mig.034)** | Constancia de trabajo imprimible con correlativo `CONST-NNN/AAAA` + historial por empleado en el expediente | ✅ Resuelto |
 | R-11 | **Nómina (futuro)** | Generación de nómina para Alcaldía/Gobernación | D-RH34 |
+| R-12 | **Egreso / desincorporación** ✅ **HECHO (mig.036)** | Baja por renuncia/despido/jubilación/fin de contrato/fallecimiento/otro: marca `fecha_egreso`+`motivo_egreso` (no borra), histórico consultable (pestaña Egresados), tiempo de servicio en expediente/constancia, reingreso con historial (`empleados_egresos`) | ✅ Resuelto |
 
 > **Estado (2026-06-04):** Hechos R-2, R-3, R-4. Desbloqueados R-1, R-5, R-6, R-7, R-9 y la parte de permisos/reposos de R-8. Bloqueados: vacaciones (R-8: D-RH04/05/NEW05) y nómina (R-11: D-RH34).
 >

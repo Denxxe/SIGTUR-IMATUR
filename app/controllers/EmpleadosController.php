@@ -5,19 +5,14 @@
 class EmpleadosController extends Controller {
 
     public function index() {
-        $empleados     = Empleado::all();
-        $cargos        = Cargo::all();
-        $departamentos = Departamento::all();
-        $parroquias    = Parroquia::all();
-        $horarios      = Horario::all();
+        $ver = ($_GET['ver'] ?? 'activos') === 'egresados' ? 'egresados' : 'activos';
+        $empleados = ($ver === 'egresados') ? Empleado::egresados() : Empleado::all();
 
         $data = [
-            'titulo'       => 'Gestión de Personal (Empleados)',
-            'empleados'    => $empleados,
-            'cargos'       => $cargos,
-            'departamentos'=> $departamentos,
-            'horarios'     => $horarios,
-            'parroquias'   => $parroquias,
+            'titulo'    => 'Gestión de Personal (Empleados)',
+            'empleados' => $empleados,
+            'ver'       => $ver,
+            'motivos'   => Empleado::MOTIVOS_EGRESO,
         ];
 
         $this->view('empleados/index', $data);
@@ -81,6 +76,9 @@ class EmpleadosController extends Controller {
             'horarios'     => Horario::all(),
             'recaudos'     => ExpedienteDocumento::recaudosEstado($id),
             'constancias'  => Constancia::porEmpleado($id),
+            'motivos'      => Empleado::MOTIVOS_EGRESO,
+            'historial_egresos' => Empleado::historialEgresos($id),
+            'tiempo_servicio'   => Empleado::tiempoServicio($empleado->fecha_ingreso, $empleado->fecha_egreso),
         ];
 
         $this->view('empleados/detalle', $data);
@@ -251,10 +249,54 @@ class EmpleadosController extends Controller {
         }
     }
 
+    /**
+     * Egreso / desincorporación del empleado (renuncia, despido, jubilación…).
+     * No borra el registro: lo marca como egresado (histórico consultable).
+     */
+    public function egresar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URL_ROOT . '/empleados/index');
+            return;
+        }
+        $_POST = $this->sanitizePost();
+        $id     = (int)($_POST['id_empleado'] ?? 0);
+        $fecha  = $_POST['fecha_egreso'] ?? '';
+        $motivo = $_POST['motivo_egreso'] ?? '';
+        $obs    = $_POST['observacion_egreso'] ?? null;
+
+        try {
+            if ($fecha > date('Y-m-d')) throw new Exception("La fecha de egreso no puede ser futura.");
+            Empleado::procesarEgreso($id, $fecha, $motivo, $obs, $this->getUserId());
+            flash('global_msg', 'Egreso procesado. El empleado pasó al histórico de egresados.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', 'No se pudo procesar el egreso: ' . $e->getMessage(), 'danger');
+        }
+        $this->backToDetalle($id);
+    }
+
+    /** Reingreso de un ex-empleado (lo reincorpora a la nómina activa). */
+    public function reingresar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URL_ROOT . '/empleados/index');
+            return;
+        }
+        $_POST = $this->sanitizePost();
+        $id  = (int)($_POST['id_empleado'] ?? 0);
+        $obs = $_POST['reingreso_observacion'] ?? null;
+        try {
+            Empleado::reingresar($id, $obs, $this->getUserId());
+            flash('global_msg', 'Reingreso registrado. El empleado vuelve a la nómina activa.');
+        } catch (Exception $e) {
+            flash('global_msg', 'No se pudo registrar el reingreso: ' . $e->getMessage(), 'danger');
+        }
+        $this->backToDetalle($id);
+    }
+
+    /** Papelera: elimina un registro creado por error (soft delete). */
     public function delete($id) {
         try {
             if (Empleado::delete($id, $this->getUserId())) {
-                flash('global_msg', 'El expediente del empleado ha sido movido a la papelera.', 'warning');
+                flash('global_msg', 'El registro del empleado ha sido movido a la papelera.', 'warning');
             } else {
                 throw new Exception("No pudimos eliminar el registro en este momento.");
             }
@@ -428,6 +470,8 @@ class EmpleadosController extends Controller {
             'empleado'   => $empleado,
             'config'     => ConfigSistema::getAll(),
             'fecha_hoy'  => $this->fechaLarga(date('Y-m-d')),
+            'tiempo_servicio' => Empleado::tiempoServicio($empleado->fecha_ingreso ?? null, $empleado->fecha_egreso ?? null),
+            'egresado'        => !empty($empleado->fecha_egreso),
         ];
         $this->view('empleados/constancia', $data);
     }

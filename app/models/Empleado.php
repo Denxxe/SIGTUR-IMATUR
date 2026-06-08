@@ -20,6 +20,8 @@ class Empleado extends Model
     const NIVELES_ACADEMICOS = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio', 'Universitario', 'Postgrado'];
     // Grupo de rotación (solo Servicios Generales) — mig.028
     const GRUPOS_ROTACION = ['A', 'B'];
+    // Motivos de egreso / desincorporación (mig. 036 — R-12)
+    const MOTIVOS_EGRESO = ['Renuncia', 'Despido', 'Jubilación', 'Fin de contrato', 'Fallecimiento', 'Otro'];
 
     // Datos de personas
     private ?int $id_persona;
@@ -129,7 +131,28 @@ class Empleado extends Model
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
+                      AND e.fecha_egreso IS NULL
                     ORDER BY p.nombre ASC");
+        return $db->resultSet();
+    }
+
+    /**
+     * Empleados egresados (histórico): trabajaron en IMATUR y ya no.
+     * Incluye fecha y motivo de egreso para mostrar el tiempo de servicio.
+     */
+    public static function egresados()
+    {
+        $db = new Database();
+        $db->query("SELECT e.*,
+                           p.cedula, p.nombre, p.apellido, p.telefono, p.correo,
+                           c.nombre as cargo, d.nombre as departamento
+                    FROM empleados e
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    INNER JOIN cargos c ON e.id_cargo = c.id
+                    INNER JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE e.is_active = TRUE AND p.is_active = TRUE
+                      AND e.fecha_egreso IS NOT NULL
+                    ORDER BY e.fecha_egreso DESC, p.nombre ASC");
         return $db->resultSet();
     }
 
@@ -146,6 +169,7 @@ class Empleado extends Model
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
+                    AND e.fecha_egreso IS NULL
                     AND (
                         d.nombre ILIKE '%turismo%'
                         OR d.nombre ILIKE '%formaci%'
@@ -330,5 +354,129 @@ class Empleado extends Model
         $result = $db->execute();
         self::auditStatic('empleados', 'DELETE', $id, $previos, null, $user_id);
         return $result;
+    }
+
+    // ── Egreso / desincorporación (R-12, mig. 036) ─────────────────────────────
+
+    /**
+     * Procesa el egreso (baja) de un empleado: marca fecha y motivo en el
+     * registro y deja constancia en el historial (empleados_egresos).
+     * El registro permanece is_active = TRUE (histórico válido, no papelera).
+     */
+    public static function procesarEgreso($id, $fecha, $motivo, $observacion = null, $user_id = null)
+    {
+        if (empty($id) || empty($fecha)) throw new Exception("Empleado y fecha de egreso son obligatorios.");
+        if (!in_array($motivo, self::MOTIVOS_EGRESO, true)) throw new Exception("Motivo de egreso inválido.");
+
+        $previos = self::find($id);
+        if (!$previos) throw new Exception("El empleado no existe.");
+        if (!empty($previos->fecha_egreso)) throw new Exception("El empleado ya se encuentra egresado.");
+        if (!empty($previos->fecha_ingreso) && $fecha < $previos->fecha_ingreso) {
+            throw new Exception("La fecha de egreso no puede ser anterior a la fecha de ingreso.");
+        }
+
+        $db = new Database();
+        $db->beginTransaction();
+        try {
+            $db->query("UPDATE empleados
+                        SET fecha_egreso = :f, motivo_egreso = :m, observacion_egreso = :o,
+                            updated_at = CURRENT_TIMESTAMP, updated_by = :uid
+                        WHERE id = :id");
+            $db->bind(':f', $fecha);
+            $db->bind(':m', $motivo);
+            $db->bind(':o', $observacion ?: null);
+            $db->bind(':uid', $user_id);
+            $db->bind(':id', $id);
+            $db->execute();
+
+            $db->query("INSERT INTO empleados_egresos (id_empleado, fecha_egreso, motivo_egreso, observacion, created_by)
+                        VALUES (:id, :f, :m, :o, :uid)");
+            $db->bind(':id', $id);
+            $db->bind(':f', $fecha);
+            $db->bind(':m', $motivo);
+            $db->bind(':o', $observacion ?: null);
+            $db->bind(':uid', $user_id);
+            $db->execute();
+
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
+
+        self::auditStatic('empleados', 'UPDATE', $id, $previos,
+            ['accion' => 'EGRESO', 'fecha_egreso' => $fecha, 'motivo_egreso' => $motivo], $user_id);
+        return true;
+    }
+
+    /**
+     * Reingreso de un ex-empleado: limpia el egreso vigente y cierra la fila
+     * abierta del historial (conserva el egreso anterior — reingreso con historial).
+     */
+    public static function reingresar($id, $observacion = null, $user_id = null)
+    {
+        $previos = self::find($id);
+        if (!$previos) throw new Exception("El empleado no existe.");
+        if (empty($previos->fecha_egreso)) throw new Exception("El empleado no está egresado.");
+
+        $db = new Database();
+        $db->beginTransaction();
+        try {
+            $db->query("UPDATE empleados_egresos
+                        SET fecha_reingreso = CURRENT_DATE, reingreso_observacion = :o,
+                            reingreso_at = CURRENT_TIMESTAMP, reingreso_by = :uid
+                        WHERE id_empleado = :id AND fecha_reingreso IS NULL");
+            $db->bind(':o', $observacion ?: null);
+            $db->bind(':uid', $user_id);
+            $db->bind(':id', $id);
+            $db->execute();
+
+            $db->query("UPDATE empleados
+                        SET fecha_egreso = NULL, motivo_egreso = NULL, observacion_egreso = NULL,
+                            updated_at = CURRENT_TIMESTAMP, updated_by = :uid
+                        WHERE id = :id");
+            $db->bind(':uid', $user_id);
+            $db->bind(':id', $id);
+            $db->execute();
+
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
+
+        self::auditStatic('empleados', 'UPDATE', $id, $previos, ['accion' => 'REINGRESO'], $user_id);
+        return true;
+    }
+
+    /** Historial de egresos/reingresos de un empleado (más reciente primero). */
+    public static function historialEgresos($id)
+    {
+        $db = new Database();
+        $db->query("SELECT * FROM empleados_egresos WHERE id_empleado = :id ORDER BY fecha_egreso DESC, id DESC");
+        $db->bind(':id', $id);
+        return $db->resultSet();
+    }
+
+    /**
+     * Tiempo de servicio formateado (años, meses) entre ingreso y egreso.
+     * Si no hay egreso, calcula hasta la fecha actual.
+     */
+    public static function tiempoServicio($fechaIngreso, $fechaEgreso = null): string
+    {
+        if (empty($fechaIngreso)) return '—';
+        try {
+            $ini = new DateTime($fechaIngreso);
+            $fin = !empty($fechaEgreso) ? new DateTime($fechaEgreso) : new DateTime();
+        } catch (Exception $e) {
+            return '—';
+        }
+        if ($fin < $ini) return '—';
+        $d = $ini->diff($fin);
+        $partes = [];
+        if ($d->y) $partes[] = $d->y . ' año' . ($d->y > 1 ? 's' : '');
+        if ($d->m) $partes[] = $d->m . ' mes' . ($d->m > 1 ? 'es' : '');
+        if (empty($partes)) $partes[] = $d->d . ' día' . ($d->d != 1 ? 's' : '');
+        return implode(', ', $partes);
     }
 }

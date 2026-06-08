@@ -374,6 +374,8 @@ CREATE TABLE public.empleados (
     talla_camisa character varying(10),
     talla_pantalon character varying(10),
     talla_zapato character varying(10),
+    motivo_egreso character varying(40),
+    observacion_egreso text,
     CONSTRAINT empleados_tipo_contrato_check CHECK (((tipo_contrato)::text = ANY ((ARRAY['Fijo'::character varying, 'Contratado'::character varying])::text[]))),
     CONSTRAINT empleados_institucion_origen_check CHECK (((institucion_origen)::text = ANY ((ARRAY['Alcaldía'::character varying, 'Gobernación'::character varying, 'IMATUR'::character varying])::text[]))),
     CONSTRAINT empleados_clasificacion_check CHECK ((clasificacion IS NULL OR (clasificacion)::text = ANY ((ARRAY['Empleado'::character varying, 'Obrero'::character varying])::text[]))),

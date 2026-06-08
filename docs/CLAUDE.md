@@ -212,8 +212,9 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 033 | `033_expediente_documentos.sql` | ✅ Ejecutado | tabla `expediente_documentos` (recaudos subidos por empleado, FK id_empleado) (R-5 RRHH) |
 | 034 | `034_constancias.sql` | ✅ Ejecutado | tabla `constancias` (FK id_empleado) + claves correlativo `*_constancia`; genera CONST-NNN/AAAA (R-10 RRHH) |
 | 035 | `035_cargos_jerarquia.sql` | ✅ Ejecutado | `cargos`: **DROP `sueldo_base`** (IMATUR no distingue sueldo por cargo, D-RH11) + `nivel_jerarquico` (Presidencia/Dirección/Coordinación/Adscrito); seed de niveles |
+| 036 | `036_egreso_empleados.sql` | ✅ Ejecutado | `empleados`: `motivo_egreso`/`observacion_egreso` (`fecha_egreso` ya existía) + tabla `empleados_egresos` (historial egreso/reingreso, índice único parcial de egreso abierto). Egreso ≠ papelera (R-12) |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–035** (columnas/constraints). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–035** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos).
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–036** (columnas/constraints; `empleados` incluye `motivo_egreso`/`observacion_egreso`). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–036** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos, la 036 agrega egreso/reingreso de empleados + tabla `empleados_egresos`).
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -387,6 +388,8 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 18. **`empleados` modelo de contrato (migración 025)** — `tipo_contrato` = estabilidad: solo `'Fijo'`/`'Contratado'`, DEFAULT `'Contratado'` (todo nuevo es Contratado). `'Suplente'` y `'Comisión de Servicio'` **deprecados** (ya no son valores válidos). El origen se modela aparte: `institucion_origen` ∈ `'Alcaldía'`/`'Gobernación'`/`'IMATUR'` (DEFAULT 'IMATUR'). **`es_comision_servicio` se DERIVA del origen** (= origen ≠ IMATUR): comisión de servicio ⟺ viene de Alcaldía/Gobernación; no es checkbox manual (el asistente lo muestra como indicador). Tope de edad: IMATUR 18–65, comisión 18–70. Enums centralizados en `Empleado::TIPOS_CONTRATO` / `Empleado::INSTITUCIONES_ORIGEN` (patrón H-07). Ver `docs/MODELO_NEGOCIO_RRHH.md` 2.2 (D-RH27).
 
+18k. **Egreso / desincorporación de empleados (migración 036, R-12)** — dar de baja a un trabajador (renuncia, despido, jubilación, fin de contrato, fallecimiento, otro) **NO borra** el registro: lo marca como egresado (`empleados.fecha_egreso` + `motivo_egreso` + `observacion_egreso`), manteniéndolo `is_active=TRUE` como **histórico consultable** (sale de la nómina activa pero sigue disponible para constancias y tiempo de servicio). `is_active=FALSE` (`delete()`) queda reservado para registros creados por error (papelera). `Empleado::all()`/`facilitadoresTalleres()` filtran `fecha_egreso IS NULL`; `Empleado::egresados()` lista el histórico; `procesarEgreso()`/`reingresar()` (transaccionales + auditados) usan la tabla `empleados_egresos` (historial; índice único parcial `uq_emp_egreso_abierto` impide dos egresos abiertos). **Reingreso con historial**: al reingresar se cierra la fila (`fecha_reingreso`) y se limpia el egreso vigente. `Empleado::tiempoServicio($ingreso,$egreso)` → "X años, Y meses" (hasta egreso o hasta hoy), embebido en la **constancia** (redacción en pasado si egresado). Enum `Empleado::MOTIVOS_EGRESO`. UI: pestañas Activos/Egresados en `empleados/index` (`?ver=egresados`), modal "Procesar egreso"/"Reingreso" en index y expediente, banner + tiempo de servicio + historial en `empleados/detalle`. Controlador: `egresar()`/`reingresar()` (POST, validan fecha ≥ ingreso y no futura).
+
 18j. **Constancias de trabajo (migración 034, R-10)** — dentro del módulo Empleados. `Constancia::crear($idEmpleado)` genera correlativo `CONST-` + `ConfigSistema::generarNumeroOficio('constancia')` → `CONST-NNN/AAAA` (claves `correlativo_oficio_constancia`/`ano_correlativo_constancia` sembradas en 034). `EmpleadosController::generarConstancia($id)` (crea + redirige a imprimible), `constancia($idConst)` (vista imprimible `empleados/constancia.php`, carta institucional con firmante de ConfigSistema), `eliminarConstancia()`. Historial en la sección "Constancias / Documentos generados" del expediente. RIF en la constancia = G-20008498-7 (igual que la ficha; difiere de carta_aceptacion — unificar vía ConfigSistema).
 
 18i. **Recaudos del expediente (migración 033, R-5)** — dentro del módulo Empleados (sin RBAC nuevo). `ExpedienteDocumento::RECAUDOS` = catálogo (clave→[etiqueta, obligatorio]); `recaudosEstado($id)` arma el checklist y cuenta faltantes obligatorios. Subida en `EmpleadosController::subirDocumento()` (valida PDF/JPG/PNG ≤5MB; nombre `Tipo_Empleado_{id}_{ts}.ext`; guarda en `public/uploads/expedientes/`; URL relativa `/uploads/expedientes/...`). Sección "Recaudos del Expediente" en `empleados/detalle.php` (estado entregado/falta, descarga, eliminar, aviso de faltantes). La Ficha Técnica generada (R-2) es un recaudo más del catálogo.
@@ -431,7 +434,7 @@ createdb -U postgres "SIGTUR-IMATUR"
 # 3. Importar el esquema consolidado (schema base + migraciones 001-023 + seeds):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
-# 4. Aplicar las migraciones posteriores al consolidado (024 a 035):
+# 4. Aplicar las migraciones posteriores al consolidado (024 a 036):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/024_pasantes_carta_aceptacion.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/025_empleados_contrato_origen.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/026_empleado_ficha_tecnica.sql
@@ -444,6 +447,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/032_p
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/033_expediente_documentos.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_constancias.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/035_cargos_jerarquia.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/036_egreso_empleados.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -452,7 +456,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/035_c
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 035** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
+> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 036** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
 
 ---
 

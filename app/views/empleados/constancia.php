@@ -7,9 +7,17 @@ $fechaIngreso = !empty($e->fecha_ingreso) ? (function ($f) {
     $m = ['', 'enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     $t = strtotime($f); return (int)date('d',$t) . ' de ' . $m[(int)date('n',$t)] . ' de ' . date('Y',$t);
 })($e->fecha_ingreso) : '—';
+$fmtFecha = function ($f) {
+    if (empty($f)) return '—';
+    $m = ['', 'enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    $t = strtotime($f); return (int)date('d',$t) . ' de ' . $m[(int)date('n',$t)] . ' de ' . date('Y',$t);
+};
 $firmante = trim($g('director_nombre') . ' ' . $g('director_apellido'));
 $cargoFirmante = $g('director_cargo') ?: 'Director(a) General';
 $v = fn($x) => htmlspecialchars($x ?? '');
+$egresado       = !empty($data['egresado']);
+$tiempoServicio = $data['tiempo_servicio'] ?? '';
+$fechaEgreso    = $egresado ? $fmtFecha($e->fecha_egreso) : '';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -66,10 +74,18 @@ $v = fn($x) => htmlspecialchars($x ?? '');
     <strong><?php echo $v($cargoFirmante); ?></strong> del Instituto Municipal Autónomo de Turismo del Municipio Sucre
     (IMATUR), por medio de la presente hace constar que el/la ciudadano(a)
     <strong><?php echo $v($e->nombre . ' ' . $e->apellido); ?></strong>, titular de la cédula de identidad
-    N° <strong><?php echo $v($e->cedula); ?></strong>, presta sus servicios en esta institución desempeñando el cargo de
-    <strong><?php echo $v($e->cargo ?? '—'); ?></strong>, adscrito(a) a <strong><?php echo $v($e->departamento ?? '—'); ?></strong>,
-    bajo la modalidad de <strong><?php echo $v($e->tipo_contrato ?? '—'); ?></strong>, desde el
-    <strong><?php echo $fechaIngreso; ?></strong>.
+    N° <strong><?php echo $v($e->cedula); ?></strong>,
+    <?php if ($egresado): ?>
+      prestó sus servicios en esta institución desempeñando el cargo de
+      <strong><?php echo $v($e->cargo ?? '—'); ?></strong>, adscrito(a) a <strong><?php echo $v($e->departamento ?? '—'); ?></strong>,
+      bajo la modalidad de <strong><?php echo $v($e->tipo_contrato ?? '—'); ?></strong>, desde el
+      <strong><?php echo $fechaIngreso; ?></strong> hasta el <strong><?php echo $fechaEgreso; ?></strong><?php echo $tiempoServicio ? ', con un tiempo de servicio de <strong>' . $v($tiempoServicio) . '</strong>' : ''; ?>.
+    <?php else: ?>
+      presta sus servicios en esta institución desempeñando el cargo de
+      <strong><?php echo $v($e->cargo ?? '—'); ?></strong>, adscrito(a) a <strong><?php echo $v($e->departamento ?? '—'); ?></strong>,
+      bajo la modalidad de <strong><?php echo $v($e->tipo_contrato ?? '—'); ?></strong>, desde el
+      <strong><?php echo $fechaIngreso; ?></strong><?php echo $tiempoServicio ? ', con un tiempo de servicio de <strong>' . $v($tiempoServicio) . '</strong>' : ''; ?>.
+    <?php endif; ?>
   </div>
 
   <div class="cierre">
