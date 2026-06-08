@@ -311,6 +311,18 @@ class TalleresController extends Controller {
                 $fechaNacLibre = $fechaNacLibreRaw;
                 $cedulaLibre   = trim($_POST['cedula_libre'] ?? '') ?: null;
                 $apellidoLibre = trim($_POST['apellido_libre'] ?? '');
+
+                // Representante / docente obligatorio: ancla la identidad del menor
+                // sin cédula (adulto con cédula = identificador estable).
+                $nombreRep = trim($_POST['nombre_docente'] ?? '');
+                $cedulaRep = preg_replace('/\D/', '', trim($_POST['cedula_docente'] ?? ''));
+                if ($nombreRep === '' || $cedulaRep === '') {
+                    throw new Exception('El representante/docente (nombre y cédula) es obligatorio para participantes sin cédula.');
+                }
+                if (strlen($cedulaRep) < 6 || strlen($cedulaRep) > 8) {
+                    throw new Exception('La cédula del representante debe tener entre 6 y 8 dígitos.');
+                }
+
                 // Anti-duplicado en la MISMA actividad (mismo niño/a sin cédula)
                 if (Taller::estaInscritoLibre($id_taller, $nombre, $apellidoLibre, $fechaNacLibre, $cedulaLibre)) {
                     throw new Exception('Ya hay un participante con ese nombre y fecha de nacimiento inscrito en esta actividad.');
@@ -319,8 +331,8 @@ class TalleresController extends Controller {
                     'nombre_libre'      => $nombre,
                     'apellido_libre'    => $apellidoLibre,
                     'cedula_libre'      => $cedulaLibre,
-                    'nombre_docente'    => trim($_POST['nombre_docente'] ?? '') ?: null,
-                    'cedula_docente'    => trim($_POST['cedula_docente'] ?? '') ?: null,
+                    'nombre_docente'    => $nombreRep,
+                    'cedula_docente'    => $cedulaRep,
                     'fecha_nac_libre'   => $fechaNacLibre,
                     'genero_libre'      => trim($_POST['genero_libre'] ?? '') ?: null,
                     'parroquia_id_libre'=> (int)($_POST['parroquia_id_libre'] ?? 0) ?: null,
@@ -856,12 +868,22 @@ class TalleresController extends Controller {
                 if ($edad < 5)  throw new Exception('El participante debe tener al menos 5 años.');
                 if ($edad >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con cédula.');
 
+                // Representante / docente obligatorio (ancla la identidad del menor)
+                $nombreRep = trim($_POST['nombre_docente'] ?? '');
+                $cedulaRep = preg_replace('/\D/', '', trim($_POST['cedula_docente'] ?? ''));
+                if ($nombreRep === '' || $cedulaRep === '') {
+                    throw new Exception('El representante/docente (nombre y cédula) es obligatorio para participantes sin cédula.');
+                }
+                if (strlen($cedulaRep) < 6 || strlen($cedulaRep) > 8) {
+                    throw new Exception('La cédula del representante debe tener entre 6 y 8 dígitos.');
+                }
+
                 Taller::actualizarParticipanteLibre($id_pt, [
                     'nombre_libre'       => $nombre,
                     'apellido_libre'     => trim($_POST['apellido_libre'] ?? '') ?: null,
                     'cedula_libre'       => trim($_POST['cedula_libre']   ?? '') ?: null,
-                    'nombre_docente'     => trim($_POST['nombre_docente'] ?? '') ?: null,
-                    'cedula_docente'     => trim($_POST['cedula_docente'] ?? '') ?: null,
+                    'nombre_docente'     => $nombreRep,
+                    'cedula_docente'     => $cedulaRep,
                     'fecha_nac_libre'    => $fechaRaw,
                     'genero_libre'       => trim($_POST['genero_libre']   ?? '') ?: null,
                     'parroquia_id_libre' => (int)($_POST['parroquia_id_libre'] ?? 0) ?: null,

@@ -486,6 +486,25 @@ sort($duplicados, SORT_NUMERIC);
                                        pattern="^[A-Za-z0-9\-]{3,20}$" title="Letras, números y guiones (3 a 20 caracteres)">
                             </div>
                         </div>
+                        <div class="col-12">
+                            <hr style="margin:var(--sp-1) 0;">
+                            <p style="font-size:12px; font-weight:600; color:var(--teal-600,#0d9488); margin:0 0 var(--sp-2);">
+                                <i class="bi bi-person-badge"></i> Representante <span class="req">*</span>
+                                <span style="font-weight:400; color:var(--text-tertiary);">— adulto responsable; ancla la identidad del menor</span>
+                            </p>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="sig-field" style="margin:0;">
+                                <label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
+                                <input type="text" name="nombre_representante" class="sig-input" placeholder="Ej: Ana Pérez" required>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="sig-field" style="margin:0;">
+                                <label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
+                                <input type="text" name="cedula_representante" class="sig-input" placeholder="12345678 (solo números)" required>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

@@ -219,6 +219,17 @@ class RutasController extends Controller {
                 }
 
                 $apellidoLibre = trim($_POST['apellido_libre'] ?? '') ?: null;
+
+                // Representante obligatorio: ancla la identidad del menor sin cédula.
+                $nombreRep = trim($_POST['nombre_representante'] ?? '');
+                $cedulaRep = preg_replace('/\D/', '', trim($_POST['cedula_representante'] ?? ''));
+                if ($nombreRep === '' || $cedulaRep === '') {
+                    throw new Exception('El representante (nombre y cédula) es obligatorio para participantes sin cédula.');
+                }
+                if (strlen($cedulaRep) < 6 || strlen($cedulaRep) > 8) {
+                    throw new Exception('La cédula del representante debe tener entre 6 y 8 dígitos.');
+                }
+
                 // Anti-duplicado en la MISMA ruta (mismo niño/a sin cédula)
                 if (Ruta::estaInscritoLibre($id_ruta, $nombre, $apellidoLibre, $fechaNacLibreRaw, $cedulaLibre)) {
                     throw new Exception('Ya hay un participante con ese nombre y fecha de nacimiento inscrito en esta ruta.');
@@ -232,6 +243,8 @@ class RutasController extends Controller {
                     'fecha_nac_libre'=> $fechaNacLibreRaw,
                     'id_institucion' => null,
                     'observaciones'  => $observaciones,
+                    'nombre_representante' => $nombreRep,
+                    'cedula_representante' => $cedulaRep,
                 ], $userId);
 
             // ── Flujo con cédula: buscar o crear en personas ─────────────────

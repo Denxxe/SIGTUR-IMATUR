@@ -226,8 +226,9 @@ class Ruta extends Model {
         $db = new Database();
         $db->query("INSERT INTO participantes_ruta
                         (id_ruta, nombre_libre, apellido_libre, cedula_libre,
-                         genero_libre, fecha_nac_libre, id_institucion, observaciones, created_by)
-                    VALUES (:r, :nom, :ape, :ced, :gen, :fnac, :inst, :obs, :u)");
+                         genero_libre, fecha_nac_libre, id_institucion, observaciones,
+                         nombre_representante, cedula_representante, created_by)
+                    VALUES (:r, :nom, :ape, :ced, :gen, :fnac, :inst, :obs, :nrep, :crep, :u)");
         $db->bind(':r',    $id_ruta);
         $db->bind(':nom',  $datos['nombre_libre']);
         $db->bind(':ape',  $datos['apellido_libre']  ?? null);
@@ -236,6 +237,8 @@ class Ruta extends Model {
         $db->bind(':fnac', $datos['fecha_nac_libre'] ?? null);
         $db->bind(':inst', $datos['id_institucion']  ?? null);
         $db->bind(':obs',  $datos['observaciones']   ?? null);
+        $db->bind(':nrep', $datos['nombre_representante'] ?? null);
+        $db->bind(':crep', $datos['cedula_representante'] ?? null);
         $db->bind(':u',    $user_id);
         $result = $db->execute();
         self::auditStatic('participantes_ruta', 'INSERT', null, null, [
@@ -243,6 +246,7 @@ class Ruta extends Model {
             'nombre_libre' => $datos['nombre_libre'],
             'cedula_libre' => $datos['cedula_libre'] ?? null,
             'genero_libre' => $datos['genero_libre'] ?? null,
+            'cedula_representante' => $datos['cedula_representante'] ?? null,
         ], $user_id);
         return $result;
     }

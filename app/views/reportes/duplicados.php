@@ -78,16 +78,17 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
     <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-person-badge"></i> Participantes sin cédula repetidos (Formación / Turismo)
         <span class="sig-badge sig-badge--<?php echo empty($dupLibre) ? 'success' : 'warning'; ?>"><?php echo count($dupLibre); ?></span></h5>
-        <small style="color:var(--text-tertiary);">Mismo nombre + apellido + fecha de nacimiento entre participantes libre de talleres y rutas. Posible misma persona registrada en varias actividades.</small>
+        <small style="color:var(--text-tertiary);">Mismo nombre + apellido + fecha de nacimiento <strong>y mismo representante</strong>, entre participantes libre de talleres y rutas. La cédula del representante distingue homónimos: misma persona en varias actividades.</small>
     </div>
     <table class="sig-table">
-        <thead><tr><th>F. Nacimiento</th><th>N°</th><th>Apariciones (actividad)</th></tr></thead>
+        <thead><tr><th>F. Nacimiento</th><th>C.I. Representante</th><th>N°</th><th>Apariciones (actividad)</th></tr></thead>
         <tbody>
             <?php if (empty($dupLibre)): ?>
-                <tr><td colspan="3" class="sig-table-empty">Sin coincidencias.</td></tr>
+                <tr><td colspan="4" class="sig-table-empty">Sin coincidencias.</td></tr>
             <?php else: foreach ($dupLibre as $g): ?>
                 <tr>
                     <td><?php echo $ffecha($g->fnac); ?></td>
+                    <td><?php echo !empty($g->ced_rep) ? htmlspecialchars($g->ced_rep) : '<span class="text-muted">—</span>'; ?></td>
                     <td><span class="sig-badge sig-badge--warning"><?php echo $g->total; ?></span></td>
                     <td style="font-size:13px;"><?php echo htmlspecialchars($g->detalle); ?></td>
                 </tr>

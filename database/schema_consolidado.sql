@@ -710,6 +710,8 @@ CREATE TABLE public.participantes_ruta (
     id_institucion integer,
     genero_libre character(1),
     fecha_nac_libre date,
+    nombre_representante character varying(100),
+    cedula_representante character varying(20),
     CONSTRAINT participantes_ruta_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
     CONSTRAINT pr_participante_req CHECK (((id_persona IS NOT NULL) OR (nombre_libre IS NOT NULL)))
 );

@@ -485,19 +485,20 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <div class="col-12">
                             <hr style="margin:var(--sp-1) 0;">
                             <p style="font-size:12px; font-weight:600; color:var(--brand-500); margin-bottom:var(--sp-2);">
-                                <i class="bi bi-person-badge"></i> Docente acompañante (opcional)
+                                <i class="bi bi-person-badge"></i> Representante / Docente <span class="req">*</span>
+                                <span style="font-weight:400; color:var(--text-tertiary);">— adulto responsable; ancla la identidad del menor</span>
                             </p>
                         </div>
                         <div class="col-md-7">
                             <div class="sig-field">
-                                <label class="sig-field__label">Nombre del docente</label>
-                                <input type="text" name="nombre_docente" class="sig-input" placeholder="Ej: María Rodríguez">
+                                <label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
+                                <input type="text" name="nombre_docente" class="sig-input" placeholder="Ej: María Rodríguez" required>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <div class="sig-field">
-                                <label class="sig-field__label">Cédula del docente</label>
-                                <input type="text" name="cedula_docente" class="sig-input" placeholder="12345678 (solo números)">
+                                <label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
+                                <input type="text" name="cedula_docente" class="sig-input" placeholder="12345678 (solo números)" required>
                             </div>
                         </div>
                     </div>
@@ -1040,12 +1041,12 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                                 <input type="text" name="direccion_libre" id="ep_direccion_libre" class="sig-input"></div>
                         </div>
                         <div class="col-md-7">
-                            <div class="sig-field"><label class="sig-field__label">Docente / tutor</label>
-                                <input type="text" name="nombre_docente" id="ep_nombre_docente" class="sig-input"></div>
+                            <div class="sig-field"><label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
+                                <input type="text" name="nombre_docente" id="ep_nombre_docente" class="sig-input" required></div>
                         </div>
                         <div class="col-md-5">
-                            <div class="sig-field"><label class="sig-field__label">Cédula del docente</label>
-                                <input type="text" name="cedula_docente" id="ep_cedula_docente" class="sig-input"></div>
+                            <div class="sig-field"><label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
+                                <input type="text" name="cedula_docente" id="ep_cedula_docente" class="sig-input" required></div>
                         </div>
                     </div>
                 </div>

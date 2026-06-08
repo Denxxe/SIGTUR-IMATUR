@@ -1155,12 +1155,16 @@ class ReportesController extends Controller {
                     ORDER BY total DESC");
         $dupPersona = $db->resultSet() ?: [];
 
-        // 3) Participantes SIN cédula (libre) repetidos por nombre + apellido +
-        //    fecha de nacimiento, unificando talleres y rutas. Estos no tienen un
-        //    identificador único, por lo que requieren revisión humana.
+        // 3) Participantes SIN cédula (libre) repetidos, unificando talleres y
+        //    rutas. La identidad del menor se ancla en su REPRESENTANTE (cédula
+        //    del adulto): se agrupa por nombre + apellido + fecha de nacimiento +
+        //    cédula del representante. Así dos homónimos con representantes
+        //    distintos NO se marcan como duplicados, y la misma persona (mismo
+        //    representante) en varias actividades sí se detecta.
         $db->query("WITH libre AS (
                         SELECT trim(pt.nombre_libre) AS nom, trim(COALESCE(pt.apellido_libre,'')) AS ape,
                                pt.fecha_nac_libre AS fnac,
+                               regexp_replace(COALESCE(pt.cedula_docente,''),'\\D','','g') AS ced_rep,
                                'Taller: ' || t.nombre AS actividad, t.fecha_inicio AS fecha
                         FROM participantes_taller pt JOIN talleres t ON pt.id_taller = t.id
                         WHERE pt.is_active = TRUE AND pt.id_persona IS NULL AND t.is_active = TRUE
@@ -1168,15 +1172,17 @@ class ReportesController extends Controller {
                         UNION ALL
                         SELECT trim(pr.nombre_libre), trim(COALESCE(pr.apellido_libre,'')),
                                pr.fecha_nac_libre,
+                               regexp_replace(COALESCE(pr.cedula_representante,''),'\\D','','g'),
                                'Ruta: ' || r.nombre, r.fecha_visita
                         FROM participantes_ruta pr JOIN rutas r ON pr.id_ruta = r.id
                         WHERE pr.is_active = TRUE AND pr.id_persona IS NULL AND r.is_active = TRUE
                           AND pr.nombre_libre IS NOT NULL
                     )
                     SELECT count(*) AS total, fnac,
+                           NULLIF(max(ced_rep),'') AS ced_rep,
                            string_agg(nom || ' ' || ape || ' — ' || actividad || ' (' || COALESCE(to_char(fecha,'DD/MM/YYYY'),'s/f') || ')', '  |  ' ORDER BY fecha) AS detalle
                     FROM libre
-                    GROUP BY lower(nom), lower(ape), fnac
+                    GROUP BY lower(nom), lower(ape), fnac, ced_rep
                     HAVING COUNT(*) > 1
                     ORDER BY total DESC");
         $dupLibre = $db->resultSet() ?: [];
