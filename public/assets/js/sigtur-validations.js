@@ -247,18 +247,12 @@ function formatTelefono(e) {
     e.target.value = val;
 }
 
-// ── Teléfonos venezolanos: prefijo (select) + 7 dígitos ──────────────────────
+// ── Teléfonos venezolanos: prefijo móvil (select) + 7 dígitos ────────────────
 // Formato nacional: 0XXX + 7 dígitos = 11 dígitos.
+// Solo se ofrecen prefijos MÓVILES; los fijos no se muestran. Si un registro
+// guardado trae un prefijo distinto (p. ej. fijo legado), se agrega como opción
+// al editar para no corromper el dato.
 const TEL_MOVILES = ['0412', '0414', '0416', '0424', '0426'];
-const TEL_FIJOS = [
-    '0212', '0234', '0235', '0238', '0239', '0241', '0242', '0243', '0244', '0245',
-    '0246', '0247', '0248', '0249', '0251', '0252', '0253', '0254', '0255', '0256',
-    '0257', '0258', '0259', '0261', '0262', '0263', '0264', '0265', '0266', '0267',
-    '0268', '0269', '0271', '0272', '0273', '0274', '0275', '0276', '0277', '0278',
-    '0281', '0282', '0283', '0284', '0285', '0286', '0287', '0288', '0291', '0292',
-    '0293', '0294', '0295'
-];
-const TEL_TODOS = TEL_MOVILES.concat(TEL_FIJOS);
 const TEL_PREFIJO_DEFAULT = '0414';
 // Descriptor nativo de .value para detectar asignaciones programáticas (lookup AJAX).
 const _telValueDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
@@ -283,9 +277,7 @@ function initTelefonoInput(input) {
     const sel = document.createElement('select');
     sel.className = 'sig-select';
     sel.style.maxWidth = '108px';
-    sel.innerHTML =
-        '<optgroup label="Móviles">' + TEL_MOVILES.map(p => `<option value="${p}">${p}</option>`).join('') + '</optgroup>' +
-        '<optgroup label="Fijos">' + TEL_FIJOS.map(p => `<option value="${p}">${p}</option>`).join('') + '</optgroup>';
+    sel.innerHTML = TEL_MOVILES.map(p => `<option value="${p}">${p}</option>`).join('');
 
     const num = document.createElement('input');
     num.type = 'text';
@@ -327,10 +319,12 @@ function initTelefonoInput(input) {
         else if (d.length === 10) { pref = '0' + d.slice(0, 3); resto = d.slice(3, 10); }
         else if (d.length === 7) { resto = d; }
         else if (d.length > 0) { resto = d.slice(-7); }
-        if (resto && !TEL_TODOS.includes(pref) && !Array.from(sel.options).some(o => o.value === pref)) {
+        // Si el prefijo guardado no está entre los móviles ofrecidos (p. ej. fijo
+        // legado), se agrega como opción para no perder el dato al editar.
+        if (resto && !Array.from(sel.options).some(o => o.value === pref)) {
             const opt = document.createElement('option'); opt.value = pref; opt.textContent = pref; sel.appendChild(opt);
         }
-        sel.value = TEL_TODOS.includes(pref) || Array.from(sel.options).some(o => o.value === pref) ? pref : TEL_PREFIJO_DEFAULT;
+        sel.value = Array.from(sel.options).some(o => o.value === pref) ? pref : TEL_PREFIJO_DEFAULT;
         num.value = resto;
         num.setCustomValidity('');
     };
