@@ -317,6 +317,52 @@ button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shado
 [data-theme="dark"] .sig-search-select__panel { background: #1a2033; border-color: rgba(148, 163, 184, 0.2); }
 [data-theme="dark"] .sig-search-select__item:hover { background: rgba(148, 163, 184, 0.14); }
 
+/* ===== TARJETAS DE ACTIVIDADES (talleres/charlas) ===== */
+.act-card {
+  display: flex; flex-direction: column; position: relative;
+  border-left: 4px solid var(--border-default);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
+}
+.act-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px -18px rgba(15, 23, 42, 0.32); }
+.act-card__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 13px 16px; border-bottom: 1px solid var(--border-subtle);
+}
+.act-status {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 700; line-height: 1;
+  padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+}
+.act-status__dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.act-late {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10.5px; font-weight: 700; line-height: 1;
+  padding: 4px 8px; border-radius: 999px;
+  background: var(--danger-50); color: var(--danger-600);
+}
+.act-id { font-size: 11px; color: var(--text-tertiary); font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.act-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.act-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; line-height: 1;
+  padding: 4px 9px; border-radius: 7px;
+  background: var(--bg-muted); color: var(--text-secondary); border: 1px solid var(--border-subtle);
+}
+.act-chip__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .65; }
+.act-chip--interna { background: #FEF9C3; color: #92400E; border-color: #FDE68A; }
+.act-meta-list { display: grid; gap: 8px; }
+.act-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.act-meta i { color: var(--brand-500); font-size: 14px; }
+.act-occ-bar { height: 6px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
+.act-occ-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--brand-500); transition: width var(--t-base); }
+.act-occ-bar.is-full > span { background: var(--danger-500); }
+.act-occ-bar.is-high > span { background: var(--warning-500, #f59e0b); }
+.act-card__foot {
+  margin-top: auto; padding: 14px 16px; border-top: 1px solid var(--border-subtle);
+  display: flex; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--bg-muted-subtle);
+}
+
 /* ===== BADGES ===== */
 .sig-badge {
   display: inline-flex; align-items: center; gap: 5px;

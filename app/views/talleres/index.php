@@ -98,13 +98,12 @@ function esAtrasada($t): bool {
             Mostrando <strong><?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($total, $pagina*$porPagina); ?></strong> de <strong><?php echo number_format($total); ?></strong> actividades<?php echo $hayFiltro ? ' (filtradas)' : ''; ?>
         <?php else: ?> Sin actividades<?php echo $hayFiltro ? ' para el filtro aplicado' : ''; ?><?php endif; ?>
     </span>
-    <div style="display:flex; gap:var(--sp-2); flex-wrap:wrap; font-size:11px; align-items:center;">
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#DC2626;display:inline-block;"></span> Atrasada</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#F59E0B;display:inline-block;"></span> Interna</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#3B82F6;display:inline-block;"></span> Programada</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#7C3AED;display:inline-block;"></span> En Curso</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#059669;display:inline-block;"></span> Finalizada</span>
-        <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#64748B;display:inline-block;"></span> Cancelada</span>
+    <div style="display:flex; gap:var(--sp-3); flex-wrap:wrap; font-size:11px; align-items:center; color:var(--text-secondary);">
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#DC2626;display:inline-block;"></span> Atrasada</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#3B82F6;display:inline-block;"></span> Programada</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#7C3AED;display:inline-block;"></span> En Curso</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#059669;display:inline-block;"></span> Finalizada</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#64748B;display:inline-block;"></span> Cancelada</span>
     </div>
 </div>
 
@@ -115,82 +114,76 @@ function esAtrasada($t): bool {
             <p><?php echo $hayFiltro ? 'Sin actividades que coincidan con el filtro.' : 'No hay actividades registradas actualmente.'; ?></p>
         </div>
     <?php else: ?>
-        <?php foreach ($data['talleres'] as $t):
-            $atrasada = esAtrasada($t);
+        <?php
+        $estadoColores = [
+            'Programado' => '#3B82F6',  // azul
+            'En Curso'   => '#7C3AED',  // morado
+            'Finalizado' => '#059669',  // verde
+            'Cancelado'  => '#64748B',  // gris
+        ];
+        foreach ($data['talleres'] as $t):
+            $atrasada  = esAtrasada($t);
             $esInterna = !empty($t->es_interna) && $t->es_interna !== 'f';
-
-            // Color del borde izquierdo de la tarjeta según estado/condición
-            if ($atrasada)                               $cardBorder = '#DC2626'; // rojo — atrasada
-            elseif ($esInterna)                          $cardBorder = '#F59E0B'; // ámbar — interna
-            elseif ($t->estado === 'En Curso')           $cardBorder = '#7C3AED'; // morado — en curso
-            elseif ($t->estado === 'Programado')         $cardBorder = '#3B82F6'; // azul — programada a tiempo
-            elseif ($t->estado === 'Finalizado')         $cardBorder = '#059669'; // verde — finalizada
-            else                                         $cardBorder = '#94A3B8'; // gris — cancelada/otro
+            // El color de la tarjeta refleja el ESTADO; "Atrasada" tiene prioridad (urgente).
+            $color     = $atrasada ? '#DC2626' : ($estadoColores[$t->estado ?? ''] ?? '#64748B');
+            $cupo      = (int)($t->cupo_maximo ?? 0);
+            $inscritos = (int)($t->total_inscritos ?? 0);
+            $pct       = $cupo > 0 ? min(100, ($inscritos / $cupo) * 100) : 0;
+            $occClase  = $cupo > 0 && $inscritos >= $cupo ? 'is-full' : ($pct >= 80 ? 'is-high' : '');
         ?>
-            <div class="sig-card h-100" style="display:flex; flex-direction:column; border-left:4px solid <?php echo $cardBorder; ?>;">
-                <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                    <?php $badgeClass = Taller::ESTADO_BADGES[$t->estado ?? ''] ?? 'sig-badge--neutral'; ?>
-                    <div style="display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap;">
-                        <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $t->estado; ?></span>
+            <div class="sig-card act-card h-100" style="border-left-color:<?php echo $color; ?>;">
+                <div class="act-card__head">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span class="act-status" style="color:<?php echo $color; ?>; background:<?php echo $color; ?>1f;">
+                            <span class="act-status__dot"></span><?php echo htmlspecialchars($t->estado ?? '—'); ?>
+                        </span>
                         <?php if ($atrasada): ?>
-                            <span class="sig-badge sig-badge--danger" style="font-size:10px;"><i class="bi bi-clock-fill"></i> Atrasada</span>
-                        <?php endif; ?>
-                        <span class="sig-badge sig-badge--neutral" style="font-size:10px;"><?php echo $t->tipo_actividad ?? 'Taller'; ?></span>
-                        <?php if ($esInterna): ?>
-                            <span class="sig-badge" style="font-size:10px;background:#FEF9C3;color:#92400E;border:1px solid #FDE68A;">Interna</span>
-                        <?php else: ?>
-                            <span class="sig-badge sig-badge--neutral" style="font-size:10px; color:var(--text-secondary);">
-                                <?php echo $t->tipo_ente ? htmlspecialchars($t->tipo_ente) : 'Externa'; ?>
-                            </span>
+                            <span class="act-late"><i class="bi bi-clock-fill"></i> Atrasada</span>
                         <?php endif; ?>
                     </div>
-                    <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">ID #<?php echo $t->id; ?></span>
+                    <span class="act-id">ID&nbsp;#<?php echo $t->id; ?></span>
                 </div>
                 <div class="sig-card__body" style="flex:1;">
-                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo $t->nombre ?? 'Actividad sin nombre'; ?></h3>
-                    <p class="text-clamp-2" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
-                        <?php echo strip_tags($t->descripcion ?? 'Sin descripción'); ?>
+                    <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;"><?php echo htmlspecialchars($t->nombre ?? 'Actividad sin nombre'); ?></h3>
+                    <p class="text-clamp-2" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-3);">
+                        <?php echo htmlspecialchars(strip_tags($t->descripcion ?? 'Sin descripción')); ?>
                     </p>
-                    <div style="display:grid; gap:var(--sp-2);">
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-calendar-event" style="color:var(--brand-500);"></i>
-                            <span><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'today')); ?></span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-geo-alt" style="color:var(--brand-500);"></i>
-                            <span><?php echo $t->ubicacion ?? 'Sin asignar'; ?></span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-person-badge" style="color:var(--brand-500);"></i>
-                            <span><?php echo ($t->facilitador_nombre ?? 'Facilitador') . ' ' . ($t->facilitador_apellido ?? 'Pendiente'); ?></span>
-                        </div>
-                        <div style="margin-top:var(--sp-2);">
-                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+                    <div class="act-chips">
+                        <span class="act-chip"><span class="act-chip__dot"></span><?php echo htmlspecialchars($t->tipo_actividad ?? 'Taller'); ?></span>
+                        <?php if ($esInterna): ?>
+                            <span class="act-chip act-chip--interna"><i class="bi bi-building"></i> Interna</span>
+                        <?php else: ?>
+                            <span class="act-chip"><i class="bi bi-box-arrow-up-right"></i> <?php echo $t->tipo_ente ? htmlspecialchars($t->tipo_ente) : 'Externa'; ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="act-meta-list">
+                        <div class="act-meta"><i class="bi bi-calendar-event"></i><span><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'today')); ?></span></div>
+                        <div class="act-meta"><i class="bi bi-geo-alt"></i><span><?php echo htmlspecialchars($t->ubicacion ?? 'Sin asignar'); ?></span></div>
+                        <div class="act-meta"><i class="bi bi-person-badge"></i><span><?php echo htmlspecialchars(trim(($t->facilitador_nombre ?? '') . ' ' . ($t->facilitador_apellido ?? '')) ?: 'Facilitador pendiente'); ?></span></div>
+                        <div style="margin-top:var(--sp-1);">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:5px; color:var(--text-secondary);">
                                 <span>Ocupación</span>
-                                <span><?php echo $t->total_inscritos; ?> / <?php echo $t->cupo_maximo; ?></span>
+                                <span style="color:var(--text-primary);"><?php echo $inscritos; ?> / <?php echo $cupo; ?></span>
                             </div>
-                            <div style="height:6px; background:var(--bg-muted); border-radius:3px; overflow:hidden;">
-                                <?php $porcentaje = ($t->cupo_maximo > 0) ? ($t->total_inscritos / $t->cupo_maximo) * 100 : 0; ?>
-                                <div style="height:100%; width:<?php echo $porcentaje; ?>%; background:var(--brand-500); border-radius:3px;"></div>
-                            </div>
+                            <div class="act-occ-bar <?php echo $occClase; ?>"><span style="width:<?php echo $pct; ?>%;"></span></div>
                         </div>
                     </div>
                 </div>
-                <div class="sig-card__footer" style="padding:var(--sp-4); border-top:1px solid var(--border-subtle); display:flex; gap:var(--sp-2); justify-content:space-between; background:var(--bg-muted-subtle);">
+                <div class="act-card__foot">
                     <a href="<?php echo URL_ROOT; ?>/talleres/detalle/<?php echo $t->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" style="flex:1; justify-content:center;">
                         <i class="bi bi-eye"></i> Detalle
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
                         <?php if (!in_array($t->estado, ['Finalizado', 'Cancelado'])): ?>
-                            <button class="row-action" style="color:var(--brand-600);" title="Cambiar estado"
+                            <button class="row-action row-action--view" title="Cambiar estado"
                                     onclick='abrirCambioEstado(<?php echo $t->id; ?>, "<?php echo $t->estado; ?>", <?php echo (int)$t->total_inscritos; ?>)'>
                                 <i class="bi bi-arrow-repeat"></i>
                             </button>
-                            <button class="row-action row-action--edit" onclick='editarTaller(<?php echo json_encode($t); ?>)'>
+                            <button class="row-action row-action--edit" title="Editar" onclick='editarTaller(<?php echo htmlspecialchars(json_encode($t), ENT_QUOTES, 'UTF-8'); ?>)'>
                                 <i class="bi bi-pencil"></i>
                             </button>
                         <?php endif; ?>
-                        <a href="<?php echo URL_ROOT; ?>/talleres/delete/<?php echo $t->id; ?>" class="row-action row-action--del delete-btn">
+                        <a href="<?php echo URL_ROOT; ?>/talleres/delete/<?php echo $t->id; ?>" class="row-action row-action--del delete-btn" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </a>
                     </div>
