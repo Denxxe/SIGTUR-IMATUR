@@ -20,10 +20,10 @@ $qs = http_build_query(array_filter([
     </div>
     <div class="page__actions">
         <div style="display:flex;gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaPdf?<?php echo $qs; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaPdf?<?php echo $qs; ?>" class="btn-sig btn-sig--danger btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>

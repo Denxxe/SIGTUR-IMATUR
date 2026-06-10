@@ -21,6 +21,17 @@ class ReportesController extends Controller {
         }
     }
 
+    /**
+     * Query string con los filtros actuales para los enlaces de exportación,
+     * EXCLUYENDO la clave 'url' del enrutador (.htaccess usa ?url=… con QSA;
+     * si se arrastra, el enlace volvería al reporte en vez de exportar).
+     */
+    private function qsFiltros(): string {
+        $q = $_GET;
+        unset($q['url']);
+        return http_build_query($q);
+    }
+
     // =========================================================================
     // RF27: Reporte de Asistencia
     // =========================================================================
@@ -386,7 +397,7 @@ class ReportesController extends Controller {
                 ['name' => 'clasificacion', 'label' => 'Clasificación', 'type' => 'select', 'options' => array_merge(['' => 'Todas'], array_combine(Empleado::CLASIFICACIONES, Empleado::CLASIFICACIONES)), 'value' => $_GET['clasificacion'] ?? ''],
                 ['name' => 'origen', 'label' => 'Origen', 'type' => 'select', 'options' => ['' => 'Todos', 'comision' => 'Comisión de servicio'] + array_combine(Empleado::INSTITUCIONES_ORIGEN, Empleado::INSTITUCIONES_ORIGEN), 'value' => $_GET['origen'] ?? ''],
             ],
-            'export_url' => URL_ROOT . '/reportes/exportarDirectorioCsv?' . http_build_query($_GET),
+            'export_url' => URL_ROOT . '/reportes/exportarDirectorioCsv?' . $this->qsFiltros(),
         ]);
     }
 
@@ -502,7 +513,7 @@ class ReportesController extends Controller {
                 ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
                 ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
             ],
-            'export_url' => URL_ROOT . '/reportes/exportarEgresosCsv?' . http_build_query($_GET),
+            'export_url' => URL_ROOT . '/reportes/exportarEgresosCsv?' . $this->qsFiltros(),
             'vacio' => 'No hay egresos registrados para el filtro.',
         ]);
     }
@@ -563,7 +574,7 @@ class ReportesController extends Controller {
                 ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
                 ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
             ],
-            'export_url' => URL_ROOT . '/reportes/exportarConstanciasCsv?' . http_build_query($_GET),
+            'export_url' => URL_ROOT . '/reportes/exportarConstanciasCsv?' . $this->qsFiltros(),
         ]);
     }
 
@@ -766,7 +777,7 @@ class ReportesController extends Controller {
                 ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
                 ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
             ],
-            'export_url' => URL_ROOT . '/reportes/exportarKardexCsv?' . http_build_query($_GET),
+            'export_url' => URL_ROOT . '/reportes/exportarKardexCsv?' . $this->qsFiltros(),
             'vacio' => 'No hay movimientos de inventario para el filtro.',
         ]);
     }
@@ -884,7 +895,7 @@ class ReportesController extends Controller {
                 ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
                 ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
             ],
-            'export_url' => URL_ROOT . '/reportes/exportarAuditoriaCsv?' . http_build_query($_GET),
+            'export_url' => URL_ROOT . '/reportes/exportarAuditoriaCsv?' . $this->qsFiltros(),
             'vacio' => 'Sin eventos de auditoría para el filtro.',
         ]);
     }

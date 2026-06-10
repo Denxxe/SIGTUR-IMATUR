@@ -18,12 +18,12 @@ function fmtMes(string $ym): string {
         <p class="page__subtitle">Métricas operativas en tiempo real — <?php echo date('d/m/Y H:i'); ?></p>
     </div>
     <div class="page__actions">
-        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost">
+        <button class="btn-sig btn-sig--danger btn-sig--sm no-print" onclick="window.print()">
+            <i class="bi bi-file-earmark-pdf"></i> PDF
+        </button>
+        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost btn-sig--sm no-print">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
-        <button class="btn-sig btn-sig--primary" onclick="window.print()">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
     </div>
 </div>
 

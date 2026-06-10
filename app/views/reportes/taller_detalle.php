@@ -10,11 +10,11 @@
     </div>
     <div class="page__actions">
         <div style="display:flex; gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarDossierCsv/<?php echo isset($data['taller']->id) ? $data['taller']->id : ''; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
-                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar Datos
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarDossierCsv/<?php echo isset($data['taller']->id) ? $data['taller']->id : ''; ?>" class="btn-sig btn-sig--success btn-sig--sm">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
-            <button onclick="window.print()" class="btn-sig btn-sig--primary" style="background:var(--danger-600);">
-                <i class="bi bi-printer"></i> Imprimir Informe
+            <button onclick="window.print()" class="btn-sig btn-sig--danger btn-sig--sm no-print">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
             </button>
         </div>
         <a href="<?php echo URL_ROOT; ?>/reportes/talleres" class="btn-sig btn-sig--ghost">

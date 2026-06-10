@@ -24,7 +24,7 @@ foreach ($regs as $r) {
         <p class="page__subtitle">Permisos y reposos por tipo, estado y período (incluye los que se solapan con el rango).</p>
     </div>
     <div class="page__actions">
-        <a href="<?php echo URL_ROOT; ?>/reportes/exportarPermisosCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--ghost btn-sig--sm"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
+        <a href="<?php echo URL_ROOT; ?>/reportes/exportarPermisosCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </div>

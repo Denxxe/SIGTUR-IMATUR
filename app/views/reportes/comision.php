@@ -16,10 +16,11 @@ function comUrl(string $org): string {
         <p class="page__subtitle">Personal proveniente de Alcaldía o Gobernación (comisión de servicio). El personal propio de IMATUR no se incluye.</p>
     </div>
     <div class="page__actions">
-        <a href="<?php echo URL_ROOT; ?>/reportes/exportarComisionCsv<?php echo $org !== '' ? '?origen=' . urlencode($org) : ''; ?>" class="btn-sig btn-sig--success">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Exportar a Excel
+        <a href="<?php echo URL_ROOT; ?>/reportes/exportarComisionCsv<?php echo $org !== '' ? '?origen=' . urlencode($org) : ''; ?>" class="btn-sig btn-sig--success btn-sig--sm">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Excel
         </a>
-        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button type="button" class="btn-sig btn-sig--danger btn-sig--sm no-print" onclick="window.print()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost btn-sig--sm no-print"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </div>
 

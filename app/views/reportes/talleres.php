@@ -21,10 +21,10 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
     </div>
     <div class="page__actions">
         <div style="display:flex;gap:var(--sp-2);">
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
-            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresPdf?<?php echo $qs; ?>" class="btn-sig btn-sig--ghost btn-sig--sm" target="_blank">
+            <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresPdf?<?php echo $qs; ?>" class="btn-sig btn-sig--danger btn-sig--sm" target="_blank">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
         </div>
