@@ -316,6 +316,39 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // Centro de Alertas — consolida avisos accionables de RRHH
+    // =========================================================================
+    public function alertas() {
+        $this->requireRoles([1, 2]);
+        $db = new Database();
+
+        $db->query("SELECT COUNT(*) AS t FROM permisos_laborales WHERE estado = 'Pendiente' AND is_active = TRUE");
+        $permPend = (int)($db->single()->t ?? 0);
+
+        $limite = Amonestacion::LIMITE_DESPIDO; $despido = 0;
+        foreach (Amonestacion::roster() as $r) if ((int)$r->amonestaciones >= $limite) $despido++;
+
+        $expedInc = 0;
+        foreach (Empleado::all() as $e) {
+            $est = ExpedienteDocumento::recaudosEstado((int)$e->id);
+            if (($est['faltan_obligatorios'] ?? 0) > 0) $expedInc++;
+        }
+
+        $db->query("SELECT COUNT(*) AS t FROM permisos_laborales
+                    WHERE estado = 'Aprobado' AND is_active = TRUE
+                      AND fecha_inicio <= CURRENT_DATE AND fecha_fin >= CURRENT_DATE");
+        $enCurso = (int)($db->single()->t ?? 0);
+
+        $alertas = [
+            ['titulo' => 'Permisos / reposos pendientes', 'desc' => 'Solicitudes por aprobar o rechazar.', 'n' => $permPend, 'icono' => 'bi-calendar2-check', 'url' => URL_ROOT . '/permisos/index', 'sev' => 'warning'],
+            ['titulo' => 'En causa de despido', 'desc' => "Empleados con {$limite}+ amonestaciones activas.", 'n' => $despido, 'icono' => 'bi-flag-fill', 'url' => URL_ROOT . '/amonestaciones/index', 'sev' => 'danger'],
+            ['titulo' => 'Expedientes incompletos', 'desc' => 'Personal con recaudos obligatorios faltantes.', 'n' => $expedInc, 'icono' => 'bi-folder-x', 'url' => URL_ROOT . '/reportes/expedientesIncompletos', 'sev' => 'warning'],
+            ['titulo' => 'Permisos / reposos en curso', 'desc' => 'Ausencias justificadas vigentes hoy.', 'n' => $enCurso, 'icono' => 'bi-info-circle', 'url' => URL_ROOT . '/permisos/index', 'sev' => 'info'],
+        ];
+        $this->view('reportes/alertas', ['titulo' => 'Centro de Alertas', 'alertas' => $alertas]);
+    }
+
+    // =========================================================================
     // RRHH — Directorio de personal
     // =========================================================================
     public function directorio() {

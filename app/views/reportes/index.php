@@ -5,6 +5,12 @@ $rol = (int)($_SESSION['user_rol'] ?? 0);
 // Catálogo de reportes agrupados por área. Cada reporte: [título, descripción, ruta, ícono, color]
 $secciones = [
     [
+        'titulo' => 'Alertas y pendientes', 'icono' => 'bi-bell-fill', 'roles' => [1, 2],
+        'reportes' => [
+            ['Centro de Alertas', 'Pendientes por atender: permisos, amonestaciones, expedientes incompletos.', 'reportes/alertas', 'bi-bell', '#D97706'],
+        ],
+    ],
+    [
         'titulo' => 'Recursos Humanos', 'icono' => 'bi-people-fill', 'roles' => [1, 2],
         'reportes' => [
             ['Directorio de Personal', 'Plantilla activa con filtros por área, cargo, clasificación, contrato y origen.', 'reportes/directorio', 'bi-person-lines-fill', '#2563EB'],
