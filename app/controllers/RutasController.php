@@ -2,14 +2,30 @@
 class RutasController extends Controller {
 
     public function index() {
-        $rutas       = Ruta::all();
-        $empleados   = Empleado::all();
-        $departamentos = Departamento::all();
+        $porPagina = 12;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
+            'buscar'      => trim($_GET['buscar']      ?? ''),
+            'estado'      => trim($_GET['estado']      ?? ''),
+            'tipo'        => trim($_GET['tipo']        ?? ''),
+            'fecha_desde' => trim($_GET['fecha_desde'] ?? ''),
+            'fecha_hasta' => trim($_GET['fecha_hasta'] ?? ''),
+        ];
+        $res          = Ruta::paginate($pagina, $porPagina, $filtros);
+        $totalReg     = $res['total'];
+        $totalPaginas = max(1, (int)ceil($totalReg / $porPagina));
+        if ($pagina > $totalPaginas) $pagina = $totalPaginas;
+
         $data = [
-            'titulo'       => 'Gestión de Rutas Turísticas',
-            'rutas'        => $rutas,
-            'empleados'    => $empleados,
-            'departamentos'=> $departamentos,
+            'titulo'        => 'Gestión de Rutas Turísticas',
+            'rutas'         => $res['items'],
+            'empleados'     => Empleado::all(),
+            'departamentos' => Departamento::all(),
+            'pagina'        => $pagina,
+            'total_paginas' => $totalPaginas,
+            'total'         => $totalReg,
+            'por_pagina'    => $porPagina,
+            'filtros'       => $filtros,
         ];
         $this->view('rutas/index', $data);
     }

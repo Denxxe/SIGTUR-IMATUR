@@ -66,6 +66,52 @@ class Ruta extends Model {
         return $db->resultSet();
     }
 
+    /**
+     * Rutas paginadas en servidor, con búsqueda (nombre/descripción/facilitador),
+     * filtro por estado, tipo y rango de fecha de visita. ['items'=>[], 'total'=>n].
+     */
+    public static function paginate(int $pagina, int $porPagina, array $f = []): array {
+        $db    = new Database();
+        $binds = [];
+        $where = "r.is_active = TRUE";
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (r.nombre ILIKE :q OR r.descripcion ILIKE :q OR (p.nombre||' '||p.apellido) ILIKE :q)";
+            $binds[':q'] = '%' . $f['buscar'] . '%';
+        }
+        if (!empty($f['estado']))     { $where .= " AND r.estado = :estado";    $binds[':estado'] = $f['estado']; }
+        if (!empty($f['tipo']))       { $where .= " AND r.tipo_ruta = :tipo";    $binds[':tipo']   = $f['tipo']; }
+        if (!empty($f['fecha_desde'])){ $where .= " AND r.fecha_visita >= :fd";  $binds[':fd']     = $f['fecha_desde']; }
+        if (!empty($f['fecha_hasta'])){ $where .= " AND r.fecha_visita <= :fh";  $binds[':fh']     = $f['fecha_hasta']; }
+
+        $base = "FROM rutas r
+                 LEFT JOIN departamentos d ON r.id_departamento = d.id
+                 LEFT JOIN empleados     e ON r.id_facilitador  = e.id
+                 LEFT JOIN personas      p ON e.id_persona       = p.id
+                 WHERE {$where}";
+
+        $db->query("SELECT COUNT(*) AS total {$base}");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $total = (int)($db->single()->total ?? 0);
+
+        $offset = ($pagina - 1) * $porPagina;
+        $db->query("SELECT r.*,
+                           d.nombre AS departamento_nombre,
+                           p.nombre AS facilitador_nombre, p.apellido AS facilitador_apellido,
+                           (SELECT COUNT(*) FROM puntos_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) AS total_puntos,
+                           (SELECT COUNT(*) FROM participantes_ruta prt WHERE prt.id_ruta = r.id AND prt.is_active = TRUE) AS total_participantes
+                    {$base}
+                    ORDER BY
+                        CASE r.estado WHEN 'Activa' THEN 0 WHEN 'En Mantenimiento' THEN 1 WHEN 'Inactiva' THEN 2 ELSE 3 END,
+                        r.fecha_visita DESC NULLS LAST, r.nombre ASC
+                    LIMIT :lim OFFSET :off");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $db->bind(':lim', $porPagina);
+        $db->bind(':off', $offset);
+
+        return ['items' => $db->resultSet(), 'total' => $total];
+    }
+
     public static function find($id) {
         $db = new Database();
         $db->query("SELECT r.*,

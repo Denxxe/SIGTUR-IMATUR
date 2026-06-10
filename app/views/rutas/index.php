@@ -1,4 +1,16 @@
-<?php require_once '../app/views/inc/header.php'; ?>
+<?php require_once '../app/views/inc/header.php';
+$flt          = $data['filtros'] ?? ['buscar'=>'','estado'=>'','tipo'=>'','fecha_desde'=>'','fecha_hasta'=>''];
+$pagina       = (int)($data['pagina'] ?? 1);
+$totalPaginas = (int)($data['total_paginas'] ?? 1);
+$totalReg     = (int)($data['total'] ?? 0);
+$porPagina    = (int)($data['por_pagina'] ?? 12);
+$hayFiltro    = array_filter($flt, fn($v) => $v !== '');
+function rutaUrl(array $f, int $p): string {
+    $q = array_filter($f, fn($v) => $v !== '' && $v !== null);
+    $q['p'] = $p;
+    return URL_ROOT . '/rutas/index?' . http_build_query($q);
+}
+?>
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
@@ -13,6 +25,58 @@
             <i class="bi bi-map"></i> Crear Nueva Ruta
         </button>
     </div>
+</div>
+
+<!-- Filtros (servidor) -->
+<form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/rutas/index" style="margin-bottom:var(--sp-4);">
+    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5); display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
+            <div class="tabla-search">
+                <i class="bi bi-search"></i>
+                <input type="text" name="buscar" class="sig-input" style="padding-left:32px;width:100%;" placeholder="Nombre, descripción o guía…" value="<?php echo htmlspecialchars($flt['buscar'] ?? ''); ?>">
+            </div>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Estado</label>
+            <select name="estado" class="sig-input" style="min-width:150px;">
+                <option value="">Todos</option>
+                <?php foreach (Ruta::ESTADOS as $est): ?>
+                    <option value="<?php echo $est; ?>" <?php echo ($flt['estado'] ?? '') === $est ? 'selected' : ''; ?>><?php echo $est; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Tipo</label>
+            <select name="tipo" class="sig-input" style="min-width:150px;">
+                <option value="">Todos</option>
+                <?php foreach (Ruta::$TIPOS_RUTA as $tp): ?>
+                    <option value="<?php echo htmlspecialchars($tp); ?>" <?php echo ($flt['tipo'] ?? '') === $tp ? 'selected' : ''; ?>><?php echo htmlspecialchars($tp); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Desde</label>
+            <input type="date" name="fecha_desde" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
+        </div>
+        <div>
+            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
+            <input type="date" name="fecha_hasta" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
+        </div>
+        <div style="display:flex; gap:var(--sp-2);">
+            <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
+            <?php if ($hayFiltro): ?>
+                <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost" style="height:42px; padding:0 var(--sp-3);" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+            <?php endif; ?>
+        </div>
+    </div>
+</form>
+
+<!-- Resumen -->
+<div class="anim-slide-up" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-3);">
+    <?php if ($totalReg > 0): ?>
+        Mostrando <strong><?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($totalReg, $pagina*$porPagina); ?></strong> de <strong><?php echo number_format($totalReg); ?></strong> rutas<?php echo $hayFiltro ? ' (filtradas)' : ''; ?>
+    <?php else: ?>Sin rutas<?php echo $hayFiltro ? ' para el filtro aplicado' : ''; ?><?php endif; ?>
 </div>
 
 <?php
@@ -36,7 +100,7 @@ $estadoColores = [
     <?php if (empty($data['rutas'])): ?>
         <div style="grid-column:1/-1; text-align:center; padding:var(--sp-12); color:var(--text-tertiary);">
             <i class="bi bi-compass" style="font-size:48px; display:block; margin-bottom:var(--sp-4);"></i>
-            <p>No hay rutas turísticas registradas.</p>
+            <p><?php echo $hayFiltro ? 'No hay rutas que coincidan con el filtro.' : 'No hay rutas turísticas registradas.'; ?></p>
         </div>
     <?php else: ?>
         <?php foreach ($data['rutas'] ?? [] as $r): ?>
@@ -114,6 +178,33 @@ $estadoColores = [
         <?php endforeach; ?>
     <?php endif; ?>
 </div>
+
+<?php if ($totalPaginas > 1): ?>
+<nav class="anim-slide-up" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:var(--sp-8);flex-wrap:wrap;">
+    <?php
+    $win = 2;
+    $ini = max(1, $pagina - $win);
+    $fin = min($totalPaginas, $pagina + $win);
+    ?>
+    <?php if ($pagina > 1): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo rutaUrl($flt, 1); ?>"><i class="bi bi-chevron-double-left"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo rutaUrl($flt, $pagina - 1); ?>"><i class="bi bi-chevron-left"></i> Anterior</a>
+    <?php endif; ?>
+    <?php if ($ini > 1): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php for ($n = $ini; $n <= $fin; $n++): ?>
+        <?php if ($n === $pagina): ?>
+            <span class="btn-sig btn-sig--primary btn-sig--sm" style="pointer-events:none;min-width:38px;justify-content:center;"><?php echo $n; ?></span>
+        <?php else: ?>
+            <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo rutaUrl($flt, $n); ?>" style="min-width:38px;justify-content:center;"><?php echo $n; ?></a>
+        <?php endif; ?>
+    <?php endfor; ?>
+    <?php if ($fin < $totalPaginas): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php if ($pagina < $totalPaginas): ?>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo rutaUrl($flt, $pagina + 1); ?>">Siguiente <i class="bi bi-chevron-right"></i></a>
+        <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo rutaUrl($flt, $totalPaginas); ?>"><i class="bi bi-chevron-double-right"></i></a>
+    <?php endif; ?>
+</nav>
+<?php endif; ?>
 
 <!-- Modal Ruta -->
 <div class="modal fade" id="modalRuta" tabindex="-1">
