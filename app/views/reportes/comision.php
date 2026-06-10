@@ -17,7 +17,7 @@ function comUrl(string $org): string {
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/reportes/exportarComisionCsv<?php echo $org !== '' ? '?origen=' . urlencode($org) : ''; ?>" class="btn-sig btn-sig--success">
-            <i class="bi bi-filetype-csv"></i> Exportar CSV
+            <i class="bi bi-file-earmark-spreadsheet"></i> Exportar a Excel
         </a>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>

@@ -2388,32 +2388,51 @@ class ReportesController extends Controller {
     // HELPERS DE EXPORTACIÓN
     // =========================================================================
 
+    /**
+     * Exporta a Excel con formato (negritas, colores, bordes, zebra) mediante
+     * HTML-como-.xls: sin librerías ni internet, y Excel lo abre con estilos.
+     * Mantiene el nombre exportCsv para no tocar los llamadores existentes.
+     * Todas las celdas se tratan como TEXTO (preserva cédulas/códigos con ceros).
+     */
     private function exportCsv($filename, $headers, $rows) {
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.csv"');
+        $titulo = ucwords(str_replace('_', ' ', $filename));
+        header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.xls"');
         header('Pragma: no-cache');
         header('Expires: 0');
 
-        $output = fopen('php://output', 'w');
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
-
-        fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
-        fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
-        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
-        fputcsv($output, ['Cumaná, Estado Sucre'], ';');
-        fputcsv($output, [''], ';');
-        fputcsv($output, ['Reporte: ' . $filename], ';');
-        fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
-        fputcsv($output, [''], ';');
-
-        fputcsv($output, $headers, ';');
-        foreach ($rows as $row) {
-            fputcsv($output, $row, ';');
-        }
-        fputcsv($output, [''], ';');
-        fputcsv($output, ['Total de registros: ' . count($rows)], ';');
-
-        fclose($output);
+        echo "\xEF\xBB\xBF"; // BOM UTF-8 para acentos
+        $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+        $n = max(1, count($headers));
+        $usuario = $_SESSION['user_username'] ?? 'Sistema';
+        ?>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+<head><meta charset="UTF-8"><style>
+  table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt; }
+  td { border: 1px solid #cbd5e1; padding: 5px 10px; mso-number-format: "\@"; vertical-align: top; }
+  .inst   { font-weight: bold; text-align: center; border: none; }
+  .titulo { font-weight: bold; font-size: 15pt; color: #1e3a8a; text-align: center; border: none; }
+  .meta   { color: #64748b; font-size: 9pt; text-align: center; border: none; }
+  .blank  { border: none; }
+  th { background: #1e3a8a; color: #ffffff; font-weight: bold; border: 1px solid #14276b; padding: 7px 10px; text-align: left; }
+  tr.par td { background: #f1f5f9; }
+  .total td { font-weight: bold; background: #e2e8f0; }
+</style></head><body>
+<table>
+  <tr><td class="inst"   colspan="<?php echo $n; ?>">REPÚBLICA BOLIVARIANA DE VENEZUELA</td></tr>
+  <tr><td class="inst"   colspan="<?php echo $n; ?>">ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE</td></tr>
+  <tr><td class="inst"   colspan="<?php echo $n; ?>">Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7</td></tr>
+  <tr><td class="titulo" colspan="<?php echo $n; ?>"><?php echo $e($titulo); ?></td></tr>
+  <tr><td class="meta"   colspan="<?php echo $n; ?>">Generado por <?php echo $e($usuario); ?> · <?php echo date('d/m/Y H:i'); ?> · <?php echo count($rows); ?> registro(s)</td></tr>
+  <tr><td class="blank"  colspan="<?php echo $n; ?>"></td></tr>
+  <tr><?php foreach ($headers as $h) echo '<th>' . $e($h) . '</th>'; ?></tr>
+  <?php foreach ($rows as $i => $row): ?>
+  <tr class="<?php echo $i % 2 ? 'par' : ''; ?>"><?php foreach ($row as $c) echo '<td>' . $e($c) . '</td>'; ?></tr>
+  <?php endforeach; ?>
+  <tr class="total"><td colspan="<?php echo $n; ?>">Total de registros: <?php echo count($rows); ?></td></tr>
+</table>
+</body></html>
+        <?php
         exit;
     }
 

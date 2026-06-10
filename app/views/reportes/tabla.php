@@ -30,7 +30,7 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
     </div>
     <div class="page__actions">
         <?php if ($exportUrl): ?>
-            <a href="<?php echo $exportUrl; ?>" class="btn-sig btn-sig--success"><i class="bi bi-filetype-csv"></i> Exportar CSV</a>
+            <a href="<?php echo $exportUrl; ?>" class="btn-sig btn-sig--success"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar a Excel</a>
         <?php endif; ?>
         <button type="button" class="btn-sig btn-sig--ghost no-print" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir / PDF</button>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
