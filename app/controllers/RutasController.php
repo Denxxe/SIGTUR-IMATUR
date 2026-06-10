@@ -288,7 +288,7 @@ class RutasController extends Controller {
                 }
 
                 $fechaNac   = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
-                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) $fechaNac = null;
+                if ($fechaNac && (\DateTime::createFromFormat('Y-m-d', $fechaNac) === false || $fechaNac > date('Y-m-d'))) $fechaNac = null;
                 $parroquiaId = (int)($_POST['parroquia_id'] ?? 0) ?: null;
 
                 $persona = Ruta::buscarPersonaPorCedula($cedula);

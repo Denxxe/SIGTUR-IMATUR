@@ -214,11 +214,13 @@ function initSigturValidations() {
             initEmailInput(input);
         }
 
-        // FECHAS DE NACIMIENTO
-        if (type === 'date' && (name.includes('nacimiento') || id.includes('nacimiento') || input.classList.contains('js-edad'))) {
-            // No permitir fechas futuras
-            const today = new Date().toISOString().split('T')[0];
-            input.setAttribute('max', today);
+        // FECHAS DE NACIMIENTO (incluye fecha_nac_libre de participantes)
+        if (type === 'date' && (name.includes('nacimiento') || name.includes('fecha_nac') || id.includes('nacimiento') || id.includes('fecha_nac') || input.classList.contains('js-edad'))) {
+            // No permitir fechas futuras — sin pisar un max más estricto ya definido
+            // (p. ej. fecha_nac_libre con tope de edad 5–12 en participantes).
+            if (!input.getAttribute('max')) {
+                input.setAttribute('max', new Date().toISOString().split('T')[0]);
+            }
             // Cálculo de edad + validación (opt-in con clase .js-edad)
             if (input.classList.contains('js-edad')) {
                 initEdadInput(input);

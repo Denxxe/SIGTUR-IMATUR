@@ -192,6 +192,11 @@ class EmpleadosController extends Controller {
 
             // Validación de edad (RN: 18–65; hasta 70 solo por comisión de servicio)
             $edad = Util::edad($data['fecha_nacimiento'] ?? null);
+            if (!empty($data['fecha_nacimiento']) && $edad === null) {
+                flash('global_msg', 'La fecha de nacimiento no es válida (no puede ser una fecha futura).', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
             if ($edad !== null) {
                 $errEdad = null;
                 if ($edad < 18)          $errEdad = "El empleado debe ser mayor de 18 años (edad: {$edad}).";

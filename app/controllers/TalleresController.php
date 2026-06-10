@@ -367,7 +367,8 @@ class TalleresController extends Controller {
                 $persona = $cedula ? Taller::buscarPersonaPorCedula($cedula) : null;
 
                 $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
-                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) {
+                // Descartar fecha inválida o futura (la edad no puede ser negativa)
+                if ($fechaNac && (\DateTime::createFromFormat('Y-m-d', $fechaNac) === false || $fechaNac > date('Y-m-d'))) {
                     $fechaNac = null;
                 }
                 $parroquiaId = (int)($_POST['parroquia_id'] ?? 0) ?: null;
@@ -895,7 +896,7 @@ class TalleresController extends Controller {
                     throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
                 }
                 $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
-                if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) $fechaNac = null;
+                if ($fechaNac && (\DateTime::createFromFormat('Y-m-d', $fechaNac) === false || $fechaNac > date('Y-m-d'))) $fechaNac = null;
 
                 Taller::actualizarPersona((int)$pt->id_persona, [
                     'nombre'           => $nombre,
