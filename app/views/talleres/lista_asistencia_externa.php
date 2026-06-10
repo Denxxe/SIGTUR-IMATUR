@@ -65,10 +65,8 @@ $t   = $data['taller'];
 $pts = $data['participantes'] ?? [];
 
 function edadExt(?string $fNac): string {
-    if (!$fNac) return '';
-    $nac = new DateTime($fNac);
-    $hoy = new DateTime();
-    return (string)$nac->diff($hoy)->y;
+    $e = Util::edad($fNac);
+    return $e === null ? '' : (string)$e;
 }
 
 // Dividir en hojas de 35 filas como el formato original

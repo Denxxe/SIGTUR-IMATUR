@@ -126,10 +126,7 @@ function seccionHijo($titulo, $icono, $btnTarget, $cols, $rows, $renderRow) {
 }
 
 // ── Carga Familiar ──
-$edadDe = function ($f) {
-    if (empty($f)) return '—';
-    try { return (new DateTime($f))->diff(new DateTime())->y . ' años'; } catch (Exception $e) { return '—'; }
-};
+$edadDe = fn($f) => Util::edadTexto($f);
 seccionHijo('Carga Familiar', 'bi-people', 'modalFamiliar',
     ['Nombre y apellido', 'Cédula', 'Sexo', 'F. Nacimiento', 'Edad', 'Parentesco', 'Estado'],
     $data['familiares'],

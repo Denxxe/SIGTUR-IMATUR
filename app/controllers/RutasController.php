@@ -224,7 +224,7 @@ class RutasController extends Controller {
                 $fnacDt    = new \DateTime($fechaNacLibreRaw);
                 $hoyDt     = new \DateTime();
                 if ($fnacDt >= $hoyDt) throw new Exception('La fecha de nacimiento no puede ser una fecha futura.');
-                $edadAnios = (int)$hoyDt->diff($fnacDt)->y;
+                $edadAnios = (int)Util::edad($fechaNacLibreRaw);
                 if ($edadAnios < 5)  throw new Exception('El participante debe tener al menos 5 años.');
                 if ($edadAnios >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula.');
 

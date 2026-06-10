@@ -301,7 +301,7 @@ class TalleresController extends Controller {
                 if ($fnacDt >= $hoyDt) {
                     throw new Exception('La fecha de nacimiento no puede ser una fecha futura.');
                 }
-                $edadAnios = (int)$hoyDt->diff($fnacDt)->y;
+                $edadAnios = (int)Util::edad($fechaNacLibreRaw);
                 if ($edadAnios < 5) {
                     throw new Exception('El participante debe tener al menos 5 años para inscribirse en una actividad formativa.');
                 }
@@ -456,9 +456,7 @@ class TalleresController extends Controller {
             $esLibre  = empty($p->id_persona);
             $genero   = $esLibre ? ($p->genero_libre  ?? '') : ($p->genero          ?? '');
             $fechaNac = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
-            $edadV    = !empty($fechaNac)
-                ? (int)(new \DateTime())->diff(new \DateTime($fechaNac))->y
-                : 99; // Sin fecha → adulto
+            $edadV    = Util::edad($fechaNac) ?? 99; // Sin fecha → adulto
             $totalSugeridos++;
             if ($edadV < 12) {
                 if ($genero === 'F') $sugeridos['ninas']++;
@@ -621,10 +619,7 @@ class TalleresController extends Controller {
         $n = 0;
         foreach ($participantes as $p) {
             $n++;
-            $edad = '';
-            if (!empty($p->fecha_nac)) {
-                try { $edad = (new DateTime())->diff(new DateTime($p->fecha_nac))->y; } catch (Exception $e) { $edad = ''; }
-            }
+            $edad = Util::edad($p->fecha_nac ?? null) ?? '';
             fputcsv($out, [
                 $n,
                 $p->tipo,
@@ -864,7 +859,7 @@ class TalleresController extends Controller {
                 if (\DateTime::createFromFormat('Y-m-d', $fechaRaw) === false) {
                     throw new Exception('El formato de fecha de nacimiento no es válido.');
                 }
-                $edad = (int)(new \DateTime())->diff(new \DateTime($fechaRaw))->y;
+                $edad = (int)Util::edad($fechaRaw);
                 if ($edad < 5)  throw new Exception('El participante debe tener al menos 5 años.');
                 if ($edad >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con cédula.');
 

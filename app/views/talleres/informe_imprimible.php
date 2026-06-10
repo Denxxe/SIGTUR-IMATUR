@@ -205,8 +205,7 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
                 $genSrc  = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
                 $genero  = ['M' => 'M', 'F' => 'F'][$genSrc] ?? '—';
                 $fnac    = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
-                $edad    = '';
-                if (!empty($fnac)) { try { $edad = (new DateTime())->diff(new DateTime($fnac))->y; } catch (Exception $e) { $edad = ''; } }
+                $edad    = Util::edad($fnac) ?? '';
                 $parr    = $esLibre ? ($p->parroquia_libre_nombre ?? '') : ($p->parroquia_nombre ?? '');
                 $muni    = $esLibre ? ($p->municipio_libre_nombre ?? '') : ($p->municipio_nombre ?? '');
                 $ubic    = trim($parr . ($muni ? ' / ' . $muni : ''));

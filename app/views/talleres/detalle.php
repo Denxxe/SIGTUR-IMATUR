@@ -115,12 +115,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         $generoSrc = $esLibre ? ($p->genero_libre ?? '') : ($p->genero ?? '');
                         $generoLabel = ['M' => 'Masc.', 'F' => 'Fem.'][$generoSrc] ?? '—';
                         $fechaNacSrc = $esLibre ? ($p->fecha_nac_libre ?? null) : ($p->fecha_nacimiento ?? null);
-                        $edad = null;
-                        if (!empty($fechaNacSrc)) {
-                            $nac  = new DateTime($fechaNacSrc);
-                            $hoy  = new DateTime();
-                            $edad = (int)$nac->diff($hoy)->y;
-                        }
+                        $edad = Util::edad($fechaNacSrc);
                         $parroquiaNombre  = $esLibre ? ($p->parroquia_libre_nombre ?? null) : ($p->parroquia_nombre ?? null);
                         $municipioNombre  = $esLibre ? ($p->municipio_libre_nombre ?? null) : ($p->municipio_nombre ?? null);
                         $nombreCompleto   = $esLibre
