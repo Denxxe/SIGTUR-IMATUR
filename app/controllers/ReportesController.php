@@ -2388,51 +2388,140 @@ class ReportesController extends Controller {
     // HELPERS DE EXPORTACIÓN
     // =========================================================================
 
+    /** Índice de columna (1→A, 27→AA) para celdas .xlsx */
+    private function colLetter(int $n): string {
+        $s = '';
+        while ($n > 0) { $m = ($n - 1) % 26; $s = chr(65 + $m) . $s; $n = intdiv($n - 1, 26); }
+        return $s;
+    }
+
     /**
-     * Exporta a Excel con formato (negritas, colores, bordes, zebra) mediante
-     * HTML-como-.xls: sin librerías ni internet, y Excel lo abre con estilos.
-     * Mantiene el nombre exportCsv para no tocar los llamadores existentes.
-     * Todas las celdas se tratan como TEXTO (preserva cédulas/códigos con ceros).
+     * Exporta a un archivo .xlsx REAL (Office Open XML) con formato — sin
+     * librerías externas (usa ZipArchive). Excel lo abre sin advertencias, con
+     * membrete, encabezados en color, bordes, filas alternadas y total.
+     * Todas las celdas son texto (preserva cédulas/códigos con ceros).
+     * Mantiene el nombre exportCsv para no tocar los llamadores.
      */
     private function exportCsv($filename, $headers, $rows) {
-        $titulo = ucwords(str_replace('_', ' ', $filename));
-        header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.xls"');
+        $titulo  = ucwords(str_replace('_', ' ', $filename));
+        $usuario = $_SESSION['user_username'] ?? 'Sistema';
+        $ncol    = max(1, count($headers));
+        $lastCol = $this->colLetter($ncol);
+        $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES | ENT_XML1, 'UTF-8');
+
+        // ── Construir filas de la hoja ────────────────────────────────────────
+        $rnum = 0; $sheetRows = ''; $merges = [];
+        $rowMerged = function (string $texto, int $style) use (&$rnum, &$sheetRows, &$merges, $lastCol, $esc) {
+            $rnum++;
+            $sheetRows .= '<row r="' . $rnum . '"><c r="A' . $rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">' . $esc($texto) . '</t></is></c></row>';
+            $merges[] = 'A' . $rnum . ':' . $lastCol . $rnum;
+        };
+        $rowCells = function (array $cells, int $style) use (&$rnum, &$sheetRows, $esc) {
+            $rnum++; $c = ''; $i = 0;
+            foreach ($cells as $v) {
+                $i++;
+                $c .= '<c r="' . $this->colLetter($i) . $rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">' . $esc($v) . '</t></is></c>';
+            }
+            $sheetRows .= '<row r="' . $rnum . '">' . $c . '</row>';
+        };
+
+        $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1);
+        $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1);
+        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7', 1);
+        $rowMerged($titulo, 2);
+        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . ' · ' . count($rows) . ' registro(s)', 3);
+        $rnum++; // fila en blanco
+        $rowCells($headers, 4);
+        $dataStart = $rnum + 1;
+        foreach ($rows as $i => $row) $rowCells(array_values((array)$row), ($i % 2 ? 6 : 5));
+        $rowMerged('Total de registros: ' . count($rows), 7);
+
+        // Ancho de columnas según contenido
+        $widths = [];
+        foreach ($headers as $i => $h) $widths[$i] = strlen((string)$h);
+        foreach ($rows as $row) { $j = 0; foreach ((array)$row as $v) { $widths[$j] = max($widths[$j] ?? 8, strlen((string)$v)); $j++; } }
+        $cols = '';
+        foreach ($widths as $i => $w) { $cols .= '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="' . min(60, max(10, $w + 3)) . '" customWidth="1"/>'; }
+
+        $mergeXml = $merges ? '<mergeCells count="' . count($merges) . '">' . implode('', array_map(fn($m) => '<mergeCell ref="' . $m . '"/>', $merges)) . '</mergeCells>' : '';
+
+        $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="' . ($dataStart - 1) . '" topLeftCell="A' . $dataStart . '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
+            . '<cols>' . $cols . '</cols><sheetData>' . $sheetRows . '</sheetData>' . $mergeXml . '</worksheet>';
+
+        // ── Estilos ───────────────────────────────────────────────────────────
+        $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<numFmts count="1"><numFmt numFmtId="164" formatCode="@"/></numFmts>'
+            . '<fonts count="5">'
+            . '<font><sz val="11"/><name val="Calibri"/></font>'
+            . '<font><b/><sz val="11"/><name val="Calibri"/></font>'
+            . '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
+            . '<font><b/><sz val="14"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font>'
+            . '<font><sz val="9"/><color rgb="FF64748B"/><name val="Calibri"/></font>'
+            . '</fonts>'
+            . '<fills count="4">'
+            . '<fill><patternFill patternType="none"/></fill>'
+            . '<fill><patternFill patternType="gray125"/></fill>'
+            . '<fill><patternFill patternType="solid"><fgColor rgb="FF1E3A8A"/></patternFill></fill>'
+            . '<fill><patternFill patternType="solid"><fgColor rgb="FFF1F5F9"/></patternFill></fill>'
+            . '</fills>'
+            . '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'
+            . '<border><left style="thin"><color rgb="FFCBD5E1"/></left><right style="thin"><color rgb="FFCBD5E1"/></right><top style="thin"><color rgb="FFCBD5E1"/></top><bottom style="thin"><color rgb="FFCBD5E1"/></bottom></border></borders>'
+            . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+            . '<cellXfs count="8">'
+            . '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'                                                                                  // 0 default
+            . '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center"/></xf>'              // 1 inst
+            . '<xf numFmtId="0" fontId="3" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center"/></xf>'              // 2 título
+            . '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center"/></xf>'              // 3 meta
+            . '<xf numFmtId="0" fontId="2" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>' // 4 header
+            . '<xf numFmtId="164" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>'             // 5 data
+            . '<xf numFmtId="164" fontId="0" fillId="3" borderId="1" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>' // 6 zebra
+            . '<xf numFmtId="0" fontId="1" fillId="3" borderId="1" applyFont="1" applyFill="1" applyBorder="1"/>'                                        // 7 total
+            . '</cellXfs>'
+            . '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
+            . '</styleSheet>';
+
+        // ── Empaquetar .xlsx (ZIP) ────────────────────────────────────────────
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx');
+        $zip = new ZipArchive();
+        $zip->open($tmp, ZipArchive::OVERWRITE);
+        $zip->addFromString('[Content_Types].xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            . '<Default Extension="xml" ContentType="application/xml"/>'
+            . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+            . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+            . '</Types>');
+        $zip->addFromString('_rels/.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+            . '</Relationships>');
+        $zip->addFromString('xl/workbook.xml',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+            . '<sheets><sheet name="Reporte" sheetId="1" r:id="rId1"/></sheets></workbook>');
+        $zip->addFromString('xl/_rels/workbook.xml.rels',
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            . '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+            . '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+            . '</Relationships>');
+        $zip->addFromString('xl/styles.xml', $styles);
+        $zip->addFromString('xl/worksheets/sheet1.xml', $sheet);
+        $zip->close();
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.xlsx"');
+        header('Content-Length: ' . filesize($tmp));
         header('Pragma: no-cache');
         header('Expires: 0');
-
-        echo "\xEF\xBB\xBF"; // BOM UTF-8 para acentos
-        $e = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
-        $n = max(1, count($headers));
-        $usuario = $_SESSION['user_username'] ?? 'Sistema';
-        ?>
-<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-<head><meta charset="UTF-8"><style>
-  table { border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 11pt; }
-  td { border: 1px solid #cbd5e1; padding: 5px 10px; mso-number-format: "\@"; vertical-align: top; }
-  .inst   { font-weight: bold; text-align: center; border: none; }
-  .titulo { font-weight: bold; font-size: 15pt; color: #1e3a8a; text-align: center; border: none; }
-  .meta   { color: #64748b; font-size: 9pt; text-align: center; border: none; }
-  .blank  { border: none; }
-  th { background: #1e3a8a; color: #ffffff; font-weight: bold; border: 1px solid #14276b; padding: 7px 10px; text-align: left; }
-  tr.par td { background: #f1f5f9; }
-  .total td { font-weight: bold; background: #e2e8f0; }
-</style></head><body>
-<table>
-  <tr><td class="inst"   colspan="<?php echo $n; ?>">REPÚBLICA BOLIVARIANA DE VENEZUELA</td></tr>
-  <tr><td class="inst"   colspan="<?php echo $n; ?>">ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE</td></tr>
-  <tr><td class="inst"   colspan="<?php echo $n; ?>">Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7</td></tr>
-  <tr><td class="titulo" colspan="<?php echo $n; ?>"><?php echo $e($titulo); ?></td></tr>
-  <tr><td class="meta"   colspan="<?php echo $n; ?>">Generado por <?php echo $e($usuario); ?> · <?php echo date('d/m/Y H:i'); ?> · <?php echo count($rows); ?> registro(s)</td></tr>
-  <tr><td class="blank"  colspan="<?php echo $n; ?>"></td></tr>
-  <tr><?php foreach ($headers as $h) echo '<th>' . $e($h) . '</th>'; ?></tr>
-  <?php foreach ($rows as $i => $row): ?>
-  <tr class="<?php echo $i % 2 ? 'par' : ''; ?>"><?php foreach ($row as $c) echo '<td>' . $e($c) . '</td>'; ?></tr>
-  <?php endforeach; ?>
-  <tr class="total"><td colspan="<?php echo $n; ?>">Total de registros: <?php echo count($rows); ?></td></tr>
-</table>
-</body></html>
-        <?php
+        readfile($tmp);
+        @unlink($tmp);
         exit;
     }
 
