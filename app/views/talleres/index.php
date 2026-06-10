@@ -342,7 +342,7 @@ function esAtrasada($t): bool {
                     <div class="col-md-5">
                         <div class="sig-field">
                             <label class="sig-field__label">Facilitador <span class="req">*</span></label>
-                            <select name="id_facilitador" id="tal_facilitador" class="sig-select" required>
+                            <select name="id_facilitador" id="tal_facilitador" class="sig-select js-search" required>
                                 <option value="">Seleccione un facilitador...</option>
                                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
                                     <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? '') . ' ' . ($e->apellido ?? ''); ?></option>

@@ -189,11 +189,16 @@ function initSearchSelect(sel) {
     panel.className = 'sig-search-select__panel';
     panel.style.display = 'none';
 
+    // Setter nativo del select: para cambios internos sin disparar el sync
+    // (evita que al teclear se borre el texto del buscador).
+    const _selValueDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    const nativeSet = (v) => { if (_selValueDesc && _selValueDesc.set) _selValueDesc.set.call(sel, v); else sel.value = v; };
+
     const setValidity = () => {
         if (requerido) input.setCustomValidity(sel.value ? '' : 'Seleccione una opción de la lista.');
     };
     const pick = (val, text) => {
-        sel.value = val;
+        nativeSet(val);
         input.value = text;
         setValidity();
         cerrar();
@@ -224,7 +229,7 @@ function initSearchSelect(sel) {
     const valorTexto = () => { const o = opciones.find(x => x.value === sel.value); return o ? o.textContent.trim() : ''; };
 
     input.addEventListener('focus', abrir);
-    input.addEventListener('input', () => { sel.value = ''; setValidity(); render(input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); });
+    input.addEventListener('input', () => { nativeSet(''); setValidity(); render(input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); });
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             const q = (input.value || '').toLowerCase().trim();
@@ -236,9 +241,23 @@ function initSearchSelect(sel) {
     });
     input.addEventListener('blur', () => setTimeout(cerrar, 150));
 
+    // Sincroniza el campo visible con el valor actual del select (para prefill
+    // en edición, reseteos de formulario o cambios por código).
+    const syncFromSelect = () => { input.value = valorTexto(); setValidity(); };
+
+    // Interceptar asignaciones programáticas a select.value (p. ej. prefill al editar)
+    if (_selValueDesc && _selValueDesc.configurable) {
+        Object.defineProperty(sel, 'value', {
+            configurable: true,
+            get() { return _selValueDesc.get.call(this); },
+            set(v) { _selValueDesc.set.call(this, v); syncFromSelect(); }
+        });
+    }
+    // Reseteo del formulario contenedor
+    if (sel.form) sel.form.addEventListener('reset', () => setTimeout(syncFromSelect, 0));
+
     // Valor preseleccionado (modo edición)
-    if (sel.value) input.value = valorTexto();
-    setValidity();
+    syncFromSelect();
 
     sel.style.display = 'none';
     sel.insertAdjacentElement('afterend', wrap);

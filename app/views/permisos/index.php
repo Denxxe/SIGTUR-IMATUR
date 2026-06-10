@@ -76,7 +76,7 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <div class="sig-field mb-3"><label class="sig-field__label">Empleado <span class="req">*</span></label>
-                    <select name="id_empleado" class="sig-select" required>
+                    <select name="id_empleado" class="sig-select js-search" required>
                         <option value="">Seleccione empleado...</option>
                         <?php foreach ($data['empleados'] ?? [] as $e): ?>
                             <option value="<?php echo $e->id; ?>"><?php echo htmlspecialchars(($e->nombre ?? '').' '.($e->apellido ?? '')); ?> (<?php echo htmlspecialchars($e->cedula ?? ''); ?>)</option>

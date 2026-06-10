@@ -60,7 +60,7 @@ $estado = function ($r) use ($limite) {
 <?php
 // Modales de registro (selección de empleado)
 $selectEmpleados = function ($id = 'id_empleado') use ($data) {
-    $html = '<select name="id_empleado" class="sig-select" required><option value="">Seleccione empleado...</option>';
+    $html = '<select name="id_empleado" class="sig-select js-search" required><option value="">Seleccione empleado...</option>';
     foreach ($data['empleados'] ?? [] as $e) {
         $html .= '<option value="' . $e->id . '">' . htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')) . ' (' . htmlspecialchars($e->cedula ?? '') . ')</option>';
     }

@@ -186,7 +186,7 @@
                     <div class="col-md-6">
                         <div class="sig-field">
                             <label class="sig-field__label">Facilitador / Guía responsable</label>
-                            <select name="id_facilitador" id="rut_facilitador" class="sig-select">
+                            <select name="id_facilitador" id="rut_facilitador" class="sig-select js-search">
                                 <option value="">Sin asignar</option>
                                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
                                     <option value="<?php echo $e->id; ?>">

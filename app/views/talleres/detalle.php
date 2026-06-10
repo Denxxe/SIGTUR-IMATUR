@@ -310,7 +310,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                 </div>
                 <div class="sig-field">
                     <label class="sig-field__label">Empleado <span class="req">*</span></label>
-                    <select name="id_empleado_persona" id="sel_empleado" class="sig-select">
+                    <select name="id_empleado_persona" id="sel_empleado" class="sig-select js-search">
                         <option value="">— Seleccione empleado —</option>
                         <?php foreach ($data['empleados'] as $emp): ?>
                             <option value="<?php echo $emp->id_persona; ?>">

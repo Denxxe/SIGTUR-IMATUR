@@ -93,7 +93,7 @@
                 <!-- Solo en creación -->
                 <div class="sig-field mb-3" id="div_empleado">
                     <label class="sig-field__label">Empleado <span class="req">*</span></label>
-                    <select name="id_empleado" id="user_id_empleado" class="sig-select">
+                    <select name="id_empleado" id="user_id_empleado" class="sig-select js-search">
                         <option value="">Seleccione al empleado...</option>
                         <?php foreach ($data['empleados_sin_cuenta'] ?? [] as $e): ?>
                             <option value="<?php echo $e->id; ?>" data-cedula="<?php echo htmlspecialchars($e->cedula ?? ''); ?>">
