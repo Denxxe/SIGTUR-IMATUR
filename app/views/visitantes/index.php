@@ -1,9 +1,21 @@
-<?php require_once '../app/views/inc/header.php'; ?>
+<?php require_once '../app/views/inc/header.php';
+$flt          = $data['filtros'] ?? ['buscar'=>'','fecha_desde'=>'','fecha_hasta'=>''];
+$pagina       = (int)($data['pagina'] ?? 1);
+$totalPaginas = (int)($data['total_paginas'] ?? 1);
+$totalReg     = (int)($data['total'] ?? 0);
+$porPagina    = (int)($data['por_pagina'] ?? 12);
+$hayFiltro    = array_filter($flt, fn($v) => $v !== '');
+function visUrl(array $f, int $p): string {
+    $q = array_filter($f, fn($v) => $v !== '' && $v !== null);
+    $q['p'] = $p;
+    return URL_ROOT . '/visitantes/index?' . http_build_query($q);
+}
+?>
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Recepción'; ?></h1>
-        <p class="page__subtitle">Control de entrada de visitantes.</p>
+        <p class="page__subtitle">Control de entrada de visitantes — historial completo con búsqueda.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary"
@@ -14,7 +26,21 @@
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
+<!-- Filtros (servidor) -->
+<form method="GET" action="<?php echo URL_ROOT; ?>/visitantes/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
+    <div class="tabla-search" style="flex:0 0 auto;">
+        <i class="bi bi-search"></i>
+        <input type="text" name="buscar" class="sig-input" style="padding-left:32px;min-width:220px;" placeholder="Cédula, nombre o procedencia…" value="<?php echo htmlspecialchars($flt['buscar'] ?? ''); ?>">
+    </div>
+    <input type="date" name="fecha_desde" class="sig-input" style="max-width:150px;" title="Desde" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
+    <input type="date" name="fecha_hasta" class="sig-input" style="max-width:150px;" title="Hasta" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
+    <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
+    <?php if ($hayFiltro): ?>
+        <a href="<?php echo URL_ROOT; ?>/visitantes/index" class="btn-sig btn-sig--ghost" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+    <?php endif; ?>
+</form>
+
+<div class="sig-table-wrap anim-slide-up">
     <table class="sig-table">
         <thead>
             <tr>
@@ -30,7 +56,7 @@
         <tbody>
             <?php if (empty($data['movimientos'])): ?>
                 <tr>
-                    <td colspan="7" class="sig-table-empty">Sin movimientos registrados hoy.</td>
+                    <td colspan="7" class="sig-table-empty"><?php echo $hayFiltro ? 'Sin visitas para el filtro aplicado.' : 'Sin visitas registradas.'; ?></td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['movimientos'] as $v): ?>
@@ -66,6 +92,18 @@
             <?php endif; ?>
         </tbody>
     </table>
+    <?php if ($totalReg > 0): ?>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:12px 16px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;">
+        <span class="tabla-count">Mostrando <?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($totalReg, $pagina*$porPagina); ?> de <?php echo number_format($totalReg); ?></span>
+        <?php if ($totalPaginas > 1): ?>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <a class="tabla-pager__btn" href="<?php echo visUrl($flt, max(1,$pagina-1)); ?>" <?php echo $pagina<=1?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-left"></i></a>
+            <span class="tabla-pager__info">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
+            <a class="tabla-pager__btn" href="<?php echo visUrl($flt, min($totalPaginas,$pagina+1)); ?>" <?php echo $pagina>=$totalPaginas?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-right"></i></a>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- ── Modal Registro de Visita ──────────────────────────────────────────── -->

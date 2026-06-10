@@ -6,8 +6,19 @@ class AsistenciasController extends Controller {
 
     public function index() {
         $hoy = date('Y-m-d');
+        $porPagina = 12;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
+            'buscar'      => trim($_GET['buscar']      ?? ''),
+            'fecha_desde' => trim($_GET['fecha_desde'] ?? ''),
+            'fecha_hasta' => trim($_GET['fecha_hasta'] ?? ''),
+        ];
         try {
-            $asistencias = Asistencia::all();
+            $res          = Asistencia::paginate($pagina, $porPagina, $filtros);
+            $asistencias  = $res['items'];
+            $totalReg     = $res['total'];
+            $totalPaginas = max(1, (int)ceil($totalReg / $porPagina));
+            if ($pagina > $totalPaginas) $pagina = $totalPaginas;
             $empleados   = Empleado::all();
             $tolerancia  = Asistencia::toleranciaPuntualidad();
 
@@ -43,6 +54,7 @@ class AsistenciasController extends Controller {
             ];
         } catch (Exception $e) {
             $asistencias = []; $empleados = []; $tolerancia = 15;
+            $totalReg = 0; $totalPaginas = 1;
             $resumen = ['activos'=>0,'presentes'=>0,'impuntuales'=>0,'en_actividad'=>0,'ausentes'=>0];
             $ausentes = []; $actividadDetalle = [];
             flash('global_msg', 'Error al cargar datos: ' . $e->getMessage(), 'danger');
@@ -56,6 +68,11 @@ class AsistenciasController extends Controller {
             'resumen'          => $resumen,
             'ausentes'         => $ausentes,
             'actividadDetalle' => $actividadDetalle,
+            'pagina'           => $pagina,
+            'total_paginas'    => $totalPaginas,
+            'total'            => $totalReg,
+            'por_pagina'       => $porPagina,
+            'filtros'          => $filtros,
         ];
 
         $this->view('asistencias/index', $data);

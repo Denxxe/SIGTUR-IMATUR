@@ -106,6 +106,47 @@ class Asistencia extends Model {
         return $db->resultSet();
     }
 
+    /**
+     * Historial de asistencias paginado en servidor, con búsqueda por
+     * nombre/apellido/cédula/expediente y rango de fechas. Devuelve
+     * ['items'=>[], 'total'=>n].
+     */
+    public static function paginate(int $pagina, int $porPagina, array $f = []): array {
+        $db    = new Database();
+        $binds = [];
+        $where = "a.is_active = TRUE";
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND ((p.nombre||' '||p.apellido) ILIKE :q OR p.cedula ILIKE :q OR e.nro_expediente ILIKE :q)";
+            $binds[':q'] = '%' . $f['buscar'] . '%';
+        }
+        if (!empty($f['fecha_desde'])) { $where .= " AND a.fecha >= :fd"; $binds[':fd'] = $f['fecha_desde']; }
+        if (!empty($f['fecha_hasta'])) { $where .= " AND a.fecha <= :fh"; $binds[':fh'] = $f['fecha_hasta']; }
+
+        $base = "FROM asistencias a
+                 INNER JOIN empleados e ON a.id_empleado = e.id
+                 INNER JOIN personas p ON e.id_persona = p.id
+                 WHERE {$where}";
+
+        $db->query("SELECT COUNT(*) AS total {$base}");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $total = (int)($db->single()->total ?? 0);
+
+        $offset = ($pagina - 1) * $porPagina;
+        $db->query("SELECT a.*, p.nombre, p.apellido, e.nro_expediente,
+                           CASE WHEN a.hora_salida IS NOT NULL
+                                THEN ROUND(EXTRACT(EPOCH FROM (a.hora_salida - a.hora_entrada))/3600.0, 2)
+                           END AS horas
+                    {$base}
+                    ORDER BY a.fecha DESC, a.hora_entrada DESC
+                    LIMIT :lim OFFSET :off");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $db->bind(':lim', $porPagina);
+        $db->bind(':off', $offset);
+
+        return ['items' => $db->resultSet(), 'total' => $total];
+    }
+
     public static function find($id) {
         $db = new Database();
         $db->query("SELECT * FROM asistencias WHERE id = :id");

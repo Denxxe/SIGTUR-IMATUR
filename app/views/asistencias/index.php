@@ -9,6 +9,18 @@ $puntualidad = function ($min) use ($tol) {
     if ($min > $tol) return '<span class="sig-badge sig-badge--danger">Impuntual (' . $min . ' min)</span>';
     return '<span class="sig-badge sig-badge--success">Puntual</span>';
 };
+// Paginación servidor del historial
+$flt          = $data['filtros'] ?? ['buscar'=>'','fecha_desde'=>'','fecha_hasta'=>''];
+$pagina       = (int)($data['pagina'] ?? 1);
+$totalPaginas = (int)($data['total_paginas'] ?? 1);
+$totalReg     = (int)($data['total'] ?? 0);
+$porPagina    = (int)($data['por_pagina'] ?? 12);
+$hayFiltro    = array_filter($flt, fn($v) => $v !== '');
+function asisUrl(array $f, int $p): string {
+    $q = array_filter($f, fn($v) => $v !== '' && $v !== null);
+    $q['p'] = $p;
+    return URL_ROOT . '/asistencias/index?' . http_build_query($q);
+}
 ?>
 
 <div class="page__head anim-slide-up">
@@ -97,10 +109,22 @@ $puntualidad = function ($min) use ($tol) {
     </div>
 </div>
 
-<!-- Registros recientes -->
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
-    <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted)">
-        <strong style="font-size:var(--fs-md);color:var(--text-primary)">Registros Recientes</strong>
+<!-- Historial de marcajes (paginado en servidor) -->
+<div class="sig-table-wrap anim-slide-up">
+    <div style="padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;">
+        <strong style="font-size:var(--fs-md);color:var(--text-primary)">Historial de marcajes</strong>
+        <form method="GET" action="<?php echo URL_ROOT; ?>/asistencias/index" style="display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;">
+            <div class="tabla-search" style="flex:0 0 auto;">
+                <i class="bi bi-search"></i>
+                <input type="text" name="buscar" class="sig-input" style="padding-left:32px;min-width:200px;" placeholder="Empleado o cédula…" value="<?php echo htmlspecialchars($flt['buscar'] ?? ''); ?>">
+            </div>
+            <input type="date" name="fecha_desde" class="sig-input" style="max-width:150px;" title="Desde" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
+            <input type="date" name="fecha_hasta" class="sig-input" style="max-width:150px;" title="Hasta" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
+            <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm"><i class="bi bi-funnel"></i></button>
+            <?php if ($hayFiltro): ?>
+                <a href="<?php echo URL_ROOT; ?>/asistencias/index" class="btn-sig btn-sig--ghost btn-sig--sm" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+            <?php endif; ?>
+        </form>
     </div>
     <table class="sig-table">
         <thead>
@@ -117,7 +141,7 @@ $puntualidad = function ($min) use ($tol) {
         </thead>
         <tbody>
             <?php if (empty($data['asistencias'])): ?>
-                <tr><td colspan="8" class="sig-table-empty">Aún no hay marcajes registrados.</td></tr>
+                <tr><td colspan="8" class="sig-table-empty"><?php echo $hayFiltro ? 'Sin marcajes para el filtro aplicado.' : 'Aún no hay marcajes registrados.'; ?></td></tr>
             <?php else: foreach ($data['asistencias'] as $as): ?>
                 <tr>
                     <td class="cell-strong"><?php echo date('d/m/Y', strtotime($as->fecha)); ?></td>
@@ -142,6 +166,18 @@ $puntualidad = function ($min) use ($tol) {
             <?php endforeach; endif; ?>
         </tbody>
     </table>
+    <?php if ($totalReg > 0): ?>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:12px 16px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;">
+        <span class="tabla-count">Mostrando <?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($totalReg, $pagina*$porPagina); ?> de <?php echo number_format($totalReg); ?></span>
+        <?php if ($totalPaginas > 1): ?>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <a class="tabla-pager__btn" href="<?php echo asisUrl($flt, max(1,$pagina-1)); ?>" <?php echo $pagina<=1?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-left"></i></a>
+            <span class="tabla-pager__info">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
+            <a class="tabla-pager__btn" href="<?php echo asisUrl($flt, min($totalPaginas,$pagina+1)); ?>" <?php echo $pagina>=$totalPaginas?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-right"></i></a>
+        </div>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>

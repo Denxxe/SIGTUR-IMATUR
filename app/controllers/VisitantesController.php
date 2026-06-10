@@ -12,13 +12,27 @@ class VisitantesController extends Controller {
     }
 
     public function index() {
-        $movimientos = Visita::getRecientesToday();
-        $empleados   = Empleado::all();
+        $porPagina = 12;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
+            'buscar'      => trim($_GET['buscar']      ?? ''),
+            'fecha_desde' => trim($_GET['fecha_desde'] ?? ''),
+            'fecha_hasta' => trim($_GET['fecha_hasta'] ?? ''),
+        ];
+        $res          = Visita::paginate($pagina, $porPagina, $filtros);
+        $totalReg     = $res['total'];
+        $totalPaginas = max(1, (int)ceil($totalReg / $porPagina));
+        if ($pagina > $totalPaginas) $pagina = $totalPaginas;
 
         $data = [
-            'titulo'       => 'Recepción',
-            'movimientos'  => $movimientos,
-            'empleados'    => $empleados,
+            'titulo'        => 'Recepción',
+            'movimientos'   => $res['items'],
+            'empleados'     => Empleado::all(),
+            'pagina'        => $pagina,
+            'total_paginas' => $totalPaginas,
+            'total'         => $totalReg,
+            'por_pagina'    => $porPagina,
+            'filtros'       => $filtros,
         ];
         $this->view('visitantes/index', $data);
     }
