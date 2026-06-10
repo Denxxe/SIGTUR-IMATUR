@@ -15,6 +15,23 @@
     </div>
 </div>
 
+<?php
+// Color de la tarjeta (acento + pill) según estado de la ruta
+$estadoColores = [
+    'Activa'           => '#059669', // verde
+    'En Mantenimiento' => '#F59E0B', // ámbar
+    'Finalizada'       => '#2563EB', // azul
+    'Inactiva'         => '#DC2626', // rojo
+];
+?>
+<!-- Leyenda de colores -->
+<div class="anim-slide-up" style="display:flex; gap:var(--sp-3); flex-wrap:wrap; justify-content:flex-end; margin-bottom:var(--sp-3); font-size:11px; color:var(--text-secondary);">
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#059669;"></span> Activa</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#F59E0B;"></span> En Mantenimiento</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#2563EB;"></span> Finalizada</span>
+    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#DC2626;"></span> Inactiva</span>
+</div>
+
 <div class="anim-slide-up" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:var(--sp-6); margin-bottom:var(--sp-8);">
     <?php if (empty($data['rutas'])): ?>
         <div style="grid-column:1/-1; text-align:center; padding:var(--sp-12); color:var(--text-tertiary);">
@@ -23,73 +40,72 @@
         </div>
     <?php else: ?>
         <?php foreach ($data['rutas'] ?? [] as $r): ?>
-            <div class="sig-card h-100" style="display:flex; flex-direction:column;">
-                <div class="sig-card__head" style="padding:var(--sp-3) var(--sp-4); border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-                    <?php
-                        $statusClass = Ruta::ESTADO_BADGES[$r->estado ?? ''] ?? 'sig-badge--neutral';
-                        $rutaFinalizada = ($r->estado === Ruta::ESTADO_TERMINAL);
-                    ?>
-                    <span class="sig-badge <?php echo $statusClass; ?>"><?php echo $r->estado; ?></span>
-                    <span style="font-size:11px; color:var(--text-tertiary); font-weight:600;">#<?php echo $r->id; ?></span>
+            <?php
+                $color = $estadoColores[$r->estado ?? ''] ?? '#64748B';
+                $rutaFinalizada = ($r->estado === Ruta::ESTADO_TERMINAL);
+                $enMant = ($r->estado === 'En Mantenimiento');
+                $cupo   = (int)($r->cupo_maximo ?? 0);
+                $insc   = (int)($r->total_participantes ?? 0);
+                $pct    = $cupo > 0 ? min(100, ($insc / $cupo) * 100) : 0;
+                $occCls = $cupo > 0 && $insc >= $cupo ? 'is-full' : ($pct >= 80 ? 'is-high' : '');
+            ?>
+            <div class="sig-card act-card h-100" style="border-left-color:<?php echo $color; ?>;">
+                <div class="act-card__head">
+                    <span class="act-status" style="color:<?php echo $color; ?>; background:<?php echo $color; ?>1f;">
+                        <span class="act-status__dot"></span><?php echo htmlspecialchars($r->estado ?? '—'); ?>
+                    </span>
+                    <span class="act-id">#<?php echo $r->id; ?></span>
                 </div>
-                <?php if ($r->estado === 'En Mantenimiento' && !empty($r->motivo_mantenimiento)): ?>
-                <div style="padding:var(--sp-2) var(--sp-4); background:rgba(245,158,11,.07); border-bottom:1px solid rgba(245,158,11,.15); font-size:11px; color:#92400E; display:flex; align-items:flex-start; gap:var(--sp-2);">
-                    <i class="bi bi-tools" style="flex-shrink:0; margin-top:1px;"></i>
-                    <span><?php echo htmlspecialchars($r->motivo_mantenimiento); ?></span>
-                </div>
-                <?php endif; ?>
                 <div class="sig-card__body" style="flex:1;">
                     <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin-bottom:var(--sp-2); line-height:1.3;">
                         <?php echo htmlspecialchars($r->nombre ?? ''); ?>
                     </h3>
-                    <p class="text-clamp-3" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-4);">
-                        <?php echo strip_tags($r->descripcion ?? 'Sin descripción'); ?>
+                    <p class="text-clamp-2" style="font-size:13px; color:var(--text-secondary); margin-bottom:var(--sp-3);">
+                        <?php echo htmlspecialchars(strip_tags($r->descripcion ?? 'Sin descripción')); ?>
                     </p>
-                    <div style="display:grid; gap:var(--sp-2);">
+                    <?php if ($enMant && !empty($r->motivo_mantenimiento)): ?>
+                    <div class="act-late" style="margin-bottom:12px; white-space:normal; align-items:flex-start;">
+                        <i class="bi bi-tools" style="margin-top:1px;"></i> <?php echo htmlspecialchars($r->motivo_mantenimiento); ?>
+                    </div>
+                    <?php endif; ?>
+                    <div class="act-chips">
+                        <span class="act-chip"><span class="act-chip__dot"></span><?php echo htmlspecialchars($r->tipo_ruta ?: 'General'); ?></span>
+                        <span class="act-chip"><i class="bi bi-pin-map"></i> <?php echo (int)$r->total_puntos; ?> paradas</span>
+                    </div>
+                    <div class="act-meta-list">
                         <?php if ($r->fecha_visita): ?>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-calendar-event" style="color:var(--teal-500);"></i>
-                            <span><?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?>
-                                <?php if ($r->hora_visita): ?>— <?php echo substr($r->hora_visita, 0, 5); ?><?php endif; ?>
-                            </span>
-                        </div>
+                        <div class="act-meta"><i class="bi bi-calendar-event"></i><span><?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?><?php if ($r->hora_visita): ?> — <?php echo substr($r->hora_visita, 0, 5); ?><?php endif; ?></span></div>
                         <?php endif; ?>
                         <?php if ($r->departamento_nombre): ?>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-building" style="color:var(--teal-500);"></i>
-                            <span><?php echo htmlspecialchars($r->departamento_nombre); ?></span>
-                        </div>
+                        <div class="act-meta"><i class="bi bi-geo-alt"></i><span><?php echo htmlspecialchars($r->departamento_nombre); ?></span></div>
                         <?php endif; ?>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-clock" style="color:var(--teal-500);"></i>
-                            <span><?php echo htmlspecialchars($r->duracion_estimada ?: '—'); ?></span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                            <i class="bi bi-pin-map" style="color:var(--teal-500);"></i>
-                            <span><?php echo (int)$r->total_puntos; ?> paradas &nbsp;·&nbsp;
-                                  <?php echo (int)$r->total_participantes; ?> participantes</span>
-                        </div>
-                        <?php if (!empty($r->tipo_ruta) && $r->tipo_ruta !== 'General'): ?>
-                        <div>
-                            <span class="sig-badge sig-badge--sm sig-badge--info"><?php echo htmlspecialchars($r->tipo_ruta); ?></span>
-                        </div>
+                        <div class="act-meta"><i class="bi bi-clock"></i><span><?php echo htmlspecialchars($r->duracion_estimada ?: 'Duración no definida'); ?></span></div>
+                        <?php if (!empty($r->facilitador_nombre)): ?>
+                        <div class="act-meta"><i class="bi bi-person-badge"></i><span><?php echo htmlspecialchars(trim($r->facilitador_nombre . ' ' . ($r->facilitador_apellido ?? ''))); ?></span></div>
                         <?php endif; ?>
+                        <div style="margin-top:var(--sp-1);">
+                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:5px; color:var(--text-secondary);">
+                                <span>Participantes</span>
+                                <span style="color:var(--text-primary);"><?php echo $insc; ?> / <?php echo $cupo; ?></span>
+                            </div>
+                            <div class="act-occ-bar <?php echo $occCls; ?>"><span style="width:<?php echo $pct; ?>%;"></span></div>
+                        </div>
                     </div>
                 </div>
-                <div class="sig-card__footer" style="padding:var(--sp-4); border-top:1px solid var(--border-subtle); display:flex; gap:var(--sp-2); justify-content:space-between; background:var(--bg-muted-subtle);">
+                <div class="act-card__foot">
                     <a href="<?php echo URL_ROOT; ?>/rutas/detalle/<?php echo $r->id; ?>"
                        class="btn-sig btn-sig--ghost btn-sig--sm" style="flex:1; justify-content:center; color:var(--teal-600); border-color:var(--teal-200);">
                         <i class="bi bi-geo"></i> Ver Ruta
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
                         <?php if (!$rutaFinalizada): ?>
-                        <button class="row-action row-action--edit"
+                        <button class="row-action row-action--edit" title="Editar"
                                 onclick='editarRuta(<?php echo htmlspecialchars(json_encode($r), ENT_QUOTES, "UTF-8"); ?>)'>
                             <i class="bi bi-pencil"></i>
                         </button>
                         <?php endif; ?>
                         <a href="<?php echo URL_ROOT; ?>/rutas/delete/<?php echo $r->id; ?>"
-                           class="row-action row-action--del delete-btn">
+                           class="row-action row-action--del delete-btn" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </a>
                     </div>
