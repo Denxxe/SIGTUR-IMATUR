@@ -11,8 +11,8 @@
     <!-- Bootstrap Icons Local -->
     <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/libs/bootstrap-icons.min.css">
     <!-- SIGTUR Design System -->
-    <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-tokens.css">
-    <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-components.css">
+    <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-tokens.css?v=<?php echo @filemtime('../public/assets/css/sigtur-tokens.css'); ?>">
+    <link rel="stylesheet" href="<?php echo URL_ROOT; ?>/assets/css/sigtur-components.css?v=<?php echo @filemtime('../public/assets/css/sigtur-components.css'); ?>">
 </head>
 <body>
 

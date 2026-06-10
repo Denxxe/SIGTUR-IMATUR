@@ -5,13 +5,40 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     initSigturValidations();
+    initRowActions();
 
     // Listener asíncrono para Modales (Bootstrap) en caso de que los forms se generen dinámicamente
     document.addEventListener('shown.bs.modal', function() {
         initSigturValidations();
         sigturRefreshButtons();
+        initRowActions();
     });
 });
+
+/**
+ * Patrón unificado de botones de acción en tablas: deja SOLO el ícono y mueve
+ * el texto a `title`/`aria-label` (tooltip al pasar el cursor). Así editar,
+ * eliminar, ver, etc. se ven iguales en todo el sistema, sin texto redundante.
+ * Idempotente; conserva el texto si el botón no tiene ícono.
+ */
+function initRowActions(root) {
+    (root || document).querySelectorAll('.row-action').forEach(el => {
+        if (el.dataset.iconified) return;
+        el.dataset.iconified = '1';
+        const icon = el.querySelector('i, svg, img');
+        if (!icon) return; // sin ícono → conservar el texto tal cual
+        let texto = '';
+        el.childNodes.forEach(n => { if (n.nodeType === 3) texto += n.textContent; });
+        texto = texto.replace(/\s+/g, ' ').trim();
+        if (texto) {
+            if (!el.getAttribute('title'))      el.setAttribute('title', texto);
+            if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', texto);
+            el.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = ''; });
+        }
+        el.classList.add('is-icon');
+    });
+}
+window.initRowActions = initRowActions;
 
 /**
  * Recalcula el estado (habilitado/deshabilitado) de los botones submit de todos
