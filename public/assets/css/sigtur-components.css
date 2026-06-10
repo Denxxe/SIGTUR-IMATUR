@@ -343,6 +343,32 @@ button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shado
 .tabla-pager__btn:disabled { opacity: .45; cursor: not-allowed; }
 .tabla-pager__info { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
 
+/* ===== TARJETAS DE REPORTES (centro de reportes) ===== */
+.rep-section-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-tertiary); margin: var(--sp-5) 0 var(--sp-3);
+}
+.rep-section-title:first-of-type { margin-top: 0; }
+.rep-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--sp-4); }
+.rep-card {
+  display: flex; gap: 14px; align-items: flex-start; position: relative;
+  padding: 18px 20px; border: 1px solid var(--border-subtle); border-radius: 14px;
+  background: var(--bg-surface); text-decoration: none;
+  transition: transform var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
+}
+.rep-card:hover { transform: translateY(-3px); box-shadow: 0 16px 36px -18px rgba(15, 23, 42, 0.3); border-color: var(--border-default); }
+.rep-card__icon {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 21px;
+}
+.rep-card__body { min-width: 0; padding-right: 18px; }
+.rep-card__title { font-weight: 700; color: var(--text-primary); font-size: 15px; margin-bottom: 3px; }
+.rep-card__desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
+.rep-card__arrow { position: absolute; top: 18px; right: 16px; color: var(--text-tertiary); transition: transform var(--t-fast), color var(--t-fast); }
+.rep-card:hover .rep-card__arrow { transform: translateX(3px); color: var(--brand-500); }
+
 /* ===== TARJETAS DE ACTIVIDADES (talleres/charlas) ===== */
 .act-card {
   display: flex; flex-direction: column; position: relative;

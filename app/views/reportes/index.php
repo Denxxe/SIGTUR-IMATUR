@@ -1,102 +1,70 @@
 <?php
 require_once '../app/views/inc/header.php';
 $rol = (int)($_SESSION['user_rol'] ?? 0);
+
+// Catálogo de reportes agrupados por área. Cada reporte: [título, descripción, ruta, ícono, color]
+$secciones = [
+    [
+        'titulo' => 'Recursos Humanos', 'icono' => 'bi-people-fill', 'roles' => [1, 2],
+        'reportes' => [
+            ['Reporte de Asistencia', 'Historial de asistencia del personal con filtros por fecha.', 'reportes/asistencia', 'bi-clipboard2-check', '#2563EB'],
+            ['Reporte de Visitantes', 'Registro de visitas institucionales por fecha y motivo.', 'reportes/visitantes', 'bi-person-vcard', '#7C3AED'],
+            ['Permisos y Reposos', 'Permisos y reposos por tipo, estado y período, con duración.', 'reportes/permisos', 'bi-calendar2-week', '#0891B2'],
+            ['Comisión de Servicio', 'Personal de Alcaldía o Gobernación, con su tiempo de servicio.', 'reportes/comisionServicio', 'bi-arrow-left-right', '#D97706'],
+        ],
+    ],
+    [
+        'titulo' => 'Formación y Turismo', 'icono' => 'bi-mortarboard-fill', 'roles' => [1, 3],
+        'reportes' => [
+            ['Reporte de Talleres', 'Estadísticas de talleres, participantes e instructores.', 'reportes/talleres', 'bi-mortarboard', '#7C3AED'],
+            ['Reporte de Rutas', 'Estado de rutas turísticas y equipamiento asignado.', 'reportes/rutas', 'bi-map', '#0D9488'],
+            ['Reporte de Pasantes', 'Control de practicantes, tutores y documentos.', 'reportes/pasantes', 'bi-person-badge', '#2563EB'],
+            ['Posibles duplicados', 'Detecta participantes repetidos para depurar registros basura.', 'reportes/duplicados', 'bi-people', '#DC2626'],
+        ],
+    ],
+    [
+        'titulo' => 'Inventario', 'icono' => 'bi-box-seam-fill', 'roles' => [1, 4],
+        'reportes' => [
+            ['Reporte de Inventario', 'Control patrimonial de bienes por condición y categoría.', 'reportes/inventario', 'bi-box-seam', '#0D9488'],
+            ['Bienes Dados de Baja', 'Historial de bienes desincorporados del inventario activo.', 'reportes/bajasInventario', 'bi-trash3', '#64748B'],
+        ],
+    ],
+    [
+        'titulo' => 'Indicadores de Gestión', 'icono' => 'bi-graph-up-arrow', 'roles' => [1, 2, 3, 4],
+        'reportes' => [
+            ['Indicadores de Gestión', 'KPIs globales: personal, formación, turismo e inventario, con tendencias.', 'reportes/indicadores', 'bi-bar-chart-line', '#059669'],
+        ],
+    ],
+];
 ?>
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">Análisis · Reportes</div>
-        <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
-        <p class="page__subtitle">Selecciona un tipo de reporte para generar.</p>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Centro de Reportes e Indicadores'; ?></h1>
+        <p class="page__subtitle">Elige un reporte para generarlo, filtrarlo y exportarlo.</p>
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-4)" class="anim-slide-up">
-
-    <?php if(in_array($rol, [1, 2])): ?>
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">📋</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Asistencia</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Historial de asistencia del personal con filtros por fecha</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/asistencia" class="btn-sig btn-sig--primary">Generar</a>
+<div class="anim-slide-up">
+<?php foreach ($secciones as $sec): ?>
+    <?php if (!array_intersect([$rol], $sec['roles'])) continue; ?>
+    <div class="rep-section-title"><i class="bi <?php echo $sec['icono']; ?>"></i> <?php echo htmlspecialchars($sec['titulo']); ?></div>
+    <div class="rep-grid">
+        <?php foreach ($sec['reportes'] as [$titulo, $desc, $ruta, $icono, $color]): ?>
+            <a href="<?php echo URL_ROOT; ?>/<?php echo $ruta; ?>" class="rep-card">
+                <span class="rep-card__icon" style="color:<?php echo $color; ?>;background:<?php echo $color; ?>1f;">
+                    <i class="bi <?php echo $icono; ?>"></i>
+                </span>
+                <span class="rep-card__body">
+                    <span class="rep-card__title"><?php echo htmlspecialchars($titulo); ?></span>
+                    <span class="rep-card__desc"><?php echo htmlspecialchars($desc); ?></span>
+                </span>
+                <i class="bi bi-arrow-right rep-card__arrow"></i>
+            </a>
+        <?php endforeach; ?>
     </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">👥</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Visitantes</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Registro de visitas institucionales con filtros por fecha y motivo</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/visitantes" class="btn-sig btn-sig--primary">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🗓️</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Permisos y Reposos</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Permisos y reposos por tipo, estado y período, con duración y estatus</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/permisos" class="btn-sig btn-sig--primary">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🔄</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Comisión de Servicio</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Personal proveniente de Alcaldía o Gobernación, con su tiempo de servicio</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/comisionServicio" class="btn-sig btn-sig--primary">Generar</a>
-    </div>
-    <?php endif; ?>
-
-    <?php if(in_array($rol, [1, 3])): ?>
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🎓</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Talleres</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Estadísticas de talleres, participantes e instructores</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/talleres" class="btn-sig btn-sig--primary" style="--brand-500:var(--accent-500);--brand-600:var(--accent-600);--brand-700:var(--accent-700)">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🗺️</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Rutas</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Estado de rutas turísticas y equipamiento asignado</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg,var(--teal-500),var(--teal-600))">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">👨‍🎓</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Pasantes</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Control de practicantes, tutores y documentos</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/pasantes" class="btn-sig btn-sig--ghost">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🧹</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Posibles duplicados</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Detecta participantes repetidos (con o sin cédula) para depurar registros basura</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/duplicados" class="btn-sig btn-sig--ghost">Revisar</a>
-    </div>
-    <?php endif; ?>
-
-    <?php if(in_array($rol, [1, 4])): ?>
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🗃️</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Reporte de Inventario</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Control patrimonial de bienes por condición y categoría</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/inventario" class="btn-sig btn-sig--primary" style="background:linear-gradient(180deg,var(--teal-500),var(--teal-600))">Generar</a>
-    </div>
-
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">🗑️</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Bienes Dados de Baja</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Historial de bienes desincorporados del inventario activo</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/bajasInventario" class="btn-sig btn-sig--ghost">Generar</a>
-    </div>
-    <?php endif; ?>
-
-    <!-- Indicadores — todos los roles -->
-    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
-        <div style="font-size:48px;margin-bottom:12px">📊</div>
-        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Indicadores de Gestión</h5>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">KPIs globales: empleados por departamento, inventario por categoría, tendencias</p>
-        <a href="<?php echo URL_ROOT; ?>/reportes/indicadores" class="btn-sig btn-sig--success" style="height:42px;font-size:15px">Ver Indicadores</a>
-    </div>
-
+<?php endforeach; ?>
 </div>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
