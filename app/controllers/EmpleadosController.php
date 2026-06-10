@@ -190,6 +190,13 @@ class EmpleadosController extends Controller {
                 return;
             }
 
+            // Validación de teléfono (si se proporcionó)
+            if (!empty($data['telefono']) && !$this->telefonoValido($data['telefono'])) {
+                flash('global_msg', 'El teléfono no es válido. Debe ser un número venezolano (prefijo + 7 dígitos).', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+
             // Validación de edad (RN: 18–65; hasta 70 solo por comisión de servicio)
             $edad = Util::edad($data['fecha_nacimiento'] ?? null);
             if (!empty($data['fecha_nacimiento']) && $edad === null) {

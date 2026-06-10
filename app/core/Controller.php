@@ -37,6 +37,13 @@ class Controller {
         return (bool) preg_match('/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', $email);
     }
 
+    // Valida un teléfono venezolano: exactamente 11 dígitos que inician en 0
+    // (0XXX + 7 = formato que produce el campo del front). Mismo criterio que
+    // sigtur-validations.js (prefijo móvil + 7 dígitos).
+    protected function telefonoValido(string $tel): bool {
+        return (bool) preg_match('/^0\d{10}$/', preg_replace('/\D/', '', $tel));
+    }
+
     // Sanitiza $_POST: elimina tags HTML sin corromper caracteres UTF-8 (tildes, ñ, etc.)
     protected function sanitizePost(): array {
         $raw = $_POST ?? [];

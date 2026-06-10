@@ -85,6 +85,10 @@ class VisitantesController extends Controller {
             if ($correo !== '' && !$this->emailValido($correo)) {
                 throw new Exception('El correo "' . htmlspecialchars($correo) . '" no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
             }
+            $tel = trim($_POST['telefono'] ?? '');
+            if ($tel !== '' && !$this->telefonoValido($tel)) {
+                throw new Exception('El teléfono no es válido. Debe ser un número venezolano (prefijo + 7 dígitos).');
+            }
 
             // Find existing visitante by cédula, or create one
             $visitante = $cedula ? Visitante::buscarPorCedula($cedula) : null;

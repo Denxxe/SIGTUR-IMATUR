@@ -362,6 +362,10 @@ class TalleresController extends Controller {
                 if ($correoRaw !== null && !$this->emailValido($correoRaw)) {
                     throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
                 }
+                $telRaw = trim($_POST['telefono'] ?? '') ?: null;
+                if ($telRaw !== null && !$this->telefonoValido($telRaw)) {
+                    throw new Exception('El teléfono no es válido. Debe ser un número venezolano (prefijo + 7 dígitos).');
+                }
 
                 // Buscar persona existente por cédula; si no existe, crear nueva
                 $persona = $cedula ? Taller::buscarPersonaPorCedula($cedula) : null;
@@ -894,6 +898,10 @@ class TalleresController extends Controller {
                 $correo = trim($_POST['correo'] ?? '') ?: null;
                 if ($correo !== null && !$this->emailValido($correo)) {
                     throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
+                }
+                $telEdit = trim($_POST['telefono'] ?? '') ?: null;
+                if ($telEdit !== null && !$this->telefonoValido($telEdit)) {
+                    throw new Exception('El teléfono no es válido. Debe ser un número venezolano (prefijo + 7 dígitos).');
                 }
                 $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
                 if ($fechaNac && (\DateTime::createFromFormat('Y-m-d', $fechaNac) === false || $fechaNac > date('Y-m-d'))) $fechaNac = null;
