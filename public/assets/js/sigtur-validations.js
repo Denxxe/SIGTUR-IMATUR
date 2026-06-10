@@ -229,12 +229,29 @@ function initSearchSelect(sel) {
             panel.appendChild(item);
         });
     };
-    const abrir  = () => { render(input.value === valorTexto() ? '' : input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); };
+    // Ubica el panel (position:fixed) bajo el input; si no cabe debajo, lo abre hacia arriba.
+    const posicionar = () => {
+        const r = input.getBoundingClientRect();
+        const alto = Math.min(panel.scrollHeight, 264);
+        const espacioAbajo = window.innerHeight - r.bottom;
+        panel.style.width = r.width + 'px';
+        panel.style.left  = r.left + 'px';
+        if (espacioAbajo < alto + 8 && r.top > espacioAbajo) {
+            panel.style.top = ''; panel.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+        } else {
+            panel.style.bottom = ''; panel.style.top = (r.bottom + 4) + 'px';
+        }
+    };
+    const abrir  = () => { render(input.value === valorTexto() ? '' : input.value); panel.style.display = 'block'; posicionar(); wrap.classList.add('is-open'); };
     const cerrar = () => { panel.style.display = 'none'; wrap.classList.remove('is-open'); };
     const valorTexto = () => { const o = opciones.find(x => x.value === sel.value); return o ? o.textContent.trim() : ''; };
+    // Reubicar mientras está abierto (scroll de cualquier contenedor / resize)
+    const onReposicionar = () => { if (panel.style.display !== 'none') posicionar(); };
+    window.addEventListener('resize', onReposicionar);
+    window.addEventListener('scroll', onReposicionar, true);
 
     input.addEventListener('focus', abrir);
-    input.addEventListener('input', () => { nativeSet(''); setValidity(); render(input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); });
+    input.addEventListener('input', () => { nativeSet(''); setValidity(); render(input.value); panel.style.display = 'block'; posicionar(); wrap.classList.add('is-open'); });
     input.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             const q = (input.value || '').toLowerCase().trim();
