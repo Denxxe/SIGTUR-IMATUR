@@ -592,6 +592,119 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // Formación — Cobertura comunitaria por parroquia (beneficiarios)
+    // =========================================================================
+    public function coberturaFormacion() {
+        $this->requireRoles([1, 3]);
+        $regs = $this->queryCoberturaFormacion();
+        $filas = []; $totalPart = 0;
+        foreach ($regs as $r) {
+            $totalPart += (int)$r->participaciones;
+            $filas[] = [
+                $r->parroquia ?? '(Sin parroquia)',
+                $r->municipio ?: '—',
+                ['raw' => '<strong>' . (int)$r->participaciones . '</strong>'],
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'Formación · Impacto', 'titulo' => 'Cobertura Comunitaria (Formación)',
+            'subtitulo' => 'Participaciones en talleres y charlas agrupadas por parroquia (alcance territorial).',
+            'resumen' => ['Participaciones' => $totalPart, 'Parroquias alcanzadas' => count($regs)],
+            'columnas' => ['Parroquia', 'Municipio', 'Participaciones'],
+            'filas' => $filas,
+            'export_url' => URL_ROOT . '/reportes/exportarCoberturaCsv',
+            'vacio' => 'Aún no hay participantes registrados en actividades de formación.',
+        ]);
+    }
+
+    public function exportarCoberturaCsv() {
+        $this->requireRoles([1, 3]);
+        $rows = [];
+        foreach ($this->queryCoberturaFormacion() as $r) {
+            $rows[] = [$r->parroquia, $r->municipio, (int)$r->participaciones];
+        }
+        $this->exportCsv('cobertura_formacion_parroquia', ['Parroquia', 'Municipio', 'Participaciones'], $rows);
+    }
+
+    private function queryCoberturaFormacion() {
+        $db = new Database();
+        $db->query("SELECT parroquia, municipio, COUNT(*) AS participaciones
+                    FROM (
+                        SELECT COALESCE(par.nombre, '(Sin parroquia)') AS parroquia, m.nombre AS municipio
+                        FROM participantes_taller pt
+                        JOIN talleres t   ON pt.id_taller = t.id AND t.is_active = TRUE
+                        JOIN personas p   ON pt.id_persona = p.id
+                        LEFT JOIN parroquia par ON p.parroquia_id = par.id
+                        LEFT JOIN municipio m   ON par.id_municipio = m.id
+                        WHERE pt.is_active = TRUE AND pt.id_persona IS NOT NULL
+                        UNION ALL
+                        SELECT COALESCE(par.nombre, '(Sin parroquia)'), m.nombre
+                        FROM participantes_taller pt
+                        JOIN talleres t   ON pt.id_taller = t.id AND t.is_active = TRUE
+                        LEFT JOIN parroquia par ON pt.parroquia_id_libre = par.id
+                        LEFT JOIN municipio m   ON par.id_municipio = m.id
+                        WHERE pt.is_active = TRUE AND pt.id_persona IS NULL
+                    ) z
+                    GROUP BY parroquia, municipio
+                    ORDER BY participaciones DESC, parroquia ASC");
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // Turismo — Participación / ocupación en rutas
+    // =========================================================================
+    public function participacionRutas() {
+        $this->requireRoles([1, 3]);
+        $regs = $this->queryParticipacionRutas();
+        $filas = []; $totalPart = 0; $sumaOcup = 0; $conCupo = 0;
+        foreach ($regs as $r) {
+            $cupo = (int)$r->cupo_maximo; $part = (int)$r->participantes;
+            $totalPart += $part;
+            $pct = $cupo > 0 ? round($part / $cupo * 100) : 0;
+            if ($cupo > 0) { $sumaOcup += $pct; $conCupo++; }
+            $badge = $pct >= 100 ? 'sig-badge--danger' : ($pct >= 80 ? 'sig-badge--warning' : 'sig-badge--success');
+            $filas[] = [
+                $r->nombre ?? '—',
+                ['raw' => '<span class="sig-badge ' . (Ruta::ESTADO_BADGES[$r->estado ?? ''] ?? 'sig-badge--neutral') . '">' . htmlspecialchars($r->estado ?? '—') . '</span>'],
+                !empty($r->fecha_visita) ? date('d/m/Y', strtotime($r->fecha_visita)) : '—',
+                (string)$part,
+                (string)$cupo,
+                ['raw' => '<span class="sig-badge ' . $badge . '">' . $pct . '%</span>'],
+            ];
+        }
+        $ocupProm = $conCupo > 0 ? round($sumaOcup / $conCupo) . '%' : '—';
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'Turismo · Impacto', 'titulo' => 'Participación en Rutas',
+            'subtitulo' => 'Ocupación por ruta (participantes vs cupo) y estado.',
+            'resumen' => ['Rutas' => count($regs), 'Participaciones' => $totalPart, 'Ocupación promedio' => $ocupProm],
+            'columnas' => ['Ruta', 'Estado', 'Fecha', 'Participantes', 'Cupo', 'Ocupación'],
+            'filas' => $filas,
+            'export_url' => URL_ROOT . '/reportes/exportarParticipacionRutasCsv',
+            'vacio' => 'No hay rutas registradas.',
+        ]);
+    }
+
+    public function exportarParticipacionRutasCsv() {
+        $this->requireRoles([1, 3]);
+        $rows = [];
+        foreach ($this->queryParticipacionRutas() as $r) {
+            $cupo = (int)$r->cupo_maximo; $part = (int)$r->participantes;
+            $rows[] = [$r->nombre, $r->estado, $r->fecha_visita, $part, $cupo, ($cupo > 0 ? round($part / $cupo * 100) : 0) . '%'];
+        }
+        $this->exportCsv('participacion_rutas', ['Ruta', 'Estado', 'Fecha', 'Participantes', 'Cupo', 'Ocupación'], $rows);
+    }
+
+    private function queryParticipacionRutas() {
+        $db = new Database();
+        $db->query("SELECT r.nombre, r.estado, r.fecha_visita, r.cupo_maximo,
+                           (SELECT COUNT(*) FROM participantes_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) AS participantes
+                    FROM rutas r
+                    WHERE r.is_active = TRUE
+                    ORDER BY r.fecha_visita DESC NULLS LAST, r.nombre ASC");
+        return $db->resultSet();
+    }
+
+    // =========================================================================
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {

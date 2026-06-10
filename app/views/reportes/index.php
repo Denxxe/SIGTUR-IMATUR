@@ -22,7 +22,9 @@ $secciones = [
         'titulo' => 'Formación y Turismo', 'icono' => 'bi-mortarboard-fill', 'roles' => [1, 3],
         'reportes' => [
             ['Reporte de Talleres', 'Estadísticas de talleres, participantes e instructores.', 'reportes/talleres', 'bi-mortarboard', '#7C3AED'],
+            ['Cobertura Comunitaria', 'Participaciones en formación por parroquia (alcance territorial).', 'reportes/coberturaFormacion', 'bi-geo-alt-fill', '#059669'],
             ['Reporte de Rutas', 'Estado de rutas turísticas y equipamiento asignado.', 'reportes/rutas', 'bi-map', '#0D9488'],
+            ['Participación en Rutas', 'Ocupación por ruta (participantes vs cupo) y estado.', 'reportes/participacionRutas', 'bi-people', '#0D9488'],
             ['Reporte de Pasantes', 'Control de practicantes, tutores y documentos.', 'reportes/pasantes', 'bi-person-badge', '#2563EB'],
             ['Posibles duplicados', 'Detecta participantes repetidos para depurar registros basura.', 'reportes/duplicados', 'bi-people', '#DC2626'],
         ],
