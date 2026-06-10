@@ -350,7 +350,7 @@ class TalleresController extends Controller {
                 // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
                 if ($cedula !== null) {
                     $cedulaN = strtoupper(preg_replace('/[\s\.\-]/', '', $cedula));
-                    if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
+                    if (!preg_match('/^[VEJGCP]?[1-9]\d{5,8}$/', $cedulaN)) {
                         throw new Exception('La cédula no es válida. Use solo números (6 a 8 dígitos).');
                     }
                     // Guardar/buscar siempre con solo dígitos (formato normalizado)

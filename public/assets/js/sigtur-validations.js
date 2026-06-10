@@ -188,10 +188,10 @@ function initSigturValidations() {
         // Excepción: campos "libre" (ID escolar / extranjeros sin cédula venezolana)
         // que pueden contener letras u otra longitud.
         if ((name.includes('cedula') || id.includes('cedula')) && !name.includes('libre') && !id.includes('libre')) {
-            input.setAttribute('pattern', '^\\d{6,8}$');
+            input.setAttribute('pattern', '^[1-9]\\d{5,7}$');
             input.setAttribute('maxlength', '8');
             input.setAttribute('inputmode', 'numeric');
-            input.title = "Solo números (6 a 8 dígitos).";
+            input.title = "Solo números (6 a 8 dígitos, sin empezar en 0).";
             input.addEventListener('input', formatCedula);
             if(input.value) formatCedula({target: input}); // Format existing
         }
@@ -443,8 +443,9 @@ function initEdadInput(input) {
  * Lógica de Formateo de Cédulas: solo dígitos, máximo 8 (sin letras ni símbolos).
  */
 function formatCedula(e) {
-    // Quita todo lo que no sea dígito y limita a 8 caracteres
-    e.target.value = (e.target.value || '').replace(/\D/g, '').slice(0, 8);
+    // Solo dígitos, sin ceros iniciales (la cédula no empieza en 0), máx. 8.
+    // Ej.: "00000000" → "" ; "020000000" → "20000000" ; "20000000" se mantiene.
+    e.target.value = (e.target.value || '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 8);
 }
 
 /**

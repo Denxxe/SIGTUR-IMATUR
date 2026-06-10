@@ -269,7 +269,7 @@ class RutasController extends Controller {
                 if (empty($cedula)) throw new Exception('Ingrese la cédula del participante.');
 
                 $cedulaN = strtoupper(preg_replace('/[\s.\-]/', '', $cedula));
-                if (!preg_match('/^[VEJGCP]?\d{6,9}$/', $cedulaN)) {
+                if (!preg_match('/^[VEJGCP]?[1-9]\d{5,8}$/', $cedulaN)) {
                     throw new Exception('La cédula no es válida. Use solo números (6 a 8 dígitos).');
                 }
                 // Guardar/buscar siempre con solo dígitos (formato normalizado)
