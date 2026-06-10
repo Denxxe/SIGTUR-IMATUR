@@ -34,6 +34,13 @@ $rol = (int)($_SESSION['user_rol'] ?? 0);
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Permisos y reposos por tipo, estado y período, con duración y estatus</p>
         <a href="<?php echo URL_ROOT; ?>/reportes/permisos" class="btn-sig btn-sig--primary">Generar</a>
     </div>
+
+    <div class="sig-card" style="text-align:center;padding:var(--sp-8) var(--sp-6)">
+        <div style="font-size:48px;margin-bottom:12px">🔄</div>
+        <h5 style="font-weight:700;color:var(--text-primary);margin-bottom:8px">Comisión de Servicio</h5>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Personal proveniente de Alcaldía o Gobernación, con su tiempo de servicio</p>
+        <a href="<?php echo URL_ROOT; ?>/reportes/comisionServicio" class="btn-sig btn-sig--primary">Generar</a>
+    </div>
     <?php endif; ?>
 
     <?php if(in_array($rol, [1, 3])): ?>

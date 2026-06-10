@@ -251,6 +251,71 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // Personal en comisión de servicio (origen Alcaldía / Gobernación)
+    // =========================================================================
+    public function comisionServicio() {
+        $this->requireRoles([1, 2]);
+        try {
+            $registros = $this->queryComision();
+            // Resumen por institución de origen
+            $resumen = [];
+            foreach ($registros as $r) {
+                $k = $r->institucion_origen ?? '—';
+                $resumen[$k] = ($resumen[$k] ?? 0) + 1;
+            }
+            $data = [
+                'titulo'    => 'Personal en Comisión de Servicio',
+                'registros' => $registros,
+                'resumen'   => $resumen,
+            ];
+            $this->view('reportes/comision', $data);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarComisionCsv() {
+        $this->requireRoles([1, 2]);
+        try {
+            $registros = $this->queryComision();
+            $headers = ['Empleado', 'Cédula', 'Expediente', 'Cargo', 'Departamento', 'Origen', 'F. Ingreso', 'Tiempo de servicio'];
+            $rows = [];
+            foreach ($registros as $r) {
+                $rows[] = [
+                    trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                    $r->cedula, $r->nro_expediente, $r->cargo, $r->departamento,
+                    $r->institucion_origen,
+                    $r->fecha_ingreso,
+                    Empleado::tiempoServicio($r->fecha_ingreso ?? null),
+                ];
+            }
+            $this->exportCsv('personal_comision_servicio', $headers, $rows);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    private function queryComision() {
+        $db  = new Database();
+        $org = trim($_GET['origen'] ?? '');
+        $where = "e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL
+                  AND e.institucion_origen <> 'IMATUR'";
+        if (in_array($org, ['Alcaldía', 'Gobernación'], true)) $where .= " AND e.institucion_origen = :org";
+        $db->query("SELECT p.cedula, p.nombre, p.apellido, e.nro_expediente, e.fecha_ingreso,
+                           e.institucion_origen, c.nombre AS cargo, d.nombre AS departamento
+                    FROM empleados e
+                    INNER JOIN personas p      ON e.id_persona      = p.id
+                    INNER JOIN cargos c        ON e.id_cargo        = c.id
+                    INNER JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE {$where}
+                    ORDER BY e.institucion_origen ASC, p.nombre ASC");
+        if (in_array($org, ['Alcaldía', 'Gobernación'], true)) $db->bind(':org', $org);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {

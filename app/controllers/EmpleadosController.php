@@ -6,12 +6,16 @@ class EmpleadosController extends Controller {
 
     public function index() {
         $ver = ($_GET['ver'] ?? 'activos') === 'egresados' ? 'egresados' : 'activos';
-        $empleados = ($ver === 'egresados') ? Empleado::egresados() : Empleado::all();
+        // Filtro por origen / comisión de servicio
+        $origenOpts = array_merge(['comision'], Empleado::INSTITUCIONES_ORIGEN);
+        $origen = in_array($_GET['origen'] ?? '', $origenOpts, true) ? $_GET['origen'] : '';
+        $empleados = ($ver === 'egresados') ? Empleado::egresados($origen) : Empleado::all($origen);
 
         $data = [
             'titulo'    => 'Gestión de Personal (Empleados)',
             'empleados' => $empleados,
             'ver'       => $ver,
+            'origen'    => $origen,
             'motivos'   => Empleado::MOTIVOS_EGRESO,
         ];
 

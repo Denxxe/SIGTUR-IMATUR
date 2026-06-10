@@ -116,9 +116,23 @@ class Empleado extends Model
     public function getId() { return $this->id; }
     public function getIdPersona() { return $this->id_persona; }
 
-    public static function all()
+    /**
+     * Construye el filtro por origen/comisión de servicio.
+     * $origen: 'comision' (Alcaldía/Gobernación), 'IMATUR', 'Alcaldía', 'Gobernación' o '' (todos).
+     * Devuelve el fragmento SQL; si usa bind, lo agrega a $binds (':origen').
+     */
+    private static function filtroOrigen(string $origen, array &$binds): string
+    {
+        if ($origen === 'comision') return " AND e.institucion_origen <> 'IMATUR'";
+        if (in_array($origen, self::INSTITUCIONES_ORIGEN, true)) { $binds[':origen'] = $origen; return " AND e.institucion_origen = :origen"; }
+        return '';
+    }
+
+    public static function all(string $origen = '')
     {
         $db = new Database();
+        $binds = [];
+        $cond = self::filtroOrigen($origen, $binds);
         $db->query("SELECT e.*,
                            p.cedula, p.nombre, p.apellido, p.telefono, p.correo, p.genero,
                            p.fecha_nacimiento, p.direccion, p.parroquia_id, p.rif, p.estado_civil,
@@ -131,8 +145,9 @@ class Empleado extends Model
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
-                      AND e.fecha_egreso IS NULL
+                      AND e.fecha_egreso IS NULL {$cond}
                     ORDER BY p.nombre ASC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
         return $db->resultSet();
     }
 
@@ -140,9 +155,11 @@ class Empleado extends Model
      * Empleados egresados (histórico): trabajaron en IMATUR y ya no.
      * Incluye fecha y motivo de egreso para mostrar el tiempo de servicio.
      */
-    public static function egresados()
+    public static function egresados(string $origen = '')
     {
         $db = new Database();
+        $binds = [];
+        $cond = self::filtroOrigen($origen, $binds);
         $db->query("SELECT e.*,
                            p.cedula, p.nombre, p.apellido, p.telefono, p.correo,
                            c.nombre as cargo, d.nombre as departamento
@@ -151,8 +168,9 @@ class Empleado extends Model
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
-                      AND e.fecha_egreso IS NOT NULL
+                      AND e.fecha_egreso IS NOT NULL {$cond}
                     ORDER BY e.fecha_egreso DESC, p.nombre ASC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
         return $db->resultSet();
     }
 

@@ -2,7 +2,13 @@
 $ver     = $data['ver'] ?? 'activos';
 $egView  = ($ver === 'egresados');
 $motivos = $data['motivos'] ?? [];
+$origen  = $data['origen'] ?? '';
 $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
+$esCom = fn($e) => (($e->institucion_origen ?? 'IMATUR') !== 'IMATUR');
+// Opciones del filtro de origen
+$origenOpciones = ['' => 'Todos los orígenes', 'comision' => 'Comisión de servicio'];
+foreach (Empleado::INSTITUCIONES_ORIGEN as $o) $origenOpciones[$o] = $o;
+$colspanBase = ($egView ? 8 : 6) + 1; // +1 por la columna Origen
 ?>
 
 <div class="page__head anim-slide-up">
@@ -32,6 +38,23 @@ $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
     </a>
 </div>
 
+<!-- Filtro por origen / comisión de servicio -->
+<form method="GET" action="<?php echo URL_ROOT; ?>/empleados/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
+    <?php if ($egView): ?><input type="hidden" name="ver" value="egresados"><?php endif; ?>
+    <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Origen / Comisión de servicio</label>
+        <select name="origen" class="sig-select" style="min-width:220px;" onchange="this.form.submit()">
+            <?php foreach ($origenOpciones as $val => $lbl): ?>
+                <option value="<?php echo $val; ?>" <?php echo $origen === $val ? 'selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
+    <?php if ($origen !== ''): ?>
+        <a href="<?php echo URL_ROOT; ?>/empleados/index<?php echo $egView ? '?ver=egresados' : ''; ?>" class="btn-sig btn-sig--ghost" title="Limpiar filtro"><i class="bi bi-x-lg"></i></a>
+    <?php endif; ?>
+</form>
+
 <div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10" data-buscar-placeholder="Buscar por nombre, cédula, cargo o departamento…">
     <table class="sig-table">
         <thead>
@@ -40,6 +63,7 @@ $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
                 <th>Cédula</th>
                 <th>Nombre</th>
                 <th>Cargo</th>
+                <th>Origen</th>
                 <?php if ($egView): ?>
                     <th>F. Egreso</th>
                     <th>Motivo</th>
@@ -52,8 +76,9 @@ $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
         </thead>
         <tbody>
             <?php if (empty($data['empleados'])): ?>
-                <tr><td colspan="<?php echo $egView ? 8 : 6; ?>" class="sig-table-empty">
+                <tr><td colspan="<?php echo $colspanBase; ?>" class="sig-table-empty">
                     <?php echo $egView ? 'No hay empleados egresados.' : 'No hay empleados activos registrados.'; ?>
+                    <?php echo $origen !== '' ? ' (para el filtro seleccionado)' : ''; ?>
                 </td></tr>
             <?php else: ?>
                 <?php foreach ($data['empleados'] ?? [] as $emp): ?>
@@ -62,6 +87,13 @@ $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
                         <td><?php echo $emp->cedula ?? 'N/A'; ?></td>
                         <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); ?></td>
                         <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo ?? 'Sin cargo'; ?></span></td>
+                        <td>
+                            <?php if ($esCom($emp)): ?>
+                                <span class="sig-badge sig-badge--warning" title="Comisión de servicio"><i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($emp->institucion_origen); ?></span>
+                            <?php else: ?>
+                                <span class="sig-badge sig-badge--neutral">IMATUR</span>
+                            <?php endif; ?>
+                        </td>
                         <?php if ($egView): ?>
                             <td><?php echo !empty($emp->fecha_egreso) ? date('d/m/Y', strtotime($emp->fecha_egreso)) : '—'; ?></td>
                             <td><span class="sig-badge sig-badge--warning"><?php echo htmlspecialchars($emp->motivo_egreso ?? '—'); ?></span></td>
