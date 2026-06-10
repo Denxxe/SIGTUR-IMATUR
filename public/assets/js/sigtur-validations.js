@@ -6,6 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     initSigturValidations();
     initRowActions();
+    initTablasBuscables();
 
     // Listener asíncrono para Modales (Bootstrap) en caso de que los forms se generen dinámicamente
     document.addEventListener('shown.bs.modal', function() {
@@ -21,6 +22,82 @@ document.addEventListener('DOMContentLoaded', () => {
  * eliminar, ver, etc. se ven iguales en todo el sistema, sin texto redundante.
  * Idempotente; conserva el texto si el botón no tiene ícono.
  */
+/**
+ * Búsqueda + paginación del lado cliente para listados. Opt-in: poner
+ * `data-tabla-buscable` en el contenedor `.sig-table-wrap` (opcional
+ * `data-por-pagina` y `data-buscar-placeholder`). Inyecta una barra de
+ * búsqueda arriba y un paginador abajo; filtra por texto y pagina las filas.
+ * Idempotente. No toca tablas sin el atributo (p. ej. detalle/modales).
+ */
+function initTablasBuscables(root) {
+    (root || document).querySelectorAll('[data-tabla-buscable]').forEach(wrap => {
+        if (wrap.dataset.tablaAttached) return;
+        const table = wrap.querySelector('table.sig-table');
+        const tbody = table && table.tBodies[0];
+        if (!tbody) return;
+        wrap.dataset.tablaAttached = '1';
+
+        const porPagina   = Math.max(1, parseInt(wrap.dataset.porPagina || '10', 10));
+        const placeholder = wrap.dataset.buscarPlaceholder || 'Buscar en la lista…';
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'tabla-toolbar';
+        toolbar.innerHTML =
+            '<div class="tabla-search"><i class="bi bi-search"></i>' +
+            '<input type="text" class="sig-input" placeholder="' + placeholder + '" aria-label="Buscar"></div>' +
+            '<span class="tabla-count"></span>';
+        wrap.insertBefore(toolbar, wrap.firstChild);
+
+        const pager = document.createElement('div');
+        pager.className = 'tabla-pager';
+        wrap.appendChild(pager);
+
+        const search = toolbar.querySelector('input');
+        const count  = toolbar.querySelector('.tabla-count');
+        let page = 1, filtro = '';
+
+        const dataRows = () => Array.from(tbody.children).filter(
+            tr => tr.tagName === 'TR' && !tr.querySelector('.sig-table-empty') && !tr.classList.contains('sig-table-empty')
+        );
+
+        const mkBtn = (label, onClick, disabled) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.className = 'tabla-pager__btn'; b.innerHTML = label;
+            if (disabled) b.disabled = true; else b.addEventListener('click', onClick);
+            return b;
+        };
+
+        const aplicar = () => {
+            const rows = dataRows();
+            const q = filtro.toLowerCase().trim();
+            const visibles = q ? rows.filter(tr => tr.textContent.toLowerCase().includes(q)) : rows;
+            const total = visibles.length;
+            const paginas = Math.max(1, Math.ceil(total / porPagina));
+            if (page > paginas) page = paginas;
+            rows.forEach(tr => { tr.style.display = 'none'; });
+            const inicio = (page - 1) * porPagina;
+            visibles.slice(inicio, inicio + porPagina).forEach(tr => { tr.style.display = ''; });
+            count.textContent = total
+                ? ('Mostrando ' + (inicio + 1) + '–' + Math.min(total, inicio + porPagina) + ' de ' + total)
+                : 'Sin resultados';
+
+            pager.innerHTML = '';
+            if (paginas > 1) {
+                pager.appendChild(mkBtn('<i class="bi bi-chevron-left"></i>', () => { page--; aplicar(); }, page <= 1));
+                const info = document.createElement('span');
+                info.className = 'tabla-pager__info';
+                info.textContent = 'Página ' + page + ' de ' + paginas;
+                pager.appendChild(info);
+                pager.appendChild(mkBtn('<i class="bi bi-chevron-right"></i>', () => { page++; aplicar(); }, page >= paginas));
+            }
+        };
+
+        search.addEventListener('input', () => { filtro = search.value; page = 1; aplicar(); });
+        aplicar();
+    });
+}
+window.initTablasBuscables = initTablasBuscables;
+
 function initRowActions(root) {
     (root || document).querySelectorAll('.row-action').forEach(el => {
         if (el.dataset.iconified) return;

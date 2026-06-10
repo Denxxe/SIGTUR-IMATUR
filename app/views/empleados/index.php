@@ -32,7 +32,7 @@ $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
     </a>
 </div>
 
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10" data-buscar-placeholder="Buscar por nombre, cédula, cargo o departamento…">
     <table class="sig-table">
         <thead>
             <tr>

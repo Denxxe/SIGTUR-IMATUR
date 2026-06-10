@@ -24,7 +24,7 @@ $estado = function ($r) use ($limite) {
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
     <table class="sig-table">
         <thead>
             <tr>

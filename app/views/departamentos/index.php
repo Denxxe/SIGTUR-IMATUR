@@ -24,7 +24,7 @@ $indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Ofici
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
     <table class="sig-table">
         <thead>
             <tr>

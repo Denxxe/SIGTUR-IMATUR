@@ -98,7 +98,7 @@ $puntualidad = function ($min) use ($tol) {
 </div>
 
 <!-- Registros recientes -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
     <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted)">
         <strong style="font-size:var(--fs-md);color:var(--text-primary)">Registros Recientes</strong>
     </div>
