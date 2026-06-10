@@ -6,6 +6,10 @@
 class DashboardController extends Controller {
 
     public function index() {
+        // Respaldo de transiciones automáticas (Programado→En Curso) al abrir el
+        // sistema, por si la tarea programada no está activa. Idempotente.
+        try { Taller::autoTransicionarProgramados(); } catch (\Throwable $ignored) {}
+
         $db   = new Database();
         $rol  = (int)($_SESSION['user_rol'] ?? 0);
         $anio = (int)date('Y');
