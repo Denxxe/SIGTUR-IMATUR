@@ -316,6 +316,282 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // RRHH — Directorio de personal
+    // =========================================================================
+    public function directorio() {
+        $this->requireRoles([1, 2]);
+        $regs = $this->queryDirectorio();
+        $filas = [];
+        foreach ($regs as $r) {
+            $esCom = ($r->institucion_origen ?? 'IMATUR') !== 'IMATUR';
+            $filas[] = [
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->cedula ?? '—',
+                ['raw' => '<span class="sig-badge sig-badge--info">' . htmlspecialchars($r->cargo ?? '—') . '</span>'],
+                $r->departamento ?? '—',
+                $r->clasificacion ?? '—',
+                $r->tipo_contrato ?? '—',
+                ['raw' => $esCom
+                    ? '<span class="sig-badge sig-badge--warning">' . htmlspecialchars($r->institucion_origen) . '</span>'
+                    : '<span class="sig-badge sig-badge--neutral">IMATUR</span>'],
+                !empty($r->fecha_ingreso) ? date('d/m/Y', strtotime($r->fecha_ingreso)) : '—',
+            ];
+        }
+        $deptos = []; foreach (Departamento::all() as $d) $deptos[$d->id] = $d->nombre;
+        $cargos = []; foreach (Cargo::all() as $c) $cargos[$c->id] = $c->nombre;
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Directorio de Personal',
+            'subtitulo' => 'Plantilla activa del instituto con filtros por área, cargo, clasificación, contrato y origen.',
+            'resumen' => ['Total' => count($regs)],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Origen', 'F. Ingreso'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/directorio',
+            'filtros' => [
+                ['name' => 'buscar', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Nombre o cédula…', 'value' => $_GET['buscar'] ?? ''],
+                ['name' => 'departamento', 'label' => 'Departamento', 'type' => 'select', 'options' => ['' => 'Todos'] + $deptos, 'value' => $_GET['departamento'] ?? ''],
+                ['name' => 'cargo', 'label' => 'Cargo', 'type' => 'select', 'options' => ['' => 'Todos'] + $cargos, 'value' => $_GET['cargo'] ?? ''],
+                ['name' => 'clasificacion', 'label' => 'Clasificación', 'type' => 'select', 'options' => array_merge(['' => 'Todas'], array_combine(Empleado::CLASIFICACIONES, Empleado::CLASIFICACIONES)), 'value' => $_GET['clasificacion'] ?? ''],
+                ['name' => 'origen', 'label' => 'Origen', 'type' => 'select', 'options' => ['' => 'Todos', 'comision' => 'Comisión de servicio'] + array_combine(Empleado::INSTITUCIONES_ORIGEN, Empleado::INSTITUCIONES_ORIGEN), 'value' => $_GET['origen'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarDirectorioCsv?' . http_build_query($_GET),
+        ]);
+    }
+
+    public function exportarDirectorioCsv() {
+        $this->requireRoles([1, 2]);
+        $regs = $this->queryDirectorio();
+        $rows = [];
+        foreach ($regs as $r) {
+            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento,
+                       $r->clasificacion, $r->tipo_contrato, $r->institucion_origen, $r->fecha_ingreso];
+        }
+        $this->exportCsv('directorio_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Origen', 'F. Ingreso'], $rows);
+    }
+
+    private function queryDirectorio() {
+        $db = new Database();
+        $binds = [];
+        $where = "e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL";
+        if (!empty($_GET['buscar']))       { $where .= " AND ((p.nombre||' '||p.apellido) ILIKE :q OR p.cedula ILIKE :q)"; $binds[':q'] = '%' . trim($_GET['buscar']) . '%'; }
+        if (!empty($_GET['departamento'])) { $where .= " AND e.id_departamento = :dep"; $binds[':dep'] = (int)$_GET['departamento']; }
+        if (!empty($_GET['cargo']))        { $where .= " AND e.id_cargo = :car"; $binds[':car'] = (int)$_GET['cargo']; }
+        if (!empty($_GET['clasificacion'])){ $where .= " AND e.clasificacion = :cla"; $binds[':cla'] = trim($_GET['clasificacion']); }
+        $org = trim($_GET['origen'] ?? '');
+        if ($org === 'comision')                                       $where .= " AND e.institucion_origen <> 'IMATUR'";
+        elseif (in_array($org, Empleado::INSTITUCIONES_ORIGEN, true)){ $where .= " AND e.institucion_origen = :org"; $binds[':org'] = $org; }
+        $db->query("SELECT p.nombre, p.apellido, p.cedula, e.clasificacion, e.tipo_contrato,
+                           e.institucion_origen, e.fecha_ingreso, c.nombre AS cargo, d.nombre AS departamento
+                    FROM empleados e
+                    INNER JOIN personas p      ON e.id_persona = p.id
+                    INNER JOIN cargos c        ON e.id_cargo = c.id
+                    INNER JOIN departamentos d ON e.id_departamento = d.id
+                    WHERE {$where}
+                    ORDER BY p.nombre ASC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // RRHH — Amonestaciones y faltas
+    // =========================================================================
+    public function amonestaciones() {
+        $this->requireRoles([1, 2]);
+        $roster = Amonestacion::roster();
+        $limite = Amonestacion::LIMITE_DESPIDO;
+        $filas = []; $despido = 0; $conObs = 0;
+        foreach ($roster as $r) {
+            $am = (int)$r->amonestaciones;
+            if ($am >= $limite) $despido++;
+            if ($am > 0 || (int)$r->faltas > 0) $conObs++;
+            $estadoBadge = $am >= $limite ? 'sig-badge--danger' : ($am === $limite - 1 ? 'sig-badge--warning' : ((int)$r->faltas >= 3 ? 'sig-badge--warning' : ($am > 0 || (int)$r->faltas > 0 ? 'sig-badge--info' : 'sig-badge--success')));
+            $estadoTxt = $am >= $limite ? 'Causa de despido' : ($am === $limite - 1 ? 'En riesgo' : ((int)$r->faltas >= 3 ? 'Faltas acumuladas' : ($am > 0 || (int)$r->faltas > 0 ? 'Con observaciones' : 'Sin novedades')));
+            $filas[] = [
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->departamento ?? '—',
+                $r->tipo_contrato ?? '—',
+                (string)(int)$r->faltas,
+                (int)$r->amonestaciones . '/' . $limite,
+                ['raw' => '<span class="sig-badge ' . $estadoBadge . '">' . $estadoTxt . '</span>'],
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'RRHH · Disciplina', 'titulo' => 'Amonestaciones y Faltas',
+            'subtitulo' => "Conteo por empleado. {$limite} amonestaciones = causa de despido (Contratado).",
+            'resumen' => ['Empleados' => count($roster), 'Con observaciones' => $conObs, 'En causa de despido' => $despido],
+            'columnas' => ['Empleado', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones', 'Estado'],
+            'filas' => $filas,
+            'export_url' => URL_ROOT . '/reportes/exportarAmonestacionesCsv',
+        ]);
+    }
+
+    public function exportarAmonestacionesCsv() {
+        $this->requireRoles([1, 2]);
+        $limite = Amonestacion::LIMITE_DESPIDO;
+        $rows = [];
+        foreach (Amonestacion::roster() as $r) {
+            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->departamento, $r->tipo_contrato,
+                       (int)$r->faltas, (int)$r->amonestaciones . '/' . $limite];
+        }
+        $this->exportCsv('amonestaciones_faltas', ['Empleado', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones'], $rows);
+    }
+
+    // =========================================================================
+    // RRHH — Egresos / rotación de personal
+    // =========================================================================
+    public function egresos() {
+        $this->requireRoles([1, 2]);
+        $regs = $this->queryEgresos();
+        $filas = []; $porMotivo = [];
+        foreach ($regs as $r) {
+            $porMotivo[$r->motivo_egreso] = ($porMotivo[$r->motivo_egreso] ?? 0) + 1;
+            $filas[] = [
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->cedula ?? '—',
+                $r->cargo ?? '—',
+                !empty($r->fecha_egreso) ? date('d/m/Y', strtotime($r->fecha_egreso)) : '—',
+                ['raw' => '<span class="sig-badge sig-badge--warning">' . htmlspecialchars($r->motivo_egreso ?? '—') . '</span>'],
+                $r->observacion ?: '—',
+                ['raw' => !empty($r->fecha_reingreso)
+                    ? date('d/m/Y', strtotime($r->fecha_reingreso))
+                    : '<span class="text-muted">— vigente —</span>'],
+            ];
+        }
+        $resumen = ['Total egresos' => count($regs)] + $porMotivo;
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Egresos y Rotación de Personal',
+            'subtitulo' => 'Personal desincorporado por motivo y período (renuncias, despidos, jubilaciones…).',
+            'resumen' => $resumen,
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'F. Egreso', 'Motivo', 'Observación', 'F. Reingreso'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/egresos',
+            'filtros' => [
+                ['name' => 'motivo', 'label' => 'Motivo', 'type' => 'select', 'options' => array_merge(['' => 'Todos'], array_combine(Empleado::MOTIVOS_EGRESO, Empleado::MOTIVOS_EGRESO)), 'value' => $_GET['motivo'] ?? ''],
+                ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
+                ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarEgresosCsv?' . http_build_query($_GET),
+            'vacio' => 'No hay egresos registrados para el filtro.',
+        ]);
+    }
+
+    public function exportarEgresosCsv() {
+        $this->requireRoles([1, 2]);
+        $rows = [];
+        foreach ($this->queryEgresos() as $r) {
+            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo,
+                       $r->fecha_egreso, $r->motivo_egreso, $r->observacion, $r->fecha_reingreso];
+        }
+        $this->exportCsv('egresos_personal', ['Empleado', 'Cédula', 'Cargo', 'F. Egreso', 'Motivo', 'Observación', 'F. Reingreso'], $rows);
+    }
+
+    private function queryEgresos() {
+        $db = new Database();
+        $binds = [];
+        $where = "1=1";
+        if (!empty($_GET['motivo']))      { $where .= " AND ee.motivo_egreso = :m"; $binds[':m'] = trim($_GET['motivo']); }
+        if (!empty($_GET['fecha_desde'])) { $where .= " AND ee.fecha_egreso >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
+        if (!empty($_GET['fecha_hasta'])) { $where .= " AND ee.fecha_egreso <= :fh"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
+        $db->query("SELECT ee.fecha_egreso, ee.motivo_egreso, ee.observacion, ee.fecha_reingreso,
+                           p.nombre, p.apellido, p.cedula, c.nombre AS cargo
+                    FROM empleados_egresos ee
+                    INNER JOIN empleados e ON ee.id_empleado = e.id
+                    INNER JOIN personas p  ON e.id_persona = p.id
+                    LEFT  JOIN cargos c    ON e.id_cargo = c.id
+                    WHERE {$where}
+                    ORDER BY ee.fecha_egreso DESC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // RRHH — Constancias de trabajo emitidas
+    // =========================================================================
+    public function constancias() {
+        $this->requireRoles([1, 2]);
+        $regs = $this->queryConstancias();
+        $filas = [];
+        foreach ($regs as $r) {
+            $filas[] = [
+                ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->numero) . '</span>'],
+                $r->tipo ?? '—',
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->cedula ?? '—',
+                !empty($r->fecha_emision) ? date('d/m/Y H:i', strtotime($r->fecha_emision)) : '—',
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Constancias Emitidas',
+            'subtitulo' => 'Bitácora de constancias de trabajo generadas, con su correlativo.',
+            'resumen' => ['Total emitidas' => count($regs)],
+            'columnas' => ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Emisión'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/constancias',
+            'filtros' => [
+                ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
+                ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarConstanciasCsv?' . http_build_query($_GET),
+        ]);
+    }
+
+    public function exportarConstanciasCsv() {
+        $this->requireRoles([1, 2]);
+        $rows = [];
+        foreach ($this->queryConstancias() as $r) {
+            $rows[] = [$r->numero, $r->tipo, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->fecha_emision];
+        }
+        $this->exportCsv('constancias_emitidas', ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Emisión'], $rows);
+    }
+
+    private function queryConstancias() {
+        $db = new Database();
+        $binds = [];
+        $where = "co.is_active = TRUE";
+        if (!empty($_GET['fecha_desde'])) { $where .= " AND co.fecha_emision >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
+        if (!empty($_GET['fecha_hasta'])) { $where .= " AND co.fecha_emision <= (:fh::date + 1)"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
+        $db->query("SELECT co.numero, co.tipo, co.fecha_emision, p.nombre, p.apellido, p.cedula
+                    FROM constancias co
+                    INNER JOIN empleados e ON co.id_empleado = e.id
+                    INNER JOIN personas p  ON e.id_persona = p.id
+                    WHERE {$where}
+                    ORDER BY co.fecha_emision DESC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // RRHH — Expedientes incompletos (recaudos obligatorios faltantes)
+    // =========================================================================
+    public function expedientesIncompletos() {
+        $this->requireRoles([1, 2]);
+        $filas = []; $totalIncompletos = 0;
+        foreach (Empleado::all() as $e) {
+            $estado = ExpedienteDocumento::recaudosEstado((int)$e->id);
+            if (($estado['faltan_obligatorios'] ?? 0) <= 0) continue;
+            $totalIncompletos++;
+            $faltantes = [];
+            foreach ($estado['items'] as $it) {
+                if ($it['obligatorio'] && !$it['entregado']) $faltantes[] = $it['label'];
+            }
+            $filas[] = [
+                trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')),
+                $e->cedula ?? '—',
+                $e->cargo ?? '—',
+                ['raw' => '<span class="sig-badge sig-badge--danger">' . (int)$estado['faltan_obligatorios'] . '</span>'],
+                implode(', ', $faltantes),
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Expedientes Incompletos',
+            'subtitulo' => 'Personal con recaudos OBLIGATORIOS faltantes en su expediente.',
+            'resumen' => ['Con recaudos faltantes' => $totalIncompletos],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Faltan', 'Recaudos faltantes'],
+            'filas' => $filas,
+            'vacio' => '¡Todos los expedientes tienen sus recaudos obligatorios completos!',
+        ]);
+    }
+
+    // =========================================================================
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {

@@ -7,10 +7,15 @@ $secciones = [
     [
         'titulo' => 'Recursos Humanos', 'icono' => 'bi-people-fill', 'roles' => [1, 2],
         'reportes' => [
+            ['Directorio de Personal', 'Plantilla activa con filtros por área, cargo, clasificación, contrato y origen.', 'reportes/directorio', 'bi-person-lines-fill', '#2563EB'],
             ['Reporte de Asistencia', 'Historial de asistencia del personal con filtros por fecha.', 'reportes/asistencia', 'bi-clipboard2-check', '#2563EB'],
-            ['Reporte de Visitantes', 'Registro de visitas institucionales por fecha y motivo.', 'reportes/visitantes', 'bi-person-vcard', '#7C3AED'],
             ['Permisos y Reposos', 'Permisos y reposos por tipo, estado y período, con duración.', 'reportes/permisos', 'bi-calendar2-week', '#0891B2'],
+            ['Amonestaciones y Faltas', 'Conteo por empleado y semáforo; quién llega a causa de despido.', 'reportes/amonestaciones', 'bi-flag', '#DC2626'],
+            ['Egresos y Rotación', 'Personal desincorporado por motivo y período (renuncias, despidos…).', 'reportes/egresos', 'bi-box-arrow-right', '#D97706'],
             ['Comisión de Servicio', 'Personal de Alcaldía o Gobernación, con su tiempo de servicio.', 'reportes/comisionServicio', 'bi-arrow-left-right', '#D97706'],
+            ['Constancias Emitidas', 'Bitácora de constancias de trabajo generadas, con correlativo.', 'reportes/constancias', 'bi-file-earmark-text', '#0891B2'],
+            ['Expedientes Incompletos', 'Personal con recaudos obligatorios faltantes en su expediente.', 'reportes/expedientesIncompletos', 'bi-folder-x', '#DC2626'],
+            ['Reporte de Visitantes', 'Registro de visitas institucionales por fecha y motivo.', 'reportes/visitantes', 'bi-person-vcard', '#7C3AED'],
         ],
     ],
     [
