@@ -69,6 +69,8 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
                     </select>
                 <?php elseif ($tipo === 'date'): ?>
                     <input type="date" name="<?php echo $f['name']; ?>" class="sig-input" style="max-width:150px;" value="<?php echo htmlspecialchars((string)$val); ?>">
+                <?php elseif ($tipo === 'number'): ?>
+                    <input type="number" name="<?php echo $f['name']; ?>" class="sig-input" style="max-width:120px;" min="0" placeholder="<?php echo htmlspecialchars($f['placeholder'] ?? ''); ?>" value="<?php echo htmlspecialchars((string)$val); ?>">
                 <?php else: ?>
                     <div class="tabla-search"><i class="bi bi-search"></i>
                         <input type="text" name="<?php echo $f['name']; ?>" class="sig-input" style="padding-left:32px;width:100%;" placeholder="<?php echo htmlspecialchars($f['placeholder'] ?? 'Buscar…'); ?>" value="<?php echo htmlspecialchars((string)$val); ?>">

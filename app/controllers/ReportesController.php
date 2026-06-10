@@ -671,6 +671,103 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // RRHH — Carga familiar del personal (detallado, con filtros configurables)
+    // =========================================================================
+    public function cargaFamiliar() {
+        $this->requireRoles([1, 2]);
+        $regs = $this->queryCargaFamiliar();
+        $filas = []; $empleados = [];
+        foreach ($regs as $r) {
+            $empleados[$r->emp_cedula ?: $r->emp_nombre . $r->emp_apellido] = true;
+            $vive = ($r->vive === true || $r->vive === 't' || $r->vive === null);
+            $sexo = $r->genero === 'M' ? 'Masculino' : ($r->genero === 'F' ? 'Femenino' : '—');
+            $filas[] = [
+                ['raw' => '<span class="cell-strong">' . htmlspecialchars(trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? ''))) . '</span>'],
+                $r->emp_cedula ?? '—',
+                $r->cargo ?? '—',
+                $r->departamento ?? '—',
+                $r->fam_nombre ?? '—',
+                ['raw' => '<span class="sig-badge sig-badge--info">' . htmlspecialchars($r->parentesco ?? '—') . '</span>'],
+                $sexo,
+                !empty($r->fecha_nacimiento) ? date('d/m/Y', strtotime($r->fecha_nacimiento)) : '—',
+                ($r->edad !== null ? $r->edad . ' años' : '—'),
+                ['raw' => '<span class="sig-badge ' . ($vive ? 'sig-badge--success' : 'sig-badge--danger') . '">' . ($vive ? 'Vivo' : 'Fallecido') . '</span>'],
+                $r->fam_cedula ?? '—',
+            ];
+        }
+        $this->renderReporte([
+            'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Carga Familiar del Personal',
+            'subtitulo' => 'Detalle de la carga familiar de cada trabajador, con filtros configurables.',
+            'resumen' => ['Trabajadores' => count($empleados), 'Familiares' => count($regs)],
+            'columnas' => ['Empleado', 'C.I. Empleado', 'Cargo', 'Departamento', 'Familiar', 'Parentesco', 'Sexo', 'F. Nacimiento', 'Edad', 'Estado', 'C.I. Familiar'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/cargaFamiliar',
+            'filtros' => [
+                ['name' => 'buscar', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Empleado o familiar…', 'value' => $_GET['buscar'] ?? ''],
+                ['name' => 'parentesco', 'label' => 'Parentesco', 'type' => 'select', 'options' => array_merge(['' => 'Todos'], array_combine(CargaFamiliar::PARENTESCOS, CargaFamiliar::PARENTESCOS)), 'value' => $_GET['parentesco'] ?? ''],
+                ['name' => 'sexo', 'label' => 'Sexo', 'type' => 'select', 'options' => ['' => 'Todos', 'M' => 'Masculino', 'F' => 'Femenino'], 'value' => $_GET['sexo'] ?? ''],
+                ['name' => 'estado', 'label' => 'Estado', 'type' => 'select', 'options' => ['' => 'Todos', 'vivo' => 'Vivo', 'fallecido' => 'Fallecido'], 'value' => $_GET['estado'] ?? ''],
+                ['name' => 'edad_min', 'label' => 'Edad mín.', 'type' => 'number', 'value' => $_GET['edad_min'] ?? ''],
+                ['name' => 'edad_max', 'label' => 'Edad máx.', 'type' => 'number', 'value' => $_GET['edad_max'] ?? ''],
+                ['name' => 'min_fam', 'label' => 'N° familiares ≥', 'type' => 'number', 'placeholder' => 'ej: 3', 'value' => $_GET['min_fam'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarCargaFamiliarCsv?' . $this->qsFiltros(),
+            'vacio' => 'No hay carga familiar registrada para el filtro (o aún no se ha cargado).',
+        ]);
+    }
+
+    public function exportarCargaFamiliarCsv() {
+        $this->requireRoles([1, 2]);
+        $rows = [];
+        foreach ($this->queryCargaFamiliar() as $r) {
+            $vive = ($r->vive === true || $r->vive === 't' || $r->vive === null);
+            $rows[] = [
+                trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')), $r->emp_cedula, $r->cargo, $r->departamento,
+                $r->fam_nombre, $r->parentesco,
+                $r->genero === 'M' ? 'Masculino' : ($r->genero === 'F' ? 'Femenino' : ''),
+                $r->fecha_nacimiento, ($r->edad !== null ? $r->edad . ' años' : ''),
+                $vive ? 'Vivo' : 'Fallecido', $r->fam_cedula,
+            ];
+        }
+        $this->exportCsv('carga_familiar', ['Empleado', 'C.I. Empleado', 'Cargo', 'Departamento', 'Familiar', 'Parentesco', 'Sexo', 'F. Nacimiento', 'Edad', 'Estado', 'C.I. Familiar'], $rows);
+    }
+
+    private function queryCargaFamiliar() {
+        $db = new Database();
+        $binds = [];
+        $w = "e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL AND cf.is_active = TRUE";
+        if (!empty($_GET['buscar']))      { $w .= " AND ((p.nombre||' '||p.apellido) ILIKE :q OR p.cedula ILIKE :q OR cf.nombre_apellido ILIKE :q)"; $binds[':q'] = '%' . trim($_GET['buscar']) . '%'; }
+        if (!empty($_GET['parentesco']))  { $w .= " AND cf.parentesco = :par"; $binds[':par'] = trim($_GET['parentesco']); }
+        if (in_array($_GET['sexo'] ?? '', ['M', 'F'], true)) { $w .= " AND cf.genero = :sx"; $binds[':sx'] = $_GET['sexo']; }
+        $est = $_GET['estado'] ?? '';
+        if ($est === 'vivo')           $w .= " AND COALESCE(cf.vive, TRUE) = TRUE";
+        elseif ($est === 'fallecido')  $w .= " AND cf.vive = FALSE";
+        if (($_GET['edad_min'] ?? '') !== '') { $w .= " AND cf.fecha_nacimiento IS NOT NULL AND EXTRACT(YEAR FROM age(cf.fecha_nacimiento)) >= :emin"; $binds[':emin'] = (int)$_GET['edad_min']; }
+        if (($_GET['edad_max'] ?? '') !== '') { $w .= " AND cf.fecha_nacimiento IS NOT NULL AND EXTRACT(YEAR FROM age(cf.fecha_nacimiento)) <= :emax"; $binds[':emax'] = (int)$_GET['edad_max']; }
+        $minFam = max(1, (int)($_GET['min_fam'] ?? 1));
+
+        $db->query("SELECT * FROM (
+                        SELECT p.nombre AS emp_nombre, p.apellido AS emp_apellido, p.cedula AS emp_cedula,
+                               c.nombre AS cargo, d.nombre AS departamento,
+                               cf.nombre_apellido AS fam_nombre, cf.parentesco, cf.genero, cf.cedula AS fam_cedula,
+                               cf.fecha_nacimiento, COALESCE(cf.vive, TRUE) AS vive,
+                               CASE WHEN cf.fecha_nacimiento IS NOT NULL THEN EXTRACT(YEAR FROM age(cf.fecha_nacimiento))::int END AS edad,
+                               COUNT(*) OVER (PARTITION BY e.id) AS fam_count
+                        FROM empleados e
+                        INNER JOIN personas p      ON e.id_persona = p.id
+                        INNER JOIN cargos c        ON e.id_cargo = c.id
+                        INNER JOIN departamentos d ON e.id_departamento = d.id
+                        INNER JOIN carga_familiar cf ON cf.id_persona = p.id
+                        WHERE {$w}
+                    ) z
+                    WHERE z.fam_count >= :minfam
+                    ORDER BY emp_nombre, emp_apellido, parentesco");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        $db->bind(':minfam', $minFam);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
     // Formación — Cobertura comunitaria por parroquia (beneficiarios)
     // =========================================================================
     public function coberturaFormacion() {

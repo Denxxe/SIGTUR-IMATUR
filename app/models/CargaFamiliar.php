@@ -35,24 +35,29 @@ class CargaFamiliar extends Model
         if ($parentesco === null || empty($data['nombre_apellido'])) {
             throw new Exception("Nombre y parentesco del familiar son obligatorios.");
         }
+        $genero = in_array($data['genero'] ?? '', ['M', 'F'], true) ? $data['genero'] : null;
+        // vive: TRUE por defecto; FALSE solo si se indica explícitamente fallecido
+        $vive   = !(isset($data['vive']) && ($data['vive'] === '0' || $data['vive'] === 0 || $data['vive'] === false));
 
         if ($id) {
             $previos = self::find($id);
             $db->query("UPDATE carga_familiar
                         SET nombre_apellido=:na, cedula=:cedula, fecha_nacimiento=:fnac, parentesco=:par,
-                            updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
+                            genero=:gen, vive=:vive, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                         WHERE id=:id");
             $db->bind(':id', $id);
         } else {
             $previos = null;
-            $db->query("INSERT INTO carga_familiar (id_persona, nombre_apellido, cedula, fecha_nacimiento, parentesco, created_by)
-                        VALUES (:id_persona, :na, :cedula, :fnac, :par, :user_id) RETURNING id");
+            $db->query("INSERT INTO carga_familiar (id_persona, nombre_apellido, cedula, fecha_nacimiento, parentesco, genero, vive, created_by)
+                        VALUES (:id_persona, :na, :cedula, :fnac, :par, :gen, :vive, :user_id) RETURNING id");
             $db->bind(':id_persona', (int)$data['id_persona']);
         }
         $db->bind(':na', trim($data['nombre_apellido']));
         $db->bind(':cedula', !empty($data['cedula']) ? trim($data['cedula']) : null);
         $db->bind(':fnac', !empty($data['fecha_nacimiento']) ? $data['fecha_nacimiento'] : null);
         $db->bind(':par', $parentesco);
+        $db->bind(':gen', $genero);
+        $db->bind(':vive', $vive, PDO::PARAM_BOOL);
         $db->bind(':user_id', $user_id);
 
         if ($id) {

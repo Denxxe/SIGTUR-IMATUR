@@ -126,15 +126,23 @@ function seccionHijo($titulo, $icono, $btnTarget, $cols, $rows, $renderRow) {
 }
 
 // ── Carga Familiar ──
+$edadDe = function ($f) {
+    if (empty($f)) return '—';
+    try { return (new DateTime($f))->diff(new DateTime())->y . ' años'; } catch (Exception $e) { return '—'; }
+};
 seccionHijo('Carga Familiar', 'bi-people', 'modalFamiliar',
-    ['Nombre y apellido', 'Cédula', 'F. Nacimiento', 'Parentesco'],
+    ['Nombre y apellido', 'Cédula', 'Sexo', 'F. Nacimiento', 'Edad', 'Parentesco', 'Estado'],
     $data['familiares'],
-    function ($r) use ($eid, $ffecha, $val) {
+    function ($r) use ($eid, $ffecha, $val, $edadDe, $esBool) {
+        $vive = !isset($r->vive) || $esBool($r->vive) || $r->vive === null;
         echo '<tr>';
         echo '<td class="cell-strong">' . $val($r->nombre_apellido) . '</td>';
         echo '<td>' . $val($r->cedula) . '</td>';
+        echo '<td>' . (($r->genero ?? '') === 'M' ? 'M' : (($r->genero ?? '') === 'F' ? 'F' : '—')) . '</td>';
         echo '<td>' . $ffecha($r->fecha_nacimiento) . '</td>';
+        echo '<td>' . htmlspecialchars($edadDe($r->fecha_nacimiento ?? null)) . '</td>';
         echo '<td><span class="sig-badge sig-badge--info">' . $val($r->parentesco) . '</span></td>';
+        echo '<td><span class="sig-badge ' . ($vive ? 'sig-badge--success' : 'sig-badge--danger') . '">' . ($vive ? 'Vivo' : 'Fallecido') . '</span></td>';
         echo '<td class="col-actions"><a href="' . URL_ROOT . '/empleados/eliminarFamiliar/' . $r->id . '/' . $eid . '" class="row-action row-action--del" onclick="return confirm(\'¿Eliminar este familiar?\')"><i class="bi bi-trash"></i></a></td>';
         echo '</tr>';
     }
@@ -294,13 +302,26 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label">F. Nacimiento</label>
                         <input type="date" name="fecha_nacimiento" id="cf_fnac_modal" class="sig-input js-edad"></div></div>
                 </div>
-                <div class="sig-field mt-3"><label class="sig-field__label">Parentesco <span class="req">*</span></label>
-                    <select name="parentesco" class="sig-select" required>
-                        <option value="">— Seleccione —</option>
-                        <?php foreach (CargaFamiliar::PARENTESCOS as $p): ?>
-                            <option value="<?php echo $p; ?>"><?php echo $p; ?></option>
-                        <?php endforeach; ?>
-                    </select></div>
+                <div class="row g-3 mt-0">
+                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Parentesco <span class="req">*</span></label>
+                        <select name="parentesco" class="sig-select" required>
+                            <option value="">— Seleccione —</option>
+                            <?php foreach (CargaFamiliar::PARENTESCOS as $p): ?>
+                                <option value="<?php echo $p; ?>"><?php echo $p; ?></option>
+                            <?php endforeach; ?>
+                        </select></div></div>
+                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Sexo</label>
+                        <select name="genero" class="sig-select">
+                            <option value="">—</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select></div></div>
+                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Estado</label>
+                        <select name="vive" class="sig-select">
+                            <option value="1">Vivo</option>
+                            <option value="0">Fallecido</option>
+                        </select></div></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>

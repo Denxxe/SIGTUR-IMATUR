@@ -215,8 +215,9 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 036 | `036_egreso_empleados.sql` | ✅ Ejecutado | `empleados`: `motivo_egreso`/`observacion_egreso` (`fecha_egreso` ya existía) + tabla `empleados_egresos` (historial egreso/reingreso, índice único parcial de egreso abierto). Egreso ≠ papelera (R-12) |
 | 037 | `037_normalizar_cedulas.sql` | ✅ Ejecutado | Data-only: normaliza `personas.cedula`/`visitantes.cedula`/`participantes_taller.cedula_docente` a **solo dígitos** (quita V-/E-/puntos), con guarda anti-colisión (omite filas que violarían UNIQUE → posibles duplicados a depurar). NO toca `cedula_libre` (ID escolar, alfanumérico) |
 | 038 | `038_representante_participante_ruta.sql` | ✅ Ejecutado | `participantes_ruta`: `nombre_representante`/`cedula_representante` (ancla de identidad del menor sin cédula; talleres ya lo tiene como `nombre_docente`/`cedula_docente`) |
+| 039 | `039_carga_familiar_genero_estado.sql` | ✅ Ejecutado | `carga_familiar`: `genero` (M/F) + `vive` (bool, vivo/fallecido). Habilita el reporte detallado de carga familiar con filtros (sexo, estado, edad, N° familiares) |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–038** (columnas/constraints; `empleados` incluye `motivo_egreso`/`observacion_egreso`; `participantes_ruta` incluye `nombre_representante`/`cedula_representante`). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–038** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos, la 036 agrega egreso/reingreso de empleados + tabla `empleados_egresos`, la 037 normaliza cédulas a solo dígitos, la 038 agrega representante del participante sin cédula en rutas).
+> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–039** (columnas/constraints; `empleados` incluye `motivo_egreso`/`observacion_egreso`; `participantes_ruta` incluye `nombre_representante`/`cedula_representante`). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–039** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos, la 036 agrega egreso/reingreso de empleados + tabla `empleados_egresos`, la 037 normaliza cédulas a solo dígitos, la 038 agrega representante del participante sin cédula en rutas, la 039 agrega genero/vive a carga_familiar).
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -450,7 +451,7 @@ createdb -U postgres "SIGTUR-IMATUR"
 # 3. Importar el esquema consolidado (schema base + migraciones 001-023 + seeds):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
-# 4. Aplicar las migraciones posteriores al consolidado (024 a 038):
+# 4. Aplicar las migraciones posteriores al consolidado (024 a 039):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/024_pasantes_carta_aceptacion.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/025_empleados_contrato_origen.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/026_empleado_ficha_tecnica.sql
@@ -466,6 +467,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/035_c
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/036_egreso_empleados.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/037_normalizar_cedulas.sql
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/038_representante_participante_ruta.sql
+PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/039_carga_familiar_genero_estado.sql
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
@@ -474,7 +476,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/038_r
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
 ```
 
-> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 038** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
+> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 039** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
 
 ---
 

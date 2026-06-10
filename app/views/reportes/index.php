@@ -21,6 +21,7 @@ $secciones = [
             ['Comisión de Servicio', 'Personal de Alcaldía o Gobernación, con su tiempo de servicio.', 'reportes/comisionServicio', 'bi-arrow-left-right', '#D97706'],
             ['Constancias Emitidas', 'Bitácora de constancias de trabajo generadas, con correlativo.', 'reportes/constancias', 'bi-file-earmark-text', '#0891B2'],
             ['Expedientes Incompletos', 'Personal con recaudos obligatorios faltantes en su expediente.', 'reportes/expedientesIncompletos', 'bi-folder-x', '#DC2626'],
+            ['Carga Familiar', 'Carga familiar detallada por trabajador, con filtros (parentesco, sexo, edad, estado, N° de familiares).', 'reportes/cargaFamiliar', 'bi-people-fill', '#7C3AED'],
             ['Reporte de Visitantes', 'Registro de visitas institucionales por fecha y motivo.', 'reportes/visitantes', 'bi-person-vcard', '#7C3AED'],
         ],
     ],
