@@ -158,24 +158,24 @@
             border-collapse: collapse;
         }
         thead th {
-            background: #f1f5f9;
-            color: #374151;
+            background: #1e3a8a;
+            color: #ffffff;
             padding: 9px 14px;
             text-align: left;
             font-size: 8pt;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            border-bottom: 2px solid #1a56db;
+            border: 1px solid #14276b;
         }
         tbody td {
             padding: 8px 14px;
-            border-bottom: 1px solid #f1f5f9;
+            border: 1px solid #cbd5e1;
             font-size: 10pt;
             color: #374151;
             vertical-align: top;
         }
-        tbody tr:nth-child(even) td { background: #f8fafc; }
+        tbody tr:nth-child(even) td { background: #f1f5f9; }
         tbody tr:last-child td { border-bottom: none; }
         .td-first { font-weight: 700; color: #111827; }
         .td-empty {

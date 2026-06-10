@@ -32,6 +32,29 @@ class ReportesController extends Controller {
         return http_build_query($q);
     }
 
+    /**
+     * Renderiza un reporte tabular: HTML normal, o PDF con membrete institucional
+     * (misma plantilla/estilo que el Excel) cuando ?formato=pdf. Reutiliza
+     * reportes/pdf_template aplanando las celdas con HTML (badges) a texto.
+     */
+    private function renderReporte(array $data) {
+        if (($_GET['formato'] ?? '') === 'pdf') {
+            $rows = [];
+            foreach ($data['filas'] ?? [] as $f) {
+                $r = [];
+                foreach ($f as $c) {
+                    $r[] = is_array($c)
+                        ? trim(html_entity_decode(strip_tags($c['raw'] ?? ''), ENT_QUOTES, 'UTF-8'))
+                        : (string)$c;
+                }
+                $rows[] = $r;
+            }
+            $this->exportPdf($data['titulo'] ?? 'Reporte', $data['subtitulo'] ?? '', $data['columnas'] ?? [], $rows, $data['resumen'] ?? []);
+            return;
+        }
+        $this->view('reportes/tabla', $data);
+    }
+
     // =========================================================================
     // RF27: Reporte de Asistencia
     // =========================================================================
@@ -274,6 +297,18 @@ class ReportesController extends Controller {
                 $k = $r->institucion_origen ?? '—';
                 $resumen[$k] = ($resumen[$k] ?? 0) + 1;
             }
+            if (($_GET['formato'] ?? '') === 'pdf') {
+                $rows = [];
+                foreach ($registros as $r) {
+                    $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->nro_expediente,
+                               $r->cargo, $r->departamento, $r->institucion_origen,
+                               !empty($r->fecha_ingreso) ? date('d/m/Y', strtotime($r->fecha_ingreso)) : '—',
+                               Empleado::tiempoServicio($r->fecha_ingreso ?? null)];
+                }
+                $this->exportPdf('Personal en Comisión de Servicio', 'Personal proveniente de Alcaldía o Gobernación, con su tiempo de servicio.',
+                    ['Empleado', 'Cédula', 'Expediente', 'Cargo', 'Departamento', 'Origen', 'F. Ingreso', 'Tiempo de servicio'], $rows, $resumen);
+                return;
+            }
             $data = [
                 'titulo'    => 'Personal en Comisión de Servicio',
                 'registros' => $registros,
@@ -383,7 +418,7 @@ class ReportesController extends Controller {
         }
         $deptos = []; foreach (Departamento::all() as $d) $deptos[$d->id] = $d->nombre;
         $cargos = []; foreach (Cargo::all() as $c) $cargos[$c->id] = $c->nombre;
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Directorio de Personal',
             'subtitulo' => 'Plantilla activa del instituto con filtros por área, cargo, clasificación, contrato y origen.',
             'resumen' => ['Total' => count($regs)],
@@ -458,7 +493,7 @@ class ReportesController extends Controller {
                 ['raw' => '<span class="sig-badge ' . $estadoBadge . '">' . $estadoTxt . '</span>'],
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'RRHH · Disciplina', 'titulo' => 'Amonestaciones y Faltas',
             'subtitulo' => "Conteo por empleado. {$limite} amonestaciones = causa de despido (Contratado).",
             'resumen' => ['Empleados' => count($roster), 'Con observaciones' => $conObs, 'En causa de despido' => $despido],
@@ -501,7 +536,7 @@ class ReportesController extends Controller {
             ];
         }
         $resumen = ['Total egresos' => count($regs)] + $porMotivo;
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Egresos y Rotación de Personal',
             'subtitulo' => 'Personal desincorporado por motivo y período (renuncias, despidos, jubilaciones…).',
             'resumen' => $resumen,
@@ -563,7 +598,7 @@ class ReportesController extends Controller {
                 !empty($r->fecha_emision) ? date('d/m/Y H:i', strtotime($r->fecha_emision)) : '—',
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Constancias Emitidas',
             'subtitulo' => 'Bitácora de constancias de trabajo generadas, con su correlativo.',
             'resumen' => ['Total emitidas' => count($regs)],
@@ -625,7 +660,7 @@ class ReportesController extends Controller {
                 implode(', ', $faltantes),
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Expedientes Incompletos',
             'subtitulo' => 'Personal con recaudos OBLIGATORIOS faltantes en su expediente.',
             'resumen' => ['Con recaudos faltantes' => $totalIncompletos],
@@ -650,7 +685,7 @@ class ReportesController extends Controller {
                 ['raw' => '<strong>' . (int)$r->participaciones . '</strong>'],
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'Formación · Impacto', 'titulo' => 'Cobertura Comunitaria (Formación)',
             'subtitulo' => 'Participaciones en talleres y charlas agrupadas por parroquia (alcance territorial).',
             'resumen' => ['Participaciones' => $totalPart, 'Parroquias alcanzadas' => count($regs)],
@@ -717,7 +752,7 @@ class ReportesController extends Controller {
             ];
         }
         $ocupProm = $conCupo > 0 ? round($sumaOcup / $conCupo) . '%' : '—';
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'Turismo · Impacto', 'titulo' => 'Participación en Rutas',
             'subtitulo' => 'Ocupación por ruta (participantes vs cupo) y estado.',
             'resumen' => ['Rutas' => count($regs), 'Participaciones' => $totalPart, 'Ocupación promedio' => $ocupProm],
@@ -765,7 +800,7 @@ class ReportesController extends Controller {
                 $r->descripcion ?: '—',
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'Inventario · Reporte', 'titulo' => 'Kardex de Movimientos',
             'subtitulo' => 'Entradas, salidas y asignaciones de bienes por período.',
             'resumen' => ['Movimientos' => count($regs)],
@@ -826,7 +861,7 @@ class ReportesController extends Controller {
                 !empty($r->fecha) ? date('d/m/Y', strtotime($r->fecha)) : '—',
             ];
         }
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'Inventario · Reporte', 'titulo' => 'Bienes Asignados',
             'subtitulo' => 'Responsable actual de cada bien (según el último movimiento de asignación).',
             'resumen' => ['Bienes asignados' => count($regs)],
@@ -882,7 +917,7 @@ class ReportesController extends Controller {
         $db->query("SELECT DISTINCT tabla_afectada FROM audit_logs WHERE tabla_afectada IS NOT NULL ORDER BY tabla_afectada");
         $tablas = ['' => 'Todas'];
         foreach ($db->resultSet() as $t) $tablas[$t->tabla_afectada] = $t->tabla_afectada;
-        $this->view('reportes/tabla', [
+        $this->renderReporte([
             'eyebrow' => 'Seguridad · Reporte', 'titulo' => 'Auditoría del Sistema',
             'subtitulo' => 'Bitácora de cambios (máx. 1000 registros recientes según filtro). Para exploración completa use el módulo de Auditoría.',
             'resumen' => ['Eventos mostrados' => count($regs)],

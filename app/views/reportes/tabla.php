@@ -29,10 +29,15 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
         <?php if (!empty($data['subtitulo'])): ?><p class="page__subtitle"><?php echo htmlspecialchars($data['subtitulo']); ?></p><?php endif; ?>
     </div>
     <div class="page__actions">
+        <?php
+        // URL del mismo reporte en formato PDF (con membrete), preservando filtros
+        $qpdf = $_GET; unset($qpdf['url']); $qpdf['formato'] = 'pdf';
+        $pdfUrl = URL_ROOT . '/' . ($_GET['url'] ?? '') . '?' . http_build_query($qpdf);
+        ?>
         <?php if ($exportUrl): ?>
             <a href="<?php echo $exportUrl; ?>" class="btn-sig btn-sig--success btn-sig--sm"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
         <?php endif; ?>
-        <button type="button" class="btn-sig btn-sig--danger btn-sig--sm no-print" onclick="window.print()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        <a href="<?php echo $pdfUrl; ?>" target="_blank" class="btn-sig btn-sig--danger btn-sig--sm no-print"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost btn-sig--sm no-print"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </div>

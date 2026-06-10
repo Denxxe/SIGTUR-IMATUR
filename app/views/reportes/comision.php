@@ -19,7 +19,7 @@ function comUrl(string $org): string {
         <a href="<?php echo URL_ROOT; ?>/reportes/exportarComisionCsv<?php echo $org !== '' ? '?origen=' . urlencode($org) : ''; ?>" class="btn-sig btn-sig--success btn-sig--sm">
             <i class="bi bi-file-earmark-spreadsheet"></i> Excel
         </a>
-        <button type="button" class="btn-sig btn-sig--danger btn-sig--sm no-print" onclick="window.print()"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+        <a href="<?php echo URL_ROOT; ?>/reportes/comisionServicio?formato=pdf<?php echo $org !== '' ? '&origen=' . urlencode($org) : ''; ?>" target="_blank" class="btn-sig btn-sig--danger btn-sig--sm no-print"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost btn-sig--sm no-print"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </div>
