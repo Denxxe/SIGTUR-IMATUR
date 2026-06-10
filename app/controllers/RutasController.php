@@ -267,8 +267,8 @@ class RutasController extends Controller {
 
                 // Correo: validar formato si está presente
                 $correoRaw = trim($_POST['correo'] ?? '') ?: null;
-                if ($correoRaw !== null && !filter_var($correoRaw, FILTER_VALIDATE_EMAIL)) {
-                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                if ($correoRaw !== null && !$this->emailValido($correoRaw)) {
+                    throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
                 }
 
                 $fechaNac   = trim($_POST['fecha_nacimiento'] ?? '') ?: null;

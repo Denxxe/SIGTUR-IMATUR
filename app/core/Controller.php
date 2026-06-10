@@ -28,6 +28,15 @@ class Controller {
         return $_SESSION['user_id'] ?? null;
     }
 
+    // Valida un correo electrónico: debe ser un email válido (filter_var) y NO
+    // contener símbolos especiales fuera del set seguro (rechaza espacios y
+    // caracteres raros). Mismo criterio que la validación front (sigtur-validations.js).
+    protected function emailValido(string $email): bool {
+        if ($email === '') return false;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return false;
+        return (bool) preg_match('/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', $email);
+    }
+
     // Sanitiza $_POST: elimina tags HTML sin corromper caracteres UTF-8 (tildes, ñ, etc.)
     protected function sanitizePost(): array {
         $raw = $_POST ?? [];

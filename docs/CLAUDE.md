@@ -284,10 +284,12 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 | `public/assets/css/sigtur-tokens.css` | Variables CSS: colores, tipografía, espaciado, dark mode |
 | `public/assets/css/sigtur-components.css` | Componentes: `.app-shell`, `.sidebar`, `.sig-header`, `.btn-sig`, `.sig-card` |
 | `public/assets/css/login.css` | Estilos exclusivos del login |
-| `public/assets/js/sigtur-validations.js` | Validación y formateo client-side (cédulas, nombres, **teléfonos VE prefijo+7**, **edad/fecha de nacimiento**) |
+| `public/assets/js/sigtur-validations.js` | Validación y formateo client-side (cédulas, nombres, **teléfonos VE prefijo+7**, **edad/fecha de nacimiento**, **correos**) |
 
 **Dark mode:** `data-theme="dark"` en `<html>`. Persiste en `localStorage['sigtur-theme']`.  
 **Cache-busting JS/CSS:** `sigtur-validations.js` y los CSS del sistema (`sigtur-tokens.css`, `sigtur-components.css`) usan `?v=<?php echo filemtime(...); ?>` — se actualizan automáticamente al editarlos.
+
+**Correo electrónico (validación global, automática):** todo `<input>` cuyo `name`/`id` contenga `correo`/`email` (o `type="email"`) se valida en cliente vía `initEmailInput` (`sigtur-validations.js`): bloquea espacios y **símbolos especiales** (saneo en vivo al set `[A-Za-z0-9._%+-@]`), exige formato `nombre@dominio.com` (`pattern` + `setCustomValidity` → integra con "botón deshabilitado hasta válido"). En el **servidor** usar `Controller::emailValido($email)` (mismo criterio: `filter_var` + regex sin símbolos especiales) — ya aplicado en Empleados/Rutas/Talleres/Visitantes. Front y back comparten el regex `^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`.
 
 **Select con búsqueda (convención global, opt-in):** agregar la clase `js-search` a un `<select>` lo convierte en un **combobox con buscador** (`initSearchSelect` en `sigtur-validations.js`): un campo de texto filtra las opciones; al elegir una se fija el valor del select original (queda oculto pero se envía en el POST). Sin librerías externas (entorno sin internet). Conserva `required` vía el campo visible (`setCustomValidity`), integrándose con "botón deshabilitado hasta válido". Se auto-aplica en carga y `shown.bs.modal`; para selects inyectados por AJAX llamar `window.initSearchSelect(sel)`. Usado en Asistencia (elegir empleado); reutilizable en cualquier select largo.
 

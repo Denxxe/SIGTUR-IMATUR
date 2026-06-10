@@ -180,8 +180,8 @@ class EmpleadosController extends Controller {
                 : URL_ROOT . '/empleados/nuevo';
 
             // Validación de correo electrónico
-            if (!empty($data['correo']) && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
-                flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido (ejemplo: nombre@dominio.com).', 'danger');
+            if (!empty($data['correo']) && !$this->emailValido($data['correo'])) {
+                flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).', 'danger');
                 header('Location: ' . $volverForm);
                 return;
             }

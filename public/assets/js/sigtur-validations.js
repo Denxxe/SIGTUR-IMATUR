@@ -132,6 +132,11 @@ function initSigturValidations() {
             initTelefonoInput(input);
         }
 
+        // CORREO ELECTRÓNICO — formato válido + bloqueo de símbolos especiales
+        if (name.includes('correo') || name.includes('email') || id.includes('correo') || id.includes('email') || type === 'email') {
+            initEmailInput(input);
+        }
+
         // FECHAS DE NACIMIENTO
         if (type === 'date' && (name.includes('nacimiento') || id.includes('nacimiento') || input.classList.contains('js-edad'))) {
             // No permitir fechas futuras
@@ -372,6 +377,39 @@ function formatTelefono(e) {
     let val = e.target.value;
     val = val.replace(/[^0-9+\-()\s]/g, '');
     e.target.value = val;
+}
+
+// ── Correo electrónico: formato válido + sin símbolos especiales ─────────────
+// Mismo criterio que el back (Controller::emailValido).
+const SIGTUR_EMAIL_RE = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
+function initEmailInput(input) {
+    if (input.dataset.emailAttached) return;
+    input.dataset.emailAttached = '1';
+
+    input.setAttribute('inputmode', 'email');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('autocomplete', input.getAttribute('autocomplete') || 'email');
+    input.setAttribute('spellcheck', 'false');
+    if (!input.getAttribute('pattern')) {
+        input.setAttribute('pattern', '[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}');
+    }
+    input.title = 'Correo válido, sin espacios ni símbolos especiales (ej: nombre@dominio.com).';
+
+    const validar = () => {
+        // Quitar espacios y cualquier carácter fuera del set permitido en correos
+        const limpio = input.value.replace(/\s+/g, '').replace(/[^A-Za-z0-9._%+\-@]/g, '');
+        if (limpio !== input.value) {
+            const pos = input.selectionStart;
+            input.value = limpio;
+            try { input.setSelectionRange(pos - 1, pos - 1); } catch (e) {}
+        }
+        if (limpio === '') { input.setCustomValidity(''); return; } // vacío → lo gestiona required si aplica
+        input.setCustomValidity(SIGTUR_EMAIL_RE.test(limpio) ? '' : 'Correo no válido. Use el formato nombre@dominio.com, sin símbolos especiales.');
+    };
+
+    input.addEventListener('input', validar);
+    input.addEventListener('blur', validar);
+    if (input.value) validar();
 }
 
 // ── Teléfonos venezolanos: prefijo móvil (select) + 7 dígitos ────────────────

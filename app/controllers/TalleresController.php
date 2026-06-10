@@ -359,8 +359,8 @@ class TalleresController extends Controller {
 
                 // Validar formato de correo electrónico
                 $correoRaw = trim($_POST['correo'] ?? '') ?: null;
-                if ($correoRaw !== null && !filter_var($correoRaw, FILTER_VALIDATE_EMAIL)) {
-                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                if ($correoRaw !== null && !$this->emailValido($correoRaw)) {
+                    throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
                 }
 
                 // Buscar persona existente por cédula; si no existe, crear nueva
@@ -896,8 +896,8 @@ class TalleresController extends Controller {
                     throw new Exception('El nombre y apellido son requeridos.');
                 }
                 $correo = trim($_POST['correo'] ?? '') ?: null;
-                if ($correo !== null && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                    throw new Exception('El correo electrónico no tiene un formato válido.');
+                if ($correo !== null && !$this->emailValido($correo)) {
+                    throw new Exception('El correo electrónico no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
                 }
                 $fechaNac = trim($_POST['fecha_nacimiento'] ?? '') ?: null;
                 if ($fechaNac && \DateTime::createFromFormat('Y-m-d', $fechaNac) === false) $fechaNac = null;

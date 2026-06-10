@@ -68,8 +68,8 @@ class VisitantesController extends Controller {
             }
 
             $correo = trim($_POST['correo'] ?? '');
-            if ($correo !== '' && !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                throw new Exception('El correo "' . htmlspecialchars($correo) . '" no es válido. Verifica el formato (ejemplo: nombre@dominio.com).');
+            if ($correo !== '' && !$this->emailValido($correo)) {
+                throw new Exception('El correo "' . htmlspecialchars($correo) . '" no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).');
             }
 
             // Find existing visitante by cédula, or create one
