@@ -705,6 +705,188 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // Inventario — Kardex / movimientos
+    // =========================================================================
+    public function kardex() {
+        $this->requireRoles([1, 4]);
+        $regs = $this->queryKardex();
+        $filas = [];
+        foreach ($regs as $r) {
+            $filas[] = [
+                !empty($r->fecha) ? date('d/m/Y', strtotime($r->fecha)) : '—',
+                ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->codigo_bn ?? '—') . '</span>'],
+                $r->item ?? '—',
+                ['raw' => '<span class="sig-badge sig-badge--info">' . htmlspecialchars($r->tipo_movimiento ?? '—') . '</span>'],
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')) ?: '—',
+                $r->descripcion ?: '—',
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'Inventario · Reporte', 'titulo' => 'Kardex de Movimientos',
+            'subtitulo' => 'Entradas, salidas y asignaciones de bienes por período.',
+            'resumen' => ['Movimientos' => count($regs)],
+            'columnas' => ['Fecha', 'Código BN', 'Bien', 'Tipo', 'Responsable', 'Descripción'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/kardex',
+            'filtros' => [
+                ['name' => 'buscar', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Bien, código o responsable…', 'value' => $_GET['buscar'] ?? ''],
+                ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
+                ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarKardexCsv?' . http_build_query($_GET),
+            'vacio' => 'No hay movimientos de inventario para el filtro.',
+        ]);
+    }
+
+    public function exportarKardexCsv() {
+        $this->requireRoles([1, 4]);
+        $rows = [];
+        foreach ($this->queryKardex() as $r) {
+            $rows[] = [$r->fecha, $r->codigo_bn, $r->item, $r->tipo_movimiento, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->descripcion];
+        }
+        $this->exportCsv('kardex_inventario', ['Fecha', 'Código BN', 'Bien', 'Tipo', 'Responsable', 'Descripción'], $rows);
+    }
+
+    private function queryKardex() {
+        $db = new Database();
+        $binds = [];
+        $where = "ai.is_active = TRUE";
+        if (!empty($_GET['buscar']))      { $where .= " AND (i.nombre ILIKE :q OR i.codigo_bn ILIKE :q OR (p.nombre||' '||p.apellido) ILIKE :q OR ai.descripcion ILIKE :q)"; $binds[':q'] = '%' . trim($_GET['buscar']) . '%'; }
+        if (!empty($_GET['fecha_desde'])) { $where .= " AND ai.fecha >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
+        if (!empty($_GET['fecha_hasta'])) { $where .= " AND ai.fecha <= :fh"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
+        $db->query("SELECT ai.fecha, ai.tipo_movimiento, ai.descripcion, i.codigo_bn, i.nombre AS item,
+                           p.nombre, p.apellido
+                    FROM actividad_inventario ai
+                    INNER JOIN inventario i ON ai.id_inventario = i.id
+                    LEFT JOIN empleados e   ON ai.id_empleado_responsable = e.id
+                    LEFT JOIN personas p    ON e.id_persona = p.id
+                    WHERE {$where}
+                    ORDER BY ai.fecha DESC, ai.id DESC");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // Inventario — Bienes asignados (responsable actual)
+    // =========================================================================
+    public function bienesAsignados() {
+        $this->requireRoles([1, 4]);
+        $regs = $this->queryBienesAsignados();
+        $filas = [];
+        foreach ($regs as $r) {
+            $filas[] = [
+                ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->codigo_bn ?? '—') . '</span>'],
+                $r->item ?? '—',
+                ['raw' => '<span class="sig-badge sig-badge--neutral">' . htmlspecialchars($r->condicion ?? '—') . '</span>'],
+                trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                !empty($r->fecha) ? date('d/m/Y', strtotime($r->fecha)) : '—',
+            ];
+        }
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'Inventario · Reporte', 'titulo' => 'Bienes Asignados',
+            'subtitulo' => 'Responsable actual de cada bien (según el último movimiento de asignación).',
+            'resumen' => ['Bienes asignados' => count($regs)],
+            'columnas' => ['Código BN', 'Bien', 'Condición', 'Responsable', 'Desde'],
+            'filas' => $filas,
+            'export_url' => URL_ROOT . '/reportes/exportarBienesAsignadosCsv',
+            'vacio' => 'No hay bienes con responsable asignado.',
+        ]);
+    }
+
+    public function exportarBienesAsignadosCsv() {
+        $this->requireRoles([1, 4]);
+        $rows = [];
+        foreach ($this->queryBienesAsignados() as $r) {
+            $rows[] = [$r->codigo_bn, $r->item, $r->condicion, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->fecha];
+        }
+        $this->exportCsv('bienes_asignados', ['Código BN', 'Bien', 'Condición', 'Responsable', 'Desde'], $rows);
+    }
+
+    private function queryBienesAsignados() {
+        $db = new Database();
+        $db->query("SELECT DISTINCT ON (ai.id_inventario)
+                           i.codigo_bn, i.nombre AS item, i.condicion, ai.fecha, p.nombre, p.apellido
+                    FROM actividad_inventario ai
+                    INNER JOIN inventario i ON ai.id_inventario = i.id AND i.is_active = TRUE
+                    INNER JOIN empleados e  ON ai.id_empleado_responsable = e.id
+                    INNER JOIN personas p   ON e.id_persona = p.id
+                    WHERE ai.is_active = TRUE AND ai.id_empleado_responsable IS NOT NULL
+                    ORDER BY ai.id_inventario, ai.fecha DESC, ai.id DESC");
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // Transversal — Auditoría (bitácora exportable)
+    // =========================================================================
+    public function auditoria() {
+        $this->requireRoles([1]);
+        $regs = $this->queryAuditoria();
+        $filas = [];
+        foreach ($regs as $r) {
+            $opBadge = ['INSERT' => 'sig-badge--success', 'UPDATE' => 'sig-badge--info', 'DELETE' => 'sig-badge--danger'][$r->operacion] ?? 'sig-badge--neutral';
+            $filas[] = [
+                !empty($r->fecha) ? date('d/m/Y H:i', strtotime($r->fecha)) : '—',
+                $r->actor ?: 'Sistema',
+                ['raw' => '<span class="sig-badge ' . $opBadge . '">' . htmlspecialchars($r->operacion ?? '—') . '</span>'],
+                $r->tabla_afectada ?? '—',
+                (string)($r->record_id ?? '—'),
+                $r->ip_direccion ?? '—',
+            ];
+        }
+        // Catálogo de tablas para el filtro
+        $db = new Database();
+        $db->query("SELECT DISTINCT tabla_afectada FROM audit_logs WHERE tabla_afectada IS NOT NULL ORDER BY tabla_afectada");
+        $tablas = ['' => 'Todas'];
+        foreach ($db->resultSet() as $t) $tablas[$t->tabla_afectada] = $t->tabla_afectada;
+        $this->view('reportes/tabla', [
+            'eyebrow' => 'Seguridad · Reporte', 'titulo' => 'Auditoría del Sistema',
+            'subtitulo' => 'Bitácora de cambios (máx. 1000 registros recientes según filtro). Para exploración completa use el módulo de Auditoría.',
+            'resumen' => ['Eventos mostrados' => count($regs)],
+            'columnas' => ['Fecha', 'Usuario', 'Operación', 'Tabla', 'Registro', 'IP'],
+            'filas' => $filas,
+            'accion' => URL_ROOT . '/reportes/auditoria',
+            'filtros' => [
+                ['name' => 'tabla', 'label' => 'Tabla', 'type' => 'select', 'options' => $tablas, 'value' => $_GET['tabla'] ?? ''],
+                ['name' => 'operacion', 'label' => 'Operación', 'type' => 'select', 'options' => ['' => 'Todas', 'INSERT' => 'INSERT', 'UPDATE' => 'UPDATE', 'DELETE' => 'DELETE'], 'value' => $_GET['operacion'] ?? ''],
+                ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
+                ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
+            ],
+            'export_url' => URL_ROOT . '/reportes/exportarAuditoriaCsv?' . http_build_query($_GET),
+            'vacio' => 'Sin eventos de auditoría para el filtro.',
+        ]);
+    }
+
+    public function exportarAuditoriaCsv() {
+        $this->requireRoles([1]);
+        $rows = [];
+        foreach ($this->queryAuditoria() as $r) {
+            $rows[] = [$r->fecha, $r->actor, $r->operacion, $r->tabla_afectada, $r->record_id, $r->ip_direccion];
+        }
+        $this->exportCsv('auditoria_sistema', ['Fecha', 'Usuario', 'Operación', 'Tabla', 'Registro', 'IP'], $rows);
+    }
+
+    private function queryAuditoria() {
+        $db = new Database();
+        $binds = [];
+        $where = "1=1";
+        if (!empty($_GET['tabla']))       { $where .= " AND a.tabla_afectada = :t"; $binds[':t'] = trim($_GET['tabla']); }
+        if (!empty($_GET['operacion']))   { $where .= " AND a.operacion = :op"; $binds[':op'] = trim($_GET['operacion']); }
+        if (!empty($_GET['fecha_desde'])) { $where .= " AND a.fecha >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
+        if (!empty($_GET['fecha_hasta'])) { $where .= " AND a.fecha <= (:fh::date + 1)"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
+        $db->query("SELECT a.fecha, a.operacion, a.tabla_afectada, a.record_id, a.ip_direccion,
+                           COALESCE(per.nombre || ' ' || per.apellido, u.username) AS actor
+                    FROM audit_logs a
+                    LEFT JOIN usuarios u   ON a.id_usuario  = u.id
+                    LEFT JOIN empleados e  ON u.id_empleado = e.id
+                    LEFT JOIN personas per ON e.id_persona  = per.id
+                    WHERE {$where}
+                    ORDER BY a.fecha DESC
+                    LIMIT 1000");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {
