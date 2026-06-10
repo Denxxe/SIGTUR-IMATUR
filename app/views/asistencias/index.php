@@ -46,8 +46,8 @@ $puntualidad = function ($min) use ($tol) {
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5)">
     <div class="sig-card__body" style="padding:var(--sp-5) var(--sp-6)">
         <form action="<?php echo URL_ROOT; ?>/asistencias/marcar" method="POST" style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap">
-            <select name="id_empleado" class="sig-select" required style="flex:1;min-width:200px">
-                <option value="">Seleccione su nombre...</option>
+            <select name="id_empleado" class="sig-select js-search" required>
+                <option value="">Buscar empleado por nombre o cédula...</option>
                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
                     <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? '') . ' ' . ($e->apellido ?? ''); ?> (<?php echo $e->cedula ?? ''; ?>)</option>
                 <?php endforeach; ?>

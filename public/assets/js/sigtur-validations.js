@@ -146,9 +146,107 @@ function initSigturValidations() {
         input.dataset.formatAttached = 'true';
     });
 
+    // Selects con búsqueda (combobox)
+    document.querySelectorAll('select.js-search').forEach(initSearchSelect);
+
     // Estado inicial de los botones submit (tras enganchar validaciones/realces)
     sigturRefreshButtons();
 }
+
+/**
+ * Convierte un <select class="js-search"> en un combobox con buscador:
+ * un campo de texto filtra las opciones y al elegir una se fija el valor del
+ * select original (que queda oculto pero sigue enviándose en el POST).
+ * Sin librerías externas. Idempotente. Mantiene la validación `required`
+ * a través del campo visible (setCustomValidity) para integrarse con el
+ * patrón "botón deshabilitado hasta que el formulario sea válido".
+ */
+function initSearchSelect(sel) {
+    if (sel.dataset.searchAttached) return;
+    sel.dataset.searchAttached = '1';
+
+    const opciones = Array.from(sel.options).filter(o => o.value !== '');
+    const placeholder = (sel.options[0] && sel.options[0].value === '')
+        ? sel.options[0].textContent.trim() : 'Buscar...';
+    const requerido = sel.hasAttribute('required');
+    sel.removeAttribute('required'); // la validación la lleva el campo visible
+
+    const wrap  = document.createElement('div');
+    wrap.className = 'sig-search-select';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'sig-input sig-search-select__input';
+    input.setAttribute('placeholder', placeholder);
+    input.setAttribute('autocomplete', 'off');
+    input.setAttribute('role', 'combobox');
+    if (requerido) input.required = true;
+
+    const caret = document.createElement('i');
+    caret.className = 'bi bi-chevron-down sig-search-select__caret';
+
+    const panel = document.createElement('div');
+    panel.className = 'sig-search-select__panel';
+    panel.style.display = 'none';
+
+    const setValidity = () => {
+        if (requerido) input.setCustomValidity(sel.value ? '' : 'Seleccione una opción de la lista.');
+    };
+    const pick = (val, text) => {
+        sel.value = val;
+        input.value = text;
+        setValidity();
+        cerrar();
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const render = (filtro) => {
+        const f = (filtro || '').toLowerCase().trim();
+        panel.innerHTML = '';
+        const matches = opciones.filter(o => o.textContent.toLowerCase().includes(f));
+        if (matches.length === 0) {
+            const vacio = document.createElement('div');
+            vacio.className = 'sig-search-select__empty';
+            vacio.textContent = 'Sin coincidencias';
+            panel.appendChild(vacio);
+            return;
+        }
+        matches.forEach(o => {
+            const item = document.createElement('div');
+            item.className = 'sig-search-select__item';
+            item.textContent = o.textContent.trim();
+            if (o.value === sel.value) item.classList.add('is-selected');
+            item.addEventListener('mousedown', e => { e.preventDefault(); pick(o.value, o.textContent.trim()); });
+            panel.appendChild(item);
+        });
+    };
+    const abrir  = () => { render(input.value === valorTexto() ? '' : input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); };
+    const cerrar = () => { panel.style.display = 'none'; wrap.classList.remove('is-open'); };
+    const valorTexto = () => { const o = opciones.find(x => x.value === sel.value); return o ? o.textContent.trim() : ''; };
+
+    input.addEventListener('focus', abrir);
+    input.addEventListener('input', () => { sel.value = ''; setValidity(); render(input.value); panel.style.display = 'block'; wrap.classList.add('is-open'); });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const q = (input.value || '').toLowerCase().trim();
+            const match = opciones.find(o => o.textContent.toLowerCase().includes(q));
+            if (match) { e.preventDefault(); pick(match.value, match.textContent.trim()); }
+        } else if (e.key === 'Escape') {
+            cerrar();
+        }
+    });
+    input.addEventListener('blur', () => setTimeout(cerrar, 150));
+
+    // Valor preseleccionado (modo edición)
+    if (sel.value) input.value = valorTexto();
+    setValidity();
+
+    sel.style.display = 'none';
+    sel.insertAdjacentElement('afterend', wrap);
+    wrap.appendChild(input);
+    wrap.appendChild(caret);
+    wrap.appendChild(panel);
+}
+window.initSearchSelect = initSearchSelect;
 
 /**
  * Calcula la edad (años cumplidos) a partir de una fecha 'YYYY-MM-DD'.
