@@ -15,18 +15,23 @@
 
 <div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
     <table class="sig-table">
-        <thead><tr><th>Código BN</th><th>Nombre</th><th>Marca/Modelo</th><th>Categoría</th><th>Ubicación</th><th>Condición</th><th class="col-actions">Acciones</th></tr></thead>
+        <thead><tr><th>Código BN</th><th>Nombre</th><th>Marca/Modelo</th><th>Categoría</th><th>Ubicación</th><th>Tipo</th><th>Condición</th><th class="col-actions">Acciones</th></tr></thead>
         <tbody>
             <?php if (empty($data['items'])): ?>
-                <tr><td colspan="7" class="sig-table-empty">No hay bienes registrados.</td></tr>
+                <tr><td colspan="8" class="sig-table-empty">No hay bienes registrados.</td></tr>
             <?php else: ?>
                 <?php foreach ($data['items'] ?? [] as $item): ?>
                     <tr>
-                        <td class="cell-strong" style="color:var(--brand-600)"><?php echo $item->codigo_bn ?? 'N/A'; ?></td>
+                        <td class="cell-strong" style="color:var(--brand-600)"><?php echo $item->codigo_bn ?: '—'; ?></td>
                         <td><?php echo $item->nombre ?? 'Sin nombre'; ?></td>
-                        <td style="font-size:12.5px"><?php echo $item->marca ?? 'S/M'; ?> / <?php echo $item->modelo ?? 'S/M'; ?><br><span style="color:var(--text-tertiary)">S/N: <?php echo $item->serial ?? 'S/N'; ?></span></td>
+                        <td style="font-size:12.5px"><?php echo $item->marca ?: 'S/M'; ?> / <?php echo $item->modelo ?: 'S/M'; ?><br><span style="color:var(--text-tertiary)">S/N: <?php echo $item->serial ?: 'S/N'; ?></span></td>
                         <td><?php echo $item->categoria ?? 'Sin cat.'; ?></td>
                         <td><?php echo $item->ubicacion ?? 'Sin ubi.'; ?></td>
+                        <td>
+                            <?php $tcls = Inventario::TIPO_BIEN_BADGES[$item->tipo_bien ?? ''] ?? 'sig-badge--neutral'; ?>
+                            <span class="sig-badge <?php echo $tcls; ?>"><?php echo $item->tipo_bien ?? 'Durable'; ?></span>
+                            <?php if (($item->tipo_bien ?? '') === 'Fungible'): ?><br><small style="color:var(--text-tertiary)">Cant.: <?php echo (int)($item->cantidad ?? 1); ?></small><?php endif; ?>
+                        </td>
                         <td>
                             <?php $cls = Inventario::CONDICION_BADGES[$item->condicion ?? ''] ?? 'sig-badge--neutral'; ?>
                             <span class="sig-badge <?php echo $cls; ?>"><?php echo $item->condicion; ?></span>
@@ -50,14 +55,20 @@
             <div class="modal-body">
                 <input type="hidden" name="id" id="inv_id">
                 <div class="row g-3">
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Código B.N. <span class="req">*</span></label><input type="text" name="codigo_bn" id="inv_codigo" class="sig-input" required placeholder="IMATUR-001"></div></div>
-                    <div class="col-md-8"><div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="inv_nombre" class="sig-input" required placeholder="Escritorio Ejecutivo"></div></div>
+                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Tipo de bien <span class="req">*</span></label>
+                        <select name="tipo_bien" id="inv_tipo_bien" class="sig-select" onchange="invToggleTipo()">
+                            <?php foreach (Inventario::TIPOS_BIEN as $tb): ?><option value="<?php echo $tb; ?>"><?php echo $tb; ?></option><?php endforeach; ?>
+                        </select>
+                        <small style="color:var(--text-tertiary)">Durable = inventariable · Fungible = consumible</small></div></div>
+                    <div class="col-md-4" id="inv_wrap_codigo"><div class="sig-field"><label class="sig-field__label">Código B.N. <span class="req" id="inv_codigo_req">*</span></label><input type="text" name="codigo_bn" id="inv_codigo" class="sig-input" required placeholder="IMATUR-001"></div></div>
+                    <div class="col-md-4" id="inv_wrap_cantidad" style="display:none"><div class="sig-field"><label class="sig-field__label">Cantidad <span class="req">*</span></label><input type="number" name="cantidad" id="inv_cantidad" class="sig-input" min="1" value="1"></div></div>
+                    <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="inv_nombre" class="sig-input" required placeholder="Escritorio Ejecutivo"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Categoría <span class="req">*</span></label><select name="id_categoria" id="inv_id_cat" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['categorias'] ?? [] as $c): ?><option value="<?php echo $c->id; ?>"><?php echo $c->nombre; ?></option><?php endforeach; ?></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Ubicación <span class="req">*</span></label><select name="id_ubicacion" id="inv_id_ubi" class="sig-select" required><option value="">Seleccione...</option><?php foreach ($data['ubicaciones'] ?? [] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo $u->nombre; ?></option><?php endforeach; ?></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Condición</label><select name="condicion" id="inv_condicion" class="sig-select"><?php foreach(Inventario::CONDICIONES as $c): ?><option value="<?php echo $c; ?>"><?php echo $c; ?></option><?php endforeach; ?></select></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Marca</label><input type="text" name="marca" id="inv_marca" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Modelo</label><input type="text" name="modelo" id="inv_modelo" class="sig-input"></div></div>
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Serial</label><input type="text" name="serial" id="inv_serial" class="sig-input"></div></div>
+                    <div class="col-md-4" id="inv_wrap_serial"><div class="sig-field"><label class="sig-field__label">Serial</label><input type="text" name="serial" id="inv_serial" class="sig-input"></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label">Descripción</label><textarea name="descripcion" id="inv_descripcion" class="sig-textarea" rows="2"></textarea></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label">Observaciones</label><textarea name="observaciones" id="inv_observaciones" class="sig-textarea" rows="2"></textarea></div></div>
                 </div>
@@ -68,14 +79,32 @@
 </div>
 
 <script>
-    function nuevoInv() { document.getElementById('modalInvLabel').innerText='Registro de Bien Nacional'; document.getElementById('inv_id').value=''; document.querySelector('#modalInv form').reset(); }
+    // Muestra/oculta campos según el tipo de bien (Durable vs Fungible).
+    function invToggleTipo() {
+        var fung = document.getElementById('inv_tipo_bien').value === 'Fungible';
+        document.getElementById('inv_wrap_codigo').style.display   = fung ? 'none' : '';
+        document.getElementById('inv_wrap_serial').style.display    = fung ? 'none' : '';
+        document.getElementById('inv_wrap_cantidad').style.display  = fung ? '' : 'none';
+        var codigo = document.getElementById('inv_codigo'); codigo.required = !fung;
+        var mark = document.getElementById('inv_codigo_req'); if (mark) mark.style.display = fung ? 'none' : '';
+        var cant = document.getElementById('inv_cantidad'); cant.required = fung; if (!fung) cant.value = 1;
+    }
+    function nuevoInv() {
+        document.getElementById('modalInvLabel').innerText='Registro de Bien Nacional';
+        document.getElementById('inv_id').value='';
+        document.querySelector('#modalInv form').reset();
+        invToggleTipo();
+    }
     function editarInv(item) {
         document.getElementById('modalInvLabel').innerText='Editar: '+item.nombre; document.getElementById('inv_id').value=item.id;
-        document.getElementById('inv_codigo').value=item.codigo_bn; document.getElementById('inv_nombre').value=item.nombre;
+        document.getElementById('inv_tipo_bien').value=item.tipo_bien||'Durable';
+        document.getElementById('inv_cantidad').value=item.cantidad||1;
+        document.getElementById('inv_codigo').value=item.codigo_bn||''; document.getElementById('inv_nombre').value=item.nombre;
         document.getElementById('inv_id_cat').value=item.id_categoria; document.getElementById('inv_id_ubi').value=item.id_ubicacion;
         document.getElementById('inv_condicion').value=item.condicion; document.getElementById('inv_marca').value=item.marca;
-        document.getElementById('inv_modelo').value=item.modelo; document.getElementById('inv_serial').value=item.serial;
+        document.getElementById('inv_modelo').value=item.modelo; document.getElementById('inv_serial').value=item.serial||'';
         document.getElementById('inv_descripcion').value=item.descripcion; document.getElementById('inv_observaciones').value=item.observaciones;
+        invToggleTipo();
         new bootstrap.Modal(document.getElementById('modalInv')).show();
     }
 </script>

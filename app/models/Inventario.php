@@ -15,18 +15,24 @@ class Inventario extends Model {
         'Dañado'        => 'sig-badge--danger',
         'En Reparación' => 'sig-badge--warning',
     ];
+    // Tipo de bien (mig.044): Durable = inventariable (Código BN); Fungible = consumible (cantidad)
+    const TIPOS_BIEN        = ['Durable', 'Fungible'];
+    const TIPO_BIEN_DEFAULT = 'Durable';
+    const TIPO_BIEN_BADGES  = ['Durable' => 'sig-badge--info', 'Fungible' => 'sig-badge--neutral'];
 
     private ?int $id;
     private ?int $id_categoria;
     private ?int $id_ubicacion;
-    private string $codigo_bn;
+    private ?string $codigo_bn;
     private string $nombre;
     private string $descripcion;
     private string $marca;
     private string $modelo;
-    private string $serial;
+    private ?string $serial;
     private string $condicion; // 'Nuevo', 'Bueno', 'Regular', 'Dañado'
     private string $observaciones;
+    private string $tipo_bien;
+    private int $cantidad;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -34,14 +40,16 @@ class Inventario extends Model {
             $this->id = $data['id'] ?? null;
             $this->id_categoria = $data['id_categoria'] ?? null;
             $this->id_ubicacion = $data['id_ubicacion'] ?? null;
-            $this->codigo_bn = $data['codigo_bn'] ?? '';
+            $this->codigo_bn = $data['codigo_bn'] ?? null;
             $this->nombre = $data['nombre'] ?? '';
             $this->descripcion = $data['descripcion'] ?? '';
             $this->marca = $data['marca'] ?? '';
             $this->modelo = $data['modelo'] ?? '';
-            $this->serial = $data['serial'] ?? '';
+            $this->serial = $data['serial'] ?? null;
             $this->condicion = $data['condicion'] ?? 'Bueno';
             $this->observaciones = $data['observaciones'] ?? '';
+            $this->tipo_bien = in_array($data['tipo_bien'] ?? '', self::TIPOS_BIEN, true) ? $data['tipo_bien'] : self::TIPO_BIEN_DEFAULT;
+            $this->cantidad = max(1, (int)($data['cantidad'] ?? 1));
         }
     }
 
@@ -95,14 +103,15 @@ class Inventario extends Model {
         $previos = null;
         if ($this->id) {
             $previos = self::find($this->id);
-            $this->db->query("UPDATE inventario SET id_categoria=:id_categoria, id_ubicacion=:id_ubicacion, codigo_bn=:codigo_bn, 
-                              nombre=:nombre, descripcion=:descripcion, marca=:marca, modelo=:modelo, serial=:serial, 
-                              condicion=:condicion, observaciones=:observaciones, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id 
+            $this->db->query("UPDATE inventario SET id_categoria=:id_categoria, id_ubicacion=:id_ubicacion, codigo_bn=:codigo_bn,
+                              nombre=:nombre, descripcion=:descripcion, marca=:marca, modelo=:modelo, serial=:serial,
+                              condicion=:condicion, observaciones=:observaciones, tipo_bien=:tipo_bien, cantidad=:cantidad,
+                              updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO inventario (id_categoria, id_ubicacion, codigo_bn, nombre, descripcion, marca, modelo, serial, condicion, observaciones, created_by) 
-                              VALUES (:id_categoria, :id_ubicacion, :codigo_bn, :nombre, :descripcion, :marca, :modelo, :serial, :condicion, :observaciones, :user_id)");
+            $this->db->query("INSERT INTO inventario (id_categoria, id_ubicacion, codigo_bn, nombre, descripcion, marca, modelo, serial, condicion, observaciones, tipo_bien, cantidad, created_by)
+                              VALUES (:id_categoria, :id_ubicacion, :codigo_bn, :nombre, :descripcion, :marca, :modelo, :serial, :condicion, :observaciones, :tipo_bien, :cantidad, :user_id)");
         }
         $this->db->bind(':id_categoria', $this->id_categoria);
         $this->db->bind(':id_ubicacion', $this->id_ubicacion);
@@ -114,9 +123,11 @@ class Inventario extends Model {
         $this->db->bind(':serial', $this->serial);
         $this->db->bind(':condicion', $this->condicion);
         $this->db->bind(':observaciones', $this->observaciones);
+        $this->db->bind(':tipo_bien', $this->tipo_bien);
+        $this->db->bind(':cantidad', $this->cantidad);
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->execute();
-        $this->audit('inventario', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'codigo_bn' => $this->codigo_bn, 'condicion' => $this->condicion], $user_id);
+        $this->audit('inventario', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? 0, $previos, ['nombre' => $this->nombre, 'codigo_bn' => $this->codigo_bn, 'condicion' => $this->condicion, 'tipo_bien' => $this->tipo_bien], $user_id);
         return $result;
     }
 

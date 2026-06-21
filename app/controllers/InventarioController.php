@@ -26,25 +26,51 @@ class InventarioController extends Controller {
             $condicion = in_array($_POST['condicion'] ?? '', Inventario::CONDICIONES)
                 ? $_POST['condicion'] : Inventario::CONDICION_DEFAULT;
 
+            $tipoBien = in_array($_POST['tipo_bien'] ?? '', Inventario::TIPOS_BIEN, true)
+                ? $_POST['tipo_bien'] : Inventario::TIPO_BIEN_DEFAULT;
+            $esFungible = ($tipoBien === 'Fungible');
+
+            $codigoBn = trim($_POST['codigo_bn'] ?? '');
+            $serial   = trim($_POST['serial'] ?? '');
+
+            // Reglas por tipo de bien (U5):
+            //  · Durable: bien inventariable → Código BN obligatorio; cantidad = 1.
+            //  · Fungible: consumible → sin Código BN ni serial; se controla por cantidad (≥1).
+            if ($esFungible) {
+                $codigoBn = '';                 // los consumibles no llevan Código BN
+                $serial   = '';                 // ni serial individual
+                $cantidad = max(1, (int)($_POST['cantidad'] ?? 1));
+            } else {
+                $cantidad = 1;                  // los durables se inventarían de uno en uno
+                if ($codigoBn === '') {
+                    flash('global_msg', 'El Código B.N. es obligatorio para los bienes durables (inventariables).', 'danger');
+                    header('Location: ' . URL_ROOT . '/inventario/index');
+                    return;
+                }
+            }
+
             $data = [
                 'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,
                 'id_categoria' => (int)$_POST['id_categoria'],
                 'id_ubicacion' => (int)$_POST['id_ubicacion'],
-                'codigo_bn' => trim($_POST['codigo_bn']),
+                // Vacío → NULL: evita colisión con los índices UNIQUE de codigo_bn/serial
+                'codigo_bn' => $codigoBn !== '' ? $codigoBn : null,
                 'nombre' => trim($_POST['nombre']),
                 'descripcion' => trim($_POST['descripcion']),
                 'marca' => trim($_POST['marca']),
                 'modelo' => trim($_POST['modelo']),
-                'serial' => trim($_POST['serial']),
+                'serial' => $serial !== '' ? $serial : null,
                 'condicion' => $condicion,
-                'observaciones' => trim($_POST['observaciones'])
+                'observaciones' => trim($_POST['observaciones']),
+                'tipo_bien' => $tipoBien,
+                'cantidad' => $cantidad,
             ];
 
             $esEdicion  = !empty($data['id']);
             $excludeId  = $esEdicion ? (int)$data['id'] : null;
 
             // Unicidad de Código BN (campo UNIQUE en BD)
-            if ($data['codigo_bn'] !== '') {
+            if (!empty($data['codigo_bn'])) {
                 $dupBN = Inventario::findByCodigoBn($data['codigo_bn'], $excludeId);
                 if ($dupBN) {
                     flash('global_msg', 'El Código BN "' . htmlspecialchars($data['codigo_bn']) . '" ya está registrado en otro bien (ID #' . $dupBN . '). Verifica el código antes de continuar.', 'danger');
@@ -54,7 +80,7 @@ class InventarioController extends Controller {
             }
 
             // Unicidad de Serial (campo UNIQUE en BD)
-            if ($data['serial'] !== '') {
+            if (!empty($data['serial'])) {
                 $dupSer = Inventario::findBySerial($data['serial'], $excludeId);
                 if ($dupSer) {
                     flash('global_msg', 'El número de serial "' . htmlspecialchars($data['serial']) . '" ya está asignado a otro bien (ID #' . $dupSer . '). Verifica el serial antes de continuar.', 'danger');
