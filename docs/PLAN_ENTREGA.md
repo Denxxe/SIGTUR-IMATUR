@@ -41,16 +41,18 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 
 | # | Tarea | Estado | Área | Resp. |
 |---|-------|--------|------|-------|
-| U1 | Uniformar/limpiar los CRUD (orden, estética) | ❌ PENDIENTE | Transversal | |
+| U1 | Uniformar/limpiar los CRUD (orden, estética) | ✅ HECHO (verificado 2026-06-21) | Transversal | — |
 | U2 | Nivel académico → grado; resolver `profesion` vs `titulo` | ✅ HECHO (verificado 2026-06-21) | RRHH | — |
-| U3 | Filtro "por tiempo / próximos" en listados | ❌ PENDIENTE | Formación/Turismo | |
+| U3 | Filtro "por tiempo / próximos" en listados | ✅ HECHO (verificado 2026-06-21) | Formación/Turismo | — |
 | U4 | Notificar fechas vencidas (taller/contrato/pasante) — centro de alertas | ✅ HECHO (2026-06-21) | Transversal | — |
 | U5 | Inventario: tipo de bien Durable vs Fungible + validación por tipo | ✅ HECHO (mig.044, 2026-06-21) | Inventario | — |
 | U6 | Export Excel/PDF en listados CRUD | ✅ HECHO (transversal, 2026-06-21) | Transversal | — |
 | U7 | Unificar RIF institucional vía `ConfigSistema` | ✅ HECHO (mig.043, 2026-06-21) | Transversal | — |
 | U8 | ~~Typo HTML `form.php:184`~~ | ❎ FALSO POSITIVO (el archivo ya estaba correcto) | RRHH | — |
 
-> **Avance Bloque 2 (2026-06-21):** U2 ya estaba resuelto (nivel académico usa grados; no existe campo "Título", solo "Profesión"). U4/U5/U6/U7 implementados y commiteados. U8 era artefacto de visualización (no había typo). **Quedan U1 y U3.**
+> **Avance Bloque 2 (2026-06-21): COMPLETO.** U2/U1/U3 ya estaban resueltos (verificados); U4/U5/U6/U7 implementados y commiteados; U8 era falso positivo.
+> - **U1:** design system aplicado de forma consistente en todos los CRUD (page__head + sig-table + data-tabla-buscable con búsqueda/paginación/export + row-action + badges + modales). Sin outliers.
+> - **U3:** filtro server-side por `periodo` (Próximos/Hoy/Esta semana/Este mes/Pasados) + rango de fechas en **talleres** y **rutas**.
 >
 > **U4 (vencimientos):** se agregó alerta de **talleres/actividades vencidas** (`Taller::contarVencidos()`: Programado con fecha pasada o En Curso con `fecha_fin` pasada) al **Dashboard** (roles 1,3) y al **Centro de Alertas**. El Centro de Alertas quedó **role-aware**: RRHH/admin ven contratos por vencer + permisos + disciplina + expedientes; Formación/admin ven talleres vencidos + pasantes por culminar. Contratos y pasantes ahora también se consolidan ahí (antes solo en el Dashboard).
 >
