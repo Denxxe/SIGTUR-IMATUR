@@ -495,7 +495,7 @@ El sistema debe **generar y/o registrar** los siguientes documentos, guardando *
 
 ---
 
-## 11. Preguntas Cerradas — Correlación con `preguntas_modelo_negocio.md`
+## 11. Preguntas Cerradas (decisiones RRHH) — ver `BACKLOG.md` para las abiertas
 
 | ID original | Estado | Respuesta resumida |
 |-------------|--------|--------------------|
