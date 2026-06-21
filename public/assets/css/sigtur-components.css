@@ -342,6 +342,10 @@ button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shado
 .tabla-pager__btn:hover:not(:disabled) { background: var(--bg-muted); color: var(--text-primary); }
 .tabla-pager__btn:disabled { opacity: .45; cursor: not-allowed; }
 .tabla-pager__info { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+.tabla-export { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.tabla-export__btn { gap: 5px; font-size: 12.5px; font-weight: 600; padding: 0 11px; }
+.tabla-export__btn .bi-file-earmark-excel { color: #1d8c4e; }
+.tabla-export__btn .bi-file-earmark-pdf { color: #c0392b; }
 
 /* ===== IMPRESIÓN / PDF (limpia el shell para imprimir el contenido) ===== */
 @media print {

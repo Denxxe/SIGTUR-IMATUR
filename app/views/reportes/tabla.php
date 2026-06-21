@@ -83,7 +83,7 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
 </form>
 <?php endif; ?>
 
-<div class="sig-table-wrap anim-slide-up"<?php echo $buscador ? ' data-tabla-buscable data-por-pagina="15"' : ''; ?>>
+<div class="sig-table-wrap anim-slide-up"<?php echo $buscador ? ' data-tabla-buscable data-por-pagina="15" data-no-export' : ''; ?>>
     <table class="sig-table">
         <thead><tr><?php foreach ($columnas as $c): ?><th><?php echo htmlspecialchars($c); ?></th><?php endforeach; ?></tr></thead>
         <tbody>

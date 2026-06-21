@@ -47,7 +47,7 @@ function comUrl(string $org): string {
     <a href="<?php echo comUrl('Gobernación'); ?>" class="btn-sig btn-sig--sm <?php echo $org === 'Gobernación' ? 'btn-sig--primary' : 'btn-sig--ghost'; ?>">Gobernación</a>
 </div>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por nombre, cédula, cargo…">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por nombre, cédula, cargo…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>

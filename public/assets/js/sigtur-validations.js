@@ -93,10 +93,128 @@ function initTablasBuscables(root) {
         };
 
         search.addEventListener('input', () => { filtro = search.value; page = 1; aplicar(); });
+
+        // Exportación a Excel / PDF — transversal, opt-out con data-no-export.
+        // Exporta el conjunto FILTRADO completo (todas las páginas), respetando el buscador.
+        if (wrap.dataset.noExport === undefined) {
+            const expGroup = document.createElement('div');
+            expGroup.className = 'tabla-export no-print';
+            const filtradas = () => {
+                const q = filtro.toLowerCase().trim();
+                return q ? dataRows().filter(tr => tr.textContent.toLowerCase().includes(q)) : dataRows();
+            };
+            const bX = document.createElement('button');
+            bX.type = 'button'; bX.className = 'tabla-pager__btn tabla-export__btn';
+            bX.innerHTML = '<i class="bi bi-file-earmark-excel"></i> Excel';
+            bX.title = 'Descargar listado en Excel';
+            bX.addEventListener('click', () => sigturExportarTabla(table, 'excel', filtradas()));
+            const bP = document.createElement('button');
+            bP.type = 'button'; bP.className = 'tabla-pager__btn tabla-export__btn';
+            bP.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> PDF';
+            bP.title = 'Imprimir / guardar como PDF';
+            bP.addEventListener('click', () => sigturExportarTabla(table, 'pdf', filtradas()));
+            expGroup.appendChild(bX); expGroup.appendChild(bP);
+            toolbar.appendChild(expGroup);
+        }
+
         aplicar();
     });
 }
 window.initTablasBuscables = initTablasBuscables;
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Exportación de listados (Excel .xls + PDF vía impresión) — del lado cliente.
+ * Reutilizada por initTablasBuscables; toma los datos ya renderizados en la
+ * tabla, omite la columna de acciones y aplica el membrete institucional
+ * (mismo encabezado que ReportesController::exportCsv). Sin librerías/CDN.
+ * ────────────────────────────────────────────────────────────────────────── */
+function sigturSlug(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'listado';
+}
+function sigturTituloListado() {
+    const h = document.querySelector('.page__title');
+    return ((h ? h.textContent : document.title) || 'Listado').trim();
+}
+// Convierte la tabla en {headers, rows} de texto, saltando columnas de acciones
+// (th/td con clase col-actions o atributo data-no-export).
+function sigturTablaMatriz(table, trs) {
+    const head = table.tHead && table.tHead.rows[0] ? Array.from(table.tHead.rows[0].cells) : [];
+    const skip = new Set();
+    const headers = [];
+    head.forEach((th, i) => {
+        if (th.classList.contains('col-actions') || th.dataset.noExport !== undefined) { skip.add(i); return; }
+        headers.push(th.textContent.replace(/\s+/g, ' ').trim());
+    });
+    const rows = trs.map(tr => Array.from(tr.cells)
+        .filter((c, i) => !skip.has(i))
+        .map(c => (c.innerText || c.textContent || '').replace(/\s+/g, ' ').trim()));
+    return { headers, rows };
+}
+function sigturExportarTabla(table, modo, trs) {
+    const titulo = sigturTituloListado();
+    const { headers, rows } = sigturTablaMatriz(table, trs);
+    if (!headers.length) { if (window.showToast) showToast('Exportar', 'No hay datos para exportar.', 'warning'); return; }
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const fecha = new Date().toLocaleString('es-VE');
+    const membrete = ['REPÚBLICA BOLIVARIANA DE VENEZUELA',
+        'ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE',
+        'Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7'];
+    const ncol = Math.max(1, headers.length);
+
+    if (modo === 'excel') {
+        let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8">'
+            + '<style>td,th{mso-number-format:"\\@";border:1px solid #ccd;padding:4px 8px;'
+            + 'font-family:Calibri,Arial,sans-serif;font-size:11pt}'
+            + 'th{background:#1b5e20;color:#fff;font-weight:bold}'
+            + '.mb{font-weight:bold;text-align:center;border:none}'
+            + '.ttl{font-size:14pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none}'
+            + '.mt{border:none;color:#555}</style></head><body><table>';
+        const span = ' colspan="' + ncol + '"';
+        membrete.forEach(m => { h += '<tr><td' + span + ' class="mb">' + esc(m) + '</td></tr>'; });
+        h += '<tr><td' + span + ' class="ttl">' + esc(titulo) + '</td></tr>';
+        h += '<tr><td' + span + ' class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</td></tr>';
+        h += '<tr><td' + span + ' class="mt"></td></tr>';
+        h += '<tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
+        rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
+        h += '</table></body></html>';
+        const blob = new Blob(['﻿' + h], { type: 'application/vnd.ms-excel' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = sigturSlug(titulo) + '.xls';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        return;
+    }
+
+    // PDF: documento limpio en un iframe oculto → diálogo de impresión (Guardar como PDF).
+    let h = '<html><head><meta charset="UTF-8"><title>' + esc(titulo) + '</title><style>'
+        + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:22px}'
+        + '.mb{text-align:center;font-size:11px;color:#555;line-height:1.5}'
+        + 'h1{font-size:16px;text-align:center;margin:6px 0 2px}'
+        + '.mt{text-align:center;font-size:11px;color:#666;margin-bottom:14px}'
+        + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+        + 'th,td{border:1px solid #999;padding:5px 7px;text-align:left}'
+        + 'th{background:#1b5e20;color:#fff}tr:nth-child(even) td{background:#f3f6f3}'
+        + '@page{size:landscape;margin:12mm}</style></head><body>';
+    h += '<div class="mb">' + membrete.map(esc).join('<br>') + '</div>';
+    h += '<h1>' + esc(titulo) + '</h1>';
+    h += '<div class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</div>';
+    h += '<table><thead><tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>';
+    rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
+    h += '</tbody></table></body></html>';
+    const ifr = document.createElement('iframe');
+    ifr.setAttribute('aria-hidden', 'true');
+    ifr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(ifr);
+    const doc = ifr.contentWindow.document;
+    doc.open(); doc.write(h); doc.close();
+    setTimeout(() => {
+        try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch (e) {}
+        setTimeout(() => ifr.remove(), 1500);
+    }, 250);
+}
+window.sigturExportarTabla = sigturExportarTabla;
 
 function initRowActions(root) {
     (root || document).querySelectorAll('.row-action').forEach(el => {
