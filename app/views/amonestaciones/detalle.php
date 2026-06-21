@@ -52,15 +52,26 @@ $egresado = !empty($e->fecha_egreso);
                 <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFalta"><i class="bi bi-plus-lg"></i> Agregar</button>
             </div>
             <table class="sig-table">
-                <thead><tr><th>Fecha</th><th>Motivo</th><th class="col-actions">Acción</th></tr></thead>
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Motivo</th><th class="col-actions">Acción</th></tr></thead>
                 <tbody>
                     <?php if (empty($data['faltas'])): ?>
-                        <tr><td colspan="3" class="sig-table-empty">Sin faltas registradas.</td></tr>
+                        <tr><td colspan="4" class="sig-table-empty">Sin faltas registradas.</td></tr>
                     <?php else: foreach ($data['faltas'] as $f): ?>
                         <tr>
                             <td class="cell-strong"><?php echo $ffecha($f->fecha); ?></td>
+                            <td><?php $ti = $f->tipo ?? Falta::TIPO_DEFAULT; $tc = $ti === 'Incumplimiento de reglas' ? 'sig-badge--warning' : 'sig-badge--neutral'; ?>
+                                <span class="sig-badge <?php echo $tc; ?>" style="font-size:10px"><?php echo htmlspecialchars($ti); ?></span></td>
                             <td style="font-size:13px"><?php echo htmlspecialchars($f->motivo ?? '—'); ?></td>
-                            <td class="col-actions"><button type="button" class="row-action row-action--del js-anular" title="Anular falta" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarFalta/<?php echo $f->id; ?>/<?php echo $eid; ?>" data-tipo="falta"><i class="bi bi-trash"></i></button></td>
+                            <td class="col-actions">
+                                <?php if (!$egresado): ?>
+                                <form action="<?php echo URL_ROOT; ?>/amonestaciones/amonestarDesdeFalta" method="POST" style="display:inline">
+                                    <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                                    <input type="hidden" name="id_falta" value="<?php echo $f->id; ?>">
+                                    <button type="submit" class="row-action" title="Generar amonestación a partir de esta falta"><i class="bi bi-flag"></i></button>
+                                </form>
+                                <?php endif; ?>
+                                <button type="button" class="row-action row-action--del js-anular" title="Anular falta" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarFalta/<?php echo $f->id; ?>/<?php echo $eid; ?>" data-tipo="falta"><i class="bi bi-trash"></i></button>
+                            </td>
                         </tr>
                     <?php endforeach; endif; ?>
                 </tbody>
@@ -82,7 +93,10 @@ $egresado = !empty($e->fecha_egreso);
                     <?php else: foreach ($data['amonestaciones'] as $a): ?>
                         <tr>
                             <td class="cell-strong"><?php echo $ffecha($a->fecha); ?></td>
-                            <td style="font-size:13px"><?php echo htmlspecialchars($a->motivo ?? ''); ?></td>
+                            <td style="font-size:13px">
+                                <?php if (!empty($a->id_falta_origen)): ?><span class="sig-badge sig-badge--neutral" style="font-size:10px" title="Generada a partir de una falta"><i class="bi bi-arrow-up-right"></i> desde falta</span> <?php endif; ?>
+                                <?php echo htmlspecialchars($a->motivo ?? ''); ?>
+                            </td>
                             <td class="col-actions"><button type="button" class="row-action row-action--del js-anular" title="Anular amonestación" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarAmonestacion/<?php echo $a->id; ?>/<?php echo $eid; ?>" data-tipo="amonestación"><i class="bi bi-trash"></i></button></td>
                         </tr>
                     <?php endforeach; endif; ?>
@@ -100,6 +114,12 @@ $egresado = !empty($e->fecha_egreso);
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <div class="sig-field mb-3"><label class="sig-field__label">Tipo de falta <span class="req">*</span></label>
+                    <select name="tipo" class="sig-select" required>
+                        <?php foreach (Falta::TIPOS as $t): ?>
+                            <option value="<?php echo $t; ?>"><?php echo $t; ?></option>
+                        <?php endforeach; ?>
+                    </select></div>
                 <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
                     <input type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
                 <div class="sig-field"><label class="sig-field__label">Motivo / observación</label>

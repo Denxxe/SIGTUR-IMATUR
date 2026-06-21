@@ -32,8 +32,9 @@ class Amonestacion extends Model
             $db->bind(':id', $id);
         } else {
             $previos = null;
-            $db->query("INSERT INTO amonestaciones (id_empleado, fecha, motivo, created_by) VALUES (:emp, :fecha, :motivo, :uid) RETURNING id");
+            $db->query("INSERT INTO amonestaciones (id_empleado, fecha, motivo, id_falta_origen, created_by) VALUES (:emp, :fecha, :motivo, :fo, :uid) RETURNING id");
             $db->bind(':emp', (int)$data['id_empleado']);
+            $db->bind(':fo', !empty($data['id_falta_origen']) ? (int)$data['id_falta_origen'] : null);
         }
         $db->bind(':fecha', !empty($data['fecha']) ? $data['fecha'] : date('Y-m-d'));
         $db->bind(':motivo', trim($data['motivo']));

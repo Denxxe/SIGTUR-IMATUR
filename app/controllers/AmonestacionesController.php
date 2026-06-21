@@ -58,6 +58,31 @@ class AmonestacionesController extends Controller {
         $this->volver($idEmpleado);
     }
 
+    /** Genera una amonestación a partir de una falta existente (escalado, 3E). */
+    public function amonestarDesdeFalta() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        $_POST = $this->sanitizePost();
+        $idEmpleado = (int)($_POST['id_empleado'] ?? 0);
+        $idFalta    = (int)($_POST['id_falta'] ?? 0);
+        try {
+            $falta = Falta::find($idFalta);
+            if (!$falta || !$falta->is_active) throw new Exception('La falta no existe o ya fue anulada.');
+            $motivo = 'Originada por falta del ' . date('d/m/Y', strtotime($falta->fecha))
+                    . ' (' . ($falta->tipo ?? 'falta') . ')'
+                    . (!empty($falta->motivo) ? ': ' . $falta->motivo : '');
+            Amonestacion::save([
+                'id_empleado'     => $idEmpleado,
+                'fecha'           => date('Y-m-d'),
+                'motivo'          => $motivo,
+                'id_falta_origen' => $idFalta,
+            ], $this->getUserId());
+            flash('global_msg', 'Amonestación generada a partir de la falta.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', 'No se pudo generar la amonestación: ' . $e->getMessage(), 'danger');
+        }
+        $this->volver($idEmpleado);
+    }
+
     public function eliminarFalta($id, $idEmpleado = 0) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->volver($idEmpleado); return; }
         $_POST = $this->sanitizePost();
