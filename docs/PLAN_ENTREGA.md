@@ -18,9 +18,9 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 
 | # | Tarea | Estado | Evidencia / Nota | Resp. |
 |---|-------|--------|------------------|-------|
-| B1 | "Botón Guardar de RRHH no funciona" | 🔁 REPRODUCIR | Wizard `empleados/form.php`. No reproducible por análisis estático; probar alta de punta a punta. Si el typo de `form.php:184` rompe el render del paso, podría ser la causa. | |
+| B1 | "Botón Guardar de RRHH no funciona" | 🔁 SIN DEFECTO ESTÁTICO | El wizard valida por paso y envía a `store()`; el "typo" era falso positivo. Solo falta un click-through manual para cerrarlo definitivamente. | |
 | B2 | N° Expediente se autoincrementa solo, no editable | ✅ HECHO | `form.php:139-144` readonly + preview `proximo_expediente`; mig.040 `EXP-####`. | |
-| B3 | Validar TODOS los campos de empleados por paso | 🟡 PARCIAL | Validación por paso existe; auditar campo por campo (no-vacíos, formato, requeridos reales). | |
+| B3 | Validar TODOS los campos de empleados por paso | ✅ HECHO (verificado 2026-06-21) | `wzStepValido(n)` valida `checkValidity()` por paso, deshabilita "Siguiente" y bloquea el avance con `reportValidity()`. | |
 | B4 | Lógica fecha ingreso/egreso; ocultar egreso según contrato | ✅ HECHO | mig.041 separa `fecha_vencimiento_contrato` de `fecha_egreso`; `wzVencToggle()` oculta para Fijos. Confirmar con el profesor que cubre su pedido. | |
 | B5 | Primeras letras en mayúscula (auto) | ✅ HECHO | `sigtur-validations.js:236` capitaliza texto libre. | |
 | B6 | Validación de RIF (cliente + servidor) | ✅ HECHO | `initRifInput` + `Controller::rifValido/normalizarRif`. | |
@@ -28,12 +28,12 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 | B8 | Teléfono con todos los dígitos + prefijo | ✅ HECHO | `initTelefonoInput` (prefijo VE + 7 dígitos). | |
 | B9 | Etiquetas de color por estado (Formación) | ✅ HECHO | `Taller::ESTADO_BADGES` / `Ruta::ESTADO_BADGES`. Confirmar con profesor qué módulo exacto señaló. | |
 | B10 | Alerta por registro duplicado (no guardar) | ✅ HECHO | `Empleado::existeCedula()` bloquea alta; reporte `reportes/duplicados`. | |
-| B11 | Alta de participantes: el recuadro debe **agregar** (no buscar); lupa aparte para buscar ya agregados; elegir **niño vs adulto** antes de pedir cédula | ❌ PENDIENTE | Rediseño UX del alta en talleres/rutas. | |
-| B12 | "No busca al reingresar al mismo recuadro" | ❌ PENDIENTE | Bug del evento de búsqueda en el mismo flujo de B11. | |
+| B11 | Alta de participantes: el recuadro debe **agregar** (no buscar); lupa aparte para buscar ya agregados; elegir **niño vs adulto** antes de pedir cédula | ✅ HECHO (verificado 2026-06-21) | Modal con selector segmentado Adulto/Niño-a 5–11 antes de la cédula (talleres + rutas); lista de agregados con búsqueda vía `data-tabla-buscable`. | |
+| B12 | "No busca al reingresar al mismo recuadro" | ✅ HECHO (verificado 2026-06-21) | El recuadro **agrega** y el lookup por cédula es automático (sin botón). Comentario en código: "Corrige B12". | |
 | B13 | Mínimo 6 meses de antigüedad (constancia/egreso) | 🔒 BLOQUEADO | **Contradice** decisión B13 previa ("constancias sin antigüedad mínima"). Cerrar con cliente antes de implementar. | |
 | B14 | Anular amonestación con motivo + describir causa de despido | ✅ HECHO | mig.042 `motivo_anulacion`; `MOTIVOS_EGRESO`. | |
 
-> **Conclusión Bloque 1:** de los 14 ítems, **8 ya están hechos**. El trabajo real es B1 (reproducir), B3 (completar), **B11/B12 (rediseño del alta de participantes)** y resolver B13 con el cliente.
+> **Conclusión Bloque 1 (actualizada 2026-06-21):** de los 14 ítems, **13 están hechos** (verificados en código). B3 valida por paso; **B11/B12 ya estaban implementados** (selector Adulto/Niño + alta sin botón "Buscar" en talleres y rutas); B1 no tiene defecto estático (solo un click-through manual pendiente). **Lo único realmente abierto es B13** (mínimo 6 meses de antigüedad), que es una **decisión de negocio** porque contradice la regla previa "constancias sin antigüedad mínima".
 
 ---
 
