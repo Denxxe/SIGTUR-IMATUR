@@ -93,9 +93,15 @@ Decisión del cliente: **reasignación con historial** (sin flujo de aprobación
 - Reunión de directores/coordinadores; aprobación final Directora general o coordinador del depto emisor.
 - **Falta:** ¿flujo con aprobación o reasignación con historial?
 
+### 3E. Faltas vs amonestaciones — ✅ IMPLEMENTADO (2026-06-21)
+Aclarado y construido (mig.048): las **faltas** tienen tipo (Inasistencia injustificada / Incumplimiento de reglas), se acumulan y pueden **escalar a amonestación** (botón "Generar amonestación", vínculo `id_falta_origen`); 3 amonestaciones = causa de despido; ambas se anulan con motivo (B14). El flujo de justificación documental de ausencias se cubre por permisos/reposos (R-8).
+
+<details><summary>Detalle histórico de la regla</summary>
+
 ### 3E. Faltas justificadas vs injustificadas
 - Justificadas: servicio médico a familiar directo (con informe) o diligencia notificada al jefe. Injustificadas (3 = despido) ya existen.
 - **Falta:** ¿se modela el flujo de justificación con soporte documental?
+</details>
 
 ### 3F. Otras reglas abiertas (de `REGISTRO_NEGOCIO.md`)
 | ID | Tema | Módulo |
@@ -117,8 +123,8 @@ Decisión del cliente: **reasignación con historial** (sin flujo de aprobación
 | O1 | Cargos por departamento: definir qué cargos existen en cada uno y sus diferencias (Director ≠ Coordinador) | 🔒 BLOQUEADO (info cliente) | |
 | O2 | Reforzar organigrama (Presidencia→Dirección→Coordinación→Oficina→Adscritos) | ✅ HECHO (mig.027) — confirmar visual | |
 | O3 | Traspaso entre departamentos con aprobación (ver 3D) | 🔒 BLOQUEADO | |
-| O4 | Expediente organizado por departamento (antes por tipo) — confirmar vista | 🔁 VERIFICAR | |
-| O5 | Actualizar horario institucional 8am-4pm → **8am-2pm**; OAC subgrupos 7-12 y 10-2 | 🔁 VERIFICAR seed `horarios` | |
+| O4 | Personal organizado por departamento | ✅ HECHO (filtro por departamento en la lista, 2026-06-21) | |
+| O5 | Horario institucional 8am-4pm → **8am-2pm** | ✅ HECHO (mig.049; OAC 7-12/10-2 ya estaban) | |
 
 ---
 
