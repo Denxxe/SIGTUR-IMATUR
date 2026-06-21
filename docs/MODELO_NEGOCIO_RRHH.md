@@ -4,7 +4,7 @@
 **Última actualización:** 2026-06-04  
 **Estado:** En construcción — relevamiento activo con fuentes documentales  
 **Complementa:** `REGLAS_NEGOCIO_RRHH.md` (reglas técnicas) · `ESTRUCTURA_ORGANIZATIVA.md` (organigrama)  
-**Cierra preguntas de:** `REGISTRO_NEGOCIO.md` (fuente única de preguntas/decisiones)
+**Cierra preguntas de:** `BACKLOG.md` (backlog único de preguntas/decisiones)
 
 **Leyenda de estado:**
 - ✅ **Confirmado** — listo para implementar

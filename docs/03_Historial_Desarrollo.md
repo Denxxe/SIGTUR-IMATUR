@@ -247,7 +247,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/009_f
 
 ## Backlog — Fase 3 (próxima)
 
-### Requiere respuestas en `preguntas_modelo_negocio.md`
+### Requiere respuestas en `BACKLOG.md`
 - HorariosController — turnos + asignación a empleados (requiere D-RH01, D-RH08)
 - PermisosLaboralesController — CRUD + reporte (requiere D-RH02, D-RH03, D-NEW04)
 - VacacionesController — saldo + días tomados (requiere D-RH04, D-RH05, D-RH06, D-NEW05)

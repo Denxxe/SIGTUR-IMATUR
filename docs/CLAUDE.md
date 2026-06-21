@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-05-25  
+**Última actualización:** 2026-06-21 (migraciones hasta 050; ver `docs/BACKLOG.md` para pendientes)  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -522,13 +522,11 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_m
 | `docs/REGLAS_NEGOCIO_Inventario.md` | Bienes e Inventario |
 | `docs/REGLAS_NEGOCIO_Visitantes.md` | Visitantes y Control de Visitas |
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
-| **`docs/REGISTRO_NEGOCIO.md`** | **FUENTE ÚNICA** — preguntas abiertas (A) + decisiones tomadas (B) + auditoría H-xx (C) + backlog (D), por módulo. Consolida preguntas + decisiones + auditoría |
-| `docs/DECISIONES_PENDIENTES.md` | Archivo de DETALLE histórico (Q&A con impacto técnico) — la fuente viva es REGISTRO_NEGOCIO.md |
-| `docs/preguntas_modelo_negocio.md` | (redirección a REGISTRO_NEGOCIO.md) |
+| **`docs/BACKLOG.md`** | **BACKLOG ÚNICO** — qué falta por hacer y decidir: estado por módulo, decisiones/insumos del cliente, preguntas abiertas, auditoría H-xx abierta, programación faltante. Consolida (y reemplaza) los antiguos REGISTRO_NEGOCIO/DECISIONES_PENDIENTES/preguntas/AUDITORIA_SENIOR/Notas/PLAN_ENTREGA |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
 | `docs/ANALISIS_MODULOS_FORMACION_TURISMO.md` | Análisis funcional de Formación y Turismo (estado, reglas, validaciones, backlog) |
 
-> **Nota (2026-05-31):** migraciones aplicadas hasta la **021**. Cambios recientes en Turismo: `nivel_dificultad` eliminado (021), estado `Finalizada` (020), `ruta_inventario` eliminado (019), `ruta_informes` (018); módulos **Instituciones externas** y **Actividades de ruta** retirados del sistema. Ver `INDICADORES_GESTION.md` y la memoria interna para el detalle.
+> **Nota (2026-06-21):** migraciones aplicadas hasta la **050**. Para qué falta y decisiones pendientes, ver siempre `docs/BACKLOG.md` (fuente única de seguimiento).
 
 ---
 
@@ -546,7 +544,6 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_m
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-035 encima) |
-| Auditoría senior + deuda técnica | `docs/AUDITORIA_SENIOR_2026-05-31.md` |
-| Preguntas/decisiones/auditoría (fuente única) | `docs/REGISTRO_NEGOCIO.md` |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-050 encima) |
+| Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Schema base original (historial) | `database/schema.sql` |
