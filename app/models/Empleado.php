@@ -76,6 +76,7 @@ class Empleado extends Model
     private ?string $talla_zapato;
     private ?string $fecha_egreso;
     private ?string $fecha_vencimiento_contrato;
+    private ?string $fecha_ingreso_administracion;
     private ?int    $id_horario;
 
     public function __construct(array $data = [])
@@ -119,6 +120,7 @@ class Empleado extends Model
             $this->talla_zapato = !empty($data['talla_zapato']) ? $data['talla_zapato'] : null;
             $this->fecha_egreso  = !empty($data['fecha_egreso'])  ? $data['fecha_egreso']  : null;
             $this->fecha_vencimiento_contrato = !empty($data['fecha_vencimiento_contrato']) ? $data['fecha_vencimiento_contrato'] : null;
+            $this->fecha_ingreso_administracion = !empty($data['fecha_ingreso_administracion']) ? $data['fecha_ingreso_administracion'] : null;
             $this->id_horario    = !empty($data['id_horario'])    ? (int)$data['id_horario'] : null;
         }
     }
@@ -353,7 +355,8 @@ class Empleado extends Model
                                       es_comision_servicio=:es_comision_servicio, clasificacion=:clasificacion,
                                       grupo_rotacion=:grupo_rotacion, uniforme=:uniforme,
                                       talla_camisa=:talla_camisa, talla_pantalon=:talla_pantalon, talla_zapato=:talla_zapato,
-                                      fecha_vencimiento_contrato=:fecha_vencimiento_contrato, id_horario=:id_horario,
+                                      fecha_vencimiento_contrato=:fecha_vencimiento_contrato,
+                                      fecha_ingreso_administracion=:fecha_ingreso_administracion, id_horario=:id_horario,
                                       updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                                   WHERE id=:id");
                 // Nota: fecha_egreso NO se toca aquí; la gestiona el módulo de egreso (R-12).
@@ -364,11 +367,11 @@ class Empleado extends Model
                                   (id_persona, id_cargo, id_departamento,
                                    fecha_ingreso, tipo_contrato, institucion_origen, es_comision_servicio,
                                    clasificacion, grupo_rotacion, uniforme, talla_camisa, talla_pantalon, talla_zapato,
-                                   fecha_vencimiento_contrato, id_horario, created_by)
+                                   fecha_vencimiento_contrato, fecha_ingreso_administracion, id_horario, created_by)
                                   VALUES (:id_persona, :id_cargo, :id_departamento,
                                           :fecha_ingreso, :tipo_contrato, :institucion_origen, :es_comision_servicio,
                                           :clasificacion, :grupo_rotacion, :uniforme, :talla_camisa, :talla_pantalon, :talla_zapato,
-                                          :fecha_vencimiento_contrato, :id_horario, :user_id)
+                                          :fecha_vencimiento_contrato, :fecha_ingreso_administracion, :id_horario, :user_id)
                                   RETURNING id");
                 $this->db->bind(':id_persona', $this->id_persona);
             }
@@ -386,6 +389,7 @@ class Empleado extends Model
             $this->db->bind(':talla_pantalon',   $this->talla_pantalon);
             $this->db->bind(':talla_zapato',     $this->talla_zapato);
             $this->db->bind(':fecha_vencimiento_contrato', $this->fecha_vencimiento_contrato);
+            $this->db->bind(':fecha_ingreso_administracion', $this->fecha_ingreso_administracion);
             $this->db->bind(':id_horario',       $this->id_horario);
             $this->db->bind(':user_id', $user_id);
 

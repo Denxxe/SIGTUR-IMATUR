@@ -181,6 +181,9 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de ingreso <span class="req">*</span></label>
                 <input type="date" name="fecha_ingreso" id="wz_fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>" oninput="wzVencCalc()"></div></div>
+            <div class="col-md-4" id="wz_ingadm_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label">Ingreso a la administración pública <small style="color:var(--text-secondary)">(comisión)</small></label>
+                <input type="date" name="fecha_ingreso_administracion" id="wz_fecha_ingadm" class="sig-input" value="<?php echo $val('fecha_ingreso_administracion'); ?>">
+                <small style="color:var(--text-tertiary)">Antigüedad para vacaciones: fecha original en Alcaldía/Gobernación.</small></div></div>
             <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
                 <input type="date" name="fecha_vencimiento_contrato" id="wz_fecha_venc" class="sig-input" value="<?php echo $val('fecha_vencimiento_contrato'); ?>" oninput="wzVencCalc()">
                 <small id="wz_venc_info" style="display:block;margin-top:4px;color:var(--text-tertiary)">Mínimo 3 meses desde el ingreso.</small></div></div>
@@ -313,6 +316,8 @@ function wzOrigenCambio() {
     }
     const f = document.getElementById('emp_fecha_nac');
     if (f) { f.dataset.edadMax = esComision ? '70' : '65'; f.dispatchEvent(new Event('edad:refresh')); }
+    const adm = document.getElementById('wz_ingadm_wrap');
+    if (adm) adm.style.display = esComision ? '' : 'none';
 }
 function wzToggleUniforme() {
     const on = document.getElementById('wz_uniforme').checked;

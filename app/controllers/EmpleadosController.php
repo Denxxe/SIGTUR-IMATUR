@@ -169,6 +169,9 @@ class EmpleadosController extends Controller {
                 'tipo_contrato'  => $tipoContrato,
                 'institucion_origen'   => $institucionOrigen,
                 'es_comision_servicio' => $esComisionServicio,
+                // Antigüedad para vacaciones (3A): solo comisionados; si no, usa fecha_ingreso.
+                'fecha_ingreso_administracion' => ($institucionOrigen !== 'IMATUR' && !empty($_POST['fecha_ingreso_administracion']))
+                                                  ? $_POST['fecha_ingreso_administracion'] : null,
                 'clasificacion'  => $clasificacion,
                 'grupo_rotacion' => $grupoRotacion,
                 'uniforme'       => $uniforme,
