@@ -83,9 +83,11 @@ Reglas cerradas y construidas: **15 días hábiles base + 1/año de servicio, to
 - **Falta:** ¿el sistema calcula o solo registra?, formato exacto, tablas de sueldos (LOTTT/función pública).
 - **Tarea al desbloquear:** definir alcance (v1 probablemente registro + reporte, no cálculo completo).
 
-### 3C. Traspaso Contratado → Fijo
-- Por tiempo de servicio: Alcaldía 5-6, Gobernación 3-6, IMATUR 5-6 años; años previos se suman; decisión final de la Presidenta; Fijo requiere **carta de asignación**.
-- **Tarea:** alerta "elegible para fijo" + validación de carta.
+### 3C. Traspaso Contratado → Fijo — ✅ IMPLEMENTADO (2026-06-21)
+Decisión del cliente: **no se mide exacto ni hay flujo automático**, solo un **badge de color** para identificar candidatos. Hecho: `Empleado::elegibleParaFijo()` + `UMBRAL_FIJO` por origen (Gobernación 3 / Alcaldía·IMATUR 5 años, sobre antigüedad total); **badge verde "Elegible a fijo"** en la lista de empleados con tooltip (requiere carta de asignación + aprobación de Presidencia). La promoción real sigue siendo manual.
+
+### 3D. Traslado de personal entre departamentos (O3) — ✅ IMPLEMENTADO (2026-06-21)
+Decisión del cliente: **reasignación con historial** (sin flujo de aprobación). Hecho (mig.047): tabla `empleado_traslados`, `Empleado::trasladar()` (transaccional: registra histórico + actualiza depto/cargo), sección "Traslados de departamento" + modal en el expediente.
 
 ### 3D. Traspaso de personal entre departamentos (O3, nuevo)
 - Reunión de directores/coordinadores; aprobación final Directora general o coordinador del depto emisor.
