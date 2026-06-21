@@ -145,7 +145,7 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | `ubicaciones_formacion` | Sedes e instituciones; `es_sede_propia BOOL` |
 | `talleres` | Actividades formativas; `tipo_actividad` ('Taller','Charla','Inducción'); `es_interna BOOL`; `tipo_ente VARCHAR(50)` *(006)* |
 | `taller_informes` | Informe demográfico por taller (mujeres/hombres/niñas/niños) |
-| `taller_inventario` | Préstamo de bienes a un taller (sin UI dedicada) |
+| ~~`taller_inventario`~~ | **ELIMINADA** (mig.050, D-FO07 — no se usaba) |
 | `participantes_taller` | Inscripción; `id_persona` nullable; `nombre_libre/apellido_libre/cedula_libre`; `es_brigadista BOOL`; `nombre_docente`; `cedula_docente` *(006)* |
 | `pasantes` | Historial de pasantes; FK `id_persona` (migración 003) |
 | `pasante_documentos` | Flags de documentos entregados |
@@ -220,6 +220,7 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 041 | `041_fecha_vencimiento_contrato.sql` | ✅ Ejecutado | `empleados.fecha_vencimiento_contrato` (DATE): **vencimiento del contrato** (futuro, solo Contratados) separado de `fecha_egreso` (salida real, R-12). Resuelve el choque semántico (`all()` filtra `fecha_egreso IS NULL`). El form lo valida (≥ ingreso + 3 meses, oculto para Fijos); `save()` ya NO toca `fecha_egreso`; la alerta "contratos por vencer" del Dashboard usa esta columna (B4) |
 | 043 | `043_rif_institucional.sql` | ✅ Ejecutado | Siembra `configuracion_sistema.rif_institucional` = `G-20008498-7` (idempotente). Fuente única del RIF; `ConfigSistema::rif()` lo lee (fallback `RIF_DEFAULT`). Editable en `/config`; expuesto al JS como `window.SIGTUR_RIF`. Reemplaza 13 hardcodes en documentos/reportes y corrige el RIF erróneo de la carta de aceptación de pasantes (U7) |
 | 045 | `045_vacaciones_base.sql` | ✅ Ejecutado | Base de Vacaciones (R-8/3A): `empleados.fecha_ingreso_administracion` (antigüedad total para comisionados); tabla `feriados` (+seed nacionales/Cumaná); `vacaciones` pasa a registro de períodos (se elimina UNIQUE(empleado,anio)); RBAC `VacacionesController` (rol 2). Lógica en `Vacacion` (15 hábiles + 1/año, tope 30; días excluyen finde+feriados; saldo acumulado) y `Feriado` |
+| 050 | `050_limpieza_formacion.sql` | ✅ Ejecutado | Limpieza (3F): **DROP** `participantes_taller.es_brigadista` (D-FO08) y **DROP TABLE** `taller_inventario` (D-FO07) — no se usaban. `Taller::inscribir()` ya no recibe `$esBrigadista` |
 | 049 | `049_horario_estandar_8_2.sql` | ✅ Ejecutado | Horario "Estándar" 8am-4pm → **8am-2pm** (cambio institucional, O5). Data-only idempotente |
 | 048 | `048_falta_tipo_escalado.sql` | ✅ Ejecutado | `faltas.tipo` (Inasistencia injustificada / Incumplimiento de reglas) + `amonestaciones.id_falta_origen` (vínculo). Escalado falta→amonestación (`amonestarDesdeFalta`); UI con tipo, columna y botón "Generar amonestación" (3E) |
 | 047 | `047_empleado_traslados.sql` | ✅ Ejecutado | Traslado de personal entre departamentos (3D/O3): tabla `empleado_traslados` (origen/destino depto y cargo, fecha, motivo). **Reasignación con historial** (sin flujo de aprobación): `Empleado::trasladar()` (transaccional, actualiza depto/cargo + registra histórico) y `historialTraslados()`; sección + modal en el expediente |
@@ -407,7 +408,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 9. **`talleres.es_interna`** — `TRUE` = actividad para personal IMATUR; no requiere oficio aunque la sede no sea propia. `tipo_ente` = NULL cuando interna.
 
-10. **`participantes_taller.es_brigadista`** — para participantes con cédula. `nombre_docente`/`cedula_docente` para niños/as (libre).
+10. **`participantes_taller`** — `es_brigadista` **ELIMINADO** (mig.050, no se usaba). `nombre_docente`/`cedula_docente` para niños/as (libre, representante).
 
 11. **`rutas.nivel_dificultad` ELIMINADO (migración 021)** — columna eliminada; ya no existe en BD ni en código.
 11b. **Enums centralizados en constantes de modelo (H-07, 2026-05-31)** — los valores válidos de estado/tipo/condición viven en constantes PHP como fuente única: `Taller::ESTADOS/TIPOS_ACTIVIDAD/ESTADO_BADGES/TRANSICIONES`, `Ruta::ESTADOS/ESTADO_TERMINAL/ESTADO_BADGES`, `Inventario::CONDICIONES/CONDICION_DEFAULT/CONDICION_BADGES`. Los controllers usan estas constantes para whitelists; las vistas PHP para badges; el JS las recibe vía `json_encode()`. **No hardcodear** estos valores en controllers ni vistas.

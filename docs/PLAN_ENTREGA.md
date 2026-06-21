@@ -111,8 +111,8 @@ Aclarado y construido (mig.048): las **faltas** tienen tipo (Inasistencia injust
 | D-IN09 | ¿Costo de adquisición / fecha compra / proveedor? | Inventario |
 | D-IN05 | ¿Distinguir fungibles vs durables? | Inventario |
 | D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y flujo de pago? | Turismo |
-| D-FO07 | ¿Se usa `taller_inventario`? | Formación |
-| D-FO08 | ¿Qué es `es_brigadista`? (usar o eliminar) | Formación |
+| ~~D-FO07~~ | ✅ Resuelto: NO se usa `taller_inventario` → **eliminada** (mig.050) | Formación |
+| ~~D-FO08~~ | ✅ Resuelto: `es_brigadista` no se usa → **eliminado** (mig.050) | Formación |
 
 ---
 
