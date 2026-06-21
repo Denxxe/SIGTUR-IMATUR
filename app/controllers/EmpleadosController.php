@@ -11,12 +11,20 @@ class EmpleadosController extends Controller {
         $origen = in_array($_GET['origen'] ?? '', $origenOpts, true) ? $_GET['origen'] : '';
         $empleados = ($ver === 'egresados') ? Empleado::egresados($origen) : Empleado::all($origen);
 
+        // Filtro por departamento (O4: organizar el personal por departamento).
+        $depto = (int)($_GET['departamento'] ?? 0);
+        if ($depto > 0) {
+            $empleados = array_values(array_filter($empleados, fn($e) => (int)($e->id_departamento ?? 0) === $depto));
+        }
+
         $data = [
-            'titulo'    => 'Gestión de Personal (Empleados)',
-            'empleados' => $empleados,
-            'ver'       => $ver,
-            'origen'    => $origen,
-            'motivos'   => Empleado::MOTIVOS_EGRESO,
+            'titulo'        => 'Gestión de Personal (Empleados)',
+            'empleados'     => $empleados,
+            'ver'           => $ver,
+            'origen'        => $origen,
+            'departamento'  => $depto,
+            'departamentos' => Departamento::all(),
+            'motivos'       => Empleado::MOTIVOS_EGRESO,
         ];
 
         $this->view('empleados/index', $data);
