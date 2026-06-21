@@ -76,7 +76,11 @@ $hm = fn($t) => !empty($t) ? substr($t, 0, 5) : '—';
                     <div class="col-md-4">
                         <div class="sig-field">
                             <label class="sig-field__label">Días laborales</label>
-                            <input type="text" name="dias_laborales" id="hor_dias" class="sig-input" placeholder="L-V" value="L-V">
+                            <select name="dias_laborales" id="hor_dias" class="sig-select">
+                                <?php foreach (Horario::DIAS_OPCIONES as $val => $lbl): ?>
+                                    <option value="<?php echo htmlspecialchars($val); ?>"<?php echo $val === Horario::DIAS_DEFAULT ? ' selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,17 @@
  * Servicios Generales) y horarios personalizados (p. ej. ajustes por estudio/discapacidad).
  */
 class Horario extends Model {
+    // Patrones de días laborales (selección controlada, no texto libre).
+    // clave = valor almacenado/mostrado · valor = etiqueta en el formulario.
+    const DIAS_OPCIONES = [
+        'L-V'                => 'Lunes a Viernes (L-V)',
+        'L-S'                => 'Lunes a Sábado (L-S)',
+        'L-D'                => 'Todos los días (L-D)',
+        'L-V (rotación A/B)' => 'L-V con rotación A/B (días alternos)',
+        'Días intercalados'  => 'Días intercalados',
+    ];
+    const DIAS_DEFAULT = 'L-V';
+
     private ?int $id;
     private string $nombre;
     private ?string $hora_entrada;
@@ -19,7 +30,9 @@ class Horario extends Model {
             $this->nombre = $data['nombre'] ?? '';
             $this->hora_entrada = !empty($data['hora_entrada']) ? $data['hora_entrada'] : null;
             $this->hora_salida = !empty($data['hora_salida']) ? $data['hora_salida'] : null;
-            $this->dias_laborales = !empty($data['dias_laborales']) ? $data['dias_laborales'] : 'L-V';
+            // Solo se acepta un patrón de la lista; cualquier otro valor cae al default.
+            $this->dias_laborales = in_array($data['dias_laborales'] ?? '', array_keys(self::DIAS_OPCIONES), true)
+                ? $data['dias_laborales'] : self::DIAS_DEFAULT;
             $this->descripcion = !empty($data['descripcion']) ? $data['descripcion'] : null;
         }
     }
