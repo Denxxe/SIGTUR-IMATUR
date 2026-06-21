@@ -291,7 +291,13 @@ button[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shado
 .row-action--view:hover { background: var(--brand-500); color: white; box-shadow: 0 2px 8px -2px var(--brand-500); }
 
 /* ===== SELECT CON BÚSQUEDA (combobox) ===== */
-.sig-search-select { position: relative; flex: 1 1 240px; min-width: 220px; }
+/* Compacto en cualquier contenedor: width:100% (altura por contenido). Evita que
+   dentro de .sig-field —flex column— el flex-basis inflara la altura a 240px. */
+.sig-search-select { position: relative; display: block; width: 100%; min-width: 200px; }
+/* Solo cuando es HIJO DIRECTO de una barra horizontal (p. ej. el buscador de
+   empleado en Asistencia) crece como ítem flex; no aplica si va dentro de .sig-field. */
+.tabla-toolbar > .sig-search-select,
+form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
 .sig-search-select__input { width: 100%; padding-right: 34px; }
 .sig-search-select__caret {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
