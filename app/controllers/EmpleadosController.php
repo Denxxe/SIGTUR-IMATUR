@@ -83,11 +83,34 @@ class EmpleadosController extends Controller {
             'constancias'  => Constancia::porEmpleado($id),
             'motivos'      => Empleado::MOTIVOS_EGRESO,
             'historial_egresos' => Empleado::historialEgresos($id),
+            'historial_traslados' => Empleado::historialTraslados($id),
             'tiempo_servicio'   => Empleado::tiempoServicio($empleado->fecha_ingreso, $empleado->fecha_egreso),
             'permiso_vigente'   => empty($empleado->fecha_egreso) ? PermisoLaboral::vigenteHoy($id) : null,
         ];
 
         $this->view('empleados/detalle', $data);
+    }
+
+    /**
+     * Traslada al empleado a otro departamento (reasignación con historial, 3D).
+     */
+    public function trasladar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/empleados/index'); return; }
+        $_POST = $this->sanitizePost();
+        $id = (int)($_POST['id_empleado'] ?? 0);
+        try {
+            $depto = (int)($_POST['id_departamento_destino'] ?? 0);
+            if ($depto < 1) throw new Exception('Selecciona el departamento destino.');
+            $cargo = !empty($_POST['id_cargo_destino']) ? (int)$_POST['id_cargo_destino'] : null;
+            $fecha = trim($_POST['fecha'] ?? '') ?: date('Y-m-d');
+            $motivo = trim($_POST['motivo'] ?? '') ?: null;
+            $obs    = trim($_POST['observacion'] ?? '') ?: null;
+            Empleado::trasladar($id, $depto, $cargo, $fecha, $motivo, $obs, $this->getUserId());
+            flash('global_msg', 'Traslado registrado y aplicado al expediente.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/empleados/detalle/' . $id);
     }
 
     /**

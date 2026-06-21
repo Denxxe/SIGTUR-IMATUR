@@ -450,6 +450,91 @@ if (!empty($hist)): ?>
 </div>
 <?php endif; ?>
 
+<?php
+// ── Traslados de departamento (3D) ──
+$traslados = $data['historial_traslados'] ?? [];
+?>
+<div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h5 style="margin:0;"><i class="bi bi-arrow-left-right"></i> Traslados de departamento</h5>
+        <?php if (!$egresado): ?>
+        <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalTraslado">
+            <i class="bi bi-arrow-left-right"></i> Trasladar
+        </button>
+        <?php endif; ?>
+    </div>
+    <table class="sig-table">
+        <thead><tr><th>Fecha</th><th>Departamento</th><th>Cargo</th><th>Motivo</th></tr></thead>
+        <tbody>
+            <?php if (empty($traslados)): ?>
+                <tr><td colspan="4" class="sig-table-empty">Sin traslados registrados.</td></tr>
+            <?php else: foreach ($traslados as $t): ?>
+                <tr>
+                    <td><?php echo $ffecha($t->fecha); ?></td>
+                    <td><?php echo $val($t->depto_origen); ?> <i class="bi bi-arrow-right" style="color:var(--text-tertiary)"></i> <strong><?php echo $val($t->depto_destino); ?></strong></td>
+                    <td><?php echo $val($t->cargo_origen); ?> <i class="bi bi-arrow-right" style="color:var(--text-tertiary)"></i> <?php echo $val($t->cargo_destino); ?></td>
+                    <td style="font-size:13px;"><?php echo $val($t->motivo); ?></td>
+                </tr>
+            <?php endforeach; endif; ?>
+        </tbody>
+    </table>
+</div>
+
+<?php if (!$egresado): ?>
+<!-- Modal: Trasladar de departamento -->
+<div class="modal fade" id="modalTraslado" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/trasladar" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Trasladar de departamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <p class="text-muted" style="font-size:13px;">
+                    Actual: <strong><?php echo $val($e->departamento); ?></strong> — <?php echo $val($e->cargo); ?>.
+                    El cambio se aplica al expediente y queda registrado en el historial.
+                </p>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Departamento destino <span class="req">*</span></label>
+                    <select name="id_departamento_destino" class="sig-select js-search" required>
+                        <option value="">— Seleccione —</option>
+                        <?php foreach ($data['departamentos'] ?? [] as $d): ?>
+                            <option value="<?php echo $d->id; ?>" <?php echo ((int)$d->id === (int)$e->id_departamento) ? 'disabled' : ''; ?>><?php echo htmlspecialchars($d->nombre); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Cargo destino <small style="color:var(--text-tertiary)">(opcional; solo si cambia)</small></label>
+                    <select name="id_cargo_destino" class="sig-select js-search">
+                        <option value="">— Mantener cargo actual —</option>
+                        <?php foreach ($data['cargos'] ?? [] as $c): ?>
+                            <option value="<?php echo $c->id; ?>"><?php echo htmlspecialchars($c->nombre); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Fecha</label>
+                    <input type="date" name="fecha" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label">Motivo</label>
+                    <input type="text" name="motivo" class="sig-input" placeholder="Ej: necesidad del servicio, decisión de reunión de directores…">
+                </div>
+                <div class="sig-field mb-2">
+                    <label class="sig-field__label">Observación</label>
+                    <textarea name="observacion" class="sig-input" rows="2" placeholder="N° de oficio, aprobación de Directora general / coordinador, etc. (opcional)"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Registrar traslado</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php if (!$egresado): ?>
 <!-- Modal: Procesar egreso -->
 <div class="modal fade" id="modalEgreso" tabindex="-1">

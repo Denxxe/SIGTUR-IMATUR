@@ -572,6 +572,64 @@ class Empleado extends Model
         return $db->resultSet();
     }
 
+    /** Historial de traslados de departamento del empleado (3D). */
+    public static function historialTraslados($id): array
+    {
+        $db = new Database();
+        $db->query("SELECT t.*, dor.nombre AS depto_origen, dde.nombre AS depto_destino,
+                           cor.nombre AS cargo_origen, cde.nombre AS cargo_destino
+                    FROM empleado_traslados t
+                    LEFT JOIN departamentos dor ON t.id_departamento_origen  = dor.id
+                    LEFT JOIN departamentos dde ON t.id_departamento_destino = dde.id
+                    LEFT JOIN cargos cor ON t.id_cargo_origen  = cor.id
+                    LEFT JOIN cargos cde ON t.id_cargo_destino = cde.id
+                    WHERE t.id_empleado = :id AND t.is_active = TRUE
+                    ORDER BY t.fecha DESC, t.id DESC");
+        $db->bind(':id', $id);
+        return $db->resultSet();
+    }
+
+    /**
+     * Traslada al empleado a otro departamento (y opcionalmente otro cargo),
+     * registrando el movimiento en el historial. Transaccional (3D / O3).
+     */
+    public static function trasladar(int $id, int $deptoDestino, ?int $cargoDestino, string $fecha, ?string $motivo, ?string $obs, $user_id = null): bool
+    {
+        $emp = self::find($id);
+        if (!$emp) throw new Exception('Empleado no encontrado.');
+        if ($deptoDestino < 1) throw new Exception('Departamento destino no válido.');
+        $deptoOrigen = (int)$emp->id_departamento;
+        $cargoOrigen = (int)$emp->id_cargo;
+        $cargoDest   = $cargoDestino ?: $cargoOrigen;
+        if ($deptoDestino === $deptoOrigen && $cargoDest === $cargoOrigen) {
+            throw new Exception('El destino coincide con el departamento y cargo actuales.');
+        }
+        $db = new Database();
+        $db->beginTransaction();
+        try {
+            $db->query("INSERT INTO empleado_traslados
+                        (id_empleado, id_departamento_origen, id_departamento_destino, id_cargo_origen, id_cargo_destino, fecha, motivo, observacion, created_by)
+                        VALUES (:e, :do_, :dd, :co, :cd, :f, :m, :o, :u)");
+            $db->bind(':e', $id);    $db->bind(':do_', $deptoOrigen); $db->bind(':dd', $deptoDestino);
+            $db->bind(':co', $cargoOrigen); $db->bind(':cd', $cargoDest);
+            $db->bind(':f', $fecha); $db->bind(':m', $motivo); $db->bind(':o', $obs); $db->bind(':u', $user_id);
+            $db->execute();
+
+            $db->query("UPDATE empleados SET id_departamento = :dd, id_cargo = :cd, updated_at = CURRENT_TIMESTAMP, updated_by = :u WHERE id = :id");
+            $db->bind(':dd', $deptoDestino); $db->bind(':cd', $cargoDest); $db->bind(':u', $user_id); $db->bind(':id', $id);
+            $db->execute();
+
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
+        self::auditStatic('empleados', 'UPDATE', $id,
+            ['id_departamento' => $deptoOrigen, 'id_cargo' => $cargoOrigen],
+            ['id_departamento' => $deptoDestino, 'id_cargo' => $cargoDest], $user_id);
+        return true;
+    }
+
     /**
      * Tiempo de servicio en MESES completos entre ingreso y egreso (o hasta hoy).
      * Devuelve null si no hay fecha de ingreso o el rango es inválido.
