@@ -351,16 +351,15 @@ class Taller extends Model {
     }
 
     // Inscribir persona con cédula registrada en el sistema
-    public static function inscribir($id_taller, $id_persona, $user_id = null, bool $esBrigadista = false) {
+    public static function inscribir($id_taller, $id_persona, $user_id = null) {
         $db = new Database();
-        $db->query("INSERT INTO participantes_taller (id_taller, id_persona, es_brigadista, created_by)
-                    VALUES (:id_taller, :id_persona, :brigadista, :user_id)");
+        $db->query("INSERT INTO participantes_taller (id_taller, id_persona, created_by)
+                    VALUES (:id_taller, :id_persona, :user_id)");
         $db->bind(':id_taller',  $id_taller);
         $db->bind(':id_persona', $id_persona);
-        $db->bind(':brigadista', $esBrigadista);
         $db->bind(':user_id',    $user_id);
         $result = $db->execute();
-        self::auditStatic('participantes_taller', 'INSERT', null, null, ['id_taller' => $id_taller, 'id_persona' => $id_persona, 'es_brigadista' => $esBrigadista], $user_id);
+        self::auditStatic('participantes_taller', 'INSERT', null, null, ['id_taller' => $id_taller, 'id_persona' => $id_persona], $user_id);
         return $result;
     }
 

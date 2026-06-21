@@ -282,7 +282,7 @@ class TalleresController extends Controller {
                 if (Taller::estaInscrito($id_taller, $idPersona)) {
                     throw new Exception('Este empleado ya está inscrito en esta actividad.');
                 }
-                Taller::inscribir($id_taller, $idPersona, $userId, false);
+                Taller::inscribir($id_taller, $idPersona, $userId);
             } elseif ($esLibre) {
                 // RN-F16: participante sin cédula (niño/a)
                 $nombre = trim($_POST['nombre_libre'] ?? '');
@@ -417,7 +417,7 @@ class TalleresController extends Controller {
                     ], $userId);
                 }
 
-                Taller::inscribir($id_taller, $idPersona, $userId, false);
+                Taller::inscribir($id_taller, $idPersona, $userId);
             }
             // REGLA DE NEGOCIO (decisión confirmada): el cupo_maximo es una ESTIMACIÓN
             // de planificación, NO un límite rígido. El sistema permite el overbooking
