@@ -181,6 +181,10 @@ class DashboardController extends Controller {
                             WHERE estado IN ('En Curso','Programado') AND is_active = TRUE");
                 $data['kpiActividadesActivas'] = (int)($db->single()->total ?? 0);
 
+                // Talleres/actividades vencidas: Programado con fecha pasada (sin ejecutarse)
+                // o En Curso con fecha de fin pasada sin finalizar (U4).
+                $data['kpiTalleresVencidos'] = Taller::contarVencidos();
+
                 $db->query("SELECT COUNT(*) AS total
                             FROM participantes_taller pt
                             JOIN talleres t ON pt.id_taller = t.id
@@ -320,6 +324,11 @@ class DashboardController extends Controller {
                 if ($pasantesCulm > 0) {
                     $alertas[] = ['tipo' => 'info', 'ico' => 'bi-journal-text',
                         'msg' => "$pasantesCulm pasante(s) culminan en los próximos {$diasPasante} días"];
+                }
+                if (($data['kpiTalleresVencidos'] ?? 0) > 0) {
+                    $n = $data['kpiTalleresVencidos'];
+                    $alertas[] = ['tipo' => 'danger', 'ico' => 'bi-calendar-x',
+                        'msg' => "$n actividad(es) de formación vencida(s): fecha cumplida sin ejecutarse o sin finalizar"];
                 }
                 if (($data['kpiActividadesActivas'] ?? 0) > 0) {
                     $n = $data['kpiActividadesActivas'];

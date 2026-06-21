@@ -632,6 +632,20 @@ class Taller extends Model {
         $db->execute();
     }
 
+    // Talleres "vencidos" para alertas (U4): Programado cuya fecha de inicio ya pasó
+    // (no se ejecutó / sin participantes para auto-transicionar) o En Curso cuya
+    // fecha de fin ya pasó sin finalizarse. Cancelado/Finalizado nunca cuentan.
+    public static function contarVencidos(): int {
+        $db = new Database();
+        $db->query("SELECT COUNT(*) AS total FROM talleres
+                    WHERE is_active = TRUE
+                      AND (
+                          (estado = 'Programado' AND fecha_inicio < CURRENT_DATE)
+                          OR (estado = 'En Curso' AND fecha_fin IS NOT NULL AND fecha_fin < CURRENT_DATE)
+                      )");
+        return (int)($db->single()->total ?? 0);
+    }
+
     // Actualiza solo el estado y el motivo (para el cambio rápido de estado desde la tarjeta)
     public static function cambiarEstado(int $id, string $estado, ?string $motivoCancelacion, $userId): bool {
         $db = new Database();
