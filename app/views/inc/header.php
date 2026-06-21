@@ -62,6 +62,9 @@
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/permisos/index">
                 <i class="bi bi-calendar2-week"></i> <span>Permisos y Reposos</span>
             </a>
+            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/vacaciones/index">
+                <i class="bi bi-umbrella"></i> <span>Vacaciones</span>
+            </a>
             <?php endif; ?>
             <?php if(in_array($rol, [1, 2, 5])): ?>
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/asistencias/index">

@@ -79,9 +79,13 @@ class Vacacion extends Model {
         return (int)($db->single()->t ?? 0);
     }
 
-    /** Saldo disponible = derecho acumulado − días ya disfrutados/comprometidos. */
+    /**
+     * Saldo disponible = derecho acumulado − ajuste inicial (días disfrutados antes
+     * del sistema) − días ya disfrutados/comprometidos en períodos registrados.
+     */
     public static function saldo($empleado): int {
-        return self::derechoAcumulado($empleado) - self::totalDisfrutado((int)$empleado->id);
+        $ajuste = (int)($empleado->vacaciones_ajuste_dias ?? 0);
+        return self::derechoAcumulado($empleado) - $ajuste - self::totalDisfrutado((int)$empleado->id);
     }
 
     // ── Conteo de días hábiles (sin fines de semana ni feriados) ──────────────
