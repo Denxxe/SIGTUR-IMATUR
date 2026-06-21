@@ -56,6 +56,16 @@ function rutaUrl(array $f, int $p): string {
             </select>
         </div>
         <div>
+            <label class="sig-field__label" style="font-size:11px;">Período</label>
+            <?php $perActual = $flt['periodo'] ?? '';
+                  $periodos = ['' => 'Todos', 'proximos' => 'Próximas', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasadas']; ?>
+            <select name="periodo" class="sig-input" style="min-width:130px;">
+                <?php foreach ($periodos as $val => $lbl): ?>
+                    <option value="<?php echo $val; ?>" <?php echo $perActual === $val ? 'selected' : ''; ?>><?php echo $lbl; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
             <label class="sig-field__label" style="font-size:11px;">Desde</label>
             <input type="date" name="fecha_desde" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
         </div>

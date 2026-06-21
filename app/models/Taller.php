@@ -130,6 +130,14 @@ class Taller extends Model {
                                          $binds[':esi'] = ($f['es_interna'] === '1'); }
         if (!empty($f['fecha_inicio'])) { $where .= " AND t.fecha_inicio >= :fi";        $binds[':fi']     = $f['fecha_inicio']; }
         if (!empty($f['fecha_fin']))    { $where .= " AND t.fecha_inicio <= :ff";        $binds[':ff']     = $f['fecha_fin']; }
+        // Filtro rápido por período relativo a hoy (U3)
+        switch ($f['periodo'] ?? '') {
+            case 'proximos': $where .= " AND t.fecha_inicio >= CURRENT_DATE"; break;
+            case 'hoy':      $where .= " AND t.fecha_inicio = CURRENT_DATE"; break;
+            case 'semana':   $where .= " AND t.fecha_inicio BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '7 days')"; break;
+            case 'mes':      $where .= " AND date_trunc('month', t.fecha_inicio) = date_trunc('month', CURRENT_DATE)"; break;
+            case 'pasados':  $where .= " AND t.fecha_inicio < CURRENT_DATE"; break;
+        }
         if (!empty($f['buscar'])) {
             $where .= " AND (t.nombre ILIKE :q OR (p.nombre||' '||p.apellido) ILIKE :q)";
             $binds[':q'] = '%' . $f['buscar'] . '%';

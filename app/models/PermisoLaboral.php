@@ -39,6 +39,20 @@ class PermisoLaboral extends Model
         return $db->single();
     }
 
+    /**
+     * Permiso o reposo APROBADO que esté vigente hoy para el empleado (o null).
+     * Sirve para mostrar el estatus actual del trabajador.
+     */
+    public static function vigenteHoy($idEmpleado) {
+        $db = new Database();
+        $db->query("SELECT * FROM permisos_laborales
+                    WHERE id_empleado = :id AND is_active = TRUE AND estado = 'Aprobado'
+                      AND fecha_inicio <= CURRENT_DATE AND fecha_fin >= CURRENT_DATE
+                    ORDER BY fecha_inicio DESC LIMIT 1");
+        $db->bind(':id', $idEmpleado);
+        return $db->single();
+    }
+
     public static function porEmpleado($idEmpleado) {
         $db = new Database();
         $db->query("SELECT * FROM permisos_laborales WHERE id_empleado = :id AND is_active = TRUE ORDER BY fecha_inicio DESC");

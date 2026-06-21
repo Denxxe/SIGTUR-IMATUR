@@ -8,6 +8,7 @@ class RutasController extends Controller {
             'buscar'      => trim($_GET['buscar']      ?? ''),
             'estado'      => trim($_GET['estado']      ?? ''),
             'tipo'        => trim($_GET['tipo']        ?? ''),
+            'periodo'     => trim($_GET['periodo']     ?? ''),
             'fecha_desde' => trim($_GET['fecha_desde'] ?? ''),
             'fecha_hasta' => trim($_GET['fecha_hasta'] ?? ''),
         ];

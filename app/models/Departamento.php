@@ -45,6 +45,46 @@ class Departamento extends Model {
         return $db->resultSet();
     }
 
+    /**
+     * Lista JERÁRQUICA (recorrido en profundidad): cada unidad seguida de sus
+     * subunidades, de mayor a menor nivel. Agrega `->nivel` (profundidad, 0=raíz)
+     * para indentar en la UI. Las huérfanas (padre inactivo) se tratan como raíces.
+     */
+    public static function arbol() {
+        $rows = self::all();
+        $byId = [];
+        foreach ($rows as $r) { $r->nivel = 0; $byId[$r->id] = $r; }
+
+        $hijos = [];
+        $raices = [];
+        foreach ($rows as $r) {
+            if (!empty($r->id_padre) && isset($byId[$r->id_padre])) {
+                $hijos[$r->id_padre][] = $r;
+            } else {
+                $raices[] = $r;
+            }
+        }
+        $orden = self::ORDEN_TIPO;
+        $cmp = function ($a, $b) use ($orden) {
+            $oa = $orden[$a->tipo_unidad] ?? 9;
+            $ob = $orden[$b->tipo_unidad] ?? 9;
+            if ($oa !== $ob) return $oa <=> $ob;
+            return strcasecmp($a->nombre, $b->nombre);
+        };
+        usort($raices, $cmp);
+        foreach ($hijos as &$lst) { usort($lst, $cmp); }
+        unset($lst);
+
+        $out = [];
+        $walk = function ($nodo, $nivel) use (&$walk, &$out, &$hijos) {
+            $nodo->nivel = $nivel;
+            $out[] = $nodo;
+            foreach ($hijos[$nodo->id] ?? [] as $h) { $walk($h, $nivel + 1); }
+        };
+        foreach ($raices as $r) { $walk($r, 0); }
+        return $out;
+    }
+
     public static function find($id) {
         $db = new Database();
         $db->query("SELECT d.*, pa.nombre AS padre

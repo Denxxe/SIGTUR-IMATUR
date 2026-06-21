@@ -5,10 +5,31 @@ $motivos = $data['motivos'] ?? [];
 $origen  = $data['origen'] ?? '';
 $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
 $esCom = fn($e) => (($e->institucion_origen ?? 'IMATUR') !== 'IMATUR');
+// Badge de vencimiento del contrato (activos): Fijos sin vencimiento; Contratados con semáforo.
+$vencBadge = function ($e) {
+    if (($e->tipo_contrato ?? '') === 'Fijo') return '<span class="sig-badge sig-badge--neutral" title="Sin vencimiento por tiempo">Indefinido</span>';
+    if (empty($e->fecha_vencimiento_contrato)) return '<span class="sig-badge sig-badge--neutral">—</span>';
+    $f = strtotime($e->fecha_vencimiento_contrato);
+    $dias = floor(($f - strtotime(date('Y-m-d'))) / 86400);
+    $fecha = date('d/m/Y', $f);
+    if ($dias < 0)   return '<span class="sig-badge sig-badge--danger" title="Contrato vencido">Vencido · ' . $fecha . '</span>';
+    if ($dias <= 30) return '<span class="sig-badge sig-badge--warning" title="Por vencer">' . $fecha . ' · ' . (int)$dias . ' d</span>';
+    return '<span class="sig-badge sig-badge--info">' . $fecha . '</span>';
+};
+// Conteo disciplinario: amonestaciones (rojo si llega al límite de despido) + faltas.
+$discBadge = function ($e) {
+    $am = (int)($e->amonestaciones ?? 0);
+    $fa = (int)($e->faltas ?? 0);
+    if ($am === 0 && $fa === 0) return '<span style="color:var(--text-tertiary)">—</span>';
+    $cls = $am >= 3 ? 'sig-badge--danger' : ($am > 0 ? 'sig-badge--warning' : 'sig-badge--neutral');
+    $out = '<span class="sig-badge ' . $cls . '" title="Amonestaciones"><i class="bi bi-flag"></i> ' . $am . '</span>';
+    if ($fa > 0) $out .= ' <span class="sig-badge sig-badge--neutral" title="Faltas injustificadas"><i class="bi bi-exclamation-circle"></i> ' . $fa . '</span>';
+    return $out;
+};
 // Opciones del filtro de origen
 $origenOpciones = ['' => 'Todos los orígenes', 'comision' => 'Comisión de servicio'];
 foreach (Empleado::INSTITUCIONES_ORIGEN as $o) $origenOpciones[$o] = $o;
-$colspanBase = ($egView ? 8 : 6) + 1; // +1 por la columna Origen
+$colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina y Vencimiento)
 ?>
 
 <div class="page__head anim-slide-up">
@@ -70,6 +91,8 @@ $colspanBase = ($egView ? 8 : 6) + 1; // +1 por la columna Origen
                     <th>Tiempo de servicio</th>
                 <?php else: ?>
                     <th>Departamento</th>
+                    <th>Disciplina</th>
+                    <th>Vencimiento</th>
                 <?php endif; ?>
                 <th class="col-actions">Acciones</th>
             </tr>
@@ -100,6 +123,8 @@ $colspanBase = ($egView ? 8 : 6) + 1; // +1 por la columna Origen
                             <td><?php echo htmlspecialchars($ts($emp->fecha_ingreso ?? null, $emp->fecha_egreso ?? null)); ?></td>
                         <?php else: ?>
                             <td><?php echo $emp->departamento ?? 'Sin dpto.'; ?></td>
+                            <td><?php echo $discBadge($emp); ?></td>
+                            <td><?php echo $vencBadge($emp); ?></td>
                         <?php endif; ?>
                         <td class="col-actions">
                             <a href="<?php echo URL_ROOT; ?>/empleados/detalle/<?php echo $emp->id; ?>" class="row-action">

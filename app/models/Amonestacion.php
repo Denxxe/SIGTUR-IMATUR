@@ -44,14 +44,16 @@ class Amonestacion extends Model
         return $ok;
     }
 
-    public static function delete($id, $user_id = null) {
+    public static function delete($id, $user_id = null, $motivoAnulacion = null) {
         $previos = self::find($id);
         $db = new Database();
-        $db->query("UPDATE amonestaciones SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:uid WHERE id=:id");
+        $db->query("UPDATE amonestaciones SET is_active=FALSE, motivo_anulacion=:ma,
+                        deleted_at=CURRENT_TIMESTAMP, deleted_by=:uid WHERE id=:id");
         $db->bind(':id', $id);
+        $db->bind(':ma', !empty($motivoAnulacion) ? trim($motivoAnulacion) : null);
         $db->bind(':uid', $user_id);
         $ok = $db->execute();
-        self::auditStatic('amonestaciones', 'DELETE', $id, $previos, null, $user_id);
+        self::auditStatic('amonestaciones', 'DELETE', $id, $previos, ['motivo_anulacion' => $motivoAnulacion], $user_id);
         return $ok;
     }
 

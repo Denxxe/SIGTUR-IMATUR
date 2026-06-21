@@ -88,7 +88,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
             </div>
         </div>
     </div>
-    <div class="sig-table-wrap">
+    <div class="sig-table-wrap" data-tabla-buscable data-por-pagina="50" data-buscar-placeholder="Buscar participante ya inscrito por nombre o cédula…">
         <table class="sig-table">
             <thead>
                 <tr>
@@ -320,34 +320,30 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                 <?php else: ?>
                 <!-- ── BLOQUE EXTERNO ────────────────────────────────────── -->
 
-                <!-- Toggle niño/a sin cédula (RN-F16) -->
-                <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="insc_es_libre" name="tipo_participante_libre" value="1">
-                        <label class="form-check-label" for="insc_es_libre" style="font-size:13px; cursor:pointer; user-select:none;">
-                            <i class="bi bi-person-x"></i> Menor de edad sin cédula <span style="color:var(--text-tertiary); font-weight:400;">(5 a 11 años)</span>
-                        </label>
+                <!-- Selector tipo de participante (RN-F16) -->
+                <div>
+                    <label class="sig-field__label" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
+                    <div id="seg_tipo_part" style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="seg-tipo" data-libre="0" style="flex:1; min-width:170px; padding:12px; border-radius:8px; border:2px solid var(--border-subtle); background:var(--bg-muted); color:var(--text-secondary); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <i class="bi bi-person-vcard"></i> Adulto (con cédula)
+                        </button>
+                        <button type="button" class="seg-tipo" data-libre="1" style="flex:1; min-width:170px; padding:12px; border-radius:8px; border:2px solid var(--border-subtle); background:var(--bg-muted); color:var(--text-secondary); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <i class="bi bi-person-hearts"></i> Niño/a 5–11 (sin cédula)
+                        </button>
                     </div>
+                    <input type="checkbox" id="insc_es_libre" name="tipo_participante_libre" value="1" style="display:none;">
                 </div>
 
                 <!-- ── BLOQUE PERSONA CON CÉDULA ─────────────────────────── -->
                 <div id="bloque_persona">
-                    <div class="row g-3" style="margin-bottom:var(--sp-1);">
-                        <div class="col-md-8">
-                            <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">
-                                    Cédula
-                                    <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— busca si ya está registrado, o completa para registrar</span>
-                                </label>
-                                <input type="text" id="insc_cedula_busqueda" name="cedula_participante"
-                                       class="sig-input" placeholder="Ej: 12345678 (solo números)" autocomplete="off">
-                            </div>
-                        </div>
-                        <div class="col-md-4" style="display:flex; align-items:flex-end;">
-                            <button type="button" id="btn_buscar_cedula" class="btn-sig btn-sig--ghost" style="width:100%;">
-                                <i class="bi bi-search" id="ico_buscar"></i> Buscar
-                            </button>
-                        </div>
+                    <div class="sig-field" style="margin-bottom:var(--sp-1);">
+                        <label class="sig-field__label">
+                            Cédula del participante
+                            <i class="bi bi-search" id="ico_buscar" style="margin-left:4px; color:var(--text-tertiary);" title="Búsqueda automática"></i>
+                            <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— si ya está registrado, sus datos se completan solos</span>
+                        </label>
+                        <input type="text" id="insc_cedula_busqueda" name="cedula_participante"
+                               class="sig-input" placeholder="Ej: 12345678 (solo números)" autocomplete="off" inputmode="numeric">
                     </div>
                     <div id="insc_status" style="display:none;"></div>
                     <div id="bloque_datos_persona">
@@ -736,7 +732,10 @@ function checkInscripcionValid() {
         var apellido = (document.getElementById('insc_apellido').value || '').trim();
         var correo   = (document.getElementById('insc_correo').value   || '').trim();
         var correoOk = !correo || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-        btn.disabled = !nombre || !apellido || !correoOk;
+        // Cédula obligatoria para participantes adultos (6 a 8 dígitos).
+        var cedula   = (document.getElementById('insc_cedula_busqueda').value || '').replace(/\D/g, '');
+        var cedulaOk = cedula.length >= 6 && cedula.length <= 8;
+        btn.disabled = !nombre || !apellido || !correoOk || !cedulaOk;
     }
 }
 
@@ -772,22 +771,28 @@ function mostrarStatus(tipo, html) {
     s.innerHTML = html; s.style.display = 'block';
 }
 
-document.getElementById('btn_buscar_cedula').addEventListener('click', function() {
+// Búsqueda AUTOMÁTICA de la cédula: el recuadro es para AGREGAR; al escribir
+// (con un pequeño retardo) el sistema verifica si la persona ya existe y
+// autocompleta sus datos. Sin botón "Buscar" (evita la confusión buscar/agregar).
+var inscCedTimer = null;
+function ejecutarBusquedaCedula() {
     var cedula = (document.getElementById('insc_cedula_busqueda').value || '').trim();
-    var btn = this; var ico = document.getElementById('ico_buscar');
+    var ico = document.getElementById('ico_buscar');
     if (!cedula) {
         resetBloquePersona();
         document.getElementById('bloque_datos_persona').style.display = 'block';
-        mostrarStatus('warn', '<i class="bi bi-pencil"></i> Complete los datos para registrar un nuevo participante.');
+        document.getElementById('insc_status').style.display = 'none';
         checkInscripcionValid(); return;
     }
-    // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
     var cedulaN = cedula.toUpperCase().replace(/[\s.\-]/g, '');
     if (!/^[VEJGCP]?\d{6,9}$/.test(cedulaN)) {
-        mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Cédula no válida. Use solo números (6 a 8 dígitos).');
-        return;
+        // Cédula aún incompleta: permitir completar los datos manualmente, sin buscar.
+        document.getElementById('bloque_datos_persona').style.display = 'block';
+        setPersonaReadonly(false);
+        mostrarStatus('warn', '<i class="bi bi-pencil"></i> Complete la cédula (6 a 8 dígitos) o llene los datos para registrar.');
+        checkInscripcionValid(); return;
     }
-    btn.disabled = true; ico.className = 'bi bi-hourglass-split';
+    if (ico) ico.className = 'bi bi-hourglass-split';
     fetch('<?php echo URL_ROOT; ?>/talleres/buscarPersona?cedula=' + encodeURIComponent(cedula))
         .then(function(r) { return r.json(); })
         .then(function(res) {
@@ -820,11 +825,17 @@ document.getElementById('btn_buscar_cedula').addEventListener('click', function(
             checkInscripcionValid();
         })
         .catch(function() { mostrarStatus('err', '<i class="bi bi-exclamation-circle"></i> Error al consultar. Intente nuevamente.'); })
-        .finally(function() { btn.disabled = false; ico.className = 'bi bi-search'; });
-});
+        .finally(function() { if (ico) ico.className = 'bi bi-search'; });
+}
 
+// Disparo automático con debounce al escribir; Enter fuerza la consulta inmediata.
+// (Esto corrige B12: la búsqueda se reactiva cada vez que se reescribe en el recuadro.)
+document.getElementById('insc_cedula_busqueda').addEventListener('input', function() {
+    clearTimeout(inscCedTimer);
+    inscCedTimer = setTimeout(ejecutarBusquedaCedula, 450);
+});
 document.getElementById('insc_cedula_busqueda').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn_buscar_cedula').click(); }
+    if (e.key === 'Enter') { e.preventDefault(); clearTimeout(inscCedTimer); ejecutarBusquedaCedula(); }
 });
 
 document.getElementById('insc_es_libre').addEventListener('change', function() {
@@ -835,6 +846,33 @@ document.getElementById('insc_es_libre').addEventListener('change', function() {
     checkInscripcionValid();
 });
 
+// Cédula obligatoria para adultos: refrescar el estado del botón al escribir.
+document.getElementById('insc_cedula_busqueda').addEventListener('input', checkInscripcionValid);
+
+// Selector segmentado tipo de participante (Adulto / Niño-a) → maneja insc_es_libre.
+(function() {
+    var seg = document.getElementById('seg_tipo_part');
+    var chk = document.getElementById('insc_es_libre');
+    if (!seg || !chk) return;
+    window.pintarSegTipoPart = function(libre) {
+        seg.querySelectorAll('.seg-tipo').forEach(function(b) {
+            var on = (b.dataset.libre === '1') === !!libre;
+            b.style.borderColor = on ? 'var(--brand-500)' : 'var(--border-subtle)';
+            b.style.background  = on ? 'var(--brand-50,#eff6ff)' : 'var(--bg-muted)';
+            b.style.color       = on ? 'var(--brand-600,#2563eb)' : 'var(--text-secondary)';
+        });
+    };
+    seg.querySelectorAll('.seg-tipo').forEach(function(b) {
+        b.addEventListener('click', function() {
+            var libre = b.dataset.libre === '1';
+            if (chk.checked !== libre) { chk.checked = libre; chk.dispatchEvent(new Event('change')); }
+            window.pintarSegTipoPart(libre);
+        });
+    });
+    chk.addEventListener('change', function() { window.pintarSegTipoPart(chk.checked); });
+    window.pintarSegTipoPart(chk.checked);
+})();
+
 // Limpiar el modal de inscripción al abrirse, para empezar siempre limpio
 var modalInsc = document.getElementById('modalInscripcion');
 if (modalInsc) {
@@ -844,6 +882,7 @@ if (modalInsc) {
         document.getElementById('bloque_persona').style.display = 'block';
         document.getElementById('bloque_libre').style.display   = 'none';
         resetBloquePersona();
+        if (window.pintarSegTipoPart) window.pintarSegTipoPart(false);
     });
 }
 
@@ -908,14 +947,6 @@ document.getElementById('formInscripcion').addEventListener('submit', function(e
         var msgEl = document.getElementById('msg_correo');
         if (msgEl) msgEl.textContent = 'Formato de correo no válido (ej: usuario@dominio.com).';
     }
-});
-
-document.getElementById('modalInscripcion').addEventListener('show.bs.modal', function() {
-    document.getElementById('insc_es_libre').checked        = false;
-    document.getElementById('bloque_persona').style.display = 'block';
-    document.getElementById('bloque_libre').style.display   = 'none';
-    document.getElementById('insc_cedula_busqueda').value   = '';
-    resetBloquePersona();
 });
 
 <?php else: ?>

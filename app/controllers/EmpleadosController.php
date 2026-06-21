@@ -37,6 +37,7 @@ class EmpleadosController extends Controller {
         $data = array_merge($this->catalogosForm(), [
             'titulo'   => 'Registrar Empleado',
             'empleado' => null,
+            'proximo_expediente' => Empleado::proximoNumeroExpediente(),
         ]);
         $this->view('empleados/form', $data);
     }
@@ -83,6 +84,7 @@ class EmpleadosController extends Controller {
             'motivos'      => Empleado::MOTIVOS_EGRESO,
             'historial_egresos' => Empleado::historialEgresos($id),
             'tiempo_servicio'   => Empleado::tiempoServicio($empleado->fecha_ingreso, $empleado->fecha_egreso),
+            'permiso_vigente'   => empty($empleado->fecha_egreso) ? PermisoLaboral::vigenteHoy($id) : null,
         ];
 
         $this->view('empleados/detalle', $data);
@@ -108,6 +110,18 @@ class EmpleadosController extends Controller {
         $this->view('empleados/ficha_tecnica', $data);
     }
 
+    /**
+     * AJAX (GET): ¿la cédula ya está registrada como empleado?
+     * Usado por el formulario para avisar en vivo antes de enviar.
+     */
+    public function verificarCedula() {
+        header('Content-Type: application/json; charset=utf-8');
+        $ced = preg_replace('/\D/', '', $_GET['cedula'] ?? '');
+        $excluir = !empty($_GET['id']) ? (int)$_GET['id'] : null;
+        $existe = ($ced !== '') && Empleado::existeCedula($ced, $excluir);
+        echo json_encode(['existe' => $existe, 'cedula' => $ced]);
+    }
+
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
@@ -129,8 +143,9 @@ class EmpleadosController extends Controller {
                              ? $_POST['clasificacion'] : null;
             $estadoCivil   = in_array($_POST['estado_civil'] ?? '', Empleado::ESTADOS_CIVILES, true)
                              ? $_POST['estado_civil'] : null;
-            $nivelAcademico = in_array($_POST['nivel_academico'] ?? '', Empleado::NIVELES_ACADEMICOS, true)
-                             ? $_POST['nivel_academico'] : null;
+            // nivel_academico: varchar libre (sin CHECK en BD). El select sugiere los
+            // valores estándar; se acepta y conserva el texto (máx. 50) tal cual.
+            $nivelAcademico = !empty($_POST['nivel_academico']) ? mb_substr(trim($_POST['nivel_academico']), 0, 50) : null;
             $discapacidad  = !empty($_POST['discapacidad']);
             $grupoRotacion = in_array($_POST['grupo_rotacion'] ?? '', Empleado::GRUPOS_ROTACION, true)
                              ? $_POST['grupo_rotacion'] : null;
@@ -149,7 +164,7 @@ class EmpleadosController extends Controller {
                 'direccion'      => trim($_POST['direccion']),
                 'id_cargo'       => (int)$_POST['id_cargo'],
                 'id_departamento'=> (int)$_POST['id_departamento'],
-                'nro_expediente' => trim($_POST['nro_expediente']),
+                // nro_expediente lo asigna el sistema automáticamente (folio EXP-####); no se lee del POST.
                 'fecha_ingreso'  => $_POST['fecha_ingreso'],
                 'tipo_contrato'  => $tipoContrato,
                 'institucion_origen'   => $institucionOrigen,
@@ -160,7 +175,10 @@ class EmpleadosController extends Controller {
                 'talla_camisa'   => ($uniforme && !empty($_POST['talla_camisa'])) ? trim($_POST['talla_camisa']) : null,
                 'talla_pantalon' => ($uniforme && !empty($_POST['talla_pantalon'])) ? trim($_POST['talla_pantalon']) : null,
                 'talla_zapato'   => ($uniforme && !empty($_POST['talla_zapato'])) ? trim($_POST['talla_zapato']) : null,
-                'fecha_egreso'   => !empty($_POST['fecha_egreso']) ? $_POST['fecha_egreso'] : null,
+                // Vencimiento del contrato: solo aplica a Contratados (los Fijos no expiran por tiempo).
+                // La fecha de egreso real la gestiona el módulo de egreso (R-12), no este formulario.
+                'fecha_vencimiento_contrato' => ($tipoContrato !== 'Fijo' && !empty($_POST['fecha_vencimiento_contrato']))
+                                                ? $_POST['fecha_vencimiento_contrato'] : null,
                 'id_horario'     => !empty($_POST['id_horario']) ? (int)$_POST['id_horario'] : null,
                 // Datos personales extra + formación académica (van a personas)
                 'parroquia_id'   => !empty($_POST['parroquia_id']) ? (int)$_POST['parroquia_id'] : null,
@@ -170,7 +188,6 @@ class EmpleadosController extends Controller {
                 'discapacidad_detalle' => ($discapacidad && !empty($_POST['discapacidad_detalle'])) ? trim($_POST['discapacidad_detalle']) : null,
                 'nivel_academico'=> $nivelAcademico,
                 'profesion'      => !empty($_POST['profesion']) ? trim($_POST['profesion']) : null,
-                'titulo'         => !empty($_POST['titulo']) ? trim($_POST['titulo']) : null,
                 'fecha_graduacion' => !empty($_POST['fecha_graduacion']) ? $_POST['fecha_graduacion'] : null,
                 'institucion_academica' => !empty($_POST['institucion_academica']) ? trim($_POST['institucion_academica']) : null,
                 'centro_votacion' => !empty($_POST['centro_votacion']) ? trim($_POST['centro_votacion']) : null,
@@ -182,6 +199,78 @@ class EmpleadosController extends Controller {
             $volverForm = $esEdicion
                 ? URL_ROOT . '/empleados/editar/' . (int)$data['id']
                 : URL_ROOT . '/empleados/nuevo';
+
+            // Validación de campos obligatorios (server-side; los `required` de HTML pueden saltarse).
+            $requeridos = [
+                'cedula' => 'Cédula', 'nombre' => 'Nombres', 'apellido' => 'Apellidos',
+                'genero' => 'Género', 'fecha_nacimiento' => 'Fecha de nacimiento',
+                'telefono' => 'Teléfono', 'rif' => 'RIF', 'parroquia_id' => 'Parroquia',
+                'direccion' => 'Dirección', 'id_cargo' => 'Cargo', 'id_departamento' => 'Departamento',
+                'clasificacion' => 'Clasificación', 'tipo_contrato' => 'Tipo de contrato',
+                'institucion_origen' => 'Institución / Nómina', 'fecha_ingreso' => 'Fecha de ingreso',
+            ];
+            $faltantes = [];
+            foreach ($requeridos as $campo => $etiqueta) {
+                if (empty($data[$campo])) $faltantes[] = $etiqueta;
+            }
+            if (!empty($faltantes)) {
+                flash('global_msg', 'Complete los campos obligatorios: ' . implode(', ', $faltantes) . '.', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+            if (!in_array($data['genero'], ['M', 'F'], true)) {
+                flash('global_msg', 'Seleccione un género válido.', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+
+            // B6 — Validación de RIF venezolano (formato letra + 8 dígitos + verificador)
+            if (!$this->rifValido($data['rif'])) {
+                flash('global_msg', 'El RIF no es válido. Use el formato venezolano: letra (V/E/J/P/G/C) + 8 dígitos + verificador. Ej: J-12345678-9.', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+            $data['rif'] = $this->normalizarRif($data['rif']);
+
+            // B5 — Normaliza nombres/apellidos a Mayúscula Inicial (robustez server-side)
+            $data['nombre']   = mb_convert_case($data['nombre'], MB_CASE_TITLE, 'UTF-8');
+            $data['apellido'] = mb_convert_case($data['apellido'], MB_CASE_TITLE, 'UTF-8');
+
+            // Cédula: solo dígitos (regla global, mig.037)
+            $data['cedula'] = preg_replace('/\D/', '', $data['cedula']);
+
+            // Anti-duplicado: una misma cédula no puede registrarse dos veces como empleado.
+            if (Empleado::existeCedula($data['cedula'], $esEdicion ? (int)$data['id'] : null)) {
+                $msg = $esEdicion
+                    ? "La cédula {$data['cedula']} ya pertenece a otro empleado registrado."
+                    : "Ya existe un empleado registrado con la cédula {$data['cedula']}. Si egresó de la institución, use la opción de «Reingreso» en el histórico de egresados; no es necesario registrarlo de nuevo.";
+                flash('global_msg', $msg, 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+
+            // B4 — Vencimiento del contrato: OBLIGATORIO para Contratados, mínimo 3 meses.
+            // Los Fijos no expiran por tiempo (campo nulo).
+            if ($tipoContrato !== 'Fijo') {
+                if (empty($data['fecha_vencimiento_contrato'])) {
+                    flash('global_msg', 'El vencimiento del contrato es obligatorio para empleados Contratados.', 'danger');
+                    header('Location: ' . $volverForm);
+                    return;
+                }
+                $ing = $data['fecha_ingreso'];
+                $ven = $data['fecha_vencimiento_contrato'];
+                $minVenc = date('Y-m-d', strtotime($ing . ' +3 months'));
+                if ($ven <= $ing) {
+                    flash('global_msg', 'La fecha de vencimiento del contrato debe ser posterior a la fecha de ingreso.', 'danger');
+                    header('Location: ' . $volverForm);
+                    return;
+                }
+                if ($ven < $minVenc) {
+                    flash('global_msg', "El contrato debe tener una vigencia mínima de 3 meses (vencimiento a partir del {$minVenc}).", 'danger');
+                    header('Location: ' . $volverForm);
+                    return;
+                }
+            }
 
             // Validación de correo electrónico
             if (!empty($data['correo']) && !$this->emailValido($data['correo'])) {
@@ -458,9 +547,10 @@ class EmpleadosController extends Controller {
 
     // ── Constancias de trabajo (R-10) ──────────────────────────────────────────
 
-    public function generarConstancia($idEmpleado) {
+    public function generarConstancia($idEmpleado, $tipo = 'trabajo') {
         try {
-            $idConst = Constancia::crear($idEmpleado, 'Constancia de trabajo', $this->getUserId());
+            if (!array_key_exists($tipo, Constancia::TIPOS)) $tipo = 'trabajo';
+            $idConst = Constancia::crear($idEmpleado, $tipo, $this->getUserId());
             if (!$idConst) throw new Exception("No se pudo generar la constancia.");
             flash('global_msg', 'Constancia generada. Ábrala para imprimir/PDF.');
             header('Location: ' . URL_ROOT . '/empleados/constancia/' . (int)$idConst);

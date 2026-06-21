@@ -4,6 +4,7 @@
     <div class="page__title-block">
         <div class="page__eyebrow">Inventario · Bienes Nacionales</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Inventario Institucional'; ?></h1>
+        <p class="page__subtitle">Registro y control de los bienes nacionales de la institución.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInv" onclick="nuevoInv()">

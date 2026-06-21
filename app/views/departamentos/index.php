@@ -8,7 +8,6 @@ $tipoBadge = function ($t) {
     $cls = $map[$t] ?? 'sig-badge--secondary';
     return '<span class="sig-badge ' . $cls . '">' . htmlspecialchars($t ?: '—') . '</span>';
 };
-$indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Oficina' => 1, 'Coordinación' => 2, 'Unidad' => 1];
 ?>
 
 <div class="page__head anim-slide-up">
@@ -24,7 +23,7 @@ $indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Ofici
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="100" data-buscar-placeholder="Buscar unidad…">
     <table class="sig-table">
         <thead>
             <tr>
@@ -36,8 +35,10 @@ $indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Ofici
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($data['departamentos'] ?? [] as $dpto): ?>
-                <?php $pad = ($indent[$dpto->tipo_unidad] ?? 0) * 22; ?>
+            <?php if (empty($data['departamentos'])): ?>
+                <tr><td colspan="5" class="sig-table-empty">No hay unidades registradas.</td></tr>
+            <?php else: foreach ($data['departamentos'] as $dpto): ?>
+                <?php $pad = (int)($dpto->nivel ?? 0) * 22; ?>
                 <tr>
                     <td><?php echo $tipoBadge($dpto->tipo_unidad); ?></td>
                     <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
@@ -50,7 +51,7 @@ $indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Ofici
                         <a href="<?php echo URL_ROOT; ?>/departamentos/delete/<?php echo $dpto->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endforeach; endif; ?>
         </tbody>
     </table>
 </div>
@@ -86,7 +87,7 @@ $indent = ['Presidencia' => 0, 'Junta Directiva' => 0, 'Dirección' => 1, 'Ofici
                             <select name="id_padre" id="dpto_id_padre" class="sig-select">
                                 <option value="">— Ninguna (nivel raíz) —</option>
                                 <?php foreach ($data['departamentos'] ?? [] as $opt): ?>
-                                    <option value="<?php echo $opt->id; ?>"><?php echo htmlspecialchars($opt->nombre); ?></option>
+                                    <option value="<?php echo $opt->id; ?>"><?php echo str_repeat('— ', (int)($opt->nivel ?? 0)) . htmlspecialchars($opt->nombre); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

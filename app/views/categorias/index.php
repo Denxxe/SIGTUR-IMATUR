@@ -4,6 +4,7 @@
     <div class="page__title-block">
         <div class="page__eyebrow">Inventario · Catálogo</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Gestión de Categorías'; ?></h1>
+        <p class="page__subtitle">Clasificación de los bienes del inventario institucional.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalCat" onclick="nuevaCat()">
@@ -23,7 +24,9 @@
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($data['categorias'] ?? [] as $cat): ?>
+            <?php if (empty($data['categorias'])): ?>
+                <tr><td colspan="4" class="sig-table-empty">No hay categorías registradas.</td></tr>
+            <?php else: foreach ($data['categorias'] as $cat): ?>
                 <tr>
                     <td><span class="cell-id"><?php echo $cat->id; ?></span></td>
                     <td class="cell-strong"><?php echo $cat->nombre; ?></td>
@@ -33,7 +36,7 @@
                         <a href="<?php echo URL_ROOT; ?>/categorias/delete/<?php echo $cat->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endforeach; endif; ?>
         </tbody>
     </table>
 </div>

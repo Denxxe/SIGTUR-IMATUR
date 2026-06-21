@@ -38,7 +38,8 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
         <h5 class="mb-4"><i class="bi bi-person-vcard"></i> Datos personales</h5>
         <div class="row g-3">
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Cédula <span class="req">*</span></label>
-                <input type="text" name="cedula" class="sig-input" required value="<?php echo $val('cedula'); ?>"></div></div>
+                <input type="text" name="cedula" id="emp_cedula" class="sig-input" required value="<?php echo $val('cedula'); ?>">
+                <small id="emp_cedula_msg" style="display:block;margin-top:4px;font-weight:600;"></small></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nombres <span class="req">*</span></label>
                 <input type="text" name="nombre" class="sig-input" required value="<?php echo $val('nombre'); ?>"></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Apellidos <span class="req">*</span></label>
@@ -54,21 +55,21 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                        value="<?php echo $val('fecha_nacimiento'); ?>">
                 <small id="emp_edad_badge" style="display:block;margin-top:4px;font-weight:600;"></small>
                 <small style="color:var(--text-tertiary)">18–65 años · comisión de servicio: 18–70.</small></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Teléfono</label>
-                <input type="text" name="telefono" class="sig-input" value="<?php echo $val('telefono'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Teléfono <span class="req">*</span></label>
+                <input type="text" name="telefono" class="sig-input" required value="<?php echo $val('telefono'); ?>"></div></div>
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Correo electrónico</label>
                 <input type="email" name="correo" class="sig-input" value="<?php echo $val('correo'); ?>"></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Parroquia</label>
-                <select name="parroquia_id" class="sig-select">
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Parroquia <span class="req">*</span></label>
+                <select name="parroquia_id" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach ($data['parroquias'] ?? [] as $pq): ?>
                         <option value="<?php echo $pq->id; ?>" <?php echo $sel('parroquia_id',$pq->id); ?>><?php echo htmlspecialchars($pq->nombre); ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">Dirección de habitación</label>
-                <textarea name="direccion" class="sig-textarea" rows="2"><?php echo $val('direccion'); ?></textarea></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">RIF</label>
-                <input type="text" name="rif" class="sig-input" placeholder="V-XXXXXXXXX" value="<?php echo $val('rif'); ?>"></div></div>
+            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">Dirección de habitación <span class="req">*</span></label>
+                <textarea name="direccion" class="sig-textarea" rows="2" required><?php echo $val('direccion'); ?></textarea></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">RIF <span class="req">*</span></label>
+                <input type="text" name="rif" class="sig-input" placeholder="V-XXXXXXXXX" required value="<?php echo $val('rif'); ?>"></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Estado civil</label>
                 <select name="estado_civil" class="sig-select">
                     <option value="">— Seleccione —</option>
@@ -95,8 +96,12 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
         <h5 class="mb-4"><i class="bi bi-mortarboard"></i> Formación académica</h5>
         <div class="row g-3">
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nivel académico</label>
-                <select name="nivel_academico" class="sig-select">
+                <select name="nivel_academico" class="sig-select js-search">
                     <option value="">— Seleccione —</option>
+                    <?php $nivActual = $e->nivel_academico ?? null;
+                          if (!empty($nivActual) && !in_array($nivActual, Empleado::NIVELES_ACADEMICOS, true)): ?>
+                        <option value="<?php echo htmlspecialchars($nivActual); ?>" selected><?php echo htmlspecialchars($nivActual); ?> (actual)</option>
+                    <?php endif; ?>
                     <?php foreach (Empleado::NIVELES_ACADEMICOS as $na): ?>
                         <option value="<?php echo $na; ?>" <?php echo $sel('nivel_academico',$na); ?>><?php echo $na; ?></option>
                     <?php endforeach; ?>
@@ -105,8 +110,6 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                 <input type="text" name="profesion" class="sig-input" value="<?php echo $val('profesion'); ?>"></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de graduación</label>
                 <input type="date" name="fecha_graduacion" class="sig-input" value="<?php echo $val('fecha_graduacion'); ?>"></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Nombre del título</label>
-                <input type="text" name="titulo" class="sig-input" value="<?php echo $val('titulo'); ?>"></div></div>
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Institución académica</label>
                 <input type="text" name="institucion_academica" class="sig-input" value="<?php echo $val('institucion_academica'); ?>"></div></div>
         </div>
@@ -131,17 +134,24 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                         <option value="<?php echo $d->id; ?>" <?php echo $sel('id_departamento',$d->id); ?>><?php echo htmlspecialchars($d->nombre); ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nro. Expediente <span class="req">*</span></label>
-                <input type="text" name="nro_expediente" class="sig-input" required value="<?php echo $val('nro_expediente'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Clasificación</label>
-                <select name="clasificacion" class="sig-select">
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nro. Expediente</label>
+                <?php if ($isEdit): ?>
+                    <input type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo $val('nro_expediente'); ?>">
+                    <small style="color:var(--text-tertiary)">Folio permanente del expediente.</small>
+                <?php else: ?>
+                    <input type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo htmlspecialchars($data['proximo_expediente'] ?? ''); ?>"
+                           style="background:var(--bg-muted);color:var(--text-secondary)">
+                    <small style="color:var(--text-tertiary)"><i class="bi bi-magic"></i> Asignado automáticamente por el sistema al registrar.</small>
+                <?php endif; ?></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Clasificación <span class="req">*</span></label>
+                <select name="clasificacion" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach (Empleado::CLASIFICACIONES as $cl): ?>
                         <option value="<?php echo $cl; ?>" <?php echo $sel('clasificacion',$cl); ?>><?php echo $cl; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Tipo de contrato <span class="req">*</span></label>
-                <select name="tipo_contrato" class="sig-select" required>
+                <select name="tipo_contrato" id="wz_tipo_contrato" class="sig-select" required onchange="wzVencToggle()">
                     <?php foreach (Empleado::TIPOS_CONTRATO as $tc): ?>
                         <option value="<?php echo $tc; ?>" <?php echo $isEdit ? $sel('tipo_contrato',$tc) : ($tc === Empleado::TIPO_CONTRATO_DEFAULT ? 'selected' : ''); ?>><?php echo $tc; ?></option>
                     <?php endforeach; ?>
@@ -170,9 +180,10 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                     <?php endforeach; ?>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de ingreso <span class="req">*</span></label>
-                <input type="date" name="fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de egreso <small style="color:var(--text-secondary)">(si aplica)</small></label>
-                <input type="date" name="fecha_egreso" class="sig-input" value="<?php echo $val('fecha_egreso'); ?>"></div></div>
+                <input type="date" name="fecha_ingreso" id="wz_fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>" oninput="wzVencCalc()"></div></div>
+            <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
+                <input type="date" name="fecha_vencimiento_contrato" id="wz_fecha_venc" class="sig-input" value="<?php echo $val('fecha_vencimiento_contrato'); ?>" oninput="wzVencCalc()">
+                <small id="wz_venc_info" style="display:block;margin-top:4px;color:var(--text-tertiary)">Mínimo 3 meses desde el ingreso.</small></div></div>
             <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">¿Usa uniforme?</label>
                 <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="uniforme" id="wz_uniforme" value="1" <?php echo $chk('uniforme'); ?> onchange="wzToggleUniforme()">
                     <label class="form-check-label" for="wz_uniforme">Sí, registrar tallas</label></div></div></div>
@@ -308,6 +319,104 @@ function wzToggleUniforme() {
     document.getElementById('wz_tallas_wrap').style.display = on ? '' : 'none';
 }
 
+// Verificación en vivo de cédula duplicada (empleado ya registrado).
+let wzCedTimer = null;
+function wzCheckCedula() {
+    const inp = document.getElementById('emp_cedula');
+    const msg = document.getElementById('emp_cedula_msg');
+    if (!inp) return;
+    const ced = (inp.value || '').replace(/\D/g, '');
+    inp.setCustomValidity('');                 // se revalida tras la consulta
+    if (msg) { msg.textContent = ''; msg.style.color = ''; }
+    if (ced.length < 6) { if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons(); return; }
+    const idEmp = (wzForm.querySelector('[name="id"]') || {}).value || '';
+    clearTimeout(wzCedTimer);
+    wzCedTimer = setTimeout(() => {
+        const url = '<?php echo URL_ROOT; ?>/empleados/verificarCedula?cedula=' + encodeURIComponent(ced) + (idEmp ? '&id=' + encodeURIComponent(idEmp) : '');
+        fetch(url).then(r => r.json()).then(res => {
+            if (res && res.existe) {
+                inp.setCustomValidity('Cédula ya registrada');
+                if (msg) { msg.style.color = 'var(--danger, #dc2626)'; msg.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Ya existe un empleado con esta cédula. Si egresó, use «Reingreso».'; }
+            } else {
+                inp.setCustomValidity('');
+                if (msg) { msg.style.color = 'var(--success, #16a34a)'; msg.innerHTML = '<i class="bi bi-check-circle"></i> Cédula disponible.'; }
+            }
+            if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
+            wzUpdateNav();
+        }).catch(() => {});
+    }, 350);
+}
+
+// B4 — Vencimiento del contrato: oculto para Fijos (no expiran por tiempo);
+// mínimo 3 meses desde el ingreso y muestra los días de vigencia en vivo.
+function wzFmtISO(d) {
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+}
+function wzAddMonths(iso, n) {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d)) return null;
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + n);
+    if (d.getDate() < day) d.setDate(0); // ajuste de meses con menos días
+    return d;
+}
+function wzVencToggle() {
+    const tipo = document.getElementById('wz_tipo_contrato');
+    const wrap = document.getElementById('wz_venc_wrap');
+    const venc = document.getElementById('wz_fecha_venc');
+    if (!wrap || !venc) return;
+    const esFijo = tipo && tipo.value === 'Fijo';
+    const req = document.getElementById('wz_venc_req');
+    wrap.style.display = esFijo ? 'none' : '';
+    if (esFijo) {
+        venc.value = ''; venc.removeAttribute('required'); venc.setCustomValidity('');
+        if (req) req.style.display = 'none';
+    } else {
+        venc.setAttribute('required', '');   // obligatorio para Contratados
+        if (req) req.style.display = '';
+    }
+    wzVencCalc();
+}
+function wzVencCalc() {
+    const ing  = document.getElementById('wz_fecha_ingreso');
+    const venc = document.getElementById('wz_fecha_venc');
+    const info = document.getElementById('wz_venc_info');
+    const tipo = document.getElementById('wz_tipo_contrato');
+    if (!venc || !info) return;
+    if (tipo && tipo.value === 'Fijo') { venc.setCustomValidity(''); return; }
+
+    let minDate = null;
+    if (ing && ing.value) { minDate = wzAddMonths(ing.value, 3); if (minDate) venc.setAttribute('min', wzFmtISO(minDate)); }
+
+    if (!venc.value) {
+        info.style.color = 'var(--text-tertiary)';
+        info.textContent = 'Mínimo 3 meses desde el ingreso (opcional).';
+        venc.setCustomValidity('');
+    } else if (!ing || !ing.value) {
+        info.style.color = 'var(--danger, #dc2626)';
+        info.textContent = 'Indique primero la fecha de ingreso.';
+        venc.setCustomValidity('Indique la fecha de ingreso.');
+    } else {
+        const d1 = new Date(ing.value + 'T00:00:00'), d2 = new Date(venc.value + 'T00:00:00');
+        const dias = Math.round((d2 - d1) / 86400000);
+        if (d2 <= d1) {
+            info.style.color = 'var(--danger, #dc2626)';
+            info.textContent = 'El vencimiento debe ser posterior a la fecha de ingreso.';
+            venc.setCustomValidity('Vencimiento posterior al ingreso.');
+        } else if (minDate && d2 < minDate) {
+            info.style.color = 'var(--danger, #dc2626)';
+            info.textContent = `El contrato debe durar al menos 3 meses (vence desde el ${wzFmtISO(minDate)}).`;
+            venc.setCustomValidity('Mínimo 3 meses de contrato.');
+        } else {
+            info.style.color = 'var(--success, #16a34a)';
+            info.innerHTML = `<i class="bi bi-check-circle"></i> Contrato vigente por <strong>${dias} días</strong> (~${Math.floor(dias / 30)} meses).`;
+            venc.setCustomValidity('');
+        }
+    }
+    if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
+}
+
 // Carga familiar dinámica (solo alta)
 function cfAddRow(d) {
     d = d || {};
@@ -350,7 +459,7 @@ function wzSave() {
     if (isEdit) return;
     const data = {};
     wzForm.querySelectorAll('input, select, textarea').forEach(el => {
-        if (!el.name || el.name.endsWith('[]')) return;
+        if (!el.name || el.name.endsWith('[]') || el.name === '_token') return;
         data[el.name] = el.type === 'checkbox' ? el.checked : el.value;
     });
     try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
@@ -367,7 +476,9 @@ function wzRestore() {
 
 document.addEventListener('DOMContentLoaded', () => {
     wzRestore();
-    wzToggleDisc(); wzOrigenCambio(); wzToggleUniforme();
+    wzToggleDisc(); wzOrigenCambio(); wzToggleUniforme(); wzVencToggle();
+    const cedInp = document.getElementById('emp_cedula');
+    if (cedInp) { cedInp.addEventListener('input', wzCheckCedula); cedInp.addEventListener('blur', wzCheckCedula); }
     wzShow(0);
     wzForm.addEventListener('input', wzSave);
     wzForm.addEventListener('input', wzUpdateNav);

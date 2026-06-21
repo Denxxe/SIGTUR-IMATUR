@@ -5,7 +5,7 @@
 class DepartamentosController extends Controller {
 
     public function index() {
-        $departamentos = Departamento::all();
+        $departamentos = Departamento::arbol(); // orden jerárquico (árbol) con ->nivel
         $data = [
             'titulo' => 'Estructura Organizativa (Departamentos)',
             'departamentos' => $departamentos

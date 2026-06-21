@@ -4,6 +4,7 @@
     <div class="page__title-block">
         <div class="page__eyebrow">Inventario · Logística</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? ''; ?></h1>
+        <p class="page__subtitle">Sedes y almacenes donde se ubican los bienes de la institución.</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalUbi" onclick="nuevaUbi()">
@@ -24,7 +25,9 @@
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($data['ubicaciones'] ?? [] as $ubi): ?>
+            <?php if (empty($data['ubicaciones'])): ?>
+                <tr><td colspan="5" class="sig-table-empty">No hay ubicaciones registradas.</td></tr>
+            <?php else: foreach ($data['ubicaciones'] as $ubi): ?>
                 <tr>
                     <td><span class="cell-id"><?php echo $ubi->id; ?></span></td>
                     <td class="cell-strong"><?php echo $ubi->nombre; ?></td>
@@ -41,7 +44,7 @@
                         <a href="<?php echo URL_ROOT; ?>/ubicaciones/delete/<?php echo $ubi->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                     </td>
                 </tr>
-            <?php endforeach; ?>
+            <?php endforeach; endif; ?>
         </tbody>
     </table>
 </div>

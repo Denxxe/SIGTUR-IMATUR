@@ -44,6 +44,24 @@ class Controller {
         return (bool) preg_match('/^0\d{10}$/', preg_replace('/\D/', '', $tel));
     }
 
+    // Valida un RIF venezolano: una letra de tipo (V/E/J/P/G/C) + 8 dígitos +
+    // 1 dígito verificador (9 dígitos en total). Acepta guiones/espacios. Mismo
+    // criterio que la validación front (sigtur-validations.js).
+    protected function rifValido(string $rif): bool {
+        $r = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rif));
+        return (bool) preg_match('/^[VEJPGC]\d{9}$/', $r);
+    }
+
+    // Normaliza un RIF al formato canónico "X-XXXXXXXX-X". Si no es válido,
+    // devuelve el valor original sin tocar.
+    protected function normalizarRif(string $rif): string {
+        $r = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $rif));
+        if (preg_match('/^([VEJPGC])(\d{8})(\d)$/', $r, $m)) {
+            return $m[1] . '-' . $m[2] . '-' . $m[3];
+        }
+        return $rif;
+    }
+
     // Sanitiza $_POST: elimina tags HTML sin corromper caracteres UTF-8 (tildes, ñ, etc.)
     protected function sanitizePost(): array {
         $raw = $_POST ?? [];

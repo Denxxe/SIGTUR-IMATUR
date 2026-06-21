@@ -53,6 +53,36 @@
         </div>
 
         <script>
+            // ==================== IDEMPOTENCIA / ANTI DOBLE-ENVÍO (B10) ====================
+            // Token de un solo uso emitido por el servidor; se inyecta en cada formulario
+            // POST y el backend lo consume (Router). Un reenvío con el mismo token se ignora.
+            window.SIGTUR_TOKEN = <?php echo json_encode(sigtur_token_emitir()); ?>;
+
+            // Inyecta el token en todos los formularios POST (salvo data-no-token).
+            function sigturInjectTokens() {
+                document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function(form) {
+                    if (form.hasAttribute('data-no-token')) return;
+                    if (form.querySelector('input[name="_token"]')) return;
+                    var inp = document.createElement('input');
+                    inp.type = 'hidden'; inp.name = '_token'; inp.value = window.SIGTUR_TOKEN;
+                    form.appendChild(inp);
+                });
+            }
+
+            // Guard de doble-envío: bloquea reenviar el mismo formulario (doble clic).
+            document.addEventListener('submit', function(e) {
+                var form = e.target;
+                if (!form || form.tagName !== 'FORM') return;
+                if ((form.method || '').toLowerCase() !== 'post') return;        // sólo POST
+                if (form.hasAttribute('data-allow-multi-submit')) return;
+                if (form.dataset.sigSubmitting === '1') { e.preventDefault(); e.stopPropagation(); return; }
+                if (typeof form.checkValidity === 'function' && !form.checkValidity()) return; // deja ver errores
+                form.dataset.sigSubmitting = '1';
+                setTimeout(function() {
+                    form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function(b) { b.disabled = true; });
+                }, 50);
+            }, false);
+
             /**
              * Sistema de Notificaciones (Toasts) — Diseño SIGTUR v2.0
              */
@@ -132,6 +162,9 @@
 
             // ==================== DOMContentLoaded ====================
             document.addEventListener('DOMContentLoaded', function() {
+
+                // ── Idempotencia: inyectar token en formularios POST ──────
+                sigturInjectTokens();
 
                 // ── Modal de confirmación de eliminación ──────────────────
                 const _delModal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));

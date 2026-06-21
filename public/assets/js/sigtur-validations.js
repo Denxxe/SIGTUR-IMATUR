@@ -214,6 +214,30 @@ function initSigturValidations() {
             initEmailInput(input);
         }
 
+        // RIF VENEZOLANO — letra (V/E/J/P/G/C) + 8 dígitos + verificador
+        // (evita falsos positivos como "tarifa": exige 'rif' como token).
+        if (/(^|[_-])rif([_-]|$)/.test(name) || /(^|[_-])rif([_-]|$)/.test(id)) {
+            initRifInput(input);
+        }
+
+        // CAPITALIZACIÓN (B5): primera letra de cada palabra en mayúscula, donde aplique.
+        // Aplica a texto libre (input text / textarea con name), excluyendo identificadores,
+        // códigos y credenciales, y los campos ya gobernados por reglas propias.
+        const esTextoLibre = (type === 'text' || input.tagName === 'TEXTAREA');
+        const yaGobernado = name.includes('nombre') || name.includes('apellido') ||
+                            name.includes('cedula') || name.includes('correo') ||
+                            name.includes('email')  || name.includes('telefono') ||
+                            name.includes('rif')    || name.includes('codigo') ||
+                            name.includes('serial')|| name.includes('url') ||
+                            name.includes('password') || name.includes('clave') ||
+                            name.includes('usuario') || name.includes('user') ||
+                            name.includes('buscar')  || name.includes('search') ||
+                            name.includes('libre');
+        if (esTextoLibre && name && !yaGobernado && !input.classList.contains('js-no-capitalize')) {
+            input.addEventListener('input', formatCapitalizar);
+            if (input.value) formatCapitalizar({ target: input });
+        }
+
         // FECHAS DE NACIMIENTO (incluye fecha_nac_libre de participantes)
         if (type === 'date' && (name.includes('nacimiento') || name.includes('fecha_nac') || id.includes('nacimiento') || id.includes('fecha_nac') || input.classList.contains('js-edad'))) {
             // No permitir fechas futuras — sin pisar un max más estricto ya definido
@@ -465,6 +489,58 @@ function formatNombreApellido(e) {
     input.value = val;
     // Restaurar posición del cursor para no saltar al final al editar en medio
     try { input.setSelectionRange(pos, pos); } catch(_) {}
+}
+
+/**
+ * Capitaliza la primera letra de cada palabra (B5) sin eliminar números ni
+ * signos — apto para direcciones, profesiones, instituciones, etc.
+ */
+function formatCapitalizar(e) {
+    const input = e.target;
+    const pos = input.selectionStart;
+    input.value = input.value.replace(/(^|[\s])([a-záéíóúüñ])/gi, (_, sep, c) => sep + c.toUpperCase());
+    try { input.setSelectionRange(pos, pos); } catch (_) {}
+}
+
+// ── RIF venezolano: letra (V/E/J/P/G/C) + 8 dígitos + verificador ────────────
+// Mismo criterio que el back (Controller::rifValido). Formato canónico: X-XXXXXXXX-X.
+const SIGTUR_RIF_RE = /^[VEJPGC]-?\d{8}-?\d$/i;
+function initRifInput(input) {
+    if (input.dataset.rifAttached) return;
+    input.dataset.rifAttached = '1';
+
+    input.setAttribute('maxlength', '12');           // X-XXXXXXXX-X
+    input.setAttribute('inputmode', 'text');
+    input.setAttribute('autocapitalize', 'characters');
+    input.style.textTransform = 'uppercase';
+    if (!input.getAttribute('pattern')) {
+        input.setAttribute('pattern', '[VEJPGCvejpgc]-?\\d{8}-?\\d');
+    }
+    input.title = 'RIF venezolano: letra (V/E/J/P/G/C) + 8 dígitos + verificador. Ej: J-12345678-9.';
+
+    // Mientras escribe: mayúsculas + solo charset válido, sin reformatear (no salta el cursor).
+    const live = () => {
+        const v = input.value.toUpperCase().replace(/[^VEJPGC0-9-]/g, '');
+        if (v !== input.value) {
+            const pos = input.selectionStart;
+            input.value = v;
+            try { input.setSelectionRange(pos, pos); } catch (_) {}
+        }
+        input.setCustomValidity(v === '' || SIGTUR_RIF_RE.test(v) ? '' : 'RIF no válido. Formato: J-12345678-9.');
+    };
+    // Al salir: normaliza al formato canónico con guiones.
+    const norm = () => {
+        const limpio = input.value.toUpperCase().replace(/[^VEJPGC0-9]/g, '');
+        if (/^[VEJPGC]\d{9}$/.test(limpio)) {
+            input.value = limpio[0] + '-' + limpio.slice(1, 9) + '-' + limpio.slice(9);
+        }
+        input.setCustomValidity(input.value === '' || SIGTUR_RIF_RE.test(input.value) ? '' : 'RIF no válido. Formato: J-12345678-9.');
+        if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
+    };
+
+    input.addEventListener('input', live);
+    input.addEventListener('blur', norm);
+    if (input.value) norm();
 }
 
 /**

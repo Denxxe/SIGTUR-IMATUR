@@ -68,6 +68,24 @@ class Router {
         // 5. Obtener los parámetros restantes
         $this->params = $url ? array_values($url) : [];
 
+        // --- Idempotencia: token anti doble-envío en peticiones POST (B10) ---
+        // Cada formulario lleva un token de un solo uso; un POST repetido con el
+        // mismo token (doble clic, refrescar el POST, reintento) se ignora para no
+        // duplicar registros. Exentos: login (vista sin footer/token) y los
+        // endpoints AJAX de asistencia (idempotentes por diseño: marcan un booleano).
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_SESSION['user_id'])) {
+            $ctrl   = get_class($this->currentController);
+            $metodo = $this->currentMethod;
+            $metodosExentos = ['marcarAsistencia', 'marcarAsistenciaMasiva'];
+            $exento = ($ctrl === 'AuthController') || in_array($metodo, $metodosExentos, true);
+            if (!$exento && !sigtur_token_consumir($_POST['_token'] ?? null)) {
+                flash('global_msg', 'Solicitud duplicada o expirada: la operación no se repitió para evitar registros duplicados. Verifica si los datos ya se guardaron.', 'warning');
+                $destino = $_SERVER['HTTP_REFERER'] ?? (URL_ROOT . '/dashboard');
+                header('Location: ' . $destino);
+                exit;
+            }
+        }
+
         // 6. Ejecutar el callback con parámetros
         call_user_func_array([$this->currentController, $this->currentMethod], $this->params);
     }

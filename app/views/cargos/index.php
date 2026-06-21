@@ -32,11 +32,16 @@
             <?php else: ?>
                 <?php
                 $nivelBadge = ['Presidencia'=>'sig-badge--danger','Dirección'=>'sig-badge--info','Coordinación'=>'sig-badge--success','Adscrito'=>'sig-badge--neutral'];
-                foreach ($data['cargos'] as $cargo): ?>
+                foreach ($data['cargos'] as $cargo):
+                    $rank = Cargo::ORDEN_NIVEL[$cargo->nivel_jerarquico] ?? 5;
+                    $pad  = ($rank - 1) * 22; // escalera: Presidencia 0 → Adscrito más a la derecha
+                ?>
                     <tr>
                         <td><span class="cell-id"><?php echo $cargo->id; ?></span></td>
                         <td><span class="sig-badge <?php echo $nivelBadge[$cargo->nivel_jerarquico] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($cargo->nivel_jerarquico ?? '—'); ?></span></td>
-                        <td class="cell-strong"><?php echo $cargo->nombre; ?></td>
+                        <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
+                            <?php echo ($pad > 0 ? '<span style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
+                        </td>
                         <td style="color:var(--text-secondary);font-size:13px"><?php echo $cargo->descripcion; ?></td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>

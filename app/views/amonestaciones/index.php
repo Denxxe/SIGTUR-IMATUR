@@ -3,7 +3,6 @@ $limite = (int)($data['limite'] ?? 3);
 // Estado/semáforo por empleado
 $estado = function ($r) use ($limite) {
     $am = (int)$r->amonestaciones; $fa = (int)$r->faltas;
-    $contratado = ($r->tipo_contrato === 'Contratado');
     if ($am >= $limite) return ['Causa de despido', 'sig-badge--danger'];
     if ($am === $limite - 1) return ['En riesgo', 'sig-badge--warning'];
     if ($fa >= 3) return ['Faltas acumuladas', 'sig-badge--warning'];
@@ -16,7 +15,7 @@ $estado = function ($r) use ($limite) {
     <div class="page__title-block">
         <div class="page__eyebrow">RRHH · Disciplina</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Faltas y Amonestaciones'; ?></h1>
-        <p class="page__subtitle">El sistema cuenta faltas y amonestaciones; RRHH las registra. <?php echo $limite; ?> amonestaciones = causa de despido (Contratado).</p>
+        <p class="page__subtitle">El sistema cuenta faltas y amonestaciones; RRHH las registra. <?php echo $limite; ?> amonestaciones = causa de despido (la desincorporación es manual).</p>
     </div>
     <div class="page__actions">
         <button type="button" class="btn-sig btn-sig--ghost" data-bs-toggle="modal" data-bs-target="#modalFalta"><i class="bi bi-exclamation-circle"></i> Registrar falta</button>

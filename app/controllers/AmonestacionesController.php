@@ -59,14 +59,26 @@ class AmonestacionesController extends Controller {
     }
 
     public function eliminarFalta($id, $idEmpleado = 0) {
-        try { Falta::delete($id, $this->getUserId()); flash('global_msg', 'Falta eliminada.', 'warning'); }
-        catch (Exception $e) { flash('global_msg', 'No se pudo eliminar: ' . $e->getMessage(), 'danger'); }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->volver($idEmpleado); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            $motivo = trim($_POST['motivo_anulacion'] ?? '');
+            if ($motivo === '') throw new Exception("Debe indicar el motivo de la anulación.");
+            Falta::delete($id, $this->getUserId(), $motivo);
+            flash('global_msg', 'Falta anulada.', 'warning');
+        } catch (Exception $e) { flash('global_msg', 'No se pudo anular: ' . $e->getMessage(), 'danger'); }
         $this->volver($idEmpleado);
     }
 
     public function eliminarAmonestacion($id, $idEmpleado = 0) {
-        try { Amonestacion::delete($id, $this->getUserId()); flash('global_msg', 'Amonestación eliminada.', 'warning'); }
-        catch (Exception $e) { flash('global_msg', 'No se pudo eliminar: ' . $e->getMessage(), 'danger'); }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { $this->volver($idEmpleado); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            $motivo = trim($_POST['motivo_anulacion'] ?? '');
+            if ($motivo === '') throw new Exception("Debe indicar el motivo de la anulación.");
+            Amonestacion::delete($id, $this->getUserId(), $motivo);
+            flash('global_msg', 'Amonestación anulada.', 'warning');
+        } catch (Exception $e) { flash('global_msg', 'No se pudo anular: ' . $e->getMessage(), 'danger'); }
         $this->volver($idEmpleado);
     }
 

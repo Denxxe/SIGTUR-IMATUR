@@ -7,6 +7,19 @@ $esBool = fn($v) => ($v === true || $v === 't' || $v === '1');
 $egresado = !empty($e->fecha_egreso);
 $motivos  = $data['motivos'] ?? [];
 $tiempoServicio = $data['tiempo_servicio'] ?? '—';
+
+// Estatus actual del trabajador (visible en el expediente).
+$permVig = $data['permiso_vigente'] ?? null;
+if ($egresado) {
+    $estatusTxt = 'Egresado · ' . ($e->motivo_egreso ?: '—');
+    $estatusCls = 'sig-badge--danger';
+} elseif ($permVig) {
+    $estatusTxt = ($permVig->categoria === 'Reposo' ? 'En reposo' : 'En permiso') . ' · ' . ($permVig->tipo_permiso ?? '');
+    $estatusCls = 'sig-badge--warning';
+} else {
+    $estatusTxt = 'Activo';
+    $estatusCls = 'sig-badge--success';
+}
 ?>
 
 <div class="page__head anim-slide-up">
@@ -14,6 +27,14 @@ $tiempoServicio = $data['tiempo_servicio'] ?? '—';
         <div class="page__eyebrow">RRHH · Expediente del Trabajador</div>
         <h1 class="page__title"><?php echo htmlspecialchars($e->nombre . ' ' . $e->apellido); ?></h1>
         <p class="page__subtitle">C.I. <?php echo $val($e->cedula); ?> · Expediente <?php echo $val($e->nro_expediente); ?></p>
+        <div style="margin-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span class="sig-badge <?php echo $estatusCls; ?>" title="Estatus actual del trabajador">
+                <i class="bi bi-circle-fill" style="font-size:7px; vertical-align:middle;"></i> <?php echo htmlspecialchars($estatusTxt); ?>
+            </span>
+            <span class="sig-badge sig-badge--neutral" title="Tiempo de servicio">
+                <i class="bi bi-clock-history"></i> <?php echo htmlspecialchars($tiempoServicio); ?><?php echo $egresado ? '' : ' (a la fecha)'; ?>
+            </span>
+        </div>
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/empleados/fichaTecnica/<?php echo $eid; ?>" target="_blank" class="btn-sig btn-sig--primary">
@@ -73,7 +94,6 @@ $tiempoServicio = $data['tiempo_servicio'] ?? '—';
                 <dl class="mb-0">
                     <dt>Nivel académico</dt><dd><?php echo $val($e->nivel_academico); ?></dd>
                     <dt>Profesión</dt><dd><?php echo $val($e->profesion); ?></dd>
-                    <dt>Título</dt><dd><?php echo $val($e->titulo); ?></dd>
                     <dt>F. Graduación</dt><dd><?php echo $ffecha($e->fecha_graduacion); ?></dd>
                     <dt>Institución</dt><dd><?php echo $val($e->institucion_academica); ?></dd>
                 </dl>
@@ -255,13 +275,36 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
 </div>
 
 <!-- Constancias / Documentos generados -->
-<div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
+<div class="anim-slide-up" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 10px;">
         <h5 style="margin:0;"><i class="bi bi-file-earmark-text"></i> Constancias / Documentos generados</h5>
-        <a href="<?php echo URL_ROOT; ?>/empleados/generarConstancia/<?php echo $eid; ?>" class="btn-sig btn-sig--primary btn-sig--sm" onclick="return confirm('¿Generar una nueva constancia de trabajo?')">
-            <i class="bi bi-file-earmark-plus"></i> Generar constancia
-        </a>
+        <?php
+        // Tipos disponibles según el estatus: egreso solo para egresados;
+        // bancaria/horario solo para activos.
+        $tiposDisponibles = [];
+        foreach (Constancia::TIPOS as $k => $label) {
+            if ($k === 'egreso' && !$egresado) continue;
+            if (in_array($k, ['bancaria', 'horario'], true) && $egresado) continue;
+            $tiposDisponibles[$k] = $label;
+        }
+        ?>
+        <div class="dropdown">
+            <button class="btn-sig btn-sig--primary btn-sig--sm dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                <i class="bi bi-file-earmark-plus"></i> Generar constancia
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <?php foreach ($tiposDisponibles as $k => $label): ?>
+                    <li>
+                        <a class="dropdown-item" href="<?php echo URL_ROOT; ?>/empleados/generarConstancia/<?php echo $eid; ?>/<?php echo $k; ?>"
+                           onclick="return confirm('¿Generar <?php echo htmlspecialchars($label, ENT_QUOTES); ?>?')">
+                            <i class="bi bi-file-earmark-text"></i> <?php echo htmlspecialchars($label); ?>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     </div>
+    <div class="sig-table-wrap">
     <table class="sig-table">
         <thead><tr><th>N° Documento</th><th>Tipo</th><th>Emisión</th><th class="col-actions">Acciones</th></tr></thead>
         <tbody>
@@ -270,7 +313,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <?php else: foreach ($data['constancias'] as $co): ?>
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($co->numero); ?></td>
-                    <td style="font-size:13px"><?php echo htmlspecialchars($co->tipo); ?></td>
+                    <td style="font-size:13px"><?php echo htmlspecialchars(Constancia::labelTipo($co->tipo)); ?></td>
                     <td><?php echo date('d/m/Y H:i', strtotime($co->fecha_emision)); ?></td>
                     <td class="col-actions">
                         <a href="<?php echo URL_ROOT; ?>/empleados/constancia/<?php echo $co->id; ?>" target="_blank" class="row-action"><i class="bi bi-printer"></i> Ver / Imprimir</a>
@@ -280,6 +323,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <?php endforeach; endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <!-- Modal: Familiar -->
@@ -428,7 +472,7 @@ if (!empty($hist)): ?>
                 </div>
                 <div class="sig-field mb-3">
                     <label class="sig-field__label">Motivo <span class="req">*</span></label>
-                    <select name="motivo_egreso" class="sig-input" required>
+                    <select name="motivo_egreso" id="eg_motivo" class="sig-input" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach ($motivos as $m): ?>
                             <option value="<?php echo htmlspecialchars($m); ?>"><?php echo htmlspecialchars($m); ?></option>
@@ -475,5 +519,21 @@ if (!empty($hist)): ?>
     </div>
 </div>
 <?php endif; ?>
+
+<script>
+// Si se llega desde la alerta "Causa de despido" (?egreso=despido), abrir el
+// modal de egreso con el motivo "Despido" preseleccionado.
+document.addEventListener('DOMContentLoaded', function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('egreso') === 'despido') {
+        var modalEl = document.getElementById('modalEgreso');
+        var sel = document.getElementById('eg_motivo');
+        if (modalEl) {
+            if (sel) sel.value = 'Despido';
+            new bootstrap.Modal(modalEl).show();
+        }
+    }
+});
+</script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

@@ -88,10 +88,12 @@ class DashboardController extends Controller {
                 $prevAsist = (int)($db->single()->total ?? 0);
                 $data['deltaAsistenciaMes'] = $mkDelta($data['kpiAsistenciaMes'], $prevAsist, 'vs mes anterior');
 
+                // Contratos por vencer: usa el vencimiento del contrato (no la fecha de egreso real, que es R-12).
                 $db->query("SELECT COUNT(*) AS total FROM empleados
                             WHERE is_active = TRUE AND tipo_contrato = 'Contratado'
-                              AND fecha_egreso IS NOT NULL
-                              AND fecha_egreso BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasContrato || ' days')::INTERVAL)");
+                              AND fecha_egreso IS NULL
+                              AND fecha_vencimiento_contrato IS NOT NULL
+                              AND fecha_vencimiento_contrato BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasContrato || ' days')::INTERVAL)");
                 $data['kpiContratosVencen'] = (int)($db->single()->total ?? 0);
 
                 $db->query("SELECT TO_CHAR(a.fecha, 'YYYY-MM') AS mes, COUNT(*) AS total

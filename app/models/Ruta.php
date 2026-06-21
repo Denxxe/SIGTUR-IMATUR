@@ -83,6 +83,14 @@ class Ruta extends Model {
         if (!empty($f['tipo']))       { $where .= " AND r.tipo_ruta = :tipo";    $binds[':tipo']   = $f['tipo']; }
         if (!empty($f['fecha_desde'])){ $where .= " AND r.fecha_visita >= :fd";  $binds[':fd']     = $f['fecha_desde']; }
         if (!empty($f['fecha_hasta'])){ $where .= " AND r.fecha_visita <= :fh";  $binds[':fh']     = $f['fecha_hasta']; }
+        // Filtro rápido por período relativo a hoy (U3)
+        switch ($f['periodo'] ?? '') {
+            case 'proximos': $where .= " AND r.fecha_visita >= CURRENT_DATE"; break;
+            case 'hoy':      $where .= " AND r.fecha_visita = CURRENT_DATE"; break;
+            case 'semana':   $where .= " AND r.fecha_visita BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '7 days')"; break;
+            case 'mes':      $where .= " AND date_trunc('month', r.fecha_visita) = date_trunc('month', CURRENT_DATE)"; break;
+            case 'pasados':  $where .= " AND r.fecha_visita < CURRENT_DATE"; break;
+        }
 
         $base = "FROM rutas r
                  LEFT JOIN departamentos d ON r.id_departamento = d.id

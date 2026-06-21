@@ -1,0 +1,16 @@
+# Archivos subidos por usuarios (datos personales / recaudos) — NO versionar
+public/uploads/**
+!public/uploads/
+!public/uploads/**/
+!public/uploads/**/.gitkeep
+
+# Entorno / dependencias locales
+/vendor/
+.env
+*.log
+
+# Artefactos del sistema operativo / editores
+Thumbs.db
+.DS_Store
+.idea/
+.vscode/

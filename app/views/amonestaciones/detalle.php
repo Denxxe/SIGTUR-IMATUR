@@ -5,7 +5,7 @@ $limite = (int)($data['limite'] ?? 3);
 $nAmones = count($data['amonestaciones'] ?? []);
 $nFaltas = count($data['faltas'] ?? []);
 $ffecha = fn($f) => !empty($f) ? date('d/m/Y', strtotime($f)) : '—';
-$contratado = ($e->tipo_contrato === 'Contratado');
+$egresado = !empty($e->fecha_egreso);
 ?>
 
 <div class="page__head anim-slide-up">
@@ -21,9 +21,17 @@ $contratado = ($e->tipo_contrato === 'Contratado');
 
 <?php if ($nAmones >= $limite): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:4px solid var(--danger,#EF4444)">
-        <div class="sig-card__body" style="padding:var(--sp-4)">
-            <strong style="color:var(--danger,#EF4444)"><i class="bi bi-exclamation-octagon"></i> Causa de despido:</strong>
-            este empleado acumula <?php echo $nAmones; ?> amonestaciones (límite <?php echo $limite; ?>)<?php echo $contratado ? '' : ' — nota: el despido por amonestaciones aplica a Contratados'; ?>.
+        <div class="sig-card__body" style="padding:var(--sp-4);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+                <strong style="color:var(--danger,#EF4444)"><i class="bi bi-exclamation-octagon"></i> Causa de despido:</strong>
+                este empleado acumula <?php echo $nAmones; ?> amonestaciones (límite <?php echo $limite; ?>).
+                La desincorporación es una <strong>acción manual</strong> de RRHH.
+            </div>
+            <?php if (!$egresado): ?>
+                <a href="<?php echo URL_ROOT; ?>/empleados/detalle/<?php echo $eid; ?>?egreso=despido" class="btn-sig btn-sig--danger btn-sig--sm" style="white-space:nowrap;">
+                    <i class="bi bi-box-arrow-right"></i> Procesar despido
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 <?php elseif ($nAmones === $limite - 1): ?>
@@ -52,7 +60,7 @@ $contratado = ($e->tipo_contrato === 'Contratado');
                         <tr>
                             <td class="cell-strong"><?php echo $ffecha($f->fecha); ?></td>
                             <td style="font-size:13px"><?php echo htmlspecialchars($f->motivo ?? '—'); ?></td>
-                            <td class="col-actions"><a href="<?php echo URL_ROOT; ?>/amonestaciones/eliminarFalta/<?php echo $f->id; ?>/<?php echo $eid; ?>" class="row-action row-action--del" onclick="return confirm('¿Eliminar esta falta?')"><i class="bi bi-trash"></i></a></td>
+                            <td class="col-actions"><button type="button" class="row-action row-action--del js-anular" title="Anular falta" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarFalta/<?php echo $f->id; ?>/<?php echo $eid; ?>" data-tipo="falta"><i class="bi bi-trash"></i></button></td>
                         </tr>
                     <?php endforeach; endif; ?>
                 </tbody>
@@ -75,7 +83,7 @@ $contratado = ($e->tipo_contrato === 'Contratado');
                         <tr>
                             <td class="cell-strong"><?php echo $ffecha($a->fecha); ?></td>
                             <td style="font-size:13px"><?php echo htmlspecialchars($a->motivo ?? ''); ?></td>
-                            <td class="col-actions"><a href="<?php echo URL_ROOT; ?>/amonestaciones/eliminarAmonestacion/<?php echo $a->id; ?>/<?php echo $eid; ?>" class="row-action row-action--del" onclick="return confirm('¿Eliminar esta amonestación?')"><i class="bi bi-trash"></i></a></td>
+                            <td class="col-actions"><button type="button" class="row-action row-action--del js-anular" title="Anular amonestación" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarAmonestacion/<?php echo $a->id; ?>/<?php echo $eid; ?>" data-tipo="amonestación"><i class="bi bi-trash"></i></button></td>
                         </tr>
                     <?php endforeach; endif; ?>
                 </tbody>
@@ -125,5 +133,43 @@ $contratado = ($e->tipo_contrato === 'Contratado');
         </form>
     </div>
 </div>
+
+<!-- Modal: Anular falta / amonestación (con motivo) -->
+<div class="modal fade" id="modalAnular" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content" id="formAnular">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-trash"></i> Anular <span id="anularTipo">registro</span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:var(--text-secondary)">Indique el motivo por el cual se anula este registro. Quedará en el histórico y la auditoría.</p>
+                <div class="sig-field">
+                    <label class="sig-field__label">Motivo de la anulación <span class="req">*</span></label>
+                    <textarea name="motivo_anulacion" class="sig-textarea" rows="3" required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--danger"><i class="bi bi-trash"></i> Anular</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = new bootstrap.Modal(document.getElementById('modalAnular'));
+    var form  = document.getElementById('formAnular');
+    document.querySelectorAll('.js-anular').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            form.setAttribute('action', btn.dataset.action);
+            document.getElementById('anularTipo').textContent = btn.dataset.tipo || 'registro';
+            var ta = form.querySelector('[name="motivo_anulacion"]');
+            if (ta) ta.value = '';
+            modal.show();
+        });
+    });
+});
+</script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

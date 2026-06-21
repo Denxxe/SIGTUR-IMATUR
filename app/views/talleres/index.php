@@ -75,6 +75,16 @@ function esAtrasada($t): bool {
             </select>
         </div>
         <div>
+            <label class="sig-field__label" style="font-size:11px;">Período</label>
+            <?php $perActual = $filtros['periodo'] ?? '';
+                  $periodos = ['' => 'Todos', 'proximos' => 'Próximos', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasados']; ?>
+            <select name="periodo" class="sig-input" style="min-width:130px;">
+                <?php foreach ($periodos as $val => $lbl): ?>
+                    <option value="<?php echo $val; ?>" <?php echo $perActual === $val ? 'selected' : ''; ?>><?php echo $lbl; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div>
             <label class="sig-field__label" style="font-size:11px;">Desde</label>
             <input type="date" name="fecha_inicio" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio'] ?? ''); ?>">
         </div>

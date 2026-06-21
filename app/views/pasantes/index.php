@@ -75,6 +75,9 @@
                             <a href="<?php echo URL_ROOT; ?>/pasantes/editar/<?php echo $p->id; ?>" class="row-action row-action--edit" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
+                            <a href="<?php echo URL_ROOT; ?>/pasantes/eliminar/<?php echo $p->id; ?>" class="row-action row-action--del delete-btn" title="Eliminar" data-nombre="<?php echo htmlspecialchars($p->nombre . ' ' . $p->apellido); ?>">
+                                <i class="bi bi-trash"></i>
+                            </a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

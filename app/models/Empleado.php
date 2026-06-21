@@ -16,8 +16,21 @@ class Empleado extends Model
     const CLASIFICACIONES = ['Empleado', 'Obrero'];
     // Estado civil (mig. 026) — valores canónicos sin género
     const ESTADOS_CIVILES = ['Soltero', 'Casado', 'Concubinato', 'Divorciado', 'Viudo'];
-    // Niveles académicos sugeridos para la ficha técnica
-    const NIVELES_ACADEMICOS = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio', 'Universitario', 'Postgrado'];
+    // Niveles académicos sugeridos para la ficha técnica (de menor a mayor).
+    // `personas.nivel_academico` es varchar libre (sin CHECK): el select sugiere
+    // estos valores, pero se conserva cualquier otro ya guardado.
+    const NIVELES_ACADEMICOS = [
+        'Primaria',
+        '1er año', '2do año', '3er año', '4to año',
+        'Bachiller',
+        'Técnico Medio',
+        'TSU',
+        'Licenciado',
+        'Ingeniero',
+        'Especialización',
+        'Magíster',
+        'Doctorado',
+    ];
     // Grupo de rotación (solo Servicios Generales) — mig.028
     const GRUPOS_ROTACION = ['A', 'B'];
     // Motivos de egreso / desincorporación (mig. 036 — R-12)
@@ -40,7 +53,6 @@ class Empleado extends Model
     private ?string $discapacidad_detalle;
     private ?string $nivel_academico;
     private ?string $profesion;
-    private ?string $titulo;
     private ?string $fecha_graduacion;
     private ?string $institucion_academica;
     private ?string $centro_votacion;
@@ -63,6 +75,7 @@ class Empleado extends Model
     private ?string $talla_pantalon;
     private ?string $talla_zapato;
     private ?string $fecha_egreso;
+    private ?string $fecha_vencimiento_contrato;
     private ?int    $id_horario;
 
     public function __construct(array $data = [])
@@ -86,7 +99,6 @@ class Empleado extends Model
             $this->discapacidad_detalle = !empty($data['discapacidad_detalle']) ? $data['discapacidad_detalle'] : null;
             $this->nivel_academico = !empty($data['nivel_academico']) ? $data['nivel_academico'] : null;
             $this->profesion = !empty($data['profesion']) ? $data['profesion'] : null;
-            $this->titulo = !empty($data['titulo']) ? $data['titulo'] : null;
             $this->fecha_graduacion = !empty($data['fecha_graduacion']) ? $data['fecha_graduacion'] : null;
             $this->institucion_academica = !empty($data['institucion_academica']) ? $data['institucion_academica'] : null;
             $this->centro_votacion = !empty($data['centro_votacion']) ? $data['centro_votacion'] : null;
@@ -106,6 +118,7 @@ class Empleado extends Model
             $this->talla_pantalon = !empty($data['talla_pantalon']) ? $data['talla_pantalon'] : null;
             $this->talla_zapato = !empty($data['talla_zapato']) ? $data['talla_zapato'] : null;
             $this->fecha_egreso  = !empty($data['fecha_egreso'])  ? $data['fecha_egreso']  : null;
+            $this->fecha_vencimiento_contrato = !empty($data['fecha_vencimiento_contrato']) ? $data['fecha_vencimiento_contrato'] : null;
             $this->id_horario    = !empty($data['id_horario'])    ? (int)$data['id_horario'] : null;
         }
     }
@@ -115,6 +128,25 @@ class Empleado extends Model
      */
     public function getId() { return $this->id; }
     public function getIdPersona() { return $this->id_persona; }
+    public function getNroExpediente() { return $this->nro_expediente; }
+
+    /** Formato del folio de expediente, derivado del id del empleado (permanente). */
+    public static function formatoFolio($id): string
+    {
+        return 'EXP-' . str_pad((string)(int)$id, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Próximo folio de expediente estimado (solo para preview en la UI de alta).
+     * El valor autoritativo se asigna en save() a partir del id real.
+     */
+    public static function proximoNumeroExpediente(): string
+    {
+        $db = new Database();
+        $db->query("SELECT COALESCE(MAX(id), 0) + 1 AS prox FROM empleados");
+        $row = $db->single();
+        return self::formatoFolio($row->prox ?? 1);
+    }
 
     /**
      * Construye el filtro por origen/comisión de servicio.
@@ -137,13 +169,16 @@ class Empleado extends Model
                            p.cedula, p.nombre, p.apellido, p.telefono, p.correo, p.genero,
                            p.fecha_nacimiento, p.direccion, p.parroquia_id, p.rif, p.estado_civil,
                            p.discapacidad, p.discapacidad_detalle, p.nivel_academico, p.profesion,
-                           p.titulo, p.fecha_graduacion, p.institucion_academica,
+                           p.fecha_graduacion, p.institucion_academica,
                            p.centro_votacion, p.consejo_comunal, p.comuna,
-                           c.nombre as cargo, d.nombre as departamento
+                           c.nombre as cargo, d.nombre as departamento,
+                           COALESCE(am.total, 0) AS amonestaciones, COALESCE(fa.total, 0) AS faltas
                     FROM empleados e
                     INNER JOIN personas p ON e.id_persona = p.id
                     INNER JOIN cargos c ON e.id_cargo = c.id
                     INNER JOIN departamentos d ON e.id_departamento = d.id
+                    LEFT JOIN (SELECT id_empleado, COUNT(*) total FROM amonestaciones WHERE is_active = TRUE GROUP BY id_empleado) am ON am.id_empleado = e.id
+                    LEFT JOIN (SELECT id_empleado, COUNT(*) total FROM faltas WHERE is_active = TRUE GROUP BY id_empleado) fa ON fa.id_empleado = e.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
                       AND e.fecha_egreso IS NULL {$cond}
                     ORDER BY p.nombre ASC");
@@ -201,13 +236,35 @@ class Empleado extends Model
     }
 
     /**
+     * ¿Ya existe un empleado (activo o egresado, no en papelera) con esta cédula?
+     * Compara solo los dígitos (la cédula se normaliza a números — mig.037).
+     * $excluirId permite ignorar al propio registro en edición.
+     */
+    public static function existeCedula($cedula, $excluirId = null): bool
+    {
+        $ced = preg_replace('/\D/', '', (string)$cedula);
+        if ($ced === '') return false;
+        $db = new Database();
+        $sql = "SELECT e.id FROM empleados e
+                INNER JOIN personas p ON e.id_persona = p.id
+                WHERE e.is_active = TRUE
+                  AND regexp_replace(COALESCE(p.cedula, ''), '[^0-9]', '', 'g') = :ced";
+        if ($excluirId) $sql .= " AND e.id <> :id";
+        $sql .= " LIMIT 1";
+        $db->query($sql);
+        $db->bind(':ced', $ced);
+        if ($excluirId) $db->bind(':id', (int)$excluirId);
+        return (bool) $db->single();
+    }
+
+    /**
      * Buscar un empleado por ID
      */
     public static function find($id)
     {
         $db = new Database();
         $db->query("SELECT e.*, p.*, e.id as id,
-                           c.nombre AS cargo, d.nombre AS departamento,
+                           c.nombre AS cargo, c.nivel_jerarquico AS nivel_cargo, d.nombre AS departamento,
                            par.nombre AS parroquia, h.nombre AS horario,
                            h.hora_entrada, h.hora_salida
                     FROM empleados e
@@ -239,7 +296,7 @@ class Empleado extends Model
                                  correo=:correo, genero=:genero, fecha_nacimiento=:fecha_nacimiento, direccion=:direccion,
                                  parroquia_id=:parroquia_id, rif=:rif, estado_civil=:estado_civil,
                                  discapacidad=:discapacidad, discapacidad_detalle=:discapacidad_detalle,
-                                 nivel_academico=:nivel_academico, profesion=:profesion, titulo=:titulo,
+                                 nivel_academico=:nivel_academico, profesion=:profesion,
                                  fecha_graduacion=:fecha_graduacion, institucion_academica=:institucion_academica,
                                  centro_votacion=:centro_votacion, consejo_comunal=:consejo_comunal, comuna=:comuna,
                                  updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id_persona");
@@ -248,11 +305,11 @@ class Empleado extends Model
                 // INSERT Persona
                 $this->db->query("INSERT INTO personas (cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento, direccion,
                                  parroquia_id, rif, estado_civil, discapacidad, discapacidad_detalle,
-                                 nivel_academico, profesion, titulo, fecha_graduacion, institucion_academica,
+                                 nivel_academico, profesion, fecha_graduacion, institucion_academica,
                                  centro_votacion, consejo_comunal, comuna, created_by)
                                  VALUES (:cedula, :nombre, :apellido, :telefono, :correo, :genero, :fecha_nacimiento, :direccion,
                                  :parroquia_id, :rif, :estado_civil, :discapacidad, :discapacidad_detalle,
-                                 :nivel_academico, :profesion, :titulo, :fecha_graduacion, :institucion_academica,
+                                 :nivel_academico, :profesion, :fecha_graduacion, :institucion_academica,
                                  :centro_votacion, :consejo_comunal, :comuna, :user_id) RETURNING id");
             }
 
@@ -271,7 +328,6 @@ class Empleado extends Model
             $this->db->bind(':discapacidad_detalle', $this->discapacidad_detalle);
             $this->db->bind(':nivel_academico', $this->nivel_academico);
             $this->db->bind(':profesion', $this->profesion);
-            $this->db->bind(':titulo', $this->titulo);
             $this->db->bind(':fecha_graduacion', $this->fecha_graduacion);
             $this->db->bind(':institucion_academica', $this->institucion_academica);
             $this->db->bind(':centro_votacion', $this->centro_votacion);
@@ -289,34 +345,36 @@ class Empleado extends Model
 
             // --- EMPLEADO ---
             if ($this->id) {
+                // nro_expediente NO se modifica en edición: es un folio permanente.
                 $this->db->query("UPDATE empleados
                                   SET id_cargo=:id_cargo, id_departamento=:id_departamento,
-                                      nro_expediente=:nro_expediente, fecha_ingreso=:fecha_ingreso,
+                                      fecha_ingreso=:fecha_ingreso,
                                       tipo_contrato=:tipo_contrato, institucion_origen=:institucion_origen,
                                       es_comision_servicio=:es_comision_servicio, clasificacion=:clasificacion,
                                       grupo_rotacion=:grupo_rotacion, uniforme=:uniforme,
                                       talla_camisa=:talla_camisa, talla_pantalon=:talla_pantalon, talla_zapato=:talla_zapato,
-                                      fecha_egreso=:fecha_egreso, id_horario=:id_horario,
+                                      fecha_vencimiento_contrato=:fecha_vencimiento_contrato, id_horario=:id_horario,
                                       updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                                   WHERE id=:id");
+                // Nota: fecha_egreso NO se toca aquí; la gestiona el módulo de egreso (R-12).
                 $this->db->bind(':id', $this->id);
             } else {
+                // El folio (nro_expediente) se asigna después del INSERT, derivado del id real.
                 $this->db->query("INSERT INTO empleados
-                                  (id_persona, id_cargo, id_departamento, nro_expediente,
+                                  (id_persona, id_cargo, id_departamento,
                                    fecha_ingreso, tipo_contrato, institucion_origen, es_comision_servicio,
                                    clasificacion, grupo_rotacion, uniforme, talla_camisa, talla_pantalon, talla_zapato,
-                                   fecha_egreso, id_horario, created_by)
-                                  VALUES (:id_persona, :id_cargo, :id_departamento, :nro_expediente,
+                                   fecha_vencimiento_contrato, id_horario, created_by)
+                                  VALUES (:id_persona, :id_cargo, :id_departamento,
                                           :fecha_ingreso, :tipo_contrato, :institucion_origen, :es_comision_servicio,
                                           :clasificacion, :grupo_rotacion, :uniforme, :talla_camisa, :talla_pantalon, :talla_zapato,
-                                          :fecha_egreso, :id_horario, :user_id)
+                                          :fecha_vencimiento_contrato, :id_horario, :user_id)
                                   RETURNING id");
                 $this->db->bind(':id_persona', $this->id_persona);
             }
 
             $this->db->bind(':id_cargo',        $this->id_cargo);
             $this->db->bind(':id_departamento',  $this->id_departamento);
-            $this->db->bind(':nro_expediente',   $this->nro_expediente);
             $this->db->bind(':fecha_ingreso',    $this->fecha_ingreso);
             $this->db->bind(':tipo_contrato',    $this->tipo_contrato);
             $this->db->bind(':institucion_origen',   $this->institucion_origen);
@@ -327,7 +385,7 @@ class Empleado extends Model
             $this->db->bind(':talla_camisa',     $this->talla_camisa);
             $this->db->bind(':talla_pantalon',   $this->talla_pantalon);
             $this->db->bind(':talla_zapato',     $this->talla_zapato);
-            $this->db->bind(':fecha_egreso',     $this->fecha_egreso);
+            $this->db->bind(':fecha_vencimiento_contrato', $this->fecha_vencimiento_contrato);
             $this->db->bind(':id_horario',       $this->id_horario);
             $this->db->bind(':user_id', $user_id);
 
@@ -336,6 +394,14 @@ class Empleado extends Model
                 if (!$resEmp) throw new Exception("Error al instanciar el perfil del empleado.");
                 $prevId = $resEmp->id;
                 $this->id = $resEmp->id;
+
+                // Folio de expediente automático: 'EXP-####' derivado del id (permanente, único).
+                $folio = self::formatoFolio($this->id);
+                $this->db->query("UPDATE empleados SET nro_expediente = :folio WHERE id = :id");
+                $this->db->bind(':folio', $folio);
+                $this->db->bind(':id', $this->id);
+                $this->db->execute();
+                $this->nro_expediente = $folio;
             } else {
                 $this->db->execute();
             }
@@ -474,6 +540,24 @@ class Empleado extends Model
         $db->query("SELECT * FROM empleados_egresos WHERE id_empleado = :id ORDER BY fecha_egreso DESC, id DESC");
         $db->bind(':id', $id);
         return $db->resultSet();
+    }
+
+    /**
+     * Tiempo de servicio en MESES completos entre ingreso y egreso (o hasta hoy).
+     * Devuelve null si no hay fecha de ingreso o el rango es inválido.
+     */
+    public static function mesesServicio($fechaIngreso, $fechaEgreso = null): ?int
+    {
+        if (empty($fechaIngreso)) return null;
+        try {
+            $ini = new DateTime($fechaIngreso);
+            $fin = !empty($fechaEgreso) ? new DateTime($fechaEgreso) : new DateTime();
+        } catch (Exception $e) {
+            return null;
+        }
+        if ($fin < $ini) return null;
+        $d = $ini->diff($fin);
+        return $d->y * 12 + $d->m;
     }
 
     /**

@@ -18,12 +18,28 @@ $v = fn($x) => htmlspecialchars($x ?? '');
 $egresado       = !empty($data['egresado']);
 $tiempoServicio = $data['tiempo_servicio'] ?? '';
 $fechaEgreso    = $egresado ? $fmtFecha($e->fecha_egreso) : '';
+
+// Tipo de constancia + datos derivados
+$tipo = array_key_exists($co->tipo ?? '', Constancia::TIPOS) ? $co->tipo : 'trabajo';
+$tituloConst = Constancia::labelTipo($tipo);
+$cargo   = $v($e->cargo ?? '—');
+$depto   = $v($e->departamento ?? '—');
+$contrato= $v($e->tipo_contrato ?? '—');
+$nivel   = $v($e->nivel_cargo ?? '');
+$tsTxt   = $tiempoServicio ? (', con un tiempo de servicio de <strong>' . $v($tiempoServicio) . '</strong>') : '';
+$horaEnt = !empty($e->hora_entrada) ? substr($e->hora_entrada, 0, 5) : '';
+$horaSal = !empty($e->hora_salida) ? substr($e->hora_salida, 0, 5) : '';
+$horarioNom = $v($e->horario ?? '');
+$grupo   = $v($e->grupo_rotacion ?? '');
+$motivoEg= $v($e->motivo_egreso ?? '—');
+$presta  = $egresado ? 'prestó sus servicios' : 'presta sus servicios';
+$desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Constancia de Trabajo — <?php echo $v($co->numero); ?></title>
+<title><?php echo $v($tituloConst); ?> — <?php echo $v($co->numero); ?></title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Times New Roman', serif; font-size:12pt; color:#000; background:#fff; }
@@ -67,7 +83,7 @@ $fechaEgreso    = $egresado ? $fmtFecha($e->fecha_egreso) : '';
 
   <div class="doc-nro"><strong>N° <?php echo $v($co->numero); ?></strong></div>
 
-  <div class="titulo">Constancia de Trabajo</div>
+  <div class="titulo"><?php echo $v($tituloConst); ?></div>
 
   <div class="cuerpo">
     Quien suscribe, <strong><?php echo $v($firmante ?: '____________________'); ?></strong>, en su carácter de
@@ -75,17 +91,48 @@ $fechaEgreso    = $egresado ? $fmtFecha($e->fecha_egreso) : '';
     (IMATUR), por medio de la presente hace constar que el/la ciudadano(a)
     <strong><?php echo $v($e->nombre . ' ' . $e->apellido); ?></strong>, titular de la cédula de identidad
     N° <strong><?php echo $v($e->cedula); ?></strong>,
-    <?php if ($egresado): ?>
-      prestó sus servicios en esta institución desempeñando el cargo de
-      <strong><?php echo $v($e->cargo ?? '—'); ?></strong>, adscrito(a) a <strong><?php echo $v($e->departamento ?? '—'); ?></strong>,
-      bajo la modalidad de <strong><?php echo $v($e->tipo_contrato ?? '—'); ?></strong>, desde el
-      <strong><?php echo $fechaIngreso; ?></strong> hasta el <strong><?php echo $fechaEgreso; ?></strong><?php echo $tiempoServicio ? ', con un tiempo de servicio de <strong>' . $v($tiempoServicio) . '</strong>' : ''; ?>.
-    <?php else: ?>
-      presta sus servicios en esta institución desempeñando el cargo de
-      <strong><?php echo $v($e->cargo ?? '—'); ?></strong>, adscrito(a) a <strong><?php echo $v($e->departamento ?? '—'); ?></strong>,
-      bajo la modalidad de <strong><?php echo $v($e->tipo_contrato ?? '—'); ?></strong>, desde el
-      <strong><?php echo $fechaIngreso; ?></strong><?php echo $tiempoServicio ? ', con un tiempo de servicio de <strong>' . $v($tiempoServicio) . '</strong>' : ''; ?>.
-    <?php endif; ?>
+    <?php
+    switch ($tipo):
+        case 'horario': ?>
+            <?php echo $presta; ?> en esta institución desempeñando el cargo de <strong><?php echo $cargo; ?></strong>,
+            adscrito(a) a <strong><?php echo $depto; ?></strong>,
+            <?php if ($horaEnt && $horaSal): ?>
+                cumpliendo un horario de trabajo<?php echo $horarioNom ? ' (<strong>' . $horarioNom . '</strong>)' : ''; ?>
+                desde las <strong><?php echo $horaEnt; ?></strong> hasta las <strong><?php echo $horaSal; ?></strong><?php echo $grupo ? ', en el <strong>Grupo ' . $grupo . '</strong>' : ''; ?>.
+            <?php else: ?>
+                sin un horario formal registrado en el sistema a la fecha de emisión.
+            <?php endif; ?>
+            <?php break; ?>
+
+        <?php case 'funciones': ?>
+            <?php echo $desemp; ?> de <strong><?php echo $cargo; ?></strong><?php echo $nivel ? ' (nivel <strong>' . $nivel . '</strong>)' : ''; ?>,
+            adscrito(a) a <strong><?php echo $depto; ?></strong>, cumpliendo las funciones y responsabilidades inherentes a dicho cargo<?php echo $tsTxt; ?>.
+            <?php break; ?>
+
+        <?php case 'antiguedad': ?>
+            ha prestado sus servicios en esta institución desde el <strong><?php echo $fechaIngreso; ?></strong><?php echo $egresado ? ' hasta el <strong>' . $fechaEgreso . '</strong>' : ''; ?>,
+            acumulando un tiempo de servicio de <strong><?php echo $v($tiempoServicio ?: '—'); ?></strong>, desempeñando el cargo de <strong><?php echo $cargo; ?></strong>.
+            <?php break; ?>
+
+        <?php case 'egreso': ?>
+            prestó sus servicios en esta institución desempeñando el cargo de <strong><?php echo $cargo; ?></strong>,
+            adscrito(a) a <strong><?php echo $depto; ?></strong>, desde el <strong><?php echo $fechaIngreso; ?></strong>
+            hasta el <strong><?php echo $fechaEgreso; ?></strong>, fecha en la cual cesó en sus funciones por motivo de
+            <strong><?php echo $motivoEg; ?></strong><?php echo $tsTxt; ?>.
+            <?php break; ?>
+
+        <?php case 'bancaria': ?>
+            <?php echo $presta; ?> en esta institución desempeñando el cargo de <strong><?php echo $cargo; ?></strong>,
+            adscrito(a) a <strong><?php echo $depto; ?></strong>, bajo la modalidad de <strong><?php echo $contrato; ?></strong>,
+            desde el <strong><?php echo $fechaIngreso; ?></strong><?php echo $egresado ? ' hasta el <strong>' . $fechaEgreso . '</strong>' : ''; ?><?php echo $tsTxt; ?>.
+            Devenga una remuneración mensual de: <strong>_______________________________</strong>.
+            <?php break; ?>
+
+        <?php default: // trabajo ?>
+            <?php echo $presta; ?> en esta institución desempeñando el cargo de <strong><?php echo $cargo; ?></strong>,
+            adscrito(a) a <strong><?php echo $depto; ?></strong>, bajo la modalidad de <strong><?php echo $contrato; ?></strong>,
+            desde el <strong><?php echo $fechaIngreso; ?></strong><?php echo $egresado ? ' hasta el <strong>' . $fechaEgreso . '</strong>' : ''; ?><?php echo $tsTxt; ?>.
+    <?php endswitch; ?>
   </div>
 
   <div class="cierre">

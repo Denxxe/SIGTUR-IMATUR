@@ -12,6 +12,7 @@ class TalleresController extends Controller {
             'estado'      => trim($_GET['estado']      ?? ''),
             'tipo'        => trim($_GET['tipo']        ?? ''),
             'es_interna'  => $_GET['es_interna']       ?? '',
+            'periodo'     => trim($_GET['periodo']     ?? ''),
             'fecha_inicio'=> trim($_GET['fecha_inicio'] ?? ''),
             'fecha_fin'   => trim($_GET['fecha_fin']   ?? ''),
         ];
@@ -345,6 +346,12 @@ class TalleresController extends Controller {
 
                 if (empty($nombre) || empty($apellido)) {
                     throw new Exception('El nombre y apellido del participante son requeridos.');
+                }
+
+                // La cédula es obligatoria para participantes adultos (con cédula).
+                // Los menores sin cédula se registran por la opción "Niño/a sin cédula".
+                if ($cedula === null) {
+                    throw new Exception('La cédula es obligatoria para participantes adultos. Para menores sin cédula, use la opción «Niño/a sin cédula».');
                 }
 
                 // Validar formato de cédula venezolana (V/E/J/G/C/P + 6-9 dígitos)
