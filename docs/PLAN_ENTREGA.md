@@ -62,6 +62,11 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 
 ## BLOQUE 3 — Reglas de negocio PENDIENTES (bloquean desarrollo) 🔒
 
+### 3A. Vacaciones — ✅ IMPLEMENTADO (cálculo de días, 2026-06-21)
+Reglas cerradas y construidas: **15 días hábiles base + 1/año de servicio, tope 30**; antigüedad **total** (incluye institución de origen, vía `empleados.fecha_ingreso_administracion`); días hábiles **excluyen fines de semana y feriados** (tabla `feriados` gestionable); vacaciones no disfrutadas **se acumulan**; **ajuste de saldo inicial** por empleado para arrancar exacto. Módulo `/vacaciones` (mig.045/046): roster de saldos, detalle por empleado (registrar período, flujo de estados), calendario de feriados. **Pendiente solo el COBRO/liquidación** (depende de los formatos de nómina — ver 3B).
+
+<details><summary>Detalle histórico de la regla (Notas.md)</summary>
+
 ### 3A. Vacaciones (R-8, D-RH04/05) — `Notas.md` aportó la fórmula base
 - Base: **15 días + 1 día por año de servicio**.
 - Fin de semana = día laboral (órgano turístico) → descanso normal; **excepciones por eventos** (Carnaval, Semana Santa, Santa Inés, Cruz de Mayo).
@@ -69,6 +74,7 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 - Comisión de servicio: coordinadas con ente de origen.
 - **Falta cerrar:** ¿saldo automático o manual?, períodos solapados, calendario de feriados/eventos.
 - **Tarea al desbloquear:** `VacacionesController` + UI sobre tabla `vacaciones` (existe, sin UI).
+</details>
 
 ### 3B. Nómina / Liquidación (R-11, D-RH34) — estructura aportada
 - Nómina la recibe de la Alcaldía; RRHH calcula; Alcaldía analiza y paga.
