@@ -487,7 +487,7 @@ class RutasController extends Controller {
 
         fputcsv($out, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
         fputcsv($out, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
-        fputcsv($out, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF. G-20008498-7'], ';');
+        fputcsv($out, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF. ' . ConfigSistema::rif()], ';');
         fputcsv($out, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '  Fecha: ' . date('d/m/Y H:i')], ';');
         fputcsv($out, [''], ';');
         fputcsv($out, ['INFORME DE VISITA TURÍSTICA'], ';');

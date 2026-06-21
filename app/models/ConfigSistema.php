@@ -1,6 +1,18 @@
 <?php
 class ConfigSistema extends Model {
 
+    /** RIF oficial por defecto (fallback si la clave no está en BD). */
+    const RIF_DEFAULT = 'G-20008498-7';
+
+    /**
+     * RIF institucional (fuente única). Lee la clave `rif_institucional` de
+     * configuracion_sistema; si está vacía o no existe, usa RIF_DEFAULT.
+     */
+    public static function rif(): string {
+        $v = trim(self::get('rif_institucional'));
+        return $v !== '' ? $v : self::RIF_DEFAULT;
+    }
+
     public static function getAll(): array {
         $db = new Database();
         $db->query("SELECT clave, valor, descripcion FROM configuracion_sistema ORDER BY id ASC");

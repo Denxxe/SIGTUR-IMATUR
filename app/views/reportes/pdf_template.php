@@ -249,7 +249,7 @@
                 Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
                 Cumaná, Estado Sucre
             </h2>
-            <div class="rif">RIF. G-20008498-7</div>
+            <div class="rif">RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
         </div>
         <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
     </div>

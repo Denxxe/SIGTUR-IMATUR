@@ -57,6 +57,8 @@
             // Token de un solo uso emitido por el servidor; se inyecta en cada formulario
             // POST y el backend lo consume (Router). Un reenvío con el mismo token se ignora.
             window.SIGTUR_TOKEN = <?php echo json_encode(sigtur_token_emitir()); ?>;
+            // RIF institucional (fuente única) para los exportadores del lado cliente.
+            window.SIGTUR_RIF = <?php echo json_encode(ConfigSistema::rif()); ?>;
 
             // Inyecta el token en todos los formularios POST (salvo data-no-token).
             function sigturInjectTokens() {

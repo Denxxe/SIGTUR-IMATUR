@@ -73,7 +73,7 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
       REPÚBLICA BOLIVARIANA DE VENEZUELA<br>
       ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE<br>
       INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)<br>
-      CUMANÁ, ESTADO SUCRE — RIF. G-20008498-7
+      CUMANÁ, ESTADO SUCRE — RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
     </div>
     <div class="logo-box">
       <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:64px;max-height:64px;object-fit:contain;" onerror="this.style.display='none'">

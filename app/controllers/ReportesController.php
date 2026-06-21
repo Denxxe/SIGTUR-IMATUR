@@ -1521,7 +1521,7 @@ class ReportesController extends Controller {
 
         fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
         fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
-        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. G-20008498-7'], ';');
+        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. ' . ConfigSistema::rif()], ';');
         fputcsv($output, ['Cumaná, Estado Sucre'], ';');
         fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
         fputcsv($output, [''], ';');
@@ -2570,7 +2570,7 @@ class ReportesController extends Controller {
 
         $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1);
         $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1);
-        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7', 1);
+        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), 1);
         $rowMerged($titulo, 2);
         $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . ' · ' . count($rows) . ' registro(s)', 3);
         $rnum++; // fila en blanco

@@ -73,7 +73,7 @@
       ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE<br>
       INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)<br>
       CUMANÁ, ESTADO SUCRE<br>
-      RIF. G-20009499-7
+      RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
     </div>
     <div class="logo-box">
       <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png"

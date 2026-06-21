@@ -57,6 +57,15 @@
                                    placeholder="Ej: Director General">
                         </div>
                     </div>
+                    <div class="col-12">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">RIF institucional</label>
+                            <input type="text" name="rif_institucional" class="sig-input"
+                                   value="<?php echo htmlspecialchars($cfg['rif_institucional']['valor'] ?? ConfigSistema::RIF_DEFAULT); ?>"
+                                   placeholder="G-20008498-7">
+                            <small style="color:var(--text-tertiary)">Aparece en constancias, oficios, fichas y reportes.</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -157,9 +157,10 @@ function sigturExportarTabla(table, modo, trs) {
     if (!headers.length) { if (window.showToast) showToast('Exportar', 'No hay datos para exportar.', 'warning'); return; }
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const fecha = new Date().toLocaleString('es-VE');
+    const rif = window.SIGTUR_RIF || 'G-20008498-7';
     const membrete = ['REPÚBLICA BOLIVARIANA DE VENEZUELA',
         'ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE',
-        'Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF G-20008498-7'];
+        'Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' + rif];
     const ncol = Math.max(1, headers.length);
 
     if (modo === 'excel') {

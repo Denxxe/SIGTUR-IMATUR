@@ -198,7 +198,7 @@ if (!empty($oficiosPrevios)):
                         Alcaldía Bolivariana del Municipio Sucre<br>
                         Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
                         Cumaná, Estado Sucre<br>
-                        RIF. G-20008498-7
+                        RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
                     </p>
                 </div>
                 <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="" style="height:68px; width:auto; object-fit:contain; flex-shrink:0;">
