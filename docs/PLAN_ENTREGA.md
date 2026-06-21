@@ -42,13 +42,17 @@ Tablero de tareas para asignar de cara a la entrega. Estados verificados **en c�
 | # | Tarea | Estado | Área | Resp. |
 |---|-------|--------|------|-------|
 | U1 | Uniformar/limpiar los CRUD (orden, estética) | ❌ PENDIENTE | Transversal | |
-| U2 | Nivel académico: "universidad" → grado (Ingeniero/Licenciado); decidir fusionar/eliminar `profesion` vs `titulo` | ❌ PENDIENTE | RRHH | |
+| U2 | Nivel académico → grado; resolver `profesion` vs `titulo` | ✅ HECHO (verificado 2026-06-21) | RRHH | — |
 | U3 | Filtro "por tiempo / próximos" en listados | ❌ PENDIENTE | Formación/Turismo | |
 | U4 | Notificar fechas vencidas (taller/contrato/pasante) — centro de alertas | 🟡 PARCIAL | Transversal | |
-| U5 | Inventario: validar por tipo de bien (inmovilizado/inmueble); dividir/reetiquetar tipos | ❌ PENDIENTE | Inventario | |
-| U6 | Export Excel/PDF donde falten + columna "Observación" | 🟡 PARCIAL | Reportes | |
-| U7 | Unificar RIF institucional (ficha/constancia `G-20008498-7` vs carta `G-20009499-7`) vía `ConfigSistema` | ❌ PENDIENTE | Transversal | |
-| U8 | Corregir typo HTML `form.php:184` (`*<\span>` → `</span>`) y `'Institución\Nómina'` en resumen JS | ❌ PENDIENTE | RRHH | |
+| U5 | Inventario: tipo de bien Durable vs Fungible + validación por tipo | ✅ HECHO (mig.044, 2026-06-21) | Inventario | — |
+| U6 | Export Excel/PDF en listados CRUD | ✅ HECHO (transversal, 2026-06-21) | Transversal | — |
+| U7 | Unificar RIF institucional vía `ConfigSistema` | ✅ HECHO (mig.043, 2026-06-21) | Transversal | — |
+| U8 | ~~Typo HTML `form.php:184`~~ | ❎ FALSO POSITIVO (el archivo ya estaba correcto) | RRHH | — |
+
+> **Avance Bloque 2 (2026-06-21):** U2 ya estaba resuelto (nivel académico usa grados; no existe campo "Título", solo "Profesión"). U5/U6/U7 implementados y commiteados. U8 era artefacto de visualización (no había typo). **Quedan U1, U3 y completar U4.**
+>
+> **Decisiones tomadas:** U2 → solo "Profesión". U5 → Durable vs Fungible. U7 → RIF oficial **G-20008498-7** (editable en /config).
 
 ---
 
