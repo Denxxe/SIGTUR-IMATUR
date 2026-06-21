@@ -36,6 +36,32 @@ class Empleado extends Model
     // Motivos de egreso / desincorporación (mig. 036 — R-12)
     const MOTIVOS_EGRESO = ['Renuncia', 'Despido', 'Jubilación', 'Fin de contrato', 'Fallecimiento', 'Otro'];
 
+    // Umbral (años de servicio) para SEÑALAR elegibilidad a Fijo, por origen (3C).
+    // Rangos del negocio: Alcaldía 5-6, Gobernación 3-6, IMATUR 5-6 → se marca al
+    // alcanzar el mínimo. NO promueve automáticamente: solo es un indicador visual
+    // (la decisión final es de Presidencia y requiere carta de asignación).
+    const UMBRAL_FIJO = ['IMATUR' => 5, 'Alcaldía' => 5, 'Gobernación' => 3];
+
+    /** Años de servicio (antigüedad total: usa fecha_ingreso_administracion si existe). */
+    public static function aniosServicio($empleado): int {
+        $base = !empty($empleado->fecha_ingreso_administracion)
+            ? $empleado->fecha_ingreso_administracion
+            : ($empleado->fecha_ingreso ?? null);
+        if (!$base) return 0;
+        try { $ini = new \DateTime($base); $hoy = new \DateTime('today'); }
+        catch (\Exception $e) { return 0; }
+        if ($hoy < $ini) return 0;
+        return (int)$ini->diff($hoy)->y;
+    }
+
+    /** ¿Contratado activo con tiempo suficiente para considerarse Fijo? (3C, solo señal). */
+    public static function elegibleParaFijo($empleado): bool {
+        if (($empleado->tipo_contrato ?? '') !== 'Contratado') return false;
+        if (!empty($empleado->fecha_egreso)) return false;
+        $umbral = self::UMBRAL_FIJO[$empleado->institucion_origen ?? 'IMATUR'] ?? 5;
+        return self::aniosServicio($empleado) >= $umbral;
+    }
+
     // Datos de personas
     private ?int $id_persona;
     private string $cedula;

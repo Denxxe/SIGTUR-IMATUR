@@ -26,6 +26,12 @@ $discBadge = function ($e) {
     if ($fa > 0) $out .= ' <span class="sig-badge sig-badge--neutral" title="Faltas injustificadas"><i class="bi bi-exclamation-circle"></i> ' . $fa . '</span>';
     return $out;
 };
+// Badge de elegibilidad a Fijo (3C): solo señal visual para Contratados con tiempo suficiente.
+$fijoBadge = function ($e) {
+    if (!Empleado::elegibleParaFijo($e)) return '';
+    $a = Empleado::aniosServicio($e);
+    return ' <span class="sig-badge sig-badge--success" title="Tiempo de servicio suficiente para pasar a Fijo (' . $a . ' años). Requiere carta de asignación y aprobación de Presidencia."><i class="bi bi-patch-check"></i> Elegible a fijo</span>';
+};
 // Opciones del filtro de origen
 $origenOpciones = ['' => 'Todos los orígenes', 'comision' => 'Comisión de servicio'];
 foreach (Empleado::INSTITUCIONES_ORIGEN as $o) $origenOpciones[$o] = $o;
@@ -108,7 +114,7 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
                     <tr>
                         <td class="cell-strong"><?php echo $emp->nro_expediente ?? 'N/A'; ?></td>
                         <td><?php echo $emp->cedula ?? 'N/A'; ?></td>
-                        <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); ?></td>
+                        <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); echo $fijoBadge($emp); ?></td>
                         <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo ?? 'Sin cargo'; ?></span></td>
                         <td>
                             <?php if ($esCom($emp)): ?>
