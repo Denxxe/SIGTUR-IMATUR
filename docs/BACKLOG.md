@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-06-21 · **Migraciones aplicadas:** hasta **050** · **Rama:** `development_stage`
+**Última actualización:** 2026-06-25 · **Migraciones aplicadas:** hasta **050** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -22,7 +22,26 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ---
 
-## 2. LO RESUELTO EN ESTE CICLO (2026-06-21, mig. 043–050)
+## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-06-25 — Bloque CMI de indicadores (sin migración)
+
+Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* del documento del proyecto. 8 indicadores nuevos (prefijo `CMI-*` en `INDICADORES_GESTION.md`), solo lectura sobre datos existentes:
+
+| # | Indicador | Fórmula |
+|---|-----------|---------|
+| ✅ CMI-RH01 | Cumplimiento de jornada | horas reales / programadas (mes, días con marcaje completo + horario) |
+| ✅ CMI-RH02 | Precisión de asistencia | registros con salida / total (mes) |
+| ✅ CMI-RH03 | Documentación del personal | empleados con recaudos obligatorios completos / total |
+| ✅ CMI-I01 | Precisión del registro (inventario) | durables con código BN (+fungibles) / total |
+| ✅ CMI-I02 | Movimientos de bienes | conteo por `tipo_movimiento` (año) |
+| ✅ CMI-I03 | Asignación de responsables | durables con último movimiento = Asignación / total durables |
+| ✅ CMI-F01 | Cobertura por parroquia | parroquias con actividad / total (año) |
+| ✅ CMI-T01 | Frecuencia de rutas | rutas finalizadas por mes (6 meses) |
+
+> Archivos: `ReportesController::indicadores()` + `views/reportes/indicadores.php`. Pendientes del documento que **no** se implementaron (ver 3.4 y 3.8): stock mínimo, instituciones participantes en rutas, tiempo de generación de reportes.
+
+### 2026-06-21 (mig. 043–050)
 
 | # | Entregable | Migración |
 |---|-----------|-----------|
@@ -64,6 +83,7 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 | 🔴 D-IN06 | ¿"Responsable del bien" nominal? ¿Un bien asignable a >1 empleado? (FK `id_responsable` o tabla de asignación) |
 | 🟡 D-IN10 (H-04) | ¿La Baja/Mantenimiento cambia automáticamente la `condicion` del bien? |
 | 🟡 D-IN09 | ¿Registrar costo de adquisición, fecha de compra y proveedor? |
+| 🟡 D-IN11 (CMI) | **Stock mínimo de papelería** (indicador del documento, no implementado). Requiere columna `inventario.stock_minimo` (fungibles) + alerta + indicador. **Preguntar:** ¿qué ítems se controlan y con qué umbral por ítem? |
 | 🟢 D-IN03 | Confirmar lista final de categorías. |
 
 ### 3.5 Turismo (Rutas)
@@ -71,6 +91,7 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 |----|----------|
 | 🟡 D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y cuál es el flujo de pago? (arquitectura `tiene_tarifa`/`tarifa_monto` lista) |
 | 🟡 D-RT03 | Al **Finalizar** una ruta, ¿generar informe/oficio automáticamente? |
+| 🟡 D-RT05 (CMI) | **Instituciones participantes en rutas** (indicador del documento). Se **retiró** a propósito (`id_institucion` fuera del flujo, ver H-09). Reintroducirlo revierte una decisión previa. **Preguntar:** ¿se registra de nuevo la institución del grupo que recorre la ruta? |
 | 🟢 D-RT04 | Facilitador externo: ¿lista gestionada o texto libre? |
 
 ### 3.6 Formación
@@ -85,6 +106,7 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 |----|----------|
 | 🟡 D-TX03 | Migración de **históricos** (Excel/papel): definir módulos + obtener archivos fuente. |
 | 🟢 D-OF03 | Libro de correspondencia unificado (oficios emitidos/recibidos). |
+| ⚪ D-CMI01 | **"Reducción del tiempo de generación de reportes"** (figura en el documento): es una métrica operativa **antes/después** (manual vs. sistema), **no** un indicador que la app pueda calcular de sí misma. Se mide fuera del sistema (justificación de impacto), no se implementa como KPI. |
 
 ---
 

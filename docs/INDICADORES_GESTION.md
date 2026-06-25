@@ -1,6 +1,6 @@
 # Indicadores de Gestión — SIGTUR-IMATUR
 
-**Última actualización:** 2026-05-31
+**Última actualización:** 2026-06-25
 **Fuentes de verdad en código:**
 - `app/controllers/ReportesController.php::indicadores()` — página *Indicadores de Gestión* (RF30)
 - `app/controllers/DashboardController.php::index()` — Panel Principal (role-aware)
@@ -111,6 +111,8 @@ El dashboard es **role-aware**: cada bloque solo se calcula y muestra según el 
 
 Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesController::indicadores()`. Esta vista es **transversal** (no filtra por rol — muestra todos los bloques).
 
+> **Bloque CMI (2026-06-25):** los indicadores con prefijo **`CMI-*`** se agregaron para alinear el panel con el *Cuadro de Mando Integral* descrito en el documento del proyecto (precisión de registro, cumplimiento de jornada, documentación del personal, cobertura por parroquia, frecuencia de rutas, movimientos y asignación de inventario). Pendientes del documento que **aún no son indicadores** (requieren decisión/desarrollo): **stock mínimo de papelería** e **instituciones participantes en rutas** (ver `BACKLOG.md`); el "tiempo de generación de reportes" es una métrica operativa externa, no un indicador del sistema.
+
 ### 3.1 KPIs de resumen (tarjetas superiores)
 
 | KPI | Para qué sirve | Fórmula | Fuente |
@@ -135,6 +137,9 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | **Permisos/reposos vigentes hoy** | Personal ausente justificado hoy + pendientes de aprobar. | Aprobados con `CURRENT_DATE BETWEEN fecha_inicio AND fecha_fin` (por categoría) + conteo de `estado='Pendiente'`. | `permisos_laborales` |
 | **Amonestaciones** | Empleados con amonestaciones activas y en causa de despido (≥3). | `COUNT(DISTINCT id_empleado)` activos + subconteo con `HAVING COUNT(*) >= 3`. | `amonestaciones` |
 | **Impuntualidad del mes** | % de marcajes impuntuales en el mes actual. | `impuntuales (minutos_tarde > tolerancia) / marcajes con horario`, mes en curso. | `asistencias` + config `minutos_tolerancia_puntualidad` |
+| **CMI-RH01 — Cumplimiento de jornada** | Qué proporción de las horas programadas se cumplió efectivamente. | `horas_reales / horas_programadas × 100`, mes en curso. Solo días con **marcaje completo (entrada+salida) y horario asignado**, para que un check-out faltante no distorsione el resultado. Umbral verde ≥90%, ámbar ≥75%. | `asistencias` ⋈ `empleados` ⟕ `horarios` |
+| **CMI-RH02 — Precisión del registro de asistencia** | Calidad del marcaje (sin registros colgados). | `registros con hora_salida / total de registros × 100`, mes en curso. Umbral verde ≥95%, ámbar ≥85%. | `asistencias` |
+| **CMI-RH03 — Documentación completa del personal** | % de expedientes con todos los recaudos obligatorios. | `empleados con faltan_obligatorios = 0 / total de empleados × 100` (recorre `ExpedienteDocumento::recaudosEstado` por empleado). Umbral verde ≥90%, ámbar ≥70%. | `empleados` + `expediente_documentos` (catálogo `RECAUDOS`) |
 
 ### 3.3 Sección Formación
 
@@ -145,6 +150,7 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | — | **Participantes internos vs externos** | Cuánta formación es para personal IMATUR vs comunidad. | `SUM` condicional sobre `talleres.es_interna` de las inscripciones. | `participantes_taller` ⋈ `talleres` |
 | **F-3** | **Demografía de formación (año)** | Desagregación por género/edad de las personas atendidas (reporte de género). | `SUM` de `mujeres`, `hombres`, `ninas`, `ninos`, `total_atendidas` de los informes de talleres del año. | `taller_informes` ⋈ `talleres` |
 | **F-4** | **Cobertura territorial** | En cuántos municipios se ejecuta formación (alcance geográfico). | `COUNT(DISTINCT municipio)` de las sedes de talleres del año, sobre el total de municipios. Incluye lista de municipios cubiertos. | `talleres` ⋈ `ubicaciones_formacion` ⋈ `parroquia` ⋈ `municipio` |
+| **CMI-F01** | **Cobertura territorial por parroquia** | Alcance geográfico más fino que el municipal. | `COUNT(DISTINCT parroquia de la sede) / total de parroquias × 100`, talleres del año. Se muestra dentro de la tarjeta de Cobertura Municipal. | `talleres` ⋈ `ubicaciones_formacion` (+ `parroquia`) |
 | **F-2** | **Tipo de entidad atendida** | Qué clase de público se forma (Personal IMATUR / tipo de ente externo). | Talleres y participantes agrupados por `CASE`: interna → "Personal IMATUR"; si no, `tipo_ente`; si vacío → "Sin especificar". | `talleres` ⟕ `participantes_taller` |
 | **F-5** | **Capacitadores activos (top 10)** | Productividad de facilitadores (actividades y personas formadas). | Por facilitador: `COUNT(talleres)` y `SUM(inscritos)` del año, orden desc, límite 10. | `talleres` ⋈ `empleados` ⋈ `personas` ⟕ `participantes_taller` |
 | **F-META** | **Meta anual de formación** | Avance contra la meta institucional de actividades ejecutadas. | `talleres_finalizados_año / meta_talleres_anio`. Numerador = `COUNT(*)` talleres `Finalizado` del año. | `talleres` + `configuracion_sistema` |
@@ -159,6 +165,7 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | **T-2** | **Participantes por tipo de ruta** | Demanda relativa de cada tipo de ruta. | Por `tipo_ruta` (NULL → "General"): `COUNT(DISTINCT rutas)` y `COUNT(participantes)`. | `rutas` ⟕ `participantes_ruta` |
 | **T-1** | **Meta anual de rutas** | Avance contra la meta de rutas ejecutadas. | `rutas_finalizadas_año / meta_rutas_anio`. Numerador = `COUNT(*)` rutas `Finalizada` con `EXTRACT(YEAR FROM COALESCE(fecha_visita, created_at)) = año`. | `rutas` + `configuracion_sistema` |
 | **T-DEMO** | **Demografía de participantes en rutas (año)** | Desagregación por género/edad de quienes recorren rutas ejecutadas en el año. | Conteos condicionales: con cédula → `personas.genero` (M/F); libres (niños/as) → `genero_libre`. Solo rutas con `COALESCE(fecha_visita, created_at)` del año. | `participantes_ruta` ⟕ `personas` (+ `EXISTS rutas`) |
+| **CMI-T01** | **Frecuencia de rutas por período** | Ritmo de ejecución de rutas a lo largo del tiempo. | `COUNT(*)` de rutas `Finalizada` agrupadas por mes (`YYYY-MM` de `COALESCE(fecha_visita, created_at)`), últimos 6 meses. Gráfica de barras. | `rutas` |
 
 > **T-3 (Instituciones participantes en rutas) — RETIRADO.** El campo `id_institucion` se eliminó del flujo de inscripción de rutas; el indicador quedó sin fuente de datos y se removió del controlador y de la vista (2026-05-31).
 > **Nivel de dificultad — ELIMINADO** (migración 021). IMATUR no usa esa distinción; ya no aparece en ningún indicador, filtro ni reporte de rutas.
@@ -176,7 +183,10 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 |----|-----------|----------------|---------|--------|
 | — | **Inventario por categoría** | Composición del patrimonio por tipo de bien. | `COUNT(bienes)` por categoría (incluye categorías con 0). | `categorias` ⟕ `inventario` |
 | — | **Inventario por condición** | Estado general del patrimonio. | `COUNT(*)` agrupado por `condicion`. | `inventario` |
-| **PROP-I01** | **Tasa de depreciación operativa** | % del patrimonio deteriorado (necesidad de mantenimiento/reposición). | `deteriorados / total × 100`, donde deteriorados = `Dañado` + `En Reparación`. | `inventario` |
+| **PROP-I01** | **Tasa de depreciación operativa** | % del patrimonio deteriorado (necesidad de mantenimiento/reposición). | `deteriorados / total × 100`, donde deteriorados = `Dañado` + `En Reparación`. (En el panel se muestra como **Salud del Patrimonio** = `100 − depreciación`). | `inventario` |
+| **CMI-I01** | **Precisión del registro** | Calidad de los datos del inventario. | `bienes correctos / total × 100`, donde correcto = `Durable` con `codigo_bn` no vacío, o cualquier `Fungible` (la categoría y la ubicación son FK obligatorias). Umbral verde ≥95%, ámbar ≥85%. | `inventario` |
+| **CMI-I02** | **Movimientos de bienes (año)** | Volumen y tipo de movimientos de patrimonio. | `COUNT(*)` por `tipo_movimiento` (Asignación/Devolución/Traslado/Baja/Mantenimiento), año actual. Donut + tabla. | `actividad_inventario` |
+| **CMI-I03** | **Asignación de responsables** | % de bienes durables bajo custodia activa. | `durables cuyo ÚLTIMO movimiento = 'Asignacion' / total de durables × 100` (`DISTINCT ON (id_inventario)` ordenado por fecha desc). Informativo (sin veredicto: no todo durable requiere custodia). | `actividad_inventario` ⋈ `inventario` |
 
 ---
 

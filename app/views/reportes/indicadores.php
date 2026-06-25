@@ -127,6 +127,58 @@ function verdictPill(string $color): string {
          . 'padding:2px 7px;border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
 }
 
+// ── Helper: tarjeta de métrica con valor grande, sub, veredicto y barra ───
+function metricCard(string $label, string $valueDisplay, string $color, string $sub, string $icon, string $meta = '', ?int $barPct = null, bool $verdict = true): void {
+    echo '<div class="col-6 col-md-4">';
+    echo '<div class="sig-card h-100" style="border-bottom:3px solid ' . $color . ';">';
+    echo '<div class="sig-card__body" style="padding:var(--sp-4);">';
+    echo '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">';
+    echo '<div style="min-width:0;flex:1;">';
+    echo '<div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">' . htmlspecialchars($label) . '</div>';
+    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $color . ';line-height:1;margin-bottom:4px;">' . $valueDisplay . '</div>';
+    echo '<div style="font-size:0.65rem;color:var(--text-tertiary);">' . htmlspecialchars($sub) . '</div>';
+    if ($verdict) echo '<div style="margin-top:5px;">' . verdictPill($color) . '</div>';
+    echo '</div>';
+    echo '<div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:' . $color . '22;display:flex;align-items:center;justify-content:center;"><i class="bi ' . $icon . '" style="font-size:1rem;color:' . $color . ';"></i></div>';
+    echo '</div>';
+    if ($barPct !== null) {
+        echo '<div style="margin-top:var(--sp-3);"><div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;"><div style="height:100%;width:' . min(100, max(0, $barPct)) . '%;background:' . $color . ';border-radius:2px;"></div></div>';
+        if ($meta !== '') echo '<div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">' . htmlspecialchars($meta) . '</span></div>';
+        echo '</div>';
+    }
+    echo '</div></div></div>';
+}
+
+// ── Bloque verde: ratios adicionales (cuadre con el documento CMI) ────────
+$jm    = $data['jornadaMes'] ?? null;
+$hReal = (float)($jm->horas_reales ?? 0);
+$hProg = (float)($jm->horas_programadas ?? 0);
+$tasaJornada = $hProg > 0 ? round(($hReal / $hProg) * 100, 1) : 0;
+$colJornada  = $tasaJornada >= 90 ? '#059669' : ($tasaJornada >= 75 ? '#D97706' : '#DC2626');
+
+$pa     = $data['precisionAsist'] ?? null;
+$paTot  = (int)($pa->total ?? 0); $paOk = (int)($pa->completos ?? 0);
+$tasaPrecAsist = $paTot > 0 ? round(($paOk / $paTot) * 100, 1) : 0;
+$colPrecAsist  = $tasaPrecAsist >= 95 ? '#059669' : ($tasaPrecAsist >= 85 ? '#D97706' : '#DC2626');
+
+$tDoc   = (int)($data['empDocTotal'] ?? 0); $okDoc = (int)($data['empDocCompletos'] ?? 0);
+$tasaDoc = $tDoc > 0 ? round(($okDoc / $tDoc) * 100, 1) : 0;
+$colDoc  = $tasaDoc >= 90 ? '#059669' : ($tasaDoc >= 70 ? '#D97706' : '#DC2626');
+
+$pi     = $data['precisionInv'] ?? null;
+$piTot  = (int)($pi->total ?? 0); $piOk = (int)($pi->completos ?? 0);
+$tasaPrecInv = $piTot > 0 ? round(($piOk / $piTot) * 100, 1) : 0;
+$colPrecInv  = $tasaPrecInv >= 95 ? '#059669' : ($tasaPrecInv >= 85 ? '#D97706' : '#DC2626');
+
+$aiv    = $data['asignacionInv'] ?? null;
+$aiTot  = (int)($aiv->total_durables ?? 0); $aiAsig = (int)($aiv->asignados ?? 0);
+$tasaAsig = $aiTot > 0 ? round(($aiAsig / $aiTot) * 100, 1) : 0;
+
+$cp     = $data['coberturaParroquia'] ?? null;
+$parrCub = (int)($cp->parroquias_cubiertas ?? 0);
+$parrTot = (int)($cp->total_parroquias ?? 0);
+$pctParr = $parrTot > 0 ? round(($parrCub / $parrTot) * 100) : 0;
+
 // ── Evaluación de cada área estratégica ───────────────────────────────────
 $semTiles = [];
 
@@ -308,32 +360,30 @@ foreach ($semTiles as $st) {
     </div>
 </div>
 
+<!-- Sub-área: Recursos Humanos ──────────────────────────────────────── -->
+<?php areaSep('Eficiencia · Recursos Humanos — ' . $data['anioActual'], '#3B82F6', 'bi-people'); ?>
+<div class="row g-3 mb-4 anim-slide-up">
+    <?php
+    metricCard('Cumplimiento de Jornada', $tasaJornada . '%', $colJornada,
+        round($hReal) . ' h reales / ' . round($hProg) . ' h programadas (mes)', 'bi-clock-history', 'Meta: ≥ 90%', (int)round($tasaJornada));
+    metricCard('Precisión de Asistencia', $tasaPrecAsist . '%', $colPrecAsist,
+        $paOk . ' completos / ' . $paTot . ' registros (mes)', 'bi-check2-square', 'Meta: ≥ 95%', (int)round($tasaPrecAsist));
+    metricCard('Documentación del Personal', $tasaDoc . '%', $colDoc,
+        $okDoc . ' completos / ' . $tDoc . ' empleados', 'bi-folder-check', 'Meta: ≥ 90%', (int)round($tasaDoc));
+    ?>
+</div>
+
 <!-- Sub-área: Inventario y Patrimonio ───────────────────────────────── -->
 <?php areaSep('Eficiencia · Inventario y Patrimonio', '#64748B', 'bi-box-seam'); ?>
 <div class="row g-3 mb-4 anim-slide-up">
-    <div class="col-6 col-md-4">
-        <div class="sig-card" style="border-bottom:3px solid <?php echo $colDeprec; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Depreciación del Patrimonio</div>
-                        <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colDeprec; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaDeprec; ?>%</div>
-                        <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $deteriorados; ?> deteriorados de <?php echo $totalBienes; ?></div>
-                        <div style="margin-top:5px;"><?php echo verdictPill($colDeprec); ?></div>
-                    </div>
-                    <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colDeprec; ?>22;display:flex;align-items:center;justify-content:center;">
-                        <i class="bi bi-exclamation-circle-fill" style="font-size:1rem;color:<?php echo $colDeprec; ?>;"></i>
-                    </div>
-                </div>
-                <div style="margin-top:var(--sp-3);">
-                    <div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
-                        <div style="height:100%;width:<?php echo min(100,$tasaDeprec); ?>%;background:<?php echo $colDeprec; ?>;border-radius:2px;"></div>
-                    </div>
-                    <div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">Umbral: &lt; 15%</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php
+    metricCard('Salud del Patrimonio', (100 - $tasaDeprec) . '%', $colDeprec,
+        $deteriorados . ' deteriorados de ' . $totalBienes . ' bienes', 'bi-shield-check', 'Deterioro < 15%', (int)round(100 - $tasaDeprec));
+    metricCard('Precisión del Registro', $tasaPrecInv . '%', $colPrecInv,
+        $piOk . ' completos / ' . $piTot . ' bienes', 'bi-upc-scan', 'Durables con código BN', (int)round($tasaPrecInv));
+    metricCard('Asignación de Responsables', $tasaAsig . '%', '#0891B2',
+        $aiAsig . ' asignados / ' . $aiTot . ' durables', 'bi-person-check', 'Bajo custodia actual', (int)round($tasaAsig), false);
+    ?>
 </div>
 
 <!-- ══════════════════════════════════════════════════════════════════════
@@ -747,6 +797,14 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
                 <?php else: ?>
                 <div style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-2);font-style:italic;">Sin actividades con sede registrada este año</div>
                 <?php endif; ?>
+                <div style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);">
+                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Cobertura por parroquia</div>
+                    <div style="font-size:1.5rem;font-weight:800;color:#7C3AED;line-height:1;"><?php echo $parrCub; ?> <span style="font-size:0.8rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $parrTot; ?> parroquias</span></div>
+                    <div style="height:6px;background:var(--bg-muted);border-radius:3px;margin:var(--sp-2) 0;overflow:hidden;">
+                        <div style="height:100%;width:<?php echo $pctParr; ?>%;background:#7C3AED;border-radius:3px;transition:width 1s;"></div>
+                    </div>
+                    <div style="font-size:1rem;font-weight:800;color:#7C3AED;"><?php echo $pctParr; ?>%</div>
+                </div>
             </div>
         </div>
     </div>
@@ -895,6 +953,19 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
     </div>
 </div>
 
+<div class="row g-4 mb-6 anim-slide-up">
+    <div class="col-12">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-calendar-range-fill" style="color:#D97706;"></i> Frecuencia de Rutas Ejecutadas — Últimos 6 meses</div>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <div id="chartRutasMes"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: TURISMO — DEMOGRAFÍA DE PARTICIPANTES (T-DEMO)
 ════════════════════════════════════════════════════════════════════════ -->
@@ -986,6 +1057,53 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
             </div>
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div id="chartInvCat"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-8 anim-slide-up">
+    <div class="col-md-6">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-arrow-left-right" style="color:#0891B2;"></i> Movimientos de Bienes — <?php echo $data['anioActual']; ?></div>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <?php if (empty($data['movInventario'])): ?>
+                    <div style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);font-size:12px;">
+                        <i class="bi bi-info-circle" style="font-size:1.5rem;display:block;margin-bottom:var(--sp-2);"></i>
+                        Sin movimientos (asignaciones, traslados, bajas) registrados este año.
+                    </div>
+                <?php else: ?>
+                    <div id="chartMovInv"></div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title"><i class="bi bi-list-ol" style="color:#0891B2;"></i> Detalle de Movimientos</div>
+            </div>
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Movimiento</th>
+                            <th style="text-align:center;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($data['movInventario'])): ?>
+                            <tr><td colspan="2" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin movimientos este año</td></tr>
+                        <?php else: foreach ($data['movInventario'] as $mv): ?>
+                            <tr>
+                                <td class="cell-strong"><?php echo htmlspecialchars($mv->tipo_movimiento ?? '—'); ?></td>
+                                <td style="text-align:center;font-weight:700;color:#0891B2;"><?php echo (int)($mv->total ?? 0); ?></td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -1348,6 +1466,49 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: false },
         theme, noData
     }).render();
+
+    // ── BLOQUE VERDE: Frecuencia de rutas ejecutadas por mes (barras) ─────────
+    <?php
+    $lblRM = []; $valRM = [];
+    foreach ($data['rutasPorMes'] ?? [] as $rm) {
+        $lblRM[] = fmtMes($rm->mes ?? '');
+        $valRM[] = (int)($rm->total ?? 0);
+    }
+    ?>
+    if (document.querySelector('#chartRutasMes')) {
+        new ApexCharts(document.querySelector('#chartRutasMes'), {
+            chart: { type: 'bar', height: 260, background: 'transparent', toolbar: { show: false } },
+            series: [{ name: 'Rutas ejecutadas', data: <?php echo json_encode($valRM); ?> }],
+            xaxis: { categories: <?php echo json_encode($lblRM); ?>, labels: axLbl },
+            yaxis: { labels: { style: { colors: tp } }, min: 0 },
+            plotOptions: { bar: { borderRadius: 5, columnWidth: '50%' } },
+            colors: ['#D97706'],
+            dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
+            grid, theme, noData
+        }).render();
+    }
+
+    // ── BLOQUE VERDE: Movimientos de inventario por tipo (donut) ──────────────
+    <?php
+    $lblMI = []; $valMI = [];
+    foreach ($data['movInventario'] ?? [] as $mi) {
+        $lblMI[] = $mi->tipo_movimiento ?? 'N/A';
+        $valMI[] = (int)($mi->total ?? 0);
+    }
+    ?>
+    if (document.querySelector('#chartMovInv')) {
+        new ApexCharts(document.querySelector('#chartMovInv'), {
+            chart: { type: 'donut', height: 280, background: 'transparent' },
+            series: <?php echo json_encode($valMI); ?>,
+            labels: <?php echo json_encode($lblMI); ?>,
+            colors: palette,
+            legend: { position: 'bottom', labels: { colors: tp }, fontSize: '11px' },
+            stroke: { show: false },
+            plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
+            dataLabels: { enabled: false },
+            theme, noData
+        }).render();
+    }
 });
 </script>
 

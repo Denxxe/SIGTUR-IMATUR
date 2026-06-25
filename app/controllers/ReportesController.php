@@ -2347,6 +2347,82 @@ class ReportesController extends Controller {
             $db->bind(':tol', Asistencia::toleranciaPuntualidad());
             $puntualidadMes = $db->single();
 
+            // ══ BLOQUE VERDE — indicadores adicionales (cuadre con el documento CMI) ══
+
+            // RRHH: Cumplimiento de jornada (horas reales vs programadas) — mes actual.
+            // Compara solo días con marcaje completo (entrada+salida) Y horario asignado,
+            // para que un check-out faltante no distorsione el cumplimiento.
+            $db->query("SELECT
+                            COALESCE(SUM(CASE WHEN a.hora_salida IS NOT NULL AND h.hora_entrada IS NOT NULL AND h.hora_salida IS NOT NULL
+                                 THEN EXTRACT(EPOCH FROM (a.hora_salida - a.hora_entrada))/3600.0 END), 0) AS horas_reales,
+                            COALESCE(SUM(CASE WHEN a.hora_salida IS NOT NULL AND h.hora_entrada IS NOT NULL AND h.hora_salida IS NOT NULL
+                                 THEN EXTRACT(EPOCH FROM (h.hora_salida - h.hora_entrada))/3600.0 END), 0) AS horas_programadas
+                        FROM asistencias a
+                        INNER JOIN empleados e ON a.id_empleado = e.id
+                        LEFT  JOIN horarios  h ON e.id_horario  = h.id
+                        WHERE a.is_active = TRUE AND a.fecha >= date_trunc('month', CURRENT_DATE)");
+            $jornadaMes = $db->single();
+
+            // RRHH: Precisión del registro de asistencia (registros con salida / total) — mes actual.
+            $db->query("SELECT COUNT(*) AS total, COUNT(hora_salida) AS completos
+                        FROM asistencias
+                        WHERE is_active = TRUE AND fecha >= date_trunc('month', CURRENT_DATE)");
+            $precisionAsist = $db->single();
+
+            // RRHH: Documentación completa del personal (expedientes con recaudos obligatorios completos).
+            $empDocTotal = 0; $empDocCompletos = 0;
+            foreach (Empleado::all() as $emp) {
+                $empDocTotal++;
+                $est = ExpedienteDocumento::recaudosEstado((int)$emp->id);
+                if ((int)($est['faltan_obligatorios'] ?? 0) === 0) $empDocCompletos++;
+            }
+
+            // INVENTARIO: Precisión del registro (durables con código BN; fungibles siempre cuentan).
+            $db->query("SELECT COUNT(*) AS total,
+                               COUNT(CASE WHEN (tipo_bien = 'Durable' AND codigo_bn IS NOT NULL AND TRIM(codigo_bn) <> '')
+                                            OR tipo_bien = 'Fungible' THEN 1 END) AS completos
+                        FROM inventario WHERE is_active = TRUE");
+            $precisionInv = $db->single();
+
+            // INVENTARIO: Movimientos por tipo (entradas/salidas/asignaciones) — año actual.
+            $db->query("SELECT tipo_movimiento, COUNT(*) AS total
+                        FROM actividad_inventario
+                        WHERE is_active = TRUE AND EXTRACT(YEAR FROM fecha) = :anio
+                        GROUP BY tipo_movimiento ORDER BY total DESC");
+            $db->bind(':anio', $anioActual);
+            $movInventario = $db->resultSet();
+
+            // INVENTARIO: Asignación responsable — durables cuyo ÚLTIMO movimiento es 'Asignacion'.
+            $db->query("SELECT
+                            (SELECT COUNT(*) FROM inventario WHERE is_active = TRUE AND tipo_bien = 'Durable') AS total_durables,
+                            COUNT(CASE WHEN u.tipo_movimiento = 'Asignacion' THEN 1 END) AS asignados
+                        FROM (
+                            SELECT DISTINCT ON (ai.id_inventario) ai.id_inventario, ai.tipo_movimiento
+                            FROM actividad_inventario ai
+                            INNER JOIN inventario i ON i.id = ai.id_inventario AND i.is_active = TRUE AND i.tipo_bien = 'Durable'
+                            WHERE ai.is_active = TRUE
+                            ORDER BY ai.id_inventario, ai.fecha DESC, ai.id DESC
+                        ) u");
+            $asignacionInv = $db->single();
+
+            // FORMACIÓN: Cobertura territorial por parroquia (año actual).
+            $db->query("SELECT COUNT(DISTINCT uf.parroquia) AS parroquias_cubiertas,
+                               (SELECT COUNT(*) FROM parroquia WHERE is_active = TRUE) AS total_parroquias
+                        FROM talleres t
+                        INNER JOIN ubicaciones_formacion uf ON t.id_ubicacion_formacion = uf.id
+                        WHERE t.is_active = TRUE AND uf.parroquia IS NOT NULL
+                          AND EXTRACT(YEAR FROM t.fecha_inicio) = :anio");
+            $db->bind(':anio', $anioActual);
+            $coberturaParroquia = $db->single();
+
+            // TURISMO: Frecuencia de rutas ejecutadas (Finalizadas) por mes — últimos 6 meses.
+            $db->query("SELECT TO_CHAR(COALESCE(fecha_visita, created_at), 'YYYY-MM') AS mes, COUNT(*) AS total
+                        FROM rutas
+                        WHERE is_active = TRUE AND estado = 'Finalizada'
+                          AND COALESCE(fecha_visita, created_at) >= (date_trunc('month', CURRENT_DATE) - INTERVAL '5 months')
+                        GROUP BY mes ORDER BY mes ASC");
+            $rutasPorMes = $db->resultSet();
+
             $data = [
                 'titulo'                => 'Indicadores de Gestión',
                 'anioActual'            => $anioActual,
@@ -2395,6 +2471,16 @@ class ReportesController extends Controller {
                 'amonDespido'           => $amonDespido,
                 'puntualidadMes'        => $puntualidadMes,
                 'tolPunt'               => Asistencia::toleranciaPuntualidad(),
+                // Bloque verde — indicadores adicionales (cuadre con el documento CMI)
+                'jornadaMes'            => $jornadaMes,
+                'precisionAsist'        => $precisionAsist,
+                'empDocTotal'           => $empDocTotal,
+                'empDocCompletos'       => $empDocCompletos,
+                'precisionInv'          => $precisionInv,
+                'movInventario'         => $movInventario,
+                'asignacionInv'         => $asignacionInv,
+                'coberturaParroquia'    => $coberturaParroquia,
+                'rutasPorMes'           => $rutasPorMes,
             ];
             $this->view('reportes/indicadores', $data);
         } catch (Exception $e) {
