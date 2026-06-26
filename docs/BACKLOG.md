@@ -149,8 +149,9 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - El profesor pidió **mínimo 6 meses de servicio** para emitir constancia; el sistema hoy **no exige antigüedad** (decisión previa). **Contradicción.**
 - **Preguntar:** ¿se exige mínimo 6 meses para alguna constancia (¿cuáles?) o se mantiene sin mínimo?
 
-### 3.3 🟡 O1 — Cargos por departamento
-- **Preguntar:** ¿qué cargos existen en cada departamento y sus diferencias? ¿Se cataloga la relación cargo↔departamento o el cargo es transversal (como hoy)?
+### 3.3 ✅ O1 — Cargos por departamento — **DECIDIDO (2026-06-25): cargos GENERALES**
+- **Decisión del cliente:** los cargos son **transversales/generales** (no por departamento), tal como ya estaba implementado. El empleado tiene `id_cargo` e `id_departamento` independientes; un mismo catálogo de cargos sirve para todos los departamentos.
+- **Acción:** ninguna. Se evaluó vincular cargo↔departamento (mig. tentativa 053) y se **descartó/revirtió** por esta decisión.
 
 ### 3.4 Inventario
 | ID | Pregunta |
