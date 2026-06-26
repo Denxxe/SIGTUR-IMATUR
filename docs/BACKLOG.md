@@ -145,9 +145,9 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Preguntar:** ¿el sistema **calcula** la nómina/liquidación o solo **registra** y genera el reporte de envío? · ¿formato exacto del archivo a la Alcaldía? · estructura de salario integral (base + cuota vacaciones + cuota utilidades) y conceptos de liquidación · ¿el bono vacacional lo calcula el sistema?
 - **Al desbloquear:** módulo Nómina + liquidación (probable v1 = registro + reporte, no cálculo completo).
 
-### 3.2 🟡 B13 — Mínimo de antigüedad para constancia
-- El profesor pidió **mínimo 6 meses de servicio** para emitir constancia; el sistema hoy **no exige antigüedad** (decisión previa). **Contradicción.**
-- **Preguntar:** ¿se exige mínimo 6 meses para alguna constancia (¿cuáles?) o se mantiene sin mínimo?
+### 3.2 ✅ B13 — Mínimo de antigüedad para constancia — **DECIDIDO (2026-06-25): SIN mínimo**
+- **Decisión del cliente:** **no** se exige antigüedad mínima para emitir constancias (se descarta el "mínimo 6 meses"). El mínimo de contrato ya se aclaró en otra sesión.
+- **Acción:** ninguna — el sistema ya emite constancias sin exigir antigüedad (`Constancia::crear` no valida tiempo de servicio). B13 cerrado.
 
 ### 3.3 ✅ O1 — Cargos por departamento — **DECIDIDO (2026-06-25): cargos GENERALES**
 - **Decisión del cliente:** los cargos son **transversales/generales** (no por departamento), tal como ya estaba implementado. El empleado tiene `id_cargo` e `id_departamento` independientes; un mismo catálogo de cargos sirve para todos los departamentos.
