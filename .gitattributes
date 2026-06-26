@@ -1,0 +1,28 @@
+# Normalización de fin de línea — evita el ruido "LF will be replaced by CRLF".
+# El repositorio guarda siempre LF; el checkout también usa LF (entorno PHP/Laragon).
+* text=auto eol=lf
+
+# Tipos de texto explícitos
+*.php   text eol=lf
+*.sql   text eol=lf
+*.css   text eol=lf
+*.js    text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.html  text eol=lf
+*.txt   text eol=lf
+*.svg   text eol=lf
+
+# Archivos binarios — nunca modificar el fin de línea
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.pdf   binary
+*.xlsx  binary
+*.xls   binary

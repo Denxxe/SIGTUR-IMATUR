@@ -24,6 +24,14 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — Calidad: pruebas, normalización de fin de línea y manual (sin migración)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Pruebas | **Suite mínima sin dependencias** (`tests/run.php`, `php tests/run.php`) | 18 checks de lógica pura sin BD: política de contraseñas, vacaciones (derecho/antigüedad/acumulado), `Util::edad`, `Empleado::tiempoServicio`. |
+| ✅ Repo | **`.gitattributes`** | Normaliza fin de línea a LF y marca binarios — elimina el ruido "LF will be replaced by CRLF". |
+| ✅ Docs | **Manual de usuario por rol** (`docs/MANUAL_USUARIO.md`) | Guía práctica: acceso/seguridad, interfaz, roles, módulos, reportes, campana, búsqueda, perfil y FAQ. |
+
 ### 2026-06-25 — UX/seguridad: campana, búsqueda global, accesos, filtro de año (sin migración)
 
 | # | Mejora | Detalle |
@@ -168,11 +176,9 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. |
-| 🟢 **Filtro de rango de fechas (granularidad fina) en Indicadores** | Ya hay selector de **año**; falta, si se requiere, rango libre mes-a-mes en las métricas anuales. |
-| 🟢 **Suite mínima de pruebas** | Cubrir cálculos críticos: vacaciones (`Vacacion`), puntualidad (`Asistencia`), tiempo de servicio (`Empleado`). Hoy no hay tests. |
-| 🟢 **`.gitattributes`** | Fijar fin de línea (evita el ruido "LF will be replaced by CRLF" en cada commit). |
-| 🟢 **Manual de usuario por rol** | Documento breve para entrega/defensa. |
+| 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. **Único pendiente de impacto alto.** |
+| 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año** (cubre "período configurable"); pendiente solo si el cliente pide rango libre mes-a-mes en las métricas anuales (refactor amplio, bajo valor marginal). |
+| 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar más casos (p. ej. `Asistencia::calcularMinutosTarde`, `Vacacion::diasHabiles` con feriados — requeriría aislar la dependencia de BD). |
 
 ---
 

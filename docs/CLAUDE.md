@@ -541,6 +541,8 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_m
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
 | **`docs/BACKLOG.md`** | **BACKLOG ÚNICO** — qué falta por hacer y decidir: estado por módulo, decisiones/insumos del cliente, preguntas abiertas, auditoría H-xx abierta, programación faltante. Consolida (y reemplaza) los antiguos REGISTRO_NEGOCIO/DECISIONES_PENDIENTES/preguntas/AUDITORIA_SENIOR/Notas/PLAN_ENTREGA |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
+| `docs/MANUAL_USUARIO.md` | **Manual de usuario por rol** (acceso/seguridad, interfaz, módulos, reportes, campana, búsqueda, perfil, FAQ) |
+| `tests/run.php` | **Suite mínima de pruebas** sin dependencias (`php tests/run.php`): lógica pura sin BD (contraseñas, vacaciones, edad, tiempo de servicio) |
 
 > **Nota (2026-06-21):** migraciones aplicadas hasta la **050**. Para qué falta y decisiones pendientes, ver siempre `docs/BACKLOG.md` (fuente única de seguimiento).
 
