@@ -1,20 +1,27 @@
 <?php
 
 /**
- * SIGTUR-IMATUR - Archivo de configuración global
+ * SIGTUR-IMATUR — Plantilla de configuración.
+ *
+ * COPIAR este archivo a `config/config.php` y completar con los valores reales
+ * del entorno. `config/config.php` NO se versiona (está en .gitignore) para no
+ * exponer credenciales. Cada servidor (local/producción) tiene el suyo.
  */
 
-// URL Base de la aplicación
+// URL Base de la aplicación (ajustar por entorno; sin barra final)
 define('URL_ROOT', 'http://localhost/SIGTUR-IMATUR');
 
 // Nombre del Sitio
 define('SITE_NAME', 'SIGTUR-IMATUR');
 
-// Configuración de la Base de Datos (PostgreSQL)
+// Modo depuración: en PRODUCCIÓN debe ser false (no muestra errores al usuario).
+define('APP_DEBUG', false);
+
+// Configuración de la Base de Datos (PostgreSQL) — usar credenciales propias.
 define('DB_HOST', 'localhost');
 define('DB_PORT', '5432');
 define('DB_USER', 'postgres');
-define('DB_PASS', '1234'); // Cambiar según el entorno real
+define('DB_PASS', 'CAMBIAR_ESTA_CONTRASEÑA');
 define('DB_NAME', 'SIGTUR-IMATUR');
 
 // Carpeta de la aplicación (Raíz del proyecto)

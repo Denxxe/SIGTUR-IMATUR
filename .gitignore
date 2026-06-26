@@ -9,6 +9,9 @@ public/uploads/**
 .env
 *.log
 
+# Configuración con credenciales — NO versionar (usar config/config.example.php)
+config/config.php
+
 # Artefactos del sistema operativo / editores
 Thumbs.db
 .DS_Store

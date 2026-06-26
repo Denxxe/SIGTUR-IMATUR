@@ -24,6 +24,17 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — Análisis profundo: Lote 1 (seguridad rápida) + Lote 3 (índices, mig. 052)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Seguridad | **Errores de producción** | `public/index.php` con `display_errors` según `APP_DEBUG`, `log_errors` y `set_exception_handler` (página 500 limpia). `Database` ya no filtra el detalle del error de conexión. |
+| ✅ Seguridad | **Cookie de sesión endurecida** | `httponly` + `samesite=Lax` (+ `secure` con HTTPS) antes de `session_start()`. |
+| ✅ Seguridad | **Secretos fuera del repo** | `config/config.php` deja de versionarse (`.gitignore`); plantilla `config/config.example.php`. **Acción operativa:** cambiar la contraseña real de PostgreSQL. |
+| ✅ Rendimiento | **Índices (mig. 052)** | 5 índices nuevos en tablas que crecen (participantes_ruta, actividad_inventario, personas/parroquia, audit_logs); verificado que no duplican los existentes. |
+
+> Correcciones del análisis: el "SQL injection crítico en `Taller::actualizarPersona`" era **falso positivo** (claves de columna fijas en el controlador, no input). El "upload de PHP" está mitigado por whitelist de extensión (el riesgo real es de *fuga*, ver §5.2).
+
 ### 2026-06-25 — Respaldos automáticos de BD (sin migración)
 
 | # | Mejora | Detalle |
@@ -182,9 +193,18 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🟢 **Programar la tarea de respaldo en el servidor** | El script `cron/respaldo_bd.php` ya existe y funciona; falta **crear la tarea programada** en el equipo de producción (`schtasks`, ver cabecera del script). Acción operativa, no de código. |
-| 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año** (cubre "período configurable"); pendiente solo si el cliente pide rango libre mes-a-mes en las métricas anuales (refactor amplio, bajo valor marginal). |
-| 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar más casos (p. ej. `Asistencia::calcularMinutosTarde`, `Vacacion::diasHabiles` con feriados — requeriría aislar la dependencia de BD). |
+| 🟠 **Proteger documentos subidos** (análisis profundo, Lote 2) | Recaudos/pasantes están en `public/uploads/` (web root) **sin control de acceso**. Mover a `storage/uploads/` + controlador de descarga que valide sesión/rol. Mayor riesgo de **confidencialidad** pendiente. |
+| 🟡 **IDOR en borrados** | `CargaFamiliar/ExpedienteDocumento/CursoRealizado/ExperienciaLaboral::delete` no validan pertenencia del registro al empleado/contexto. Verificar `id_empleado`/`id_persona` antes de borrar. |
+| 🟡 **Transacciones en guardados multi-tabla** | `Taller`+participantes, `CargaFamiliar`, `PermisoLaboral` guardan sin `beginTransaction`. Envolver para atomicidad. |
+| 🟡 **Cache de alertas/config en sesión** | `CentroAlertas::resumen` + lectura de `dias_preaviso_*` corren en el header de **cada** página. Cachear en sesión con TTL corto. |
+| 🟢 **Validación MIME en subida** | `EmpleadosController::subirDocumento` valida solo extensión; añadir `finfo`/`mime_content_type`. |
+| 🟢 **UX móvil del header + a11y** | Header se satura en <576px (buscador+campana+tema+perfil); `aria-label` en botones ícono; `label[for]` en login/formularios. |
+| 🟢 **README de instalación/despliegue** | Setup BD, copia de `config.example.php`, crons (`schtasks`), restauración de respaldos. |
+| 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
+| 🟢 **Dividir `ReportesController`** (~3000 líneas) | Separar por área cuando convenga (mantenibilidad). |
+| 🟢 **Programar la tarea de respaldo en el servidor** | `cron/respaldo_bd.php` ya funciona; falta crear la tarea (`schtasks`). Operativo. |
+| 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
+| 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
 
 ---
 

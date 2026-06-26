@@ -34,7 +34,15 @@ class Database {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            die("Error de conexión: " . $this->error);
+            // Registrar el detalle en el log; NO exponerlo (puede filtrar host/credenciales/versión).
+            error_log('[SIGTUR] Error de conexión a BD: ' . $this->error);
+            if (PHP_SAPI === 'cli') {
+                fwrite(STDERR, 'Error de conexión con la base de datos.' . PHP_EOL);
+            } else {
+                http_response_code(500);
+                echo 'Error de conexión con la base de datos. Contacte al administrador.';
+            }
+            exit(1);
         }
     }
 
