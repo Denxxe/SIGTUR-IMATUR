@@ -24,6 +24,12 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — Respaldos automáticos de BD (sin migración)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Continuidad | **Respaldo automático de la base de datos** (`cron/respaldo_bd.php`) | `pg_dump` (SQL plano) a `storage/backups/` con nombre fechado + **rotación** (conserva `BACKUP_RETENTION`=14). Carpeta fuera de `public/` y con `.gitignore`. `PG_DUMP_PATH`/`BACKUP_RETENTION` en config. Programable en el Programador de tareas de Windows; restaurar con `psql -f`. Probado: genera dump válido (92 CREATE/COPY). |
+
 ### 2026-06-25 — Calidad: pruebas, normalización de fin de línea y manual (sin migración)
 
 | # | Mejora | Detalle |
@@ -176,7 +182,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. **Único pendiente de impacto alto.** |
+| 🟢 **Programar la tarea de respaldo en el servidor** | El script `cron/respaldo_bd.php` ya existe y funciona; falta **crear la tarea programada** en el equipo de producción (`schtasks`, ver cabecera del script). Acción operativa, no de código. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año** (cubre "período configurable"); pendiente solo si el cliente pide rango libre mes-a-mes en las métricas anuales (refactor amplio, bajo valor marginal). |
 | 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar más casos (p. ej. `Asistencia::calcularMinutosTarde`, `Vacacion::diasHabiles` con feriados — requeriría aislar la dependencia de BD). |
 

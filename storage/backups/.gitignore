@@ -1,0 +1,3 @@
+# Los respaldos y el log NO se versionan; solo se conserva la carpeta.
+*
+!.gitignore
