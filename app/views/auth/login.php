@@ -33,8 +33,9 @@
 
         <form action="<?php echo URL_ROOT; ?>/auth/login" method="POST">
             <div class="login-field">
-                <label>Usuario</label>
-                <input type="text" name="username" placeholder="Ingrese su usuario"
+                <label for="username">Usuario</label>
+                <input type="text" name="username" id="username" placeholder="Ingrese su usuario"
+                    autocomplete="username"
                     class="<?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
                     value="<?php echo $data['username'] ?? ''; ?>">
                 <?php if (!empty($data['username_err'])): ?>
@@ -43,8 +44,9 @@
             </div>
 
             <div class="login-field">
-                <label>Contraseña</label>
-                <input type="password" name="password" placeholder="Ingrese su contraseña"
+                <label for="password">Contraseña</label>
+                <input type="password" name="password" id="password" placeholder="Ingrese su contraseña"
+                    autocomplete="current-password"
                     class="<?php echo (!empty($data['password_err'])) ? 'is-invalid' : ''; ?>">
                 <?php if (!empty($data['password_err'])): ?>
                     <div class="error-msg"><?php echo $data['password_err']; ?></div>

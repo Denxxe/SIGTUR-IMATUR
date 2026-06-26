@@ -24,6 +24,16 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — Análisis profundo: Lote 5 (integridad) + Lote 6 (UX/a11y/README)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Seguridad | **Anti-IDOR en borrados** | `eliminarFamiliar/Curso/Experiencia` validan pertenencia a la persona del empleado; `eliminarDocumento` valida `id_empleado`. |
+| ✅ Verificación | **Transacciones** | Revisado: ya están aplicadas donde se requieren (`Empleado::save/egreso/reingreso/traslado`, Pasantes, Roles, ConfigSistema). Los demás guardados son de una sola sentencia (atómicos); `guardarCargaFamiliarInicial` es best-effort por diseño. **Sin cambios necesarios.** |
+| ✅ UX | **Header móvil** | El buscador inline se oculta en <576px (queda campana/tema/perfil). |
+| ✅ a11y | **Labels/aria** | `login` con `label[for]`+`autocomplete`; `aria-label` en campana y botón de tema. |
+| ✅ Docs | **README.md** | Instalación, config (`config.example.php`), migraciones, crons (`schtasks`), restauración de respaldos, pruebas, estructura. |
+
 ### 2026-06-25 — Análisis profundo: Lote 2 (proteger uploads) + Lote 4 (cache de alertas)
 
 | # | Mejora | Detalle |
@@ -203,12 +213,10 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🟡 **IDOR en borrados** | `CargaFamiliar/ExpedienteDocumento/CursoRealizado/ExperienciaLaboral::delete` no validan pertenencia del registro al empleado/contexto. Verificar `id_empleado`/`id_persona` antes de borrar. |
-| 🟡 **Transacciones en guardados multi-tabla** | `Taller`+participantes, `CargaFamiliar`, `PermisoLaboral` guardan sin `beginTransaction`. Envolver para atomicidad. |
-| 🟢 **UX móvil del header + a11y** | Header se satura en <576px (buscador+campana+tema+perfil); `aria-label` en botones ícono; `label[for]` en login/formularios. |
-| 🟢 **README de instalación/despliegue** | Setup BD, copia de `config.example.php`, crons (`schtasks`), restauración de respaldos. |
+| 🟢 **a11y en formularios restantes** | Hecho login + botones ícono del header. Falta vincular `label[for]` en los formularios de los demás módulos (empleados, inventario, visitantes…). |
 | 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
 | 🟢 **Dividir `ReportesController`** (~3000 líneas) | Separar por área cuando convenga (mantenibilidad). |
+| 🟢 **Migrar estilos inline a clases** | ~1500 `style=""` en vistas; consolidar en utilidades CSS (gradual). |
 | 🟢 **Programar la tarea de respaldo en el servidor** | `cron/respaldo_bd.php` ya funciona; falta crear la tarea (`schtasks`). Operativo. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
 | 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |

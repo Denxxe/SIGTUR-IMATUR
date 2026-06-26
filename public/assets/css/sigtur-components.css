@@ -664,7 +664,11 @@ form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
   .page__subtitle { font-size: 13px; }
   .kpi__value { font-size: 28px; }
   .sig-card__head, .sig-card__body, .sig-card__footer { padding: var(--sp-4); }
-  
+
+  /* En móvil el buscador inline satura el header; se oculta (queda la campana,
+     tema y perfil). La búsqueda sigue disponible en /buscar y por los listados. */
+  .sig-header__search { display: none !important; }
+
   .sig-header__actions .btn-sig--danger {
      width: 34px; height: 34px; padding: 0; border-radius: 10px;
   }

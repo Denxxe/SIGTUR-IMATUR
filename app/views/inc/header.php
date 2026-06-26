@@ -219,7 +219,7 @@
                 $___sevColor = ['info' => '#0891B2', 'warning' => '#D97706', 'danger' => '#DC2626'];
                 ?>
                 <div class="dropdown">
-                    <button class="sig-header__icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notificaciones" style="position:relative;">
+                    <button class="sig-header__icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones" title="Notificaciones" style="position:relative;">
                         <i class="bi bi-bell" style="font-size:17px;"></i>
                         <?php if ($___total > 0): ?>
                             <span style="position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;">
@@ -261,7 +261,7 @@
                         <?php endif; ?>
                     </div>
                 </div>
-                <button class="sig-header__icon-btn" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
+                <button class="sig-header__icon-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema claro/oscuro" id="themeToggleBtn">
                     <i class="bi bi-moon" id="themeIcon" style="font-size:17px;"></i>
                 </button>
                 <a href="<?php echo URL_ROOT; ?>/perfil/index" class="sig-header__user-pill" style="text-decoration:none;color:inherit;" title="Mi perfil">

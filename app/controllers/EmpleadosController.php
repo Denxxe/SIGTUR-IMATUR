@@ -464,8 +464,21 @@ class EmpleadosController extends Controller {
         $this->backToDetalle($idEmpleado);
     }
 
+    /** id_persona del empleado indicado (para validar pertenencia de registros hijos). */
+    private function personaDeEmpleado(int $idEmpleado): ?int {
+        if ($idEmpleado <= 0) return null;
+        $e = Empleado::find($idEmpleado);
+        return $e ? (int)$e->id_persona : null;
+    }
+
     public function eliminarFamiliar($id, $idEmpleado = 0) {
         try {
+            // Anti-IDOR: el familiar debe pertenecer a la persona de este empleado.
+            $idPersona = $this->personaDeEmpleado((int)$idEmpleado);
+            $reg = CargaFamiliar::find((int)$id);
+            if (!$reg || $idPersona === null || (int)$reg->id_persona !== $idPersona) {
+                throw new Exception('Registro no encontrado o no pertenece a este empleado.');
+            }
             CargaFamiliar::delete($id, $this->getUserId());
             flash('global_msg', 'Familiar eliminado.', 'warning');
         } catch (Exception $e) {
@@ -489,6 +502,11 @@ class EmpleadosController extends Controller {
 
     public function eliminarCurso($id, $idEmpleado = 0) {
         try {
+            $idPersona = $this->personaDeEmpleado((int)$idEmpleado);
+            $reg = CursoRealizado::find((int)$id);
+            if (!$reg || $idPersona === null || (int)$reg->id_persona !== $idPersona) {
+                throw new Exception('Registro no encontrado o no pertenece a este empleado.');
+            }
             CursoRealizado::delete($id, $this->getUserId());
             flash('global_msg', 'Curso eliminado.', 'warning');
         } catch (Exception $e) {
@@ -512,6 +530,11 @@ class EmpleadosController extends Controller {
 
     public function eliminarExperiencia($id, $idEmpleado = 0) {
         try {
+            $idPersona = $this->personaDeEmpleado((int)$idEmpleado);
+            $reg = ExperienciaLaboral::find((int)$id);
+            if (!$reg || $idPersona === null || (int)$reg->id_persona !== $idPersona) {
+                throw new Exception('Registro no encontrado o no pertenece a este empleado.');
+            }
             ExperienciaLaboral::delete($id, $this->getUserId());
             flash('global_msg', 'Experiencia eliminada.', 'warning');
         } catch (Exception $e) {
@@ -579,6 +602,11 @@ class EmpleadosController extends Controller {
 
     public function eliminarDocumento($id, $idEmpleado = 0) {
         try {
+            // Anti-IDOR: el recaudo debe pertenecer a este empleado.
+            $doc = ExpedienteDocumento::find((int)$id);
+            if (!$doc || (int)$doc->id_empleado !== (int)$idEmpleado) {
+                throw new Exception('Recaudo no encontrado o no pertenece a este empleado.');
+            }
             ExpedienteDocumento::delete($id, $this->getUserId());
             flash('global_msg', 'Recaudo eliminado.', 'warning');
         } catch (Exception $e) {
