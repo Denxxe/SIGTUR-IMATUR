@@ -208,7 +208,7 @@
             <div class="sig-header__actions">
                 <!-- Centro de notificaciones (campana) -->
                 <?php
-                $___alertas  = CentroAlertas::resumen($rol);
+                $___alertas  = CentroAlertas::resumenCacheado($rol);
                 $___total    = 0; $___visibles = [];
                 foreach ($___alertas as $___a) {
                     if ((int)$___a['n'] > 0) {

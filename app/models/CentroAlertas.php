@@ -6,6 +6,30 @@
  */
 class CentroAlertas extends Model {
 
+    /** Segundos que se cachea el resumen en sesión (la campana corre en cada página). */
+    const CACHE_TTL = 120;
+
+    /**
+     * Igual que resumen(), pero memoiza el resultado en sesión por CACHE_TTL
+     * segundos. Lo usa la campana del header (se invoca en CADA página); evita
+     * repetir las consultas (roster de amonestaciones, faltantes, config…) en
+     * cada navegación. Tolera hasta CACHE_TTL de desfase, aceptable para avisos.
+     */
+    public static function resumenCacheado(int $rol): array {
+        $c = $_SESSION['_alertas_cache'] ?? null;
+        if (is_array($c) && ($c['rol'] ?? null) === $rol && (time() - (int)($c['t'] ?? 0)) < self::CACHE_TTL) {
+            return $c['data'];
+        }
+        $data = self::resumen($rol);
+        $_SESSION['_alertas_cache'] = ['t' => time(), 'rol' => $rol, 'data' => $data];
+        return $data;
+    }
+
+    /** Invalida el cache de alertas (p. ej. tras una acción que cambia los conteos). */
+    public static function invalidarCache(): void {
+        unset($_SESSION['_alertas_cache']);
+    }
+
     /** Lista de alertas aplicables al rol (incluye las de conteo 0). */
     public static function resumen(int $rol): array {
         $db = new Database();

@@ -143,7 +143,7 @@
                                 </td>
                                 <td style="text-align:center;">
                                     <?php if(isset($doc->archivo_url) && $doc->archivo_url): ?>
-                                        <a href="<?php echo URL_ROOT . $doc->archivo_url; ?>" target="_blank" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);">
+                                        <a href="<?php echo URL_ROOT; ?>/descarga/pasante/<?php echo (int)$doc->id; ?>" target="_blank" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);">
                                             <i class="bi bi-file-pdf"></i> Ver PDF
                                         </a>
                                     <?php else: ?>

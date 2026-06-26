@@ -232,7 +232,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                     <td>
                         <?php foreach ($it['documentos'] as $doc): ?>
                             <div style="display:flex;align-items:center;gap:8px;margin:2px 0;">
-                                <a href="<?php echo URL_ROOT . htmlspecialchars($doc->archivo_url); ?>" target="_blank" style="font-size:13px;">
+                                <a href="<?php echo URL_ROOT; ?>/descarga/expediente/<?php echo (int)$doc->id; ?>" target="_blank" style="font-size:13px;">
                                     <i class="bi bi-file-earmark-arrow-down"></i> <?php echo htmlspecialchars($doc->nombre_original ?? 'documento'); ?>
                                 </a>
                                 <a href="<?php echo URL_ROOT; ?>/empleados/eliminarDocumento/<?php echo $doc->id; ?>/<?php echo $eid; ?>" class="row-action row-action--del" onclick="return confirm('¿Eliminar este recaudo?')"><i class="bi bi-trash"></i></a>

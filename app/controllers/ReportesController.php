@@ -368,7 +368,9 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         $rol = (int)($_SESSION['user_rol'] ?? 0);
         // Fuente única: CentroAlertas (compartida con la campana del header).
-        $this->view('reportes/alertas', ['titulo' => 'Centro de Alertas', 'alertas' => CentroAlertas::resumen($rol)]);
+        // Recalcula en fresco y refresca el cache de la campana (el usuario viene a actuar).
+        CentroAlertas::invalidarCache();
+        $this->view('reportes/alertas', ['titulo' => 'Centro de Alertas', 'alertas' => CentroAlertas::resumenCacheado($rol)]);
     }
 
     // =========================================================================

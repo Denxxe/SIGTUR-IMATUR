@@ -24,6 +24,16 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — Análisis profundo: Lote 2 (proteger uploads) + Lote 4 (cache de alertas)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Confidencialidad | **Documentos privados fuera del web root** | Recaudos y docs de pasantes movidos a `storage/uploads/` (no accesibles por URL). Nuevo `DescargaController` sirve por **id de registro** con verificación de rol + `is_active` + `basename()` (sin path traversal). Vistas enlazan a `/descarga/...`. Archivos existentes migrados; valores antiguos siguen resolviéndose. |
+| ✅ Seguridad | **Validación MIME en subida** | `EmpleadosController`/`PasantesController` validan extensión **y** `mime_content_type`. |
+| ✅ Rendimiento | **Cache de alertas en sesión** | `CentroAlertas::resumenCacheado` (TTL 120s) usado por la campana del header; se invalida al abrir `reportes/alertas`. Evita recomputar roster/faltantes/config en cada página. |
+
+> Residual: dos documentos de pasante quedaron en el **historial de git** (commiteados antes del `.gitignore`); se quitaron del tracking ahora. Si se requiere borrarlos del historial, hace falta reescritura (BFG/`git filter-repo`) — repo interno, prioridad baja.
+
 ### 2026-06-25 — Análisis profundo: Lote 1 (seguridad rápida) + Lote 3 (índices, mig. 052)
 
 | # | Mejora | Detalle |
@@ -193,11 +203,8 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🟠 **Proteger documentos subidos** (análisis profundo, Lote 2) | Recaudos/pasantes están en `public/uploads/` (web root) **sin control de acceso**. Mover a `storage/uploads/` + controlador de descarga que valide sesión/rol. Mayor riesgo de **confidencialidad** pendiente. |
 | 🟡 **IDOR en borrados** | `CargaFamiliar/ExpedienteDocumento/CursoRealizado/ExperienciaLaboral::delete` no validan pertenencia del registro al empleado/contexto. Verificar `id_empleado`/`id_persona` antes de borrar. |
 | 🟡 **Transacciones en guardados multi-tabla** | `Taller`+participantes, `CargaFamiliar`, `PermisoLaboral` guardan sin `beginTransaction`. Envolver para atomicidad. |
-| 🟡 **Cache de alertas/config en sesión** | `CentroAlertas::resumen` + lectura de `dias_preaviso_*` corren en el header de **cada** página. Cachear en sesión con TTL corto. |
-| 🟢 **Validación MIME en subida** | `EmpleadosController::subirDocumento` valida solo extensión; añadir `finfo`/`mime_content_type`. |
 | 🟢 **UX móvil del header + a11y** | Header se satura en <576px (buscador+campana+tema+perfil); `aria-label` en botones ícono; `label[for]` en login/formularios. |
 | 🟢 **README de instalación/despliegue** | Setup BD, copia de `config.example.php`, crons (`schtasks`), restauración de respaldos. |
 | 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |

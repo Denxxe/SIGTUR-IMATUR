@@ -544,11 +544,19 @@ class EmpleadosController extends Controller {
                 throw new Exception("El archivo supera el límite de 5 MB.");
             }
 
+            // Validación de contenido (MIME real), no solo la extensión.
+            $mimeReal = function_exists('mime_content_type') ? @mime_content_type($_FILES['archivo']['tmp_name']) : null;
+            $mimesOk  = ['application/pdf', 'image/jpeg', 'image/png'];
+            if ($mimeReal !== null && !in_array($mimeReal, $mimesOk, true)) {
+                throw new Exception("El contenido del archivo no corresponde a un PDF/JPG/PNG válido.");
+            }
+
             // Convención de nombre: Tipo_Empleado_ID_timestamp.ext
+            // Se guarda FUERA del web root (storage/) y se sirve vía DescargaController.
             $fileName  = $tipo . '_Empleado_' . $idEmpleado . '_' . time() . '.' . $ext;
-            $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/expedientes/';
+            $uploadDir = dirname(dirname(__DIR__)) . '/storage/uploads/expedientes/';
             if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+                mkdir($uploadDir, 0775, true);
             }
             if (!move_uploaded_file($_FILES['archivo']['tmp_name'], $uploadDir . $fileName)) {
                 throw new Exception("No se pudo guardar el archivo en el servidor.");
@@ -557,7 +565,7 @@ class EmpleadosController extends Controller {
             ExpedienteDocumento::save([
                 'id_empleado'     => $idEmpleado,
                 'tipo_documento'  => $tipo,
-                'archivo_url'     => '/uploads/expedientes/' . $fileName,
+                'archivo_url'     => $fileName,   // solo el nombre; la descarga resuelve la ruta en storage/
                 'nombre_original' => basename($_FILES['archivo']['name']),
                 'observaciones'   => $_POST['observaciones'] ?? null,
             ], $this->getUserId());

@@ -400,15 +400,29 @@ class PasantesController extends Controller {
 
             try {
                 if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] === UPLOAD_ERR_OK) {
+                    // Validación de tipo y tamaño (PDF/imagen, máx. 5MB)
+                    $ext = strtolower(pathinfo($_FILES['archivo']['name'], PATHINFO_EXTENSION));
+                    if (!in_array($ext, ['pdf', 'jpg', 'jpeg', 'png'], true)) {
+                        throw new Exception("Formato no permitido. Use PDF, JPG o PNG.");
+                    }
+                    if ($_FILES['archivo']['size'] > 5 * 1024 * 1024) {
+                        throw new Exception("El archivo supera el límite de 5 MB.");
+                    }
+                    $mimeReal = function_exists('mime_content_type') ? @mime_content_type($_FILES['archivo']['tmp_name']) : null;
+                    if ($mimeReal !== null && !in_array($mimeReal, ['application/pdf', 'image/jpeg', 'image/png'], true)) {
+                        throw new Exception("El contenido del archivo no corresponde a un PDF/JPG/PNG válido.");
+                    }
+
+                    // Se guarda FUERA del web root (storage/) y se sirve vía DescargaController.
                     $fileName  = time() . '_' . preg_replace("/[^a-zA-Z0-9\._-]/", "", basename($_FILES['archivo']['name']));
-                    $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/pasantes/';
+                    $uploadDir = dirname(dirname(__DIR__)) . '/storage/uploads/pasantes/';
 
                     if (!file_exists($uploadDir)) {
-                        mkdir($uploadDir, 0777, true);
+                        mkdir($uploadDir, 0775, true);
                     }
 
                     if (move_uploaded_file($_FILES['archivo']['tmp_name'], $uploadDir . $fileName)) {
-                        $archivoUrl = '/uploads/pasantes/' . $fileName;
+                        $archivoUrl = $fileName;   // solo el nombre; la descarga resuelve la ruta en storage/
                     } else {
                         throw new Exception("Error al mover el archivo al servidor.");
                     }
