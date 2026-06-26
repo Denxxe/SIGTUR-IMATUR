@@ -51,6 +51,8 @@ if (in_array($rol, [1, 2, 5])) {
     $recCards = [
         ['label'=>'Visitas Hoy',       'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',     'icon'=>'bi-door-open-fill', 'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index',
             'delta'=>$data['deltaVisitasHoy']??null],
+        ['label'=>'Activas Ahora',     'value'=>number_format($data['kpiVisitasActivas']??0),    'sub'=>'visitantes dentro (sin salida)','icon'=>'bi-person-walking',  'bg'=>'#D97706','href'=>URL_ROOT.'/visitas/index',
+            'status'=>($data['kpiVisitasActivas']??0)>0?'warning':'neutral'],
     ];
     if (in_array($rol, [1, 5])) {
         $recCards[] = ['label'=>'Visitantes Semana','value'=>number_format($data['kpiVisitasSemana']??0),'sub'=>'únicos en la semana actual','icon'=>'bi-people-fill',     'bg'=>'#7C3AED',

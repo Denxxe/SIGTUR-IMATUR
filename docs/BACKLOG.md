@@ -39,7 +39,19 @@ Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* d
 | ✅ CMI-F01 | Cobertura por parroquia | parroquias con actividad / total (año) |
 | ✅ CMI-T01 | Frecuencia de rutas | rutas finalizadas por mes (6 meses) |
 
-> Archivos: `ReportesController::indicadores()` + `views/reportes/indicadores.php`. Pendientes del documento que **no** se implementaron (ver 3.4 y 3.8): stock mínimo, instituciones participantes en rutas, tiempo de generación de reportes.
+> Archivos: `ReportesController::indicadores()` + `views/reportes/indicadores.php`. Pendientes del documento que **no** se implementaron (ver 3.4 y 3.5): stock mínimo, instituciones participantes en rutas, tiempo de generación de reportes.
+
+### 2026-06-25 — Bloque B (reportes implementables, sin migración)
+
+| # | Reporte | Ruta · Roles |
+|---|---------|--------------|
+| ✅ BRH-07 | **Saldo de vacaciones** por empleado (años servicio, derecho, acumulado, ajuste, disfrutado, saldo) | `reportes/vacacionesSaldo` · 1,2 |
+| ✅ D-RE01/02 | **Informe trimestral de Formación** (actividades/finalizadas/canceladas/inscritos/atendidos + género por trimestre, filtro por año) | `reportes/formacionTrimestral` · 1,3 |
+| ✅ BRT-05 | **Ejecuciones de ruta** (rutas Finalizadas por fecha, participantes y atendidos; filtros año/tipo) | `reportes/ejecucionesRuta` · 1,3 |
+| ✅ BVIS-05 | **Estadísticas de visitas** (afluencia por mes, visitantes únicos, situación del día) | `reportes/estadisticasVisitas` · 1,2 |
+| ✅ BVIS-04 | **Visitas activas del día** en el Dashboard (`kpiVisitasActivas` = entradas de hoy sin salida) | Dashboard · 1,2,5 |
+
+> Quedan del Bloque B: **formato físico imprimible de asistencia** (necesita el formato real del cliente, ver 5) y **`taller_facilitadores`** / **importación de históricos** (condicionados a decisión).
 
 ### 2026-06-21 (mig. 043–050)
 
@@ -124,17 +136,30 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 
 ## 5. PROGRAMACIÓN FALTANTE / BACKLOG TÉCNICO 🛠️
 
-Implementable sin decisión de negocio (priorizar cuando convenga):
+### 5.1 Reportes/funciones pendientes (implementables, queda lo no hecho del Bloque B)
 
 | Módulo | Tarea | Origen |
 |--------|-------|--------|
-| RRHH | Reporte de **saldo de vacaciones** por empleado (el módulo ya calcula el saldo) | BRH-07 |
-| RRHH | Réplica imprimible del **formato físico de asistencia** | MOD-RRHH 6.2 |
-| Formación | Informe **trimestral consolidado** (metas/logros) | D-RE01/02 |
+| RRHH | Réplica imprimible del **formato físico de asistencia** — 🔒 necesita el **formato real** (planilla oficial) del cliente para ser fiel | MOD-RRHH 6.2 |
 | Formación | Tabla `taller_facilitadores` (múltiples facilitadores) — solo si el cliente lo pide | D-FO08-bis |
-| Turismo | Reporte de **ejecuciones de ruta** (múltiples fechas) | BRT-05 |
-| Recepción | "**Visitas activas del día**" en Dashboard + estadísticas de visitas en Reportes | BVIS-04/05 |
 | Transversal | Importación de datos históricos desde Excel (depende de D-TX03) | D-TX03 |
+
+### 5.2 Mejoras propuestas (futuro cercano / más adelante) ✨
+
+Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorización sugerida:
+
+| Prioridad | Mejora | Notas de implementación |
+|-----------|--------|-------------------------|
+| 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. |
+| 🟡 **Endurecer el login** | Bloqueo tras N intentos fallidos, expiración de sesión por inactividad, política de contraseñas. Tocar `AuthController` + tabla `usuarios` (campos de intentos/lockout). |
+| 🟡 **Optimizar N+1 de "documentación completa"** | Hoy `indicadores()`/`alertas()` llaman `ExpedienteDocumento::recaudosEstado()` por empleado (1 consulta c/u). Reemplazar por **una consulta agregada** sobre `expediente_documentos`. |
+| 🟡 **Centro de notificaciones (campana)** | Header con conteo de alertas (contratos por vencer, expedientes incompletos, talleres vencidos, permisos pendientes). Reutiliza la lógica de `reportes/alertas`. |
+| 🟢 **Filtro de rango de fechas en Indicadores** | Hoy el panel es "mes/año en curso" fijo; permitir período configurable. |
+| 🟢 **Búsqueda global** (header) | Empleado / bien / ruta / taller desde un único buscador. |
+| 🟢 **Vista de accesos/sesiones** | A partir de `audit_logs` (quién entró y cuándo). |
+| 🟢 **Suite mínima de pruebas** | Cubrir cálculos críticos: vacaciones (`Vacacion`), puntualidad (`Asistencia`), tiempo de servicio (`Empleado`). Hoy no hay tests. |
+| 🟢 **`.gitattributes`** | Fijar fin de línea (evita el ruido "LF will be replaced by CRLF" en cada commit). |
+| 🟢 **Manual de usuario por rol** | Documento breve para entrega/defensa. |
 
 ---
 

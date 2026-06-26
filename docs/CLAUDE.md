@@ -262,7 +262,11 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 | Pasantes con estado y tutor | 1, 3 | CSV + PDF |
 | Inventario con filtros condición/categoría | 1, 4 | CSV + PDF |
 | Bienes dados de baja | 1, 4 | CSV |
-| Indicadores KPIs (4 gráficas ApexCharts) | todos | — |
+| Indicadores KPIs (ApexCharts) + **bloque CMI** (jornada, precisión, documentación, cobertura parroquia, frecuencia rutas, movimientos/asignación inventario) | todos | — |
+| **Saldo de vacaciones** por empleado | 1, 2 | Excel |
+| **Estadísticas de visitas** (afluencia por mes, únicos, situación del día) | 1, 2 | Excel |
+| **Informe trimestral de Formación** (por trimestre, filtro por año) | 1, 3 | Excel |
+| **Ejecuciones de ruta** (rutas Finalizadas por fecha) | 1, 3 | Excel |
 
 ### Reportes / indicadores RRHH (módulos 025-034)
 - **Reporte de Asistencia** ahora incluye **puntualidad** (impuntual vs tolerancia) y **horas** trabajadas + KPIs (impuntuales, horas totales).
@@ -270,8 +274,8 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 - **Indicadores** (`reportes/indicadores`) sección Personal: clasificación (Empleado/Obrero), permisos/reposos vigentes hoy + pendientes, amonestaciones (empleados + en causa de despido), impuntualidad del mes.
 
 ### Reportes pendientes de implementar
-- Saldo de vacaciones por empleado (bloqueado: fórmula D-RH04/05)
-- Informe trimestral de Formación (metas, logros, actividades)
+- Réplica imprimible del **formato físico de asistencia** (requiere la planilla oficial del cliente).
+- Mejoras propuestas (respaldos automáticos, endurecer login, centro de notificaciones…) — ver `docs/BACKLOG.md` §5.2.
 
 ---
 

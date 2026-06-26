@@ -2649,6 +2649,362 @@ class ReportesController extends Controller {
     }
 
     // =========================================================================
+    // RRHH — Saldo de vacaciones por empleado (BRH-07)
+    // =========================================================================
+    public function vacacionesSaldo() {
+        $this->requireRoles([1, 2]);
+        try {
+            $regs = $this->queryVacacionesSaldo();
+            $filas = []; $totSaldo = 0;
+            foreach ($regs as $r) {
+                $totSaldo += $r['saldo'];
+                $badge = $r['saldo'] <= 0 ? 'sig-badge--neutral' : ($r['saldo'] > 30 ? 'sig-badge--warning' : 'sig-badge--success');
+                $filas[] = [
+                    ['raw' => '<span class="cell-strong">' . htmlspecialchars($r['empleado']) . '</span>'],
+                    $r['cedula'] ?? '—',
+                    $r['cargo'] ?? '—',
+                    $r['departamento'] ?? '—',
+                    (string)$r['anios'],
+                    (string)$r['derecho'],
+                    (string)$r['acumulado'],
+                    (string)$r['ajuste'],
+                    (string)$r['disfrutado'],
+                    ['raw' => '<span class="sig-badge ' . $badge . '">' . $r['saldo'] . ' días</span>'],
+                ];
+            }
+            $deptos = []; foreach (Departamento::all() as $d) $deptos[$d->id] = $d->nombre;
+            $this->renderReporte([
+                'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Saldo de Vacaciones',
+                'subtitulo' => 'Derecho acumulado, días disfrutados y saldo disponible por empleado (15 días hábiles + 1 por año de servicio, tope 30).',
+                'resumen' => ['Empleados' => count($regs), 'Saldo total (días)' => $totSaldo],
+                'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Años serv.', 'Derecho año', 'Acumulado', 'Ajuste', 'Disfrutado', 'Saldo'],
+                'filas' => $filas,
+                'accion' => URL_ROOT . '/reportes/vacacionesSaldo',
+                'filtros' => [
+                    ['name' => 'buscar', 'label' => 'Buscar', 'type' => 'text', 'placeholder' => 'Nombre o cédula…', 'value' => $_GET['buscar'] ?? ''],
+                    ['name' => 'departamento', 'label' => 'Departamento', 'type' => 'select', 'options' => ['' => 'Todos'] + $deptos, 'value' => $_GET['departamento'] ?? ''],
+                ],
+                'export_url' => URL_ROOT . '/reportes/exportarVacacionesSaldoCsv?' . $this->qsFiltros(),
+                'vacio' => 'No hay empleados activos para el filtro.',
+            ]);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de vacaciones: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarVacacionesSaldoCsv() {
+        $this->requireRoles([1, 2]);
+        $rows = [];
+        foreach ($this->queryVacacionesSaldo() as $r) {
+            $rows[] = [$r['empleado'], $r['cedula'], $r['cargo'], $r['departamento'],
+                       $r['anios'], $r['derecho'], $r['acumulado'], $r['ajuste'], $r['disfrutado'], $r['saldo']];
+        }
+        $this->exportCsv('saldo_vacaciones', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Años servicio', 'Derecho año', 'Acumulado', 'Ajuste', 'Disfrutado', 'Saldo'], $rows);
+    }
+
+    private function queryVacacionesSaldo(): array {
+        $buscar = trim($_GET['buscar'] ?? '');
+        $depto  = trim($_GET['departamento'] ?? '');
+        $out = [];
+        foreach (Empleado::all() as $e) {
+            if ($depto !== '' && (int)$e->id_departamento !== (int)$depto) continue;
+            if ($buscar !== '') {
+                $hay = stripos(trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')), $buscar) !== false
+                    || stripos((string)($e->cedula ?? ''), $buscar) !== false;
+                if (!$hay) continue;
+            }
+            $out[] = [
+                'empleado'    => trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')),
+                'cedula'      => $e->cedula ?? null,
+                'cargo'       => $e->cargo ?? null,
+                'departamento'=> $e->departamento ?? null,
+                'anios'       => Vacacion::aniosServicio($e),
+                'derecho'     => Vacacion::derechoAnioActual($e),
+                'acumulado'   => Vacacion::derechoAcumulado($e),
+                'ajuste'      => (int)($e->vacaciones_ajuste_dias ?? 0),
+                'disfrutado'  => Vacacion::totalDisfrutado((int)$e->id),
+                'saldo'       => Vacacion::saldo($e),
+            ];
+        }
+        return $out;
+    }
+
+    // =========================================================================
+    // Formación — Informe trimestral consolidado (D-RE01/02)
+    // =========================================================================
+    public function formacionTrimestral() {
+        $this->requireRoles([1, 3]);
+        try {
+            $anio = (int)($_GET['anio'] ?? date('Y'));
+            $q = $this->queryFormacionTrimestral($anio);
+            $romanos = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+            $rangos  = [1 => 'Ene–Mar', 2 => 'Abr–Jun', 3 => 'Jul–Sep', 4 => 'Oct–Dic'];
+            $filas = [];
+            $tot = ['act' => 0, 'fin' => 0, 'can' => 0, 'ins' => 0, 'ate' => 0];
+            foreach ([1, 2, 3, 4] as $t) {
+                $d = $q[$t];
+                $tot['act'] += $d['actividades']; $tot['fin'] += $d['finalizadas'];
+                $tot['can'] += $d['canceladas'];  $tot['ins'] += $d['inscritos']; $tot['ate'] += $d['atendidos'];
+                $filas[] = [
+                    ['raw' => '<span class="cell-strong">Trimestre ' . $romanos[$t] . '</span> <span style="color:var(--text-tertiary);font-size:11px;">(' . $rangos[$t] . ')</span>'],
+                    (string)$d['actividades'],
+                    (string)$d['finalizadas'],
+                    (string)$d['canceladas'],
+                    (string)$d['inscritos'],
+                    (string)$d['atendidos'],
+                    (string)$d['mujeres'],
+                    (string)$d['hombres'],
+                    (string)($d['ninas'] + $d['ninos']),
+                ];
+            }
+            $anios = $this->aniosDisponibles('talleres', 'fecha_inicio', $anio);
+            $this->renderReporte([
+                'eyebrow' => 'Formación · Informe', 'titulo' => 'Informe Trimestral de Formación — ' . $anio,
+                'subtitulo' => 'Actividades, ejecución y personas atendidas (según informe demográfico) por trimestre.',
+                'resumen' => ['Año' => $anio, 'Actividades' => $tot['act'], 'Finalizadas' => $tot['fin'], 'Inscritos' => $tot['ins'], 'Atendidos (informe)' => $tot['ate']],
+                'columnas' => ['Trimestre', 'Actividades', 'Finalizadas', 'Canceladas', 'Inscritos', 'Atendidos', 'Mujeres', 'Hombres', 'Niños/as'],
+                'filas' => $filas,
+                'accion' => URL_ROOT . '/reportes/formacionTrimestral',
+                'filtros' => [
+                    ['name' => 'anio', 'label' => 'Año', 'type' => 'select', 'options' => $anios, 'value' => (string)$anio],
+                ],
+                'export_url' => URL_ROOT . '/reportes/exportarFormacionTrimestralCsv?' . $this->qsFiltros(),
+            ]);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el informe trimestral: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarFormacionTrimestralCsv() {
+        $this->requireRoles([1, 3]);
+        $anio = (int)($_GET['anio'] ?? date('Y'));
+        $q = $this->queryFormacionTrimestral($anio);
+        $romanos = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        $rows = [];
+        foreach ([1, 2, 3, 4] as $t) {
+            $d = $q[$t];
+            $rows[] = ['Trimestre ' . $romanos[$t], $d['actividades'], $d['finalizadas'], $d['canceladas'],
+                       $d['inscritos'], $d['atendidos'], $d['mujeres'], $d['hombres'], $d['ninas'] + $d['ninos']];
+        }
+        $this->exportCsv('formacion_trimestral_' . $anio, ['Trimestre', 'Actividades', 'Finalizadas', 'Canceladas', 'Inscritos', 'Atendidos', 'Mujeres', 'Hombres', 'Niños/as'], $rows);
+    }
+
+    private function queryFormacionTrimestral(int $anio): array {
+        $base = [];
+        foreach ([1, 2, 3, 4] as $t) {
+            $base[$t] = ['actividades' => 0, 'finalizadas' => 0, 'canceladas' => 0, 'inscritos' => 0,
+                         'atendidos' => 0, 'mujeres' => 0, 'hombres' => 0, 'ninas' => 0, 'ninos' => 0];
+        }
+        $db = new Database();
+        $db->query("SELECT EXTRACT(QUARTER FROM t.fecha_inicio)::int AS tri,
+                           COUNT(*) AS actividades,
+                           COUNT(*) FILTER (WHERE t.estado = 'Finalizado') AS finalizadas,
+                           COUNT(*) FILTER (WHERE t.estado = 'Cancelado')  AS canceladas,
+                           COALESCE(SUM(pc.cnt), 0) AS inscritos
+                    FROM talleres t
+                    LEFT JOIN (SELECT id_taller, COUNT(*) AS cnt FROM participantes_taller WHERE is_active = TRUE GROUP BY id_taller) pc ON pc.id_taller = t.id
+                    WHERE t.is_active = TRUE AND EXTRACT(YEAR FROM t.fecha_inicio) = :anio
+                    GROUP BY tri");
+        $db->bind(':anio', $anio);
+        foreach ($db->resultSet() as $r) {
+            $t = (int)$r->tri; if (!isset($base[$t])) continue;
+            $base[$t]['actividades'] = (int)$r->actividades;
+            $base[$t]['finalizadas'] = (int)$r->finalizadas;
+            $base[$t]['canceladas']  = (int)$r->canceladas;
+            $base[$t]['inscritos']   = (int)$r->inscritos;
+        }
+        $db->query("SELECT EXTRACT(QUARTER FROM t.fecha_inicio)::int AS tri,
+                           COALESCE(SUM(ti.mujeres), 0) AS mujeres, COALESCE(SUM(ti.hombres), 0) AS hombres,
+                           COALESCE(SUM(ti.ninas), 0) AS ninas, COALESCE(SUM(ti.ninos), 0) AS ninos,
+                           COALESCE(SUM(ti.total_atendidas), 0) AS atendidos
+                    FROM taller_informes ti
+                    JOIN talleres t ON ti.id_taller = t.id
+                    WHERE t.is_active = TRUE AND EXTRACT(YEAR FROM t.fecha_inicio) = :anio
+                    GROUP BY tri");
+        $db->bind(':anio', $anio);
+        foreach ($db->resultSet() as $r) {
+            $t = (int)$r->tri; if (!isset($base[$t])) continue;
+            $base[$t]['mujeres']   = (int)$r->mujeres;
+            $base[$t]['hombres']   = (int)$r->hombres;
+            $base[$t]['ninas']     = (int)$r->ninas;
+            $base[$t]['ninos']     = (int)$r->ninos;
+            $base[$t]['atendidos'] = (int)$r->atendidos;
+        }
+        return $base;
+    }
+
+    // =========================================================================
+    // Turismo — Ejecuciones de ruta (rutas Finalizadas) (BRT-05)
+    // =========================================================================
+    public function ejecucionesRuta() {
+        $this->requireRoles([1, 3]);
+        try {
+            $regs = $this->queryEjecucionesRuta();
+            $filas = []; $totPart = 0; $totAte = 0;
+            foreach ($regs as $r) {
+                $totPart += (int)$r->participantes; $totAte += (int)$r->atendidos;
+                $filas[] = [
+                    ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->nombre ?? '—') . '</span>'],
+                    $r->tipo_ruta ?? 'General',
+                    !empty($r->fecha_ejecucion) ? date('d/m/Y', strtotime($r->fecha_ejecucion)) : '—',
+                    (string)(int)$r->participantes,
+                    (string)(int)$r->atendidos,
+                ];
+            }
+            $anio = (int)($_GET['anio'] ?? date('Y'));
+            $anios = $this->aniosDisponibles('rutas', "COALESCE(fecha_visita, created_at)", $anio, "estado = 'Finalizada'");
+            $db = new Database();
+            $db->query("SELECT DISTINCT COALESCE(tipo_ruta, 'General') AS t FROM rutas WHERE is_active = TRUE AND estado = 'Finalizada' ORDER BY t");
+            $tipos = ['' => 'Todos']; foreach ($db->resultSet() as $tt) $tipos[$tt->t] = $tt->t;
+            $this->renderReporte([
+                'eyebrow' => 'Turismo · Impacto', 'titulo' => 'Ejecuciones de Ruta',
+                'subtitulo' => 'Rutas efectivamente ejecutadas (Finalizadas), con participantes y personas atendidas por ejecución.',
+                'resumen' => ['Ejecuciones' => count($regs), 'Participantes' => $totPart, 'Atendidos (informe)' => $totAte],
+                'columnas' => ['Ruta', 'Tipo', 'Fecha de ejecución', 'Participantes', 'Atendidos'],
+                'filas' => $filas,
+                'accion' => URL_ROOT . '/reportes/ejecucionesRuta',
+                'filtros' => [
+                    ['name' => 'anio', 'label' => 'Año', 'type' => 'select', 'options' => $anios, 'value' => (string)$anio],
+                    ['name' => 'tipo', 'label' => 'Tipo de ruta', 'type' => 'select', 'options' => $tipos, 'value' => $_GET['tipo'] ?? ''],
+                ],
+                'export_url' => URL_ROOT . '/reportes/exportarEjecucionesRutaCsv?' . $this->qsFiltros(),
+                'vacio' => 'No hay rutas ejecutadas (Finalizadas) para el filtro.',
+            ]);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de ejecuciones: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarEjecucionesRutaCsv() {
+        $this->requireRoles([1, 3]);
+        $rows = [];
+        foreach ($this->queryEjecucionesRuta() as $r) {
+            $rows[] = [$r->nombre, $r->tipo_ruta ?? 'General', $r->fecha_ejecucion, (int)$r->participantes, (int)$r->atendidos];
+        }
+        $this->exportCsv('ejecuciones_ruta', ['Ruta', 'Tipo', 'Fecha de ejecución', 'Participantes', 'Atendidos'], $rows);
+    }
+
+    private function queryEjecucionesRuta() {
+        $db = new Database();
+        $anio = (int)($_GET['anio'] ?? date('Y'));
+        $tipo = trim($_GET['tipo'] ?? '');
+        $where = "r.is_active = TRUE AND r.estado = 'Finalizada'
+                  AND EXTRACT(YEAR FROM COALESCE(r.fecha_visita, r.created_at)) = :anio";
+        if ($tipo !== '') $where .= " AND COALESCE(r.tipo_ruta, 'General') = :tipo";
+        $db->query("SELECT r.nombre, COALESCE(r.tipo_ruta, 'General') AS tipo_ruta,
+                           COALESCE(r.fecha_visita, r.created_at) AS fecha_ejecucion,
+                           (SELECT COUNT(*) FROM participantes_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) AS participantes,
+                           COALESCE(ri.total_atendidos, 0) AS atendidos
+                    FROM rutas r
+                    LEFT JOIN ruta_informes ri ON ri.id_ruta = r.id
+                    WHERE {$where}
+                    ORDER BY COALESCE(r.fecha_visita, r.created_at) DESC, r.nombre ASC");
+        $db->bind(':anio', $anio);
+        if ($tipo !== '') $db->bind(':tipo', $tipo);
+        return $db->resultSet();
+    }
+
+    // =========================================================================
+    // Recepción — Estadísticas de visitas (BVIS-05)
+    // =========================================================================
+    public function estadisticasVisitas() {
+        $this->requireRoles([1, 2]);
+        try {
+            $fi = $_GET['fecha_inicio'] ?? date('Y-01-01');
+            $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
+            $db = new Database();
+
+            // Resumen del rango + situación actual
+            $db->query("SELECT COUNT(*) AS total, COUNT(DISTINCT id_visitante) AS unicos
+                        FROM visitas WHERE is_active = TRUE
+                          AND DATE(hora_entrada) BETWEEN :fi AND :ff");
+            $db->bind(':fi', $fi); $db->bind(':ff', $ff);
+            $st = $db->single();
+
+            $db->query("SELECT COUNT(*) AS hoy,
+                               COUNT(*) FILTER (WHERE hora_salida IS NULL) AS activas
+                        FROM visitas WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE");
+            $hoy = $db->single();
+
+            $meses = $this->queryVisitasPorMes($fi, $ff);
+            $filas = [];
+            foreach ($meses as $m) {
+                $filas[] = [
+                    ['raw' => '<span class="cell-strong">' . htmlspecialchars(self::fmtMesLargo($m->mes)) . '</span>'],
+                    (string)(int)$m->visitas,
+                    (string)(int)$m->unicos,
+                ];
+            }
+            $this->renderReporte([
+                'eyebrow' => 'Recepción · Estadísticas', 'titulo' => 'Estadísticas de Visitas',
+                'subtitulo' => 'Afluencia por mes, visitantes únicos y situación del día.',
+                'resumen' => [
+                    'Visitas (rango)'    => (int)($st->total ?? 0),
+                    'Visitantes únicos'  => (int)($st->unicos ?? 0),
+                    'Visitas hoy'        => (int)($hoy->hoy ?? 0),
+                    'Activas ahora'      => (int)($hoy->activas ?? 0),
+                ],
+                'columnas' => ['Mes', 'Visitas', 'Visitantes únicos'],
+                'filas' => $filas,
+                'accion' => URL_ROOT . '/reportes/estadisticasVisitas',
+                'filtros' => [
+                    ['name' => 'fecha_inicio', 'label' => 'Desde', 'type' => 'date', 'value' => $fi],
+                    ['name' => 'fecha_fin', 'label' => 'Hasta', 'type' => 'date', 'value' => $ff],
+                ],
+                'export_url' => URL_ROOT . '/reportes/exportarEstadisticasVisitasCsv?' . $this->qsFiltros(),
+                'vacio' => 'No hay visitas registradas en el período.',
+            ]);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar las estadísticas de visitas: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarEstadisticasVisitasCsv() {
+        $this->requireRoles([1, 2]);
+        $fi = $_GET['fecha_inicio'] ?? date('Y-01-01');
+        $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
+        $rows = [];
+        foreach ($this->queryVisitasPorMes($fi, $ff) as $m) {
+            $rows[] = [self::fmtMesLargo($m->mes), (int)$m->visitas, (int)$m->unicos];
+        }
+        $this->exportCsv('estadisticas_visitas', ['Mes', 'Visitas', 'Visitantes únicos'], $rows);
+    }
+
+    private function queryVisitasPorMes(string $fi, string $ff) {
+        $db = new Database();
+        $db->query("SELECT TO_CHAR(hora_entrada, 'YYYY-MM') AS mes,
+                           COUNT(*) AS visitas, COUNT(DISTINCT id_visitante) AS unicos
+                    FROM visitas
+                    WHERE is_active = TRUE AND DATE(hora_entrada) BETWEEN :fi AND :ff
+                    GROUP BY mes ORDER BY mes DESC");
+        $db->bind(':fi', $fi); $db->bind(':ff', $ff);
+        return $db->resultSet();
+    }
+
+    /** Años con datos en una tabla/columna fecha, para los selects de filtro. */
+    private function aniosDisponibles(string $tabla, string $colFecha, int $actual, string $extra = ''): array {
+        $db = new Database();
+        $w = "is_active = TRUE" . ($extra ? " AND {$extra}" : '');
+        $db->query("SELECT DISTINCT EXTRACT(YEAR FROM {$colFecha})::int AS a FROM {$tabla} WHERE {$w} AND {$colFecha} IS NOT NULL ORDER BY a DESC");
+        $opts = [];
+        foreach ($db->resultSet() as $r) $opts[(string)$r->a] = (string)$r->a;
+        if (!isset($opts[(string)$actual])) $opts[(string)$actual] = (string)$actual;
+        return $opts;
+    }
+
+    /** "2026-06" → "Junio 2026". */
+    private static function fmtMesLargo(string $ym): string {
+        $m = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $p = explode('-', $ym);
+        if (count($p) < 2) return $ym;
+        return ($m[(int)$p[1]] ?? '?') . ' ' . $p[0];
+    }
+
+    // =========================================================================
     // HELPERS DE EXPORTACIÓN
     // =========================================================================
 

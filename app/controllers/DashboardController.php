@@ -142,6 +142,11 @@ class DashboardController extends Controller {
                             WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE");
                 $data['kpiVisitasHoy'] = (int)($db->single()->total ?? 0);
 
+                // Visitas activas ahora: entradas de hoy sin salida registrada (personas dentro)
+                $db->query("SELECT COUNT(*) AS total FROM visitas
+                            WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE AND hora_salida IS NULL");
+                $data['kpiVisitasActivas'] = (int)($db->single()->total ?? 0);
+
                 // Delta visitas hoy: vs ayer
                 $db->query("SELECT COUNT(*) AS total FROM visitas
                             WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE - 1");
