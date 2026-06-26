@@ -27,6 +27,20 @@ class Router {
             $url = [];
         }
 
+        // --- Expiración de sesión por inactividad ---
+        // Si pasó más de SESSION_TIMEOUT desde la última actividad, se cierra la
+        // sesión y se redirige al login con aviso. Cada request renueva el reloj.
+        if (isset($_SESSION['user_id']) && defined('SESSION_TIMEOUT')) {
+            $ahora = time();
+            if (isset($_SESSION['last_activity']) && ($ahora - (int)$_SESSION['last_activity']) > SESSION_TIMEOUT) {
+                $_SESSION = [];
+                session_destroy();
+                header('Location: ' . URL_ROOT . '/auth/login?expired=1');
+                exit;
+            }
+            $_SESSION['last_activity'] = $ahora;
+        }
+
         // --- RBAC Middleware (Control de Acceso por Rol) ---
         if (isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
             $rolId = $_SESSION['user_rol'] ?? 0;

@@ -139,7 +139,7 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | **Impuntualidad del mes** | % de marcajes impuntuales en el mes actual. | `impuntuales (minutos_tarde > tolerancia) / marcajes con horario`, mes en curso. | `asistencias` + config `minutos_tolerancia_puntualidad` |
 | **CMI-RH01 — Cumplimiento de jornada** | Qué proporción de las horas programadas se cumplió efectivamente. | `horas_reales / horas_programadas × 100`, mes en curso. Solo días con **marcaje completo (entrada+salida) y horario asignado**, para que un check-out faltante no distorsione el resultado. Umbral verde ≥90%, ámbar ≥75%. | `asistencias` ⋈ `empleados` ⟕ `horarios` |
 | **CMI-RH02 — Precisión del registro de asistencia** | Calidad del marcaje (sin registros colgados). | `registros con hora_salida / total de registros × 100`, mes en curso. Umbral verde ≥95%, ámbar ≥85%. | `asistencias` |
-| **CMI-RH03 — Documentación completa del personal** | % de expedientes con todos los recaudos obligatorios. | `empleados con faltan_obligatorios = 0 / total de empleados × 100` (recorre `ExpedienteDocumento::recaudosEstado` por empleado). Umbral verde ≥90%, ámbar ≥70%. | `empleados` + `expediente_documentos` (catálogo `RECAUDOS`) |
+| **CMI-RH03 — Documentación completa del personal** | % de expedientes con todos los recaudos obligatorios. | `empleados con faltan_obligatorios = 0 / total de empleados × 100`, vía `ExpedienteDocumento::faltantesObligatorios()` (una consulta agregada, sin N+1). Umbral verde ≥90%, ámbar ≥70%. | `empleados` + `expediente_documentos` (catálogo `RECAUDOS`) |
 
 ### 3.3 Sección Formación
 

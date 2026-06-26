@@ -63,6 +63,66 @@ class ExpedienteDocumento extends Model
         return ['items' => $items, 'faltan_obligatorios' => $faltanObligatorios];
     }
 
+    /** Claves de recaudos marcados como obligatorios en el catálogo. */
+    public static function clavesObligatorias(): array {
+        $obl = [];
+        foreach (self::RECAUDOS as $clave => [$label, $obligatorio]) {
+            if ($obligatorio) $obl[] = $clave;
+        }
+        return $obl;
+    }
+
+    /**
+     * Faltantes de recaudos OBLIGATORIOS por empleado, en UNA sola consulta
+     * (evita el N+1 de llamar recaudosEstado() por cada empleado).
+     * Devuelve [id_empleado => nº de obligatorios faltantes] para el personal
+     * activo no egresado (mismo universo que Empleado::all()).
+     */
+    public static function faltantesObligatorios(): array {
+        $obl   = self::clavesObligatorias();
+        $total = count($obl);
+        $db = new Database();
+        if ($total === 0) {
+            $db->query("SELECT e.id FROM empleados e INNER JOIN personas p ON e.id_persona = p.id
+                        WHERE e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL");
+            $out = [];
+            foreach ($db->resultSet() as $r) $out[(int)$r->id] = 0;
+            return $out;
+        }
+        $ph = [];
+        foreach ($obl as $i => $c) $ph[":o$i"] = $c;
+        $inList = implode(',', array_keys($ph));
+        $db->query("SELECT e.id AS id_empleado,
+                           COUNT(DISTINCT ed.tipo_documento) AS entregados
+                    FROM empleados e
+                    INNER JOIN personas p ON e.id_persona = p.id
+                    LEFT JOIN expediente_documentos ed
+                           ON ed.id_empleado = e.id AND ed.is_active = TRUE
+                          AND ed.tipo_documento IN ($inList)
+                    WHERE e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL
+                    GROUP BY e.id");
+        foreach ($ph as $k => $v) $db->bind($k, $v);
+        $out = [];
+        foreach ($db->resultSet() as $r) {
+            $out[(int)$r->id_empleado] = max(0, $total - (int)$r->entregados);
+        }
+        return $out;
+    }
+
+    /**
+     * Recaudos entregados por empleado: [id_empleado => [tipo_documento => true]],
+     * en UNA sola consulta. Útil para construir la lista de faltantes sin N+1.
+     */
+    public static function entregadosPorEmpleado(): array {
+        $db = new Database();
+        $db->query("SELECT id_empleado, tipo_documento FROM expediente_documentos WHERE is_active = TRUE");
+        $out = [];
+        foreach ($db->resultSet() as $r) {
+            $out[(int)$r->id_empleado][$r->tipo_documento] = true;
+        }
+        return $out;
+    }
+
     public static function save(array $data, $user_id = null) {
         $db = new Database();
         $db->query("INSERT INTO expediente_documentos (id_empleado, tipo_documento, archivo_url, nombre_original, observaciones, created_by)

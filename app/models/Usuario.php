@@ -3,6 +3,11 @@
  * Clase Usuario: Modelo para la tabla usuarios
  */
 class Usuario extends Model {
+    // ── Política de seguridad del login (mig. 051) ───────────────────────────
+    const MAX_INTENTOS     = 5;    // intentos fallidos consecutivos antes de bloquear
+    const BLOQUEO_MINUTOS  = 15;   // duración del bloqueo temporal
+    const PASSWORD_MIN     = 8;    // longitud mínima de contraseña
+
     private ?int $id;
     private ?int $id_empleado;
     private ?int $id_rol;
@@ -90,6 +95,65 @@ class Usuario extends Model {
         $nuevos = ['username' => $this->username, 'id_rol' => $this->id_rol, 'id_empleado' => $this->id_empleado, 'password_changed' => !empty($this->password)];
         $this->audit('usuarios', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, $nuevos, $user_id);
         return $result;
+    }
+
+    // ── Seguridad del login (mig. 051) ───────────────────────────────────────
+
+    /**
+     * Minutos restantes de bloqueo de la cuenta (0 si no está bloqueada).
+     * Recibe la fila del usuario (debe incluir locked_until).
+     */
+    public static function bloqueoRestante($user): int {
+        if (empty($user->locked_until)) return 0;
+        $hasta = strtotime($user->locked_until);
+        $ahora = time();
+        if ($hasta <= $ahora) return 0;
+        return (int)ceil(($hasta - $ahora) / 60);
+    }
+
+    /**
+     * Registra un intento fallido. Si alcanza el máximo, bloquea la cuenta por
+     * BLOQUEO_MINUTOS. Devuelve ['bloqueada'=>bool, 'restantes'=>intentos restantes].
+     */
+    public static function registrarLoginFallido(int $id): array {
+        $db = new Database();
+        $db->query("UPDATE usuarios
+                    SET failed_attempts = failed_attempts + 1,
+                        locked_until = CASE
+                            WHEN failed_attempts + 1 >= :max
+                            THEN NOW() + (:mins || ' minutes')::INTERVAL
+                            ELSE locked_until END
+                    WHERE id = :id
+                    RETURNING failed_attempts, locked_until");
+        $db->bind(':max', self::MAX_INTENTOS);
+        $db->bind(':mins', self::BLOQUEO_MINUTOS);
+        $db->bind(':id', $id);
+        $row = $db->single();
+        $intentos  = (int)($row->failed_attempts ?? 0);
+        $bloqueada = self::bloqueoRestante($row) > 0;
+        return ['bloqueada' => $bloqueada, 'restantes' => max(0, self::MAX_INTENTOS - $intentos)];
+    }
+
+    /** Reinicia los contadores y marca el último acceso tras un login exitoso. */
+    public static function registrarLoginExitoso(int $id): void {
+        $db = new Database();
+        $db->query("UPDATE usuarios SET failed_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = :id");
+        $db->bind(':id', $id);
+        $db->execute();
+    }
+
+    /**
+     * Valida la política de contraseñas. Devuelve un mensaje de error o null si es válida.
+     * Reglas: mínimo PASSWORD_MIN caracteres, al menos una letra y un número.
+     */
+    public static function passwordPolicyError(string $pwd): ?string {
+        if (mb_strlen($pwd) < self::PASSWORD_MIN) {
+            return 'La contraseña debe tener al menos ' . self::PASSWORD_MIN . ' caracteres.';
+        }
+        if (!preg_match('/[A-Za-zÁÉÍÓÚáéíóúÑñ]/', $pwd) || !preg_match('/[0-9]/', $pwd)) {
+            return 'La contraseña debe incluir al menos una letra y un número.';
+        }
+        return null;
     }
 
     /**

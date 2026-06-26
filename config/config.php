@@ -19,3 +19,6 @@ define('DB_NAME', 'SIGTUR-IMATUR');
 
 // Carpeta de la aplicación (Raíz del proyecto)
 define('APP_ROOT', dirname(dirname(__FILE__)));
+
+// Seguridad: expiración de sesión por inactividad (segundos). 1800 = 30 minutos.
+define('SESSION_TIMEOUT', 1800);

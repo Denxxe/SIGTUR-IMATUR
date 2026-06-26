@@ -56,8 +56,8 @@ class UsuariosController extends Controller {
             header('Location: ' . URL_ROOT . '/usuarios/index');
             return;
         }
-        if (!empty($data['password']) && mb_strlen($data['password']) < 6) {
-            flash('global_msg', 'La contraseña debe tener al menos 6 caracteres.', 'danger');
+        if (!empty($data['password']) && ($err = Usuario::passwordPolicyError($data['password'])) !== null) {
+            flash('global_msg', $err, 'danger');
             header('Location: ' . URL_ROOT . '/usuarios/index');
             return;
         }

@@ -19,12 +19,13 @@ class AuthController extends Controller {
             'username' => '',
             'password' => '',
             'username_err' => '',
-            'password_err' => ''
+            'password_err' => '',
+            'login_err'  => '',
         ];
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
-            
+
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);
 
@@ -39,22 +40,41 @@ class AuthController extends Controller {
                 try {
                     $loggedInUser = Usuario::findByUsername($data['username']);
                 } catch (Exception $e) {
-                    $data['username_err'] = 'Error de conexión con el sistema. Intente más tarde.';
+                    $data['login_err'] = 'Error de conexión con el sistema. Intente más tarde.';
                     $this->view('auth/login', $data);
                     return;
                 }
 
+                // Cuenta bloqueada temporalmente por intentos fallidos
+                if ($loggedInUser && ($min = Usuario::bloqueoRestante($loggedInUser)) > 0) {
+                    $data['login_err'] = 'Cuenta bloqueada temporalmente por seguridad. Intenta de nuevo en '
+                        . $min . ' minuto(s).';
+                    $this->view('auth/login', $data);
+                    return;
+                }
+
+                if ($loggedInUser && password_verify($data['password'], $loggedInUser->password)) {
+                    Usuario::registrarLoginExitoso((int)$loggedInUser->id);
+                    $this->createUserSession($loggedInUser);
+                    return;
+                }
+
+                // Credenciales inválidas — mensaje genérico (no revela si el usuario existe)
                 if ($loggedInUser) {
-                    if (password_verify($data['password'], $loggedInUser->password)) {
-                        $this->createUserSession($loggedInUser);
+                    $r = Usuario::registrarLoginFallido((int)$loggedInUser->id);
+                    if ($r['bloqueada']) {
+                        $data['login_err'] = 'Demasiados intentos fallidos. La cuenta quedó bloqueada por '
+                            . Usuario::BLOQUEO_MINUTOS . ' minutos.';
+                    } elseif ($r['restantes'] <= 2) {
+                        $data['login_err'] = 'Usuario o contraseña incorrectos. Te queda(n) '
+                            . $r['restantes'] . ' intento(s) antes del bloqueo.';
                     } else {
-                        $data['password_err'] = 'Contraseña incorrecta';
-                        $this->view('auth/login', $data);
+                        $data['login_err'] = 'Usuario o contraseña incorrectos.';
                     }
                 } else {
-                    $data['username_err'] = 'No se encontró el usuario';
-                    $this->view('auth/login', $data);
+                    $data['login_err'] = 'Usuario o contraseña incorrectos.';
                 }
+                $this->view('auth/login', $data);
             } else {
                 $this->view('auth/login', $data);
             }
@@ -64,9 +84,12 @@ class AuthController extends Controller {
     }
 
     public function createUserSession($user) {
+        // Renueva el id de sesión al autenticar (mitiga fijación de sesión)
+        session_regenerate_id(true);
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_username'] = $user->username;
         $_SESSION['user_rol'] = $user->id_rol;
+        $_SESSION['last_activity'] = time();
         header('Location: ' . URL_ROOT . '/dashboard/index');
     }
 

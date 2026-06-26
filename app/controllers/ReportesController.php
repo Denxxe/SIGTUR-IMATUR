@@ -398,9 +398,8 @@ class ReportesController extends Controller {
             foreach (Amonestacion::roster() as $r) if ((int)$r->amonestaciones >= $limite) $despido++;
 
             $expedInc = 0;
-            foreach (Empleado::all() as $e) {
-                $est = ExpedienteDocumento::recaudosEstado((int)$e->id);
-                if (($est['faltan_obligatorios'] ?? 0) > 0) $expedInc++;
+            foreach (ExpedienteDocumento::faltantesObligatorios() as $f) {
+                if ((int)$f > 0) $expedInc++;
             }
 
             $db->query("SELECT COUNT(*) AS t FROM permisos_laborales
@@ -678,20 +677,24 @@ class ReportesController extends Controller {
     // =========================================================================
     public function expedientesIncompletos() {
         $this->requireRoles([1, 2]);
+        // Consultas agregadas (sin N+1): faltantes por empleado + recaudos entregados.
+        $faltMap   = ExpedienteDocumento::faltantesObligatorios();
+        $entregMap = ExpedienteDocumento::entregadosPorEmpleado();
         $filas = []; $totalIncompletos = 0;
         foreach (Empleado::all() as $e) {
-            $estado = ExpedienteDocumento::recaudosEstado((int)$e->id);
-            if (($estado['faltan_obligatorios'] ?? 0) <= 0) continue;
+            $faltan = (int)($faltMap[(int)$e->id] ?? 0);
+            if ($faltan <= 0) continue;
             $totalIncompletos++;
+            $entregados = $entregMap[(int)$e->id] ?? [];
             $faltantes = [];
-            foreach ($estado['items'] as $it) {
-                if ($it['obligatorio'] && !$it['entregado']) $faltantes[] = $it['label'];
+            foreach (ExpedienteDocumento::RECAUDOS as $clave => [$label, $obligatorio]) {
+                if ($obligatorio && empty($entregados[$clave])) $faltantes[] = $label;
             }
             $filas[] = [
                 trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')),
                 $e->cedula ?? '—',
                 $e->cargo ?? '—',
-                ['raw' => '<span class="sig-badge sig-badge--danger">' . (int)$estado['faltan_obligatorios'] . '</span>'],
+                ['raw' => '<span class="sig-badge sig-badge--danger">' . $faltan . '</span>'],
                 implode(', ', $faltantes),
             ];
         }
@@ -2370,12 +2373,11 @@ class ReportesController extends Controller {
             $precisionAsist = $db->single();
 
             // RRHH: Documentación completa del personal (expedientes con recaudos obligatorios completos).
-            $empDocTotal = 0; $empDocCompletos = 0;
-            foreach (Empleado::all() as $emp) {
-                $empDocTotal++;
-                $est = ExpedienteDocumento::recaudosEstado((int)$emp->id);
-                if ((int)($est['faltan_obligatorios'] ?? 0) === 0) $empDocCompletos++;
-            }
+            // Una sola consulta agregada (sin N+1 por empleado).
+            $faltMap = ExpedienteDocumento::faltantesObligatorios();
+            $empDocTotal = count($faltMap);
+            $empDocCompletos = 0;
+            foreach ($faltMap as $f) if ((int)$f === 0) $empDocCompletos++;
 
             // INVENTARIO: Precisión del registro (durables con código BN; fungibles siempre cuentan).
             $db->query("SELECT COUNT(*) AS total,

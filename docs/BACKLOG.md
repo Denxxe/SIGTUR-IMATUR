@@ -41,6 +41,15 @@ Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* d
 
 > Archivos: `ReportesController::indicadores()` + `views/reportes/indicadores.php`. Pendientes del documento que **no** se implementaron (ver 3.4 y 3.5): stock mínimo, instituciones participantes en rutas, tiempo de generación de reportes.
 
+### 2026-06-25 — Endurecimiento de login + optimización N+1 (mig. 051)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Seguridad | **Endurecer el login** | Bloqueo tras 5 intentos fallidos por 15 min (`usuarios.failed_attempts`/`locked_until`), política de contraseñas (mín. 8 + letra y número), mensaje genérico anti-enumeración, `session_regenerate_id`, expiración de sesión por inactividad (`SESSION_TIMEOUT`=30 min en el Router). |
+| ✅ Rendimiento | **Optimizar N+1 de documentación** | `ExpedienteDocumento::faltantesObligatorios()` + `entregadosPorEmpleado()` (consultas agregadas) reemplazan el bucle `recaudosEstado()` por empleado en `indicadores()`, `alertas()` y `expedientesIncompletos()`. |
+
+> Migración **051** (`usuarios_seguridad_login`): `+failed_attempts/locked_until/last_login`. Idempotente.
+
 ### 2026-06-25 — Bloque B (reportes implementables, sin migración)
 
 | # | Reporte | Ruta · Roles |
@@ -151,8 +160,6 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
 | 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. |
-| 🟡 **Endurecer el login** | Bloqueo tras N intentos fallidos, expiración de sesión por inactividad, política de contraseñas. Tocar `AuthController` + tabla `usuarios` (campos de intentos/lockout). |
-| 🟡 **Optimizar N+1 de "documentación completa"** | Hoy `indicadores()`/`alertas()` llaman `ExpedienteDocumento::recaudosEstado()` por empleado (1 consulta c/u). Reemplazar por **una consulta agregada** sobre `expediente_documentos`. |
 | 🟡 **Centro de notificaciones (campana)** | Header con conteo de alertas (contratos por vencer, expedientes incompletos, talleres vencidos, permisos pendientes). Reutiliza la lógica de `reportes/alertas`. |
 | 🟢 **Filtro de rango de fechas en Indicadores** | Hoy el panel es "mes/año en curso" fijo; permitir período configurable. |
 | 🟢 **Búsqueda global** (header) | Empleado / bien / ruta / taller desde un único buscador. |

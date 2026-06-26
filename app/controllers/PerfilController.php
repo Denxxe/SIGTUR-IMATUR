@@ -78,8 +78,8 @@ class PerfilController extends Controller {
 
         if (!$row || !password_verify($actual, $row->password)) {
             flash('global_msg', 'La contraseña actual no es correcta.', 'danger');
-        } elseif (mb_strlen($nueva) < 6) {
-            flash('global_msg', 'La nueva contraseña debe tener al menos 6 caracteres.', 'danger');
+        } elseif (($err = Usuario::passwordPolicyError($nueva)) !== null) {
+            flash('global_msg', $err, 'danger');
         } elseif ($nueva !== $repite) {
             flash('global_msg', 'Las contraseñas nuevas no coinciden.', 'danger');
         } else {
