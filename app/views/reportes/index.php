@@ -53,6 +53,7 @@ $secciones = [
         'titulo' => 'Seguridad', 'icono' => 'bi-shield-lock-fill', 'roles' => [1],
         'reportes' => [
             ['Auditoría del Sistema', 'Bitácora de cambios (quién, qué, cuándo) filtrable y exportable.', 'reportes/auditoria', 'bi-clipboard-data', '#64748B'],
+            ['Accesos al Sistema', 'Inicios de sesión e intentos fallidos: quién entró, cuándo y desde qué IP.', 'reportes/accesos', 'bi-box-arrow-in-right', '#DC2626'],
         ],
     ],
     [

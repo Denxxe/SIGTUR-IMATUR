@@ -193,7 +193,74 @@
                 <span class="sig-header__breadcrumb-sep">/</span>
                 <span class="sig-header__breadcrumb-current">Gestión</span>
             </div>
+
+            <!-- Búsqueda global -->
+            <form method="get" action="<?php echo URL_ROOT; ?>/buscar/index" class="sig-header__search" role="search"
+                  style="margin-left:auto;display:flex;align-items:center;gap:6px;max-width:340px;flex:1;">
+                <div style="position:relative;flex:1;">
+                    <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-tertiary);"></i>
+                    <input type="text" name="q" placeholder="Buscar…" aria-label="Buscar"
+                           value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>"
+                           style="width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);font-size:13px;">
+                </div>
+            </form>
+
             <div class="sig-header__actions">
+                <!-- Centro de notificaciones (campana) -->
+                <?php
+                $___alertas  = CentroAlertas::resumen($rol);
+                $___total    = 0; $___visibles = [];
+                foreach ($___alertas as $___a) {
+                    if ((int)$___a['n'] > 0) {
+                        $___visibles[] = $___a;
+                        if (in_array($___a['sev'], ['warning', 'danger'], true)) $___total += (int)$___a['n'];
+                    }
+                }
+                $___sevColor = ['info' => '#0891B2', 'warning' => '#D97706', 'danger' => '#DC2626'];
+                ?>
+                <div class="dropdown">
+                    <button class="sig-header__icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notificaciones" style="position:relative;">
+                        <i class="bi bi-bell" style="font-size:17px;"></i>
+                        <?php if ($___total > 0): ?>
+                            <span style="position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;">
+                                <?php echo $___total > 99 ? '99+' : $___total; ?>
+                            </span>
+                        <?php endif; ?>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end shadow" style="width:330px;max-width:90vw;padding:0;overflow:hidden;">
+                        <div style="padding:10px 14px;border-bottom:1px solid var(--border-subtle);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;">
+                            <span><i class="bi bi-bell"></i> Notificaciones</span>
+                            <span style="font-size:11px;color:var(--text-tertiary);font-weight:500;"><?php echo count($___visibles); ?> aviso(s)</span>
+                        </div>
+                        <div style="max-height:360px;overflow-y:auto;">
+                            <?php if (empty($___visibles)): ?>
+                                <div style="padding:22px 14px;text-align:center;color:var(--text-tertiary);font-size:13px;">
+                                    <i class="bi bi-check2-circle" style="font-size:1.4rem;display:block;margin-bottom:6px;color:#059669;"></i>
+                                    Sin alertas pendientes.
+                                </div>
+                            <?php else: foreach ($___visibles as $___a):
+                                $___c = $___sevColor[$___a['sev']] ?? '#64748B'; ?>
+                                <a href="<?php echo $___a['url']; ?>" class="dropdown-item" style="display:flex;gap:10px;align-items:flex-start;padding:10px 14px;white-space:normal;border-bottom:1px solid var(--border-subtle);">
+                                    <span style="flex-shrink:0;width:30px;height:30px;border-radius:8px;background:<?php echo $___c; ?>1f;display:flex;align-items:center;justify-content:center;">
+                                        <i class="bi <?php echo $___a['icono']; ?>" style="color:<?php echo $___c; ?>;font-size:15px;"></i>
+                                    </span>
+                                    <span style="min-width:0;flex:1;">
+                                        <span style="display:flex;align-items:center;gap:6px;">
+                                            <span style="font-weight:700;font-size:12.5px;color:var(--text-primary);"><?php echo htmlspecialchars($___a['titulo']); ?></span>
+                                            <span style="margin-left:auto;background:<?php echo $___c; ?>;color:#fff;border-radius:10px;padding:0 7px;font-size:11px;font-weight:700;"><?php echo (int)$___a['n']; ?></span>
+                                        </span>
+                                        <span style="display:block;font-size:11.5px;color:var(--text-tertiary);"><?php echo htmlspecialchars($___a['desc']); ?></span>
+                                    </span>
+                                </a>
+                            <?php endforeach; endif; ?>
+                        </div>
+                        <?php if (in_array($rol, [1, 2], true)): ?>
+                        <a href="<?php echo URL_ROOT; ?>/reportes/alertas" class="dropdown-item" style="text-align:center;padding:9px;font-size:12px;font-weight:600;color:var(--brand-600);">
+                            Ver centro de alertas <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
                 <button class="sig-header__icon-btn" onclick="toggleTheme()" title="Cambiar tema" id="themeToggleBtn">
                     <i class="bi bi-moon" id="themeIcon" style="font-size:17px;"></i>
                 </button>

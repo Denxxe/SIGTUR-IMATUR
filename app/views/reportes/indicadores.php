@@ -18,6 +18,14 @@ function fmtMes(string $ym): string {
         <p class="page__subtitle">Métricas operativas en tiempo real — <?php echo date('d/m/Y H:i'); ?></p>
     </div>
     <div class="page__actions">
+        <form method="get" action="<?php echo URL_ROOT; ?>/reportes/indicadores" class="no-print" style="display:flex;align-items:center;gap:6px;">
+            <label for="filtroAnio" style="font-size:12px;font-weight:600;color:var(--text-secondary);"><i class="bi bi-calendar3"></i> Año</label>
+            <select id="filtroAnio" name="anio" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                <?php foreach (($data['aniosDisponibles'] ?? []) as $a): ?>
+                    <option value="<?php echo $a; ?>" <?php echo ((int)$a === (int)$data['anioActual']) ? 'selected' : ''; ?>><?php echo $a; ?></option>
+                <?php endforeach; ?>
+            </select>
+        </form>
         <button class="btn-sig btn-sig--danger btn-sig--sm no-print" onclick="window.print()">
             <i class="bi bi-file-earmark-pdf"></i> PDF
         </button>
@@ -72,7 +80,7 @@ function areaSep(string $label, string $color, string $icon): void {
 <?php areaSep('Formación y Turismo', '#7C3AED', 'bi-mortarboard'); ?>
 <div class="row g-3 mb-5 anim-slide-up">
     <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Actividades Activas', 'value'=>$data['kpiActividadesActivas'], 'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',  'bg'=>'#7C3AED']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Formados '.date('Y'), 'value'=>$data['kpiFormadosAnio'],       'sub'=>'inscripciones activas en el año','icon'=>'bi-person-check-fill', 'bg'=>'#059669']); ?></div>
+    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Formados '.$data['anioActual'], 'value'=>$data['kpiFormadosAnio'],       'sub'=>'inscripciones activas en el año','icon'=>'bi-person-check-fill', 'bg'=>'#059669']); ?></div>
     <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Rutas Operativas',    'value'=>$data['kpiRutasActivas'],       'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',      'bg'=>'#D97706']); ?></div>
     <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes en Alerta',    'value'=>$data['kpiBienesAlerta'],       'sub'=>'dañados o en reparación',        'icon'=>'bi-exclamation-triangle-fill','bg'=>'#DC2626','alert'=>true]); ?></div>
 </div>

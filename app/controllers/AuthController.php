@@ -55,6 +55,10 @@ class AuthController extends Controller {
 
                 if ($loggedInUser && password_verify($data['password'], $loggedInUser->password)) {
                     Usuario::registrarLoginExitoso((int)$loggedInUser->id);
+                    try {
+                        AuditLog::log('usuarios', 'LOGIN', (int)$loggedInUser->id, null,
+                            ['username' => $loggedInUser->username], (int)$loggedInUser->id);
+                    } catch (Exception $ignored) {}
                     $this->createUserSession($loggedInUser);
                     return;
                 }
@@ -62,6 +66,10 @@ class AuthController extends Controller {
                 // Credenciales inválidas — mensaje genérico (no revela si el usuario existe)
                 if ($loggedInUser) {
                     $r = Usuario::registrarLoginFallido((int)$loggedInUser->id);
+                    try {
+                        AuditLog::log('usuarios', 'LOGIN_FALLIDO', (int)$loggedInUser->id, null,
+                            ['username' => $loggedInUser->username, 'bloqueada' => $r['bloqueada']], (int)$loggedInUser->id);
+                    } catch (Exception $ignored) {}
                     if ($r['bloqueada']) {
                         $data['login_err'] = 'Demasiados intentos fallidos. La cuenta quedó bloqueada por '
                             . Usuario::BLOQUEO_MINUTOS . ' minutos.';

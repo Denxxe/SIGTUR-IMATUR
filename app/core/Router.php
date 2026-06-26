@@ -48,8 +48,9 @@ class Router {
             $permisos   = RolesController::getMapaRbac();
             $permitidos = $permisos[$rolId] ?? [];
             if ($permitidos !== '*' && !in_array($this->currentController, $permitidos)) {
-                // PerfilController: accesible por cualquier usuario autenticado (gestión propia de cuenta).
-                $accesoSiempre = $this->currentController === 'PerfilController';
+                // PerfilController y BuscarController: accesibles por cualquier usuario
+                // autenticado (gestión de cuenta propia / búsqueda global gated por rol).
+                $accesoSiempre = in_array($this->currentController, ['PerfilController', 'BuscarController'], true);
 
                 // AuditoriaController tiene permisos a nivel de método.
                 $accesoAuditoria = $this->currentController === 'AuditoriaController'

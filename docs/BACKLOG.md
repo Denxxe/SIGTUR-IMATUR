@@ -24,6 +24,15 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-06-25 — UX/seguridad: campana, búsqueda global, accesos, filtro de año (sin migración)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Vista de accesos | **Reporte de accesos al sistema** (`reportes/accesos`, rol 1) | Inicios de sesión e intentos fallidos desde `audit_logs` (AuthController ahora registra `LOGIN`/`LOGIN_FALLIDO`); filtros usuario/tipo/fecha + export. |
+| ✅ Centro de notificaciones | **Campana en el header** | `CentroAlertas::resumen($rol)` (fuente única, reusada por `reportes/alertas`); dropdown role-aware con badge de conteo accionable. |
+| ✅ Filtro de período | **Selector de año en Indicadores** | `?anio=` gobierna los indicadores anuales del panel; métricas "del mes" y tendencias siguen relativas a hoy. |
+| ✅ Búsqueda global | **Buscador en el header** (`BuscarController`) | Empleados / inventario / talleres / rutas / visitantes, **gated por rol**; acceso permitido a todo usuario autenticado en el Router. |
+
 ### 2026-06-25 — Bloque CMI de indicadores (sin migración)
 
 Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* del documento del proyecto. 8 indicadores nuevos (prefijo `CMI-*` en `INDICADORES_GESTION.md`), solo lectura sobre datos existentes:
@@ -160,10 +169,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
 | 🔴 **Respaldos automáticos de BD** | `pg_dump` programado (Tarea de Windows, igual que `cron/actualizar_estados.php`), con rotación. Hoy **no hay política de backup** — mayor riesgo operativo on-premise. |
-| 🟡 **Centro de notificaciones (campana)** | Header con conteo de alertas (contratos por vencer, expedientes incompletos, talleres vencidos, permisos pendientes). Reutiliza la lógica de `reportes/alertas`. |
-| 🟢 **Filtro de rango de fechas en Indicadores** | Hoy el panel es "mes/año en curso" fijo; permitir período configurable. |
-| 🟢 **Búsqueda global** (header) | Empleado / bien / ruta / taller desde un único buscador. |
-| 🟢 **Vista de accesos/sesiones** | A partir de `audit_logs` (quién entró y cuándo). |
+| 🟢 **Filtro de rango de fechas (granularidad fina) en Indicadores** | Ya hay selector de **año**; falta, si se requiere, rango libre mes-a-mes en las métricas anuales. |
 | 🟢 **Suite mínima de pruebas** | Cubrir cálculos críticos: vacaciones (`Vacacion`), puntualidad (`Asistencia`), tiempo de servicio (`Empleado`). Hoy no hay tests. |
 | 🟢 **`.gitattributes`** | Fijar fin de línea (evita el ruido "LF will be replaced by CRLF" en cada commit). |
 | 🟢 **Manual de usuario por rol** | Documento breve para entrega/defensa. |

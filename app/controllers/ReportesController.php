@@ -366,66 +366,9 @@ class ReportesController extends Controller {
     // =========================================================================
     public function alertas() {
         $this->requireRoles([1, 2]);
-        $rol     = (int)($_SESSION['user_rol'] ?? 0);
-        $esRRHH  = in_array($rol, [1, 2], true);  // RRHH / admin
-        $esForm  = in_array($rol, [1, 3], true);  // Formación / admin (admin entra por requireRoles)
-        $db = new Database();
-
-        // Umbrales de preaviso (config, con fallback) — compartidos con el Dashboard.
-        $diasContrato = 30; $diasPasante = 15;
-        try {
-            $db->query("SELECT clave, valor FROM configuracion_sistema WHERE clave IN ('dias_preaviso_contrato','dias_preaviso_pasante')");
-            foreach ($db->resultSet() as $row) {
-                if ($row->clave === 'dias_preaviso_contrato' && (int)$row->valor > 0) $diasContrato = (int)$row->valor;
-                if ($row->clave === 'dias_preaviso_pasante'  && (int)$row->valor > 0) $diasPasante  = (int)$row->valor;
-            }
-        } catch (\Exception $ignored) {}
-
-        $alertas = [];
-
-        if ($esRRHH) {
-            // Contratos por vencer (vencimiento del contrato, no la fecha de egreso real — R-12)
-            $db->query("SELECT COUNT(*) AS t FROM empleados
-                        WHERE is_active = TRUE AND tipo_contrato = 'Contratado' AND fecha_egreso IS NULL
-                          AND fecha_vencimiento_contrato IS NOT NULL
-                          AND fecha_vencimiento_contrato BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasContrato || ' days')::INTERVAL)");
-            $contratosVencen = (int)($db->single()->t ?? 0);
-
-            $db->query("SELECT COUNT(*) AS t FROM permisos_laborales WHERE estado = 'Pendiente' AND is_active = TRUE");
-            $permPend = (int)($db->single()->t ?? 0);
-
-            $limite = Amonestacion::LIMITE_DESPIDO; $despido = 0;
-            foreach (Amonestacion::roster() as $r) if ((int)$r->amonestaciones >= $limite) $despido++;
-
-            $expedInc = 0;
-            foreach (ExpedienteDocumento::faltantesObligatorios() as $f) {
-                if ((int)$f > 0) $expedInc++;
-            }
-
-            $db->query("SELECT COUNT(*) AS t FROM permisos_laborales
-                        WHERE estado = 'Aprobado' AND is_active = TRUE
-                          AND fecha_inicio <= CURRENT_DATE AND fecha_fin >= CURRENT_DATE");
-            $enCurso = (int)($db->single()->t ?? 0);
-
-            $alertas[] = ['titulo' => 'Contratos por vencer', 'desc' => "Contratados que vencen en los próximos {$diasContrato} días.", 'n' => $contratosVencen, 'icono' => 'bi-person-badge', 'url' => URL_ROOT . '/empleados/index', 'sev' => 'warning'];
-            $alertas[] = ['titulo' => 'Permisos / reposos pendientes', 'desc' => 'Solicitudes por aprobar o rechazar.', 'n' => $permPend, 'icono' => 'bi-calendar2-check', 'url' => URL_ROOT . '/permisos/index', 'sev' => 'warning'];
-            $alertas[] = ['titulo' => 'En causa de despido', 'desc' => "Empleados con {$limite}+ amonestaciones activas.", 'n' => $despido, 'icono' => 'bi-flag-fill', 'url' => URL_ROOT . '/amonestaciones/index', 'sev' => 'danger'];
-            $alertas[] = ['titulo' => 'Expedientes incompletos', 'desc' => 'Personal con recaudos obligatorios faltantes.', 'n' => $expedInc, 'icono' => 'bi-folder-x', 'url' => URL_ROOT . '/reportes/expedientesIncompletos', 'sev' => 'warning'];
-            $alertas[] = ['titulo' => 'Permisos / reposos en curso', 'desc' => 'Ausencias justificadas vigentes hoy.', 'n' => $enCurso, 'icono' => 'bi-info-circle', 'url' => URL_ROOT . '/permisos/index', 'sev' => 'info'];
-        }
-
-        if ($esForm) {
-            $tallVenc = Taller::contarVencidos();
-            $db->query("SELECT COUNT(*) AS t FROM pasantes
-                        WHERE is_active = TRUE AND estado = 'En Curso' AND fecha_fin IS NOT NULL
-                          AND fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasPasante || ' days')::INTERVAL)");
-            $pasCulm = (int)($db->single()->t ?? 0);
-
-            $alertas[] = ['titulo' => 'Talleres / actividades vencidas', 'desc' => 'Programadas cuya fecha ya pasó (sin ejecutarse) o en curso sin finalizar.', 'n' => $tallVenc, 'icono' => 'bi-calendar-x', 'url' => URL_ROOT . '/talleres/index', 'sev' => 'danger'];
-            $alertas[] = ['titulo' => 'Pasantes por culminar', 'desc' => "Pasantías que culminan en los próximos {$diasPasante} días.", 'n' => $pasCulm, 'icono' => 'bi-journal-text', 'url' => URL_ROOT . '/pasantes/index', 'sev' => 'info'];
-        }
-
-        $this->view('reportes/alertas', ['titulo' => 'Centro de Alertas', 'alertas' => $alertas]);
+        $rol = (int)($_SESSION['user_rol'] ?? 0);
+        // Fuente única: CentroAlertas (compartida con la campana del header).
+        $this->view('reportes/alertas', ['titulo' => 'Centro de Alertas', 'alertas' => CentroAlertas::resumen($rol)]);
     }
 
     // =========================================================================
@@ -2049,6 +1992,12 @@ class ReportesController extends Controller {
         try {
             $db = new Database();
 
+            // Año del panel: configurable por ?anio (default = año del servidor).
+            // Gobierna todos los indicadores anuales; las métricas "del mes" y las
+            // tendencias "últimos N meses" siguen siendo relativas a hoy.
+            $anioActual = (int)($_GET['anio'] ?? date('Y'));
+            if ($anioActual < 2000 || $anioActual > (int)date('Y') + 1) $anioActual = (int)date('Y');
+
             // ── KPIs de resumen ───────────────────────────────────────────
             $db->query("SELECT COUNT(*) as total FROM empleados WHERE is_active = TRUE");
             $kpiEmpleados = $db->single();
@@ -2062,8 +2011,9 @@ class ReportesController extends Controller {
             $db->query("SELECT COUNT(*) as total
                         FROM participantes_taller pt
                         JOIN talleres t ON pt.id_taller = t.id
-                        WHERE EXTRACT(YEAR FROM t.fecha_inicio) = EXTRACT(YEAR FROM CURRENT_DATE)
+                        WHERE EXTRACT(YEAR FROM t.fecha_inicio) = :anio
                           AND pt.is_active = TRUE AND t.is_active = TRUE");
+            $db->bind(':anio', $anioActual);
             $kpiFormadosAnio = $db->single();
 
             $db->query("SELECT COUNT(*) as total FROM rutas WHERE estado = 'Activa' AND is_active = TRUE");
@@ -2133,8 +2083,7 @@ class ReportesController extends Controller {
             $db->query("SELECT condicion, COUNT(*) as total FROM inventario WHERE is_active = TRUE GROUP BY condicion ORDER BY total DESC");
             $invPorCondicion = $db->resultSet();
 
-            // ── F-3: Demografía de formación (año actual) ─────────────────
-            $anioActual = (int)date('Y');
+            // ── F-3: Demografía de formación (año seleccionado) ───────────
             $db->query("SELECT
                             COALESCE(SUM(ti.mujeres), 0) as mujeres,
                             COALESCE(SUM(ti.hombres), 0) as hombres,
@@ -2428,6 +2377,7 @@ class ReportesController extends Controller {
             $data = [
                 'titulo'                => 'Indicadores de Gestión',
                 'anioActual'            => $anioActual,
+                'aniosDisponibles'      => $this->aniosDisponibles('talleres', 'fecha_inicio', $anioActual),
                 // KPIs resumen
                 'kpiEmpleados'          => (int)($kpiEmpleados->total          ?? 0),
                 'kpiVisitasHoy'         => (int)($kpiVisitasHoy->total         ?? 0),
@@ -3004,6 +2954,89 @@ class ReportesController extends Controller {
         $p = explode('-', $ym);
         if (count($p) < 2) return $ym;
         return ($m[(int)$p[1]] ?? '?') . ' ' . $p[0];
+    }
+
+    // =========================================================================
+    // Seguridad — Accesos al sistema (inicios de sesión) desde audit_logs
+    // =========================================================================
+    public function accesos() {
+        $this->requireRoles([1]);
+        try {
+            $regs = $this->queryAccesos();
+            $filas = []; $ok = 0; $fail = 0;
+            foreach ($regs as $r) {
+                $esFallo = $r->operacion === 'LOGIN_FALLIDO';
+                if ($esFallo) $fail++; else $ok++;
+                $badge = $esFallo
+                    ? '<span class="sig-badge sig-badge--danger">Intento fallido</span>'
+                    : '<span class="sig-badge sig-badge--success">Acceso</span>';
+                $filas[] = [
+                    !empty($r->fecha) ? date('d/m/Y H:i:s', strtotime($r->fecha)) : '—',
+                    ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->actor_name ?? $r->username ?? '—') . '</span>'],
+                    ['raw' => $badge],
+                    $r->ip_direccion ?? '—',
+                ];
+            }
+            $this->renderReporte([
+                'eyebrow' => 'Seguridad · Bitácora', 'titulo' => 'Accesos al Sistema',
+                'subtitulo' => 'Inicios de sesión e intentos fallidos: quién entró, cuándo y desde qué IP.',
+                'resumen' => ['Registros' => count($regs), 'Accesos' => $ok, 'Intentos fallidos' => $fail],
+                'columnas' => ['Fecha y hora', 'Usuario', 'Tipo', 'IP'],
+                'filas' => $filas,
+                'accion' => URL_ROOT . '/reportes/accesos',
+                'filtros' => [
+                    ['name' => 'buscar', 'label' => 'Usuario', 'type' => 'text', 'placeholder' => 'Nombre o usuario…', 'value' => $_GET['buscar'] ?? ''],
+                    ['name' => 'tipo', 'label' => 'Tipo', 'type' => 'select', 'options' => ['' => 'Todos', 'exito' => 'Accesos', 'fallido' => 'Intentos fallidos'], 'value' => $_GET['tipo'] ?? ''],
+                    ['name' => 'fecha_inicio', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_inicio'] ?? ''],
+                    ['name' => 'fecha_fin', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_fin'] ?? ''],
+                ],
+                'export_url' => URL_ROOT . '/reportes/exportarAccesosCsv?' . $this->qsFiltros(),
+                'vacio' => 'No hay accesos registrados para el filtro.',
+            ]);
+        } catch (Exception $e) {
+            flash('global_msg', 'Error al generar el reporte de accesos: ' . $e->getMessage(), 'danger');
+            header('Location: ' . URL_ROOT . '/reportes/index');
+        }
+    }
+
+    public function exportarAccesosCsv() {
+        $this->requireRoles([1]);
+        $rows = [];
+        foreach ($this->queryAccesos() as $r) {
+            $rows[] = [
+                !empty($r->fecha) ? date('d/m/Y H:i:s', strtotime($r->fecha)) : '',
+                $r->actor_name ?? $r->username ?? '',
+                $r->operacion === 'LOGIN_FALLIDO' ? 'Intento fallido' : 'Acceso',
+                $r->ip_direccion ?? '',
+            ];
+        }
+        $this->exportCsv('accesos_sistema', ['Fecha y hora', 'Usuario', 'Tipo', 'IP'], $rows);
+    }
+
+    private function queryAccesos() {
+        $db = new Database();
+        $binds = [];
+        $where = "a.tabla_afectada = 'usuarios' AND a.operacion IN ('LOGIN','LOGIN_FALLIDO')";
+        $tipo = trim($_GET['tipo'] ?? '');
+        if ($tipo === 'exito')   $where .= " AND a.operacion = 'LOGIN'";
+        if ($tipo === 'fallido') $where .= " AND a.operacion = 'LOGIN_FALLIDO'";
+        if (!empty($_GET['fecha_inicio'])) { $where .= " AND a.fecha >= :fi"; $binds[':fi'] = trim($_GET['fecha_inicio']) . ' 00:00:00'; }
+        if (!empty($_GET['fecha_fin']))    { $where .= " AND a.fecha <= :ff"; $binds[':ff'] = trim($_GET['fecha_fin']) . ' 23:59:59'; }
+        if (!empty($_GET['buscar'])) {
+            $where .= " AND (u.username ILIKE :q OR (COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')) ILIKE :q)";
+            $binds[':q'] = '%' . trim($_GET['buscar']) . '%';
+        }
+        $db->query("SELECT a.fecha, a.operacion, a.ip_direccion, u.username,
+                           COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username) AS actor_name
+                    FROM audit_logs a
+                    LEFT JOIN usuarios u   ON a.id_usuario  = u.id
+                    LEFT JOIN empleados e  ON u.id_empleado = e.id
+                    LEFT JOIN personas per ON e.id_persona  = per.id
+                    WHERE {$where}
+                    ORDER BY a.fecha DESC
+                    LIMIT 1000");
+        foreach ($binds as $k => $v) $db->bind($k, $v);
+        return $db->resultSet();
     }
 
     // =========================================================================
