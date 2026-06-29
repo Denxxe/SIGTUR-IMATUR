@@ -132,6 +132,11 @@ class DashboardController extends Controller {
                 $pm = $db->single();
                 $data['kpiImpuntualMes'] = (int)($pm->imp ?? 0);
                 $data['kpiImpuntualPct'] = ((int)($pm->con ?? 0) > 0) ? (int)round((int)$pm->imp * 100 / (int)$pm->con) : 0;
+
+                // Ausencias (faltas) registradas y vigentes en el mes actual
+                $db->query("SELECT COUNT(*) AS total FROM faltas
+                            WHERE is_active = TRUE AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE)");
+                $data['kpiAusenciasMes'] = (int)($db->single()->total ?? 0);
             }
 
             // ══════════════════════════════════════════════════════════════
@@ -176,6 +181,12 @@ class DashboardController extends Controller {
                             WHERE is_active = TRUE AND hora_entrada >= (CURRENT_DATE - INTERVAL '14 days')
                             GROUP BY dia ORDER BY dia ASC");
                 $data['visitasPorDia'] = $padDays($db->resultSet(), 14);
+
+                // Visitantes tipo pasante: visitas cuyo motivo es "Pasantías" (mes actual)
+                $db->query("SELECT COUNT(DISTINCT id_visitante) AS total FROM visitas
+                            WHERE is_active = TRUE AND motivo = 'Pasantías'
+                              AND date_trunc('month', hora_entrada) = date_trunc('month', NOW())");
+                $data['kpiVisitantesPasantes'] = (int)($db->single()->total ?? 0);
             }
 
             // ══════════════════════════════════════════════════════════════

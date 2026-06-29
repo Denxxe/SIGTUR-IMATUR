@@ -43,6 +43,8 @@ if (in_array($rol, [1, 2])) {
         ['label'=>'Amonestaciones',       'value'=>number_format($data['kpiAmonDespido']??0),      'sub'=>'en causa de despido (3+)',           'icon'=>'bi-flag-fill',                 'bg'=>$alDesp?'#DC2626':'#64748B','href'=>URL_ROOT.'/amonestaciones/index','alert'=>$alDesp,
             'status'=>kpiSt($data['kpiAmonDespido']??0,0,1,true)],
         ['label'=>'Impuntualidad '.date('M'),'value'=>$pctImp.'%',                                 'sub'=>($data['kpiImpuntualMes']??0).' marcaje(s) tarde','icon'=>'bi-alarm-fill',       'bg'=>$colImp,'href'=>URL_ROOT.'/reportes/asistencia'],
+        ['label'=>'Ausencias '.date('M'),    'value'=>number_format($data['kpiAusenciasMes']??0),    'sub'=>'inasistencias registradas','icon'=>'bi-person-x-fill', 'bg'=>($data['kpiAusenciasMes']??0)>0?'#DC2626':'#64748B','href'=>URL_ROOT.'/amonestaciones/index',
+            'status'=>kpiSt($data['kpiAusenciasMes']??0,0,1,true)],
     ]];
 }
 
@@ -59,6 +61,8 @@ if (in_array($rol, [1, 2, 5])) {
             'delta'=>$data['deltaVisitasSemana']??null];
         $recCards[] = ['label'=>'Visitantes Mes',   'value'=>number_format($data['kpiVisitantesMes']??0), 'sub'=>'únicos en el mes actual',   'icon'=>'bi-calendar-month', 'bg'=>'#059669',
             'status'=>($data['kpiVisitantesMes']??0)>0?'good':'neutral'];
+        $recCards[] = ['label'=>'Pasantes (Visitas)','value'=>number_format($data['kpiVisitantesPasantes']??0),'sub'=>'motivo «Pasantías» — mes actual','icon'=>'bi-person-video3','bg'=>'#DB2777','href'=>URL_ROOT.'/visitantes/index',
+            'status'=>($data['kpiVisitantesPasantes']??0)>0?'good':'neutral'];
     }
     $kpiSections[] = ['label'=>'Recepción','color'=>'#0891B2','icon'=>'bi-door-open','cards'=>$recCards];
 }
