@@ -188,10 +188,86 @@
             <button class="sig-header__icon-btn sidebar-toggle" onclick="toggleSidebar()" aria-label="Menú">
                 <i class="bi bi-list" style="font-size:20px;"></i>
             </button>
+            <?php
+            /**
+             * Breadcrumb dinámico: indica al usuario dónde está.
+             * Estructura: [Inicio] / [Grupo] / [Sección] (/ [Página] si aporta detalle).
+             * - "Grupo" = grupo del menú lateral (RRHH, Inventario, …). Texto plano.
+             * - "Sección" se deriva del controlador actual (1.er segmento de la URL).
+             * - "Página" usa $data['titulo'] cuando es un detalle distinto de la sección
+             *   (p. ej. Reportes / Directorio de Personal). Se omite si es redundante.
+             */
+            $___bcSeg = '';
+            if (isset($_GET['url'])) {
+                $___parts = explode('/', trim($_GET['url'], '/'));
+                $___bcSeg = strtolower($___parts[0] ?? '');
+            }
+            // [grupo, etiqueta de sección]. Grupo vacío = sin nivel de grupo.
+            $___bcMap = [
+                ''                     => ['', 'Panel Principal'],
+                'dashboard'            => ['', 'Panel Principal'],
+                'empleados'            => ['RRHH', 'Empleados'],
+                'cargos'               => ['RRHH', 'Cargos'],
+                'departamentos'        => ['RRHH', 'Departamentos'],
+                'horarios'             => ['RRHH', 'Horarios'],
+                'amonestaciones'       => ['RRHH', 'Amonestaciones'],
+                'permisos'             => ['RRHH', 'Permisos y Reposos'],
+                'vacaciones'           => ['RRHH', 'Vacaciones'],
+                'asistencias'          => ['RRHH', 'Asistencia'],
+                'visitantes'           => ['Recepción', 'Visitas'],
+                'visitas'              => ['Recepción', 'Visitas'],
+                'inventario'           => ['Inventario', 'Bienes'],
+                'categorias'           => ['Inventario', 'Categorías'],
+                'ubicaciones'          => ['Inventario', 'Ubicaciones'],
+                'actividadesinventario'=> ['Inventario', 'Movimientos'],
+                'talleres'             => ['Formación', 'Talleres'],
+                'ubicacionesformacion' => ['Formación', 'Sedes de Formación'],
+                'pasantes'             => ['Formación', 'Pasantes'],
+                'rutas'                => ['Turismo', 'Rutas Turísticas'],
+                'reportes'             => ['Análisis', 'Reportes'],
+                'config'               => ['Sistema', 'Configuración'],
+                'usuarios'             => ['Sistema', 'Usuarios'],
+                'roles'                => ['Sistema', 'Roles y Permisos'],
+                'municipio'            => ['Sistema', 'Municipios'],
+                'parroquia'            => ['Sistema', 'Parroquias'],
+                'auditoria'            => ['Sistema', 'Auditoría'],
+                'perfil'               => ['', 'Mi Perfil'],
+                'buscar'               => ['', 'Búsqueda'],
+            ];
+            [$___bcGrupo, $___bcSeccion] = $___bcMap[$___bcSeg]
+                ?? ['', ($___bcSeg !== '' ? ucfirst($___bcSeg) : 'Panel Principal')];
+
+            // Hoja: título de la página, solo si aporta detalle frente a la sección.
+            $___bcHoja = '';
+            $___titulo = trim($data['titulo'] ?? '');
+            if ($___titulo !== '') {
+                $___norm = function ($s) {
+                    $s = strtolower($s);
+                    $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n']);
+                    return $s;
+                };
+                $a = $___norm($___titulo); $b = $___norm($___bcSeccion);
+                if (strpos($a, $b) === false && strpos($b, $a) === false) {
+                    $___bcHoja = $___titulo;
+                }
+            }
+            ?>
             <div class="sig-header__breadcrumb">
-                <i class="bi bi-house-door" style="font-size:14px; color:var(--brand-500);"></i>
+                <a href="<?php echo URL_ROOT; ?>" title="Inicio" style="display:inline-flex;align-items:center;text-decoration:none;">
+                    <i class="bi bi-house-door" style="font-size:14px; color:var(--brand-500);"></i>
+                </a>
+                <?php if ($___bcGrupo !== ''): ?>
+                    <span class="sig-header__breadcrumb-sep">/</span>
+                    <span class="sig-header__breadcrumb-group" style="color:var(--text-tertiary);"><?php echo htmlspecialchars($___bcGrupo); ?></span>
+                <?php endif; ?>
                 <span class="sig-header__breadcrumb-sep">/</span>
-                <span class="sig-header__breadcrumb-current">Gestión</span>
+                <?php if ($___bcHoja !== ''): ?>
+                    <a href="<?php echo URL_ROOT . '/' . $___bcSeg; ?>" class="sig-header__breadcrumb-link" style="text-decoration:none;color:var(--text-secondary);"><?php echo htmlspecialchars($___bcSeccion); ?></a>
+                    <span class="sig-header__breadcrumb-sep">/</span>
+                    <span class="sig-header__breadcrumb-current"><?php echo htmlspecialchars($___bcHoja); ?></span>
+                <?php else: ?>
+                    <span class="sig-header__breadcrumb-current"><?php echo htmlspecialchars($___bcSeccion); ?></span>
+                <?php endif; ?>
             </div>
 
             <!-- Búsqueda global -->
