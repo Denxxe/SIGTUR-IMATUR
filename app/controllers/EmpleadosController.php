@@ -600,6 +600,21 @@ class EmpleadosController extends Controller {
         $this->backToDetalle($idEmpleado);
     }
 
+    /** Carnetización — carga/actualiza la foto del empleado (de su persona). */
+    public function subirFoto() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        $idEmpleado = (int)($_POST['id_empleado'] ?? 0);
+        try {
+            $emp = Empleado::find($idEmpleado);
+            if (!$emp) throw new Exception('Empleado no encontrado.');
+            $this->guardarFotoPersona((int)$emp->id_persona);
+            flash('global_msg', 'Foto actualizada correctamente.');
+        } catch (Exception $e) {
+            flash('global_msg', 'No se pudo cargar la foto: ' . $e->getMessage(), 'danger');
+        }
+        $this->backToDetalle($idEmpleado);
+    }
+
     public function eliminarDocumento($id, $idEmpleado = 0) {
         try {
             // Anti-IDOR: el recaudo debe pertenecer a este empleado.
@@ -659,6 +674,37 @@ class EmpleadosController extends Controller {
             flash('global_msg', 'No se pudo eliminar: ' . $e->getMessage(), 'danger');
         }
         $this->backToDetalle($idEmpleado);
+    }
+
+    // ── Carnet del trabajador (carnetización) ───────────────────────────────────
+
+    /** Vista imprimible del carnet de un empleado. */
+    public function carnet($idEmpleado) {
+        $e = Empleado::find((int)$idEmpleado);
+        if (!$e) {
+            flash('global_msg', 'El empleado solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/empleados/index');
+            return;
+        }
+        $nombre = trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? ''));
+        // Subtipo: FIJO / CONTRATADO (a partir del tipo de contrato)
+        $subtipo = strtoupper((string)($e->tipo_contrato ?? ''));
+
+        $data = [
+            'titulo' => 'Carnet — ' . $nombre,
+            'carnet' => [
+                'tipo'       => 'TRABAJADOR',
+                'subtipo'    => $subtipo,
+                'nombre'     => $nombre,
+                'cedula'     => $e->cedula ?? '—',
+                'id_persona' => (int)$e->id_persona,
+                'lineas'     => [
+                    ['label' => 'Cargo',        'valor' => $e->cargo ?? ''],
+                    ['label' => 'Departamento', 'valor' => $e->departamento ?? ''],
+                ],
+            ],
+        ];
+        $this->view('empleados/carnet', $data);
     }
 
     /** Fecha en formato largo en español (para documentos). */

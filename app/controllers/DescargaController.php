@@ -37,6 +37,17 @@ class DescargaController extends Controller {
         $this->stream('expedientes', $row->archivo_url, $row->nombre_original ?? null);
     }
 
+    /** Foto de una persona (carnetización) — RRHH / Turismo / Admin. */
+    public function foto($idPersona = 0) {
+        if (!in_array($this->rol(), [1, 2, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT foto_url FROM personas WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idPersona);
+        $row = $db->single();
+        if (!$row || empty($row->foto_url)) $this->abort(404, 'Foto no disponible.');
+        $this->stream('fotos', $row->foto_url, null);
+    }
+
     /** Documento de un pasante — Turismo / Admin. */
     public function pasante($idDoc = 0) {
         if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');

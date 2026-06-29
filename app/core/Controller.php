@@ -62,6 +62,41 @@ class Controller {
         return $rif;
     }
 
+    /**
+     * Carnetización — guarda la foto subida ($_FILES['foto']) de una persona.
+     * Valida imagen (jpg/jpeg/png, ≤5 MB, MIME real), la mueve a
+     * storage/uploads/fotos/ y actualiza personas.foto_url. Lanza Exception
+     * con mensaje claro si algo falla. Mismo criterio que subirDocumento().
+     */
+    protected function guardarFotoPersona(int $idPersona): void {
+        if ($idPersona <= 0) throw new Exception('Persona no válida.');
+        if (!isset($_FILES['foto']) || $_FILES['foto']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('Debe adjuntar una imagen válida (JPG o PNG).');
+        }
+        $permitidas = ['jpg', 'jpeg', 'png'];
+        $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $permitidas, true)) {
+            throw new Exception('Formato no permitido. Use JPG o PNG.');
+        }
+        if ($_FILES['foto']['size'] > 5 * 1024 * 1024) {
+            throw new Exception('La imagen supera el límite de 5 MB.');
+        }
+        $mimeReal = function_exists('mime_content_type') ? @mime_content_type($_FILES['foto']['tmp_name']) : null;
+        if ($mimeReal !== null && !in_array($mimeReal, ['image/jpeg', 'image/png'], true)) {
+            throw new Exception('El contenido del archivo no corresponde a una imagen JPG/PNG válida.');
+        }
+
+        $fileName  = 'Foto_Persona_' . $idPersona . '_' . time() . '.' . $ext;
+        $uploadDir = dirname(dirname(__DIR__)) . '/storage/uploads/fotos/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+        if (!move_uploaded_file($_FILES['foto']['tmp_name'], $uploadDir . $fileName)) {
+            throw new Exception('No se pudo guardar la imagen en el servidor.');
+        }
+        Persona::actualizarFoto($idPersona, $fileName, $this->getUserId());
+    }
+
     // Sanitiza $_POST: elimina tags HTML sin corromper caracteres UTF-8 (tildes, ñ, etc.)
     protected function sanitizePost(): array {
         $raw = $_POST ?? [];

@@ -15,6 +15,9 @@
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSubirDoc">
             <i class="bi bi-cloud-upload"></i> Subir Documento
         </button>
+        <a href="<?php echo URL_ROOT; ?>/pasantes/carnet/<?php echo $data['pasante']->id; ?>" target="_blank" class="btn-sig btn-sig--primary">
+            <i class="bi bi-person-vcard"></i> Carnet
+        </a>
         <?php if ($data['pasante']->estado === 'Postulado'): ?>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalAprobar">
             <i class="bi bi-person-check-fill"></i> Aprobar Pasante
@@ -44,10 +47,21 @@
                 </div>
             </div>
             <div class="sig-card__body" style="padding:var(--sp-6);">
-                <div style="margin-bottom:var(--sp-4);">
-                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Pasante</small>
-                    <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
-                    <div class="cell-id" style="margin-top:2px;"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
+                <div style="margin-bottom:var(--sp-4); display:flex; gap:12px; align-items:center;">
+                    <div style="width:64px; height:80px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden; background:var(--bg-muted-subtle); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                        <img src="<?php echo URL_ROOT; ?>/descarga/foto/<?php echo (int)$data['pasante']->id_persona; ?>?v=<?php echo time(); ?>"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             style="width:100%; height:100%; object-fit:cover;" alt="Foto">
+                        <span style="display:none; align-items:center; justify-content:center; width:100%; height:100%; font-size:32px; color:var(--text-tertiary);"><i class="bi bi-person"></i></span>
+                    </div>
+                    <div style="min-width:0;">
+                        <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Pasante</small>
+                        <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
+                        <div class="cell-id" style="margin-top:2px;"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
+                        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFoto" style="margin-top:6px;">
+                            <i class="bi bi-camera"></i> Foto
+                        </button>
+                    </div>
                 </div>
 
                 <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
@@ -164,6 +178,26 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Modal: Cargar / cambiar foto (carnetización) -->
+<div class="modal fade" id="modalFoto" tabindex="-1">
+  <div class="modal-dialog">
+    <form action="<?php echo URL_ROOT; ?>/pasantes/subirFoto" method="POST" enctype="multipart/form-data" class="modal-content">
+      <div class="modal-header"><h5 class="modal-title"><i class="bi bi-camera"></i> Foto del pasante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" name="id_pasante" value="<?php echo (int)$data['pasante']->id; ?>">
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
+        <div class="sig-field"><label class="sig-field__label">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
+          <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-upload"></i> Guardar foto</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Modal Subir Documento -->

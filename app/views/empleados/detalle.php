@@ -40,6 +40,9 @@ if ($egresado) {
         <a href="<?php echo URL_ROOT; ?>/empleados/fichaTecnica/<?php echo $eid; ?>" target="_blank" class="btn-sig btn-sig--primary">
             <i class="bi bi-file-earmark-text"></i> Ficha Técnica
         </a>
+        <a href="<?php echo URL_ROOT; ?>/empleados/carnet/<?php echo $eid; ?>" target="_blank" class="btn-sig btn-sig--primary">
+            <i class="bi bi-person-vcard"></i> Carnet
+        </a>
         <?php if ($egresado): ?>
             <button type="button" class="btn-sig btn-sig--success" data-bs-toggle="modal" data-bs-target="#modalReingreso">
                 <i class="bi bi-arrow-counterclockwise"></i> Reingreso
@@ -78,6 +81,17 @@ if ($egresado) {
         <div class="row g-4">
             <div class="col-md-4">
                 <h6 class="text-muted"><i class="bi bi-person-vcard"></i> Datos Personales</h6>
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                    <div style="width:64px; height:80px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden; background:var(--bg-muted-subtle); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                        <img src="<?php echo URL_ROOT; ?>/descarga/foto/<?php echo (int)$e->id_persona; ?>?v=<?php echo time(); ?>"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                             style="width:100%; height:100%; object-fit:cover;" alt="Foto">
+                        <span style="display:none; align-items:center; justify-content:center; width:100%; height:100%; font-size:32px; color:var(--text-tertiary);"><i class="bi bi-person"></i></span>
+                    </div>
+                    <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFoto">
+                        <i class="bi bi-camera"></i> Cargar / cambiar foto
+                    </button>
+                </div>
                 <dl class="mb-0">
                     <dt>Teléfono</dt><dd><?php echo $val($e->telefono); ?></dd>
                     <dt>Correo</dt><dd><?php echo $val($e->correo); ?></dd>
@@ -244,6 +258,26 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <?php endforeach; ?>
         </tbody>
     </table>
+</div>
+
+<!-- Modal: Cargar / cambiar foto (carnetización) -->
+<div class="modal fade" id="modalFoto" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/subirFoto" method="POST" enctype="multipart/form-data" class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-camera"></i> Foto del trabajador</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
+                <div class="sig-field"><label class="sig-field__label">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
+                    <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-upload"></i> Guardar foto</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal: Cargar recaudo -->

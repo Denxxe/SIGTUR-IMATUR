@@ -50,6 +50,22 @@ class Persona extends Model
     }
 
     /**
+     * Actualiza solo la foto (carnetización). Guarda el NOMBRE del archivo;
+     * el binario vive en storage/uploads/fotos/ y se sirve por DescargaController::foto().
+     */
+    public static function actualizarFoto(int $idPersona, string $fileName, ?int $userId = null): bool
+    {
+        $db = new Database();
+        $db->query("UPDATE personas
+                       SET foto_url = :f, updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                     WHERE id = :id");
+        $db->bind(':f', $fileName);
+        $db->bind(':u', $userId);
+        $db->bind(':id', $idPersona);
+        return $db->execute();
+    }
+
+    /**
      * Guardar o actualizar registro de persona
      */
     public function save($user_id = null)

@@ -386,10 +386,53 @@ class PasantesController extends Controller {
         $this->view('pasantes/carta_aceptacion', $data);
     }
 
+    /** Vista imprimible del carnet de un pasante. */
+    public function carnet($id) {
+        $p = $this->pasanteModel->getPasanteUnico((int)$id);
+        if (!$p) {
+            flash('global_msg', 'El pasante solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/pasantes/index');
+            return;
+        }
+        $nombre = trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''));
+
+        $data = [
+            'titulo' => 'Carnet — ' . $nombre,
+            'carnet' => [
+                'tipo'       => 'PASANTE',
+                'subtipo'    => '',
+                'nombre'     => $nombre,
+                'cedula'     => $p->cedula ?? '—',
+                'id_persona' => (int)$p->id_persona,
+                'lineas'     => [
+                    ['label' => 'Carrera',     'valor' => $p->carrera ?? ''],
+                    ['label' => 'Institución', 'valor' => $p->institucion ?? ''],
+                ],
+            ],
+        ];
+        $this->view('pasantes/carnet', $data);
+    }
+
     private function fechaEspanol(int $dia, int $mes, int $year): string {
         $meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
                   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
         return $dia . ' de ' . $meses[$mes] . ' de ' . $year;
+    }
+
+    /** Carnetización — carga/actualiza la foto del pasante (de su persona). */
+    public function subirFoto() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
+        $idPasante = (int)($_POST['id_pasante'] ?? 0);
+        try {
+            $p = $this->pasanteModel->getPasanteUnico($idPasante);
+            if (!$p) throw new Exception('Pasante no encontrado.');
+            $this->guardarFotoPersona((int)$p->id_persona);
+            flash('global_msg', 'Foto actualizada correctamente.');
+        } catch (Exception $e) {
+            flash('global_msg', 'No se pudo cargar la foto: ' . $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/pasantes/detalle/' . $idPasante);
+        exit;
     }
 
     public function subirDocumento($id_pasante) {
