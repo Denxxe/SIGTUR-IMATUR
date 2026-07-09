@@ -692,28 +692,39 @@ function epActualizarEdad() {
     else if (edad >= 12){ lbl.textContent = '· ' + edad + ' años'; err.textContent = 'De 12 años o más debe usar cédula.'; err.style.display = 'block'; }
     else                { lbl.textContent = '· ' + edad + ' años (Niño/a)'; }
 }
-document.getElementById('ep_fecha_nac_libre').addEventListener('change', epActualizarEdad);
-document.getElementById('ep_correo').addEventListener('input', function() {
-    var v = this.value.trim();
-    var ok = !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-    this.classList.toggle('is-invalid', !ok);
-    document.getElementById('ep_msg_correo').textContent = ok ? '' : 'Formato de correo no válido.';
-});
-document.getElementById('formEditarPart').addEventListener('submit', function(e) {
-    var esLibre = document.getElementById('ep_bloque_libre').style.display !== 'none';
-    if (esLibre) {
-        var edad = calcularEdad(document.getElementById('ep_fecha_nac_libre').value);
-        if (edad === null || edad < 5 || edad >= 12) {
-            e.preventDefault(); epActualizarEdad();
+// El modal "Editar Participante" se renderiza MÁS ABAJO en el DOM que este script,
+// así que sus elementos aún no existen durante el parseo. Enganchar sus listeners al
+// cargar el DOM evita un TypeError (null.addEventListener) que abortaría el resto del
+// script — incluido el autocompletado por cédula del modal "Agregar Participante".
+document.addEventListener('DOMContentLoaded', function() {
+    var epFnac = document.getElementById('ep_fecha_nac_libre');
+    if (epFnac) epFnac.addEventListener('change', epActualizarEdad);
+
+    var epCorreo = document.getElementById('ep_correo');
+    if (epCorreo) epCorreo.addEventListener('input', function() {
+        var v = this.value.trim();
+        var ok = !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        this.classList.toggle('is-invalid', !ok);
+        document.getElementById('ep_msg_correo').textContent = ok ? '' : 'Formato de correo no válido.';
+    });
+
+    var epForm = document.getElementById('formEditarPart');
+    if (epForm) epForm.addEventListener('submit', function(e) {
+        var esLibre = document.getElementById('ep_bloque_libre').style.display !== 'none';
+        if (esLibre) {
+            var edad = calcularEdad(document.getElementById('ep_fecha_nac_libre').value);
+            if (edad === null || edad < 5 || edad >= 12) {
+                e.preventDefault(); epActualizarEdad();
+            }
+        } else {
+            var c = document.getElementById('ep_correo').value.trim();
+            if (c && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) {
+                e.preventDefault();
+                document.getElementById('ep_correo').classList.add('is-invalid');
+                document.getElementById('ep_msg_correo').textContent = 'Formato de correo no válido.';
+            }
         }
-    } else {
-        var c = document.getElementById('ep_correo').value.trim();
-        if (c && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c)) {
-            e.preventDefault();
-            document.getElementById('ep_correo').classList.add('is-invalid');
-            document.getElementById('ep_msg_correo').textContent = 'Formato de correo no válido.';
-        }
-    }
+    });
 });
 
 <?php if (!$esInterna): ?>

@@ -403,6 +403,10 @@ class Taller extends Model {
     }
 
     public static function buscarPersonaPorCedula(string $cedula) {
+        // Las cédulas se almacenan solo con dígitos (migración 037): normalizar la
+        // entrada (quita V-/E-/puntos/espacios) para que la búsqueda no falle por formato.
+        $cedula = preg_replace('/\D/', '', $cedula);
+        if ($cedula === '') return null;
         $db = new Database();
         $db->query("SELECT id, cedula, nombre, apellido, telefono, correo, genero, fecha_nacimiento,
                            parroquia_id, direccion
