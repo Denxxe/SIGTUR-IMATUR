@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-06-25 · **Migraciones aplicadas:** hasta **050** · **Rama:** `development_stage`
+**Última actualización:** 2026-07-09 · **Migraciones aplicadas:** hasta **053** · **Rama:** `development_stage` (sincronizada con `origin` el 2026-07-09)
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -9,6 +9,7 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 - **Referencia técnica:** `CLAUDE.md` (arquitectura, BD, convenciones, migraciones).
 - **Reglas de negocio por módulo (detalle):** `REGLAS_NEGOCIO_*.md`, `MODELO_NEGOCIO_RRHH.md`, `ESTRUCTURA_ORGANIZATIVA.md`.
 - **Indicadores:** `INDICADORES_GESTION.md`.
+- **Preguntas para el cliente (imprimible):** `PREGUNTAS_CLIENTE.md` (espejo de la sección 3).
 
 **Leyenda:** 🔴 bloquea BD/lógica · 🟡 alto impacto · 🟢 menor · ✅ hecho · 🔒 espera decisión/insumo del cliente · 🛠️ implementable ya
 
@@ -23,6 +24,15 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-06-28/29 — Carnetización + UX (mig. 053)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Carnetización | **Carnets CR80 imprimibles** (empleados y pasantes) | Formato credencial 54×85.6mm una cara, colores institucionales, `window.print()`. Foto por persona (`personas.foto_url`, mig.053) en `storage/uploads/fotos/`, servida por `DescargaController::foto`; subida con `Controller::guardarFotoPersona()` (MIME real). Partial compartido `inc/carnet_card.php`. Sin RIF/vigencia/QR por decisión del cliente (QR vendorizado queda disponible). |
+| ✅ Dashboard | **Tarjeta "Pasantes (Visitas)"** (Recepción) + **KPI "Ausencias del mes"** (RRHH, tabla `faltas`, distinto de Impuntualidad) | `DashboardController` |
+| ✅ UX | **Breadcrumb dinámico** en el header (Inicio / Grupo / Sección / Página) | `$___bcMap` en `header.php` |
+| ✅ Docs | **`docs/PREGUNTAS_CLIENTE.md`** — lista consolidada de preguntas para el cliente (espejo de §3) | — |
 
 ### 2026-06-25 — Análisis profundo: Lote 5 (integridad) + Lote 6 (UX/a11y/README)
 
@@ -216,8 +226,8 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 |-----------|--------|-------------------------|
 | 🟢 **a11y en formularios restantes** | Hecho login + botones ícono del header. Falta vincular `label[for]` en los formularios de los demás módulos (empleados, inventario, visitantes…). |
 | 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
-| 🟢 **Dividir `ReportesController`** (~3000 líneas) | Separar por área cuando convenga (mantenibilidad). |
-| 🟢 **Migrar estilos inline a clases** | ~1500 `style=""` en vistas; consolidar en utilidades CSS (gradual). |
+| 🟢 **Dividir `ReportesController`** (~3200 líneas al 2026-07-09) | Separar por área cuando convenga (mantenibilidad). |
+| 🟢 **Migrar estilos inline a clases** | ~1900 `style=""` en vistas al 2026-07-09; consolidar en utilidades CSS (gradual). |
 | 🟢 **Programar la tarea de respaldo en el servidor** | `cron/respaldo_bd.php` ya funciona; falta crear la tarea (`schtasks`). Operativo. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
 | 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
@@ -243,7 +253,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía. 🔒 Falta: tarifa (D-RT02), informe/oficio automático al finalizar (D-RT03).
 - **Inventario:** ✅ bienes, categorías, ubicaciones, movimientos, bajas, **Durable/Fungible**, reportes/kardex. 🔒 Falta: responsable del bien (D-IN06), costo/proveedor (D-IN09), baja→condición (D-IN10).
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
-- **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal.
+- **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051), respaldos automáticos, búsqueda global, campana de alertas, **carnetización** (mig.053).
 
 ---
 

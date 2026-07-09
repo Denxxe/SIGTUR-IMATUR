@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-06-29 (migraciones hasta 053; ver `docs/BACKLOG.md` para pendientes)  
+**Última actualización:** 2026-07-09 (migraciones hasta 053; ver `docs/BACKLOG.md` para pendientes — suite `php tests/run.php` 18/18 ✓)  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
