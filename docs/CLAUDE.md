@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-07-09 (migraciones hasta 053; ver `docs/BACKLOG.md` para pendientes — suite `php tests/run.php` 18/18 ✓)  
+**Última actualización:** 2026-07-10 (migraciones hasta 053; UX: duración de permisos/reposos autocalculada por fechas; ver `docs/BACKLOG.md` para pendientes — suite `php tests/run.php` 18/18 ✓)  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -119,7 +119,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `empleados` | 1:1 con personas; FK a cargo/departamento/horario; `tipo_contrato`, `fecha_egreso` |
 | `asistencias` | Marcaje diario entrada/salida (patrón toggle) |
 | `horarios` *(002; UI + seed en 028)* | Catálogo de turnos asignables (Estándar, OAC Matutino/Vespertino, Servicios Generales, personalizados) |
-| `permisos_laborales` *(002; UI + categoría/duración en 032)* | Permisos y reposos: `categoria` (Reposo/Permiso), `tipo_permiso` (taxonomía), fechas, `estado` aprobación |
+| `permisos_laborales` *(002; UI + categoría/duración en 032)* | Permisos y reposos: `categoria` (Reposo/Permiso), `tipo_permiso` (taxonomía), fechas, `estado` aprobación. **Duración** se autocalcula en días al elegir Desde/Hasta (JS en `permisos/index.php`); sigue siendo editable a mano (ej. "72 horas") y no se recalcula si el usuario la corrigió |
 | `vacaciones` *(002, sin UI)* | Control anual de días |
 | `carga_familiar` *(026)* | Familiares del empleado (FK `id_persona`); bloque de la Ficha Técnica |
 | `cursos_realizados` *(026)* | Cursos por persona (FK `id_persona`); bloque de la Ficha Técnica |

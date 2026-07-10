@@ -93,12 +93,12 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label">Desde <span class="req">*</span></label>
-                        <input type="date" name="fecha_inicio" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div></div>
+                        <input type="date" name="fecha_inicio" id="pl_fecha_inicio" class="sig-input" required value="<?php echo date('Y-m-d'); ?>" onchange="plCalcularDuracion()"></div></div>
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label">Hasta <span class="req">*</span></label>
-                        <input type="date" name="fecha_fin" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div></div>
+                        <input type="date" name="fecha_fin" id="pl_fecha_fin" class="sig-input" required value="<?php echo date('Y-m-d'); ?>" onchange="plCalcularDuracion()"></div></div>
                 </div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Duración <small style="color:var(--text-secondary)">(texto, ej. "72 horas", "10 días", "6 meses")</small></label>
-                    <input type="text" name="duracion" class="sig-input"></div>
+                <div class="sig-field mb-3"><label class="sig-field__label">Duración <small style="color:var(--text-secondary)">(calculada automáticamente; puede ajustarla, ej. "72 horas", "6 meses")</small></label>
+                    <input type="text" name="duracion" id="pl_duracion" class="sig-input" oninput="pl_duracionManual = true"></div>
                 <div class="sig-field"><label class="sig-field__label">Motivo / observación</label>
                     <textarea name="motivo" class="sig-textarea" rows="2"></textarea></div>
             </div>
@@ -120,6 +120,23 @@ function plCascada() {
     if (!opts.length) { tipo.innerHTML = '<option value="">Seleccione categoría primero</option>'; return; }
     opts.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tipo.appendChild(o); });
 }
+
+// Duración: se calcula sola a partir de Desde/Hasta, pero deja de tocarse si el usuario la edita a mano.
+let pl_duracionManual = false;
+function plCalcularDuracion() {
+    if (pl_duracionManual) return;
+    const desde = document.getElementById('pl_fecha_inicio').value;
+    const hasta = document.getElementById('pl_fecha_fin').value;
+    const campo = document.getElementById('pl_duracion');
+    if (!desde || !hasta) return;
+    const dias = Math.round((new Date(hasta) - new Date(desde)) / 86400000) + 1;
+    campo.value = dias > 0 ? (dias + (dias === 1 ? ' día' : ' días')) : '';
+}
+document.addEventListener('DOMContentLoaded', plCalcularDuracion);
+document.getElementById('modalPermiso').addEventListener('show.bs.modal', function () {
+    pl_duracionManual = false;
+    plCalcularDuracion();
+});
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
