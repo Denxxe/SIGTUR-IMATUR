@@ -58,7 +58,9 @@ class AuthController extends Controller {
                     try {
                         AuditLog::log('usuarios', 'LOGIN', (int)$loggedInUser->id, null,
                             ['username' => $loggedInUser->username], (int)$loggedInUser->id);
-                    } catch (Exception $ignored) {}
+                    } catch (Exception $e) {
+                        error_log('AuditLog LOGIN falló para usuario ' . $loggedInUser->username . ': ' . $e->getMessage());
+                    }
                     $this->createUserSession($loggedInUser);
                     return;
                 }
@@ -69,7 +71,9 @@ class AuthController extends Controller {
                     try {
                         AuditLog::log('usuarios', 'LOGIN_FALLIDO', (int)$loggedInUser->id, null,
                             ['username' => $loggedInUser->username, 'bloqueada' => $r['bloqueada']], (int)$loggedInUser->id);
-                    } catch (Exception $ignored) {}
+                    } catch (Exception $e) {
+                        error_log('AuditLog LOGIN_FALLIDO falló para usuario ' . $loggedInUser->username . ': ' . $e->getMessage());
+                    }
                     if ($r['bloqueada']) {
                         $data['login_err'] = 'Demasiados intentos fallidos. La cuenta quedó bloqueada por '
                             . Usuario::BLOQUEO_MINUTOS . ' minutos.';

@@ -56,7 +56,12 @@ class RolesController extends Controller {
             'CargosController'                => ['label' => 'Cargos',                'icon' => 'bi-briefcase',         'grupo' => 'RRHH'],
             'DepartamentosController'         => ['label' => 'Departamentos',         'icon' => 'bi-diagram-3',         'grupo' => 'RRHH'],
             'AsistenciasController'           => ['label' => 'Asistencias',           'icon' => 'bi-calendar-check',   'grupo' => 'RRHH'],
+            'HorariosController'              => ['label' => 'Horarios',              'icon' => 'bi-clock',             'grupo' => 'RRHH'],
+            'PermisosController'              => ['label' => 'Permisos y Reposos',    'icon' => 'bi-file-earmark-medical', 'grupo' => 'RRHH'],
+            'VacacionesController'            => ['label' => 'Vacaciones',            'icon' => 'bi-airplane',           'grupo' => 'RRHH'],
+            'AmonestacionesController'        => ['label' => 'Amonestaciones y Faltas', 'icon' => 'bi-exclamation-triangle', 'grupo' => 'RRHH'],
             'VisitantesController'            => ['label' => 'Recepción (Visitas)',  'icon' => 'bi-door-open',         'grupo' => 'Recepción'],
+            'VisitasController'               => ['label' => 'Visitas (acceso directo)', 'icon' => 'bi-door-open',   'grupo' => 'Recepción'],
             'TalleresController'              => ['label' => 'Talleres/Formación',    'icon' => 'bi-mortarboard',       'grupo' => 'Formación'],
             'UbicacionesformacionController'  => ['label' => 'Sedes de Formación',    'icon' => 'bi-geo-alt',           'grupo' => 'Formación'],
             'PasantesController'              => ['label' => 'Pasantes',              'icon' => 'bi-person-workspace',  'grupo' => 'Formación'],
@@ -67,7 +72,8 @@ class RolesController extends Controller {
             'ActividadesinventarioController' => ['label' => 'Movimientos de Bienes', 'icon' => 'bi-arrow-left-right',  'grupo' => 'Inventario'],
             'UsuariosController'              => ['label' => 'Usuarios del Sistema',  'icon' => 'bi-shield-lock',       'grupo' => 'Sistema'],
             'RolesController'                 => ['label' => 'Roles y Permisos',      'icon' => 'bi-key',               'grupo' => 'Sistema'],
-            'AuditoriaController'             => ['label' => 'Bitácora / Auditoría',  'icon' => 'bi-clipboard-data',    'grupo' => 'Sistema'],
+            // 'AuditoriaController' (Bitácora general) NO es asignable: es exclusiva del Administrador
+            // (ver AuditoriaController::guardAdmin()). No agregar aquí.
             'AuditoriaPapelera'               => ['label' => 'Papelera de Reciclaje', 'icon' => 'bi-recycle',           'grupo' => 'Sistema'],
         ];
     }

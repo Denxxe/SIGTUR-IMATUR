@@ -129,7 +129,7 @@
             <?php
             $canConfig   = in_array($rol, [1, 2]);
             $canSysAdmin = ($rol == 1);
-            $canBitacora = ($rol == 1) || RolesController::roleHasModulo('AuditoriaController');
+            $canBitacora = ($rol == 1); // Bitácora exclusiva de Admin (no delegable, ver AuditoriaController::guardAdmin)
             $canPapelera = ($rol == 1) || RolesController::roleHasModulo('AuditoriaPapelera');
             if ($canConfig || $canSysAdmin || $canBitacora || $canPapelera):
             ?>

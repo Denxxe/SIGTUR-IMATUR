@@ -4,8 +4,8 @@
  * Maneja la gestión de bitácoras y la papelera de reciclaje global.
  *
  * Permisos (RBAC a nivel de método, ver Router.php):
- *  - 'AuditoriaController' → Bitácora / log de auditoría (index)
- *  - 'AuditoriaPapelera'   → Papelera de Reciclaje (papelera, restaurar)
+ *  - Bitácora (index) → EXCLUSIVA del Administrador (id_rol=1), no delegable por rol.
+ *  - 'AuditoriaPapelera'   → Papelera de Reciclaje (papelera, restaurar), sí delegable por rol.
  * El Administrador (marcador '*') accede a todo.
  *
  * Las pestañas de la papelera se derivan de los módulos operativos del rol:
@@ -66,8 +66,16 @@ class AuditoriaController extends Controller {
         }
     }
 
+    /** La Bitácora (historial de cambios de todo el sistema) es exclusiva del Administrador. */
+    private function guardAdmin(): void {
+        if ((int)($_SESSION['user_rol'] ?? 0) !== 1) {
+            header('Location: ' . URL_ROOT . '/dashboard/accesoDenegado');
+            exit;
+        }
+    }
+
     public function index() {
-        $this->guard('AuditoriaController');
+        $this->guardAdmin();
 
         $porPagina = 50;
         $pagina    = max(1, (int)($_GET['p'] ?? 1));
