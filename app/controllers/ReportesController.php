@@ -220,6 +220,25 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         try {
             $registros = $this->queryPermisos();
+            if (($_GET['formato'] ?? '') === 'pdf') {
+                $kpis = ['Total' => count($registros), 'Reposos' => 0, 'Permisos' => 0, 'En curso' => 0];
+                $rows = [];
+                foreach ($registros as $r) {
+                    if ($r->categoria === 'Reposo') $kpis['Reposos']++; else $kpis['Permisos']++;
+                    if ($r->estatus_periodo === 'En curso') $kpis['En curso']++;
+                    $rows[] = [
+                        trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                        $r->cedula, $r->departamento, $r->categoria, $r->tipo_permiso,
+                        !empty($r->fecha_inicio) ? date('d/m/Y', strtotime($r->fecha_inicio)) : '—',
+                        !empty($r->fecha_fin) ? date('d/m/Y', strtotime($r->fecha_fin)) : '—',
+                        $r->duracion ?? ($r->dias_solicitados . ' días'),
+                        $r->estatus_periodo, $r->estado,
+                    ];
+                }
+                $this->exportPdf('Reporte de Permisos y Reposos', 'Reposos médicos y permisos laborales del personal, por período y estado.',
+                    ['Empleado', 'Cédula', 'Departamento', 'Categoría', 'Tipo', 'Desde', 'Hasta', 'Duración', 'Período', 'Estado'], $rows, $kpis);
+                return;
+            }
             $data = [
                 'titulo'        => 'Reporte de Permisos y Reposos',
                 'registros'     => $registros,
@@ -1496,53 +1515,46 @@ class ReportesController extends Controller {
             return;
         }
 
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="Dossier_Taller_' . date('Y-m-d') . '.csv"');
-
-        $output = fopen('php://output', 'w');
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM UTF-8
-
-        fputcsv($output, ['REPÚBLICA BOLIVARIANA DE VENEZUELA'], ';');
-        fputcsv($output, ['ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE'], ';');
-        fputcsv($output, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)  —  RIF. ' . ConfigSistema::rif()], ';');
-        fputcsv($output, ['Cumaná, Estado Sucre'], ';');
-        fputcsv($output, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '    Fecha: ' . date('d/m/Y H:i')], ';');
-        fputcsv($output, [''], ';');
-
-        fputcsv($output, ['DOSSIER INTEGRAL DE ACTIVIDAD - IMATUR'], ';');
-        fputcsv($output, ['Taller:',     $t->nombre], ';');
-        fputcsv($output, ['Facilitador:', $t->facilitador], ';');
-        fputcsv($output, ['Lugar:',       $t->sede ?: 'No especificada'], ';');
-        fputcsv($output, ['Fecha:',       $t->fecha_inicio], ';');
-        fputcsv($output, ['Estado:',      $t->estado], ';');
-        fputcsv($output, [], ';');
-
-        fputcsv($output, ['RESUMEN DEMOGRÁFICO'], ';');
-        fputcsv($output, ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)', 'Total Atendidos'], ';');
-        fputcsv($output, [
-            $inf->mujeres         ?? 0,
-            $inf->hombres         ?? 0,
-            $inf->ninas           ?? 0,
-            $inf->ninos           ?? 0,
-            $inf->total_atendidas ?? 0,
-        ], ';');
-        fputcsv($output, [], ';');
-
-        fputcsv($output, ['LISTADO DE PERSONAS INSCRITAS'], ';');
-        fputcsv($output, ['Tipo', 'Cédula', 'Nombre Completo', 'Docente/Tutor', 'C.I. Docente', 'Asistencia'], ';');
+        $filasParticipantes = [];
         foreach ($participantes as $p) {
-            fputcsv($output, [
-                $p->tipo,
-                $p->cedula,
-                $p->nombre,
-                $p->nombre_docente,
-                $p->cedula_docente,
+            $filasParticipantes[] = [
+                $p->tipo, $p->cedula, $p->nombre,
+                $p->nombre_docente, $p->cedula_docente,
                 $p->asistio ? 'Presente' : 'Ausente',
-            ], ';');
+            ];
         }
 
-        fclose($output);
-        exit;
+        $secciones = [
+            [
+                'titulo'  => 'Datos del Taller',
+                'headers' => ['Campo', 'Valor'],
+                'rows'    => [
+                    ['Taller', $t->nombre],
+                    ['Facilitador', $t->facilitador],
+                    ['Lugar', $t->sede ?: 'No especificada'],
+                    ['Fecha', $t->fecha_inicio],
+                    ['Estado', $t->estado],
+                ],
+            ],
+            [
+                'titulo'  => 'Resumen Demográfico',
+                'headers' => ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)', 'Total Atendidos'],
+                'rows'    => [[
+                    $inf->mujeres         ?? 0,
+                    $inf->hombres         ?? 0,
+                    $inf->ninas           ?? 0,
+                    $inf->ninos           ?? 0,
+                    $inf->total_atendidas ?? 0,
+                ]],
+            ],
+            [
+                'titulo'  => 'Listado de Personas Inscritas',
+                'headers' => ['Tipo', 'Cédula', 'Nombre Completo', 'Docente/Tutor', 'C.I. Docente', 'Asistencia'],
+                'rows'    => $filasParticipantes,
+            ],
+        ];
+
+        $this->exportCsvSecciones('Dossier_Taller', 'Dossier Integral de Actividad — ' . $t->nombre, $secciones);
     }
 
     // =========================================================================
@@ -3060,14 +3072,61 @@ class ReportesController extends Controller {
      * Mantiene el nombre exportCsv para no tocar los llamadores.
      */
     private function exportCsv($filename, $headers, $rows) {
-        $titulo  = ucwords(str_replace('_', ' ', $filename));
-        $usuario = $_SESSION['user_username'] ?? 'Sistema';
-        $ncol    = max(1, count($headers));
-        $lastCol = $this->colLetter($ncol);
-        $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES | ENT_XML1, 'UTF-8');
+        $titulo = ucwords(str_replace('_', ' ', $filename));
+        $ncol   = max(1, count($headers));
+        [$sheetRows, $merges, $dataStart] = $this->construirHojaMembrete($titulo, $ncol,
+            function ($rowMerged, $rowCells) use ($headers, $rows) {
+                $rowCells($headers, 4);
+                foreach ($rows as $i => $row) $rowCells(array_values((array)$row), ($i % 2 ? 6 : 5));
+                $rowMerged('Total de registros: ' . count($rows), 7);
+            },
+            ' · ' . count($rows) . ' registro(s)'
+        );
 
-        // ── Construir filas de la hoja ────────────────────────────────────────
+        // Ancho de columnas según contenido
+        $widths = [];
+        foreach ($headers as $i => $h) $widths[$i] = strlen((string)$h);
+        foreach ($rows as $row) { $j = 0; foreach ((array)$row as $v) { $widths[$j] = max($widths[$j] ?? 8, strlen((string)$v)); $j++; } }
+
+        $this->descargarXlsx($filename, $sheetRows, $merges, $widths, $dataStart);
+    }
+
+    /**
+     * Exporta un .xlsx con MÚLTIPLES secciones en una sola hoja (cada una con su
+     * propio título y su propio encabezado de columnas) — para reportes que no son
+     * una tabla plana, como el Dossier de Taller. Comparte el mismo membrete
+     * institucional y el mismo empaquetador que exportCsv().
+     * $secciones = [['titulo' => .., 'headers' => [...], 'rows' => [...]], ...]
+     */
+    private function exportCsvSecciones($filename, $tituloReporte, array $secciones) {
+        $ncol = max(1, ...array_map(fn($s) => count($s['headers']), $secciones));
+        $widths = [];
+        [$sheetRows, $merges, $dataStart] = $this->construirHojaMembrete($tituloReporte, $ncol,
+            function ($rowMerged, $rowCells) use ($secciones, &$widths) {
+                foreach ($secciones as $sec) {
+                    $rowMerged($sec['titulo'], 2);
+                    $rowCells($sec['headers'], 4);
+                    foreach ($sec['headers'] as $i => $h) $widths[$i] = max($widths[$i] ?? 8, strlen((string)$h));
+                    foreach ($sec['rows'] as $i => $row) {
+                        $rowCells(array_values((array)$row), ($i % 2 ? 6 : 5));
+                        $j = 0; foreach ((array)$row as $v) { $widths[$j] = max($widths[$j] ?? 8, strlen((string)$v)); $j++; }
+                    }
+                }
+            }
+        );
+        $this->descargarXlsx($filename, $sheetRows, $merges, $widths, $dataStart);
+    }
+
+    /**
+     * Arma el membrete institucional (REPÚBLICA/ALCALDÍA/IMATUR+RIF, título, autor/fecha)
+     * y delega el cuerpo de la hoja al callback, que recibe los mismos constructores de
+     * fila ($rowMerged para texto fusionado a lo ancho de $ncol columnas, $rowCells para
+     * una fila de celdas con estilo) usados por el membrete. Devuelve [sheetRows, merges, dataStart].
+     */
+    private function construirHojaMembrete(string $titulo, int $ncol, callable $cuerpo, string $metaExtra = ''): array {
+        $lastCol = $this->colLetter($ncol);
         $rnum = 0; $sheetRows = ''; $merges = [];
+        $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES | ENT_XML1, 'UTF-8');
         $rowMerged = function (string $texto, int $style) use (&$rnum, &$sheetRows, &$merges, $lastCol, $esc) {
             $rnum++;
             $sheetRows .= '<row r="' . $rnum . '"><c r="A' . $rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">' . $esc($texto) . '</t></is></c></row>';
@@ -3082,21 +3141,21 @@ class ReportesController extends Controller {
             $sheetRows .= '<row r="' . $rnum . '">' . $c . '</row>';
         };
 
+        $usuario = $_SESSION['user_username'] ?? 'Sistema';
         $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1);
         $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1);
         $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), 1);
         $rowMerged($titulo, 2);
-        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . ' · ' . count($rows) . ' registro(s)', 3);
+        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, 3);
         $rnum++; // fila en blanco
-        $rowCells($headers, 4);
         $dataStart = $rnum + 1;
-        foreach ($rows as $i => $row) $rowCells(array_values((array)$row), ($i % 2 ? 6 : 5));
-        $rowMerged('Total de registros: ' . count($rows), 7);
 
-        // Ancho de columnas según contenido
-        $widths = [];
-        foreach ($headers as $i => $h) $widths[$i] = strlen((string)$h);
-        foreach ($rows as $row) { $j = 0; foreach ((array)$row as $v) { $widths[$j] = max($widths[$j] ?? 8, strlen((string)$v)); $j++; } }
+        $cuerpo($rowMerged, $rowCells);
+
+        return [$sheetRows, $merges, $dataStart];
+    }
+
+    private function descargarXlsx($filename, $sheetRows, array $merges, array $widths, int $dataStart) {
         $cols = '';
         foreach ($widths as $i => $w) { $cols .= '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="' . min(60, max(10, $w + 3)) . '" customWidth="1"/>'; }
 

@@ -25,6 +25,7 @@ foreach ($regs as $r) {
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/reportes/exportarPermisosCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
+        <a href="<?php echo URL_ROOT; ?>/reportes/permisos?formato=pdf&<?php echo $qs; ?>" target="_blank" class="btn-sig btn-sig--danger btn-sig--sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a href="<?php echo URL_ROOT; ?>/reportes/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
     </div>
 </div>

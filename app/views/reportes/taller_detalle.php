@@ -24,6 +24,20 @@
 </div>
 
 <div class="print-area anim-slide-up">
+    <!-- MEMBRETE INSTITUCIONAL (solo impresión/PDF) -->
+    <div class="d-none d-print-block" style="padding:0 0 16px; margin-bottom:20px; border-bottom:3px solid #1a56db; display:flex; align-items:center; gap:20px;">
+        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía de Cumaná" style="height:60px; width:auto;">
+        <div style="flex:1; text-align:center;">
+            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; line-height:1.6; color:#111827;">
+                República Bolivariana de Venezuela<br>
+                Alcaldía Bolivariana del Municipio Sucre<br>
+                Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)
+            </div>
+            <div style="font-size:10px; font-weight:600; color:#6b7280; margin-top:4px;">RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
+        </div>
+        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR" style="height:60px; width:auto;">
+    </div>
+
     <!-- SECCIÓN 1: FICHA TÉCNICA -->
     <div class="sig-card mb-6 overflow-hidden">
         <div class="sig-card__head" style="background:var(--bg-muted); border-bottom:1px solid var(--border-subtle);">
@@ -216,6 +230,12 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- PIE INSTITUCIONAL (solo impresión/PDF) -->
+    <div class="d-none d-print-block" style="margin-top:20px; padding-top:10px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; font-size:8pt; color:#6b7280;">
+        <div>Calle Sucre N° 11, San Francisco, Parroquia Santa Inés, Municipio Sucre — Edo. Sucre</div>
+        <div>Generado por SIGTUR-IMATUR © <?php echo date('Y'); ?></div>
     </div>
 </div>
 
