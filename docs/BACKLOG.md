@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-07-09 · **Migraciones aplicadas:** hasta **053** · **Rama:** `development_stage` (sincronizada con `origin` el 2026-07-09)
+**Última actualización:** 2026-07-12 · **Migraciones aplicadas:** hasta **058** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -24,6 +24,22 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-07-11/12 — Bitácora inmutable, notificaciones, auditoría de reportes, recuperación de contraseña (mig. 054–058)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Bitácora inmutable | **Asistencias y visitas ya NO son eliminables** | Se quitó el botón "Eliminar" (y el endpoint completo, no solo la UI) de `asistencias/index.php` y `visitantes/index.php`; reemplazado por "Ver detalles" (modal). Son bitácora/auditoría, no un CRUD editable. |
+| ✅ Asistencia | **Motivo obligatorio si el empleado marca salida antes de su horario** (mig. 056) | Tolerancia configurable (`minutos_tolerancia_salida_temprana`, default 10 min), independiente de la tolerancia de puntualidad de entrada. Editable en `/config`. |
+| ✅ Notificaciones | **Campana "tipo Facebook"**: alertas ya vistas no reaparecen (mig. 057) | `alertas_vistas` (fingerprint por usuario+clave de alerta). Reaparecen SOLO si cambia el conjunto de registros que las componen (ej. sube el número de contratos por vencer), nunca por simple paso del tiempo. |
+| ✅ Empleados | **Listado principal**: badge de tipo de contrato (Fijo/Contratado/Suplente/Comisión), columna Contacto, filtro por Cargo, badge Grupo A/B (rotación) | `empleados/index.php` |
+| ✅ Reportes/listados | **Auditoría completa (~18 hallazgos) cerrada**: Directorio de Personal (tel/correo/vencimiento), Amonestaciones (cédula/cargo/última fecha), Egresos (departamento/tiempo servicio), Constancias (cargo/depto/filtro tipo), Rutas (departamento/tarifa/guía externo/filtros), Visitantes (hora salida/atendido por), Pasantes (contacto/nota, + fechas en el listado), Bajas de Inventario (motivo), Inventario (filtros server-side) + bloque transversal (buscador/paginación en 6 reportes que no lo tenían + botón exportar en listados de tarjetas de Talleres/Rutas) | Ver detalle en `ReportesController.php` |
+| ✅ Seguridad | **Recuperación de contraseña por correo** (autoservicio, mig. 058) | Token de un solo uso (30 min, hash sha256), PHPMailer vendoreado sin Composer (`app/libs/PHPMailer`). Remitente = correo institucional (`configuracion_sistema.correo_institucion`). **Pendiente:** credenciales SMTP reales (proveedor sin definir aún) — hoy el envío falla de forma controlada. |
+| ✅ Seguridad | **Login acepta usuario o correo** | Resuelve "olvidé mi usuario" sin flujo aparte — si recuerda su correo, no necesita el username. |
+| ✅ Seguridad | **Egreso desactiva automáticamente el acceso del empleado; reingreso lo reactiva** | Antes el usuario de acceso quedaba huérfano y activo indefinidamente tras un despido/renuncia — brecha confirmada y cerrada. `Empleado::procesarEgreso()`/`reingresar()`. |
+| ✅ Fix | **Cédula sin normalizar en Visitantes/Pasantes/Búsqueda global** (mismo bug que rompió Talleres/Rutas días atrás) | `Visitante::buscarPorCedula/crear/store`, `Pasante::findPersonaByCedula/createPersona/updatePersona`, `BuscarController` ahora normalizan a solo-dígitos antes de buscar/guardar (mig. 037). Verificado con auditoría completa del sistema: patrón de JS que causó el bug original (script abortado por `getElementById` sin guarda) confirmado como caso aislado, no sistémico; RBAC/`permisos_rol` sin discrepancias. |
+| ✅ Fix | **`CargaFamiliar`**: cédula normalizada + anti-duplicado **por empleado** (no global) | La misma cédula de familiar SÍ puede repetirse legítimamente entre empleados distintos (hermanos que declaran al mismo padre, cónyuges que ambos trabajan en la institución). Solo se bloquea el doble registro accidental del mismo familiar para el mismo empleado. |
+| ✅ Migraciones | **054/055 aplicadas** (estaban pendientes desde hacía semanas) | 054: `audit_logs.operacion` acepta `LOGIN`/`LOGIN_FALLIDO` (antes fallaba en silencio, `/reportes/accesos` siempre vacío). 055: bitácora general exclusiva de Admin (0 filas afectadas, ya sin concesiones previas). |
 
 ### 2026-06-28/29 — Carnetización + UX (mig. 053)
 
@@ -150,6 +166,11 @@ Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* d
 
 Bloquean desarrollo. Cada una incluye **qué preguntar**.
 
+### 3.0 🔴 Proveedor SMTP para recuperación de contraseña (2026-07-12)
+- **Falta:** credenciales reales de un servidor de correo saliente (host/puerto/usuario/clave) para que la recuperación de contraseña por correo (ya implementada, mig. 058) pueda enviar correos de verdad.
+- **Preguntar:** ¿usan Gmail/Google Workspace (contraseña de aplicación), un correo institucional propio (gobernación/alcaldía), u otro proveedor?
+- **Al desbloquear:** completar `SMTP_HOST/PORT/USER/PASS/ENCRYPTION` en `config/config.php` (no requiere tocar código ni migraciones).
+
 ### 3.1 🔴 Nómina / Liquidación (R-11 · D-RH34/D-RH14)
 - **Falta:** los **formatos de las cuentas** que la Alcaldía usa para la nómina, y las tablas de sueldos (LOTTT / función pública).
 - **Preguntar:** ¿el sistema **calcula** la nómina/liquidación o solo **registra** y genera el reporte de envío? · ¿formato exacto del archivo a la Alcaldía? · estructura de salario integral (base + cuota vacaciones + cuota utilidades) y conceptos de liquidación · ¿el bono vacacional lo calcula el sistema?
@@ -241,6 +262,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 - Toggle **Durable/Fungible** en el modal de inventario.
 - Registrar un **período de vacaciones** y verificar el conteo de días hábiles (excluye finde+feriados).
 - Registrar un **traslado** y un **escalado falta→amonestación**.
+- **Pendiente 2026-07-12** (probado por API/BD, falta un vistazo visual en navegador): listados/reportes de Empleados, Rutas, Visitantes, Pasantes, Inventario con las columnas/filtros nuevos; campana de notificaciones (abrir dropdown y confirmar que las alertas ya vistas no reaparecen); flujo completo de "¿Olvidaste tu contraseña?" desde el link del login.
 
 ---
 
@@ -253,7 +275,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía. 🔒 Falta: tarifa (D-RT02), informe/oficio automático al finalizar (D-RT03).
 - **Inventario:** ✅ bienes, categorías, ubicaciones, movimientos, bajas, **Durable/Fungible**, reportes/kardex. 🔒 Falta: responsable del bien (D-IN06), costo/proveedor (D-IN09), baja→condición (D-IN10).
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
-- **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051), respaldos automáticos, búsqueda global, campana de alertas, **carnetización** (mig.053).
+- **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.
 
 ---
 

@@ -16,7 +16,7 @@ Aplicación web de uso interno. Última actualización: 2026-06-25.
 - Tras **5 intentos fallidos** la cuenta se **bloquea 15 minutos** (el aviso indica los intentos restantes).
 - La sesión se **cierra sola tras 30 minutos de inactividad**; vuelve a iniciar sesión.
 - Las contraseñas deben tener **mínimo 8 caracteres, con al menos una letra y un número**.
-- Si olvidaste tu contraseña, **el administrador** (rol Administrador) puede restablecerla desde *Sistema → Usuarios*.
+- Si olvidaste tu contraseña, en la pantalla de inicio de sesión pulsa **"¿Olvidaste tu contraseña?"** e ingresa tu usuario o correo: si tu cuenta tiene un correo registrado, recibirás un enlace (válido 30 minutos) para definir una nueva. Si tu cuenta **no tiene correo registrado**, pide al **administrador** (rol Administrador) que te la restablezca desde *Sistema → Usuarios*.
 
 ---
 
