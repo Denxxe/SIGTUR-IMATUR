@@ -14,17 +14,24 @@ class BuscarController extends Controller {
         if (mb_strlen($q) >= 2) {
             $db   = new Database();
             $like = '%' . $q . '%';
+            // Las cédulas se guardan solo con dígitos (mig.037): si el término de
+            // búsqueda trae formato (V-/puntos/espacios), se compara también su
+            // versión solo-dígitos contra el campo cédula, sin tocar la búsqueda por nombre.
+            $soloDigitos = preg_replace('/\D/', '', $q);
+            $likeCedula  = $soloDigitos !== '' ? '%' . $soloDigitos . '%' : null;
 
             // ── Empleados (RRHH / Admin) ──────────────────────────────────────
             if (in_array($rol, [1, 2], true)) {
+                $condCedula = $likeCedula !== null ? 'OR p.cedula ILIKE :qc' : '';
                 $db->query("SELECT e.id, p.nombre, p.apellido, p.cedula, c.nombre AS cargo
                             FROM empleados e
                             INNER JOIN personas p ON e.id_persona = p.id
                             LEFT  JOIN cargos c   ON e.id_cargo   = c.id
                             WHERE e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL
-                              AND ((p.nombre || ' ' || p.apellido) ILIKE :q OR p.cedula ILIKE :q)
+                              AND ((p.nombre || ' ' || p.apellido) ILIKE :q OR p.cedula ILIKE :q {$condCedula})
                             ORDER BY p.nombre ASC LIMIT 8");
                 $db->bind(':q', $like);
+                if ($likeCedula !== null) $db->bind(':qc', $likeCedula);
                 $items = [];
                 foreach ($db->resultSet() as $r) {
                     $items[] = [
@@ -78,6 +85,7 @@ class BuscarController extends Controller {
 
             // ── Visitantes (RRHH / Recepción / Admin) ─────────────────────────
             if (in_array($rol, [1, 2, 5], true)) {
+                $condCedula = $likeCedula !== null ? 'OR COALESCE(p.cedula, vt.cedula) ILIKE :qc' : '';
                 $db->query("SELECT vt.id,
                                    COALESCE(p.nombre, vt.nombre)     AS nombre,
                                    COALESCE(p.apellido, vt.apellido) AS apellido,
@@ -86,9 +94,11 @@ class BuscarController extends Controller {
                             LEFT JOIN personas p ON vt.id_persona = p.id
                             WHERE vt.is_active = TRUE
                               AND (COALESCE(p.cedula, vt.cedula) ILIKE :q
-                                   OR (COALESCE(p.nombre, vt.nombre) || ' ' || COALESCE(p.apellido, vt.apellido)) ILIKE :q)
+                                   OR (COALESCE(p.nombre, vt.nombre) || ' ' || COALESCE(p.apellido, vt.apellido)) ILIKE :q
+                                   {$condCedula})
                             ORDER BY nombre ASC LIMIT 8");
                 $db->bind(':q', $like);
+                if ($likeCedula !== null) $db->bind(':qc', $likeCedula);
                 $items = [];
                 foreach ($db->resultSet() as $r) {
                     $items[] = [

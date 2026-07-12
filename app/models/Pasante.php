@@ -50,6 +50,10 @@ class Pasante extends Model {
     }
 
     public function findPersonaByCedula($cedula) {
+        // Las cédulas se almacenan solo con dígitos (migración 037): normalizar la
+        // entrada (quita V-/E-/puntos/espacios) para que la búsqueda no falle por formato.
+        $cedula = preg_replace('/\D/', '', (string)$cedula);
+        if ($cedula === '') return null;
         $this->db->query("SELECT id FROM personas WHERE cedula = :cedula LIMIT 1");
         $this->db->bind(':cedula', $cedula);
         return $this->db->single();
@@ -61,7 +65,7 @@ class Pasante extends Model {
             VALUES (:cedula, :nombre, :apellido, CURRENT_TIMESTAMP, :uid)
             RETURNING id
         ");
-        $this->db->bind(':cedula',   $data['cedula']);
+        $this->db->bind(':cedula',   preg_replace('/\D/', '', (string)$data['cedula']));
         $this->db->bind(':nombre',   $data['nombre']);
         $this->db->bind(':apellido', $data['apellido']);
         $this->db->bind(':uid',      $userId);
@@ -80,7 +84,7 @@ class Pasante extends Model {
             WHERE id = :id
         ");
         $this->db->bind(':id',       $idPersona);
-        $this->db->bind(':cedula',   $data['cedula']);
+        $this->db->bind(':cedula',   preg_replace('/\D/', '', (string)$data['cedula']));
         $this->db->bind(':nombre',   $data['nombre']);
         $this->db->bind(':apellido', $data['apellido']);
         $this->db->bind(':uid',      $userId);

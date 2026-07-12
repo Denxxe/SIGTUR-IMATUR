@@ -29,6 +29,10 @@ class Visitante extends Model {
      * Returns object with id_visitante, id_persona, and all personal fields.
      */
     public static function buscarPorCedula(string $cedula) {
+        // Las cédulas se almacenan solo con dígitos (migración 037): normalizar la
+        // entrada (quita V-/E-/puntos/espacios) para que la búsqueda no falle por formato.
+        $cedula = preg_replace('/\D/', '', $cedula);
+        if ($cedula === '') return null;
         $db = new Database();
         $db->query("
             SELECT vt.id           AS id_visitante,
@@ -58,6 +62,10 @@ class Visitante extends Model {
      */
     public static function crear(array $data, $userId): int {
         $db = new Database();
+
+        // Las cédulas se almacenan solo con dígitos (migración 037): normalizar
+        // antes de buscar/guardar para no crear personas duplicadas por formato.
+        $data['cedula'] = !empty($data['cedula']) ? preg_replace('/\D/', '', $data['cedula']) : null;
 
         // 1. Find or create the persona
         $idPersona = null;
@@ -112,6 +120,8 @@ class Visitante extends Model {
     public static function store($data, $userId) {
         $previos = !empty($data['id']) ? self::find($data['id']) : null;
         $op      = !empty($data['id']) ? 'UPDATE' : 'INSERT';
+        // Las cédulas se almacenan solo con dígitos (migración 037).
+        $data['cedula'] = !empty($data['cedula']) ? preg_replace('/\D/', '', $data['cedula']) : null;
         $db = new Database();
         if (!empty($data['id'])) {
             $db->query("

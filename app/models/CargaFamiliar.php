@@ -26,6 +26,31 @@ class CargaFamiliar extends Model
         return $db->single();
     }
 
+    /**
+     * ¿Ya existe un familiar ACTIVO con esta cédula para ESTE MISMO empleado?
+     * A propósito NO es una comprobación global: la misma cédula puede
+     * repetirse legítimamente entre empleados distintos (hermanos que
+     * declaran al mismo padre, cónyuges que trabajan ambos en la institución
+     * y se declaran mutuamente). Solo se evita el doble registro accidental
+     * del mismo familiar para la misma persona.
+     */
+    public static function existeCedulaEnPersona($idPersona, $cedula, $excluirId = null): bool
+    {
+        $cedula = preg_replace('/\D/', '', (string)$cedula);
+        if ($cedula === '') return false;
+        $db = new Database();
+        $sql = "SELECT id FROM carga_familiar
+                WHERE id_persona = :id_persona AND is_active = TRUE
+                  AND regexp_replace(COALESCE(cedula, ''), '[^0-9]', '', 'g') = :cedula";
+        if ($excluirId) $sql .= " AND id <> :id";
+        $sql .= " LIMIT 1";
+        $db->query($sql);
+        $db->bind(':id_persona', (int)$idPersona);
+        $db->bind(':cedula', $cedula);
+        if ($excluirId) $db->bind(':id', (int)$excluirId);
+        return (bool) $db->single();
+    }
+
     /** Inserta o actualiza un familiar. Devuelve true/false. */
     public static function save(array $data, $user_id = null)
     {
@@ -34,6 +59,11 @@ class CargaFamiliar extends Model
         $parentesco  = in_array($data['parentesco'] ?? '', self::PARENTESCOS, true) ? $data['parentesco'] : null;
         if ($parentesco === null || empty($data['nombre_apellido'])) {
             throw new Exception("Nombre y parentesco del familiar son obligatorios.");
+        }
+        // Las cédulas se almacenan solo con dígitos (migración 037).
+        $data['cedula'] = !empty($data['cedula']) ? preg_replace('/\D/', '', $data['cedula']) : null;
+        if (!empty($data['cedula']) && self::existeCedulaEnPersona($data['id_persona'], $data['cedula'], $id)) {
+            throw new Exception("Este empleado ya tiene registrado un familiar con la cédula {$data['cedula']}.");
         }
         $genero = in_array($data['genero'] ?? '', ['M', 'F'], true) ? $data['genero'] : null;
         // vive: TRUE por defecto; FALSE solo si se indica explícitamente fallecido
