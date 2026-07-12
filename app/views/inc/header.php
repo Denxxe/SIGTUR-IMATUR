@@ -284,7 +284,7 @@
             <div class="sig-header__actions">
                 <!-- Centro de notificaciones (campana) -->
                 <?php
-                $___alertas  = CentroAlertas::resumenCacheado($rol);
+                $___alertas  = CentroAlertas::resumenPersonal($rol, (int)($_SESSION['user_id'] ?? 0));
                 $___total    = 0; $___visibles = [];
                 foreach ($___alertas as $___a) {
                     if ((int)$___a['n'] > 0) {
@@ -294,11 +294,11 @@
                 }
                 $___sevColor = ['info' => '#0891B2', 'warning' => '#D97706', 'danger' => '#DC2626'];
                 ?>
-                <div class="dropdown">
+                <div class="dropdown" id="notifDropdown">
                     <button class="sig-header__icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones" title="Notificaciones" style="position:relative;">
                         <i class="bi bi-bell" style="font-size:17px;"></i>
                         <?php if ($___total > 0): ?>
-                            <span style="position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;">
+                            <span id="notifBadge" style="position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;">
                                 <?php echo $___total > 99 ? '99+' : $___total; ?>
                             </span>
                         <?php endif; ?>

@@ -92,7 +92,7 @@ class Router {
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && isset($_SESSION['user_id'])) {
             $ctrl   = get_class($this->currentController);
             $metodo = $this->currentMethod;
-            $metodosExentos = ['marcarAsistencia', 'marcarAsistenciaMasiva'];
+            $metodosExentos = ['marcarAsistencia', 'marcarAsistenciaMasiva', 'marcarAlertasVistas'];
             $exento = ($ctrl === 'AuthController') || in_array($metodo, $metodosExentos, true);
             if (!$exento && !sigtur_token_consumir($_POST['_token'] ?? null)) {
                 flash('global_msg', 'Solicitud duplicada o expirada: la operación no se repitió para evitar registros duplicados. Verifica si los datos ya se guardaron.', 'warning');

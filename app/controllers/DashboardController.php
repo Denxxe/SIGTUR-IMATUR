@@ -373,4 +373,21 @@ class DashboardController extends Controller {
         ];
         $this->view('dashboard/acceso_denegado', $data);
     }
+
+    /**
+     * Marca como vistas, para el usuario en sesión, las alertas actualmente
+     * visibles en la campana (AJAX, invocado al abrir el dropdown).
+     */
+    public function marcarAlertasVistas() {
+        header('Content-Type: application/json');
+        $rol = (int)($_SESSION['user_rol'] ?? 0);
+        $uid = (int)($this->getUserId() ?? 0);
+        if ($rol && $uid) {
+            try {
+                CentroAlertas::marcarVisiblesVistas($rol, $uid);
+            } catch (Exception $ignored) {}
+        }
+        echo json_encode(['ok' => true]);
+        exit;
+    }
 }

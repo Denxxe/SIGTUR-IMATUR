@@ -168,6 +168,16 @@
                 // ── Idempotencia: inyectar token en formularios POST ──────
                 sigturInjectTokens();
 
+                // ── Campana: marcar alertas visibles como vistas al abrir ─
+                const _notifDropdown = document.getElementById('notifDropdown');
+                if (_notifDropdown) {
+                    _notifDropdown.addEventListener('shown.bs.dropdown', function() {
+                        const badge = document.getElementById('notifBadge');
+                        if (badge) badge.remove();
+                        fetch('<?php echo URL_ROOT; ?>/dashboard/marcarAlertasVistas', { method: 'POST' }).catch(() => {});
+                    }, { once: true });
+                }
+
                 // ── Modal de confirmación de eliminación ──────────────────
                 const _delModal = new bootstrap.Modal(document.getElementById('modalConfirmDelete'));
 
