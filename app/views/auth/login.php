@@ -29,12 +29,20 @@
             <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #ffecb5;background:#fff3cd;color:#664d03;border-radius:.4rem;text-align:center;">
                 Tu sesión se cerró por inactividad. Inicia sesión nuevamente.
             </div>
+        <?php elseif (isset($_GET['reset_ok'])): ?>
+            <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #badbcc;background:#d1e7dd;color:#0f5132;border-radius:.4rem;text-align:center;">
+                Tu contraseña fue actualizada. Ya puedes iniciar sesión.
+            </div>
+        <?php elseif (isset($_GET['reset_invalido'])): ?>
+            <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #f5c2c7;background:#f8d7da;color:#842029;border-radius:.4rem;text-align:center;">
+                El enlace de recuperación es inválido o ya expiró. Solicita uno nuevo.
+            </div>
         <?php endif; ?>
 
         <form action="<?php echo URL_ROOT; ?>/auth/login" method="POST">
             <div class="login-field">
-                <label for="username">Usuario</label>
-                <input type="text" name="username" id="username" placeholder="Ingrese su usuario"
+                <label for="username">Usuario o correo</label>
+                <input type="text" name="username" id="username" placeholder="Ingrese su usuario o correo"
                     autocomplete="username"
                     class="<?php echo (!empty($data['username_err'])) ? 'is-invalid' : ''; ?>"
                     value="<?php echo $data['username'] ?? ''; ?>">
@@ -55,6 +63,10 @@
 
             <button type="submit" class="login-btn">Iniciar Sesión</button>
         </form>
+
+        <div style="text-align:center;margin-top:1rem;">
+            <a href="<?php echo URL_ROOT; ?>/auth/olvidoPassword" style="font-size:.85rem;">¿Olvidaste tu contraseña?</a>
+        </div>
 
         <div class="login-footer">&copy; <?php echo date('Y'); ?> IMATUR — Gestión Turística v2.0</div>
     </div>

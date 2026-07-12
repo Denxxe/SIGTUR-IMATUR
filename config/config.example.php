@@ -35,3 +35,14 @@ define('SESSION_TIMEOUT', 1800);
 //   BACKUP_RETENTION: cuántos respaldos conservar (rota los más antiguos).
 define('PG_DUMP_PATH', 'C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump.exe');
 define('BACKUP_RETENTION', 14);
+
+// Correo saliente (SMTP) — recuperación de contraseña por correo.
+// SMTP_FROM_EMAIL es solo el RESPALDO: el remitente real es
+// configuracion_sistema.correo_institucion (editable en /config) si está definido.
+define('SMTP_HOST', 'CAMBIAR_HOST_SMTP');
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'CAMBIAR_USUARIO_SMTP');
+define('SMTP_PASS', 'CAMBIAR_CLAVE_SMTP');
+define('SMTP_ENCRYPTION', 'tls'); // 'tls' | 'ssl'
+define('SMTP_FROM_EMAIL', 'no-responder@imatur.gob.ve');
+define('SMTP_FROM_NAME', 'SIGTUR-IMATUR');

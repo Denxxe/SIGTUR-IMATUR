@@ -286,6 +286,29 @@ class Empleado extends Model
     }
 
     /**
+     * Anti-duplicado de correo entre empleados activos (comparación insensible
+     * a mayúsculas). Un correo repetido entre dos personas rompe silenciosamente
+     * la recuperación de contraseña por correo (Usuario::findByUsernameOrEmail()
+     * trata el correo ambiguo como "no encontrado", por diseño anti-enumeración).
+     */
+    public static function existeCorreo($correo, $excluirId = null): bool
+    {
+        $correo = trim((string)$correo);
+        if ($correo === '') return false;
+        $db = new Database();
+        $sql = "SELECT e.id FROM empleados e
+                INNER JOIN personas p ON e.id_persona = p.id
+                WHERE e.is_active = TRUE
+                  AND LOWER(COALESCE(p.correo, '')) = LOWER(:correo)";
+        if ($excluirId) $sql .= " AND e.id <> :id";
+        $sql .= " LIMIT 1";
+        $db->query($sql);
+        $db->bind(':correo', $correo);
+        if ($excluirId) $db->bind(':id', (int)$excluirId);
+        return (bool) $db->single();
+    }
+
+    /**
      * Buscar un empleado por ID
      */
     public static function find($id)
@@ -512,6 +535,20 @@ class Empleado extends Model
             $db->bind(':uid', $user_id);
             $db->execute();
 
+            // Desactiva la cuenta de acceso del empleado egresado (si tiene una
+            // activa) — evita cuentas huérfanas con acceso tras el egreso.
+            $db->query("SELECT id FROM usuarios WHERE id_empleado = :id AND is_active = TRUE");
+            $db->bind(':id', $id);
+            $usuario = $db->single();
+            if ($usuario) {
+                $db->query("UPDATE usuarios SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP, updated_by = :uid WHERE id = :uidu");
+                $db->bind(':uid', $user_id);
+                $db->bind(':uidu', $usuario->id);
+                $db->execute();
+                self::auditStatic('usuarios', 'UPDATE', (int)$usuario->id, ['is_active' => true],
+                    ['is_active' => false, 'motivo' => 'Egreso del empleado'], $user_id);
+            }
+
             $db->endTransaction();
         } catch (Exception $e) {
             $db->cancelTransaction();
@@ -552,6 +589,21 @@ class Empleado extends Model
             $db->bind(':uid', $user_id);
             $db->bind(':id', $id);
             $db->execute();
+
+            // Reactiva la cuenta de acceso que había quedado desactivada por el
+            // egreso (si tiene una), con los intentos fallidos limpios.
+            $db->query("SELECT id FROM usuarios WHERE id_empleado = :id AND is_active = FALSE");
+            $db->bind(':id', $id);
+            $usuario = $db->single();
+            if ($usuario) {
+                $db->query("UPDATE usuarios SET is_active = TRUE, failed_attempts = 0, locked_until = NULL,
+                                updated_at = CURRENT_TIMESTAMP, updated_by = :uid WHERE id = :uidu");
+                $db->bind(':uid', $user_id);
+                $db->bind(':uidu', $usuario->id);
+                $db->execute();
+                self::auditStatic('usuarios', 'UPDATE', (int)$usuario->id, ['is_active' => false],
+                    ['is_active' => true, 'motivo' => 'Reingreso del empleado'], $user_id);
+            }
 
             $db->endTransaction();
         } catch (Exception $e) {

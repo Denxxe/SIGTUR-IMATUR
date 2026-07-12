@@ -28,6 +28,7 @@ session_start();
 
 // Cargar Helpers
 require_once '../app/helpers/session_helper.php';
+require_once '../app/helpers/mail_helper.php';
 
 // Cargar Clases base manualmente (Autoload simple)
 spl_autoload_register(function($className) {

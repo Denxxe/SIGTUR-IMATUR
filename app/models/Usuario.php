@@ -63,6 +63,25 @@ class Usuario extends Model {
     }
 
     /**
+     * Buscar un usuario activo por username o por el correo de su persona
+     * asociada (recuperación de contraseña). Devuelve null si no hay
+     * coincidencia única (no existe, o el correo es ambiguo entre 2+ cuentas)
+     * — nunca revela cuál de los dos casos ocurrió (anti-enumeración).
+     */
+    public static function findByUsernameOrEmail(string $identificador) {
+        $db = new Database();
+        $db->query("SELECT u.*, p.correo
+                    FROM usuarios u
+                    INNER JOIN empleados e ON u.id_empleado = e.id
+                    INNER JOIN personas p  ON e.id_persona  = p.id
+                    WHERE u.is_active = TRUE AND (u.username = :id OR p.correo = :id)
+                    LIMIT 2");
+        $db->bind(':id', trim($identificador));
+        $rows = $db->resultSet();
+        return count($rows) === 1 ? $rows[0] : null;
+    }
+
+    /**
      * Guardar registro
      */
     public function save($user_id = null) {
@@ -140,6 +159,27 @@ class Usuario extends Model {
         $db->query("UPDATE usuarios SET failed_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = :id");
         $db->bind(':id', $id);
         $db->execute();
+    }
+
+    /**
+     * Actualiza SOLO la contraseña (recuperación por correo). A diferencia de
+     * save(), no toca username/id_rol — evita pisarlos con vacío si el llamador
+     * no los conoce. Limpia el bloqueo de intentos fallidos (la identidad ya
+     * quedó verificada por el enlace de un solo uso).
+     */
+    public static function actualizarPassword(int $id, string $plainPassword, $userId = null): bool {
+        $previos = self::find($id);
+        $db = new Database();
+        $db->query("UPDATE usuarios
+                    SET password = :password, failed_attempts = 0, locked_until = NULL,
+                        updated_at = CURRENT_TIMESTAMP, updated_by = :user_id
+                    WHERE id = :id");
+        $db->bind(':password', password_hash($plainPassword, PASSWORD_BCRYPT));
+        $db->bind(':user_id', $userId);
+        $db->bind(':id', $id);
+        $result = $db->execute();
+        self::auditStatic('usuarios', 'UPDATE', $id, $previos, ['password_changed' => true], $userId);
+        return $result;
     }
 
     /**
