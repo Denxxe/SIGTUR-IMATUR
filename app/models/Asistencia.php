@@ -31,6 +31,15 @@ class Asistencia extends Model {
     }
 
     /**
+     * Tolerancia de salida anticipada (minutos) desde configuración; default 10.
+     * Independiente de la tolerancia de puntualidad de entrada.
+     */
+    public static function toleranciaSalidaTemprana(): int {
+        $t = (int) ConfigSistema::get('minutos_tolerancia_salida_temprana');
+        return $t > 0 ? $t : 10;
+    }
+
+    /**
      * Minutos de retraso respecto a la hora de entrada del horario asignado.
      * Devuelve null si el empleado no tiene horario; 0 si llegó a tiempo o antes.
      */
@@ -126,6 +135,8 @@ class Asistencia extends Model {
         $base = "FROM asistencias a
                  INNER JOIN empleados e ON a.id_empleado = e.id
                  INNER JOIN personas p ON e.id_persona = p.id
+                 LEFT JOIN departamentos d ON e.id_departamento = d.id
+                 LEFT JOIN cargos c ON e.id_cargo = c.id
                  WHERE {$where}";
 
         $db->query("SELECT COUNT(*) AS total {$base}");
@@ -133,7 +144,8 @@ class Asistencia extends Model {
         $total = (int)($db->single()->total ?? 0);
 
         $offset = ($pagina - 1) * $porPagina;
-        $db->query("SELECT a.*, p.nombre, p.apellido, e.nro_expediente,
+        $db->query("SELECT a.*, p.nombre, p.apellido, p.cedula, e.nro_expediente,
+                           d.nombre AS departamento, c.nombre AS cargo,
                            CASE WHEN a.hora_salida IS NOT NULL
                                 THEN ROUND(EXTRACT(EPOCH FROM (a.hora_salida - a.hora_entrada))/3600.0, 2)
                            END AS horas
@@ -198,17 +210,6 @@ class Asistencia extends Model {
             ? ['hora_salida' => $this->hora_salida, 'observacion' => $this->observacion]
             : ['id_empleado' => $this->id_empleado, 'fecha' => $this->fecha, 'hora_entrada' => $this->hora_entrada, 'minutos_tarde' => $this->minutos_tarde];
         $this->audit('asistencias', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, $nuevos, $user_id);
-        return $result;
-    }
-
-    public static function delete($id, $user_id = null) {
-        $previos = self::find($id);
-        $db = new Database();
-        $db->query("UPDATE asistencias SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");
-        $db->bind(':id', $id);
-        $db->bind(':user_id', $user_id);
-        $result = $db->execute();
-        self::auditStatic('asistencias', 'DELETE', $id, $previos, null, $user_id);
         return $result;
     }
 }

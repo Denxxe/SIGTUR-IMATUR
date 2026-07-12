@@ -90,10 +90,30 @@ class AsistenciasController extends Controller {
                 $asistenciaAbierta = Asistencia::findOpen($id_empleado);
 
                 if ($asistenciaAbierta) {
+                    $horaSalida  = date('H:i:s');
+                    $observacion = 'Marcaje de salida automático';
+
+                    $empleado = Empleado::find($id_empleado);
+                    if (!empty($empleado->hora_salida)) {
+                        $programada  = strtotime(date('Y-m-d') . ' ' . $empleado->hora_salida);
+                        $ahora       = strtotime(date('Y-m-d') . ' ' . $horaSalida);
+                        $tolSalida   = Asistencia::toleranciaSalidaTemprana();
+                        $minAnticipo = $programada !== false ? (int) floor(($programada - $ahora) / 60) : 0;
+                        if ($minAnticipo > $tolSalida) {
+                            $motivo = trim($_POST['motivo_temprano'] ?? '');
+                            if ($motivo === '') {
+                                flash('global_msg', 'Debe indicar el motivo de la salida antes de su horario (' . substr($empleado->hora_salida, 0, 5) . ').', 'danger');
+                                header('Location: ' . URL_ROOT . '/asistencias/index');
+                                exit;
+                            }
+                            $observacion .= ' — Salida anticipada: ' . $motivo;
+                        }
+                    }
+
                     $data = [
                         'id'          => $asistenciaAbierta->id,
-                        'hora_salida' => date('H:i:s'),
-                        'observacion' => 'Marcaje de salida automático',
+                        'hora_salida' => $horaSalida,
+                        'observacion' => $observacion,
                     ];
                     $asistencia = new Asistencia($data);
                     $asistencia->save($user_id);
@@ -129,16 +149,36 @@ class AsistenciasController extends Controller {
         }
     }
 
-    public function delete($id) {
-        try {
-            if (Asistencia::delete($id, $this->getUserId())) {
-                flash('global_msg', 'Registro de asistencia eliminado.', 'warning');
-            } else {
-                throw new Exception('No se pudo eliminar el registro.');
+    /**
+     * Estado del marcaje de un empleado (AJAX): indica si el próximo marcaje
+     * sería una salida antes de su hora de horario, para pedir el motivo
+     * en el formulario antes de enviar.
+     */
+    public function estadoMarcaje() {
+        header('Content-Type: application/json');
+        $id = (int)($_GET['id'] ?? 0);
+        $requiereMotivo = false;
+        $horaProgramada = null;
+
+        if ($id) {
+            $abierta = Asistencia::findOpen($id);
+            if ($abierta) {
+                $empleado = Empleado::find($id);
+                if (!empty($empleado->hora_salida)) {
+                    $horaProgramada = substr($empleado->hora_salida, 0, 5);
+                    $programada  = strtotime(date('Y-m-d') . ' ' . $empleado->hora_salida);
+                    $ahora       = strtotime(date('Y-m-d H:i:s'));
+                    $tolSalida   = Asistencia::toleranciaSalidaTemprana();
+                    $minAnticipo = $programada !== false ? (int) floor(($programada - $ahora) / 60) : 0;
+                    if ($minAnticipo > $tolSalida) $requiereMotivo = true;
+                }
             }
-        } catch (Exception $e) {
-            flash('global_msg', $e->getMessage(), 'danger');
         }
-        header('Location: ' . URL_ROOT . '/asistencias/index');
+
+        echo json_encode([
+            'requiere_motivo' => $requiereMotivo,
+            'hora_programada' => $horaProgramada,
+        ]);
+        exit;
     }
 }

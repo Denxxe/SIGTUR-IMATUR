@@ -17,6 +17,12 @@ class EmpleadosController extends Controller {
             $empleados = array_values(array_filter($empleados, fn($e) => (int)($e->id_departamento ?? 0) === $depto));
         }
 
+        // Filtro por cargo.
+        $cargo = (int)($_GET['cargo'] ?? 0);
+        if ($cargo > 0) {
+            $empleados = array_values(array_filter($empleados, fn($e) => (int)($e->id_cargo ?? 0) === $cargo));
+        }
+
         $data = [
             'titulo'        => 'Gestión de Personal (Empleados)',
             'empleados'     => $empleados,
@@ -24,6 +30,8 @@ class EmpleadosController extends Controller {
             'origen'        => $origen,
             'departamento'  => $depto,
             'departamentos' => Departamento::all(),
+            'cargo'         => $cargo,
+            'cargos'        => Cargo::all(),
             'motivos'       => Empleado::MOTIVOS_EGRESO,
         ];
 
@@ -309,6 +317,14 @@ class EmpleadosController extends Controller {
             // Validación de correo electrónico
             if (!empty($data['correo']) && !$this->emailValido($data['correo'])) {
                 flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+
+            // Anti-duplicado: dos empleados no pueden compartir el mismo correo
+            // (rompería la recuperación de contraseña por correo para ambos).
+            if (!empty($data['correo']) && Empleado::existeCorreo($data['correo'], $esEdicion ? (int)$data['id'] : null)) {
+                flash('global_msg', 'El correo "' . htmlspecialchars($data['correo']) . '" ya está registrado con otro empleado. Cada cuenta necesita un correo distinto para poder recuperar su contraseña.', 'danger');
                 header('Location: ' . $volverForm);
                 return;
             }

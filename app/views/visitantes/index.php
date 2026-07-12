@@ -51,12 +51,13 @@ function visUrl(array $f, int $p): string {
                 <th>Institución / Procedencia</th>
                 <th>Correo</th>
                 <th>Motivo</th>
+                <th class="col-actions">Detalles</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['movimientos'])): ?>
                 <tr>
-                    <td colspan="7" class="sig-table-empty"><?php echo $hayFiltro ? 'Sin visitas para el filtro aplicado.' : 'Sin visitas registradas.'; ?></td>
+                    <td colspan="8" class="sig-table-empty"><?php echo $hayFiltro ? 'Sin visitas para el filtro aplicado.' : 'Sin visitas registradas.'; ?></td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['movimientos'] as $v): ?>
@@ -87,6 +88,11 @@ function visUrl(array $f, int $p): string {
                                 </div>
                             <?php endif; ?>
                         </td>
+                        <td class="col-actions">
+                            <button type="button" class="row-action row-action--view" data-bs-toggle="modal" data-bs-target="#detVis<?php echo $v->id; ?>" title="Ver detalles">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -105,6 +111,47 @@ function visUrl(array $f, int $p): string {
     </div>
     <?php endif; ?>
 </div>
+
+<!-- Modales de detalle de visita -->
+<?php foreach ($data['movimientos'] ?? [] as $v):
+    $generoLabel = ['M' => 'Masculino', 'F' => 'Femenino'][$v->vis_genero ?? ''] ?? '—';
+?>
+<div class="modal fade" id="detVis<?php echo $v->id; ?>" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-lines-fill"></i> Detalle de visita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="audit-kv" style="width:100%">
+                    <tr><th>Visitante</th><td><?php echo htmlspecialchars($v->vis_nombre . ' ' . $v->vis_apellido); ?></td></tr>
+                    <tr><th>Cédula</th><td><?php echo htmlspecialchars($v->vis_cedula ?? '—'); ?></td></tr>
+                    <tr><th>Género</th><td><?php echo $generoLabel; ?></td></tr>
+                    <tr><th>Teléfono</th><td><?php echo htmlspecialchars($v->vis_telefono ?? '—'); ?></td></tr>
+                    <tr><th>Correo</th><td><?php echo htmlspecialchars($v->vis_correo ?? '—'); ?></td></tr>
+                    <tr><th>Procedencia</th><td><?php echo htmlspecialchars($v->procedencia ?? '—'); ?></td></tr>
+                    <tr><th>Motivo</th><td><?php echo htmlspecialchars($v->motivo ?? '—'); ?></td></tr>
+                    <tr><th>Atendido por</th><td><?php echo !empty($v->emp_nombre) ? htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido) : '—'; ?></td></tr>
+                    <tr><th>Entrada</th><td><?php echo date('d/m/Y H:i', strtotime($v->hora_entrada)); ?></td></tr>
+                    <tr><th>Salida</th><td><?php echo $v->hora_salida ? date('d/m/Y H:i', strtotime($v->hora_salida)) : 'Pendiente'; ?></td></tr>
+                    <tr><th>Observaciones</th><td><?php echo htmlspecialchars($v->observaciones ?? '—'); ?></td></tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endforeach; ?>
+
+<style>
+.audit-kv { width:100%; border-collapse:collapse; font-size:13px; }
+.audit-kv th { text-align:left; font-weight:700; color:var(--text-secondary); padding:4px 12px 4px 0; white-space:nowrap; vertical-align:top; width:1%; }
+.audit-kv td { color:var(--text-primary); padding:4px 0; word-break:break-word; }
+.audit-kv tr + tr th, .audit-kv tr + tr td { border-top:1px dashed var(--border-subtle); }
+</style>
 
 <!-- ── Modal Registro de Visita ──────────────────────────────────────────── -->
 <div class="modal fade" id="modalMarcaje" tabindex="-1">

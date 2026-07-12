@@ -5,6 +5,8 @@ $motivos = $data['motivos'] ?? [];
 $origen  = $data['origen'] ?? '';
 $departamento  = (int)($data['departamento'] ?? 0);
 $departamentos = $data['departamentos'] ?? [];
+$cargoSel      = (int)($data['cargo'] ?? 0);
+$cargosOpts    = $data['cargos'] ?? [];
 $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
 $esCom = fn($e) => (($e->institucion_origen ?? 'IMATUR') !== 'IMATUR');
 // Badge de vencimiento del contrato (activos): Fijos sin vencimiento; Contratados con semáforo.
@@ -34,10 +36,22 @@ $fijoBadge = function ($e) {
     $a = Empleado::aniosServicio($e);
     return ' <span class="sig-badge sig-badge--success" title="Tiempo de servicio suficiente para pasar a Fijo (' . $a . ' años). Requiere carta de asignación y aprobación de Presidencia."><i class="bi bi-patch-check"></i> Elegible a fijo</span>';
 };
+// Badge de tipo de contrato (Fijo / Contratado / Suplente / Comisión de Servicio).
+$contratoBadge = function ($e) {
+    $tc  = $e->tipo_contrato ?? '';
+    $map = [
+        'Fijo'                 => ['sig-badge--success', 'bi-shield-check'],
+        'Contratado'           => ['sig-badge--info',    'bi-file-earmark-text'],
+        'Suplente'             => ['sig-badge--warning',  'bi-arrow-repeat'],
+        'Comisión de Servicio' => ['sig-badge--neutral',  'bi-arrow-left-right'],
+    ];
+    [$cls, $ico] = $map[$tc] ?? ['sig-badge--neutral', 'bi-question-circle'];
+    return '<span class="sig-badge ' . $cls . '"><i class="bi ' . $ico . '"></i> ' . htmlspecialchars($tc ?: '—') . '</span>';
+};
 // Opciones del filtro de origen
 $origenOpciones = ['' => 'Todos los orígenes', 'comision' => 'Comisión de servicio'];
 foreach (Empleado::INSTITUCIONES_ORIGEN as $o) $origenOpciones[$o] = $o;
-$colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina y Vencimiento)
+$colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (activos suman Disciplina y Vencimiento)
 ?>
 
 <div class="page__head anim-slide-up">
@@ -80,6 +94,15 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
         </select>
     </div>
     <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Cargo</label>
+        <select name="cargo" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
+            <option value="0">Todos los cargos</option>
+            <?php foreach ($cargosOpts as $c): ?>
+                <option value="<?php echo $c->id; ?>" <?php echo $cargoSel === (int)$c->id ? 'selected' : ''; ?>><?php echo htmlspecialchars($c->nombre); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="sig-field" style="margin:0;">
         <label class="sig-field__label" style="font-size:11px;">Origen / Comisión de servicio</label>
         <select name="origen" class="sig-select" style="min-width:220px;" onchange="this.form.submit()">
             <?php foreach ($origenOpciones as $val => $lbl): ?>
@@ -88,7 +111,7 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
         </select>
     </div>
     <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
-    <?php if ($origen !== '' || $departamento > 0): ?>
+    <?php if ($origen !== '' || $departamento > 0 || $cargoSel > 0): ?>
         <a href="<?php echo URL_ROOT; ?>/empleados/index<?php echo $egView ? '?ver=egresados' : ''; ?>" class="btn-sig btn-sig--ghost" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
     <?php endif; ?>
 </form>
@@ -100,7 +123,9 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
                 <th>Expediente</th>
                 <th>Cédula</th>
                 <th>Nombre</th>
+                <th>Contacto</th>
                 <th>Cargo</th>
+                <th>Contrato</th>
                 <th>Origen</th>
                 <?php if ($egView): ?>
                     <th>F. Egreso</th>
@@ -126,7 +151,13 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
                         <td class="cell-strong"><?php echo $emp->nro_expediente ?? 'N/A'; ?></td>
                         <td><?php echo $emp->cedula ?? 'N/A'; ?></td>
                         <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); echo $fijoBadge($emp); ?></td>
+                        <td style="font-size:12px;color:var(--text-secondary);">
+                            <?php if (!empty($emp->telefono)): ?><div><i class="bi bi-telephone" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($emp->telefono); ?></div><?php endif; ?>
+                            <?php if (!empty($emp->correo)): ?><div style="word-break:break-all;"><i class="bi bi-envelope" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($emp->correo); ?></div><?php endif; ?>
+                            <?php if (empty($emp->telefono) && empty($emp->correo)): ?>—<?php endif; ?>
+                        </td>
                         <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo ?? 'Sin cargo'; ?></span></td>
+                        <td><?php echo $contratoBadge($emp); ?></td>
                         <td>
                             <?php if ($esCom($emp)): ?>
                                 <span class="sig-badge sig-badge--warning" title="Comisión de servicio"><i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($emp->institucion_origen); ?></span>
@@ -139,7 +170,12 @@ $colspanBase = ($egView ? 8 : 8) + 1; // +1 por Origen (activos suman Disciplina
                             <td><span class="sig-badge sig-badge--warning"><?php echo htmlspecialchars($emp->motivo_egreso ?? '—'); ?></span></td>
                             <td><?php echo htmlspecialchars($ts($emp->fecha_ingreso ?? null, $emp->fecha_egreso ?? null)); ?></td>
                         <?php else: ?>
-                            <td><?php echo $emp->departamento ?? 'Sin dpto.'; ?></td>
+                            <td>
+                                <?php echo $emp->departamento ?? 'Sin dpto.'; ?>
+                                <?php if (!empty($emp->grupo_rotacion)): ?>
+                                    <span class="sig-badge sig-badge--neutral" title="Grupo de rotación (días alternos)">Grupo <?php echo htmlspecialchars($emp->grupo_rotacion); ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td><?php echo $discBadge($emp); ?></td>
                             <td><?php echo $vencBadge($emp); ?></td>
                         <?php endif; ?>

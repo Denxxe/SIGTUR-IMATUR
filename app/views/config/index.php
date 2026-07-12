@@ -290,6 +290,23 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-12">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4); padding:var(--sp-3) var(--sp-4); background:var(--bg-muted-subtle); border-radius:8px; border:1px solid var(--border-subtle);">
+                            <div>
+                                <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:2px;">
+                                    <i class="bi bi-box-arrow-right" style="color:#D97706;"></i> Tolerancia de salida anticipada
+                                </div>
+                                <div style="font-size:11px;color:var(--text-tertiary);">Minutos antes de la hora de salida del horario antes de exigir motivo</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                                <input type="number" name="minutos_tolerancia_salida_temprana" class="sig-input"
+                                       style="width:72px;text-align:center;font-weight:700;font-size:15px;padding:var(--sp-1) var(--sp-2);"
+                                       min="0" max="120"
+                                       value="<?php echo (int)($cfg['minutos_tolerancia_salida_temprana']['valor'] ?? 10); ?>">
+                                <span style="font-size:12px;color:var(--text-secondary);">min</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

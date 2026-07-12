@@ -57,8 +57,8 @@ function asisUrl(array $f, int $p): string {
 <!-- Tarjeta de marcaje -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5)">
     <div class="sig-card__body" style="padding:var(--sp-5) var(--sp-6)">
-        <form action="<?php echo URL_ROOT; ?>/asistencias/marcar" method="POST" style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap">
-            <select name="id_empleado" class="sig-select js-search" required>
+        <form action="<?php echo URL_ROOT; ?>/asistencias/marcar" method="POST" style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap" id="formMarcaje">
+            <select name="id_empleado" id="id_empleado" class="sig-select js-search" required>
                 <option value="">Buscar empleado por nombre o cédula...</option>
                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
                     <option value="<?php echo $e->id; ?>"><?php echo ($e->nombre ?? '') . ' ' . ($e->apellido ?? ''); ?> (<?php echo $e->cedula ?? ''; ?>)</option>
@@ -67,6 +67,12 @@ function asisUrl(array $f, int $p): string {
             <button type="submit" class="btn-sig btn-sig--primary" style="height:40px"><i class="bi bi-check2-circle"></i> MARCAR</button>
             <span class="sig-badge sig-badge--neutral" id="clock" style="font-size:14px;padding:6px 14px">--:--:--</span>
             <span style="font-size:11px;color:var(--text-tertiary)">Tolerancia de puntualidad: <?php echo $tol; ?> min</span>
+            <div id="motivoTempranoWrap" style="display:none;flex:1 1 100%;">
+                <label class="sig-field__label" style="color:var(--danger-600)">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Sale antes de su horario (<span id="motivoHoraProgramada"></span>) — indique el motivo:
+                </label>
+                <textarea name="motivo_temprano" id="motivo_temprano" class="sig-input" rows="2" placeholder="Motivo de la salida anticipada..."></textarea>
+            </div>
         </form>
     </div>
 </div>
@@ -136,7 +142,7 @@ function asisUrl(array $f, int $p): string {
                 <th>Puntualidad</th>
                 <th>Horas</th>
                 <th>Observación</th>
-                <th class="col-actions">Eliminar</th>
+                <th class="col-actions">Detalles</th>
             </tr>
         </thead>
         <tbody>
@@ -158,9 +164,9 @@ function asisUrl(array $f, int $p): string {
                     <td><?php echo isset($as->horas) && $as->horas !== null ? number_format((float)$as->horas, 2) . ' h' : '—'; ?></td>
                     <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo htmlspecialchars($as->observacion ?? ''); ?></td>
                     <td class="col-actions">
-                        <a href="<?php echo URL_ROOT; ?>/asistencias/delete/<?php echo $as->id; ?>" class="row-action row-action--del delete-btn">
-                            <i class="bi bi-trash"></i>
-                        </a>
+                        <button type="button" class="row-action row-action--view" data-bs-toggle="modal" data-bs-target="#detAsis<?php echo $as->id; ?>" title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </td>
                 </tr>
             <?php endforeach; endif; ?>
@@ -180,6 +186,45 @@ function asisUrl(array $f, int $p): string {
     <?php endif; ?>
 </div>
 
+<!-- Modales de detalle de marcaje -->
+<?php foreach ($data['asistencias'] ?? [] as $as): ?>
+<div class="modal fade" id="detAsis<?php echo $as->id; ?>" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-calendar-check"></i> Detalle de asistencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="audit-kv" style="width:100%">
+                    <tr><th>Empleado</th><td><?php echo htmlspecialchars($as->nombre . ' ' . $as->apellido); ?></td></tr>
+                    <tr><th>Cédula</th><td><?php echo htmlspecialchars($as->cedula ?? '—'); ?></td></tr>
+                    <tr><th>Expediente</th><td><?php echo htmlspecialchars($as->nro_expediente ?? '—'); ?></td></tr>
+                    <tr><th>Departamento</th><td><?php echo htmlspecialchars($as->departamento ?? '—'); ?></td></tr>
+                    <tr><th>Cargo</th><td><?php echo htmlspecialchars($as->cargo ?? '—'); ?></td></tr>
+                    <tr><th>Fecha</th><td><?php echo date('d/m/Y', strtotime($as->fecha)); ?></td></tr>
+                    <tr><th>Hora entrada</th><td><?php echo $hm($as->hora_entrada); ?></td></tr>
+                    <tr><th>Hora salida</th><td><?php echo $as->hora_salida ? $hm($as->hora_salida) : 'Pendiente'; ?></td></tr>
+                    <tr><th>Horas trabajadas</th><td><?php echo isset($as->horas) && $as->horas !== null ? number_format((float)$as->horas, 2) . ' h' : '—'; ?></td></tr>
+                    <tr><th>Puntualidad</th><td><?php echo $puntualidad($as->minutos_tarde ?? null); ?></td></tr>
+                    <tr><th>Observación</th><td><?php echo htmlspecialchars($as->observacion ?? '—'); ?></td></tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endforeach; ?>
+
+<style>
+.audit-kv { width:100%; border-collapse:collapse; font-size:13px; }
+.audit-kv th { text-align:left; font-weight:700; color:var(--text-secondary); padding:4px 12px 4px 0; white-space:nowrap; vertical-align:top; width:1%; }
+.audit-kv td { color:var(--text-primary); padding:4px 0; word-break:break-word; }
+.audit-kv tr + tr th, .audit-kv tr + tr td { border-top:1px dashed var(--border-subtle); }
+</style>
+
 <script>
     function updateClock() {
         const now = new Date();
@@ -187,6 +232,36 @@ function asisUrl(array $f, int $p): string {
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    // Si el próximo marcaje del empleado seleccionado es una salida antes de
+    // su horario, exige un motivo antes de permitir el envío del formulario.
+    const selEmpleado    = document.getElementById('id_empleado');
+    const wrapMotivo      = document.getElementById('motivoTempranoWrap');
+    const inputMotivo     = document.getElementById('motivo_temprano');
+    const spanHoraProg    = document.getElementById('motivoHoraProgramada');
+
+    function ocultarMotivo() {
+        wrapMotivo.style.display = 'none';
+        inputMotivo.required = false;
+        inputMotivo.value = '';
+    }
+
+    selEmpleado?.addEventListener('change', () => {
+        const id = selEmpleado.value;
+        if (!id) { ocultarMotivo(); return; }
+        fetch('<?php echo URL_ROOT; ?>/asistencias/estadoMarcaje?id=' + encodeURIComponent(id))
+            .then(r => r.json())
+            .then(json => {
+                if (json.requiere_motivo) {
+                    spanHoraProg.textContent = json.hora_programada || '';
+                    wrapMotivo.style.display = 'block';
+                    inputMotivo.required = true;
+                } else {
+                    ocultarMotivo();
+                }
+            })
+            .catch(() => ocultarMotivo());
+    });
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

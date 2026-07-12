@@ -124,17 +124,4 @@ class VisitantesController extends Controller {
 
         header('Location: ' . URL_ROOT . '/visitantes/index');
     }
-
-    public function delete($id) {
-        try {
-            if (Visita::delete($id, $this->getUserId())) {
-                flash('global_msg', 'Registro eliminado.', 'warning');
-            } else {
-                throw new Exception('No se pudo eliminar.');
-            }
-        } catch (Exception $e) {
-            flash('global_msg', 'Error: ' . $e->getMessage(), 'danger');
-        }
-        header('Location: ' . URL_ROOT . '/visitantes/index');
-    }
 }

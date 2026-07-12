@@ -62,6 +62,7 @@ class Visita extends Model {
                            COALESCE(p.apellido, vt.apellido) AS vis_apellido,
                            COALESCE(p.correo,   vt.correo)   AS vis_correo,
                            COALESCE(p.telefono, vt.telefono) AS vis_telefono,
+                           COALESCE(p.genero,   vt.genero)   AS vis_genero,
                            vt.procedencia,
                            ep.nombre AS emp_nombre, ep.apellido AS emp_apellido
                     {$base}
@@ -115,16 +116,6 @@ class Visita extends Model {
             $result = $db->execute();
             self::auditStatic('visitas', 'INSERT', null, null, ['id_visitante' => $data['id_visitante'], 'id_empleado' => $data['id_empleado'] ?: null, 'motivo' => $data['motivo'] ?: null], $userId);
         }
-        return $result;
-    }
-
-    public static function delete($id, $user_id = null) {
-        $previos = self::find($id);
-        $db = new Database();
-        $db->query("UPDATE visitas SET is_active = FALSE WHERE id = :id");
-        $db->bind(':id', $id);
-        $result = $db->execute();
-        self::auditStatic('visitas', 'DELETE', (int)$id, $previos, null, $user_id);
         return $result;
     }
 }
