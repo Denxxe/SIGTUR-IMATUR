@@ -104,22 +104,24 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
 </div>
 
 <!-- Tabla -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por pasante, cédula o institución…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>
                 <th>Cédula</th>
                 <th>Pasante</th>
+                <th>Contacto</th>
                 <th>Institución / Carrera</th>
                 <th>Tutor IMATUR</th>
                 <th style="text-align:center;">Fecha Inicio</th>
                 <th style="text-align:center;">Fecha Fin</th>
                 <th style="text-align:center;">Estado</th>
+                <th style="text-align:center;">Nota / Evaluación</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['pasantes'])): ?>
-                <tr><td colspan="7" class="sig-table-empty">No se encontraron pasantes con los filtros aplicados.</td></tr>
+                <tr><td colspan="9" class="sig-table-empty">No se encontraron pasantes con los filtros aplicados.</td></tr>
             <?php else: ?>
                 <?php foreach ($data['pasantes'] as $p):
                     $bdg = ['Postulado' => 'sig-badge--warning', 'Aceptado' => 'sig-badge--info', 'En Curso' => 'sig-badge--brand', 'Culminado' => 'sig-badge--success', 'Rechazado' => 'sig-badge--danger'];
@@ -128,6 +130,11 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                 <tr <?php if ($isVigente) echo 'style="border-left:3px solid var(--accent-500);"'; ?>>
                     <td class="cell-id"><?php echo htmlspecialchars($p->cedula ?? '—'); ?></td>
                     <td class="cell-strong"><?php echo htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? '')); ?></td>
+                    <td style="font-size:12px;color:var(--text-secondary);">
+                        <?php if (!empty($p->telefono)): ?><div><i class="bi bi-telephone" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($p->telefono); ?></div><?php endif; ?>
+                        <?php if (!empty($p->correo)): ?><div style="word-break:break-all;"><i class="bi bi-envelope" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($p->correo); ?></div><?php endif; ?>
+                        <?php if (empty($p->telefono) && empty($p->correo)): ?>—<?php endif; ?>
+                    </td>
                     <td>
                         <div style="font-weight:600;font-size:13px;color:var(--text-primary);"><?php echo htmlspecialchars($p->institucion ?? '—'); ?></div>
                         <div style="font-size:11px;color:var(--text-tertiary);"><?php echo htmlspecialchars($p->carrera ?? '—'); ?></div>
@@ -150,6 +157,16 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                     </td>
                     <td style="text-align:center;">
                         <span class="sig-badge <?php echo $bdg[$p->estado ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($p->estado ?? '—'); ?></span>
+                    </td>
+                    <?php $tieneNota = $p->nota !== null && $p->nota !== ''; $tieneEval = !empty($p->evaluacion); ?>
+                    <td style="text-align:center;font-size:12px;">
+                        <?php if ($tieneNota): ?>
+                            <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars((string)$p->nota); ?></span>
+                        <?php endif; ?>
+                        <?php if ($tieneEval): ?>
+                            <div style="color:var(--text-tertiary);margin-top:2px;max-width:220px;white-space:normal;"><?php echo htmlspecialchars($p->evaluacion); ?></div>
+                        <?php endif; ?>
+                        <?php if (!$tieneNota && !$tieneEval): ?>—<?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

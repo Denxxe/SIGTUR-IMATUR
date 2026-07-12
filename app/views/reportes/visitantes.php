@@ -146,14 +146,16 @@ foreach ($data['registros'] ?? [] as $r) {
 </div>
 
 <!-- Tabla -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por visitante, cédula o procedencia…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>
-                <th>Fecha y Hora</th>
+                <th>Entrada</th>
+                <th>Salida</th>
                 <th>Visitante</th>
                 <th>Contacto</th>
                 <th>Procedencia</th>
+                <th>Atendido por</th>
                 <th>Motivo</th>
                 <th>Observaciones</th>
             </tr>
@@ -161,7 +163,7 @@ foreach ($data['registros'] ?? [] as $r) {
         <tbody>
             <?php if (empty($data['registros'])): ?>
                 <tr>
-                    <td colspan="6" class="sig-table-empty">
+                    <td colspan="8" class="sig-table-empty">
                         <i class="bi bi-search" style="opacity:.5;margin-right:6px;"></i>
                         Sin registros en el rango y filtros seleccionados.
                     </td>
@@ -173,9 +175,18 @@ foreach ($data['registros'] ?? [] as $r) {
                     <tr>
                         <td style="white-space:nowrap;">
                             <div style="font-weight:700;font-size:13px;"><?php echo date('d/m/Y', strtotime($r->fecha ?? $r->hora_entrada)); ?></div>
-                            <span class="sig-badge sig-badge--neutral" style="font-family:var(--font-mono);font-size:10px;margin-top:3px;display:inline-block;">
+                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);font-size:10px;margin-top:3px;display:inline-block;">
                                 <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_entrada)); ?>
                             </span>
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <?php if (!empty($r->hora_salida)): ?>
+                                <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono);font-size:10px;display:inline-block;">
+                                    <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_salida)); ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="sig-badge sig-badge--warning" style="font-size:10px;">EN CURSO</span>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <div style="display:flex;flex-direction:column;gap:2px;">
@@ -200,6 +211,7 @@ foreach ($data['registros'] ?? [] as $r) {
                             </div>
                         </td>
                         <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->procedencia ?? '—'); ?></td>
+                        <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars(trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '—'); ?></td>
                         <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->motivo ?? '—'); ?></td>
                         <td style="font-size:11px;color:var(--text-tertiary);"><?php echo htmlspecialchars($r->observaciones ?? '—'); ?></td>
                     </tr>

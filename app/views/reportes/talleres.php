@@ -136,7 +136,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
 </div>
 
 <!-- Tabla -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por actividad, facilitador o sede…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>

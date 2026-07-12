@@ -401,6 +401,9 @@ class ReportesController extends Controller {
         $filas = [];
         foreach ($regs as $r) {
             $esCom = ($r->institucion_origen ?? 'IMATUR') !== 'IMATUR';
+            $vencTxt = ($r->tipo_contrato ?? '') === 'Fijo'
+                ? 'Indefinido'
+                : (!empty($r->fecha_vencimiento_contrato) ? date('d/m/Y', strtotime($r->fecha_vencimiento_contrato)) : '—');
             $filas[] = [
                 trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
                 $r->cedula ?? '—',
@@ -408,10 +411,13 @@ class ReportesController extends Controller {
                 $r->departamento ?? '—',
                 $r->clasificacion ?? '—',
                 $r->tipo_contrato ?? '—',
+                $vencTxt,
                 ['raw' => $esCom
                     ? '<span class="sig-badge sig-badge--warning">' . htmlspecialchars($r->institucion_origen) . '</span>'
                     : '<span class="sig-badge sig-badge--neutral">IMATUR</span>'],
                 !empty($r->fecha_ingreso) ? date('d/m/Y', strtotime($r->fecha_ingreso)) : '—',
+                $r->telefono ?? '—',
+                $r->correo ?? '—',
             ];
         }
         $deptos = []; foreach (Departamento::all() as $d) $deptos[$d->id] = $d->nombre;
@@ -420,7 +426,7 @@ class ReportesController extends Controller {
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Directorio de Personal',
             'subtitulo' => 'Plantilla activa del instituto con filtros por área, cargo, clasificación, contrato y origen.',
             'resumen' => ['Total' => count($regs)],
-            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Origen', 'F. Ingreso'],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'],
             'filas' => $filas,
             'accion' => URL_ROOT . '/reportes/directorio',
             'filtros' => [
@@ -439,10 +445,12 @@ class ReportesController extends Controller {
         $regs = $this->queryDirectorio();
         $rows = [];
         foreach ($regs as $r) {
+            $venc = ($r->tipo_contrato ?? '') === 'Fijo' ? 'Indefinido' : ($r->fecha_vencimiento_contrato ?? '—');
             $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento,
-                       $r->clasificacion, $r->tipo_contrato, $r->institucion_origen, $r->fecha_ingreso];
+                       $r->clasificacion, $r->tipo_contrato, $venc, $r->institucion_origen, $r->fecha_ingreso,
+                       $r->telefono, $r->correo];
         }
-        $this->exportCsv('directorio_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Origen', 'F. Ingreso'], $rows);
+        $this->exportCsv('directorio_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'], $rows);
     }
 
     private function queryDirectorio() {
@@ -456,8 +464,9 @@ class ReportesController extends Controller {
         $org = trim($_GET['origen'] ?? '');
         if ($org === 'comision')                                       $where .= " AND e.institucion_origen <> 'IMATUR'";
         elseif (in_array($org, Empleado::INSTITUCIONES_ORIGEN, true)){ $where .= " AND e.institucion_origen = :org"; $binds[':org'] = $org; }
-        $db->query("SELECT p.nombre, p.apellido, p.cedula, e.clasificacion, e.tipo_contrato,
-                           e.institucion_origen, e.fecha_ingreso, c.nombre AS cargo, d.nombre AS departamento
+        $db->query("SELECT p.nombre, p.apellido, p.cedula, p.telefono, p.correo, e.clasificacion, e.tipo_contrato,
+                           e.institucion_origen, e.fecha_ingreso, e.fecha_vencimiento_contrato,
+                           c.nombre AS cargo, d.nombre AS departamento
                     FROM empleados e
                     INNER JOIN personas p      ON e.id_persona = p.id
                     INNER JOIN cargos c        ON e.id_cargo = c.id
@@ -484,10 +493,13 @@ class ReportesController extends Controller {
             $estadoTxt = $am >= $limite ? 'Causa de despido' : ($am === $limite - 1 ? 'En riesgo' : ((int)$r->faltas >= 3 ? 'Faltas acumuladas' : ($am > 0 || (int)$r->faltas > 0 ? 'Con observaciones' : 'Sin novedades')));
             $filas[] = [
                 trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
+                $r->cedula ?? '—',
+                $r->cargo ?? '—',
                 $r->departamento ?? '—',
                 $r->tipo_contrato ?? '—',
                 (string)(int)$r->faltas,
                 (int)$r->amonestaciones . '/' . $limite,
+                !empty($r->ultima_fecha) ? date('d/m/Y', strtotime($r->ultima_fecha)) : '—',
                 ['raw' => '<span class="sig-badge ' . $estadoBadge . '">' . $estadoTxt . '</span>'],
             ];
         }
@@ -495,7 +507,7 @@ class ReportesController extends Controller {
             'eyebrow' => 'RRHH · Disciplina', 'titulo' => 'Amonestaciones y Faltas',
             'subtitulo' => "Conteo por empleado. {$limite} amonestaciones = causa de despido (Contratado).",
             'resumen' => ['Empleados' => count($roster), 'Con observaciones' => $conObs, 'En causa de despido' => $despido],
-            'columnas' => ['Empleado', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones', 'Estado'],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones', 'Última fecha', 'Estado'],
             'filas' => $filas,
             'export_url' => URL_ROOT . '/reportes/exportarAmonestacionesCsv',
         ]);
@@ -506,10 +518,10 @@ class ReportesController extends Controller {
         $limite = Amonestacion::LIMITE_DESPIDO;
         $rows = [];
         foreach (Amonestacion::roster() as $r) {
-            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->departamento, $r->tipo_contrato,
-                       (int)$r->faltas, (int)$r->amonestaciones . '/' . $limite];
+            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento, $r->tipo_contrato,
+                       (int)$r->faltas, (int)$r->amonestaciones . '/' . $limite, $r->ultima_fecha];
         }
-        $this->exportCsv('amonestaciones_faltas', ['Empleado', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones'], $rows);
+        $this->exportCsv('amonestaciones_faltas', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Contrato', 'Faltas', 'Amonestaciones', 'Última fecha'], $rows);
     }
 
     // =========================================================================
@@ -525,8 +537,10 @@ class ReportesController extends Controller {
                 trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
                 $r->cedula ?? '—',
                 $r->cargo ?? '—',
+                $r->departamento ?? '—',
                 !empty($r->fecha_egreso) ? date('d/m/Y', strtotime($r->fecha_egreso)) : '—',
                 ['raw' => '<span class="sig-badge sig-badge--warning">' . htmlspecialchars($r->motivo_egreso ?? '—') . '</span>'],
+                Empleado::tiempoServicio($r->fecha_ingreso ?? null, $r->fecha_egreso ?? null),
                 $r->observacion ?: '—',
                 ['raw' => !empty($r->fecha_reingreso)
                     ? date('d/m/Y', strtotime($r->fecha_reingreso))
@@ -538,7 +552,7 @@ class ReportesController extends Controller {
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Egresos y Rotación de Personal',
             'subtitulo' => 'Personal desincorporado por motivo y período (renuncias, despidos, jubilaciones…).',
             'resumen' => $resumen,
-            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'F. Egreso', 'Motivo', 'Observación', 'F. Reingreso'],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'F. Egreso', 'Motivo', 'Tiempo de servicio', 'Observación', 'F. Reingreso'],
             'filas' => $filas,
             'accion' => URL_ROOT . '/reportes/egresos',
             'filtros' => [
@@ -555,10 +569,11 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         $rows = [];
         foreach ($this->queryEgresos() as $r) {
-            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo,
-                       $r->fecha_egreso, $r->motivo_egreso, $r->observacion, $r->fecha_reingreso];
+            $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento,
+                       $r->fecha_egreso, $r->motivo_egreso, Empleado::tiempoServicio($r->fecha_ingreso ?? null, $r->fecha_egreso ?? null),
+                       $r->observacion, $r->fecha_reingreso];
         }
-        $this->exportCsv('egresos_personal', ['Empleado', 'Cédula', 'Cargo', 'F. Egreso', 'Motivo', 'Observación', 'F. Reingreso'], $rows);
+        $this->exportCsv('egresos_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'F. Egreso', 'Motivo', 'Tiempo de servicio', 'Observación', 'F. Reingreso'], $rows);
     }
 
     private function queryEgresos() {
@@ -569,11 +584,13 @@ class ReportesController extends Controller {
         if (!empty($_GET['fecha_desde'])) { $where .= " AND ee.fecha_egreso >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
         if (!empty($_GET['fecha_hasta'])) { $where .= " AND ee.fecha_egreso <= :fh"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
         $db->query("SELECT ee.fecha_egreso, ee.motivo_egreso, ee.observacion, ee.fecha_reingreso,
-                           p.nombre, p.apellido, p.cedula, c.nombre AS cargo
+                           p.nombre, p.apellido, p.cedula, c.nombre AS cargo, d.nombre AS departamento,
+                           e.fecha_ingreso
                     FROM empleados_egresos ee
                     INNER JOIN empleados e ON ee.id_empleado = e.id
                     INNER JOIN personas p  ON e.id_persona = p.id
                     LEFT  JOIN cargos c    ON e.id_cargo = c.id
+                    LEFT  JOIN departamentos d ON e.id_departamento = d.id
                     WHERE {$where}
                     ORDER BY ee.fecha_egreso DESC");
         foreach ($binds as $k => $v) $db->bind($k, $v);
@@ -590,9 +607,11 @@ class ReportesController extends Controller {
         foreach ($regs as $r) {
             $filas[] = [
                 ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->numero) . '</span>'],
-                $r->tipo ?? '—',
+                Constancia::labelTipo($r->tipo ?? ''),
                 trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
                 $r->cedula ?? '—',
+                $r->cargo ?? '—',
+                $r->departamento ?? '—',
                 !empty($r->fecha_emision) ? date('d/m/Y H:i', strtotime($r->fecha_emision)) : '—',
             ];
         }
@@ -600,10 +619,11 @@ class ReportesController extends Controller {
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Constancias Emitidas',
             'subtitulo' => 'Bitácora de constancias de trabajo generadas, con su correlativo.',
             'resumen' => ['Total emitidas' => count($regs)],
-            'columnas' => ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Emisión'],
+            'columnas' => ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Cargo', 'Departamento', 'Emisión'],
             'filas' => $filas,
             'accion' => URL_ROOT . '/reportes/constancias',
             'filtros' => [
+                ['name' => 'tipo', 'label' => 'Tipo', 'type' => 'select', 'options' => array_merge(['' => 'Todos'], Constancia::TIPOS), 'value' => $_GET['tipo'] ?? ''],
                 ['name' => 'fecha_desde', 'label' => 'Desde', 'type' => 'date', 'value' => $_GET['fecha_desde'] ?? ''],
                 ['name' => 'fecha_hasta', 'label' => 'Hasta', 'type' => 'date', 'value' => $_GET['fecha_hasta'] ?? ''],
             ],
@@ -615,9 +635,9 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         $rows = [];
         foreach ($this->queryConstancias() as $r) {
-            $rows[] = [$r->numero, $r->tipo, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->fecha_emision];
+            $rows[] = [$r->numero, Constancia::labelTipo($r->tipo ?? ''), trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento, $r->fecha_emision];
         }
-        $this->exportCsv('constancias_emitidas', ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Emisión'], $rows);
+        $this->exportCsv('constancias_emitidas', ['N° Documento', 'Tipo', 'Empleado', 'Cédula', 'Cargo', 'Departamento', 'Emisión'], $rows);
     }
 
     private function queryConstancias() {
@@ -626,10 +646,14 @@ class ReportesController extends Controller {
         $where = "co.is_active = TRUE";
         if (!empty($_GET['fecha_desde'])) { $where .= " AND co.fecha_emision >= :fd"; $binds[':fd'] = trim($_GET['fecha_desde']); }
         if (!empty($_GET['fecha_hasta'])) { $where .= " AND co.fecha_emision <= (:fh::date + 1)"; $binds[':fh'] = trim($_GET['fecha_hasta']); }
-        $db->query("SELECT co.numero, co.tipo, co.fecha_emision, p.nombre, p.apellido, p.cedula
+        if (!empty($_GET['tipo']))        { $where .= " AND co.tipo = :tipo"; $binds[':tipo'] = trim($_GET['tipo']); }
+        $db->query("SELECT co.numero, co.tipo, co.fecha_emision, p.nombre, p.apellido, p.cedula,
+                           c.nombre AS cargo, d.nombre AS departamento
                     FROM constancias co
-                    INNER JOIN empleados e ON co.id_empleado = e.id
-                    INNER JOIN personas p  ON e.id_persona = p.id
+                    INNER JOIN empleados e      ON co.id_empleado = e.id
+                    INNER JOIN personas p       ON e.id_persona = p.id
+                    LEFT  JOIN cargos c         ON e.id_cargo = c.id
+                    LEFT  JOIN departamentos d  ON e.id_departamento = d.id
                     WHERE {$where}
                     ORDER BY co.fecha_emision DESC");
         foreach ($binds as $k => $v) $db->bind($k, $v);
@@ -1225,7 +1249,10 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 3]);
         try {
             $filtroEstado     = trim($_GET['estado'] ?? '');
-            $rutas            = $this->queryRutas($filtroEstado);
+            $filtroTipo       = trim($_GET['tipo_ruta'] ?? '');
+            $fechaDesde       = trim($_GET['fecha_desde'] ?? '');
+            $fechaHasta       = trim($_GET['fecha_hasta'] ?? '');
+            $rutas            = $this->queryRutas($filtroEstado, $filtroTipo, $fechaDesde, $fechaHasta);
             $stats            = $this->statsRutas();
 
             $data = [
@@ -1234,6 +1261,9 @@ class ReportesController extends Controller {
                 'stats'             => $stats,
                 'statsPorTipo'      => $this->statsRutasPorTipo(),
                 'filtro_estado'     => $filtroEstado,
+                'filtro_tipo'       => $filtroTipo,
+                'fecha_desde'       => $fechaDesde,
+                'fecha_hasta'       => $fechaHasta,
             ];
             $this->view('reportes/rutas', $data);
         } catch (Exception $e) {
@@ -1246,8 +1276,11 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 3]);
         try {
             $estado     = trim($_GET['estado'] ?? '');
-            $rutas      = $this->queryRutas($estado);
-            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Estado',
+            $tipo       = trim($_GET['tipo_ruta'] ?? '');
+            $fechaDesde = trim($_GET['fecha_desde'] ?? '');
+            $fechaHasta = trim($_GET['fecha_hasta'] ?? '');
+            $rutas      = $this->queryRutas($estado, $tipo, $fechaDesde, $fechaHasta);
+            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Estado', 'Tarifa',
                         'Paradas', 'Participantes', 'Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'];
             $rows    = [];
             $tpInsc = 0; $tpAt = 0;
@@ -1262,6 +1295,7 @@ class ReportesController extends Controller {
                     $r->departamento_nombre ?? '-',
                     $r->facilitador_nombre ?? '-',
                     $r->estado,
+                    !empty($r->tiene_tarifa) ? number_format((float)$r->tarifa_monto, 2) : 'Gratuita',
                     (int)$r->total_puntos,
                     (int)$r->total_participantes,
                     (int)($r->mujeres ?? 0),
@@ -1272,7 +1306,7 @@ class ReportesController extends Controller {
                 ];
             }
             // Fila de totales
-            $rows[] = ['TOTALES', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
+            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
             $this->exportCsv('reporte_rutas', $headers, $rows);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
@@ -1283,17 +1317,21 @@ class ReportesController extends Controller {
     public function exportarRutasPdf() {
         $this->requireRoles([1, 3]);
         try {
-            $estado = trim($_GET['estado'] ?? '');
-            $rutas  = $this->queryRutas($estado);
+            $estado     = trim($_GET['estado'] ?? '');
+            $tipo       = trim($_GET['tipo_ruta'] ?? '');
+            $fechaDesde = trim($_GET['fecha_desde'] ?? '');
+            $fechaHasta = trim($_GET['fecha_hasta'] ?? '');
+            $rutas  = $this->queryRutas($estado, $tipo, $fechaDesde, $fechaHasta);
             $stats  = $this->statsRutas();
 
-            $headers = ['Ruta', 'Tipo', 'Fecha', 'Guía', 'Estado', 'Paradas', 'Particip.', 'Atendidos'];
+            $headers = ['Ruta', 'Tipo', 'Fecha', 'Departamento', 'Guía', 'Estado', 'Paradas', 'Particip.', 'Atendidos'];
             $rows    = [];
             foreach ($rutas as $r) {
                 $rows[] = [
                     $r->nombre,
                     $r->tipo_ruta ?? 'General',
                     $r->fecha_visita ? date('d/m/Y', strtotime($r->fecha_visita)) : '-',
+                    $r->departamento_nombre ?? '-',
                     $r->facilitador_nombre ?? '-',
                     $r->estado,
                     (int)$r->total_puntos,
@@ -1315,13 +1353,17 @@ class ReportesController extends Controller {
         }
     }
 
-    private function queryRutas(string $estado = '') {
+    private function queryRutas(string $estado = '', string $tipo = '', string $fechaDesde = '', string $fechaHasta = '') {
         $db    = new Database();
+        $binds = [];
         $where = "r.is_active = TRUE";
-        if ($estado)     $where .= " AND r.estado = :estado";
+        if ($estado)     { $where .= " AND r.estado = :estado"; $binds[':estado'] = $estado; }
+        if ($tipo)       { $where .= " AND r.tipo_ruta = :tipo"; $binds[':tipo'] = $tipo; }
+        if ($fechaDesde) { $where .= " AND r.fecha_visita >= :fd"; $binds[':fd'] = $fechaDesde; }
+        if ($fechaHasta) { $where .= " AND r.fecha_visita <= :fh"; $binds[':fh'] = $fechaHasta; }
         $db->query("SELECT r.*,
                            d.nombre AS departamento_nombre,
-                           p.nombre || ' ' || p.apellido AS facilitador_nombre,
+                           COALESCE(p.nombre || ' ' || p.apellido, r.nombre_facilitador_externo) AS facilitador_nombre,
                            (SELECT COUNT(*) FROM puntos_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) as total_puntos,
                            (SELECT COUNT(*) FROM participantes_ruta par WHERE par.id_ruta = r.id AND par.is_active = TRUE) as total_participantes,
                            ri.mujeres, ri.hombres, ri.ninas, ri.ninos, ri.total_atendidos
@@ -1332,7 +1374,7 @@ class ReportesController extends Controller {
                     LEFT JOIN ruta_informes ri   ON ri.id_ruta = r.id
                     WHERE {$where}
                     ORDER BY r.fecha_visita DESC NULLS LAST, r.created_at DESC");
-        if ($estado)     $db->bind(':estado', $estado);
+        foreach ($binds as $k => $v) $db->bind($k, $v);
         return $db->resultSet();
     }
 
@@ -1577,7 +1619,7 @@ class ReportesController extends Controller {
             if ($busca)        $where .= " AND (pp.nombre ILIKE :busca OR pp.apellido ILIKE :busca OR pp.cedula ILIKE :busca)";
 
             $db->query("SELECT p.*,
-                               pp.cedula, pp.nombre, pp.apellido,
+                               pp.cedula, pp.nombre, pp.apellido, pp.telefono, pp.correo,
                                pt.nombre AS tutor_nombre, pt.apellido AS tutor_apellido
                         FROM pasantes p
                         INNER JOIN personas pp ON p.id_persona = pp.id
@@ -1620,7 +1662,7 @@ class ReportesController extends Controller {
         try {
             $db = new Database();
             $db->query("SELECT p.*,
-                               pp.cedula, pp.nombre, pp.apellido,
+                               pp.cedula, pp.nombre, pp.apellido, pp.telefono, pp.correo,
                                pt.nombre || ' ' || pt.apellido AS tutor
                         FROM pasantes p
                         INNER JOIN personas pp ON p.id_persona = pp.id
@@ -1629,10 +1671,11 @@ class ReportesController extends Controller {
                         WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
             $pasantes = $db->resultSet();
 
-            $headers = ['Cédula', 'Nombre', 'Apellido', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado'];
+            $headers = ['Cédula', 'Nombre', 'Apellido', 'Teléfono', 'Correo', 'Institución', 'Carrera', 'Tutor', 'Inicio', 'Fin', 'Estado', 'Nota', 'Evaluación'];
             $rows    = [];
             foreach ($pasantes as $p) {
-                $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->institucion, $p->carrera, $p->tutor ?? 'N/A', $p->fecha_inicio, $p->fecha_fin, $p->estado];
+                $rows[] = [$p->cedula, $p->nombre, $p->apellido, $p->telefono, $p->correo, $p->institucion, $p->carrera,
+                           $p->tutor ?? 'N/A', $p->fecha_inicio, $p->fecha_fin, $p->estado, $p->nota, $p->evaluacion];
             }
             $this->exportCsv("Reporte_Pasantes", $headers, $rows);
         } catch (Exception $e) {
@@ -1655,10 +1698,10 @@ class ReportesController extends Controller {
                         WHERE p.is_active = TRUE ORDER BY pp.cedula ASC");
             $pasantes = $db->resultSet();
 
-            $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado'];
+            $headers = ['Cédula', 'Nombre', 'Institución', 'Tutor', 'Estado', 'Nota'];
             $rows    = [];
             foreach ($pasantes as $p) {
-                $rows[] = [$p->cedula, $p->nombre . ' ' . $p->apellido, $p->institucion, $p->tutor ?? '-', $p->estado];
+                $rows[] = [$p->cedula, $p->nombre . ' ' . $p->apellido, $p->institucion, $p->tutor ?? '-', $p->estado, $p->nota ?? '-'];
             }
             $this->exportPdf("Listado Maestro de Pasantes", "IMATUR — Control de Formación Institucional", $headers, $rows);
         } catch (Exception $e) {
@@ -1698,12 +1741,13 @@ class ReportesController extends Controller {
         $this->requireRoles([1, 2]);
         try {
             $registros = $this->queryVisitantes();
-            $headers   = ['Fecha', 'Hora Entrada', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Motivo', 'Observaciones'];
+            $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Atendido por', 'Motivo', 'Observaciones'];
             $rows      = [];
             foreach ($registros as $r) {
                 $rows[] = [
                     $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
+                    $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En curso',
                     $r->cedula         ?? '',
                     $r->nombre         ?? '',
                     $r->apellido       ?? '',
@@ -1711,6 +1755,7 @@ class ReportesController extends Controller {
                     $r->telefono       ?? '',
                     $r->correo         ?? '',
                     $r->procedencia    ?? '',
+                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')),
                     $r->motivo         ?? '',
                     $r->observaciones  ?? '',
                 ];
@@ -1730,17 +1775,19 @@ class ReportesController extends Controller {
             $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
             $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-            $headers = ['Fecha', 'Hora', 'Cédula', 'Nombre y Apellido', 'Género', 'Teléfono', 'Procedencia', 'Motivo'];
+            $headers = ['Fecha', 'Entrada', 'Salida', 'Cédula', 'Nombre y Apellido', 'Género', 'Teléfono', 'Procedencia', 'Atendido por', 'Motivo'];
             $rows    = [];
             foreach ($registros as $r) {
                 $rows[] = [
                     $r->fecha ?? date('d/m/Y', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
+                    $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En curso',
                     $r->cedula ?? '—',
                     trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
                     match($r->genero ?? '') { 'M' => 'M', 'F' => 'F', default => '—' },
                     $r->telefono    ?? '—',
                     $r->procedencia ?? '—',
+                    trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '—',
                     $r->motivo      ?? '—',
                 ];
             }
@@ -1773,7 +1820,7 @@ class ReportesController extends Controller {
                                         OR COALESCE(pe2.apellido, vis.apellido) ILIKE :buscar
                                         OR COALESCE(pe2.cedula, vis.cedula) ILIKE :buscar)";
 
-        $db->query("SELECT v.hora_entrada, v.motivo, v.observaciones,
+        $db->query("SELECT v.hora_entrada, v.hora_salida, v.motivo, v.observaciones,
                            DATE(v.hora_entrada) AS fecha,
                            COALESCE(pe2.cedula,    vis.cedula)    AS cedula,
                            COALESCE(pe2.nombre,    vis.nombre)    AS nombre,
@@ -1781,10 +1828,13 @@ class ReportesController extends Controller {
                            COALESCE(pe2.telefono,  vis.telefono)  AS telefono,
                            COALESCE(pe2.correo,    vis.correo)    AS correo,
                            COALESCE(pe2.genero,    vis.genero)    AS genero,
-                           vis.procedencia
+                           vis.procedencia,
+                           ep.nombre AS emp_nombre, ep.apellido AS emp_apellido
                     FROM visitas v
                     INNER JOIN visitantes vis ON v.id_visitante = vis.id
                     LEFT  JOIN personas pe2  ON vis.id_persona  = pe2.id
+                    LEFT  JOIN empleados emp ON v.id_empleado   = emp.id
+                    LEFT  JOIN personas ep   ON emp.id_persona  = ep.id
                     WHERE {$where}
                     ORDER BY v.hora_entrada DESC");
         $db->bind(':fi', $fi);
@@ -2475,11 +2525,17 @@ class ReportesController extends Controller {
                                c.nombre AS categoria,
                                u.nombre AS ubicacion,
                                i.deleted_at,
-                               pu.username AS eliminado_por
+                               pu.username AS eliminado_por,
+                               ai_baja.descripcion AS motivo_baja
                         FROM inventario i
                         LEFT JOIN categorias c  ON i.id_categoria = c.id
                         LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
                         LEFT JOIN usuarios pu   ON i.deleted_by   = pu.id
+                        LEFT JOIN LATERAL (
+                            SELECT descripcion FROM actividad_inventario ai
+                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
+                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
+                        ) ai_baja ON TRUE
                         WHERE {$where}
                         ORDER BY i.deleted_at DESC");
             if ($fi)        $db->bind(':fi', $fi);
@@ -2526,18 +2582,24 @@ class ReportesController extends Controller {
 
             $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
                                c.nombre AS categoria, u.nombre AS ubicacion,
-                               i.deleted_at, pu.username AS eliminado_por
+                               i.deleted_at, pu.username AS eliminado_por,
+                               ai_baja.descripcion AS motivo_baja
                         FROM inventario i
                         LEFT JOIN categorias c ON i.id_categoria = c.id
                         LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
                         LEFT JOIN usuarios pu  ON i.deleted_by   = pu.id
+                        LEFT JOIN LATERAL (
+                            SELECT descripcion FROM actividad_inventario ai
+                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
+                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
+                        ) ai_baja ON TRUE
                         WHERE {$where} ORDER BY i.deleted_at DESC");
             if ($fi)        $db->bind(':fi', $fi);
             if ($ff)        $db->bind(':ff', $ff);
             if ($categoria) $db->bind(':categoria', '%' . $categoria . '%');
             $bajas   = $db->resultSet();
 
-            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial', 'Fecha Baja', 'Dado de baja por'];
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial', 'Fecha Baja', 'Dado de baja por', 'Motivo'];
             $rows    = [];
             foreach ($bajas as $b) {
                 $rows[] = [
@@ -2551,6 +2613,7 @@ class ReportesController extends Controller {
                     $b->serial       ?? '-',
                     $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '-',
                     $b->eliminado_por ?? '-',
+                    $b->motivo_baja  ?? '-',
                 ];
             }
             $this->exportCsv('bajas_inventario', $headers, $rows);
@@ -2575,11 +2638,17 @@ class ReportesController extends Controller {
 
             $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
                                c.nombre AS categoria, u.nombre AS ubicacion,
-                               i.deleted_at, pu.username AS eliminado_por
+                               i.deleted_at, pu.username AS eliminado_por,
+                               ai_baja.descripcion AS motivo_baja
                         FROM inventario i
                         LEFT JOIN categorias c ON i.id_categoria = c.id
                         LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
                         LEFT JOIN usuarios pu  ON i.deleted_by   = pu.id
+                        LEFT JOIN LATERAL (
+                            SELECT descripcion FROM actividad_inventario ai
+                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
+                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
+                        ) ai_baja ON TRUE
                         WHERE {$where} ORDER BY i.deleted_at DESC");
             if ($fi)        $db->bind(':fi', $fi);
             if ($ff)        $db->bind(':ff', $ff);
@@ -2589,7 +2658,7 @@ class ReportesController extends Controller {
             $db->query("SELECT COUNT(*) as total FROM inventario WHERE is_active = FALSE AND deleted_at IS NOT NULL");
             $totalHist = $db->single();
 
-            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Fecha Baja', 'Dado de baja por'];
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Fecha Baja', 'Dado de baja por', 'Motivo'];
             $rows    = [];
             foreach ($bajas as $b) {
                 $rows[] = [
@@ -2600,6 +2669,7 @@ class ReportesController extends Controller {
                     $b->condicion,
                     $b->deleted_at ? date('d/m/Y', strtotime($b->deleted_at)) : '-',
                     $b->eliminado_por ?? '-',
+                    $b->motivo_baja  ?? '-',
                 ];
             }
             $kpis = [

@@ -19,6 +19,9 @@ function rutaUrl(array $f, int $p): string {
         <p class="page__subtitle">Planificación y control de rutas turísticas y puntos de interés del municipio.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--success" title="Exportar listado completo (Excel/PDF)">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Exportar
+        </a>
         <button type="button" class="btn-sig btn-sig--primary"
                 style="background:linear-gradient(180deg, var(--teal-500), var(--teal-700)); box-shadow: var(--sh-glow-teal);"
                 data-bs-toggle="modal" data-bs-target="#modalRuta" onclick="nuevaRuta()">

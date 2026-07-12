@@ -100,7 +100,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
 </div>
 
 <!-- Tabla -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por código, nombre, categoría o ubicación…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>
@@ -113,11 +113,12 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                 <th style="text-align:center;">Condición</th>
                 <th>Fecha de Baja</th>
                 <th>Dado de baja por</th>
+                <th>Motivo</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['bajas'])): ?>
-                <tr><td colspan="9" class="sig-table-empty">No hay bienes dados de baja con los filtros seleccionados.</td></tr>
+                <tr><td colspan="10" class="sig-table-empty">No hay bienes dados de baja con los filtros seleccionados.</td></tr>
             <?php else: ?>
                 <?php foreach ($data['bajas'] as $b):
                     $condCls = 'sig-badge--neutral';
@@ -139,6 +140,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                     <td style="text-align:center;"><span class="sig-badge <?php echo $condCls; ?>"><?php echo htmlspecialchars($b->condicion ?? '—'); ?></span></td>
                     <td style="font-size:12px;white-space:nowrap;"><?php echo $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '—'; ?></td>
                     <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->eliminado_por ?? '—'); ?></td>
+                    <td style="font-size:12px;color:var(--text-secondary);max-width:220px;white-space:normal;"><?php echo htmlspecialchars($b->motivo_baja ?? '—'); ?></td>
                 </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

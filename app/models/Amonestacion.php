@@ -64,16 +64,18 @@ class Amonestacion extends Model
      */
     public static function roster() {
         $db = new Database();
-        $db->query("SELECT e.id, p.nombre, p.apellido, e.tipo_contrato,
-                           d.nombre AS departamento,
+        $db->query("SELECT e.id, p.nombre, p.apellido, p.cedula, e.tipo_contrato,
+                           d.nombre AS departamento, c.nombre AS cargo,
                            COALESCE(f.total, 0) AS faltas,
-                           COALESCE(a.total, 0) AS amonestaciones
+                           COALESCE(a.total, 0) AS amonestaciones,
+                           GREATEST(f.ultima, a.ultima) AS ultima_fecha
                     FROM empleados e
                     INNER JOIN personas p ON e.id_persona = p.id
                     LEFT JOIN departamentos d ON e.id_departamento = d.id
-                    LEFT JOIN (SELECT id_empleado, COUNT(*) total FROM faltas WHERE is_active = TRUE GROUP BY id_empleado) f
+                    LEFT JOIN cargos c ON e.id_cargo = c.id
+                    LEFT JOIN (SELECT id_empleado, COUNT(*) total, MAX(fecha) ultima FROM faltas WHERE is_active = TRUE GROUP BY id_empleado) f
                            ON f.id_empleado = e.id
-                    LEFT JOIN (SELECT id_empleado, COUNT(*) total FROM amonestaciones WHERE is_active = TRUE GROUP BY id_empleado) a
+                    LEFT JOIN (SELECT id_empleado, COUNT(*) total, MAX(fecha) ultima FROM amonestaciones WHERE is_active = TRUE GROUP BY id_empleado) a
                            ON a.id_empleado = e.id
                     WHERE e.is_active = TRUE AND p.is_active = TRUE
                     ORDER BY amonestaciones DESC, faltas DESC, p.nombre ASC");

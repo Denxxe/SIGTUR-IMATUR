@@ -29,6 +29,8 @@
                 <th>Nombre y Apellido</th>
                 <th>Institución / Carrera</th>
                 <th>Tutor Institucional</th>
+                <th style="text-align:center;">Inicio</th>
+                <th style="text-align:center;">Fin</th>
                 <th>Estado</th>
                 <th class="col-actions">Acciones</th>
             </tr>
@@ -36,7 +38,7 @@
         <tbody>
             <?php if (empty($data['pasantes'])): ?>
                 <tr>
-                    <td colspan="6" class="sig-table-empty">No hay pasantes registrados actualmente.</td>
+                    <td colspan="8" class="sig-table-empty">No hay pasantes registrados actualmente.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['pasantes'] as $p): ?>
@@ -56,6 +58,12 @@
                             <?php else: ?>
                                 <span style="font-size:12px; color:var(--text-tertiary); font-style:italic;">Sin asignar</span>
                             <?php endif; ?>
+                        </td>
+                        <td style="text-align:center;font-size:12px;white-space:nowrap;">
+                            <?php echo $p->fecha_inicio ? date('d/m/Y', strtotime($p->fecha_inicio)) : '—'; ?>
+                        </td>
+                        <td style="text-align:center;font-size:12px;white-space:nowrap;">
+                            <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span style="color:var(--text-tertiary);font-style:italic;">En curso</span>'; ?>
                         </td>
                         <td>
                             <?php

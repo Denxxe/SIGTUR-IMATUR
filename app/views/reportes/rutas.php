@@ -11,7 +11,10 @@
     <div class="page__actions">
         <?php
         $qsR = http_build_query(array_filter([
-            'estado' => $data['filtro_estado'] ?? '',
+            'estado'      => $data['filtro_estado'] ?? '',
+            'tipo_ruta'   => $data['filtro_tipo']   ?? '',
+            'fecha_desde' => $data['fecha_desde']   ?? '',
+            'fecha_hasta' => $data['fecha_hasta']   ?? '',
         ]));
         ?>
         <div style="display:flex; gap:var(--sp-2);">
@@ -81,17 +84,36 @@
                     <label class="sig-field__label">Estado</label>
                     <select name="estado" class="sig-select">
                         <option value="">Todos los estados</option>
-                        <?php foreach (['Activa','Inactiva','En Mantenimiento'] as $opt): ?>
+                        <?php foreach (['Activa','Inactiva','En Mantenimiento','Finalizada'] as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>>
                                 <?php echo $opt; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <div class="sig-field" style="margin:0; min-width:190px;">
+                    <label class="sig-field__label">Tipo de Ruta</label>
+                    <select name="tipo_ruta" class="sig-select">
+                        <option value="">Todos los tipos</option>
+                        <?php foreach (Ruta::$TIPOS_RUTA as $opt): ?>
+                            <option value="<?php echo htmlspecialchars($opt); ?>" <?php if (($data['filtro_tipo'] ?? '') === $opt) echo 'selected'; ?>>
+                                <?php echo htmlspecialchars($opt); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label">Fecha visita desde</label>
+                    <input type="date" name="fecha_desde" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_desde'] ?? ''); ?>">
+                </div>
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label">Hasta</label>
+                    <input type="date" name="fecha_hasta" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_hasta'] ?? ''); ?>">
+                </div>
                 <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm">
                     <i class="bi bi-funnel"></i> Filtrar
                 </button>
-                <?php if (!empty($data['filtro_estado'])): ?>
+                <?php if (!empty($data['filtro_estado']) || !empty($data['filtro_tipo']) || !empty($data['fecha_desde']) || !empty($data['fecha_hasta'])): ?>
                 <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--ghost btn-sig--sm">
                     <i class="bi bi-x-circle"></i> Limpiar
                 </a>
@@ -185,15 +207,17 @@
 <?php endif; ?>
 
 <!-- Tabla de Resultados -->
-<div class="sig-table-wrap anim-slide-up">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por nombre de ruta o tipo…" data-no-export>
     <table class="sig-table">
         <thead>
             <tr>
                 <th>Nombre de la Ruta</th>
                 <th>Tipo</th>
                 <th>Fecha Visita</th>
+                <th>Departamento</th>
                 <th>Guía</th>
                 <th>Estado</th>
+                <th>Tarifa</th>
                 <th style="text-align:center;">Paradas</th>
                 <th style="text-align:center;">Particip.</th>
                 <th style="text-align:center;">Atendidos</th>
@@ -202,7 +226,7 @@
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="8" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="10" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
@@ -217,6 +241,7 @@
                                 <span style="color:var(--text-tertiary);">—</span>
                             <?php endif; ?>
                         </td>
+                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->facilitador_nombre ?? '—'); ?></td>
                         <td>
                             <?php
@@ -227,6 +252,13 @@
                             elseif ($r->estado == 'Finalizada') $statusBadge = 'sig-badge--brand';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
+                        </td>
+                        <td style="font-size:12px; color:var(--text-secondary);">
+                            <?php if (!empty($r->tiene_tarifa)): ?>
+                                <span class="sig-badge sig-badge--info"><?php echo number_format((float)$r->tarifa_monto, 2); ?></span>
+                            <?php else: ?>
+                                <span class="sig-badge sig-badge--neutral">Gratuita</span>
+                            <?php endif; ?>
                         </td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>

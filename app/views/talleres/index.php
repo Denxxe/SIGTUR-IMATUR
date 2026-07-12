@@ -32,6 +32,9 @@ function esAtrasada($t): bool {
         <p class="page__subtitle">Administración de talleres y charlas de formación comunitaria.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/reportes/talleres" class="btn-sig btn-sig--success" title="Exportar listado completo (Excel/PDF)">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Exportar
+        </a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalTaller" onclick="nuevoTaller()">
             <i class="bi bi-calendar-plus"></i> Programar Actividad
         </button>

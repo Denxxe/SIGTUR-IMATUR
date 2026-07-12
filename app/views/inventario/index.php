@@ -13,6 +13,49 @@
     </div>
 </div>
 
+<!-- Filtros -->
+<form method="GET" action="<?php echo URL_ROOT; ?>/inventario/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
+    <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Categoría</label>
+        <select name="categoria" class="sig-select js-search" style="min-width:180px;" onchange="this.form.submit()">
+            <option value="0">Todas las categorías</option>
+            <?php foreach ($data['categorias'] ?? [] as $c): ?>
+                <option value="<?php echo $c->id; ?>" <?php echo (int)($data['f_categoria'] ?? 0) === (int)$c->id ? 'selected' : ''; ?>><?php echo htmlspecialchars($c->nombre); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Ubicación</label>
+        <select name="ubicacion" class="sig-select js-search" style="min-width:180px;" onchange="this.form.submit()">
+            <option value="0">Todas las ubicaciones</option>
+            <?php foreach ($data['ubicaciones'] ?? [] as $u): ?>
+                <option value="<?php echo $u->id; ?>" <?php echo (int)($data['f_ubicacion'] ?? 0) === (int)$u->id ? 'selected' : ''; ?>><?php echo htmlspecialchars($u->nombre); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Condición</label>
+        <select name="condicion" class="sig-select" style="min-width:160px;" onchange="this.form.submit()">
+            <option value="">Todas las condiciones</option>
+            <?php foreach (Inventario::CONDICIONES as $c): ?>
+                <option value="<?php echo $c; ?>" <?php echo ($data['f_condicion'] ?? '') === $c ? 'selected' : ''; ?>><?php echo $c; ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="sig-field" style="margin:0;">
+        <label class="sig-field__label" style="font-size:11px;">Tipo de bien</label>
+        <select name="tipo_bien" class="sig-select" style="min-width:150px;" onchange="this.form.submit()">
+            <option value="">Todos los tipos</option>
+            <?php foreach (Inventario::TIPOS_BIEN as $tb): ?>
+                <option value="<?php echo $tb; ?>" <?php echo ($data['f_tipo_bien'] ?? '') === $tb ? 'selected' : ''; ?>><?php echo $tb; ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <?php if (!empty($data['f_categoria']) || !empty($data['f_ubicacion']) || !empty($data['f_condicion']) || !empty($data['f_tipo_bien'])): ?>
+        <a href="<?php echo URL_ROOT; ?>/inventario/index" class="btn-sig btn-sig--ghost" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
+    <?php endif; ?>
+</form>
+
 <div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
     <table class="sig-table">
         <thead><tr><th>Código BN</th><th>Nombre</th><th>Marca/Modelo</th><th>Categoría</th><th>Ubicación</th><th>Tipo</th><th>Condición</th><th class="col-actions">Acciones</th></tr></thead>

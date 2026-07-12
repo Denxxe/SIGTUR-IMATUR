@@ -9,11 +9,26 @@ class InventarioController extends Controller {
         $categorias = Categoria::all();
         $ubicaciones = Ubicacion::all();
 
+        // Filtros server-side por categoría, ubicación, condición y tipo de bien.
+        $fCategoria = (int)($_GET['categoria'] ?? 0);
+        $fUbicacion = (int)($_GET['ubicacion'] ?? 0);
+        $fCondicion = in_array($_GET['condicion'] ?? '', Inventario::CONDICIONES, true) ? $_GET['condicion'] : '';
+        $fTipoBien  = in_array($_GET['tipo_bien'] ?? '', Inventario::TIPOS_BIEN, true) ? $_GET['tipo_bien'] : '';
+
+        if ($fCategoria > 0) $items = array_values(array_filter($items, fn($i) => (int)($i->id_categoria ?? 0) === $fCategoria));
+        if ($fUbicacion > 0) $items = array_values(array_filter($items, fn($i) => (int)($i->id_ubicacion ?? 0) === $fUbicacion));
+        if ($fCondicion !== '') $items = array_values(array_filter($items, fn($i) => ($i->condicion ?? '') === $fCondicion));
+        if ($fTipoBien !== '') $items = array_values(array_filter($items, fn($i) => ($i->tipo_bien ?? '') === $fTipoBien));
+
         $data = [
             'titulo' => 'Gestión de Bienes e Inventario',
             'items' => $items,
             'categorias' => $categorias,
-            'ubicaciones' => $ubicaciones
+            'ubicaciones' => $ubicaciones,
+            'f_categoria' => $fCategoria,
+            'f_ubicacion' => $fUbicacion,
+            'f_condicion' => $fCondicion,
+            'f_tipo_bien' => $fTipoBien,
         ];
 
         $this->view('inventario/index', $data);
