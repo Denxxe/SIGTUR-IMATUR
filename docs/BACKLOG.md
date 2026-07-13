@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-07-12 · **Migraciones aplicadas:** hasta **058** · **Rama:** `development_stage`
+**Última actualización:** 2026-07-13 · **Migraciones aplicadas:** hasta **058** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -24,6 +24,13 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-07-13 — UX: botón "Siguiente" del asistente de empleados sin feedback de error (sin migración)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ Fix UX | **Wizard de empleados**: "Siguiente" quedaba `disabled` sin explicar qué campo fallaba | `wzUpdateNav()` (`empleados/form.php`) ya no deshabilita `#wzNext`; se deja siempre clickeable para que `wzValidateStep()` pueda ejecutar `reportValidity()` sobre el primer campo inválido al hacer clic (globo nativo del navegador señalando el campo exacto). Antes, al estar `disabled`, el `onclick` nunca se disparaba y el usuario no tenía ninguna pista. |
+| ✅ Fix UX | **RIF**: sin feedback visible mientras se escribía un valor mal formado | `initRifInput()` (`sigtur-validations.js`, se auto-adjunta a cualquier input con token `rif` en name/id) ahora inserta un `<small class="sig-rif-msg">` bajo el campo que muestra en rojo "RIF no válido. Formato: J-12345678-9." en vivo mientras se escribe, igual patrón que "Cédula disponible". Aplica automáticamente a los dos campos RIF del sistema (empleados y RIF institucional en `/config`). |
 
 ### 2026-07-11/12 — Bitácora inmutable, notificaciones, auditoría de reportes, recuperación de contraseña (mig. 054–058)
 

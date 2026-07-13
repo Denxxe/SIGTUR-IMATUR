@@ -268,19 +268,10 @@ function wzShow(n) {
     wzUpdateNav();
 }
 
-// Validez del paso (sin mostrar burbujas) — para habilitar/deshabilitar "Siguiente".
-function wzStepValido(n) {
-    const step = wzSteps[n];
-    for (const f of step.querySelectorAll('input, select, textarea')) {
-        if (f.offsetParent !== null && !f.checkValidity()) return false;
-    }
-    return true;
-}
-
-// Habilita "Siguiente" sólo si el paso actual es válido; refresca el submit (último paso).
+// "Siguiente" se deja siempre clickeable (no se deshabilita): así wzValidateStep()
+// puede señalar con reportValidity() el campo exacto que falla al hacer clic.
+// Deshabilitarlo bloqueaba el avance sin dar ninguna pista del error.
 function wzUpdateNav() {
-    const next = document.getElementById('wzNext');
-    if (next) next.disabled = !wzStepValido(wzCur);
     if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
 }
 

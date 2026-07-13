@@ -637,6 +637,23 @@ function initRifInput(input) {
     }
     input.title = 'RIF venezolano: letra (V/E/J/P/G/C) + 8 dígitos + verificador. Ej: J-12345678-9.';
 
+    // Mensaje visible en vivo bajo el campo (mismo patrón que "Cédula disponible"),
+    // para que el error se vea mientras se escribe y no sólo al intentar avanzar/enviar.
+    let msg = input.nextElementSibling;
+    if (!msg || !msg.classList || !msg.classList.contains('sig-rif-msg')) {
+        msg = document.createElement('small');
+        msg.className = 'sig-rif-msg';
+        msg.style.display = 'block';
+        msg.style.marginTop = '4px';
+        msg.style.fontWeight = '600';
+        input.insertAdjacentElement('afterend', msg);
+    }
+    const mostrarMsg = (ok, v) => {
+        if (v === '' || ok) { msg.textContent = ''; msg.style.color = ''; return; }
+        msg.style.color = 'var(--danger, #dc2626)';
+        msg.innerHTML = '<i class="bi bi-exclamation-triangle"></i> RIF no válido. Formato: J-12345678-9.';
+    };
+
     // Mientras escribe: mayúsculas + solo charset válido, sin reformatear (no salta el cursor).
     const live = () => {
         const v = input.value.toUpperCase().replace(/[^VEJPGC0-9-]/g, '');
@@ -645,7 +662,9 @@ function initRifInput(input) {
             input.value = v;
             try { input.setSelectionRange(pos, pos); } catch (_) {}
         }
-        input.setCustomValidity(v === '' || SIGTUR_RIF_RE.test(v) ? '' : 'RIF no válido. Formato: J-12345678-9.');
+        const ok = v === '' || SIGTUR_RIF_RE.test(v);
+        input.setCustomValidity(ok ? '' : 'RIF no válido. Formato: J-12345678-9.');
+        mostrarMsg(ok, v);
     };
     // Al salir: normaliza al formato canónico con guiones.
     const norm = () => {
@@ -653,7 +672,9 @@ function initRifInput(input) {
         if (/^[VEJPGC]\d{9}$/.test(limpio)) {
             input.value = limpio[0] + '-' + limpio.slice(1, 9) + '-' + limpio.slice(9);
         }
-        input.setCustomValidity(input.value === '' || SIGTUR_RIF_RE.test(input.value) ? '' : 'RIF no válido. Formato: J-12345678-9.');
+        const ok = input.value === '' || SIGTUR_RIF_RE.test(input.value);
+        input.setCustomValidity(ok ? '' : 'RIF no válido. Formato: J-12345678-9.');
+        mostrarMsg(ok, input.value);
         if (typeof window.sigturRefreshButtons === 'function') window.sigturRefreshButtons();
     };
 

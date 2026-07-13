@@ -508,6 +508,8 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 25. **Secuencias SERIAL (migración 009)** — Al insertar filas con IDs explícitos en seeds, las secuencias PostgreSQL no avanzan. Si aparece `llave duplicada viola restricción «X_pkey»`, ejecutar migración 009 (`009_fix_sequences.sql`) que usa `GREATEST(MAX(id), last_value)` para resincronizar las 36 secuencias sin riesgo de retroceso.
 
+26. **Botones "Siguiente"/submit: NO deshabilitar por validez sin dar feedback (2026-07-13)** — Deshabilitar un botón (`disabled`) cuando el paso/form es inválido bloquea también su `onclick`, así que `reportValidity()` nunca se ejecuta y el usuario se queda sin ninguna pista de qué falla (ver bug real en el wizard de empleados, `wzUpdateNav()` en `empleados/form.php`). Patrón correcto: dejar el botón siempre clickeable y validar **en el handler del click** (`checkValidity()`/`reportValidity()` por campo), como hace `wzValidateStep()`. Para campos con regex propia (ej. RIF en `sigtur-validations.js::initRifInput`), agregar además un mensaje visible en vivo (`<small>` bajo el input, mismo patrón que "Cédula disponible" en el wizard) para no depender solo del globo nativo del navegador.
+
 ---
 
 ## Pasos para levantar el entorno
