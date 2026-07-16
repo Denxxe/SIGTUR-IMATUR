@@ -151,30 +151,68 @@ function sigturTablaMatriz(table, trs) {
         .map(c => (c.innerText || c.textContent || '').replace(/\s+/g, ' ').trim()));
     return { headers, rows };
 }
-function sigturExportarTabla(table, modo, trs) {
+// Convierte una imagen (misma URL de origen) a data-URI base64, cacheado en
+// memoria — evita volver a descargarla en cada exportación. Degrada a null
+// sin romper la exportación si la imagen no está disponible.
+let _sigturLogosCache = null;
+function sigturLogosBase64() {
+    if (_sigturLogosCache) return _sigturLogosCache;
+    const aBase64 = url => url
+        ? fetch(url).then(r => r.ok ? r.blob() : null)
+            .then(blob => blob ? new Promise(res => {
+                const fr = new FileReader();
+                fr.onload = () => res(fr.result);
+                fr.onerror = () => res(null);
+                fr.readAsDataURL(blob);
+            }) : null)
+            .catch(() => null)
+        : Promise.resolve(null);
+    _sigturLogosCache = Promise.all([
+        aBase64(window.SIGTUR_LOGO_ALCALDIA),
+        aBase64(window.SIGTUR_LOGO_IMATUR),
+    ]).then(([alcaldia, imatur]) => ({ alcaldia, imatur }));
+    return _sigturLogosCache;
+}
+
+async function sigturExportarTabla(table, modo, trs) {
     const titulo = sigturTituloListado();
     const { headers, rows } = sigturTablaMatriz(table, trs);
     if (!headers.length) { if (window.showToast) showToast('Exportar', 'No hay datos para exportar.', 'warning'); return; }
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const fecha = new Date().toLocaleString('es-VE');
     const rif = window.SIGTUR_RIF || 'G-20008498-7';
-    const membrete = ['REPÚBLICA BOLIVARIANA DE VENEZUELA',
-        'ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE',
+    const membrete = ['República Bolivariana de Venezuela',
+        'Alcaldía Bolivariana del Municipio Sucre',
         'Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' + rif];
     const ncol = Math.max(1, headers.length);
 
     if (modo === 'excel') {
+        const logos = await sigturLogosBase64();
+        const imgTd = (src, rowspan) => src
+            ? '<td rowspan="' + rowspan + '" class="lg"><img src="' + src + '" height="48"></td>'
+            : '<td rowspan="' + rowspan + '"></td>';
+        // 3 columnas: logo | membrete (texto) | logo — solo si hay ≥3 columnas de datos;
+        // si la tabla es muy angosta, se omiten los logos laterales para no romper el layout.
+        const usarLogos = ncol >= 3 && (logos.alcaldia || logos.imatur);
+        const filasMembrete = 5; // 3 líneas institucionales + título + meta
+
         let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8">'
-            + '<style>td,th{mso-number-format:"\\@";border:1px solid #ccd;padding:4px 8px;'
+            + '<style>td,th{mso-number-format:"\\@";border:1px solid #ccd;padding:5px 9px;'
             + 'font-family:Calibri,Arial,sans-serif;font-size:11pt}'
-            + 'th{background:#1b5e20;color:#fff;font-weight:bold}'
-            + '.mb{font-weight:bold;text-align:center;border:none}'
-            + '.ttl{font-size:14pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none}'
-            + '.mt{border:none;color:#555}</style></head><body><table>';
+            + 'th{background:#1b5e20;color:#fff;font-weight:bold;padding:7px 9px}'
+            + '.mb{font-weight:bold;text-align:center;border:none;font-size:11pt;padding:3px 4px;text-transform:uppercase}'
+            + '.ttl{font-size:16pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none;padding:8px 4px}'
+            + '.mt{border:none;color:#555;text-align:center;padding:4px}'
+            + '.lg{border:none;text-align:center;vertical-align:middle;width:70px}</style></head><body><table>';
+
+        const ncolTexto = usarLogos ? ncol - 2 : ncol;
+        const spanTexto = ' colspan="' + Math.max(1, ncolTexto) + '"';
+        if (usarLogos) h += '<tr>' + imgTd(logos.alcaldia, filasMembrete) + '<td' + spanTexto + ' class="mb">' + esc(membrete[0]) + '</td>' + imgTd(logos.imatur, filasMembrete) + '</tr>';
+        else h += '<tr><td' + spanTexto + ' class="mb">' + esc(membrete[0]) + '</td></tr>';
+        for (let i = 1; i < membrete.length; i++) h += '<tr><td' + spanTexto + ' class="mb">' + esc(membrete[i]) + '</td></tr>';
+        h += '<tr><td' + spanTexto + ' class="ttl">' + esc(titulo) + '</td></tr>';
+        h += '<tr><td' + spanTexto + ' class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</td></tr>';
         const span = ' colspan="' + ncol + '"';
-        membrete.forEach(m => { h += '<tr><td' + span + ' class="mb">' + esc(m) + '</td></tr>'; });
-        h += '<tr><td' + span + ' class="ttl">' + esc(titulo) + '</td></tr>';
-        h += '<tr><td' + span + ' class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</td></tr>';
         h += '<tr><td' + span + ' class="mt"></td></tr>';
         h += '<tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
         rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
@@ -191,7 +229,7 @@ function sigturExportarTabla(table, modo, trs) {
     // PDF: documento limpio en un iframe oculto → diálogo de impresión (Guardar como PDF).
     let h = '<html><head><meta charset="UTF-8"><title>' + esc(titulo) + '</title><style>'
         + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:22px}'
-        + '.mb{text-align:center;font-size:11px;color:#555;line-height:1.5}'
+        + '.mb{text-align:center;font-size:11px;color:#555;line-height:1.5;text-transform:uppercase;font-weight:600}'
         + 'h1{font-size:16px;text-align:center;margin:6px 0 2px}'
         + '.mt{text-align:center;font-size:11px;color:#666;margin-bottom:14px}'
         + 'table{width:100%;border-collapse:collapse;font-size:11px}'

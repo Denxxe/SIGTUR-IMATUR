@@ -21,7 +21,7 @@ class XlsxMultiSheet
     const S_ZEBRA        = 6;
     const S_TOTAL        = 7;
 
-    /** Hojas ya cerradas: cada una ['nombre','xml','merges','widths']. */
+    /** Hojas ya cerradas: cada una ['nombre','xml','merges','widths','ncol']. */
     private array $sheets = [];
 
     private ?string $nombreActual = null;
@@ -29,6 +29,7 @@ class XlsxMultiSheet
     private string $filas = '';
     private array $mergesActual = [];
     private array $anchosActual = [];
+    private int $ncolActual = 1;
 
     private static function colLetter(int $n): string
     {
@@ -51,14 +52,17 @@ class XlsxMultiSheet
         $this->filas = '';
         $this->mergesActual = [];
         $this->anchosActual = [];
+        $this->ncolActual = 1;
     }
 
-    /** Fila con un único texto fusionado a lo ancho de $ncol columnas (A1:X1). */
-    public function filaFusionada(string $texto, int $ncol, int $style = self::S_TITULO): void
+    /** Fila con un único texto fusionado a lo ancho de $ncol columnas (A1:X1). $alto = alto de fila en puntos (null = automático). */
+    public function filaFusionada(string $texto, int $ncol, int $style = self::S_TITULO, ?float $alto = null): void
     {
         $this->rnum++;
+        $this->ncolActual = max($this->ncolActual, $ncol);
         $lastCol = self::colLetter(max(1, $ncol));
-        $this->filas .= '<row r="' . $this->rnum . '"><c r="A' . $this->rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">'
+        $rowAttrs = $alto !== null ? ' ht="' . $alto . '" customHeight="1"' : '';
+        $this->filas .= '<row r="' . $this->rnum . '"' . $rowAttrs . '><c r="A' . $this->rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">'
             . self::esc($texto) . '</t></is></c></row>';
         $this->mergesActual[] = 'A' . $this->rnum . ':' . $lastCol . $this->rnum;
     }
@@ -67,6 +71,7 @@ class XlsxMultiSheet
     public function filaCeldas(array $celdas, int $style = self::S_DATA): void
     {
         $this->rnum++;
+        $this->ncolActual = max($this->ncolActual, count($celdas));
         $c = ''; $i = 0;
         foreach ($celdas as $v) {
             $i++;
@@ -77,22 +82,30 @@ class XlsxMultiSheet
         $this->filas .= '<row r="' . $this->rnum . '">' . $c . '</row>';
     }
 
-    /** Fila en blanco (separador visual entre secciones). */
-    public function filaVacia(): void
+    /** Fila en blanco (separador visual entre secciones). $alto = alto en puntos (null = automático). */
+    public function filaVacia(?float $alto = null): void
     {
         $this->rnum++;
+        if ($alto !== null) {
+            $this->filas .= '<row r="' . $this->rnum . '" ht="' . $alto . '" customHeight="1"/>';
+        }
     }
 
-    /** Membrete institucional estándar (mismo texto que ReportesController). */
+    /**
+     * Membrete institucional estándar: logos reales de Alcaldía + IMATUR (si
+     * están disponibles) más el texto institucional, con más aire entre
+     * líneas que el membrete de texto plano original.
+     */
     public function membrete(string $titulo, int $ncol, string $metaExtra = ''): void
     {
         $usuario = $_SESSION['user_username'] ?? 'Sistema';
-        $this->filaFusionada('REPÚBLICA BOLIVARIANA DE VENEZUELA', $ncol, self::S_INSTITUCIONAL);
-        $this->filaFusionada('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', $ncol, self::S_INSTITUCIONAL);
-        $this->filaFusionada('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), $ncol, self::S_INSTITUCIONAL);
-        $this->filaFusionada($titulo, $ncol, self::S_TITULO);
-        $this->filaFusionada('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, $ncol, self::S_META);
-        $this->filaVacia();
+        $this->filaFusionada('REPÚBLICA BOLIVARIANA DE VENEZUELA', $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaFusionada('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaFusionada('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaVacia(6);
+        $this->filaFusionada($titulo, $ncol, self::S_TITULO, 24);
+        $this->filaFusionada('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, $ncol, self::S_META, 16);
+        $this->filaVacia(8);
     }
 
     /** Cierra la hoja actual y la agrega al libro. */
@@ -104,6 +117,7 @@ class XlsxMultiSheet
             'xml'    => $this->filas,
             'merges' => $this->mergesActual,
             'widths' => $this->anchosActual,
+            'ncol'   => $this->ncolActual,
         ];
         $this->nombreActual = null;
     }
@@ -127,6 +141,8 @@ class XlsxMultiSheet
         $overridesSheets = '';
         $sheetsWb = '';
         $relsWb = '';
+        $overridesDrawings = '';
+        $hayImagenes = false;
         foreach ($this->sheets as $i => $s) {
             $n = $i + 1;
             $cols = '';
@@ -136,9 +152,29 @@ class XlsxMultiSheet
             $mergeXml = $s['merges']
                 ? '<mergeCells count="' . count($s['merges']) . '">' . implode('', array_map(fn($m) => '<mergeCell ref="' . $m . '"/>', $s['merges'])) . '</mergeCells>'
                 : '';
+
+            // Logos institucionales (Alcaldía + IMATUR) anclados como imagen real.
+            $piezas = XlsxLogos::piezasParaHoja($s['ncol'] ?? 1);
+            $drawingTag = '';
+            if (!empty($piezas['drawingXml'])) {
+                $hayImagenes = true;
+                foreach ($piezas['media'] as $nombreImg => $bytes) {
+                    $zip->addFromString('xl/media/' . $nombreImg, $bytes);
+                }
+                $zip->addFromString('xl/drawings/drawing' . $n . '.xml', $piezas['drawingXml']);
+                $zip->addFromString('xl/drawings/_rels/drawing' . $n . '.xml.rels', $piezas['relsXml']);
+                $zip->addFromString('xl/worksheets/_rels/sheet' . $n . '.xml.rels',
+                    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                    . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                    . '<Relationship Id="rIdDrawing" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing' . $n . '.xml"/>'
+                    . '</Relationships>');
+                $overridesDrawings .= '<Override PartName="/xl/drawings/drawing' . $n . '.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>';
+                $drawingTag = '<drawing r:id="rIdDrawing"/>';
+            }
+
             $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-                . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-                . '<cols>' . $cols . '</cols><sheetData>' . $s['xml'] . '</sheetData>' . $mergeXml . '</worksheet>';
+                . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                . '<cols>' . $cols . '</cols><sheetData>' . $s['xml'] . '</sheetData>' . $mergeXml . $drawingTag . '</worksheet>';
             $zip->addFromString('xl/worksheets/sheet' . $n . '.xml', $sheetXml);
             $overridesSheets .= '<Override PartName="/xl/worksheets/sheet' . $n . '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
             $sheetsWb .= '<sheet name="' . self::esc($s['nombre']) . '" sheetId="' . $n . '" r:id="rId' . $n . '"/>';
@@ -152,8 +188,10 @@ class XlsxMultiSheet
             . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
             . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             . '<Default Extension="xml" ContentType="application/xml"/>'
+            . ($hayImagenes ? '<Default Extension="png" ContentType="image/png"/>' : '')
             . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
             . $overridesSheets
+            . $overridesDrawings
             . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
             . '</Types>');
         $zip->addFromString('_rels/.rels',
@@ -192,7 +230,7 @@ class XlsxMultiSheet
             . '<font><sz val="11"/><name val="Calibri"/></font>'
             . '<font><b/><sz val="11"/><name val="Calibri"/></font>'
             . '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
-            . '<font><b/><sz val="14"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font>'
+            . '<font><b/><sz val="16"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font>'
             . '<font><sz val="9"/><color rgb="FF64748B"/><name val="Calibri"/></font>'
             . '</fonts>'
             . '<fills count="4">'

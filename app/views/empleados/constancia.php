@@ -44,9 +44,11 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Times New Roman', serif; font-size:12pt; color:#000; background:#fff; }
   .page { width:21cm; min-height:29.7cm; margin:0 auto; padding:2cm 2.2cm; }
-  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1cm; }
-  .logo-box { width:70px; height:70px; display:flex; align-items:center; justify-content:center; }
-  .header-text { flex:1; text-align:center; font-size:8.5pt; line-height:1.5; text-transform:uppercase; font-weight:bold; }
+  .header { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:1cm; }
+  .logo-box { width:80px; height:80px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .header-text { flex:1; text-align:center; font-family:Arial, Helvetica, sans-serif; text-transform:uppercase; }
+  .header-text .linea1 { font-size:11pt; font-weight:bold; letter-spacing:.4px; line-height:1.6; }
+  .header-text .linea2 { font-size:9.5pt; font-weight:600; line-height:1.6; color:#222; }
   .doc-nro { text-align:right; font-size:11pt; margin:0.4cm 0 1cm; }
   .titulo { text-align:center; font-size:14pt; font-weight:bold; text-transform:uppercase; text-decoration:underline; margin-bottom:1.2cm; letter-spacing:1px; }
   .cuerpo { font-size:12pt; line-height:2; text-align:justify; margin-bottom:1.5cm; }
@@ -57,7 +59,11 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
   .firma-nombre { font-weight:bold; font-size:12pt; text-transform:uppercase; }
   .firma-cargo { font-size:10pt; text-transform:uppercase; }
   .btn-print { position:fixed; top:12px; right:12px; padding:8px 18px; background:#2563EB; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; font-family:sans-serif; }
-  @media print { .btn-print { display:none; } .page { padding:1.8cm 2cm; } }
+  @media print {
+    .btn-print { display:none; }
+    .page { min-height:auto; padding:0.6cm 1.5cm; }
+    @page { size:A4; margin:1cm 1.5cm; }
+  }
 </style>
 </head>
 <body>
@@ -66,16 +72,14 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
 
   <div class="header">
     <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:64px;max-height:64px;object-fit:contain;" onerror="this.style.display='none'">
+      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" style="max-width:76px;max-height:76px;object-fit:contain;" onerror="this.style.display='none'">
     </div>
     <div class="header-text">
-      REPÚBLICA BOLIVARIANA DE VENEZUELA<br>
-      ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE<br>
-      INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)<br>
-      CUMANÁ, ESTADO SUCRE — RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
+      <div class="linea1">República Bolivariana de Venezuela<br>Alcaldía Bolivariana del Municipio Sucre</div>
+      <div class="linea2">Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>Cumaná, Estado Sucre — RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
     </div>
     <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:64px;max-height:64px;object-fit:contain;" onerror="this.style.display='none'">
+      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:76px;max-height:76px;object-fit:contain;" onerror="this.style.display='none'">
     </div>
   </div>
 

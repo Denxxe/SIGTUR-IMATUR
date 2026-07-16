@@ -3197,9 +3197,10 @@ class ReportesController extends Controller {
         $lastCol = $this->colLetter($ncol);
         $rnum = 0; $sheetRows = ''; $merges = [];
         $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES | ENT_XML1, 'UTF-8');
-        $rowMerged = function (string $texto, int $style) use (&$rnum, &$sheetRows, &$merges, $lastCol, $esc) {
+        $rowMerged = function (string $texto, int $style, ?float $alto = null) use (&$rnum, &$sheetRows, &$merges, $lastCol, $esc) {
             $rnum++;
-            $sheetRows .= '<row r="' . $rnum . '"><c r="A' . $rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">' . $esc($texto) . '</t></is></c></row>';
+            $rowAttrs = $alto !== null ? ' ht="' . $alto . '" customHeight="1"' : '';
+            $sheetRows .= '<row r="' . $rnum . '"' . $rowAttrs . '><c r="A' . $rnum . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">' . $esc($texto) . '</t></is></c></row>';
             $merges[] = 'A' . $rnum . ':' . $lastCol . $rnum;
         };
         $rowCells = function (array $cells, int $style) use (&$rnum, &$sheetRows, $esc) {
@@ -3212,12 +3213,13 @@ class ReportesController extends Controller {
         };
 
         $usuario = $_SESSION['user_username'] ?? 'Sistema';
-        $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1);
-        $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1);
-        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), 1);
-        $rowMerged($titulo, 2);
-        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, 3);
-        $rnum++; // fila en blanco
+        $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1, 18);
+        $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1, 18);
+        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), 1, 18);
+        $rnum++; $sheetRows .= '<row r="' . $rnum . '" ht="6" customHeight="1"/>'; // fila en blanco (aire para los logos)
+        $rowMerged($titulo, 2, 24);
+        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, 3, 16);
+        $rnum++; $sheetRows .= '<row r="' . $rnum . '" ht="8" customHeight="1"/>'; // fila en blanco
         $dataStart = $rnum + 1;
 
         $cuerpo($rowMerged, $rowCells);
@@ -3231,10 +3233,14 @@ class ReportesController extends Controller {
 
         $mergeXml = $merges ? '<mergeCells count="' . count($merges) . '">' . implode('', array_map(fn($m) => '<mergeCell ref="' . $m . '"/>', $merges)) . '</mergeCells>' : '';
 
+        // Logos institucionales (Alcaldía + IMATUR) anclados como imagen real.
+        $piezas = XlsxLogos::piezasParaHoja(max(1, count($widths)));
+        $drawingTag = !empty($piezas['drawingXml']) ? '<drawing r:id="rIdDrawing"/>' : '';
+
         $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+            . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
             . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="' . ($dataStart - 1) . '" topLeftCell="A' . $dataStart . '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
-            . '<cols>' . $cols . '</cols><sheetData>' . $sheetRows . '</sheetData>' . $mergeXml . '</worksheet>';
+            . '<cols>' . $cols . '</cols><sheetData>' . $sheetRows . '</sheetData>' . $mergeXml . $drawingTag . '</worksheet>';
 
         // ── Estilos ───────────────────────────────────────────────────────────
         $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -3244,7 +3250,7 @@ class ReportesController extends Controller {
             . '<font><sz val="11"/><name val="Calibri"/></font>'
             . '<font><b/><sz val="11"/><name val="Calibri"/></font>'
             . '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>'
-            . '<font><b/><sz val="14"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font>'
+            . '<font><b/><sz val="16"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font>'
             . '<font><sz val="9"/><color rgb="FF64748B"/><name val="Calibri"/></font>'
             . '</fonts>'
             . '<fills count="4">'
@@ -3273,13 +3279,27 @@ class ReportesController extends Controller {
         $tmp = tempnam(sys_get_temp_dir(), 'xlsx');
         $zip = new ZipArchive();
         $zip->open($tmp, ZipArchive::OVERWRITE);
+        if (!empty($piezas['drawingXml'])) {
+            foreach ($piezas['media'] as $nombreImg => $bytes) {
+                $zip->addFromString('xl/media/' . $nombreImg, $bytes);
+            }
+            $zip->addFromString('xl/drawings/drawing1.xml', $piezas['drawingXml']);
+            $zip->addFromString('xl/drawings/_rels/drawing1.xml.rels', $piezas['relsXml']);
+            $zip->addFromString('xl/worksheets/_rels/sheet1.xml.rels',
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                . '<Relationship Id="rIdDrawing" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing1.xml"/>'
+                . '</Relationships>');
+        }
         $zip->addFromString('[Content_Types].xml',
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             . '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
             . '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
             . '<Default Extension="xml" ContentType="application/xml"/>'
+            . (!empty($piezas['drawingXml']) ? '<Default Extension="png" ContentType="image/png"/>' : '')
             . '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
             . '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            . (!empty($piezas['drawingXml']) ? '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>' : '')
             . '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
             . '</Types>');
         $zip->addFromString('_rels/.rels',
