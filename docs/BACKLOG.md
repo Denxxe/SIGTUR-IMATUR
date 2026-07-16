@@ -181,6 +181,20 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 ### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — Bono Vacacional ✅ (v1), resto pendiente
 - **Hecho (2026-07-16, mig.059):** el cliente envió el formato oficial de **Bono Vacacional** (4 hojas por tipo de personal + resumen) que la Alcaldía exige. Se implementó v1 = **"registro + reporte"** (decisión del cliente): Talento Humano captura/verifica sueldo, primas y el total final (igual que hoy en Excel); el sistema organiza esos datos y exporta el `.xlsx` multi-hoja en el formato exacto. Nuevo: historial salarial por empleado (`empleado_salarios`, sección "Datos salariales" en el expediente), módulo `/nomina` (generar período, capturar/editar celdas, cerrar período, exportar), pantalla `/config` con los parámetros editables, y `XlsxMultiSheet` (escritor OOXML multi-hoja reusable, ver `CLAUDE.md`).
 
+- **Estado de los 3 documentos de "nómina":**
+
+  | Documento | Estado |
+  |---|---|
+  | **Bono Vacacional** (formato con 4 hojas por tipo de personal) | ✅ Recibido y ya montado en el sistema |
+  | **Liquidación de Prestaciones Sociales** (`LIQUIDACION MES JULIO 2026.xls`) | ✅ Recibido, ⏳ pendiente de construir en el sistema (2ª entrega) |
+  | **Nómina mensual regular** (el pago normal de sueldo que se le manda cada mes a la Alcaldía) | ❌ **No confirmado** — el cliente no estaba seguro de si lo envió. El archivo de Liquidación es para **egresos/prestaciones**, no es la planilla de pago mensual corriente. Hay que pedirlo aparte si existe. |
+
+- **Lista de lo que necesitamos de RRHH (para dejar el módulo completo):**
+  1. **Datos reales (no formato, sino los números):** sueldo básico y primas (profesional, responsabilidad, antigüedad, por hijo, transporte, FOND, discapacidad, caja de ahorro) de **cada empleado activo** — hoy la pantalla de captura existe pero está vacía. Número de cuenta bancaria de nómina de cada empleado.
+  2. **Un ejemplo YA CALCULADO:** un mes de Bono Vacacional con montos reales de 2-3 empleados de distinto tipo (Alto Nivel, Empleado, Obrero, Contratado) — la plantilla enviada venía vacía, no se pudo verificar la fórmula del total.
+  3. **Parámetros/reglas a confirmar:** ¿los días 75/75/85/45 son correctos y con tope máximo al sumar años? Monto vigente de Cesta Ticket (¿cambia mensual o por Unidad Tributaria?). Tasa BCV y "días adicionales" para los intereses de prestaciones — ¿de dónde los sacan hoy?
+  4. **Formato faltante:** confirmar si existe un formato de **nómina mensual regular** distinto al de Liquidación y, si sí, pedirlo (igual que se hizo con Bono Vacacional).
+
 - **Preguntar al cliente (bloquea automatizar el cálculo, hoy es todo captura manual):**
   1. ¿Nos pueden enviar un **mes de Bono Vacacional YA CALCULADO** (con montos reales de al menos 2-3 empleados de distinto tipo) para calibrar la fórmula exacta de la columna "FÓRMULA NUEVA DE BONO VACACIONAL + ALÍCUOTA"? La plantilla que enviaron estaba vacía — sin esto no se debe automatizar esa columna.
   2. Los días base 75 (Alto Nivel/Empleados Fijos) / 85 (Obreros Fijos) / 45 (Contratados) — ¿son correctos? ¿Hay un **tope máximo** al sumar años de servicio (como el tope 30 de la LOTTT), o crecen sin límite?
