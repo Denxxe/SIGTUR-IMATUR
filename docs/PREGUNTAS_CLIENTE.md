@@ -10,16 +10,17 @@ El sistema está funcional y operativo. Para **completar los puntos que dependen
 
 ## 1. Nómina y Liquidación ⭐ (lo más importante)
 
-1. **¿El sistema debe *calcular* la nómina/liquidación, o solo *registrar* los datos y generar un archivo/reporte para enviar a la Alcaldía?**
-   *(Define si construimos un módulo de cálculo o uno de registro + reporte.)*
+**Actualizado 2026-07-16 — ya recibimos y montamos el Bono Vacacional; estas son las preguntas que quedan abiertas:**
 
-2. **¿Nos pueden facilitar una copia del formato exacto del archivo de nómina que entrega a la Alcaldía?** (un ejemplo real, aunque sea con datos de prueba).
+1. ⭐ **¿Nos pueden enviar un mes de Bono Vacacional YA CALCULADO, con montos reales de 2-3 trabajadores de distinto tipo (Alto Nivel, Empleado, Obrero, Contratado)?** El formato que nos enviaron venía vacío (sin ningún trabajador con montos), así que no pudimos verificar la fórmula exacta del total. Mientras no tengamos esto, el sistema deja ese monto como captura manual (igual que hoy en Excel) en vez de calcularlo solo.
 
-3. **¿Qué conceptos componen el sueldo de cada trabajador y cómo se calculan?** (sueldo base, prima de antigüedad, bonos, etc.).
+2. **Los días de Bono Vacacional que vimos en la plantilla (75 para Alto Nivel/Empleados fijos, 85 para Obreros fijos, 45 para Contratados) — ¿son correctos? ¿Tienen un tope máximo al sumar los años de servicio, o siguen creciendo sin límite?**
 
-4. **Para la liquidación, ¿qué conceptos se incluyen y cuáles debe calcular el sistema?** (prestaciones sociales, vacaciones no disfrutadas, bono vacacional, utilidades…).
+3. **¿Cuál es el monto actual de la Cesta Ticket y cada cuánto cambia?**
 
-5. **¿El bono vacacional lo calcula el sistema o se carga manualmente?**
+4. **El archivo `LIQUIDACION MES JULIO 2026.xls` que nos enviaron, ¿es también el formato de la nómina mensual normal que le envían a la Alcaldía, o hace falta un formato aparte para eso?** (nos comentaron que no estaban seguros).
+
+5. **Para la Liquidación de Prestaciones Sociales: la tasa del Banco Central y los "días adicionales" que vimos en la hoja de intereses cambian cada mes — ¿de dónde los sacan hoy? ¿Hay una tabla o boletín oficial que reciben, o siempre se captura a mano?**
 
 ---
 

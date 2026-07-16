@@ -358,6 +358,77 @@
 
 </div>
 
+<!-- ════════════════════════════════════════════════════════════
+     SECCIÓN 4 — NÓMINA: BONO VACACIONAL
+═══════════════════════════════════════════════════════════════ -->
+<div style="display:flex;align-items:center;gap:var(--sp-3);margin:0 0 var(--sp-4);" class="anim-slide-up">
+    <div style="width:4px;height:20px;border-radius:2px;background:#16A34A;flex-shrink:0;"></div>
+    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Nómina — Bono Vacacional</span>
+    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+</div>
+
+<div class="row g-4 mb-6 anim-slide-up">
+    <div class="col-md-8">
+        <div class="sig-card h-100" style="border-top:3px solid #16A34A;">
+            <div class="sig-card__head" style="background:rgba(22,163,74,.04); border-bottom:1px solid var(--border-subtle);">
+                <div class="sig-card__title">
+                    <i class="bi bi-calendar2-check" style="color:#16A34A;"></i> Días base por tipo de personal
+                </div>
+                <span style="font-size:11px;color:var(--text-tertiary);">Beneficio de contrato colectivo — NO es el mínimo de la LOTTT (15+1/año)</span>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Alto Nivel <small>(+años)</small></label>
+                            <input type="number" name="bono_vac_dias_alto_nivel" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['bono_vac_dias_alto_nivel']['valor'] ?? 75); ?>">
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Empleados Fijos <small>(+años)</small></label>
+                            <input type="number" name="bono_vac_dias_empleados_fijos" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['bono_vac_dias_empleados_fijos']['valor'] ?? 75); ?>">
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Obreros Fijos <small>(fijo)</small></label>
+                            <input type="number" name="bono_vac_dias_obreros_fijos" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['bono_vac_dias_obreros_fijos']['valor'] ?? 85); ?>">
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Contratados <small>(+años)</small></label>
+                            <input type="number" name="bono_vac_dias_contratados" class="sig-input" min="0"
+                                   value="<?php echo (int)($cfg['bono_vac_dias_contratados']['valor'] ?? 45); ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sig-card h-100" style="border-top:3px solid #16A34A;">
+            <div class="sig-card__head" style="background:rgba(22,163,74,.04); border-bottom:1px solid var(--border-subtle);">
+                <div class="sig-card__title">
+                    <i class="bi bi-ticket-perforated" style="color:#16A34A;"></i> Cesta Ticket
+                </div>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label">Monto mensual (Bs)</label>
+                    <input type="number" step="0.01" name="monto_cesta_ticket" class="sig-input" min="0"
+                           value="<?php echo htmlspecialchars($cfg['monto_cesta_ticket']['valor'] ?? '0'); ?>">
+                    <small style="color:var(--text-tertiary)">Usado en el cálculo del Bono Vacacional (/nomina).</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Guardar -->
 <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-2);border-top:1px solid var(--border-subtle);" class="anim-slide-up">
     <a href="<?php echo URL_ROOT; ?>/dashboard/index" class="btn-sig btn-sig--ghost">

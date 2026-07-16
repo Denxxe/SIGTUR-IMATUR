@@ -17,7 +17,7 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 1. ESTADO GLOBAL
 
-- **RRHH:** completo salvo **Nómina/Liquidación** (espera formatos). Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
+- **RRHH:** completo salvo **Liquidación de Prestaciones Sociales** (2da entrega). **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
 - **Formación / Turismo / Inventario / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
 - **Cuello de botella de la entrega:** ya **no es código**, son **decisiones/insumos del cliente** (sección 3).
 
@@ -178,10 +178,24 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Preguntar:** ¿usan Gmail/Google Workspace (contraseña de aplicación), un correo institucional propio (gobernación/alcaldía), u otro proveedor?
 - **Al desbloquear:** completar `SMTP_HOST/PORT/USER/PASS/ENCRYPTION` en `config/config.php` (no requiere tocar código ni migraciones).
 
-### 3.1 🔴 Nómina / Liquidación (R-11 · D-RH34/D-RH14)
-- **Falta:** los **formatos de las cuentas** que la Alcaldía usa para la nómina, y las tablas de sueldos (LOTTT / función pública).
-- **Preguntar:** ¿el sistema **calcula** la nómina/liquidación o solo **registra** y genera el reporte de envío? · ¿formato exacto del archivo a la Alcaldía? · estructura de salario integral (base + cuota vacaciones + cuota utilidades) y conceptos de liquidación · ¿el bono vacacional lo calcula el sistema?
-- **Al desbloquear:** módulo Nómina + liquidación (probable v1 = registro + reporte, no cálculo completo).
+### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — Bono Vacacional ✅ (v1), resto pendiente
+- **Hecho (2026-07-16, mig.059):** el cliente envió el formato oficial de **Bono Vacacional** (4 hojas por tipo de personal + resumen) que la Alcaldía exige. Se implementó v1 = **"registro + reporte"** (decisión del cliente): Talento Humano captura/verifica sueldo, primas y el total final (igual que hoy en Excel); el sistema organiza esos datos y exporta el `.xlsx` multi-hoja en el formato exacto. Nuevo: historial salarial por empleado (`empleado_salarios`, sección "Datos salariales" en el expediente), módulo `/nomina` (generar período, capturar/editar celdas, cerrar período, exportar), pantalla `/config` con los parámetros editables, y `XlsxMultiSheet` (escritor OOXML multi-hoja reusable, ver `CLAUDE.md`).
+
+- **Preguntar al cliente (bloquea automatizar el cálculo, hoy es todo captura manual):**
+  1. ¿Nos pueden enviar un **mes de Bono Vacacional YA CALCULADO** (con montos reales de al menos 2-3 empleados de distinto tipo) para calibrar la fórmula exacta de la columna "FÓRMULA NUEVA DE BONO VACACIONAL + ALÍCUOTA"? La plantilla que enviaron estaba vacía — sin esto no se debe automatizar esa columna.
+  2. Los días base 75 (Alto Nivel/Empleados Fijos) / 85 (Obreros Fijos) / 45 (Contratados) — ¿son correctos? ¿Hay un **tope máximo** al sumar años de servicio (como el tope 30 de la LOTTT), o crecen sin límite?
+  3. ¿Cuál es el **monto actual de cesta ticket** y cada cuánto cambia (¿mensual, según Unidad Tributaria, otro)? Hoy quedó en 0 por defecto en Configuración.
+  4. ¿Nos pueden confirmar si el `LIQUIDACION MES JULIO 2026.xls` que enviaron es también el formato de la **nómina mensual normal** que se le envía a la Alcaldía, o falta ese formato aparte? (No estaban seguros al enviarlo.)
+  5. Para Liquidación: la tasa BCV mensual y los "días adicionales" (79→82/120→150 sobre 360) de la hoja `INTERESES` se ven tecleados a mano cada mes — ¿de dónde los saca hoy Talento Humano (tabla oficial, boletín BCV, otro)? Se necesita saber si hay una fuente publicada consultable o si siempre es carga manual.
+
+- **Para tener el módulo COMPLETAMENTE funcional falta:**
+  - [ ] Respuestas del cliente a las 5 preguntas de arriba.
+  - [ ] Cargar el **sueldo/primas real** de cada empleado activo en "Datos salariales" (hoy solo tiene datos de prueba ya eliminados) — sin esto `/nomina` genera períodos con montos en 0.
+  - [ ] Definir el **monto de cesta ticket** vigente en Configuración → Nómina.
+  - [ ] Con el ejemplo real calibrado, automatizar el cálculo de "TOTAL BONO VACACIONAL" (hoy es captura manual por fila).
+  - [ ] **Liquidación de Prestaciones Sociales** (2da entrega): tablas `liquidaciones` (snapshot al egreso, correlativo vía `ConfigSistema::generarNumeroOficio`) + `liquidacion_intereses_mensuales` (digitaliza la hoja `INTERESES` fila por fila, reusa `empleado_salarios` + `XlsxMultiSheet`); controlador/vistas; exportación de las 3 hojas (`FORMATO`/`INTERESES`/`INTERES DE MORA`).
+  - [ ] Confirmar si falta un formato de **nómina mensual normal** (pregunta 4) y, si sí, pedirlo y construir un 3er sub-módulo.
+  - [ ] Probar el flujo completo con datos reales de un mes cerrado y comparar el `.xlsx` exportado contra lo que el cliente realmente envía hoy a la Alcaldía, antes de usarlo en producción.
 
 ### 3.2 ✅ B13 — Mínimo de antigüedad para constancia — **DECIDIDO (2026-06-25): SIN mínimo**
 - **Decisión del cliente:** **no** se exige antigüedad mínima para emitir constancias (se descarta el "mínimo 6 meses"). El mínimo de contrato ya se aclaró en otra sesión.
@@ -277,7 +291,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 > Detalle funcional en los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`.
 
-- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo. 🔒 Falta: **Nómina/Liquidación**.
+- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). 🔒 Falta: **Liquidación de Prestaciones Sociales**.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía. 🔒 Falta: tarifa (D-RT02), informe/oficio automático al finalizar (D-RT03).
 - **Inventario:** ✅ bienes, categorías, ubicaciones, movimientos, bajas, **Durable/Fungible**, reportes/kardex. 🔒 Falta: responsable del bien (D-IN06), costo/proveedor (D-IN09), baja→condición (D-IN10).

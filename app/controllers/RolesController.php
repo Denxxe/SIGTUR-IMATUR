@@ -59,6 +59,7 @@ class RolesController extends Controller {
             'HorariosController'              => ['label' => 'Horarios',              'icon' => 'bi-clock',             'grupo' => 'RRHH'],
             'PermisosController'              => ['label' => 'Permisos y Reposos',    'icon' => 'bi-file-earmark-medical', 'grupo' => 'RRHH'],
             'VacacionesController'            => ['label' => 'Vacaciones',            'icon' => 'bi-airplane',           'grupo' => 'RRHH'],
+            'NominaController'                => ['label' => 'Nómina',                'icon' => 'bi-cash-coin',          'grupo' => 'RRHH'],
             'AmonestacionesController'        => ['label' => 'Amonestaciones y Faltas', 'icon' => 'bi-exclamation-triangle', 'grupo' => 'RRHH'],
             'VisitantesController'            => ['label' => 'Recepción (Visitas)',  'icon' => 'bi-door-open',         'grupo' => 'Recepción'],
             'VisitasController'               => ['label' => 'Visitas (acceso directo)', 'icon' => 'bi-door-open',   'grupo' => 'Recepción'],

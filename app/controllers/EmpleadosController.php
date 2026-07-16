@@ -102,9 +102,32 @@ class EmpleadosController extends Controller {
             'historial_traslados' => Empleado::historialTraslados($id),
             'tiempo_servicio'   => Empleado::tiempoServicio($empleado->fecha_ingreso, $empleado->fecha_egreso),
             'permiso_vigente'   => empty($empleado->fecha_egreso) ? PermisoLaboral::vigenteHoy($id) : null,
+            'sueldo_actual'     => Sueldo::actual((int)$id),
+            'historial_sueldos' => Sueldo::historial((int)$id),
         ];
 
         $this->view('empleados/detalle', $data);
+    }
+
+    /**
+     * Registra un nuevo valor salarial (sueldo básico + primas) del empleado.
+     * Append-only: nunca edita un registro anterior, conserva el historial
+     * completo (mismo patrón que trasladar()) — insumo de Nómina/Bono Vacacional.
+     */
+    public function guardarSueldo() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/empleados/index'); return; }
+        $_POST = $this->sanitizePost();
+        $id = (int)($_POST['id_empleado'] ?? 0);
+        try {
+            if (!Empleado::find($id)) throw new Exception('Empleado no encontrado.');
+            $fecha = trim($_POST['fecha_efectiva'] ?? '') ?: date('Y-m-d');
+            $motivo = trim($_POST['motivo'] ?? '') ?: null;
+            Sueldo::guardar($id, $_POST, $fecha, $motivo, $this->getUserId());
+            flash('global_msg', 'Datos salariales guardados.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/empleados/detalle/' . $id);
     }
 
     /**

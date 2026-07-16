@@ -514,6 +514,100 @@ $traslados = $data['historial_traslados'] ?? [];
     </table>
 </div>
 
+<?php
+// ── Datos salariales (R-11 — insumo de Nómina/Bono Vacacional) ──
+$sueldoActual   = $data['sueldo_actual'] ?? null;
+$historialSueldos = $data['historial_sueldos'] ?? [];
+$fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
+?>
+<div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h5 style="margin:0;"><i class="bi bi-cash-coin"></i> Datos salariales</h5>
+        <?php if (!$egresado): ?>
+        <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSueldo">
+            <i class="bi bi-cash-coin"></i> Registrar sueldo
+        </button>
+        <?php endif; ?>
+    </div>
+    <?php if (!$sueldoActual): ?>
+        <p class="sig-table-empty" style="padding:12px 16px;">Sin datos salariales registrados.</p>
+    <?php else: ?>
+        <table class="sig-table">
+            <thead><tr><th>Sueldo Básico</th><th>Prima Prof.</th><th>Prima Resp.</th><th>Prima Antig.</th><th>Prima/Hijo</th><th>Bono Transp.</th><th>Prima FOND</th><th>Prima Discap.</th><th>Caja Ahorro</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><?php echo $fmtMonto($sueldoActual->sueldo_basico); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_profesional); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_responsabilidad); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_antiguedad); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_por_hijo); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->bono_transporte); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_fond); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->prima_discapacidad); ?></td>
+                    <td><?php echo $fmtMonto($sueldoActual->caja_ahorro); ?></td>
+                </tr>
+            </tbody>
+        </table>
+    <?php endif; ?>
+    <?php if (!empty($historialSueldos)): ?>
+    <details style="padding:8px 16px 12px;">
+        <summary style="cursor:pointer;color:var(--text-secondary);font-size:13px;">Historial (<?php echo count($historialSueldos); ?>)</summary>
+        <table class="sig-table" style="margin-top:8px;">
+            <thead><tr><th>Vigente desde</th><th>Sueldo Básico</th><th>Motivo</th></tr></thead>
+            <tbody>
+                <?php foreach ($historialSueldos as $h): ?>
+                <tr>
+                    <td><?php echo $ffecha($h->fecha_efectiva); ?></td>
+                    <td><?php echo $fmtMonto($h->sueldo_basico); ?></td>
+                    <td style="font-size:13px;"><?php echo $val($h->motivo); ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </details>
+    <?php endif; ?>
+</div>
+
+<?php if (!$egresado): ?>
+<!-- Modal: Registrar sueldo -->
+<div class="modal fade" id="modalSueldo" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/guardarSueldo" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cash-coin"></i> Registrar sueldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <p class="text-muted" style="font-size:13px;">
+                    Se agrega como un nuevo registro; no borra el historial anterior — es insumo de Nómina/Bono Vacacional.
+                </p>
+                <div class="row g-2">
+                    <div class="col-6 sig-field"><label class="sig-field__label">Sueldo Básico</label><input type="number" step="0.01" min="0" name="sueldo_basico" class="sig-input" value="<?php echo $sueldoActual->sueldo_basico ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Profesional</label><input type="number" step="0.01" min="0" name="prima_profesional" class="sig-input" value="<?php echo $sueldoActual->prima_profesional ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Responsabilidad</label><input type="number" step="0.01" min="0" name="prima_responsabilidad" class="sig-input" value="<?php echo $sueldoActual->prima_responsabilidad ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Antigüedad</label><input type="number" step="0.01" min="0" name="prima_antiguedad" class="sig-input" value="<?php echo $sueldoActual->prima_antiguedad ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima por Hijo (unitaria)</label><input type="number" step="0.01" min="0" name="prima_por_hijo" class="sig-input" value="<?php echo $sueldoActual->prima_por_hijo ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Bono Transporte</label><input type="number" step="0.01" min="0" name="bono_transporte" class="sig-input" value="<?php echo $sueldoActual->bono_transporte ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima FOND</label><input type="number" step="0.01" min="0" name="prima_fond" class="sig-input" value="<?php echo $sueldoActual->prima_fond ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Discapacidad</label><input type="number" step="0.01" min="0" name="prima_discapacidad" class="sig-input" value="<?php echo $sueldoActual->prima_discapacidad ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Caja de Ahorro</label><input type="number" step="0.01" min="0" name="caja_ahorro" class="sig-input" value="<?php echo $sueldoActual->caja_ahorro ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label">Vigente desde</label><input type="date" name="fecha_efectiva" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>"></div>
+                </div>
+                <div class="sig-field mt-2">
+                    <label class="sig-field__label">Motivo</label>
+                    <input type="text" name="motivo" class="sig-input" placeholder="Ej: aumento decretado, ajuste de escala…">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php if (!$egresado): ?>
 <!-- Modal: Trasladar de departamento -->
 <div class="modal fade" id="modalTraslado" tabindex="-1">
