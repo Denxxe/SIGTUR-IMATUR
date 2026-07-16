@@ -44,10 +44,9 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Times New Roman', serif; font-size:12pt; color:#000; background:#fff; }
   .page { width:21cm; min-height:29.7cm; margin:0 auto; padding:2cm 2.2cm; }
-  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.3cm; }
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1cm; }
   .logo-box { width:70px; height:70px; display:flex; align-items:center; justify-content:center; }
   .header-text { flex:1; text-align:center; font-size:8.5pt; line-height:1.5; text-transform:uppercase; font-weight:bold; }
-  .divider { border-top:1.5px solid #000; margin:0.3cm 0; }
   .doc-nro { text-align:right; font-size:11pt; margin:0.4cm 0 1cm; }
   .titulo { text-align:center; font-size:14pt; font-weight:bold; text-transform:uppercase; text-decoration:underline; margin-bottom:1.2cm; letter-spacing:1px; }
   .cuerpo { font-size:12pt; line-height:2; text-align:justify; margin-bottom:1.5cm; }
@@ -79,7 +78,6 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
       <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:64px;max-height:64px;object-fit:contain;" onerror="this.style.display='none'">
     </div>
   </div>
-  <div class="divider"></div>
 
   <div class="doc-nro"><strong>N° <?php echo $v($co->numero); ?></strong></div>
 
