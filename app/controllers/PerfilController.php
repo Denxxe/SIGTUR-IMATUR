@@ -91,4 +91,16 @@ class PerfilController extends Controller {
         }
         header('Location: ' . URL_ROOT . '/perfil/index');
     }
+
+    /**
+     * Keep-alive de sesión: sin efecto propio, solo llegar aquí ya hace que el
+     * Router refresque $_SESSION['last_activity']. Usado por formularios largos
+     * (ej. wizard de empleados) para evitar expirar la sesión por inactividad
+     * mientras el usuario sigue escribiendo, sin bajar SESSION_TIMEOUT global.
+     */
+    public function ping() {
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        echo json_encode(['ok' => true]);
+    }
 }

@@ -470,6 +470,19 @@ function wzRestore() {
     });
 }
 
+// Keep-alive de sesión: el wizard no toca el servidor entre pasos (todo vive en
+// localStorage hasta el submit final), así que en un formulario largo la sesión
+// puede expirar por inactividad (SESSION_TIMEOUT) aunque el usuario siga escribiendo.
+// Cada interacción real dispara un ping (máx. 1 cada 4 min) que solo refresca
+// last_activity en el Router, sin bajar el timeout global del sistema.
+let wzLastPing = 0;
+function wzKeepAlive() {
+    const ahora = Date.now();
+    if (ahora - wzLastPing < 4 * 60 * 1000) return;
+    wzLastPing = ahora;
+    fetch('<?php echo URL_ROOT; ?>/perfil/ping', { credentials: 'same-origin' }).catch(() => {});
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     wzRestore();
     wzToggleDisc(); wzOrigenCambio(); wzToggleUniforme(); wzVencToggle();
@@ -479,6 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
     wzForm.addEventListener('input', wzSave);
     wzForm.addEventListener('input', wzUpdateNav);
     wzForm.addEventListener('change', wzUpdateNav);
+    wzForm.addEventListener('input', wzKeepAlive);
+    wzForm.addEventListener('change', wzKeepAlive);
     wzForm.addEventListener('submit', () => { try { localStorage.removeItem(LS_KEY); } catch (e) {} });
 });
 </script>
