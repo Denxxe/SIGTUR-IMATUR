@@ -401,13 +401,14 @@ class PasantesController extends Controller {
             'carnet' => [
                 'tipo'       => 'PASANTE',
                 'subtipo'    => '',
-                'nombre'     => $nombre,
+                // Apellidos y nombres van en líneas separadas (igual que el carnet físico).
+                'apellido'   => $p->apellido ?? '',
+                'nombre'     => $p->nombre ?? '',
                 'cedula'     => $p->cedula ?? '—',
                 'id_persona' => (int)$p->id_persona,
-                'lineas'     => [
-                    ['label' => 'Carrera',     'valor' => $p->carrera ?? ''],
-                    ['label' => 'Institución', 'valor' => $p->institucion ?? ''],
-                ],
+                // Texto lateral vertical: donde el trabajador lleva su departamento,
+                // el pasante lleva su institución educativa (decisión del cliente).
+                'vertical'   => $p->institucion ?? '',
             ],
         ];
         $this->view('pasantes/carnet', $data);

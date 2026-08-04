@@ -148,7 +148,26 @@
                             <label class="sig-field__label">Correo electrónico</label>
                             <input type="email" name="correo_institucion" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['correo_institucion']['valor'] ?? ''); ?>"
-                                   placeholder="imatur.cumana@gmail.com">
+                                   placeholder="Sucreimatur@gmail.com">
+                            <small style="color:var(--text-tertiary)">Aparece en el carnet, constancias y oficios. Es además el <strong>remitente</strong> de los correos de recuperación de contraseña.</small>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Dirección</label>
+                            <input type="text" name="direccion_institucion" class="sig-input"
+                                   value="<?php echo htmlspecialchars($cfg['direccion_institucion']['valor'] ?? ''); ?>"
+                                   placeholder="Estado Sucre, municipio Sucre, Cumaná, Calle Sucre, Casa Nº11">
+                            <small style="color:var(--text-tertiary)">Se imprime al pie del carnet institucional.</small>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label">Lema institucional</label>
+                            <input type="text" name="lema_institucion" class="sig-input"
+                                   value="<?php echo htmlspecialchars($cfg['lema_institucion']['valor'] ?? ''); ?>"
+                                   placeholder="Historia y Porvenir">
+                            <small style="color:var(--text-tertiary)">Frase que cierra el carnet institucional.</small>
                         </div>
                     </div>
                 </div>

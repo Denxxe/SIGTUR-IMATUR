@@ -734,13 +734,13 @@ class EmpleadosController extends Controller {
             'carnet' => [
                 'tipo'       => 'TRABAJADOR',
                 'subtipo'    => $subtipo,
-                'nombre'     => $nombre,
+                // Apellidos y nombres van en líneas separadas (igual que el carnet físico).
+                'apellido'   => $e->apellido ?? '',
+                'nombre'     => $e->nombre ?? '',
                 'cedula'     => $e->cedula ?? '—',
                 'id_persona' => (int)$e->id_persona,
-                'lineas'     => [
-                    ['label' => 'Cargo',        'valor' => $e->cargo ?? ''],
-                    ['label' => 'Departamento', 'valor' => $e->departamento ?? ''],
-                ],
+                // Texto lateral vertical: la unidad de adscripción del trabajador.
+                'vertical'   => $e->departamento ?? '',
             ],
         ];
         $this->view('empleados/carnet', $data);
