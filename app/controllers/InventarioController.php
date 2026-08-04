@@ -196,7 +196,11 @@ class InventarioController extends Controller {
                 'codigo_seccion'  => trim($_POST['codigo_seccion'] ?? ''),
                 'nro_orden'       => trim($_POST['nro_orden'] ?? ''),
             ];
-            Inventario::codificar($id, $partes, trim($_POST['fecha_verificacion'] ?? '') ?: null, $this->getUserId());
+            // Si la codificación se hace desde una recepción de BM-1, se deja
+            // la trazabilidad de en qué formulario vino ese código.
+            $idBM1 = (int)($_POST['id_consolidado_bm1'] ?? 0) ?: null;
+            Inventario::codificar($id, $partes, trim($_POST['fecha_verificacion'] ?? '') ?: null,
+                                  $this->getUserId(), $idBM1);
             $codigo = Inventario::componerCodigo(
                 $partes['codigo_grupo'], $partes['codigo_subgrupo'],
                 $partes['codigo_seccion'], $partes['nro_orden']
@@ -205,7 +209,11 @@ class InventarioController extends Controller {
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
-        header('Location: ' . URL_ROOT . '/inventario/index');
+        // Volver a donde se estaba trabajando: la pantalla de BM-1 si la
+        // codificación salió de una recepción, o el listado si no.
+        $volver = !empty($_POST['id_consolidado_bm1'])
+            ? '/inventario/consolidados' : '/inventario/index';
+        header('Location: ' . URL_ROOT . $volver);
     }
 
     public function delete($id) {
@@ -219,6 +227,198 @@ class InventarioController extends Controller {
             flash('global_msg', 'Error de BD: ' . $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/inventario/index');
+    }
+
+    // =====================================================================
+    //  Hoja de vida del bien (B-36)
+    // =====================================================================
+
+    /**
+     * Expediente completo de un bien: datos, código oficial, movimientos,
+     * mantenimientos y documentos de respaldo.
+     */
+    public function detalle($id = 0) {
+        $bien = Inventario::find((int)$id);
+        if (!$bien) {
+            flash('global_msg', 'El bien solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/index');
+            return;
+        }
+        $this->view('inventario/detalle', [
+            'titulo'         => 'Bien — ' . $bien->nombre,
+            'bien'           => $bien,
+            'movimientos'    => ActividadInventario::byItem((int)$id),
+            'mantenimientos' => Mantenimiento::porBien((int)$id),
+            'documentos'     => InventarioDocumento::porBien((int)$id),
+            'consolidado'    => !empty($bien->id_consolidado_bm1)
+                                    ? ConsolidadoBM1::find((int)$bien->id_consolidado_bm1) : null,
+        ]);
+    }
+
+    // =====================================================================
+    //  Documentos de respaldo (B-16 a B-19)
+    // =====================================================================
+
+    public function subirDocumento() {
+        $idBien = (int)($_POST['id_inventario'] ?? 0);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Inventario::find($idBien)) {
+                throw new Exception('Solicitud no válida.');
+            }
+            $tipo = $_POST['tipo_documento'] ?? '';
+            if (!isset(InventarioDocumento::TIPOS[$tipo])) {
+                throw new Exception('Selecciona un tipo de documento válido.');
+            }
+            $archivo = $this->guardarArchivoBien('documento', 'Doc_' . $tipo . '_' . $idBien);
+            InventarioDocumento::save([
+                'id_inventario'   => $idBien,
+                'tipo_documento'  => $tipo,
+                'archivo_url'     => $archivo['nombre'],
+                'nombre_original' => $archivo['original'],
+                'observaciones'   => trim($_POST['observaciones'] ?? ''),
+            ], $this->getUserId());
+            flash('global_msg', 'Documento adjuntado al bien.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/detalle/' . $idBien);
+    }
+
+    public function eliminarDocumento($idDoc = 0) {
+        $doc = InventarioDocumento::find((int)$idDoc);
+        if (!$doc) {
+            flash('global_msg', 'El documento no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/index');
+            return;
+        }
+        try {
+            InventarioDocumento::delete((int)$idDoc, $this->getUserId());
+            flash('global_msg', 'Documento eliminado.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/detalle/' . (int)$doc->id_inventario);
+    }
+
+    /** Foto del bien (B-21). */
+    public function subirFoto() {
+        $idBien = (int)($_POST['id_inventario'] ?? 0);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Inventario::find($idBien)) {
+                throw new Exception('Solicitud no válida.');
+            }
+            $archivo = $this->guardarArchivoBien('foto', 'Foto_' . $idBien, ['jpg', 'jpeg', 'png']);
+            $db = new Database();
+            $db->query("UPDATE inventario SET foto_url=:f, updated_at=CURRENT_TIMESTAMP, updated_by=:u WHERE id=:id");
+            $db->bind(':f',  $archivo['nombre']);
+            $db->bind(':u',  $this->getUserId());
+            $db->bind(':id', $idBien);
+            $db->execute();
+            flash('global_msg', 'Foto del bien actualizada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/detalle/' . $idBien);
+    }
+
+    // =====================================================================
+    //  Recepción del BM-1 consolidado (§2-bis del plan)
+    // =====================================================================
+
+    /** Listado de BM-1 recibidos + bienes pendientes de codificar. */
+    public function consolidados() {
+        $this->view('inventario/consolidados', [
+            'titulo'      => 'Formularios BM-1 recibidos',
+            'consolidados'=> ConsolidadoBM1::all(),
+            'pendientes'  => Inventario::pendientesCodificacion(),
+        ]);
+    }
+
+    /** Registra la recepción de un BM-1 (con su archivo escaneado). */
+    public function registrarBM1() {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+
+            $fechaRec = trim($_POST['fecha_recepcion'] ?? '') ?: date('Y-m-d');
+            if ($fechaRec > date('Y-m-d')) {
+                throw new Exception('La fecha de recepción no puede ser futura.');
+            }
+
+            // El archivo es opcional: a veces el BM-1 llega en papel y se
+            // escanea después. Lo importante es dejar registrada la recepción.
+            $archivo = ['nombre' => null, 'original' => null];
+            if (!empty($_FILES['documento']['name'])) {
+                $archivo = $this->guardarArchivoBien('documento', 'BM1_' . date('Ymd_His'));
+            }
+
+            ConsolidadoBM1::crear([
+                'fecha_recepcion' => $fechaRec,
+                'fecha_documento' => trim($_POST['fecha_documento'] ?? ''),
+                'referencia'      => trim($_POST['referencia'] ?? ''),
+                'archivo_url'     => $archivo['nombre'],
+                'nombre_original' => $archivo['original'],
+                'observaciones'   => trim($_POST['observaciones'] ?? ''),
+            ], $this->getUserId());
+
+            flash('global_msg', 'Recepción del BM-1 registrada. Ya puedes codificar los bienes que trae.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/consolidados');
+    }
+
+    public function eliminarBM1($id = 0) {
+        try {
+            ConsolidadoBM1::delete((int)$id, $this->getUserId());
+            flash('global_msg', 'Recepción eliminada. Los bienes ya codificados conservan su código.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/consolidados');
+    }
+
+    // =====================================================================
+    //  Helpers
+    // =====================================================================
+
+    /**
+     * Guarda un archivo del módulo en storage/uploads/bienes/ (fuera del web
+     * root). Valida extensión Y MIME real, igual que en RRHH.
+     * @return array{nombre:string, original:string}
+     */
+    private function guardarArchivoBien(string $campo, string $prefijo,
+                                        array $permitidas = ['pdf','jpg','jpeg','png']): array {
+        if (empty($_FILES[$campo]['name']) || ($_FILES[$campo]['error'] ?? 1) !== UPLOAD_ERR_OK) {
+            throw new Exception('Debes seleccionar un archivo válido.');
+        }
+        if ($_FILES[$campo]['size'] > 5 * 1024 * 1024) {
+            throw new Exception('El archivo no puede superar los 5 MB.');
+        }
+        $original = $_FILES[$campo]['name'];
+        $ext = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+        if (!in_array($ext, $permitidas, true)) {
+            throw new Exception('Formato no permitido. Se admite: ' . strtoupper(implode(', ', $permitidas)) . '.');
+        }
+        $mimesOk = [
+            'pdf'  => ['application/pdf'],
+            'jpg'  => ['image/jpeg'], 'jpeg' => ['image/jpeg'],
+            'png'  => ['image/png'],
+        ];
+        $mimeReal = function_exists('mime_content_type') ? @mime_content_type($_FILES[$campo]['tmp_name']) : null;
+        if ($mimeReal && !in_array($mimeReal, $mimesOk[$ext] ?? [], true)) {
+            throw new Exception('El contenido del archivo no coincide con su extensión.');
+        }
+
+        $dir = dirname(dirname(__DIR__)) . '/storage/uploads/bienes/';
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new Exception('No se pudo preparar la carpeta de archivos.');
+        }
+        $nombre = preg_replace('/[^A-Za-z0-9_\-]/', '', $prefijo) . '_' . time() . '.' . $ext;
+        if (!move_uploaded_file($_FILES[$campo]['tmp_name'], $dir . $nombre)) {
+            throw new Exception('No se pudo guardar el archivo.');
+        }
+        return ['nombre' => $nombre, 'original' => $original];
     }
 
     /** Vuelve al listado con un mensaje de error de validación. */

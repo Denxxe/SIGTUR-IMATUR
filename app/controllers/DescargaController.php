@@ -59,6 +59,41 @@ class DescargaController extends Controller {
         $this->stream('pasantes', $row->archivo_url, null);
     }
 
+    /** Documento de respaldo de un bien (factura, actas, oficios) — Inventario / Admin. */
+    public function bien($idDoc = 0) {
+        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT archivo_url, nombre_original FROM inventario_documentos
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idDoc);
+        $row = $db->single();
+        if (!$row) $this->abort(404, 'Documento no encontrado.');
+        $this->stream('bienes', $row->archivo_url, $row->nombre_original ?? null);
+    }
+
+    /** Formulario BM-1 recibido de la Alcaldía — Inventario / Admin. */
+    public function bm1($idConsolidado = 0) {
+        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT archivo_url, nombre_original FROM inventario_consolidados_bm1
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idConsolidado);
+        $row = $db->single();
+        if (!$row || empty($row->archivo_url)) $this->abort(404, 'Documento no disponible.');
+        $this->stream('bienes', $row->archivo_url, $row->nombre_original ?? null);
+    }
+
+    /** Foto de un bien — Inventario / Admin. */
+    public function fotoBien($idBien = 0) {
+        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT foto_url FROM inventario WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idBien);
+        $row = $db->single();
+        if (!$row || empty($row->foto_url)) $this->abort(404, 'Foto no disponible.');
+        $this->stream('bienes', $row->foto_url, null);
+    }
+
     /**
      * Envía el archivo desde storage/uploads/<sub>/. Resuelve por basename del
      * valor guardado (robusto ante rutas antiguas tipo "/uploads/<sub>/x.pdf").

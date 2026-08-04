@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–063.
+-- Cubre: esquema base + TODAS las migraciones 001–064.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -14,7 +14,7 @@
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 50 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 52 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
 --       - roles (5) y permisos_rol  ....... RBAC dinámico
 --       - configuracion_sistema ........... datos del instituto, RIF,
@@ -1141,6 +1141,7 @@ CREATE TABLE public.inventario (
     garantia_vence date,
     id_responsable integer,
     foto_url character varying(255),
+    id_consolidado_bm1 integer,
     CONSTRAINT inventario_cantidad_chk CHECK ((cantidad >= 1)),
     CONSTRAINT inventario_condicion_check CHECK (((condicion IS NULL) OR ((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying])::text[])))),
     CONSTRAINT inventario_estatus_check CHECK (((estatus)::text = ANY ((ARRAY['En espera de codificación'::character varying, 'Activo'::character varying, 'En mantenimiento'::character varying, 'Extraviado'::character varying, 'Robado'::character varying, 'Dado de baja'::character varying])::text[]))),
@@ -1161,6 +1162,110 @@ COMMENT ON COLUMN public.inventario.codigo_bn IS 'Código oficial compuesto (gru
 --
 
 COMMENT ON COLUMN public.inventario.nro_orden IS 'N° de orden que asigna la Alcaldía (3 dígitos con ceros a la izquierda). NULL hasta la inspección.';
+
+
+--
+-- Name: COLUMN inventario.id_consolidado_bm1; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.inventario.id_consolidado_bm1 IS 'BM-1 en el que la Alcaldía asignó el código de este bien.';
+
+
+--
+-- Name: inventario_consolidados_bm1; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.inventario_consolidados_bm1 (
+    id integer NOT NULL,
+    fecha_recepcion date DEFAULT CURRENT_DATE NOT NULL,
+    fecha_documento date,
+    referencia character varying(120),
+    archivo_url character varying(255),
+    nombre_original character varying(255),
+    observaciones text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: TABLE inventario_consolidados_bm1; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.inventario_consolidados_bm1 IS 'Formularios BM-1 recibidos de la Alcaldía (documento entrante, ya codificado).';
+
+
+--
+-- Name: inventario_consolidados_bm1_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.inventario_consolidados_bm1_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: inventario_consolidados_bm1_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.inventario_consolidados_bm1_id_seq OWNED BY public.inventario_consolidados_bm1.id;
+
+
+--
+-- Name: inventario_documentos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.inventario_documentos (
+    id integer NOT NULL,
+    id_inventario integer NOT NULL,
+    tipo_documento character varying(50) NOT NULL,
+    archivo_url character varying(255) NOT NULL,
+    nombre_original character varying(255),
+    observaciones text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: TABLE inventario_documentos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.inventario_documentos IS 'Respaldos del bien: factura, informe de la Alcaldía, oficio de donación, actas (B-16 a B-19).';
+
+
+--
+-- Name: inventario_documentos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.inventario_documentos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: inventario_documentos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.inventario_documentos_id_seq OWNED BY public.inventario_documentos.id;
 
 
 --
@@ -2587,6 +2692,20 @@ ALTER TABLE ONLY public.inventario ALTER COLUMN id SET DEFAULT nextval('public.i
 
 
 --
+-- Name: inventario_consolidados_bm1 id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_consolidados_bm1 ALTER COLUMN id SET DEFAULT nextval('public.inventario_consolidados_bm1_id_seq'::regclass);
+
+
+--
+-- Name: inventario_documentos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_documentos ALTER COLUMN id SET DEFAULT nextval('public.inventario_documentos_id_seq'::regclass);
+
+
+--
 -- Name: inventario_mantenimientos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3105,7 +3224,7 @@ SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
 -- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 179, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 185, true);
 
 
 --
@@ -3235,10 +3354,24 @@ SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
 
 
 --
+-- Name: inventario_consolidados_bm1_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.inventario_consolidados_bm1_id_seq', 1, true);
+
+
+--
+-- Name: inventario_documentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.inventario_documentos_id_seq', 2, true);
+
+
+--
 -- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_id_seq', 6, true);
+SELECT pg_catalog.setval('public.inventario_id_seq', 7, true);
 
 
 --
@@ -3385,7 +3518,7 @@ SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ubicaciones_id_seq', 6, true);
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 7, true);
 
 
 --
@@ -3678,6 +3811,22 @@ ALTER TABLE ONLY public.horarios
 
 ALTER TABLE ONLY public.inventario
     ADD CONSTRAINT inventario_codigo_bn_key UNIQUE (codigo_bn);
+
+
+--
+-- Name: inventario_consolidados_bm1 inventario_consolidados_bm1_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_consolidados_bm1
+    ADD CONSTRAINT inventario_consolidados_bm1_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: inventario_documentos inventario_documentos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_documentos
+    ADD CONSTRAINT inventario_documentos_pkey PRIMARY KEY (id);
 
 
 --
@@ -4099,6 +4248,13 @@ CREATE INDEX idx_faltas_empleado ON public.faltas USING btree (id_empleado) WHER
 --
 
 CREATE INDEX idx_feriados_mesdia ON public.feriados USING btree (EXTRACT(month FROM fecha), EXTRACT(day FROM fecha));
+
+
+--
+-- Name: idx_inv_doc_bien; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inv_doc_bien ON public.inventario_documentos USING btree (id_inventario);
 
 
 --
@@ -4564,6 +4720,14 @@ ALTER TABLE ONLY public.inventario
 
 
 --
+-- Name: inventario fk_inventario_bm1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario
+    ADD CONSTRAINT fk_inventario_bm1 FOREIGN KEY (id_consolidado_bm1) REFERENCES public.inventario_consolidados_bm1(id) ON DELETE SET NULL;
+
+
+--
 -- Name: inventario fk_inventario_responsable; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4657,6 +4821,14 @@ ALTER TABLE ONLY public.usuarios
 
 ALTER TABLE ONLY public.usuarios
     ADD CONSTRAINT fk_usuarios_rol FOREIGN KEY (id_rol) REFERENCES public.roles(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: inventario_documentos inventario_documentos_id_inventario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_documentos
+    ADD CONSTRAINT inventario_documentos_id_inventario_fkey FOREIGN KEY (id_inventario) REFERENCES public.inventario(id) ON DELETE CASCADE;
 
 
 --
@@ -4913,5 +5085,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-063).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-064).
 --

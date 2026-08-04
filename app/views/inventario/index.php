@@ -24,6 +24,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <p class="page__subtitle">Registro y control de los bienes de la institución. El código oficial lo asigna la Alcaldía.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/inventario/consolidados" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-inbox"></i> BM-1 recibidos
+        </a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInv" onclick="nuevoInv()">
             <i class="bi bi-plus-circle"></i> Registrar Bien
         </button>
@@ -56,7 +59,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <i class="bi bi-info-circle"></i>
         Estos bienes ya están registrados pero <strong>aún no tienen código de la Alcaldía</strong>.
         Se le envía un informe para que vengan a inspeccionarlos; cuando devuelvan el
-        <strong>Formulario BM-1</strong>, usa <em>Codificar</em> para transcribir el N° de orden asignado.
+        <strong>Formulario BM-1</strong>, regístralo en
+        <a href="<?php echo URL_ROOT; ?>/inventario/consolidados">BM-1 recibidos</a>
+        y transcribe desde ahí los códigos asignados.
     </div>
 <?php endif; ?>
 
@@ -170,6 +175,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php if ($sinCodigo): ?>
                                 <button class="row-action" onclick='codificarInv(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-upc-scan"></i> Codificar</button>
                             <?php endif; ?>
+                            <a href="<?php echo URL_ROOT; ?>/inventario/detalle/<?php echo (int)$item->id; ?>" class="row-action row-action--view"><i class="bi bi-journal-text"></i> Hoja de vida</a>
                             <button class="row-action row-action--edit" onclick='editarInv(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                             <a href="<?php echo URL_ROOT; ?>/inventario/delete/<?php echo $item->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                         </td>

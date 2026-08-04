@@ -353,7 +353,8 @@ class Inventario extends Model {
      * Registra el código que la Alcaldía asignó al recibir el BM-1 y pasa el
      * bien a Activo (§2-bis y §4.1 del plan). Es el paso de conciliación.
      */
-    public static function codificar(int $id, array $partes, ?string $fecha, $user_id = null): bool {
+    public static function codificar(int $id, array $partes, ?string $fecha, $user_id = null,
+                                     ?int $idConsolidado = null): bool {
         $codigo = self::componerCodigo(
             $partes['codigo_grupo'] ?? null, $partes['codigo_subgrupo'] ?? null,
             $partes['codigo_seccion'] ?? null, $partes['nro_orden'] ?? null
@@ -373,6 +374,7 @@ class Inventario extends Model {
                        SET codigo_grupo=:g, codigo_subgrupo=:sg, codigo_seccion=:sec,
                            nro_orden=:orden, codigo_bn=:codigo,
                            verificado_alcaldia=TRUE, fecha_verificacion=:fecha,
+                           id_consolidado_bm1=:bm1,
                            estatus=:activo, updated_at=CURRENT_TIMESTAMP, updated_by=:u
                      WHERE id=:id AND is_active = TRUE");
         $db->bind(':g',      trim((string)$partes['codigo_grupo']));
@@ -381,12 +383,14 @@ class Inventario extends Model {
         $db->bind(':orden',  trim((string)$partes['nro_orden']));
         $db->bind(':codigo', $codigo);
         $db->bind(':fecha',  $fecha ?: date('Y-m-d'));
+        $db->bind(':bm1',    $idConsolidado ?: null);
         $db->bind(':activo', self::EST_ACTIVO);
         $db->bind(':u',      $user_id);
         $db->bind(':id',     $id);
         $ok = $db->execute();
         self::auditStatic('inventario', 'UPDATE', $id, $previos,
-            ['codigo_bn' => $codigo, 'estatus' => self::EST_ACTIVO, 'verificado_alcaldia' => true], $user_id);
+            ['codigo_bn' => $codigo, 'estatus' => self::EST_ACTIVO,
+             'verificado_alcaldia' => true, 'id_consolidado_bm1' => $idConsolidado], $user_id);
         return $ok;
     }
 

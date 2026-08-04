@@ -2,7 +2,8 @@
 
 **Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
 
-> **Estado: ✅ Fases 1 y 2 CONSTRUIDAS** (migraciones 062-063, 2026-08-04). Siguiente: **Fase 3 — documentos**. Ver §10.
+> **Estado: ✅ Fases 1 y 2 completas · Fase 3 parcial** (migraciones 062-064, 2026-08-04).
+> **Qué falta exactamente para terminar el módulo: §12.**
 
 ---
 
@@ -343,7 +344,7 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 |---|---|---|
 | ~~**1. Base**~~ | ✅ **HECHA** (mig. 062): `estatus` + `condicion` separados (**cierra H-04**) · código oficial por partes + flujo de codificación contra el BM-1 · categoría interna (11 sembradas) · origen/donación · costo/proveedor/garantía · responsable único · sedes y depósito | — |
 | ~~**2. Movimientos**~~ | ✅ **HECHA** (mig. 063): origen/destino · autorización por cargo+departamento · mantenimiento con salida/retorno y proceso completo · todo transaccional | — |
-| **3. Documentos** | Adjuntos por bien (factura, informe, oficios) · generación del informe de bienes nuevos, acta de asignación, acta de baja · **recepción y conciliación del BM-1** | Fase 1 · formatos reales |
+| **3. Documentos** | ✅ **HECHO** (mig. 064): adjuntos por bien · foto del bien · recepción del BM-1 con archivo y codificación trazable · hoja de vida del bien (B-36).<br>⏳ **Falta**: generación del informe de bienes nuevos, acta de asignación y acta de baja | 🔒 formatos reales |
 | **4. Explotación** | Etiquetas con QR · reportes de §6 · alertas de §7 · hoja de vida del bien (B-36) | Fases 1-3 |
 | **5. Cierre** | Conteo por cambio de gestión · RBAC de §7 | Fase 4 |
 
@@ -354,3 +355,78 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 ## 11. Nota sobre la documentación existente
 
 `docs/REGLAS_NEGOCIO_Inventario.md` quedó **obsoleto** (2026-05-22): describe `ruta_inventario` y `taller_inventario` (eliminadas en la mig. 050), y da por resueltas D-IN01/D-IN05 con criterios que estas respuestas contradicen. Debe reescribirse al cerrar la Fase 1, no antes.
+
+---
+
+## 12. Qué falta para terminar el módulo
+
+Estado al 2026-08-04, tras las migraciones 062-064.
+
+### 12.1 Construido y funcionando
+
+| Área | Estado |
+|---|---|
+| Estatus administrativo vs condición física (cierra **H-04**) | ✅ |
+| Código oficial por partes + flujo de codificación | ✅ |
+| Categoría interna (11 sembradas) como eje aparte del código | ✅ |
+| Adquisición: origen, donante, costo, fecha, proveedor, garantía | ✅ |
+| Responsable nominal único · sedes · depósito | ✅ |
+| Movimientos con origen/destino y autorización por cargo+departamento | ✅ |
+| Mantenimiento con salida, retorno, costo y resultado | ✅ |
+| Documentos de respaldo por bien + foto | ✅ |
+| Recepción del BM-1 con archivo y codificación trazable | ✅ |
+| Hoja de vida del bien (B-36) | ✅ |
+
+### 12.2 Requisitos pendientes de construir
+
+**Bloqueados por falta de formatos del cliente** 🔒
+
+| # | Qué | Por qué está bloqueado |
+|---|---|---|
+| R-1 | **Informe / oficio de bienes nuevos** para enviar a la Alcaldía | Es el **dolor #1 declarado** (B-05). Sin el formato real, cualquier cosa que generemos habría que rehacerla. |
+| R-2 | **Acta administrativa de baja** (firma Coordinadora + Presidencia) + oficio de retiro a la Alcaldía | B-39. Ídem: hace falta el formato. |
+| R-3 | **Acta / oficio de asignación** de bien a responsable, que firma el empleado | B-29. Ídem. |
+
+> Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible.
+
+**Implementables ya, sin depender de nadie** 🛠️
+
+| # | Qué | Origen |
+|---|---|---|
+| R-4 | **Etiquetas con código + QR** para imprimir y pegar | B-14, B-15. El `qrcode.min.js` ya está vendorizado. |
+| R-5 | **Reportes de la Presidencia**: activos · por departamento · dañados · desincorporados · sin código · donaciones · en depósito | B-51, B-53. Sin formato obligatorio (B-52). |
+| R-6 | **Alertas**: garantías por vencer · bienes esperando código hace mucho | B-20, B-12. Se enganchan al Centro de Alertas existente. |
+| R-7 | **Mantenimiento preventivo programado** (aires, impresoras, computadoras) con aviso | B-56. Requiere la tabla `inventario_mantenimiento_plan`. |
+| R-8 | **Conteo por cambio de gestión**: acta que compara el registro contra lo hallado (estatus, lugar, cantidad) | B-05, B-48, B-50. Es el **dolor #2**. |
+| R-9 | **RBAC del módulo**: Coordinación de Bienes edita · Presidencia y Administración solo ven | B-58. Hoy sigue el rol 4 genérico. |
+| R-10 | Eliminar `tipo_bien` y `cantidad` de la BD | Depende solo de confirmar **B-66**. |
+
+### 12.3 Preguntas salientes al cliente
+
+**Bloquean R-1, R-2 y R-3 — pedir los formatos físicos:**
+
+- [ ] Informe/oficio de bienes nuevos que IMATUR envía a la Alcaldía ← **el más urgente**
+- [ ] Acta administrativa de baja
+- [ ] Oficio de retiro que se manda a la Alcaldía tras la baja
+- [ ] Acta/oficio de asignación de un bien a un empleado
+- [ ] Oficio de donación
+
+**Preguntas abiertas** (ninguna bloquea lo implementable):
+
+| # | | Pregunta |
+|---|---|---|
+| B-63 | ▲ | **Umbral de mobiliario.** No es stock de consumibles: es saber si *alcanzan* los bienes (sillas por empleado, mesas por departamento). ¿Cómo se define — cantidad esperada por departamento, o relación contra el número de empleados? |
+| B-65 | ▲ | **Sede del aeropuerto.** Sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como ubicación independiente con su propio responsable? |
+| B-66 | ▲ | **Confirmar eliminación** de `tipo_bien` (Durable/Fungible) y `cantidad`. B-07 dice que no llevan consumibles y B-09 que el registro es individual, así que sobran. Hoy están sin uso pero siguen en la BD. |
+| B-67 | ○ | Mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
+| B-68 | ○ | ¿El responsable del bien se **deriva** del director/coordinador del departamento o se elige a mano? Cambia si hay que mantenerlo al rotar el liderazgo. |
+| B-69 | ▲ | **Valores en "S/P".** El BM-1 trae *Valor unitario* y *Valor total* en `S/P` en todas las filas, pero B-17 dice que sí registran costo y factura. ¿Es solo control interno o la Alcaldía va a exigir el monto? |
+| B-70 | ▲ | ¿Cada cuánto devuelve la Alcaldía el BM-1 — con cada lote verificado, una vez al año, cuando se lo piden? |
+| B-71 | ▲ | ¿Existe el BM-1 en **digital** (Excel/Word)? Si la Alcaldía lo arma en computadora, la carga de códigos podría ser automática en vez de teclear bien por bien. |
+| B-72 | ○ | Los N° de orden de la muestra van del 025 al 171 con saltos. ¿Los huecos son bajas, o la Alcaldía numera de forma continua para toda la Alcaldía y no solo para IMATUR? |
+
+### 12.4 Antes de usarlo en producción
+
+- [ ] **Cargar los ~142 bienes reales** (B-04). Hoy la tabla está vacía; sin datos no se puede validar nada de esto contra la realidad.
+- [ ] Asignar el cargo de **Coordinador** en el departamento *Compra de Bienes y Servicios*: mientras el puesto esté vacante, el sistema **bloquea** todos los movimientos (por diseño, B-32).
+- [ ] Revisar que las **11 categorías** propuestas encajen con cómo quieren agrupar sus bienes.

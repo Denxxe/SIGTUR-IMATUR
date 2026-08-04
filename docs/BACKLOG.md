@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **063** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **064** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,22 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-04 — Bienes, Fase 3 (parte 1): expediente documental y recepción del BM-1 (mig. 064)
+
+Se construyó **todo lo que no depende de recibir formatos físicos**. La generación de documentos queda bloqueada hasta tenerlos.
+
+| # | Entregable | Detalle |
+|---|-----------|---------|
+| ✅ | **Documentos de respaldo por bien** | `inventario_documentos` con catálogo cerrado de tipos (factura, informe de la Alcaldía, oficio de donación, acta de asignación, acta de baja, denuncia, garantía, otro). Binario **fuera del web root** (`storage/uploads/bienes/`), servido por id con control de rol vía `DescargaController` — mismo patrón ya probado en RRHH. Valida extensión **y MIME real**, máx. 5 MB. Cierra B-19. |
+| ✅ | **Foto del bien** | B-21. Subida y visualización en la hoja de vida, con la misma protección. |
+| ✅ | **Recepción del BM-1** | `inventario_consolidados_bm1` + pantalla `/inventario/consolidados`. Registra cada formulario que devuelve la Alcaldía, permite adjuntar el escaneado (opcional: a veces llega en papel) y **codificar los bienes desde ahí**. `inventario.id_consolidado_bm1` deja la trazabilidad de en qué formulario vino el código de cada bien — justo lo que hace falta en la auditoría por cambio de gestión. |
+| ✅ | **Hoja de vida del bien** (B-36) | `/inventario/detalle/{id}`: ficha completa, foto, código oficial con su BM-1 de procedencia, documentos, mantenimientos y movimientos en una sola pantalla. Era un pedido explícito del cliente. |
+| ⏳ | **Generación de documentos: pendiente** | Informe de bienes nuevos (dolor #1), acta de baja y acta de asignación. **Bloqueados por los formatos reales** — si los inventamos, habría que rehacerlos. |
+| ✅ | **Verificado** | 16 pruebas sobre la BD: recepción, codificación trazable, conteo de bienes por BM-1, adjuntos con catálogo cerrado, borrado lógico y hoja de vida completa. |
+
+> **Qué falta exactamente para cerrar el módulo (requisitos + preguntas salientes): `docs/PLAN_MODULO_BIENES.md` §12.**
+> Resumen: 3 documentos bloqueados por formatos · 7 requisitos implementables ya (etiquetas QR, reportes de Presidencia, alertas, mantenimiento preventivo, conteo por cambio de gestión, RBAC del módulo, limpieza de `tipo_bien`) · 9 preguntas abiertas (B-63, B-65…B-72).
 
 ### 2026-08-04 — Bienes, Fase 2: movimientos, autorización y mantenimiento (mig. 063)
 
