@@ -1363,7 +1363,7 @@ class ReportesController extends Controller {
         if ($fechaHasta) { $where .= " AND r.fecha_visita <= :fh"; $binds[':fh'] = $fechaHasta; }
         $db->query("SELECT r.*,
                            d.nombre AS departamento_nombre,
-                           COALESCE(p.nombre || ' ' || p.apellido, r.nombre_facilitador_externo) AS facilitador_nombre,
+                           (p.nombre || ' ' || p.apellido) AS facilitador_nombre,
                            (SELECT COUNT(*) FROM puntos_ruta pr WHERE pr.id_ruta = r.id AND pr.is_active = TRUE) as total_puntos,
                            (SELECT COUNT(*) FROM participantes_ruta par WHERE par.id_ruta = r.id AND par.is_active = TRUE) as total_participantes,
                            ri.mujeres, ri.hombres, ri.ninas, ri.ninos, ri.total_atendidos

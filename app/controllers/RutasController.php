@@ -258,7 +258,6 @@ class RutasController extends Controller {
                     'cedula_libre'   => $cedulaLibre,
                     'genero_libre'   => trim($_POST['genero_libre']   ?? '') ?: null,
                     'fecha_nac_libre'=> $fechaNacLibreRaw,
-                    'id_institucion' => null,
                     'observaciones'  => $observaciones,
                     'nombre_representante' => $nombreRep,
                     'cedula_representante' => $cedulaRep,
@@ -336,7 +335,7 @@ class RutasController extends Controller {
                     }
                 }
 
-                Ruta::inscribir($id_ruta, $idPersona, $userId, null, $observaciones);
+                Ruta::inscribir($id_ruta, $idPersona, $userId, $observaciones);
             }
 
             // Advertencia no bloqueante de cupo (mismo criterio que talleres):

@@ -51,6 +51,9 @@ function auditCampo(string $k): string {
         'nombre_libre' => 'Nombre', 'apellido_libre' => 'Apellido', 'cedula_libre' => 'Documento',
         'genero_libre' => 'Género', 'fecha_nac_libre' => 'Fecha de nacimiento', 'nombre_docente' => 'Docente',
         'id_taller' => 'Taller (ID)', 'id_ruta' => 'Ruta (ID)', 'id_facilitador' => 'Facilitador (ID)',
+        // 'id_oficio' se eliminó de la BD en la migración 060, pero se conserva aquí:
+        // hay entradas de bitácora anteriores cuyo JSON lo menciona y sin la etiqueta
+        // se mostrarían con el nombre crudo de la columna.
         'id_visitante' => 'Visitante (ID)', 'id_empleado' => 'Empleado (ID)', 'id_oficio' => 'Oficio (ID)',
         'id_ubicacion_formacion' => 'Sede (ID)', 'ubicacion' => 'Ubicación', 'cargo' => 'Cargo', 'sueldo' => 'Sueldo',
     ];

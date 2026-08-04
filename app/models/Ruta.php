@@ -234,7 +234,7 @@ class Ruta extends Model {
         return $db->single() ?: null;
     }
 
-    public static function inscribir(int $id_ruta, int $id_persona, int $user_id, ?int $id_institucion = null, ?string $observaciones = null) {
+    public static function inscribir(int $id_ruta, int $id_persona, int $user_id, ?string $observaciones = null) {
         $db = new Database();
         $db->query("SELECT id FROM participantes_ruta WHERE id_ruta=:r AND id_persona=:p AND is_active=TRUE LIMIT 1");
         $db->bind(':r', $id_ruta);
@@ -242,15 +242,14 @@ class Ruta extends Model {
         if ($db->single()) {
             throw new Exception('Esta persona ya está inscrita en la ruta.');
         }
-        $db->query("INSERT INTO participantes_ruta (id_ruta, id_persona, id_institucion, observaciones, created_by)
-                    VALUES (:r, :p, :inst, :obs, :u)");
+        $db->query("INSERT INTO participantes_ruta (id_ruta, id_persona, observaciones, created_by)
+                    VALUES (:r, :p, :obs, :u)");
         $db->bind(':r',    $id_ruta);
         $db->bind(':p',    $id_persona);
-        $db->bind(':inst', $id_institucion);
         $db->bind(':obs',  $observaciones);
         $db->bind(':u',    $user_id);
         $result = $db->execute();
-        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'id_persona' => $id_persona, 'id_institucion' => $id_institucion], $user_id);
+        self::auditStatic('participantes_ruta', 'INSERT', null, null, ['id_ruta' => $id_ruta, 'id_persona' => $id_persona], $user_id);
         return $result;
     }
 
@@ -284,16 +283,15 @@ class Ruta extends Model {
         $db = new Database();
         $db->query("INSERT INTO participantes_ruta
                         (id_ruta, nombre_libre, apellido_libre, cedula_libre,
-                         genero_libre, fecha_nac_libre, id_institucion, observaciones,
+                         genero_libre, fecha_nac_libre, observaciones,
                          nombre_representante, cedula_representante, created_by)
-                    VALUES (:r, :nom, :ape, :ced, :gen, :fnac, :inst, :obs, :nrep, :crep, :u)");
+                    VALUES (:r, :nom, :ape, :ced, :gen, :fnac, :obs, :nrep, :crep, :u)");
         $db->bind(':r',    $id_ruta);
         $db->bind(':nom',  $datos['nombre_libre']);
         $db->bind(':ape',  $datos['apellido_libre']  ?? null);
         $db->bind(':ced',  $datos['cedula_libre']    ?? null);
         $db->bind(':gen',  $datos['genero_libre']    ?? null);
         $db->bind(':fnac', $datos['fecha_nac_libre'] ?? null);
-        $db->bind(':inst', $datos['id_institucion']  ?? null);
         $db->bind(':obs',  $datos['observaciones']   ?? null);
         $db->bind(':nrep', $datos['nombre_representante'] ?? null);
         $db->bind(':crep', $datos['cedula_representante'] ?? null);

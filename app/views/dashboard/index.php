@@ -338,6 +338,8 @@ $tablaNames = [
     'taller_evidencias'    => 'evidencia de actividad',
     'taller_informes'      => 'informe de actividad',
     'rutas'                => 'ruta turística',
+    // Tabla eliminada en la migración 060; la etiqueta se conserva para que
+    // cualquier registro histórico de bitácora siga leyéndose en lenguaje natural.
     'instituciones_externas'=> 'institución externa',
     'usuarios'             => 'usuario del sistema',
     'departamentos'        => 'departamento',
