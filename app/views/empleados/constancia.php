@@ -151,5 +151,14 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
   </div>
 
 </div>
+<script>
+  // El navegador imprime su propio encabezado/pie (fecha + título de la pestaña
+  // arriba, URL + página abajo) — no es parte del documento y no se puede
+  // suprimir por completo desde la página. Vaciar el título justo antes de
+  // imprimir sí quita esa mitad del texto (el navegador lo usa arriba).
+  var _tituloOriginal = document.title;
+  window.addEventListener('beforeprint', function () { document.title = ' '; });
+  window.addEventListener('afterprint', function () { document.title = _tituloOriginal; });
+</script>
 </body>
 </html>
