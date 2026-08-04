@@ -1,5 +1,7 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-07-16 (migración 059, ejecutada en este entorno; **Nómina — Bono Vacacional v1** "registro + reporte": historial salarial por empleado (`empleado_salarios`), módulo `/nomina` (períodos + captura/edición + cierre), escritor OOXML multi-hoja reusable `XlsxMultiSheet` para exportar en el formato exacto que exige la Alcaldía; días base por tipo de personal configurables. Liquidación de Prestaciones Sociales queda para una 2da entrega — ver `docs/BACKLOG.md` §3.1 — suite `php tests/run.php` 18/18 ✓)  
+**Última actualización:** 2026-08-04 — **Módulo de Bienes en replanteamiento**: el levantamiento con el cliente (59 preguntas respondidas) mostró que lo construido es un CRUD genérico y lo que hace falta es un expediente administrativo por bien; plan por fases en `docs/PLAN_MODULO_BIENES.md`. Antes en la misma fecha: carnet rediseñado según el modelo físico (mig. 061), limpieza de columnas inertes (mig. 060) y **`database/schema_consolidado.sql` regenerado y ahora es autosuficiente (001–061)**: instalar desde cero = importar ese único archivo, sin migraciones encima. Incluye catálogos institucionales sembrados y un administrador de arranque (`admin`/`Sigtur2026`, cambiar al primer ingreso). Verificado cargándolo en una BD vacía: 49 tablas, 0 errores. Antes, el consolidado cubría solo hasta la 023 y el README mandaba aplicar 024–052, así que **toda instalación nueva quedaba sin las migraciones 053–059** (carnet, auditoría de login, alertas vistas, recuperación de contraseña, nómina).
+
+**Anterior:** 2026-07-16 (migración 059; **Nómina — Bono Vacacional v1** "registro + reporte": historial salarial por empleado (`empleado_salarios`), módulo `/nomina` (períodos + captura/edición + cierre), escritor OOXML multi-hoja reusable `XlsxMultiSheet` para exportar en el formato exacto que exige la Alcaldía; días base por tipo de personal configurables. Liquidación de Prestaciones Sociales queda para una 2da entrega — ver `docs/BACKLOG.md` §3.1 — suite `php tests/run.php` 18/18 ✓)  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
 
 ---
@@ -153,17 +155,15 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | `participantes_taller` | Inscripción; `id_persona` nullable; `nombre_libre/apellido_libre/cedula_libre`; `es_brigadista BOOL`; `nombre_docente`; `cedula_docente` *(006)* |
 | `pasantes` | Historial de pasantes; FK `id_persona` (migración 003) |
 | `pasante_documentos` | Flags de documentos entregados |
-| `oficios` | Oficios recibidos (externos → IMATUR); FK `id_oficio` en talleres externos |
 
 #### Turismo
 | Tabla | Descripción |
 |-------|-------------|
-| `rutas` | Itinerarios; `nivel_dificultad` CHECK; `requiere_formacion BOOL` *(006)*; `tiene_tarifa BOOL`, `tarifa_monto DECIMAL`, `nombre_facilitador_externo VARCHAR` *(007)* |
+| `rutas` | Itinerarios; `requiere_formacion BOOL` *(006)*; `tiene_tarifa BOOL`, `tarifa_monto DECIMAL` *(007)* — ⚠️ **tarifa nunca se escribe desde la UI**, ver D-RT02. (`nivel_dificultad` eliminado en 021; `nombre_facilitador_externo` en **060**) |
 | `puntos_ruta` | Paradas con lat/lon y orden |
 | `actividades_ruta` | Eventos programados por ruta |
 | `ruta_inventario` | Bienes asignados a una ruta |
-| `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)*; `id_institucion FK instituciones_externas` *(007)* |
-| `instituciones_externas` | Instituciones educativas/empresas externas con flag `es_educativa` *(007)* |
+| `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)*; representante del menor *(038)*. (`id_institucion` eliminado en **060**) |
 | `visitantes` | Personas externas que visitan IMATUR físicamente |
 | `visitas` | Marcaje entrada/salida; `id_empleado` (empleado visitado) |
 | `oficios_emitidos` | Oficios salientes generados desde rutas *(005)* |
@@ -240,8 +240,18 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 044 | `044_inventario_tipo_bien.sql` | ✅ Ejecutado | `inventario` +`tipo_bien` (Durable/Fungible, CHECK) +`cantidad` (≥1). Normaliza `codigo_bn`/`serial` vacíos a NULL. Durable = inventariable (Código BN obligatorio); Fungible = consumible (sin código/serial, con cantidad). `Inventario::TIPOS_BIEN`/`TIPO_BIEN_BADGES`; validación por tipo en `InventarioController::store()` + toggle en el modal (U5) |
 | 042 | `042_motivo_anulacion_disciplina.sql` | ✅ Ejecutado | `amonestaciones.motivo_anulacion` + `faltas.motivo_anulacion` (TEXT): al anular una falta/amonestación RRHH registra el porqué (modal POST `eliminarFalta`/`eliminarAmonestacion`, motivo obligatorio). Alerta "Causa de despido" para **todos** (3+ amonestaciones) con botón **Procesar despido** → `empleados/detalle?egreso=despido` (preselecciona motivo Despido). Lista de empleados muestra columna **Disciplina** (conteo amonestaciones/faltas vía `Empleado::all()`) (B14) |
 | 059 | `059_nomina_bono_vacacional.sql` | ✅ Ejecutado (2026-07-16) | **Nómina — Bono Vacacional v1** (R-11, "registro + reporte"): tabla `empleado_salarios` (historial salarial append-only por empleado, mismo patrón que `empleado_traslados`); `bono_vacacional_periodos`/`bono_vacacional_detalle` (corridas mensuales, snapshot por empleado); config `bono_vac_dias_*` (días base por tipo de personal — **contrato colectivo, no LOTTT** — configurables) + `monto_cesta_ticket`; RBAC `NominaController` (rol 2). Modelos `Sueldo`/`BonoVacacional`; controlador `NominaController`; sección "Datos salariales" en el expediente del empleado. El total de bono vacacional por empleado es de **captura manual** (pendiente pedirle al cliente un mes ya calculado para calibrar la fórmula exacta) |
+| 060 | `060_limpieza_columnas_inertes.sql` | ✅ Ejecutado (2026-08-04) | **Limpieza de estructuras inertes** (cierra H-09 y H-10). DROP de `rutas.nombre_facilitador_externo` (solo se leía en un reporte, nunca se capturaba), `participantes_ruta.id_institucion` (siempre `null`) y `talleres.id_oficio` (cero referencias); DROP TABLE `oficios` (oficios recibidos, sin CRUD, 2 filas de prueba) e `instituciones_externas` (0 filas, módulo retirado en 2026-05-31). 51 → 49 tablas. `Ruta::inscribir()` pierde el parámetro `$id_institucion`. **No se tocó** `rutas.tiene_tarifa`/`tarifa_monto` (pendiente D-RT02) ni `oficios_emitidos` (en uso). Las etiquetas `'id_oficio'`/`'instituciones_externas'` de `auditoria/index.php` y `dashboard/index.php` se **conservan a propósito**: humanizan registros históricos de `audit_logs` (18 filas los mencionan), no son referencias vivas. Idempotente (`DROP ... IF EXISTS`). |
+| 061 | `061_datos_institucionales_carnet.sql` | ✅ Ejecutado (2026-08-04) | **Carnet institucional — datos reales.** El cliente entregó el carnet físico vigente y sus datos de contacto **no coincidían** con los del sistema: `telf_institucion` `(0293) 431-4073` → **`0293-4310178`** y `correo_institucion` `imatur.cumana@gmail.com` → **`Sucreimatur@gmail.com`**. ⚠️ El correo institucional es también el **remitente** de la recuperación de contraseña (mig. 058) y aparece en constancias/oficios: las credenciales SMTP deben corresponder a esa cuenta. Claves nuevas `direccion_institucion` y `lema_institucion` ("Historia y Porvenir"), ambas editables en `/config` → Contacto Institucional. Idempotente. |
 
-> **Fuente única de verdad (2026-05-31):** `database/schema_consolidado.sql` consolida el esquema base + migraciones 001-023 (37 tablas) + seeds de sistema. Generado desde la BD viva y verificado (recrea todo sin errores). El DDL de `personas`/`empleados`/`departamentos`/`asistencias` ya refleja además las migraciones **025–039** (columnas/constraints; `empleados` incluye `motivo_egreso`/`observacion_egreso`; `participantes_ruta` incluye `nombre_representante`/`cedula_representante`). Para una instalación completa: importar el consolidado y luego aplicar las migraciones **024–039** desde `database/migrations/` (idempotentes; la 026 crea `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, la 027 siembra el organigrama, la 028 siembra `horarios` + config de puntualidad, la 029 agrega `asistencias.minutos_tarde`, la 030 agrega uniforme/datos comunitarios, la 031 crea faltas/amonestaciones, la 032 amplía permisos_laborales, la 033 crea expediente_documentos, la 034 crea constancias, la 035 reemplaza sueldo_base por nivel_jerarquico en cargos, la 036 agrega egreso/reingreso de empleados + tabla `empleados_egresos`, la 037 normaliza cédulas a solo dígitos, la 038 agrega representante del participante sin cédula en rutas, la 039 agrega genero/vive a carga_familiar).
+> **Fuente única de verdad (regenerado 2026-08-04):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–061** (49 tablas) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (49 tablas, 0 errores, login funcional).
+>
+> **Instalar desde cero = importar ese archivo y nada más.** No hay que aplicar ninguna migración encima; `database/migrations/` queda como historial y para actualizar instalaciones antiguas.
+>
+> Trae datos: `roles`, `permisos_rol`, `configuracion_sistema`, `departamentos` (organigrama oficial, 23), `cargos`, `horarios`, `feriados`, `municipio`, `parroquia`. Quedan **vacías** las tablas operativas (personal, usuarios reales, inventario, talleres, rutas, visitantes, pasantes, asistencias, constancias, nómina, bitácora) y los correlativos de oficios en 0.
+>
+> **Al regenerarlo** tras nuevas migraciones, cuidar dos cosas que rompen la carga si se pasan por alto:
+> 1. Las columnas de auditoría `*_by` de los seeds referencian `usuarios.id`. Las **nullables** se ponen en `\N`; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) deben apuntar al admin de arranque (id 1).
+> 2. El bloque `DO $bootstrap$` del administrador va **entre** los datos de `departamentos` y los de `municipio`: necesita el catálogo ya sembrado y debe existir antes de que se carguen las tablas que lo referencian. (Las FK se validan al final del dump, pero `NOT NULL` se comprueba al instante.)
 
 Para ejecutar una migración suelta: `PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f <ruta_archivo>`  
 psql en Windows: `"C:\Program Files\PostgreSQL\17\bin\psql.exe"`
@@ -463,7 +473,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 12. **`rutas.requiere_formacion`** — `TRUE` → el sistema verifica en `participantes_taller` que la persona asistió a al menos un taller antes de inscribir (RN-F12). Libres (niños) exentos.
 
-13. **`talleres.id_oficio`** — FK nullable a `oficios`. Solo se asigna al crear actividad con sede externa y `es_interna = FALSE`.
+13. **`talleres.id_oficio` y la tabla `oficios` fueron ELIMINADOS (migración 060)** — nunca se usaron: cero referencias en `TalleresController`, el modelo `Taller` y sus vistas. Lo mismo con `participantes_ruta.id_institucion` + `instituciones_externas` y con `rutas.nombre_facilitador_externo`. **No confundir con `oficios_emitidos`** (oficios salientes de rutas), que sí está en uso. Si hace falta registrar oficios **recibidos**, se construye como módulo nuevo, no reviviendo esas tablas.
 
 14. **`configuracion_sistema`** — clave/valor para datos institucionales. `correlativo_oficio` se incrementa al generar oficio; `ano_correlativo` se reinicia automáticamente al cambiar de año.
 
@@ -528,38 +538,21 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 # 2. Crear la base de datos:
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 3. Importar el esquema consolidado (schema base + migraciones 001-023 + seeds):
+# 3. Importar el esquema consolidado — UN SOLO ARCHIVO, esto es toda la BD
+#    (esquema base + migraciones 001-061 + catálogos + admin de arranque):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
-# 4. Aplicar las migraciones posteriores al consolidado (024 a 039):
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/024_pasantes_carta_aceptacion.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/025_empleados_contrato_origen.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/026_empleado_ficha_tecnica.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/027_departamentos_jerarquia.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/028_horarios_grupos.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/029_asistencia_puntualidad.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/030_uniforme_comunitarios.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/031_faltas_amonestaciones.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/032_permisos_reposos.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/033_expediente_documentos.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/034_constancias.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/035_cargos_jerarquia.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/036_egreso_empleados.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/037_normalizar_cedulas.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/038_representante_participante_ruta.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/039_carga_familiar_genero_estado.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/040_nro_expediente_auto.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/041_fecha_vencimiento_contrato.sql
-PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_motivo_anulacion_disciplina.sql
+# 4. NO HAY PASO 4. No se aplica ninguna migración encima del consolidado.
 
 # 5. Verificar config/config.php:
 #    DB_HOST=localhost | DB_PORT=5432 | DB_NAME=SIGTUR-IMATUR
 #    DB_USER=postgres  | DB_PASS=1234 (entorno Laragon)
 
 # 6. URL: http://SIGTUR-IMATUR.test  o  http://localhost/SIGTUR-IMATUR/public
+#    Login de arranque: admin / Sigtur2026  <-- CAMBIAR EN EL PRIMER INGRESO
 ```
 
-> **Nota:** `database/schema_consolidado.sql` cubre schema base + migraciones 001-023 + seeds de sistema. Para una instalación completa, aplicar después las migraciones **024 a 039** desde `database/migrations/` (idempotentes). (`schema_completo.sql` queda obsoleto — solo cubría hasta la 011.)
+> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–061). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
 
 ---
 
@@ -575,6 +568,8 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_m
 | `docs/REGLAS_NEGOCIO_Inventario.md` | Bienes e Inventario |
 | `docs/REGLAS_NEGOCIO_Visitantes.md` | Visitantes y Control de Visitas |
 | `docs/ESTRUCTURA_ORGANIZATIVA.md` | Organigrama y análisis de jerarquía |
+| **`docs/PLAN_MODULO_BIENES.md`** | **Plan de reconstrucción del módulo de Bienes** (2026-08-04). Derivado del levantamiento con el cliente: análisis de brechas, cambios al modelo de datos, flujos (codificación · asignación · mantenimiento · baja · conteo por cambio de gestión), documentos a generar, catálogo de categorías propuesto, preguntas abiertas B-60…B-68 y fases 1-5. **Leer antes de tocar Inventario.** |
+| `docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` | Cuestionario de descubrimiento de Bienes y Rutas (123 preguntas, redactadas desde cero). **Parte 1 (Bienes) respondida** por el cliente; **Parte 2 (Rutas) pendiente**. |
 | **`docs/BACKLOG.md`** | **BACKLOG ÚNICO** — qué falta por hacer y decidir: estado por módulo, decisiones/insumos del cliente, preguntas abiertas, auditoría H-xx abierta, programación faltante. Consolida (y reemplaza) los antiguos REGISTRO_NEGOCIO/DECISIONES_PENDIENTES/preguntas/AUDITORIA_SENIOR/Notas/PLAN_ENTREGA |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
 | `docs/MANUAL_USUARIO.md` | **Manual de usuario por rol** (acceso/seguridad, interfaz, módulos, reportes, campana, búsqueda, perfil, FAQ) |
@@ -598,6 +593,6 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/042_m
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` (001-023 + seeds; aplicar 024-058 encima) |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-061 + catálogos + admin de arranque; no aplicar migraciones encima** |
 | Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Schema base original (historial) | `database/schema.sql` |

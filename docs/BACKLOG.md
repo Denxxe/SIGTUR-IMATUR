@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-07-13 · **Migraciones aplicadas:** hasta **058** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **061** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -18,12 +18,70 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ## 1. ESTADO GLOBAL
 
 - **RRHH:** completo salvo **Liquidación de Prestaciones Sociales** (2da entrega). **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
-- **Formación / Turismo / Inventario / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
+- **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
+- **Inventario (Bienes):** 🔄 **En replanteamiento.** El levantamiento del 2026-08-04 (59 preguntas respondidas) reveló que lo construido es un CRUD genérico, mientras que el instituto necesita un **expediente administrativo por bien** con ciclo de vida gobernado por la Alcaldía (codificación, actas, oficios). Plan por fases en `docs/PLAN_MODULO_BIENES.md`.
+- **Turismo (Rutas):** cuestionario de descubrimiento **pendiente de responder** (Parte 2 de `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`). Prioridad: R-07/R-08 (catálogo vs ejecución) — de esa respuesta depende si hay rediseño.
 - **Cuello de botella de la entrega:** ya **no es código**, son **decisiones/insumos del cliente** (sección 3).
 
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-08-04 — Instalación desde cero reparada: `schema_consolidado.sql` autosuficiente (sin migración)
+
+| # | Mejora | Detalle |
+|---|--------|---------|
+| ✅ 🔴 Despliegue | **El consolidado quedaba 36 migraciones atrás** | `database/schema_consolidado.sql` cubría hasta la **023**, el README mandaba aplicar "024 a 052" y `CLAUDE.md` decía "024 a 039" — pero existen hasta la **059**. Cualquier instalación nueva hecha siguiendo la documentación quedaba **sin las migraciones 053–059**: foto de carnet, auditoría de login, alertas vistas, tolerancia de salida temprana, recuperación de contraseña y **todo el módulo de Nómina**. Fallo silencioso: la BD se creaba sin error y el sistema reventaba al usar esos módulos. |
+| ✅ | **Regenerado desde la BD viva, autosuficiente (001–060)** | `pg_dump --no-owner --no-privileges` + `--exclude-table-data` sobre las 42 tablas operativas. Instalar = importar **un solo archivo**, sin migraciones encima. `database/migrations/` queda como historial y para actualizar instalaciones antiguas. |
+| ✅ | **Catálogos institucionales sembrados** | `roles`, `permisos_rol`, `configuracion_sistema`, `departamentos` (organigrama oficial, 23), `cargos`, `horarios`, `feriados`, `municipio`, `parroquia`. Vacías las operativas (personal, inventario, talleres, rutas, visitantes, pasantes, asistencias, constancias, nómina, bitácora) y **correlativos de oficios reiniciados a 0** (antes el dump los habría dejado en constancia=17, ruta=3). |
+| ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
+| ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
+| ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-04 — Levantamiento del módulo de Bienes + cuestionario de descubrimiento (sin migración)
+
+| # | Entregable | Detalle |
+|---|-----------|---------|
+| ✅ Docs | **`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`** — 123 preguntas (59 Bienes + 64 Rutas) | Redactadas **desde cero, como si el sistema no existiera**, para que el cliente describa su realidad sin quedar anclado a lo ya construido. Cuatro niveles de prioridad (⭐ define BD · ▲ afecta pantallas · ○ complementaria · 💡 propuesta nuestra), lista de 15 formatos físicos a pedir, y un anexo interno de contraste contra lo implementado. |
+| ✅ Cliente | **Parte 1 (Bienes) respondida completa** | Las 59 respuestas quedaron en el propio documento. |
+| ✅ Análisis | **`docs/PLAN_MODULO_BIENES.md`** — plan de reconstrucción por fases | Lo construido es un **CRUD genérico**; lo que el instituto necesita es un **expediente administrativo por bien**. Cinco diferencias de fondo: el bien nace **sin** código (lo asigna la Alcaldía tras una inspección solicitada por oficio), el código es **estructurado** (`grupo-subgrupo-sección-cantidad-N° de orden`), la baja es un **acto administrativo** firmado por Coordinadora de Bienes + Presidencia, cada bien acumula **documentos** (factura, informe, oficios), y **todo movimiento lo autoriza** la Coordinadora de Bienes. |
+| ✅ Diseño | **`estatus` (administrativo) separado de `condicion` (físico)** | Origen del bug H-04: hoy se mezclan. Nuevos estatus: En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · Dado de baja. **Criterio del cliente ya definido:** en mantenimiento **no desaparece** (B-34); dado de baja **sí sale** del inventario activo (B-38). H-04 se corrige en la Fase 2. |
+| ⚠️ Hallazgo | **La migración 044 quedó contradicha** | `tipo_bien` (Durable/Fungible) y `cantidad` se implementaron respondiendo a D-IN05. Ahora B-07 dice que **no llevan consumibles** y B-09 que el registro es **individual** aunque se compre en lote. Ambas columnas sobran → confirmar con **B-66** antes de eliminarlas. |
+| ⚠️ Hallazgo | **D-IN11 (stock mínimo) estaba mal planteada** | No es stock de papelería: no llevan consumibles. Lo que piden es un umbral de **suficiencia de mobiliario** (sillas por empleado, mesas por departamento). Replanteada como **B-63**. |
+| ⚠️ Hallazgo | **Dos sedes, no una** | Además de la Sede Principal, la **Oficina de Información Turística del Aeropuerto de Cumaná** tiene bienes que también se controlan (B-24). `ubicaciones` no contempla sedes. |
+| ✅ Docs | **9 preguntas nuevas (B-60…B-68)** | Las dos bloqueantes: el **catálogo oficial de grupos/subgrupos/secciones** de la Alcaldía y **3 ejemplos reales de código BN**. Más el **oficio de codificación**, que es el formato más urgente (automatizarlo ataca el dolor #1 declarado por el cliente). |
+| ⏳ Pendiente | **Parte 2 (Rutas) sin responder** | Prioridad: **R-07/R-08** — si el cliente espera un catálogo de rutas reutilizable en vez de una fila por ejecución, el módulo necesita **rediseño**, no ajustes. |
+
+### 2026-08-04 — Carnet institucional rediseñado según el modelo físico (mig. 061)
+
+El cliente entregó el **carnet físico vigente**. Se rehízo `app/views/inc/carnet_card.php` para reproducirlo.
+
+| # | Cambio | Detalle |
+|---|--------|---------|
+| ✅ 🔴 Datos | **Teléfono y correo del sistema estaban equivocados** | El carnet real trae `0293-4310178` y `Sucreimatur@gmail.com`; el sistema tenía `(0293) 431-4073` e `imatur.cumana@gmail.com`. **No eran variantes de formato, eran datos distintos.** Corregidos en `configuracion_sistema` (mig. 061). ⚠️ **El correo institucional es el remitente de la recuperación de contraseña** y aparece en constancias/oficios — las credenciales SMTP que falten (BACKLOG §3.0) deben ser de **esa** cuenta. |
+| ✅ | **Dirección y lema ahora configurables** | Claves nuevas `direccion_institucion` y `lema_institucion` ("Historia y Porvenir"), editables en `/config` → Contacto Institucional. No quedaron fijas en el código. |
+| ✅ | **Diseño alineado al carnet real** | Logo de la Alcaldía arriba-izquierda; "IMATUR" grande con perfilado blanco y RIF debajo; **unidad de adscripción en vertical** sobre el margen izquierdo (tamaño de fuente automático según largo); foto **circular con aro dorado**; apellidos y nombres en líneas separadas alineados a la derecha; cédula con separadores de miles; contacto con iconos circulares al pie; lema sobre la franja inferior. |
+| ✅ | **Tipo de credencial conservado** (decisión del cliente) | El modelo físico no los trae, pero se mantienen: insignia **TRABAJADOR/PASANTE** + **FIJO/CONTRATADO**, integradas al bloque de identidad en vez de centradas como antes. |
+| ✅ | **Pasantes: institución en vertical** | Donde el trabajador lleva su departamento, el pasante lleva su **institución educativa** (decisión del cliente). Antes mostraba Carrera + Institución como líneas de datos. |
+| ⏳ | **Falta el arte del fondo** | El degradado, la marca de agua y la foto de Cumaná al pie **todavía no los tenemos**. Se aproximan con CSS. Está preparado para incorporarlo sin tocar código: basta dejar el archivo en `public/assets/images/carnet_fondo.png` y la vista lo detecta (`is_file`) y sustituye el degradado. |
+| ✅ | **Verificado** | Renderizado real contra la BD (empleado y pasante), no solo `php -l`. Se corrigió un fallo detectado al probar: la cédula se formateaba con `number_format((int)…)`, que **descartaba los ceros a la izquierda** (`00123456` → `123.456`); ahora se agrupa sobre la cadena. Probado con 7 casos incluidos cédula vacía y ya formateada. |
+
+### 2026-08-04 — Limpieza de columnas y tablas inertes (mig. 060) — cierra H-09 y H-10
+
+Auditoría: estas estructuras existían en la BD pero **ninguna parte del sistema las escribía**. Eran peso muerto y, en un caso, hacían que un reporte mostrara datos falsos. Decisión del cliente: eliminarlas.
+
+| # | Eliminado | Por qué |
+|---|-----------|---------|
+| ✅ | `rutas.nombre_facilitador_externo` | Solo se **leía** en el reporte de Rutas (`ReportesController::rutas`), nunca se capturaba en ninguna pantalla → siempre NULL. Cierra **D-RT04**. |
+| ✅ | `participantes_ruta.id_institucion` + tabla `instituciones_externas` | `RutasController` insertaba **siempre `null`**; la tabla quedó en 0 filas y sin UI desde que se retiró el módulo de instituciones externas (2026-05-31). Cierra **D-RT05** (el indicador CMI de "instituciones participantes" queda descartado). |
+| ✅ | `talleres.id_oficio` + tabla `oficios` | Cero referencias en `TalleresController`, modelo `Taller` y vistas. `oficios` (oficios **recibidos**, externos → IMATUR) nunca tuvo CRUD; sus 2 únicas filas eran basura de prueba (asuntos `"klkkl"`, `"kjhgfd"`). Cierra **D-FO06**. |
+| ⏸️ | `rutas.tiene_tarifa` / `tarifa_monto` | **NO se eliminó**: sigue pendiente de decisión del cliente (D-RT02). Ojo: hoy solo se lee, nunca se escribe → la columna "Tarifa" del reporte **siempre dice "Gratuita"**. O se implementa la captura o se quita del reporte. |
+
+- **No confundir:** `oficios_emitidos` (oficios **salientes** generados desde rutas) sí está en uso y no se tocó.
+- **Código ajustado:** `Ruta::inscribir()` pierde el parámetro `$id_institucion` (firma nueva: `(id_ruta, id_persona, user_id, observaciones)`), `Ruta::inscribirLibre()` y `RutasController` dejan de enviarlo, y el `COALESCE` del facilitador en `ReportesController` se simplifica.
+- **Se conservaron a propósito** las etiquetas `'id_oficio'` (`auditoria/index.php`) e `'instituciones_externas'` (`dashboard/index.php`): son diccionarios de visualización de la **bitácora histórica**, no referencias vivas. Hay 18 registros de `audit_logs` cuyo JSON las menciona; sin la etiqueta se mostrarían con el nombre crudo de la columna. Ambas quedaron comentadas explicando esto.
+- **Verificado:** migración aplicada (51 → 49 tablas), `php -l` en los 5 archivos tocados, los dos flujos de inscripción a ruta (con cédula y libre) probados con `INSERT` real + `ROLLBACK`, la consulta del reporte de Rutas ejecutada contra la BD migrada, y suite `php tests/run.php` 18/18 ✓. Consolidado **regenerado** y reinstalado desde cero en una BD vacía (49 tablas, 0 errores).
+- **Limpieza extra:** se eliminaron `database/schema.sql` y `database/schema_completo.sql` (obsoletos: cubrían hasta la 011 y el base original; generaban dudas sobre cuál importar). Recuperables desde el historial de git.
 
 ### 2026-07-13 — UX: botón "Siguiente" del asistente de empleados sin feedback de error (sin migración)
 
@@ -219,27 +277,44 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Decisión del cliente:** los cargos son **transversales/generales** (no por departamento), tal como ya estaba implementado. El empleado tiene `id_cargo` e `id_departamento` independientes; un mismo catálogo de cargos sirve para todos los departamentos.
 - **Acción:** ninguna. Se evaluó vincular cargo↔departamento (mig. tentativa 053) y se **descartó/revirtió** por esta decisión.
 
-### 3.4 Inventario
-| ID | Pregunta |
+### 3.4 ✅ Inventario — **LEVANTAMIENTO COMPLETO (2026-08-04)**
+
+El cliente respondió las **59 preguntas** del cuestionario de descubrimiento
+(`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 1). El análisis y el plan de
+reconstrucción por fases están en **`docs/PLAN_MODULO_BIENES.md`**.
+
+**Preguntas históricas, ya resueltas por ese levantamiento:**
+
+| ID | Respuesta del cliente |
 |----|----------|
-| 🔴 D-IN06 | ¿"Responsable del bien" nominal? ¿Un bien asignable a >1 empleado? (FK `id_responsable` o tabla de asignación) |
-| 🟡 D-IN10 (H-04) | ¿La Baja/Mantenimiento cambia automáticamente la `condicion` del bien? |
-| 🟡 D-IN09 | ¿Registrar costo de adquisición, fecha de compra y proveedor? |
-| 🟡 D-IN11 (CMI) | **Stock mínimo de papelería** (indicador del documento, no implementado). Requiere columna `inventario.stock_minimo` (fungibles) + alerta + indicador. **Preguntar:** ¿qué ítems se controlan y con qué umbral por ítem? |
-| 🟢 D-IN03 | Confirmar lista final de categorías. |
+| ✅ D-IN06 | Responsable **nominal y único**: el director del departamento o, en su defecto, el coordinador (B-26/B-27). Al egresar un trabajador el bien **no lo sigue** — queda en el departamento y se reasigna (B-28). |
+| ✅ D-IN10 (H-04) | **Mantenimiento**: el bien cambia a estatus "En mantenimiento", deja de estar disponible pero **NO desaparece** (B-34). **Baja**: **sí sale** del inventario activo, conservando el registro y el oficio como aval (B-38). |
+| ✅ D-IN09 | **Sí**: costo, fecha de adquisición, proveedor y factura adjunta (B-16/B-17/B-19). También origen Compra/Donación con su oficio (B-18) y garantía con vencimiento (B-20). |
+| ⚠️ D-IN11 | **Reinterpretada.** No hay consumibles: no llevan papelería ni material gastable (B-07/B-43/B-44). Lo que piden es un umbral de **suficiencia de mobiliario** (sillas por empleado, mesas por departamento) — distinto de un stock mínimo. Pendiente de definir → **B-63**. |
+| ⚠️ D-IN03 | **No existe clasificación hoy** (todo cae en "Inmobiliario"). El cliente pidió una propuesta; hay una en §8 del plan. Pero el código de la Alcaldía es `grupo-subgrupo-sección-…`, o sea que **ya existe un catálogo oficial** que debería ser la fuente → **B-60**. |
+
+**Insumos que faltan (bloquean la Fase 1):**
+
+| ID | Qué pedir |
+|----|----------|
+| 🔴 B-60 | **Catálogo oficial de grupos / subgrupos / secciones** del Departamento de Bienes de la Alcaldía. Define las categorías y la estructura del código. |
+| 🔴 B-61 | **Tres ejemplos reales de código BN** escritos (se pidió en B-11; llegó el formato, no los ejemplos). |
+| 🟡 B-62 | El formato incluye "cantidad", pero el registro es individual (B-09). ¿Qué representa esa parte? |
+| 🟡 B-63…B-68 | Umbral de mobiliario · cómo identificar a la Coordinadora de Bienes · sede del aeropuerto · confirmar eliminación de `tipo_bien`/`cantidad` (mig. 044) · destino del bien dado de baja · responsable derivado o manual. Ver §9 del plan. |
+| 🔴 Formatos | Oficio de codificación a la Alcaldía (**el más urgente**), acta de baja, oficio de asignación, oficio de donación, formato de inventario de la Alcaldía. |
 
 ### 3.5 Turismo (Rutas)
 | ID | Pregunta |
 |----|----------|
-| 🟡 D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y cuál es el flujo de pago? (arquitectura `tiene_tarifa`/`tarifa_monto` lista) |
+| 🟡 D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y cuál es el flujo de pago? (columnas `tiene_tarifa`/`tarifa_monto` existen pero **nunca se escriben** → el reporte siempre dice "Gratuita"). **Única pregunta viva de Turismo.** |
 | 🟡 D-RT03 | Al **Finalizar** una ruta, ¿generar informe/oficio automáticamente? |
-| 🟡 D-RT05 (CMI) | **Instituciones participantes en rutas** (indicador del documento). Se **retiró** a propósito (`id_institucion` fuera del flujo, ver H-09). Reintroducirlo revierte una decisión previa. **Preguntar:** ¿se registra de nuevo la institución del grupo que recorre la ruta? |
-| 🟢 D-RT04 | Facilitador externo: ¿lista gestionada o texto libre? |
+| ✅ D-RT05 | ~~Instituciones participantes en rutas~~ — **CERRADO 2026-08-04:** eliminado (mig. 060). El indicador CMI queda descartado. |
+| ✅ D-RT04 | ~~Facilitador externo: ¿lista o texto libre?~~ — **CERRADO 2026-08-04:** columna eliminada (mig. 060), nunca se usó. |
 
 ### 3.6 Formación
 | ID | Pregunta |
 |----|----------|
-| 🟡 D-FO06 | ¿CRUD de **oficios base** (`oficios`) + vínculo con `talleres.id_oficio`? (tabla sin UI) |
+| ✅ D-FO06 | ~~¿CRUD de **oficios base** (`oficios`) + vínculo con `talleres.id_oficio`?~~ — **CERRADO 2026-08-04:** tabla y columna eliminadas (mig. 060). Si el cliente pide llevar registro de oficios **recibidos**, se construye desde cero como módulo propio. |
 | 🟢 D-FO05 | ¿Parámetros internos de meta para comparar planificado vs ejecutado? |
 | 🟢 D-NEW01 | ¿Activar en UI el correlativo de oficios de formación (FORM-XXX)? |
 
@@ -256,11 +331,13 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 
 | # | Hallazgo | Estado | Cierra con |
 |---|----------|--------|-----------|
-| H-04 | Baja de bien no actualiza `condicion` | ⚠️ Abierto | D-IN10 (3.4) |
-| H-09 | Columnas inertes restantes: `participantes_ruta.id_institucion`, `rutas.tiene_tarifa`/`nombre_facilitador_externo`, `talleres.id_oficio` | ⚠️ Parcial (ya se limpió `es_brigadista`) | D-RT02/04, D-FO06 — usar o limpiar |
-| H-10 | Tablas sin UI: solo queda **`oficios`** (vacaciones ✅, `taller_inventario` eliminada) | ⚠️ Parcial | D-FO06 |
+| H-04 | Baja de bien no actualiza `condicion` | ⚠️ **Abierto** | D-IN10 (3.4) |
+| H-09 | Columnas inertes | ✅ **Cerrado casi por completo** (mig. 060): eliminadas `participantes_ruta.id_institucion`, `rutas.nombre_facilitador_externo`, `talleres.id_oficio`. **Queda solo** `rutas.tiene_tarifa`/`tarifa_monto` | D-RT02 — usar o quitar del reporte |
+| H-10 | Tablas sin UI | ✅ **Cerrado** (mig. 060): `oficios` e `instituciones_externas` eliminadas (vacaciones ✅, `taller_inventario` ya lo estaba) | — |
 
 > Resueltos previamente: H-01, H-02, H-03 (visitas inmutables), H-05 (validaciones servidor), H-06 (correlativo atómico), H-07 (enums centralizados), H-08 (FKs validadas), H-11 (género M/F).
+
+> **Recordatorio sobre H-04:** no es solo una pregunta al cliente. Hoy `ActividadInventario::save()` no toca `inventario.condicion` e `Inventario::all()` solo filtra `is_active`, así que **un bien dado de Baja sigue apareciendo como activo** en el listado, los KPIs del dashboard y los indicadores CMI-I01/I03. El inventario reporta números incorrectos mientras esto siga abierto.
 
 ---
 
