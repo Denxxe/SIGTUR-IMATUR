@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
 
-> **Estado: Fase 1 desbloqueada.** El BM-1 resolvió las dos preguntas que impedían arrancar.
+> **Estado: ✅ Fase 1 CONSTRUIDA** (migración 062, 2026-08-04). Ver §10 para lo que sigue.
 
 ---
 
@@ -341,13 +341,13 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 
 | Fase | Contenido | Depende de |
 |---|---|---|
-| **1. Base** | `estatus` + `condicion` separados · código oficial (grupo/subgrupo/sección/N° orden) **y** categoría interna como ejes separados · origen/donación · costo/proveedor/garantía · responsable · sedes y depósito | ✅ **Desbloqueada** |
+| ~~**1. Base**~~ | ✅ **HECHA** (mig. 062): `estatus` + `condicion` separados (**cierra H-04**) · código oficial por partes + flujo de codificación contra el BM-1 · categoría interna (11 sembradas) · origen/donación · costo/proveedor/garantía · responsable único · sedes y depósito | — |
 | **2. Movimientos** | Origen/destino · autorización · mantenimiento con retorno · corrección definitiva de H-04 | Fase 1 |
 | **3. Documentos** | Adjuntos por bien (factura, informe, oficios) · generación del informe de bienes nuevos, acta de asignación, acta de baja · **recepción y conciliación del BM-1** | Fase 1 · formatos reales |
 | **4. Explotación** | Etiquetas con QR · reportes de §6 · alertas de §7 · hoja de vida del bien (B-36) | Fases 1-3 |
 | **5. Cierre** | Conteo por cambio de gestión · RBAC de §7 | Fase 4 |
 
-> **H-04 se corrige en la Fase 2**, con criterio ya definido por el cliente (§3.2). Mientras tanto el inventario sigue reportando como activos los bienes dados de baja — pero como la tabla está **vacía (0 filas)**, hoy no hay datos incorrectos a la vista.
+> **H-04 quedó cerrado en la Fase 1** (no hizo falta esperar a la Fase 2): al introducir `estatus` se corrigieron además las 8 consultas de Dashboard, Reportes y Centro de Alertas que contaban los dados de baja como activos y que filtraban por la condición `'En Reparación'`, ya inexistente.
 
 ---
 

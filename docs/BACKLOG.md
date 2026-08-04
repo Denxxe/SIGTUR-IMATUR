@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **061** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **062** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,22 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-04 — Bienes, Fase 1 construida (mig. 062) — **cierra H-04**
+
+Primera fase del plan (`docs/PLAN_MODULO_BIENES.md` §10). El módulo deja de ser un CRUD de bienes.
+
+| # | Entregable | Detalle |
+|---|-----------|---------|
+| ✅ 🔴 **H-04 CERRADO** | **`estatus` separado de `condicion`** | Era el origen del bug: ambos ejes vivían en la misma columna. Ahora `estatus` = situación administrativa (En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · Dado de baja) y `condicion` = estado físico (Nuevo/Bueno/Regular/Dañado). Con el criterio del cliente: **en mantenimiento el bien NO desaparece** (B-34) y **dado de baja SÍ sale** del inventario activo conservando su registro (B-38). |
+| ✅ | **Flujo de codificación contra el BM-1** | El bien nace **sin código**, en estatus "En espera de codificación". `Inventario::codificar()` transcribe grupo/subgrupo/sección + N° de orden cuando la Alcaldía devuelve el BM-1, y lo pasa a Activo. `componerCodigo()` arma `2-01-108-084`; valida partes completas y N° de orden único. Pestaña "Sin codificar" con contador en el listado. |
+| ✅ | **Dos ejes de clasificación** | Código oficial (Alcaldía) **y** categoría interna (reportes de Presidencia). Se sembraron **11 categorías** y se retiraron las 2 de prueba ("Inmobiliario", "Inmuebles"). El BM-1 demostró que el código no clasifica: sillas, mesas, aire acondicionado y router comparten `2-01-108`. |
+| ✅ | **Adquisición y responsable** | `origen` (Compra/Donación, con donante obligatorio si es donación), `costo_adquisicion`, `fecha_adquisicion`, `proveedor`, `tiene_garantia`+`garantia_vence`, `id_responsable` (FK empleados, **único** — B-26/27) y `foto_url`. Cierra D-IN06 y D-IN09. |
+| ✅ | **Sedes y depósito** | `ubicaciones` +`sede` (Sede Principal y Oficina del Aeropuerto — B-24) +`es_deposito` (área común de los bienes sin asignar — B-23/25). |
+| ✅ | **Reportes y alertas alineados** | Se corrigieron **8 consultas** en `DashboardController`, `ReportesController` y `CentroAlertas` que seguían filtrando por la condición `'En Reparación'` (ya inexistente) y que **contaban los dados de baja como activos**. El reporte de inventario suma columnas Estatus y Responsable. |
+| ✅ | **Verificado con pruebas reales** | 19 comprobaciones sobre la BD ejercitando el ciclo completo: alta sin código → pendiente → codificación → duplicado rechazado → código incompleto rechazado → mantenimiento (sigue visible) → baja (desaparece del activo, se conserva). Se detectaron y corrigieron 5 warnings de PHP (`?:` sobre claves inexistentes) que habrían llenado el log en producción. Consolidado regenerado y reinstalado en BD vacía. |
+
+> **Pendiente de la Fase 1:** `tipo_bien`/`cantidad` (mig. 044) quedaron sin uso pero **no se eliminaron** — esperan la confirmación del cliente (**B-66**). Siguen con DEFAULT, así que nada se rompe.
 
 ### 2026-08-04 — Levantamiento del módulo de Bienes + cuestionario de descubrimiento (sin migración)
 

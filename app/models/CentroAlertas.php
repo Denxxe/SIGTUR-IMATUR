@@ -163,7 +163,9 @@ class CentroAlertas extends Model {
         }
 
         if ($esInv) {
-            $idsBienes = $ids("SELECT id FROM inventario WHERE is_active = TRUE AND condicion IN ('Dañado','En Reparación')");
+            $idsBienes = $ids("SELECT id FROM inventario
+                              WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                                AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
             $alertas[] = ['clave' => 'bienes_en_alerta', 'titulo' => 'Bienes en alerta', 'desc' => 'Patrimonio dañado o en reparación.', 'n' => count($idsBienes), 'icono' => 'bi-box-seam', 'url' => URL_ROOT . '/inventario/index', 'sev' => 'warning', 'ids' => $idsBienes];
         }
 

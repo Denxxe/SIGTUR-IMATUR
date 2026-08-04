@@ -125,7 +125,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                     if ($b->condicion === 'Nuevo')  $condCls = 'sig-badge--success';
                     elseif ($b->condicion === 'Bueno')  $condCls = 'sig-badge--info';
                     elseif ($b->condicion === 'Regular') $condCls = 'sig-badge--warning';
-                    elseif (in_array($b->condicion, ['Dañado', 'En Reparación'])) $condCls = 'sig-badge--danger';
+                    elseif ($b->condicion === 'Dañado') $condCls = 'sig-badge--danger';
                 ?>
                 <tr>
                     <td><span class="cell-id" style="font-family:var(--font-mono);color:var(--brand-600);"><?php echo htmlspecialchars($b->codigo_bn ?? 'S/N'); ?></span></td>

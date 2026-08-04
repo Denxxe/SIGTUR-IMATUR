@@ -269,11 +269,15 @@ class DashboardController extends Controller {
             // INVENTARIO — roles 1 y 4 (Inventario)
             // ══════════════════════════════════════════════════════════════
             if (in_array($rol, [1, 4])) {
-                $db->query("SELECT COUNT(*) AS total FROM inventario WHERE is_active = TRUE");
+                // Inventario ACTIVO: excluye los dados de baja (B-38, mig. 062).
+                $db->query("SELECT COUNT(*) AS total FROM inventario
+                            WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
                 $data['kpiBienes'] = (int)($db->single()->total ?? 0);
 
+                // Alerta = dañado (condición física) o fuera de servicio (estatus).
                 $db->query("SELECT COUNT(*) AS total FROM inventario
-                            WHERE condicion IN ('Dañado','En Reparación') AND is_active = TRUE");
+                            WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                              AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
                 $data['kpiBienesAlerta'] = (int)($db->single()->total ?? 0);
 
                 $db->query("SELECT COUNT(*) AS total FROM inventario

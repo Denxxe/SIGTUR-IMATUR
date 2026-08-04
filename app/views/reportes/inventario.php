@@ -39,7 +39,7 @@
                     <label class="sig-field__label">Condición</label>
                     <select name="condicion" class="sig-select">
                         <option value="">Todas las condiciones</option>
-                        <?php foreach (['Nuevo', 'Bueno', 'Regular', 'Dañado', 'En Reparación'] as $c): ?>
+                        <?php foreach (Inventario::CONDICIONES as $c): ?>
                             <option value="<?php echo $c; ?>" <?php if (($data['filtro_condicion'] ?? '') === $c) echo 'selected'; ?>><?php echo $c; ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -82,7 +82,7 @@
         ['label' => 'Buenos',          'val' => $data['stats']->buenos    ?? 0, 'color' => 'var(--teal-500)',    'txt' => 'var(--teal-600)'],
         ['label' => 'Regulares',       'val' => $data['stats']->regulares ?? 0, 'color' => 'var(--warning-500)', 'txt' => 'var(--warning-600)'],
         ['label' => 'Dañados',         'val' => $data['stats']->danados   ?? 0, 'color' => 'var(--danger-500)',  'txt' => 'var(--danger-600)'],
-        ['label' => 'En Reparación',   'val' => $data['stats']->reparacion ?? 0,'color' => '#8B5CF6',            'txt' => '#7C3AED'],
+        ['label' => 'En mantenim.',    'val' => $data['stats']->reparacion ?? 0,'color' => '#8B5CF6',            'txt' => '#7C3AED'],
     ];
     foreach ($invKpis as $k): ?>
     <div class="col-md-2 col-4">
@@ -105,6 +105,8 @@
                 <th>Nombre del Bien</th>
                 <th>Categoría</th>
                 <th>Ubicación</th>
+                <th>Responsable</th>
+                <th style="text-align:center;">Estatus</th>
                 <th style="text-align:center;">Condición</th>
                 <th>Marca / Modelo</th>
                 <th>Serial</th>
@@ -113,7 +115,7 @@
         <tbody>
             <?php if (empty($data['registros'])): ?>
                 <tr>
-                    <td colspan="6" class="sig-table-empty">Sin registros con los filtros seleccionados.</td>
+                    <td colspan="9" class="sig-table-empty">Sin registros con los filtros seleccionados.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['registros'] ?? [] as $r): ?>
@@ -125,10 +127,12 @@
                         elseif ($r->condicion === 'Dañado')  $condBadge = 'sig-badge--danger';
                     ?>
                     <tr>
-                        <td><span class="cell-id" style="font-family:var(--font-mono);"><?php echo htmlspecialchars($r->codigo_bn ?? '—'); ?></span></td>
+                        <td><span class="cell-id" style="font-family:var(--font-mono);"><?php echo htmlspecialchars($r->codigo_bn ?: 'Sin asignar'); ?></span></td>
                         <td><span class="cell-strong"><?php echo htmlspecialchars($r->nombre ?? '—'); ?></span></td>
                         <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->categoria ?? 'Sin cat.'); ?></span></td>
                         <td style="font-size:12px;"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
+                        <td style="font-size:12px;"><?php echo !empty($r->responsable) ? htmlspecialchars($r->responsable) : '<span style="color:var(--text-tertiary);">Sin asignar</span>'; ?></td>
+                        <td style="text-align:center;"><span class="sig-badge <?php echo Inventario::ESTATUS_BADGES[$r->estatus ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estatus ?? '—'); ?></span></td>
                         <td style="text-align:center;"><span class="sig-badge <?php echo $condBadge; ?>"><?php echo htmlspecialchars($r->condicion ?? '—'); ?></span></td>
                         <td style="font-size:12px;color:var(--text-secondary);">
                             <?php echo htmlspecialchars($r->marca ?? '—'); ?>

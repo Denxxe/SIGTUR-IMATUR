@@ -1946,17 +1946,22 @@ class ReportesController extends Controller {
         $categoria = trim($_GET['categoria'] ?? '');
         $ubicacion = trim($_GET['ubicacion'] ?? '');
 
-        $where = "i.is_active = TRUE";
+        // Inventario ACTIVO: los dados de baja salen del listado (B-38, mig. 062)
+        // y se consultan en el reporte de desincorporados.
+        $where = "i.is_active = TRUE AND i.estatus <> 'Dado de baja'";
         if ($condicion !== '') $where .= " AND i.condicion = :condicion";
         if ($categoria !== '') $where .= " AND c.nombre ILIKE :categoria";
         if ($ubicacion !== '') $where .= " AND u.nombre ILIKE :ubicacion";
 
-        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
+        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.estatus, i.marca, i.modelo, i.serial,
                            c.nombre AS categoria,
-                           u.nombre AS ubicacion
+                           u.nombre AS ubicacion,
+                           TRIM(COALESCE(p.nombre,'') || ' ' || COALESCE(p.apellido,'')) AS responsable
                     FROM inventario i
                     LEFT JOIN categorias c  ON i.id_categoria = c.id
                     LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
+                    LEFT JOIN empleados   e ON i.id_responsable = e.id
+                    LEFT JOIN personas    p ON e.id_persona = p.id
                     WHERE {$where}
                     ORDER BY c.nombre ASC, i.nombre ASC");
         if ($condicion !== '') $db->bind(':condicion', $condicion);
@@ -1973,8 +1978,8 @@ class ReportesController extends Controller {
                         COUNT(CASE WHEN condicion = 'Bueno'         THEN 1 END) AS buenos,
                         COUNT(CASE WHEN condicion = 'Regular'       THEN 1 END) AS regulares,
                         COUNT(CASE WHEN condicion = 'Dañado'        THEN 1 END) AS danados,
-                        COUNT(CASE WHEN condicion = 'En Reparación' THEN 1 END) AS reparacion
-                    FROM inventario WHERE is_active = TRUE");
+                        COUNT(CASE WHEN estatus = 'En mantenimiento' THEN 1 END) AS reparacion
+                    FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
         return $db->single();
     }
 
@@ -2086,10 +2091,13 @@ class ReportesController extends Controller {
             $db->query("SELECT COUNT(*) as total FROM pasantes WHERE estado = 'En Curso' AND is_active = TRUE");
             $kpiPasantesEnCurso = $db->single();
 
-            $db->query("SELECT COUNT(*) as total FROM inventario WHERE is_active = TRUE");
+            $db->query("SELECT COUNT(*) as total FROM inventario
+                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
             $kpiBienesActivos = $db->single();
 
-            $db->query("SELECT COUNT(*) as total FROM inventario WHERE condicion IN ('Dañado', 'En Reparación') AND is_active = TRUE");
+            $db->query("SELECT COUNT(*) as total FROM inventario
+                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                          AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
             $kpiBienesAlerta = $db->single();
 
             // ── Sección Personal ──────────────────────────────────────────
@@ -2144,7 +2152,9 @@ class ReportesController extends Controller {
                         WHERE c.is_active = TRUE GROUP BY c.nombre ORDER BY total DESC");
             $invPorCat = $db->resultSet();
 
-            $db->query("SELECT condicion, COUNT(*) as total FROM inventario WHERE is_active = TRUE GROUP BY condicion ORDER BY total DESC");
+            $db->query("SELECT condicion, COUNT(*) as total FROM inventario
+                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                        GROUP BY condicion ORDER BY total DESC");
             $invPorCondicion = $db->resultSet();
 
             // ── F-3: Demografía de formación (año seleccionado) ───────────
@@ -2314,8 +2324,8 @@ class ReportesController extends Controller {
             // ── PROP-I01: Tasa de depreciación operativa del patrimonio ───────────────
             $db->query("SELECT
                             COUNT(*) AS total,
-                            COUNT(CASE WHEN condicion IN ('Dañado','En Reparación') THEN 1 END) AS deteriorados
-                        FROM inventario WHERE is_active = TRUE");
+                            COUNT(CASE WHEN condicion = 'Dañado' OR estatus = 'En mantenimiento' THEN 1 END) AS deteriorados
+                        FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
             $kpiDepreciacion = $db->single();
 
             // ── PROP-P01: Distribución por tipo de contrato ───────────────────────────
@@ -2392,11 +2402,12 @@ class ReportesController extends Controller {
             $empDocCompletos = 0;
             foreach ($faltMap as $f) if ((int)$f === 0) $empDocCompletos++;
 
-            // INVENTARIO: Precisión del registro (durables con código BN; fungibles siempre cuentan).
+            // INVENTARIO: Precisión del registro = bienes ya codificados por la Alcaldía
+            // (mig. 062: el código llega con el BM-1; antes de eso el bien no tiene código).
             $db->query("SELECT COUNT(*) AS total,
                                COUNT(CASE WHEN (tipo_bien = 'Durable' AND codigo_bn IS NOT NULL AND TRIM(codigo_bn) <> '')
                                             OR tipo_bien = 'Fungible' THEN 1 END) AS completos
-                        FROM inventario WHERE is_active = TRUE");
+                        FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
             $precisionInv = $db->single();
 
             // INVENTARIO: Movimientos por tipo (entradas/salidas/asignaciones) — año actual.
@@ -2409,12 +2420,12 @@ class ReportesController extends Controller {
 
             // INVENTARIO: Asignación responsable — durables cuyo ÚLTIMO movimiento es 'Asignacion'.
             $db->query("SELECT
-                            (SELECT COUNT(*) FROM inventario WHERE is_active = TRUE AND tipo_bien = 'Durable') AS total_durables,
+                            (SELECT COUNT(*) FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja' AND tipo_bien = 'Durable') AS total_durables,
                             COUNT(CASE WHEN u.tipo_movimiento = 'Asignacion' THEN 1 END) AS asignados
                         FROM (
                             SELECT DISTINCT ON (ai.id_inventario) ai.id_inventario, ai.tipo_movimiento
                             FROM actividad_inventario ai
-                            INNER JOIN inventario i ON i.id = ai.id_inventario AND i.is_active = TRUE AND i.tipo_bien = 'Durable'
+                            INNER JOIN inventario i ON i.id = ai.id_inventario AND i.is_active = TRUE AND i.estatus <> 'Dado de baja' AND i.tipo_bien = 'Durable'
                             WHERE ai.is_active = TRUE
                             ORDER BY ai.id_inventario, ai.fecha DESC, ai.id DESC
                         ) u");

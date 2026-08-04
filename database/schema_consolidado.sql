@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–061.
+-- Cubre: esquema base + TODAS las migraciones 001–062.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -23,6 +23,7 @@
 --       - cargos (5) ...................... niveles jerárquicos
 --       - horarios (5) .................... modalidades de jornada
 --       - feriados (12) ................... nacionales + Cumaná
+--       - categorias (11) ................. clasificación interna de bienes
 --       - municipio (2) / parroquia (7) ... geografía de Sucre
 --   · Un usuario administrador de arranque (ver el final del archivo).
 --
@@ -1106,10 +1107,42 @@ CREATE TABLE public.inventario (
     deleted_by integer,
     tipo_bien character varying(20) DEFAULT 'Durable'::character varying NOT NULL,
     cantidad integer DEFAULT 1 NOT NULL,
+    estatus character varying(30) DEFAULT 'En espera de codificación'::character varying NOT NULL,
+    codigo_grupo character varying(4),
+    codigo_subgrupo character varying(4),
+    codigo_seccion character varying(6),
+    nro_orden character varying(10),
+    verificado_alcaldia boolean DEFAULT false NOT NULL,
+    fecha_verificacion date,
+    origen character varying(20) DEFAULT 'Compra'::character varying,
+    donante character varying(200),
+    costo_adquisicion numeric(14,2),
+    fecha_adquisicion date,
+    proveedor character varying(200),
+    tiene_garantia boolean DEFAULT false NOT NULL,
+    garantia_vence date,
+    id_responsable integer,
+    foto_url character varying(255),
     CONSTRAINT inventario_cantidad_chk CHECK ((cantidad >= 1)),
-    CONSTRAINT inventario_condicion_check CHECK (((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying, 'En Reparación'::character varying])::text[]))),
+    CONSTRAINT inventario_condicion_check CHECK (((condicion IS NULL) OR ((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying])::text[])))),
+    CONSTRAINT inventario_estatus_check CHECK (((estatus)::text = ANY ((ARRAY['En espera de codificación'::character varying, 'Activo'::character varying, 'En mantenimiento'::character varying, 'Extraviado'::character varying, 'Robado'::character varying, 'Dado de baja'::character varying])::text[]))),
+    CONSTRAINT inventario_origen_check CHECK (((origen IS NULL) OR ((origen)::text = ANY ((ARRAY['Compra'::character varying, 'Donación'::character varying])::text[])))),
     CONSTRAINT inventario_tipo_bien_chk CHECK (((tipo_bien)::text = ANY ((ARRAY['Durable'::character varying, 'Fungible'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN inventario.codigo_bn; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.inventario.codigo_bn IS 'Código oficial compuesto (grupo-subgrupo-sección-N° de orden). Lo arma Inventario::componerCodigo().';
+
+
+--
+-- Name: COLUMN inventario.nro_orden; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.inventario.nro_orden IS 'N° de orden que asigna la Alcaldía (3 dígitos con ceros a la izquierda). NULL hasta la inspección.';
 
 
 --
@@ -2045,7 +2078,9 @@ CREATE TABLE public.ubicaciones (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    "departamento _d" integer NOT NULL
+    "departamento _d" integer NOT NULL,
+    sede character varying(80) DEFAULT 'Sede Principal'::character varying,
+    es_deposito boolean DEFAULT false NOT NULL
 );
 
 
@@ -2668,6 +2703,27 @@ COPY public.cargos (id, nombre, descripcion, is_active, created_at, updated_at, 
 
 
 --
+-- Data for Name: categorias; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.categorias (id, nombre, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
+1	Inmobiliario	Bienes inmobiliarios	f	2026-04-18 04:56:22.455698	\N	2026-08-04 18:11:11.195526	\N	\N	\N
+2	Inmuebles	Prueba  2	f	2026-04-28 03:21:34.415084	2026-04-28 03:21:48.698294	2026-08-04 18:11:11.195526	\N	\N	\N
+3	Climatización y refrigeración	Aires acondicionados, ventiladores, neveras	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+4	Equipos de comunicación	Teléfonos, radios, centrales telefónicas, routers	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+5	Equipos de seguridad	Extintores, cámaras de vigilancia, alarmas	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+6	Electrodomésticos y enseres	Cafeteras, microondas, dispensadores de agua	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+7	Herramientas y mantenimiento	Herramientas de Servicios Generales	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+8	Equipos de computación	CPU, laptops, monitores, impresoras, escáneres, UPS	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+9	Material turístico y promocional	Stands, pendones, kioscos, señalética, lonas	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+10	Máquinas y equipos de oficina	Fotocopiadoras, trituradoras, encuadernadoras	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+11	Bienes culturales y bibliográficos	Libros, obras, piezas de exhibición	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+12	Equipos audiovisuales	Videobeam, cámaras, televisores, sonido, micrófonos	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+13	Mobiliario de oficina	Escritorios, sillas, mesas, archivadores, estantes	t	2026-08-04 18:11:11.195526	\N	\N	\N	\N	\N
+\.
+
+
+--
 -- Data for Name: configuracion_sistema; Type: TABLE DATA; Schema: public; Owner: -
 --
 
@@ -2975,7 +3031,7 @@ SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
 -- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 167, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 173, true);
 
 
 --
@@ -3010,7 +3066,7 @@ SELECT pg_catalog.setval('public.cargos_id_seq', 7, true);
 -- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.categorias_id_seq', 2, true);
+SELECT pg_catalog.setval('public.categorias_id_seq', 13, true);
 
 
 --
@@ -3108,7 +3164,7 @@ SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
 -- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_id_seq', 1, true);
+SELECT pg_catalog.setval('public.inventario_id_seq', 5, true);
 
 
 --
@@ -3248,7 +3304,7 @@ SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ubicaciones_id_seq', 2, true);
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 4, true);
 
 
 --
@@ -3957,6 +4013,27 @@ CREATE INDEX idx_inventario_codigo_bn ON public.inventario USING btree (codigo_b
 
 
 --
+-- Name: idx_inventario_estatus; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inventario_estatus ON public.inventario USING btree (estatus);
+
+
+--
+-- Name: idx_inventario_garantia; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inventario_garantia ON public.inventario USING btree (garantia_vence) WHERE (garantia_vence IS NOT NULL);
+
+
+--
+-- Name: idx_inventario_responsable; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inventario_responsable ON public.inventario USING btree (id_responsable);
+
+
+--
 -- Name: idx_logs_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4353,6 +4430,14 @@ ALTER TABLE ONLY public.inventario
 
 
 --
+-- Name: inventario fk_inventario_responsable; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario
+    ADD CONSTRAINT fk_inventario_responsable FOREIGN KEY (id_responsable) REFERENCES public.empleados(id) ON DELETE SET NULL;
+
+
+--
 -- Name: audit_logs fk_logs_usuario; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4670,5 +4755,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-061).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-062).
 --
