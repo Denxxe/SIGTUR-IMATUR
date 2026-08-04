@@ -1876,6 +1876,10 @@ class ReportesController extends Controller {
                 'filtro_condicion' => $_GET['condicion'] ?? '',
                 'filtro_categoria' => $_GET['categoria'] ?? '',
                 'filtro_ubicacion' => $_GET['ubicacion'] ?? '',
+                'filtro_estatus'   => $_GET['estatus'] ?? '',
+                'filtro_origen'    => $_GET['origen'] ?? '',
+                'filtro_departamento' => $_GET['departamento'] ?? '',
+                'filtro_deposito'  => !empty($_GET['deposito']),
             ];
             $this->view('reportes/inventario', $data);
         } catch (Exception $e) {
@@ -1945,10 +1949,21 @@ class ReportesController extends Controller {
         $condicion = trim($_GET['condicion'] ?? '');
         $categoria = trim($_GET['categoria'] ?? '');
         $ubicacion = trim($_GET['ubicacion'] ?? '');
+        // Filtros añadidos en la Fase 4 (R-5): con ellos, este único reporte
+        // cubre las listas que pide la Presidencia en B-51 — activos, dañados,
+        // sin código, donaciones, por departamento y los que están en depósito.
+        $estatus     = in_array($_GET['estatus'] ?? '', Inventario::ESTATUS, true) ? $_GET['estatus'] : '';
+        $origen      = in_array($_GET['origen']  ?? '', Inventario::ORIGENES, true) ? $_GET['origen'] : '';
+        $departa     = trim($_GET['departamento'] ?? '');
+        $soloDeposito = !empty($_GET['deposito']);
 
         // Inventario ACTIVO: los dados de baja salen del listado (B-38, mig. 062)
         // y se consultan en el reporte de desincorporados.
         $where = "i.is_active = TRUE AND i.estatus <> 'Dado de baja'";
+        if ($estatus     !== '') $where .= " AND i.estatus = :estatus";
+        if ($origen      !== '') $where .= " AND i.origen = :origen";
+        if ($departa     !== '') $where .= " AND d.nombre ILIKE :departa";
+        if ($soloDeposito)       $where .= " AND u.es_deposito = TRUE";
         if ($condicion !== '') $where .= " AND i.condicion = :condicion";
         if ($categoria !== '') $where .= " AND c.nombre ILIKE :categoria";
         if ($ubicacion !== '') $where .= " AND u.nombre ILIKE :ubicacion";
@@ -1962,8 +1977,12 @@ class ReportesController extends Controller {
                     LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
                     LEFT JOIN empleados   e ON i.id_responsable = e.id
                     LEFT JOIN personas    p ON e.id_persona = p.id
+                    LEFT JOIN departamentos d ON u.\"departamento _d\" = d.id
                     WHERE {$where}
                     ORDER BY c.nombre ASC, i.nombre ASC");
+        if ($estatus  !== '') $db->bind(':estatus', $estatus);
+        if ($origen   !== '') $db->bind(':origen', $origen);
+        if ($departa  !== '') $db->bind(':departa', '%' . $departa . '%');
         if ($condicion !== '') $db->bind(':condicion', $condicion);
         if ($categoria !== '') $db->bind(':categoria', '%' . $categoria . '%');
         if ($ubicacion !== '') $db->bind(':ubicacion', '%' . $ubicacion . '%');

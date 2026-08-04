@@ -302,6 +302,19 @@ class ActividadInventario extends Model {
             throw $e;
         }
 
+        // Si el bien tiene mantenimiento preventivo programado, al volver de
+        // uno se corre el calendario al siguiente ciclo (B-56). Va fuera de la
+        // transacción a propósito: es un efecto secundario del calendario, no
+        // debe poder tumbar un movimiento ya válido.
+        if ($tipo === self::MOV_RETORNO_MANT) {
+            try {
+                PlanMantenimiento::marcarRealizado($idBien, $fecha, $user_id);
+            } catch (Exception $ignored) {
+                error_log('No se pudo actualizar el plan preventivo del bien ' . $idBien
+                    . ': ' . $ignored->getMessage());
+            }
+        }
+
         // La auditoría va fuera de la transacción: si el log falla, no debe
         // revertir un movimiento que ya es válido (convención del proyecto).
         self::auditStatic('actividad_inventario', 'INSERT', $idMov ?? null, null, [

@@ -167,6 +167,32 @@ class CentroAlertas extends Model {
                               WHERE is_active = TRUE AND estatus <> 'Dado de baja'
                                 AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
             $alertas[] = ['clave' => 'bienes_en_alerta', 'titulo' => 'Bienes en alerta', 'desc' => 'Patrimonio dañado o en reparación.', 'n' => count($idsBienes), 'icono' => 'bi-box-seam', 'url' => URL_ROOT . '/inventario/index', 'sev' => 'warning', 'ids' => $idsBienes];
+
+            // ── Alertas de bienes (mig. 065, R-6) ────────────────────────
+            $diasSinCod = (int)(ConfigSistema::get('dias_alerta_sin_codificar') ?: 30);
+            $diasGar    = (int)(ConfigSistema::get('dias_aviso_garantia') ?: 30);
+            $diasMant   = (int)(ConfigSistema::get('dias_aviso_mantenimiento') ?: 15);
+
+            // B-12: bienes que llevan demasiado esperando el código de la Alcaldía.
+            $idsSinCod = $ids("SELECT id FROM inventario
+                              WHERE is_active = TRUE AND estatus = 'En espera de codificación'
+                                AND created_at < (CURRENT_DATE - ($diasSinCod || ' days')::INTERVAL)");
+            $alertas[] = ['clave' => 'bienes_sin_codificar', 'titulo' => 'Bienes sin codificar', 'desc' => "Registrados hace más de {$diasSinCod} días y la Alcaldía aún no les asigna N° de orden.", 'n' => count($idsSinCod), 'icono' => 'bi-hourglass-split', 'url' => URL_ROOT . '/inventario/index?ver=pendientes', 'sev' => 'warning', 'ids' => $idsSinCod];
+
+            // B-20: garantías por vencer (o ya vencidas sin haberse atendido).
+            $idsGar = $ids("SELECT id FROM inventario
+                           WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                             AND tiene_garantia = TRUE AND garantia_vence IS NOT NULL
+                             AND garantia_vence <= (CURRENT_DATE + ($diasGar || ' days')::INTERVAL)");
+            $alertas[] = ['clave' => 'bienes_garantia', 'titulo' => 'Garantías por vencer', 'desc' => "Bienes cuya garantía vence en los próximos {$diasGar} días.", 'n' => count($idsGar), 'icono' => 'bi-patch-exclamation', 'url' => URL_ROOT . '/inventario/index', 'sev' => 'info', 'ids' => $idsGar];
+
+            // B-56: mantenimiento preventivo programado que ya toca.
+            $idsMant = $ids("SELECT p.id FROM inventario_mantenimiento_plan p
+                             INNER JOIN inventario i ON p.id_inventario = i.id
+                             WHERE p.is_active = TRUE AND i.is_active = TRUE
+                               AND i.estatus <> 'Dado de baja'
+                               AND p.proxima_fecha <= (CURRENT_DATE + ($diasMant || ' days')::INTERVAL)");
+            $alertas[] = ['clave' => 'mantenimiento_preventivo', 'titulo' => 'Mantenimiento preventivo', 'desc' => "Equipos a los que toca mantenimiento en los próximos {$diasMant} días.", 'n' => count($idsMant), 'icono' => 'bi-tools', 'url' => URL_ROOT . '/inventario/planMantenimiento', 'sev' => 'info', 'ids' => $idsMant];
         }
 
         return $alertas;

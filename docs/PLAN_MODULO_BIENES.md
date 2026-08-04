@@ -2,8 +2,8 @@
 
 **Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
 
-> **Estado: ✅ Fases 1 y 2 completas · Fase 3 parcial** (migraciones 062-064, 2026-08-04).
-> **Qué falta exactamente para terminar el módulo: §12.**
+> **Estado: ✅ Fases 1, 2 y 4 completas · Fase 3 parcial** (migraciones 062-065, 2026-08-04).
+> **Lo único pendiente son 3 documentos bloqueados por los formatos del cliente — §12.**
 
 ---
 
@@ -345,8 +345,8 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 | ~~**1. Base**~~ | ✅ **HECHA** (mig. 062): `estatus` + `condicion` separados (**cierra H-04**) · código oficial por partes + flujo de codificación contra el BM-1 · categoría interna (11 sembradas) · origen/donación · costo/proveedor/garantía · responsable único · sedes y depósito | — |
 | ~~**2. Movimientos**~~ | ✅ **HECHA** (mig. 063): origen/destino · autorización por cargo+departamento · mantenimiento con salida/retorno y proceso completo · todo transaccional | — |
 | **3. Documentos** | ✅ **HECHO** (mig. 064): adjuntos por bien · foto del bien · recepción del BM-1 con archivo y codificación trazable · hoja de vida del bien (B-36).<br>⏳ **Falta**: generación del informe de bienes nuevos, acta de asignación y acta de baja | 🔒 formatos reales |
-| **4. Explotación** | Etiquetas con QR · reportes de §6 · alertas de §7 · hoja de vida del bien (B-36) | Fases 1-3 |
-| **5. Cierre** | Conteo por cambio de gestión · RBAC de §7 | Fase 4 |
+| ~~**4. Explotación**~~ | ✅ **HECHA** (mig. 065): etiquetas con QR · reportes filtrables · alertas · hoja de vida (ya en Fase 3) | — |
+| ~~**5. Cierre**~~ | ✅ **HECHA** (mig. 065): conteo por cambio de gestión con acta · lectura/escritura por rol | — |
 
 > **H-04 quedó cerrado en la Fase 1** (no hizo falta esperar a la Fase 2): al introducir `estatus` se corrigieron además las 8 consultas de Dashboard, Reportes y Centro de Alertas que contaban los dados de baja como activos y que filtraban por la condición `'En Reparación'`, ya inexistente.
 
@@ -389,17 +389,17 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 > Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible.
 
-**Implementables ya, sin depender de nadie** 🛠️
+**Implementables ya** — ✅ **TODOS HECHOS** (mig. 065), salvo R-10
 
 | # | Qué | Origen |
 |---|---|---|
-| R-4 | **Etiquetas con código + QR** para imprimir y pegar | B-14, B-15. El `qrcode.min.js` ya está vendorizado. |
-| R-5 | **Reportes de la Presidencia**: activos · por departamento · dañados · desincorporados · sin código · donaciones · en depósito | B-51, B-53. Sin formato obligatorio (B-52). |
-| R-6 | **Alertas**: garantías por vencer · bienes esperando código hace mucho | B-20, B-12. Se enganchan al Centro de Alertas existente. |
-| R-7 | **Mantenimiento preventivo programado** (aires, impresoras, computadoras) con aviso | B-56. Requiere la tabla `inventario_mantenimiento_plan`. |
-| R-8 | **Conteo por cambio de gestión**: acta que compara el registro contra lo hallado (estatus, lugar, cantidad) | B-05, B-48, B-50. Es el **dolor #2**. |
-| R-9 | **RBAC del módulo**: Coordinación de Bienes edita · Presidencia y Administración solo ven | B-58. Hoy sigue el rol 4 genérico. |
-| R-10 | Eliminar `tipo_bien` y `cantidad` de la BD | Depende solo de confirmar **B-66**. |
+| ✅ R-4 | ~~Etiquetas con código + QR~~ **hecho** | B-14, B-15. El `qrcode.min.js` ya está vendorizado. |
+| ✅ R-5 | ~~Reportes de la Presidencia~~ **hecho** (vía filtros de estatus/origen/departamento/depósito) | B-51, B-53. Sin formato obligatorio (B-52). |
+| ✅ R-6 | ~~Alertas~~ **hecho** (+ mantenimiento preventivo) | B-20, B-12. Se enganchan al Centro de Alertas existente. |
+| ✅ R-7 | ~~Mantenimiento preventivo programado~~ **hecho** | B-56. Requiere la tabla `inventario_mantenimiento_plan`. |
+| ✅ R-8 | ~~Conteo por cambio de gestión~~ **hecho**, con acta imprimible | B-05, B-48, B-50. Es el **dolor #2**. |
+| ✅ R-9 | ~~RBAC del módulo~~ **hecho** (`InventarioController::puedeEscribir()`) | B-58. Hoy sigue el rol 4 genérico. |
+| ⏸ R-10 | Eliminar `tipo_bien` y `cantidad` de la BD — **lo único pendiente aquí** | Depende solo de confirmar **B-66**. |
 
 ### 12.3 Preguntas salientes al cliente
 

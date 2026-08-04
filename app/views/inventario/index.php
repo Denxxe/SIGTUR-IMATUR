@@ -27,6 +27,15 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados" class="btn-sig btn-sig--ghost">
             <i class="bi bi-inbox"></i> BM-1 recibidos
         </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/conteos" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-clipboard-check"></i> Conteos
+        </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/planMantenimiento" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-tools"></i> Preventivo
+        </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/etiquetas" target="_blank" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-upc-scan"></i> Etiquetas
+        </a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInv" onclick="nuevoInv()">
             <i class="bi bi-plus-circle"></i> Registrar Bien
         </button>

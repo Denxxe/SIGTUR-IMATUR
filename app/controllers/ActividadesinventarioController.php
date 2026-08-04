@@ -28,6 +28,11 @@ class ActividadesinventarioController extends Controller {
     }
 
     public function store() {
+        if (!InventarioController::puedeEscribir()) {
+            flash('global_msg', 'Tu rol tiene acceso de solo lectura al módulo de Bienes.', 'danger');
+            header('Location: ' . URL_ROOT . '/actividadesinventario/index');
+            return;
+        }
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . URL_ROOT . '/actividadesinventario/index');
             return;
@@ -86,6 +91,11 @@ class ActividadesinventarioController extends Controller {
     }
 
     public function delete($id) {
+        if (!InventarioController::puedeEscribir()) {
+            flash('global_msg', 'Tu rol tiene acceso de solo lectura al módulo de Bienes.', 'danger');
+            header('Location: ' . URL_ROOT . '/actividadesinventario/index');
+            return;
+        }
         try {
             if (ActividadInventario::delete($id, $this->getUserId())) {
                 flash('global_msg', 'Movimiento eliminado de la bitácora. '

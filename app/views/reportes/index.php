@@ -47,6 +47,9 @@ $secciones = [
             ['Kardex de Movimientos', 'Entradas, salidas y asignaciones de bienes por período.', 'reportes/kardex', 'bi-arrow-left-right', '#2563EB'],
             ['Bienes Asignados', 'Responsable actual de cada bien según el último movimiento.', 'reportes/bienesAsignados', 'bi-person-check', '#0891B2'],
             ['Bienes Dados de Baja', 'Historial de bienes desincorporados del inventario activo.', 'reportes/bajasInventario', 'bi-trash3', '#64748B'],
+            ['Conteos de Inventario', 'Verificación física por cambio de gestión, con acta imprimible.', 'inventario/conteos', 'bi-clipboard-check', '#7C3AED'],
+            ['Mantenimiento Preventivo', 'Calendario de mantenimiento de equipos y avisos de vencimiento.', 'inventario/planMantenimiento', 'bi-tools', '#D97706'],
+            ['Etiquetas de Bienes', 'Hoja imprimible con código y QR para pegar en cada bien.', 'inventario/etiquetas', 'bi-upc-scan', '#0891B2'],
         ],
     ],
     [

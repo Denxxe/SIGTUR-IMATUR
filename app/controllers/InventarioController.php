@@ -14,6 +14,29 @@
  */
 class InventarioController extends Controller {
 
+    /**
+     * Roles que pueden MODIFICAR bienes (B-58): la Coordinación de Bienes
+     * (rol 4) y el Administrador. Cualquier otro rol al que se le conceda
+     * acceso al módulo desde Roles y Permisos entra en **solo lectura**.
+     *
+     * El RBAC del sistema es por controlador, no por acción, así que la
+     * distinción lectura/escritura se resuelve aquí en vez de tocar el
+     * mecanismo compartido (que afectaría a todos los módulos).
+     */
+    const ROLES_ESCRITURA = [1, 4];
+
+    public static function puedeEscribir(): bool {
+        return in_array((int)($_SESSION['user_rol'] ?? 0), self::ROLES_ESCRITURA, true);
+    }
+
+    /** Corta la acción si el rol actual es de solo lectura. */
+    private function requireEscritura(string $volverA = '/inventario/index'): bool {
+        if (self::puedeEscribir()) return true;
+        flash('global_msg', 'Tu rol tiene acceso de solo lectura al módulo de Bienes.', 'danger');
+        header('Location: ' . URL_ROOT . $volverA);
+        return false;
+    }
+
     public function index() {
         // Vista: inventario activo (default), desincorporados o pendientes.
         $ver = $_GET['ver'] ?? '';
@@ -61,6 +84,7 @@ class InventarioController extends Controller {
     }
 
     public function store() {
+        if (!$this->requireEscritura()) return;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . URL_ROOT . '/inventario/index');
             return;
@@ -179,6 +203,7 @@ class InventarioController extends Controller {
      * Pasa el bien de "En espera de codificación" a "Activo".
      */
     public function codificar() {
+        if (!$this->requireEscritura()) return;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . URL_ROOT . '/inventario/index');
             return;
@@ -217,6 +242,7 @@ class InventarioController extends Controller {
     }
 
     public function delete($id) {
+        if (!$this->requireEscritura()) return;
         try {
             if (Inventario::delete($id, $this->getUserId())) {
                 flash('global_msg', 'El bien ha sido movido a la papelera de reciclaje.', 'warning');
@@ -260,6 +286,7 @@ class InventarioController extends Controller {
     // =====================================================================
 
     public function subirDocumento() {
+        if (!$this->requireEscritura()) return;
         $idBien = (int)($_POST['id_inventario'] ?? 0);
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Inventario::find($idBien)) {
@@ -285,6 +312,7 @@ class InventarioController extends Controller {
     }
 
     public function eliminarDocumento($idDoc = 0) {
+        if (!$this->requireEscritura()) return;
         $doc = InventarioDocumento::find((int)$idDoc);
         if (!$doc) {
             flash('global_msg', 'El documento no existe.', 'danger');
@@ -302,6 +330,7 @@ class InventarioController extends Controller {
 
     /** Foto del bien (B-21). */
     public function subirFoto() {
+        if (!$this->requireEscritura()) return;
         $idBien = (int)($_POST['id_inventario'] ?? 0);
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !Inventario::find($idBien)) {
@@ -336,6 +365,7 @@ class InventarioController extends Controller {
 
     /** Registra la recepción de un BM-1 (con su archivo escaneado). */
     public function registrarBM1() {
+        if (!$this->requireEscritura('/inventario/consolidados')) return;
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
             $_POST = $this->sanitizePost();
@@ -369,6 +399,7 @@ class InventarioController extends Controller {
     }
 
     public function eliminarBM1($id = 0) {
+        if (!$this->requireEscritura('/inventario/consolidados')) return;
         try {
             ConsolidadoBM1::delete((int)$id, $this->getUserId());
             flash('global_msg', 'Recepción eliminada. Los bienes ya codificados conservan su código.', 'warning');
@@ -376,6 +407,171 @@ class InventarioController extends Controller {
             flash('global_msg', $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/inventario/consolidados');
+    }
+
+    // =====================================================================
+    //  Etiquetas con QR (R-4 · B-14/B-15)
+    // =====================================================================
+
+    /**
+     * Hoja de etiquetas imprimible. La Alcaldía pega la suya en la
+     * inspección; ésta es la de control interno, con el código y un QR que
+     * apunta a la hoja de vida del bien para inventariar escaneando.
+     * Solo se etiquetan bienes ya codificados: sin N° de orden no hay qué imprimir.
+     */
+    public function etiquetas() {
+        $ids = array_filter(array_map('intval', explode(',', (string)($_GET['ids'] ?? ''))));
+        $todos = Inventario::all();
+        $items = array_values(array_filter($todos, function ($i) use ($ids) {
+            if (empty($i->codigo_bn)) return false;              // sin código no hay etiqueta
+            return empty($ids) || in_array((int)$i->id, $ids, true);
+        }));
+        $this->view('inventario/etiquetas', [
+            'titulo' => 'Etiquetas de bienes',
+            'items'  => $items,
+        ]);
+    }
+
+    // =====================================================================
+    //  Mantenimiento preventivo (R-7 · B-56)
+    // =====================================================================
+
+    public function planMantenimiento() {
+        $this->view('inventario/plan_mantenimiento', [
+            'titulo'      => 'Mantenimiento preventivo',
+            'planes'      => PlanMantenimiento::all(),
+            'inventario'  => Inventario::all(),
+            'dias_aviso'  => (int)(ConfigSistema::get('dias_aviso_mantenimiento') ?: 15),
+        ]);
+    }
+
+    public function guardarPlan() {
+        if (!$this->requireEscritura('/inventario/planMantenimiento')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            $idBien = (int)($_POST['id_inventario'] ?? 0);
+            if (!Inventario::find($idBien)) throw new Exception('El bien indicado no existe.');
+            PlanMantenimiento::guardar([
+                'id_inventario'    => $idBien,
+                'frecuencia_meses' => (int)($_POST['frecuencia_meses'] ?? 6),
+                'proxima_fecha'    => trim($_POST['proxima_fecha'] ?? ''),
+                'descripcion'      => trim($_POST['descripcion'] ?? ''),
+            ], $this->getUserId());
+            flash('global_msg', 'Plan de mantenimiento preventivo guardado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/planMantenimiento');
+    }
+
+    public function eliminarPlan($id = 0) {
+        if (!$this->requireEscritura('/inventario/planMantenimiento')) return;
+        try {
+            PlanMantenimiento::delete((int)$id, $this->getUserId());
+            flash('global_msg', 'Plan de mantenimiento eliminado.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/planMantenimiento');
+    }
+
+    // =====================================================================
+    //  Conteo por cambio de gestión (R-8 · B-05/B-48/B-50)
+    // =====================================================================
+
+    public function conteos() {
+        $this->view('inventario/conteos', [
+            'titulo'    => 'Conteos de inventario',
+            'conteos'   => ConteoInventario::all(),
+            'abierto'   => ConteoInventario::abierto(),
+            'empleados' => Empleado::all(),
+        ]);
+    }
+
+    public function abrirConteo() {
+        if (!$this->requireEscritura('/inventario/conteos')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            $id = ConteoInventario::abrir([
+                'motivo'         => $_POST['motivo'] ?? '',
+                'fecha_inicio'   => trim($_POST['fecha_inicio'] ?? ''),
+                'id_responsable' => (int)($_POST['id_responsable'] ?? 0),
+                'observaciones'  => trim($_POST['observaciones'] ?? ''),
+            ], $this->getUserId());
+            flash('global_msg', 'Conteo iniciado. Se congeló el estado actual de todos los bienes activos.');
+            header('Location: ' . URL_ROOT . '/inventario/verConteo/' . $id);
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/conteos');
+    }
+
+    public function verConteo($id = 0) {
+        $conteo = ConteoInventario::find((int)$id);
+        if (!$conteo) {
+            flash('global_msg', 'El conteo solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/conteos');
+            return;
+        }
+        $filtro = in_array($_GET['f'] ?? '', ['pendientes', 'faltantes', 'diferencias'], true) ? $_GET['f'] : '';
+        $this->view('inventario/conteo_detalle', [
+            'titulo'      => 'Conteo #' . (int)$id,
+            'conteo'      => $conteo,
+            'detalle'     => ConteoInventario::detalle((int)$id, $filtro),
+            'resumen'     => ConteoInventario::resumen((int)$id),
+            'ubicaciones' => Ubicacion::all(),
+            'filtro'      => $filtro,
+        ]);
+    }
+
+    public function verificarConteo() {
+        if (!$this->requireEscritura('/inventario/conteos')) return;
+        $idConteo = (int)($_POST['id_conteo'] ?? 0);
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            ConteoInventario::verificar($idConteo, (int)($_POST['id_inventario'] ?? 0), [
+                'hallado'           => !empty($_POST['hallado']),
+                'hallado_ubicacion' => (int)($_POST['hallado_ubicacion'] ?? 0),
+                'hallado_condicion' => $_POST['hallado_condicion'] ?? '',
+                'observaciones'     => trim($_POST['observaciones'] ?? ''),
+            ], $this->getUserId());
+            flash('global_msg', 'Verificación registrada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/verConteo/' . $idConteo);
+    }
+
+    public function cerrarConteo($id = 0) {
+        if (!$this->requireEscritura('/inventario/conteos')) return;
+        try {
+            ConteoInventario::cerrar((int)$id, $this->getUserId());
+            flash('global_msg', 'Conteo cerrado. Las diferencias deben resolverse con movimientos normales, '
+                . 'para que quede rastro de quién y cuándo las corrigió.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/verConteo/' . (int)$id);
+    }
+
+    /** Acta imprimible del conteo. */
+    public function actaConteo($id = 0) {
+        $conteo = ConteoInventario::find((int)$id);
+        if (!$conteo) {
+            flash('global_msg', 'El conteo solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/conteos');
+            return;
+        }
+        $this->view('inventario/conteo_acta', [
+            'titulo'  => 'Acta de conteo #' . (int)$id,
+            'conteo'  => $conteo,
+            'resumen' => ConteoInventario::resumen((int)$id),
+            'detalle' => ConteoInventario::detalle((int)$id, 'diferencias'),
+        ]);
     }
 
     // =====================================================================

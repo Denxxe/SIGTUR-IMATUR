@@ -57,6 +57,43 @@
                     <input type="text" name="ubicacion" class="sig-input" placeholder="Ej: oficina, almacén..." value="<?php echo htmlspecialchars($data['filtro_ubicacion'] ?? ''); ?>">
                 </div>
             </div>
+            <!-- Filtros de la Fase 4 (R-5): con ellos este reporte cubre las
+                 listas que pide la Presidencia en B-51. -->
+            <div class="col-md-3">
+                <div class="sig-field">
+                    <label class="sig-field__label">Estatus</label>
+                    <select name="estatus" class="sig-select">
+                        <option value="">Todos</option>
+                        <?php foreach (Inventario::ESTATUS as $e): if ($e === Inventario::EST_BAJA) continue; ?>
+                            <option value="<?php echo $e; ?>" <?php if (($data['filtro_estatus'] ?? '') === $e) echo 'selected'; ?>><?php echo $e; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sig-field">
+                    <label class="sig-field__label">Origen</label>
+                    <select name="origen" class="sig-select">
+                        <option value="">Todos</option>
+                        <?php foreach (Inventario::ORIGENES as $o): ?>
+                            <option value="<?php echo $o; ?>" <?php if (($data['filtro_origen'] ?? '') === $o) echo 'selected'; ?>><?php echo $o; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sig-field">
+                    <label class="sig-field__label">Departamento (contiene)</label>
+                    <input type="text" name="departamento" class="sig-input" placeholder="Ej: planificación..." value="<?php echo htmlspecialchars($data['filtro_departamento'] ?? ''); ?>">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;height:42px;">
+                        <input type="checkbox" name="deposito" value="1" <?php if (!empty($data['filtro_deposito'])) echo 'checked'; ?>> Solo los que están en depósito
+                    </label>
+                </div>
+            </div>
             <div class="col-md-3">
                 <div style="display:flex;gap:var(--sp-2);">
                     <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">

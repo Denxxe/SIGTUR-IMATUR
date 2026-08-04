@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **064** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **065** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,19 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-04 — Bienes, Fase 4: los 6 requisitos que no dependían de formatos (mig. 065)
+
+| # | Entregable | Detalle |
+|---|-----------|---------|
+| ✅ R-4 | **Etiquetas con código + QR** | Hoja imprimible 62×30 mm con membrete, código oficial y QR que abre la hoja de vida del bien — para inventariar escaneando (B-15). Reutiliza el `qrcode.min.js` que ya estaba vendorizado y quedó sin uso tras el carnet, así que funciona **sin internet**. Solo lista bienes ya codificados: sin N° de orden no hay qué pegar. |
+| ✅ R-5 | **Reportes para la Presidencia** | En vez de seis reportes casi idénticos, se añadieron filtros de **estatus, origen, departamento y "solo depósito"** al reporte de inventario: con ellos un mismo reporte cubre las listas de B-51 (activos, dañados, sin código, donaciones, por departamento, en almacén). Sin formato obligatorio (B-52). |
+| ✅ R-6 | **Alertas** | Tres nuevas en el Centro de Alertas: bienes esperando código hace demasiado (B-12), garantías por vencer (B-20) y mantenimiento preventivo próximo (B-56). Umbrales editables en Configuración. |
+| ✅ R-7 | **Mantenimiento preventivo programado** | `inventario_mantenimiento_plan` con frecuencia y próxima fecha. Al **retornar** de un mantenimiento el calendario avanza solo, así no se queda atrás. Un solo plan activo por bien. |
+| ✅ R-8 | **Conteo por cambio de gestión** — el **dolor #2** | Al abrirlo se **congela** lo que el sistema cree tener de cada bien; luego se registra lo hallado y se comparan (B-50: estatus, lugar, condición). Un solo conteo abierto a la vez; no se puede cerrar con bienes sin verificar. **Acta imprimible** con resumen y detalle de diferencias. **No corrige los bienes automáticamente**: las diferencias se resuelven con movimientos normales, que es lo que deja rastro auditable. |
+| ✅ R-9 | **Lectura/escritura por rol** (B-58) | La Coordinación de Bienes (rol 4) y el Administrador **editan**; cualquier otro rol con acceso al módulo queda en **solo lectura**. El RBAC del sistema es por controlador, no por acción, así que la distinción se resolvió acotada en los dos controladores del módulo en vez de tocar el mecanismo compartido (que afectaría a todos los módulos). 15 acciones de escritura protegidas. |
+| ⏸ R-10 | **NO se hizo** | Eliminar `tipo_bien`/`cantidad` espera la confirmación del cliente (**B-66**). |
+| ✅ | **Verificado** | 26 pruebas sobre la BD: plan preventivo (creación, idempotencia, rango, avance del calendario tras el retorno), conteo completo (congelado, doble apertura bloqueada, cierre con pendientes bloqueado, detección de diferencias, cierre, no-modificación de bienes), guardia de escritura para los 4 roles y las 3 alertas nuevas. |
 
 ### 2026-08-04 — Bienes, Fase 3 (parte 1): expediente documental y recepción del BM-1 (mig. 064)
 
