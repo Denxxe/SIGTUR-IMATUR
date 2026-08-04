@@ -293,15 +293,19 @@ reconstrucción por fases están en **`docs/PLAN_MODULO_BIENES.md`**.
 | ⚠️ D-IN11 | **Reinterpretada.** No hay consumibles: no llevan papelería ni material gastable (B-07/B-43/B-44). Lo que piden es un umbral de **suficiencia de mobiliario** (sillas por empleado, mesas por departamento) — distinto de un stock mínimo. Pendiente de definir → **B-63**. |
 | ⚠️ D-IN03 | **No existe clasificación hoy** (todo cae en "Inmobiliario"). El cliente pidió una propuesta; hay una en §8 del plan. Pero el código de la Alcaldía es `grupo-subgrupo-sección-…`, o sea que **ya existe un catálogo oficial** que debería ser la fuente → **B-60**. |
 
-**Insumos que faltan (bloquean la Fase 1):**
+**Formulario BM-1 recibido (2026-08-04)** — `docs/formatos/BM-1_inventario_bienes_muebles_alcaldia.jpeg`. **Desbloquea la Fase 1.**
 
-| ID | Qué pedir |
+Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro consolidado que la **Alcaldía le devuelve** ya codificado. El circuito es: registro interno → informe de bienes nuevos a la Alcaldía → inspección → BM-1 de vuelta con los códigos → conciliación. El sistema hace las dos primeras piezas y **recibe** la tercera.
+
+| ID | Estado |
 |----|----------|
-| 🔴 B-60 | **Catálogo oficial de grupos / subgrupos / secciones** del Departamento de Bienes de la Alcaldía. Define las categorías y la estructura del código. |
-| 🔴 B-61 | **Tres ejemplos reales de código BN** escritos (se pidió en B-11; llegó el formato, no los ejemplos). |
-| 🟡 B-62 | El formato incluye "cantidad", pero el registro es individual (B-09). ¿Qué representa esa parte? |
+| ✅ B-60 | Catálogo de grupos/subgrupos/secciones: **ya no bloquea**. Los valores los asigna la Alcaldía e IMATUR solo los transcribe; bastan campos validados por formato. |
+| ✅ B-61 | Ejemplos reales: `2-01-108` + N° de orden de 3 dígitos con ceros a la izquierda (`084`, `131`, `171`…). |
+| ✅ B-62 | "Cantidad" es la cantidad de la fila y **siempre vale 1**; no forma parte del identificador. |
+| 🔴 Hallazgo | **El código oficial no clasifica.** Sillas, mesas, pizarra, aire acondicionado y router comparten `2-01-108`. El catálogo de la Alcaldía **no distingue** equipo tecnológico de mobiliario → el sistema necesita **dos ejes**: código oficial (para la Alcaldía) + categoría interna (para los reportes de la Presidencia). |
+| 🟡 B-69…B-72 | Nuevas: valores en "S/P" pese a que sí registran costo · cada cuánto llega el BM-1 · si existe versión digital (permitiría carga automática de códigos) · si los saltos en el N° de orden son bajas. |
 | 🟡 B-63…B-68 | Umbral de mobiliario · cómo identificar a la Coordinadora de Bienes · sede del aeropuerto · confirmar eliminación de `tipo_bien`/`cantidad` (mig. 044) · destino del bien dado de baja · responsable derivado o manual. Ver §9 del plan. |
-| 🔴 Formatos | Oficio de codificación a la Alcaldía (**el más urgente**), acta de baja, oficio de asignación, oficio de donación, formato de inventario de la Alcaldía. |
+| 🔴 Formatos | **Informe de bienes nuevos** que IMATUR envía a la Alcaldía (el más urgente ahora), acta de baja, oficio de asignación, oficio de donación. El formato de inventario de la Alcaldía **ya se recibió**. |
 
 ### 3.5 Turismo (Rutas)
 | ID | Pregunta |

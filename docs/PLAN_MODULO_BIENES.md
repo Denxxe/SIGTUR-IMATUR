@@ -1,6 +1,8 @@
 # Plan de reconstrucción — Módulo de Bienes (Inventario)
 
-**Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) · **Estado BD hoy:** migraciones hasta 061
+**Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
+
+> **Estado: Fase 1 desbloqueada.** El BM-1 resolvió las dos preguntas que impedían arrancar.
 
 ---
 
@@ -12,7 +14,7 @@ Las cinco diferencias de fondo:
 
 | # | Lo que asumió el sistema | Lo que realmente ocurre |
 |---|---|---|
-| 1 | El bien nace con su código | El bien **nace sin código**. Se registra, se emite un **oficio a la Alcaldía**, ellos inspeccionan, asignan el N° de orden y pegan la etiqueta física (B-03, B-12, B-14) |
+| 1 | El bien nace con su código | El bien **nace sin código**. Se registra internamente, se envía un **informe a la Alcaldía**, ellos inspeccionan, asignan el código y devuelven el **BM-1 consolidado**, del que IMATUR carga los números (B-03, B-12, B-14 · §2-bis) |
 | 2 | El código es un texto libre | Es **estructurado**: `grupo-subgrupo-sección-cantidad-N° de orden`, y lo asigna el Departamento de Bienes de la Alcaldía (B-11) |
 | 3 | La baja es un movimiento más | Es un **acto administrativo** firmado por la Coordinadora de Bienes y la Presidencia, más un oficio para que la Alcaldía venga a retirar el bien (B-39) |
 | 4 | No hay documentos asociados | Cada bien acumula **factura, informe de la Alcaldía, oficio de donación, acta de asignación, acta de baja** (B-16 a B-19) |
@@ -33,6 +35,80 @@ No hay que rehacer todo. Se mantienen:
 - El patrón de adjuntos ya probado en RRHH (`expediente_documentos` + `DescargaController`) — se replica tal cual.
 - Los reportes existentes (inventario, kardex, bienes asignados, bajas) como punto de partida.
 - El `qrcode.min.js` ya vendorizado (quedó sin usar tras el carnet) — **se reutiliza para las etiquetas**.
+
+---
+
+## 2-bis. El formato oficial: Formulario BM-1 (recibido 2026-08-04)
+
+Imagen en `docs/formatos/BM-1_inventario_bienes_muebles_alcaldia.jpeg`.
+
+> ### ⚠️ El BM-1 es un documento ENTRANTE, no algo que IMATUR produzca
+>
+> Es el **registro consolidado que la Alcaldía elabora y le devuelve a IMATUR**, ya con los
+> códigos asignados. El sistema **no debe generarlo** para enviarlo.
+>
+> El circuito real tiene tres piezas y solo las dos primeras son responsabilidad del sistema:
+>
+> | # | Pieza | ¿La hace el sistema? |
+> |---|---|---|
+> | 1 | **Registro interno** de IMATUR — donde se dan de alta los bienes nuevos con todos sus datos | ✅ **Sí. Es el corazón del módulo.** |
+> | 2 | **Informe / oficio** a la Alcaldía con los bienes nuevos, para que vengan a verificar | ✅ **Sí — es el dolor #1 declarado (B-05)** |
+> | 3 | **BM-1 consolidado** que la Alcaldía devuelve con grupo/subgrupo/sección y N° de orden | ❌ No. **Se recibe** y de él se cargan los códigos |
+>
+> De ahí sale una funcionalidad que no estaba en el plan original: **conciliar el BM-1 recibido
+> contra el registro interno** — cargar los códigos asignados, detectar bienes que IMATUR tiene
+> y la Alcaldía no reconoce (o al revés), y archivar el documento como respaldo. Es exactamente
+> lo que hace falta en la auditoría por cambio de gestión (§4.5).
+>
+> Reproducir la vista BM-1 como **reporte interno** sí es útil —para comparar contra lo que
+> mandó la Alcaldía—, pero como herramienta de control, no como entregable oficial.
+
+El formato, con datos verdaderos de IMATUR:
+
+**Encabezado** — "INVENTARIO DE BIENES MUEBLES", sello de la *Coordinación de Bienes y Materiales* de la Alcaldía:
+
+| Campo | Valor (fijo para IMATUR) |
+|---|---|
+| Entidad propietaria | ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE |
+| Unidad de trabajo o dependencia | INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE) |
+| Servicio | ALCALDÍA |
+| Estado / Municipio | SUCRE / SUCRE |
+| Dirección o lugar | CALLE SUCRE, CASA Nº11, AL LADO DE LA FUNERARIA UNIÓN |
+| Fecha | la de emisión |
+
+**Columnas de la tabla:**
+
+```
+┌──────── CLASIFICACIÓN (CÓDIGO) ────────┬──────────┬──────────┐
+│  GRUPO  │  SUB-GRUPO  │    SECCIÓN     │ CANTIDAD │ Nº ORDEN │  NOMBRE Y DESCRIPCIÓN  │ VALOR UNIT. BS │ VALOR TOTAL BS │
+└─────────┴─────────────┴────────────────┴──────────┴──────────┘
+```
+
+**Fila real:** `2 │ 01 │ 108 │ 1 │ 084 │ SILLA VISITANTE EN SEMICUERO COLOR NEGRO SIN POSABRAZO │ S/P │ S/P`
+
+**Las filas se agrupan bajo una banda con el nombre del departamento.** En la muestra: *Dirección de Planificación y Gestión Turística*, *Promoción Turística*, *Calidad y Servicio Turístico* — los tres **existen tal cual en la tabla `departamentos`** (ids 7, 16 y 17).
+
+> Que la Alcaldía agrupe por los mismos departamentos que ya tenemos modelados es una buena
+> señal: la conciliación del BM-1 contra el registro interno puede hacerse **departamento por
+> departamento**, sin traducir nombres.
+
+### Lo que este documento resuelve
+
+| Pregunta | Resuelta |
+|---|---|
+| **B-61** — ejemplos reales de código | ✅ `2-01-108`, N° de orden `084`, `131`, `141`, `153`, `155`…`171`. Grupo = 1 dígito, sub-grupo = 2, sección = 3, N° de orden = **3 dígitos con ceros a la izquierda** |
+| **B-62** — qué significa "cantidad" en el código | ✅ Es la cantidad de la fila y **siempre vale 1**, porque el registro es individual (coherente con B-09). No forma parte del identificador |
+| **B-60** — catálogo de grupos/subgrupos/secciones | 🟡 **Parcial, pero ya no bloquea.** Conocemos la estructura y quién asigna los valores (la Alcaldía). Como IMATUR solo *transcribe* lo que le asignan, basta con campos validados por formato; el catálogo serviría para un desplegable, no es requisito |
+
+### Tres hallazgos que cambian el plan
+
+**1. El código oficial NO sirve para clasificar internamente.** Todos los bienes de la muestra —sillas, mesas, pizarra, archivo, biblioteca, **aire acondicionado** y **router**— comparten la misma clasificación `2-01-108`. Es decir, el catálogo de la Alcaldía **no distingue** equipo tecnológico de mobiliario, que es justo lo que el cliente pidió en B-22.
+
+> **Conclusión de diseño:** hacen falta **dos ejes independientes** — el *código oficial* (para el formulario BM-1 y la Alcaldía) y una *categoría interna* (para los reportes de la Presidencia, §6 y §8). No son lo mismo y no deben mezclarse en una sola columna.
+
+**2. Marca, modelo y serial van dentro de la descripción.** El formulario no tiene columnas propias: el aire acondicionado aparece como *"AIRE ACONDICIONADO MARCA HYUNDAI DE 36 MIL BTU COLOR BEIGE MODELO: PISO TECHO SERIAL: 540K51799013708016068"*. Conviene **seguir capturando `marca`/`modelo`/`serial` por separado** y que el sistema **componga** ese texto al exportar — se gana poder filtrar y buscar sin perder fidelidad al formato. Matiza B-13: el serial no es el identificador, pero sí se registra.
+
+**3. Los valores van en "S/P" (sin precio).** Las columnas *Valor unitario* y *Valor total* aparecen en `S/P` en **todas** las filas, aunque B-17 dijo que sí registran costo y factura. El costo se lleva internamente pero no se declara en este formulario → nueva pregunta **B-69**.
 
 ---
 
@@ -112,6 +188,7 @@ Y el enum de `tipo_movimiento` debe reconciliarse: hoy es `Asignacion/Devolucion
 | `inventario_mantenimientos` | Proceso de reparación: quién lo hizo (Servicios Generales), fechas, resultado, costo (B-33) |
 | `inventario_bajas` | Snapshot de la desincorporación: motivo, acta, firmantes, oficio a la Alcaldía, fecha de retiro (B-37 a B-42) |
 | `inventario_mantenimiento_plan` | Mantenimiento **preventivo** programado: aires, impresoras, computadoras (B-56) |
+| `inventario_consolidados_bm1` | Cada **BM-1 recibido** de la Alcaldía: fecha, archivo adjunto y resultado de la conciliación. Da trazabilidad de cuándo se codificó cada lote (§2-bis) |
 
 ---
 
@@ -119,19 +196,35 @@ Y el enum de `tipo_movimiento` debe reconciliarse: hoy es `Asignacion/Devolucion
 
 ### 4.1 Codificación (el dolor #1 — B-05)
 
+Tres actores: el **registro interno** (el sistema), el **informe saliente** y el **BM-1 entrante**.
+
 ```
-Registrar bien  →  estatus "En espera de codificación"
-      ↓
-Generar OFICIO a la Alcaldía  ←── el sistema lo produce (hoy es manual)
-      ↓
-Inspección de la Alcaldía
-      ↓
-Cargar N° de orden + marcar verificado  →  estatus "Activo"
-      ↓
-Imprimir etiqueta con QR (B-15)
+① REGISTRO INTERNO  (sistema)
+   Alta del bien: descripción, marca/modelo/serial, departamento,
+   costo, factura, origen (compra/donación)
+        →  estatus "En espera de codificación"   ·   sin código, sin N° de orden
+                    ↓
+② INFORME / OFICIO A LA ALCALDÍA  (lo genera el sistema — hoy es manual)
+   Lote de bienes nuevos pendientes de verificación
+                    ↓
+        Inspección física de la Alcaldía
+                    ↓
+③ BM-1 CONSOLIDADO  (lo devuelve la Alcaldía)
+   Trae grupo-subgrupo-sección + N° de orden por bien
+                    ↓
+   CONCILIACIÓN en el sistema:
+     · cargar el código y el N° de orden en cada bien
+     · marcar verificado_alcaldia + fecha
+     · archivar el BM-1 como documento de respaldo
+     · señalar diferencias (bienes sin reconocer en uno u otro lado)
+        →  estatus "Activo"
+                    ↓
+④ ETIQUETA con código + QR  (B-14, B-15)
+   La Alcaldía pega la suya en la inspección; el sistema puede
+   generar la propia una vez asignado el código
 ```
 
-Se puede agrupar **varios bienes en un mismo oficio** (lo habitual al recibir un lote).
+El informe del paso ② agrupa **varios bienes** (lo habitual al recibir un lote). El paso ③ es la pieza que no estaba contemplada y que además resuelve la auditoría de cambio de gestión (§4.5).
 
 ### 4.2 Asignación de responsable
 Bien en depósito → se asigna a un departamento → responsable = director o, en su defecto, coordinador (B-26). Se genera un **oficio que firma el empleado** (B-29). Al salir un trabajador, el bien **no lo sigue**: queda en el departamento y se reasigna al nuevo responsable (B-28, B-30).
@@ -153,12 +246,13 @@ Todos siguen el patrón ya probado en constancias/oficios (HTML imprimible + mem
 
 | Documento | Origen |
 |---|---|
-| **Oficio de solicitud de codificación** a la Alcaldía | B-03, B-05, B-12 |
+| **Informe / oficio de bienes nuevos** para verificación de la Alcaldía ← *el más urgente* | B-03, B-05, B-12 |
 | **Acta/oficio de asignación** de bien a responsable | B-29 |
 | **Acta administrativa de baja** (firma Coordinadora + Presidencia) | B-39 |
 | **Oficio a la Alcaldía** para retiro del bien desincorporado | B-39, B-40 |
 | **Etiqueta con código + QR** | B-14, B-15 |
 | **Acta de conteo** por cambio de gestión | B-48, B-49 |
+| **Vista tipo BM-1** como reporte **interno** de control (no es entregable a la Alcaldía) | §2-bis |
 
 ---
 
@@ -191,9 +285,9 @@ Todos internos para la Presidencia, **sin formato obligatorio** (B-52), filtrabl
 
 El cliente pidió expresamente una propuesta: hoy no hay clasificación real (todo cae en "Inmobiliario").
 
-**Antes de adoptar cualquier lista propia, hay que entender esto:** el código de la Alcaldía es `grupo-subgrupo-sección-…`. Es decir, **la Alcaldía ya tiene un catálogo oficial de clasificación** — y las categorías del sistema deberían ser ese catálogo, no uno inventado por nosotros. Pedirlo es la acción más importante de esta lista (ver §9).
+**El BM-1 recibido zanjó esta duda** (§2-bis): en la muestra real, sillas, mesas, pizarra, archivo, aire acondicionado y router comparten **todos** la clasificación `2-01-108`. El catálogo de la Alcaldía **no distingue** equipo tecnológico de mobiliario, que es justamente lo que se pide en B-22.
 
-Mientras llega, esta propuesta de trabajo cubre lo típico de un instituto de este tamaño:
+Por eso el sistema necesita **dos ejes independientes**: el **código oficial** (transcrito del BM-1, para la Alcaldía) y una **categoría interna** (para los reportes de la Presidencia). Esta es la propuesta para el eje interno:
 
 | Categoría | Ejemplos |
 |---|---|
@@ -213,13 +307,19 @@ Mientras llega, esta propuesta de trabajo cubre lo típico de un instituto de es
 
 ## 9. Preguntas abiertas y nuevas
 
-Ninguna impide empezar por la Fase 1, pero **B-60 y B-61 conviene resolverlas antes de tocar el código de codificación**.
+> **Actualización 2026-08-04:** con el BM-1 recibido, **B-61 y B-62 quedaron resueltas** y
+> **B-60 dejó de bloquear** (ver §2-bis). **La Fase 1 ya se puede arrancar.** Lo que sigue abierto
+> afecta detalles, no la estructura.
 
 | # | | Pregunta |
 |---|---|---|
-| B-60 | ⭐ | **El catálogo oficial de la Alcaldía.** ¿Nos pueden facilitar la tabla de **grupos, subgrupos y secciones** que usa el Departamento de Bienes? Define las categorías del sistema y la estructura del código. Sin esto, la clasificación de §8 es una suposición. |
-| B-61 | ⭐ | **Tres ejemplos reales de código BN.** Se pidió en B-11 y quedó sin responder: llegó el formato (`grupo-subgrupo-sección-cantidad-N° de orden`) pero no un código real escrito. Necesitamos verlos para saber cuántos dígitos lleva cada parte y con qué se separan. |
-| B-62 | ⭐ | En ese formato aparece **"cantidad"**, pero B-09 dice que cada bien se registra individualmente con su propio código. ¿Qué representa esa parte — siempre 1, o la cantidad del lote en que se adquirió? |
+| ~~B-60~~ | ✅ | ~~Catálogo oficial de grupos/subgrupos/secciones.~~ **Ya no bloquea.** Conocemos la estructura y que los valores los asigna la Alcaldía; IMATUR solo los transcribe. Seguiría siendo útil para un desplegable, pero no es requisito. |
+| ~~B-61~~ | ✅ | ~~Ejemplos reales de código.~~ **Resuelta con el BM-1:** `2-01-108`, N° de orden de 3 dígitos con ceros a la izquierda (`084`, `131`, `171`…). |
+| ~~B-62~~ | ✅ | ~~Qué significa "cantidad" en el código.~~ **Resuelta:** es la cantidad de la fila y siempre vale 1; no forma parte del identificador. |
+| B-69 | ▲ | **Valores en S/P.** En el BM-1 las columnas *Valor unitario* y *Valor total* aparecen en `S/P` en todas las filas, pero B-17 dice que sí registran costo y factura. ¿El costo es solo control interno, o la Alcaldía va a empezar a exigir el monto declarado? |
+| B-70 | ▲ | **Recepción del BM-1.** ¿Cada cuánto lo devuelve la Alcaldía — con cada lote verificado, una vez al año, cuando se lo piden? Define si la conciliación es un evento puntual o una rutina. |
+| B-71 | ▲ | **El BM-1 llega en papel.** ¿Existe la versión digital (Excel/Word) del archivo que arma la Alcaldía? Si la hay, la carga de códigos podría ser automática en vez de teclear bien por bien. |
+| B-72 | ○ | **Numeración del N° de orden.** Los números de la muestra van del 025 al 171 con saltos. ¿Los huecos son bienes ya dados de baja, o la Alcaldía numera de forma continua para toda la Alcaldía y no solo para IMATUR? |
 | B-63 | ▲ | **El "umbral" de B-45/B-47.** No es stock de consumibles, sino saber si *alcanzan* los bienes (sillas por empleado, mesas por departamento). ¿Cómo lo definirían: una cantidad esperada por departamento, o una relación contra el número de empleados? |
 | B-64 | ▲ | **La Coordinadora de Bienes autoriza los movimientos** (B-32). ¿Cómo la identifica el sistema — por el cargo de la persona, por su departamento, o se designa manualmente? |
 | B-65 | ▲ | **Sede del aeropuerto** (B-24): sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como una ubicación independiente con su propio responsable? |
@@ -228,12 +328,12 @@ Ninguna impide empezar por la Fase 1, pero **B-60 y B-61 conviene resolverlas an
 | B-68 | ○ | ¿El responsable del bien se **deriva automáticamente** del director/coordinador del departamento, o se elige a mano? Cambia si hay que mantenerlo al cambiar el liderazgo. |
 
 ### Formatos que faltan por pedir
-- [ ] Oficio de solicitud de codificación a la Alcaldía ← **el más urgente**
+- [x] ~~Formato de inventario de la Alcaldía (B-02)~~ — **recibido**: Formulario BM-1, `docs/formatos/`
+- [ ] **Informe / oficio de bienes nuevos** que IMATUR envía a la Alcaldía ← **el más urgente ahora**
 - [ ] Acta administrativa de baja
 - [ ] Oficio de asignación de bien a un empleado
 - [ ] Oficio de donación
-- [ ] El formato de inventario de la Alcaldía mencionado en B-02
-- [ ] Catálogo de grupos/subgrupos/secciones (B-60)
+- [ ] Versión digital del BM-1, si existe (B-71)
 
 ---
 
@@ -241,9 +341,9 @@ Ninguna impide empezar por la Fase 1, pero **B-60 y B-61 conviene resolverlas an
 
 | Fase | Contenido | Depende de |
 |---|---|---|
-| **1. Base** | `estatus` + `condicion` separados · flujo de codificación · origen/donación · costo/proveedor/garantía · responsable · sedes y depósito · categorías reales | B-60, B-61 |
+| **1. Base** | `estatus` + `condicion` separados · código oficial (grupo/subgrupo/sección/N° orden) **y** categoría interna como ejes separados · origen/donación · costo/proveedor/garantía · responsable · sedes y depósito | ✅ **Desbloqueada** |
 | **2. Movimientos** | Origen/destino · autorización · mantenimiento con retorno · corrección definitiva de H-04 | Fase 1 |
-| **3. Documentos** | Adjuntos por bien (factura, informe, oficios) · generación de oficio de codificación, acta de asignación, acta de baja | Fase 1 · formatos reales |
+| **3. Documentos** | Adjuntos por bien (factura, informe, oficios) · generación del informe de bienes nuevos, acta de asignación, acta de baja · **recepción y conciliación del BM-1** | Fase 1 · formatos reales |
 | **4. Explotación** | Etiquetas con QR · reportes de §6 · alertas de §7 · hoja de vida del bien (B-36) | Fases 1-3 |
 | **5. Cierre** | Conteo por cambio de gestión · RBAC de §7 | Fase 4 |
 
