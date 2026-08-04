@@ -1,4 +1,53 @@
 --
+-- =====================================================================
+-- SIGTUR-IMATUR — ESQUEMA CONSOLIDADO (INSTALACIÓN DESDE CERO)
+-- =====================================================================
+--
+-- Generado: 2026-08-04  ·  PostgreSQL 17
+-- Cubre: esquema base + TODAS las migraciones 001–061.
+--
+-- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
+-- aplicar ninguna migración de database/migrations/ — ya están todas
+-- incluidas. Las migraciones sueltas se conservan solo como historial
+-- y para actualizar instalaciones antiguas.
+--
+-- ---------------------------------------------------------------------
+-- QUÉ INCLUYE
+-- ---------------------------------------------------------------------
+--   · Las 49 tablas, índices, constraints, secuencias y CHECKs.
+--   · Catálogos institucionales con datos (listos para operar):
+--       - roles (5) y permisos_rol  ....... RBAC dinámico
+--       - configuracion_sistema ........... datos del instituto, RIF,
+--                                           tolerancias, metas, nómina
+--       - departamentos (23) .............. organigrama oficial IMATUR
+--       - cargos (5) ...................... niveles jerárquicos
+--       - horarios (5) .................... modalidades de jornada
+--       - feriados (12) ................... nacionales + Cumaná
+--       - municipio (2) / parroquia (7) ... geografía de Sucre
+--   · Un usuario administrador de arranque (ver el final del archivo).
+--
+-- ---------------------------------------------------------------------
+-- QUÉ **NO** INCLUYE (se carga operando el sistema)
+-- ---------------------------------------------------------------------
+--   Personal, usuarios reales, inventario, bienes, ubicaciones físicas,
+--   categorías, talleres, rutas, visitantes, pasantes, asistencias,
+--   constancias, nómina y bitácora. Todas esas tablas quedan vacías.
+--
+--   Los correlativos de oficios (constancias, rutas, formación,
+--   pasantes) quedan reiniciados en 0.
+--
+-- ---------------------------------------------------------------------
+-- CÓMO INSTALAR
+-- ---------------------------------------------------------------------
+--   createdb -U postgres "SIGTUR-IMATUR"
+--   psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
+--
+--   En Windows, psql suele estar en:
+--   "C:\Program Files\PostgreSQL\17\bin\psql.exe"
+--
+-- =====================================================================
+--
+--
 -- PostgreSQL database dump
 --
 
@@ -22,6 +71,13 @@ SET row_security = off;
 --
 
 -- *not* creating schema, since initdb creates it
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS '';
 
 
 SET default_tablespace = '';
@@ -112,6 +168,80 @@ ALTER SEQUENCE public.actividades_ruta_id_seq OWNED BY public.actividades_ruta.i
 
 
 --
+-- Name: alertas_vistas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.alertas_vistas (
+    id integer NOT NULL,
+    id_usuario integer NOT NULL,
+    clave_alerta character varying(60) NOT NULL,
+    fingerprint character varying(64) NOT NULL,
+    visto_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+--
+-- Name: alertas_vistas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.alertas_vistas_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: alertas_vistas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.alertas_vistas_id_seq OWNED BY public.alertas_vistas.id;
+
+
+--
+-- Name: amonestaciones; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.amonestaciones (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    fecha date DEFAULT CURRENT_DATE NOT NULL,
+    motivo text NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer,
+    motivo_anulacion text,
+    id_falta_origen integer
+);
+
+
+--
+-- Name: amonestaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.amonestaciones_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: amonestaciones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.amonestaciones_id_seq OWNED BY public.amonestaciones.id;
+
+
+--
 -- Name: asistencias; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -167,7 +297,7 @@ CREATE TABLE public.audit_logs (
     id_usuario integer,
     fecha timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     ip_direccion character varying(45),
-    CONSTRAINT audit_logs_operacion_check CHECK (((operacion)::text = ANY ((ARRAY['INSERT'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying])::text[])))
+    CONSTRAINT audit_logs_operacion_check CHECK (((operacion)::text = ANY ((ARRAY['INSERT'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying, 'LOGIN'::character varying, 'LOGIN_FALLIDO'::character varying])::text[])))
 );
 
 
@@ -192,6 +322,138 @@ ALTER SEQUENCE public.audit_logs_id_seq OWNED BY public.audit_logs.id;
 
 
 --
+-- Name: bono_vacacional_detalle; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.bono_vacacional_detalle (
+    id integer NOT NULL,
+    id_periodo integer NOT NULL,
+    id_empleado integer NOT NULL,
+    tipo_personal character varying(20) NOT NULL,
+    dias_vacaciones integer DEFAULT 0 NOT NULL,
+    grado_escala character varying(30),
+    sueldo_basico numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_profesional numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_antiguedad numeric(12,2) DEFAULT 0 NOT NULL,
+    n_hijos integer DEFAULT 0 NOT NULL,
+    monto_hijo numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_por_hijo numeric(12,2) DEFAULT 0 NOT NULL,
+    bono_transporte numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_discapacidad numeric(12,2) DEFAULT 0 NOT NULL,
+    caja_ahorro numeric(12,2) DEFAULT 0 NOT NULL,
+    sueldo_integral numeric(12,2) DEFAULT 0 NOT NULL,
+    cuenta_bancaria character varying(30),
+    monto_cesta_ticket numeric(12,2) DEFAULT 0 NOT NULL,
+    alicuotas numeric(12,2) DEFAULT 0 NOT NULL,
+    total_bono_vacacional numeric(12,2),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT bono_vacacional_detalle_tipo_personal_check CHECK (((tipo_personal)::text = ANY ((ARRAY['Alto Nivel'::character varying, 'Empleados Fijos'::character varying, 'Obreros Fijos'::character varying, 'Contratados'::character varying])::text[])))
+);
+
+
+--
+-- Name: bono_vacacional_detalle_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.bono_vacacional_detalle_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: bono_vacacional_detalle_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.bono_vacacional_detalle_id_seq OWNED BY public.bono_vacacional_detalle.id;
+
+
+--
+-- Name: bono_vacacional_periodos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.bono_vacacional_periodos (
+    id integer NOT NULL,
+    periodo character varying(20) NOT NULL,
+    fecha_corte date NOT NULL,
+    estado character varying(20) DEFAULT 'Borrador'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    cerrado_at timestamp without time zone,
+    cerrado_by integer,
+    CONSTRAINT bono_vacacional_periodos_estado_check CHECK (((estado)::text = ANY ((ARRAY['Borrador'::character varying, 'Cerrado'::character varying])::text[])))
+);
+
+
+--
+-- Name: bono_vacacional_periodos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.bono_vacacional_periodos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: bono_vacacional_periodos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.bono_vacacional_periodos_id_seq OWNED BY public.bono_vacacional_periodos.id;
+
+
+--
+-- Name: carga_familiar; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.carga_familiar (
+    id integer NOT NULL,
+    id_persona integer NOT NULL,
+    nombre_apellido character varying(150) NOT NULL,
+    cedula character varying(15),
+    fecha_nacimiento date,
+    parentesco character varying(20) NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer,
+    genero character(1),
+    vive boolean DEFAULT true,
+    CONSTRAINT carga_familiar_genero_check CHECK (((genero IS NULL) OR (genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar])))),
+    CONSTRAINT carga_familiar_parentesco_check CHECK (((parentesco)::text = ANY ((ARRAY['Padre'::character varying, 'Madre'::character varying, 'Cónyuge'::character varying, 'Concubino'::character varying, 'Hijo'::character varying])::text[])))
+);
+
+
+--
+-- Name: carga_familiar_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.carga_familiar_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: carga_familiar_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.carga_familiar_id_seq OWNED BY public.carga_familiar.id;
+
+
+--
 -- Name: cargos; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -207,7 +469,7 @@ CREATE TABLE public.cargos (
     updated_by integer,
     deleted_by integer,
     nivel_jerarquico character varying(20) DEFAULT 'Adscrito'::character varying,
-    CONSTRAINT cargos_nivel_jerarquico_check CHECK ((nivel_jerarquico IS NULL OR (nivel_jerarquico)::text = ANY ((ARRAY['Presidencia'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Adscrito'::character varying])::text[])))
+    CONSTRAINT cargos_nivel_jerarquico_check CHECK (((nivel_jerarquico IS NULL) OR ((nivel_jerarquico)::text = ANY ((ARRAY['Presidencia'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Adscrito'::character varying])::text[]))))
 );
 
 
@@ -304,6 +566,88 @@ ALTER SEQUENCE public.configuracion_sistema_id_seq OWNED BY public.configuracion
 
 
 --
+-- Name: constancias; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.constancias (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    numero character varying(30) NOT NULL,
+    tipo character varying(50) DEFAULT 'Constancia de trabajo'::character varying NOT NULL,
+    fecha_emision timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    observaciones text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: constancias_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.constancias_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: constancias_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.constancias_id_seq OWNED BY public.constancias.id;
+
+
+--
+-- Name: cursos_realizados; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cursos_realizados (
+    id integer NOT NULL,
+    id_persona integer NOT NULL,
+    institucion character varying(150),
+    curso character varying(200) NOT NULL,
+    fecha_inicio date,
+    fecha_culminacion date,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: cursos_realizados_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cursos_realizados_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cursos_realizados_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cursos_realizados_id_seq OWNED BY public.cursos_realizados.id;
+
+
+--
 -- Name: departamentos; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -320,8 +664,7 @@ CREATE TABLE public.departamentos (
     deleted_by integer,
     id_padre integer,
     tipo_unidad character varying(30),
-    CONSTRAINT departamentos_id_padre_fkey FOREIGN KEY (id_padre) REFERENCES public.departamentos(id) ON DELETE SET NULL,
-    CONSTRAINT departamentos_tipo_unidad_check CHECK ((tipo_unidad IS NULL OR (tipo_unidad)::text = ANY ((ARRAY['Presidencia'::character varying, 'Junta Directiva'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Oficina'::character varying, 'Unidad'::character varying])::text[])))
+    CONSTRAINT departamentos_tipo_unidad_check CHECK (((tipo_unidad IS NULL) OR ((tipo_unidad)::text = ANY ((ARRAY['Presidencia'::character varying, 'Junta Directiva'::character varying, 'Dirección'::character varying, 'Coordinación'::character varying, 'Oficina'::character varying, 'Unidad'::character varying])::text[]))))
 );
 
 
@@ -343,6 +686,89 @@ CREATE SEQUENCE public.departamentos_id_seq
 --
 
 ALTER SEQUENCE public.departamentos_id_seq OWNED BY public.departamentos.id;
+
+
+--
+-- Name: empleado_salarios; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.empleado_salarios (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    fecha_efectiva date DEFAULT CURRENT_DATE NOT NULL,
+    sueldo_basico numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_profesional numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_responsabilidad numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_antiguedad numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_por_hijo numeric(12,2) DEFAULT 0 NOT NULL,
+    bono_transporte numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_fond numeric(12,2) DEFAULT 0 NOT NULL,
+    prima_discapacidad numeric(12,2) DEFAULT 0 NOT NULL,
+    caja_ahorro numeric(12,2) DEFAULT 0 NOT NULL,
+    motivo character varying(255),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer
+);
+
+
+--
+-- Name: empleado_salarios_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.empleado_salarios_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: empleado_salarios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.empleado_salarios_id_seq OWNED BY public.empleado_salarios.id;
+
+
+--
+-- Name: empleado_traslados; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.empleado_traslados (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    id_departamento_origen integer,
+    id_departamento_destino integer NOT NULL,
+    id_cargo_origen integer,
+    id_cargo_destino integer,
+    fecha date DEFAULT CURRENT_DATE NOT NULL,
+    motivo character varying(255),
+    observacion text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer
+);
+
+
+--
+-- Name: empleado_traslados_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.empleado_traslados_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: empleado_traslados_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.empleado_traslados_id_seq OWNED BY public.empleado_traslados.id;
 
 
 --
@@ -376,11 +802,53 @@ CREATE TABLE public.empleados (
     talla_zapato character varying(10),
     motivo_egreso character varying(40),
     observacion_egreso text,
-    CONSTRAINT empleados_tipo_contrato_check CHECK (((tipo_contrato)::text = ANY ((ARRAY['Fijo'::character varying, 'Contratado'::character varying])::text[]))),
+    fecha_vencimiento_contrato date,
+    fecha_ingreso_administracion date,
+    vacaciones_ajuste_dias integer DEFAULT 0 NOT NULL,
+    CONSTRAINT empleados_clasificacion_check CHECK (((clasificacion IS NULL) OR ((clasificacion)::text = ANY ((ARRAY['Empleado'::character varying, 'Obrero'::character varying])::text[])))),
+    CONSTRAINT empleados_grupo_rotacion_check CHECK (((grupo_rotacion IS NULL) OR (grupo_rotacion = ANY (ARRAY['A'::bpchar, 'B'::bpchar])))),
     CONSTRAINT empleados_institucion_origen_check CHECK (((institucion_origen)::text = ANY ((ARRAY['Alcaldía'::character varying, 'Gobernación'::character varying, 'IMATUR'::character varying])::text[]))),
-    CONSTRAINT empleados_clasificacion_check CHECK ((clasificacion IS NULL OR (clasificacion)::text = ANY ((ARRAY['Empleado'::character varying, 'Obrero'::character varying])::text[]))),
-    CONSTRAINT empleados_grupo_rotacion_check CHECK ((grupo_rotacion IS NULL OR grupo_rotacion IN ('A', 'B')))
+    CONSTRAINT empleados_tipo_contrato_check CHECK (((tipo_contrato)::text = ANY ((ARRAY['Fijo'::character varying, 'Contratado'::character varying])::text[])))
 );
+
+
+--
+-- Name: empleados_egresos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.empleados_egresos (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    fecha_egreso date NOT NULL,
+    motivo_egreso character varying(40) NOT NULL,
+    observacion text,
+    fecha_reingreso date,
+    reingreso_observacion text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by integer,
+    reingreso_at timestamp without time zone,
+    reingreso_by integer
+);
+
+
+--
+-- Name: empleados_egresos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.empleados_egresos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: empleados_egresos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.empleados_egresos_id_seq OWNED BY public.empleados_egresos.id;
 
 
 --
@@ -401,6 +869,168 @@ CREATE SEQUENCE public.empleados_id_seq
 --
 
 ALTER SEQUENCE public.empleados_id_seq OWNED BY public.empleados.id;
+
+
+--
+-- Name: expediente_documentos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.expediente_documentos (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    tipo_documento character varying(50) NOT NULL,
+    archivo_url character varying(255) NOT NULL,
+    nombre_original character varying(255),
+    observaciones text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: expediente_documentos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.expediente_documentos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: expediente_documentos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.expediente_documentos_id_seq OWNED BY public.expediente_documentos.id;
+
+
+--
+-- Name: experiencia_laboral; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.experiencia_laboral (
+    id integer NOT NULL,
+    id_persona integer NOT NULL,
+    organismo character varying(150) NOT NULL,
+    cargo character varying(150),
+    fecha_inicio date,
+    fecha_culminacion date,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: experiencia_laboral_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.experiencia_laboral_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: experiencia_laboral_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.experiencia_laboral_id_seq OWNED BY public.experiencia_laboral.id;
+
+
+--
+-- Name: faltas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.faltas (
+    id integer NOT NULL,
+    id_empleado integer NOT NULL,
+    fecha date DEFAULT CURRENT_DATE NOT NULL,
+    motivo text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer,
+    motivo_anulacion text,
+    tipo character varying(40) DEFAULT 'Inasistencia injustificada'::character varying NOT NULL
+);
+
+
+--
+-- Name: faltas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.faltas_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: faltas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.faltas_id_seq OWNED BY public.faltas.id;
+
+
+--
+-- Name: feriados; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.feriados (
+    id integer NOT NULL,
+    fecha date NOT NULL,
+    nombre character varying(120) NOT NULL,
+    recurrente boolean DEFAULT true NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer
+);
+
+
+--
+-- Name: feriados_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.feriados_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: feriados_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.feriados_id_seq OWNED BY public.feriados.id;
 
 
 --
@@ -425,6 +1055,13 @@ CREATE TABLE public.horarios (
 
 
 --
+-- Name: TABLE horarios; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.horarios IS 'Turnos de trabajo del personal (Ej: Mañana 7-12, Administrativo 8-16).';
+
+
+--
 -- Name: horarios_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -442,48 +1079,6 @@ CREATE SEQUENCE public.horarios_id_seq
 --
 
 ALTER SEQUENCE public.horarios_id_seq OWNED BY public.horarios.id;
-
-
---
--- Name: instituciones_externas; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.instituciones_externas (
-    id integer NOT NULL,
-    nombre character varying(150) NOT NULL,
-    tipo character varying(50) DEFAULT 'Educativa'::character varying,
-    es_educativa boolean DEFAULT true,
-    municipio character varying(100),
-    contacto character varying(100),
-    telefono character varying(30),
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by integer,
-    updated_at timestamp without time zone,
-    updated_by integer,
-    deleted_at timestamp without time zone,
-    deleted_by integer
-);
-
-
---
--- Name: instituciones_externas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.instituciones_externas_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: instituciones_externas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.instituciones_externas_id_seq OWNED BY public.instituciones_externas.id;
 
 
 --
@@ -509,7 +1104,11 @@ CREATE TABLE public.inventario (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    CONSTRAINT inventario_condicion_check CHECK (((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying, 'En Reparación'::character varying])::text[])))
+    tipo_bien character varying(20) DEFAULT 'Durable'::character varying NOT NULL,
+    cantidad integer DEFAULT 1 NOT NULL,
+    CONSTRAINT inventario_cantidad_chk CHECK ((cantidad >= 1)),
+    CONSTRAINT inventario_condicion_check CHECK (((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying, 'En Reparación'::character varying])::text[]))),
+    CONSTRAINT inventario_tipo_bien_chk CHECK (((tipo_bien)::text = ANY ((ARRAY['Durable'::character varying, 'Fungible'::character varying])::text[])))
 );
 
 
@@ -552,6 +1151,13 @@ CREATE TABLE public.municipio (
 
 
 --
+-- Name: TABLE municipio; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.municipio IS 'Municipios disponibles del sistema';
+
+
+--
 -- Name: municipio_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -569,26 +1175,6 @@ CREATE SEQUENCE public.municipio_id_seq
 --
 
 ALTER SEQUENCE public.municipio_id_seq OWNED BY public.municipio.id;
-
-
---
--- Name: oficios; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.oficios (
-    id integer NOT NULL,
-    numero character varying(50),
-    fecha date NOT NULL,
-    id_institucion integer,
-    asunto character varying(255),
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone,
-    deleted_at timestamp without time zone,
-    created_by integer,
-    updated_by integer,
-    deleted_by integer
-);
 
 
 --
@@ -630,26 +1216,6 @@ ALTER SEQUENCE public.oficios_emitidos_id_seq OWNED BY public.oficios_emitidos.i
 
 
 --
--- Name: oficios_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.oficios_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: oficios_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.oficios_id_seq OWNED BY public.oficios.id;
-
-
---
 -- Name: parroquia; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -665,6 +1231,13 @@ CREATE TABLE public.parroquia (
     update_at timestamp without time zone NOT NULL,
     delete_at timestamp without time zone
 );
+
+
+--
+-- Name: TABLE parroquia; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.parroquia IS 'Parroquias del sistema, asociada a municipio especifico.';
 
 
 --
@@ -707,7 +1280,6 @@ CREATE TABLE public.participantes_ruta (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    id_institucion integer,
     genero_libre character(1),
     fecha_nac_libre date,
     nombre_representante character varying(100),
@@ -715,6 +1287,20 @@ CREATE TABLE public.participantes_ruta (
     CONSTRAINT participantes_ruta_genero_libre_check CHECK ((genero_libre = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
     CONSTRAINT pr_participante_req CHECK (((id_persona IS NOT NULL) OR (nombre_libre IS NOT NULL)))
 );
+
+
+--
+-- Name: COLUMN participantes_ruta.genero_libre; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.participantes_ruta.genero_libre IS 'Género del participante sin cédula (niño/a)';
+
+
+--
+-- Name: COLUMN participantes_ruta.fecha_nac_libre; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.participantes_ruta.fecha_nac_libre IS 'Fecha de nacimiento del participante sin cédula (validación 5-11 años)';
 
 
 --
@@ -757,7 +1343,6 @@ CREATE TABLE public.participantes_taller (
     nombre_libre character varying(100),
     apellido_libre character varying(100),
     cedula_libre character varying(20),
-    es_brigadista boolean DEFAULT false NOT NULL,
     nombre_docente character varying(100),
     cedula_docente character varying(20),
     fecha_nac_libre date,
@@ -853,6 +1438,8 @@ CREATE TABLE public.pasantes (
     updated_by integer,
     deleted_by integer,
     id_persona integer NOT NULL,
+    oficio_aceptacion character varying(25),
+    tutor_externo character varying(200),
     CONSTRAINT pasantes_estado_check CHECK (((estado)::text = ANY ((ARRAY['Postulado'::character varying, 'Aceptado'::character varying, 'En Curso'::character varying, 'Culminado'::character varying, 'Rechazado'::character varying])::text[])))
 );
 
@@ -875,6 +1462,41 @@ CREATE SEQUENCE public.pasantes_id_seq
 --
 
 ALTER SEQUENCE public.pasantes_id_seq OWNED BY public.pasantes.id;
+
+
+--
+-- Name: password_resets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.password_resets (
+    id integer NOT NULL,
+    id_usuario integer NOT NULL,
+    token_hash character varying(64) NOT NULL,
+    expires_at timestamp without time zone NOT NULL,
+    used_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    requested_ip character varying(45)
+);
+
+
+--
+-- Name: password_resets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.password_resets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: password_resets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.password_resets_id_seq OWNED BY public.password_resets.id;
 
 
 --
@@ -902,10 +1524,17 @@ CREATE TABLE public.permisos_laborales (
     deleted_by integer,
     categoria character varying(20),
     duracion character varying(40),
+    CONSTRAINT permisos_categoria_check CHECK (((categoria IS NULL) OR ((categoria)::text = ANY ((ARRAY['Reposo'::character varying, 'Permiso'::character varying, 'Vacaciones'::character varying])::text[])))),
     CONSTRAINT permisos_estado_check CHECK (((estado)::text = ANY ((ARRAY['Pendiente'::character varying, 'Aprobado'::character varying, 'Rechazado'::character varying, 'Anulado'::character varying])::text[]))),
-    CONSTRAINT permisos_categoria_check CHECK ((categoria IS NULL OR (categoria)::text = ANY ((ARRAY['Reposo'::character varying, 'Permiso'::character varying, 'Vacaciones'::character varying])::text[]))),
     CONSTRAINT permisos_tipo_check CHECK (((tipo_permiso)::text = ANY ((ARRAY['Reposo médico'::character varying, 'Médico familiar'::character varying, 'Diligencia'::character varying, 'Duelo'::character varying, 'Maternidad/Paternidad'::character varying, 'Personal'::character varying, 'Estudios'::character varying, 'Otro'::character varying])::text[])))
 );
+
+
+--
+-- Name: TABLE permisos_laborales; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.permisos_laborales IS 'Registro de permisos y ausencias justificadas del personal.';
 
 
 --
@@ -995,9 +1624,24 @@ CREATE TABLE public.personas (
     centro_votacion character varying(150),
     consejo_comunal character varying(150),
     comuna character varying(150),
-    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar]))),
-    CONSTRAINT personas_estado_civil_check CHECK ((estado_civil IS NULL OR (estado_civil)::text = ANY ((ARRAY['Soltero'::character varying, 'Casado'::character varying, 'Concubinato'::character varying, 'Divorciado'::character varying, 'Viudo'::character varying])::text[])))
+    foto_url character varying(255),
+    CONSTRAINT personas_estado_civil_check CHECK (((estado_civil IS NULL) OR ((estado_civil)::text = ANY ((ARRAY['Soltero'::character varying, 'Casado'::character varying, 'Concubinato'::character varying, 'Divorciado'::character varying, 'Viudo'::character varying])::text[])))),
+    CONSTRAINT personas_genero_check CHECK ((genero = ANY (ARRAY['M'::bpchar, 'F'::bpchar])))
 );
+
+
+--
+-- Name: TABLE personas; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.personas IS 'Datos base de todas las personas físicas del sistema.';
+
+
+--
+-- Name: COLUMN personas.foto_url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.personas.foto_url IS 'Nombre del archivo de foto (carnetización). Ruta real en storage/uploads/fotos/.';
 
 
 --
@@ -1081,6 +1725,13 @@ CREATE TABLE public.roles (
 
 
 --
+-- Name: TABLE roles; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.roles IS 'Define los niveles de permisos del sistema (Ej. Administrador, RRHH, Turismo). Determina a qué pantallas puede entrar un usuario.';
+
+
+--
 -- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1119,6 +1770,34 @@ CREATE TABLE public.ruta_informes (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     created_by integer
 );
+
+
+--
+-- Name: TABLE ruta_informes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ruta_informes IS 'Informe demográfico post-visita de una ruta turística';
+
+
+--
+-- Name: COLUMN ruta_informes.ninas; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ruta_informes.ninas IS 'Participantes libres femeninas (5-11 años)';
+
+
+--
+-- Name: COLUMN ruta_informes.ninos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ruta_informes.ninos IS 'Participantes libres masculinos (5-11 años)';
+
+
+--
+-- Name: COLUMN ruta_informes.total_atendidos; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ruta_informes.total_atendidos IS 'Suma calculada: mujeres + hombres + ninas + ninos';
 
 
 --
@@ -1166,12 +1845,32 @@ CREATE TABLE public.rutas (
     requiere_formacion boolean DEFAULT false NOT NULL,
     tiene_tarifa boolean DEFAULT false,
     tarifa_monto numeric(10,2) DEFAULT NULL::numeric,
-    nombre_facilitador_externo character varying(150) DEFAULT NULL::character varying,
     motivo_mantenimiento text,
     tipo_ruta character varying(50) DEFAULT 'General'::character varying,
     CONSTRAINT rutas_estado_check CHECK (((estado)::text = ANY ((ARRAY['Activa'::character varying, 'Inactiva'::character varying, 'En Mantenimiento'::character varying, 'Finalizada'::character varying])::text[]))),
     CONSTRAINT rutas_tipo_ruta_check CHECK (((tipo_ruta)::text = ANY ((ARRAY['Cumaná Histórica'::character varying, 'Exploradores de Cumaná'::character varying, 'Comunitaria'::character varying, 'General'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN rutas.estado; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.rutas.estado IS 'Activa | Inactiva | En Mantenimiento | Finalizada (terminal: visita ejecutada)';
+
+
+--
+-- Name: COLUMN rutas.motivo_mantenimiento; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.rutas.motivo_mantenimiento IS 'Motivo obligatorio cuando estado = ''En Mantenimiento''';
+
+
+--
+-- Name: COLUMN rutas.tipo_ruta; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.rutas.tipo_ruta IS 'Programa o clasificación administrativa de la ruta';
 
 
 --
@@ -1279,46 +1978,6 @@ ALTER SEQUENCE public.taller_informes_id_seq OWNED BY public.taller_informes.id;
 
 
 --
--- Name: taller_inventario; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.taller_inventario (
-    id integer NOT NULL,
-    id_taller integer NOT NULL,
-    id_inventario integer NOT NULL,
-    cantidad integer DEFAULT 1,
-    observaciones text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    created_by integer,
-    is_active boolean DEFAULT true,
-    updated_at timestamp without time zone,
-    updated_by integer,
-    deleted_at timestamp without time zone,
-    deleted_by integer
-);
-
-
---
--- Name: taller_inventario_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.taller_inventario_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: taller_inventario_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.taller_inventario_id_seq OWNED BY public.taller_inventario.id;
-
-
---
 -- Name: talleres; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1342,7 +2001,6 @@ CREATE TABLE public.talleres (
     updated_by integer,
     deleted_by integer,
     tipo_actividad character varying(30) DEFAULT 'Taller'::character varying,
-    id_oficio integer,
     es_interna boolean DEFAULT false NOT NULL,
     tipo_ente character varying(50),
     motivo_cancelacion text,
@@ -1389,6 +2047,13 @@ CREATE TABLE public.ubicaciones (
     deleted_by integer,
     "departamento _d" integer NOT NULL
 );
+
+
+--
+-- Name: TABLE ubicaciones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ubicaciones IS ' Estas son las oficinas o almacenes internos de la institución donde "duerme" un equipo (Ej. Almacén Principal, Despacho del Director).';
 
 
 --
@@ -1469,7 +2134,10 @@ CREATE TABLE public.usuarios (
     deleted_at timestamp without time zone,
     created_by integer,
     updated_by integer,
-    deleted_by integer
+    deleted_by integer,
+    failed_attempts integer DEFAULT 0 NOT NULL,
+    locked_until timestamp without time zone,
+    last_login timestamp without time zone
 );
 
 
@@ -1519,6 +2187,13 @@ CREATE TABLE public.vacaciones (
 
 
 --
+-- Name: TABLE vacaciones; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.vacaciones IS 'Control anual de días de vacaciones por empleado.';
+
+
+--
 -- Name: vacaciones_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1565,6 +2240,13 @@ CREATE TABLE public.visitantes (
 
 
 --
+-- Name: TABLE visitantes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.visitantes IS 'Personas externas a la institución que realizan visitas.';
+
+
+--
 -- Name: visitantes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1603,6 +2285,13 @@ CREATE TABLE public.visitas (
 
 
 --
+-- Name: TABLE visitas; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.visitas IS 'Control de marcaje de entrada y salida de visitantes externos.';
+
+
+--
 -- Name: visitas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1637,6 +2326,20 @@ ALTER TABLE ONLY public.actividades_ruta ALTER COLUMN id SET DEFAULT nextval('pu
 
 
 --
+-- Name: alertas_vistas id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.alertas_vistas ALTER COLUMN id SET DEFAULT nextval('public.alertas_vistas_id_seq'::regclass);
+
+
+--
+-- Name: amonestaciones id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.amonestaciones ALTER COLUMN id SET DEFAULT nextval('public.amonestaciones_id_seq'::regclass);
+
+
+--
 -- Name: asistencias id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1648,6 +2351,27 @@ ALTER TABLE ONLY public.asistencias ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.audit_logs ALTER COLUMN id SET DEFAULT nextval('public.audit_logs_id_seq'::regclass);
+
+
+--
+-- Name: bono_vacacional_detalle id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_detalle ALTER COLUMN id SET DEFAULT nextval('public.bono_vacacional_detalle_id_seq'::regclass);
+
+
+--
+-- Name: bono_vacacional_periodos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_periodos ALTER COLUMN id SET DEFAULT nextval('public.bono_vacacional_periodos_id_seq'::regclass);
+
+
+--
+-- Name: carga_familiar id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carga_familiar ALTER COLUMN id SET DEFAULT nextval('public.carga_familiar_id_seq'::regclass);
 
 
 --
@@ -1672,10 +2396,38 @@ ALTER TABLE ONLY public.configuracion_sistema ALTER COLUMN id SET DEFAULT nextva
 
 
 --
+-- Name: constancias id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.constancias ALTER COLUMN id SET DEFAULT nextval('public.constancias_id_seq'::regclass);
+
+
+--
+-- Name: cursos_realizados id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cursos_realizados ALTER COLUMN id SET DEFAULT nextval('public.cursos_realizados_id_seq'::regclass);
+
+
+--
 -- Name: departamentos id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.departamentos ALTER COLUMN id SET DEFAULT nextval('public.departamentos_id_seq'::regclass);
+
+
+--
+-- Name: empleado_salarios id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_salarios ALTER COLUMN id SET DEFAULT nextval('public.empleado_salarios_id_seq'::regclass);
+
+
+--
+-- Name: empleado_traslados id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_traslados ALTER COLUMN id SET DEFAULT nextval('public.empleado_traslados_id_seq'::regclass);
 
 
 --
@@ -1686,17 +2438,45 @@ ALTER TABLE ONLY public.empleados ALTER COLUMN id SET DEFAULT nextval('public.em
 
 
 --
+-- Name: empleados_egresos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleados_egresos ALTER COLUMN id SET DEFAULT nextval('public.empleados_egresos_id_seq'::regclass);
+
+
+--
+-- Name: expediente_documentos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.expediente_documentos ALTER COLUMN id SET DEFAULT nextval('public.expediente_documentos_id_seq'::regclass);
+
+
+--
+-- Name: experiencia_laboral id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.experiencia_laboral ALTER COLUMN id SET DEFAULT nextval('public.experiencia_laboral_id_seq'::regclass);
+
+
+--
+-- Name: faltas id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.faltas ALTER COLUMN id SET DEFAULT nextval('public.faltas_id_seq'::regclass);
+
+
+--
+-- Name: feriados id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.feriados ALTER COLUMN id SET DEFAULT nextval('public.feriados_id_seq'::regclass);
+
+
+--
 -- Name: horarios id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.horarios ALTER COLUMN id SET DEFAULT nextval('public.horarios_id_seq'::regclass);
-
-
---
--- Name: instituciones_externas id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.instituciones_externas ALTER COLUMN id SET DEFAULT nextval('public.instituciones_externas_id_seq'::regclass);
 
 
 --
@@ -1711,13 +2491,6 @@ ALTER TABLE ONLY public.inventario ALTER COLUMN id SET DEFAULT nextval('public.i
 --
 
 ALTER TABLE ONLY public.municipio ALTER COLUMN id SET DEFAULT nextval('public.municipio_id_seq'::regclass);
-
-
---
--- Name: oficios id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.oficios ALTER COLUMN id SET DEFAULT nextval('public.oficios_id_seq'::regclass);
 
 
 --
@@ -1760,6 +2533,13 @@ ALTER TABLE ONLY public.pasante_documentos ALTER COLUMN id SET DEFAULT nextval('
 --
 
 ALTER TABLE ONLY public.pasantes ALTER COLUMN id SET DEFAULT nextval('public.pasantes_id_seq'::regclass);
+
+
+--
+-- Name: password_resets id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_resets ALTER COLUMN id SET DEFAULT nextval('public.password_resets_id_seq'::regclass);
 
 
 --
@@ -1826,13 +2606,6 @@ ALTER TABLE ONLY public.taller_informes ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
--- Name: taller_inventario id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.taller_inventario ALTER COLUMN id SET DEFAULT nextval('public.taller_inventario_id_seq'::regclass);
-
-
---
 -- Name: talleres id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1882,6 +2655,631 @@ ALTER TABLE ONLY public.visitas ALTER COLUMN id SET DEFAULT nextval('public.visi
 
 
 --
+-- Data for Name: cargos; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.cargos (id, nombre, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by, nivel_jerarquico) FROM stdin;
+3	CTI	Coordinación de tecnología de Información.	t	2026-04-17 14:52:17.178796	\N	\N	\N	\N	\N	Adscrito
+5	Presidenta	Máxima autoridad del instituto	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	Presidencia
+6	Coordinador	Responsable de una coordinación	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	Coordinación
+2	Director	Responsable de una Dirección	t	2026-04-12 14:41:40.888475	2026-06-08 22:31:12.277056	\N	\N	\N	\N	Dirección
+4	Guia Turistico	Trabajador encargado de rutas turisticas	t	2026-06-01 15:56:06.1521	2026-06-08 22:35:39.56058	\N	\N	\N	\N	Adscrito
+\.
+
+
+--
+-- Data for Name: configuracion_sistema; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.configuracion_sistema (id, clave, valor, descripcion, updated_at, updated_by) FROM stdin;
+26	rif_institucional	G-20008498-7	RIF del instituto, usado en documentos oficiales y reportes	2026-06-28 17:01:55.392757	\N
+27	minutos_tolerancia_salida_temprana	10	Minutos de tolerancia antes de la hora de salida del horario, antes de exigir motivo de salida anticipada	2026-07-11 23:51:17.899562	\N
+28	bono_vac_dias_alto_nivel	75	Bono Vacacional: días base (+ años de servicio) para Alto Nivel y Dirección	2026-07-16 12:43:18.149605	\N
+29	bono_vac_dias_empleados_fijos	75	Bono Vacacional: días base (+ años de servicio) para Empleados Fijos	2026-07-16 12:43:18.149605	\N
+30	bono_vac_dias_obreros_fijos	85	Bono Vacacional: días fijos (no suma años) para Obreros Fijos	2026-07-16 12:43:18.149605	\N
+31	bono_vac_dias_contratados	45	Bono Vacacional: días base (+ años de servicio) para Contratados	2026-07-16 12:43:18.149605	\N
+32	monto_cesta_ticket	0	Monto mensual de cesta ticket usado en el cálculo del Bono Vacacional	2026-07-16 12:43:18.149605	\N
+11	ano_correlativo_ruta	0	Año del correlativo activo (se reinicia automáticamente)	2026-05-08 16:57:20.940974	\N
+12	firmante_cargo	Director General	\N	2026-05-20 10:35:25.894766	\N
+13	correlativo_oficio_formacion	0	\N	2026-05-20 10:35:25.894766	\N
+14	ano_correlativo_formacion	0	\N	2026-05-20 10:35:25.894766	\N
+24	correlativo_oficio_constancia	0	Último correlativo de constancias de trabajo	2026-06-05 17:21:13.71886	\N
+8	telf_institucion	0293-4310178	Teléfono institucional	2026-08-04 14:42:39.592851	\N
+9	correo_institucion	Sucreimatur@gmail.com	Correo electrónico institucional	2026-08-04 14:42:39.592851	\N
+38	direccion_institucion	Estado Sucre, municipio Sucre, Cumaná, Calle Sucre, Casa Nº11	Dirección física del instituto. Aparece en el carnet institucional.	2026-08-04 14:42:39.592851	\N
+21	correlativo_oficio_pasante	0	Correlativo de cartas de aceptación de pasantes (PAST-NNN/AAAA)	2026-06-01 13:27:58.416309	\N
+22	ano_correlativo_pasante	0	Año del correlativo de cartas de aceptación de pasantes	2026-06-01 13:27:58.416309	\N
+10	correlativo_oficio_ruta	0	Último correlativo de oficio emitido en el año en curso	2026-05-08 16:57:20.880114	\N
+1	director_nombre	Maria	Nombre del Director/Presidente de IMATUR	2026-06-28 17:01:54.746647	\N
+2	director_apellido	Maza	Apellido del Director/Presidente	2026-06-28 17:01:54.800802	\N
+3	director_cargo	Director	Cargo del firmante institucional	2026-06-28 17:01:54.849354	\N
+4	resolucion_numero	025	N° de la Resolución de nombramiento	2026-06-28 17:01:54.891653	\N
+5	resolucion_fecha	15 De Marzo De 2024	Fecha de la Resolución (texto, ej: 15 de enero de 2025)	2026-06-28 17:01:54.939612	\N
+25	ano_correlativo_constancia	0	Año del correlativo de constancias	2026-06-05 17:21:13.71886	\N
+6	gaceta_numero	042	N° de la Gaceta Municipal Extraordinaria	2026-06-28 17:01:54.985504	\N
+39	lema_institucion	Historia y Porvenir	Lema del instituto. Aparece al pie del carnet institucional.	2026-08-04 14:42:39.592851	\N
+7	gaceta_fecha	20 De Enero Del 2024	Fecha de la Gaceta (texto, ej: 20 de enero de 2025)	2026-06-28 17:01:55.030345	\N
+15	meta_talleres_anio	100	Meta anual de actividades formativas a ejecutar	2026-06-28 17:01:55.162101	\N
+16	meta_rutas_anio	100	Meta anual de rutas turísticas a ejecutar	2026-06-28 17:01:55.201958	\N
+17	dias_preaviso_contrato	15	Días de anticipación para alertar sobre contratos vencientes	2026-06-28 17:01:55.257451	\N
+18	dias_preaviso_pasante	10	Días de anticipación para alertar sobre pasantes próximos a culminar	2026-06-28 17:01:55.304731	\N
+23	minutos_tolerancia_puntualidad	5	Minutos de tolerancia tras la hora de entrada antes de marcar impuntualidad	2026-06-28 17:01:55.354204	\N
+\.
+
+
+--
+-- Data for Name: departamentos; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.departamentos (id, nombre, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by, id_padre, tipo_unidad) FROM stdin;
+6	Presidencia	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	\N	Presidencia
+3	Dirección General	Sede Principal	t	2026-04-12 14:41:40.888475	\N	\N	\N	\N	\N	6	Dirección
+13	Dirección de Secretaría	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Dirección
+11	Relaciones Inter-Institucionales	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Oficina
+12	Oficina de Atención al Ciudadano (OAC)	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Oficina
+14	Consultoría Jurídica	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Oficina
+15	Auditoría Interna	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Oficina
+5	Dirección de Talento Humano	Departamento de Talento Humano	t	2026-04-28 03:25:26.955571	\N	\N	\N	\N	\N	6	Dirección
+7	Dirección de Planificación y Gestión Turística	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Dirección
+8	Dirección de Administración	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	6	Dirección
+16	Promoción Turística	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	7	Coordinación
+17	Calidad y Servicios Turísticos	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	7	Coordinación
+18	Proyectos e Inversión Turística	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	7	Coordinación
+19	Formación	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	7	Coordinación
+20	Comunicación	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	7	Coordinación
+21	Presupuesto	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	8	Coordinación
+22	Contabilidad	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	8	Coordinación
+23	Compra de Bienes y Servicios	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	8	Coordinación
+24	Servicios Generales	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	8	Coordinación
+25	Registro y Selección	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
+26	Bienestar Social	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
+27	Nómina	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
+4	Departamento de informática	Departamento de Telecomunicaciones e Informática.	t	2026-04-17 15:11:35.123254	2026-06-05 04:14:16.072951	\N	\N	\N	\N	3	Unidad
+\.
+
+
+--
+-- Data for Name: feriados; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.feriados (id, fecha, nombre, recurrente, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
+1	2000-05-03	Cruz de Mayo	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+2	2000-01-21	Santa Inés (Cumaná)	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+3	2000-05-01	Día del Trabajador	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+4	2000-04-19	Declaración de Independencia	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+5	2000-07-05	Día de la Independencia	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+6	2000-07-24	Natalicio del Libertador	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+7	2000-12-25	Navidad	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+8	2000-01-01	Año Nuevo	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+9	2000-06-24	Batalla de Carabobo	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+10	2000-12-24	Nochebuena	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+11	2000-12-31	Fin de Año	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+12	2000-10-12	Día de la Resistencia Indígena	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+\.
+
+
+--
+-- Data for Name: horarios; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.horarios (id, nombre, hora_entrada, hora_salida, dias_laborales, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
+2	Servicios Generales (8:00am–2:00pm)	08:00:00	14:00:00	L-V (rotación A/B)	Días alternos según grupo A/B	t	2026-06-05 03:54:51.487854	\N	\N	\N	\N	\N
+3	OAC Vespertino (10:00am–2:00pm)	10:00:00	14:00:00	L-V	Recepción / OAC, sub-grupo 2	t	2026-06-05 03:54:51.487854	\N	\N	\N	\N	\N
+4	OAC Matutino (7:00am–12:00pm)	07:00:00	12:00:00	L-V	Recepción / OAC, sub-grupo 1	t	2026-06-05 03:54:51.487854	\N	\N	\N	\N	\N
+5	Estándar	08:00:00	14:00:00	L-V	Horario general vigente	t	2026-06-05 03:54:51.487854	2026-06-21 16:57:53.74893	\N	\N	\N	\N
+6	Pasantes	10:30:00	12:00:00	L-V	.....	t	2026-07-09 14:23:24.556772	\N	\N	\N	\N	\N
+\.
+
+
+--
+--
+-- =====================================================================
+-- USUARIO ADMINISTRADOR DE ARRANQUE
+-- =====================================================================
+--
+-- Sin esto no hay forma de entrar al sistema recién instalado:
+-- `usuarios.id_empleado` es NOT NULL, así que todo usuario necesita
+-- una persona y un empleado detrás.
+--
+--     Usuario:    admin
+--     Contraseña: Sigtur2026
+--
+--   ###############################################################
+--   #  CAMBIAR LA CONTRASEÑA EN EL PRIMER INGRESO                 #
+--   #  (Perfil -> Cambiar contraseña).                            #
+--   #  Esta clave es pública: está versionada en el repositorio.  #
+--   ###############################################################
+--
+-- El empleado creado aquí es un registro técnico de arranque, no una
+-- persona real. Una vez cargado el personal verdadero y creado un
+-- administrador nominal, conviene desactivarlo.
+--
+-- Va en este punto del archivo a propósito: necesita que `cargos` y
+-- `departamentos` ya estén sembrados, y debe existir antes de
+-- `municipio`/`parroquia`, cuyas columnas de auditoría son NOT NULL y
+-- apuntan a este usuario (id 1).
+--
+
+DO $bootstrap$
+DECLARE
+    v_id_cargo  integer;
+    v_id_depto  integer;
+BEGIN
+    IF EXISTS (SELECT 1 FROM public.usuarios WHERE id = 1 OR username = 'admin') THEN
+        RAISE NOTICE 'El administrador de arranque ya existe; no se recrea.';
+        RETURN;
+    END IF;
+
+    -- Se ancla al catálogo sembrado sin depender de IDs fijos.
+    SELECT id INTO v_id_depto FROM public.departamentos
+        WHERE is_active AND tipo_unidad = 'Presidencia' ORDER BY id LIMIT 1;
+    IF v_id_depto IS NULL THEN
+        SELECT id INTO v_id_depto FROM public.departamentos
+            WHERE is_active ORDER BY id LIMIT 1;
+    END IF;
+
+    SELECT id INTO v_id_cargo FROM public.cargos
+        WHERE is_active AND nivel_jerarquico = 'Presidencia' ORDER BY id LIMIT 1;
+    IF v_id_cargo IS NULL THEN
+        SELECT id INTO v_id_cargo FROM public.cargos
+            WHERE is_active ORDER BY id LIMIT 1;
+    END IF;
+
+    IF v_id_cargo IS NULL OR v_id_depto IS NULL THEN
+        RAISE EXCEPTION 'Faltan cargos o departamentos sembrados; '
+                        'no se puede crear el administrador de arranque.';
+    END IF;
+
+    INSERT INTO public.personas (id, nombre, apellido, is_active, created_at)
+    VALUES (1, 'Administrador', 'del Sistema', TRUE, CURRENT_TIMESTAMP);
+
+    INSERT INTO public.empleados
+        (id, id_persona, id_cargo, id_departamento, nro_expediente,
+         tipo_contrato, institucion_origen, fecha_ingreso, is_active, created_at)
+    VALUES
+        (1, 1, v_id_cargo, v_id_depto, 'EXP-0001',
+         'Fijo', 'IMATUR', CURRENT_DATE, TRUE, CURRENT_TIMESTAMP);
+
+    -- bcrypt de 'Sigtur2026'
+    INSERT INTO public.usuarios
+        (id, id_empleado, id_rol, username, password, is_active, created_at)
+    VALUES
+        (1, 1, 1, 'admin',
+         '$2y$10$vrNAvVFuZQ0OXyh/nmW9We6DuiGRZwosiiY.IUpj/WX.LcE3QkZym',
+         TRUE, CURRENT_TIMESTAMP);
+
+    RAISE NOTICE 'Administrador de arranque creado -> admin / Sigtur2026 '
+                 '(CAMBIAR LA CONTRASEÑA).';
+END
+$bootstrap$;
+
+
+
+-- Data for Name: municipio; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.municipio (id, nombre, codigo_postal, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
+2	Sucre	6101	t	2026-04-26 16:51:36.702899	2026-04-26 16:51:36.702899	\N	1	1	\N
+3	Bolivar	6107	t	2026-04-28 03:22:54.098579	2026-04-28 03:22:54.098579	\N	1	1	\N
+\.
+
+
+--
+-- Data for Name: parroquia; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.parroquia (id, nombre, id_municipio, is_active, create_by, update_by, delete_by, create_at, update_at, delete_at) FROM stdin;
+1	Altagracia	2	t	1	1	\N	2026-04-26 16:52:13.285237	2026-04-26 16:52:13.285237	\N
+2	Santa Ines	2	t	1	1	\N	2026-04-26 16:53:21.016217	2026-04-26 16:53:21.016217	\N
+3	Valentin Valiente	2	t	1	1	\N	2026-04-26 16:54:36.814184	2026-04-26 16:54:36.814184	\N
+4	Ayacucho	2	t	1	1	\N	2026-04-26 16:55:00.340542	2026-04-26 16:55:00.340542	\N
+5	San Juan	2	t	1	1	\N	2026-04-26 16:55:32.137902	2026-04-26 16:55:32.137902	\N
+6	Raul Leoni	2	t	1	1	\N	2026-04-26 16:56:06.355341	2026-04-26 16:56:06.355341	\N
+7	Gran Mariscal	2	t	1	1	\N	2026-04-26 16:56:30.227526	2026-04-26 16:56:30.227526	\N
+\.
+
+
+--
+-- Data for Name: permisos_rol; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.permisos_rol (id, id_rol, modulo, created_at, created_by) FROM stdin;
+1	1	*	2026-05-26 02:22:50.069328	\N
+11	3	DashboardController	2026-05-26 02:22:50.078989	\N
+12	3	RutasController	2026-05-26 02:22:50.078989	\N
+14	3	TalleresController	2026-05-26 02:22:50.078989	\N
+15	3	UbicacionesformacionController	2026-05-26 02:22:50.078989	\N
+16	3	PasantesController	2026-05-26 02:22:50.078989	\N
+17	3	VisitantesController	2026-05-26 02:22:50.078989	\N
+19	3	ReportesController	2026-05-26 02:22:50.078989	\N
+20	4	DashboardController	2026-05-26 02:22:50.079374	\N
+21	4	InventarioController	2026-05-26 02:22:50.079374	\N
+22	4	CategoriasController	2026-05-26 02:22:50.079374	\N
+23	4	UbicacionesController	2026-05-26 02:22:50.079374	\N
+24	4	ActividadesinventarioController	2026-05-26 02:22:50.079374	\N
+25	4	ReportesController	2026-05-26 02:22:50.079374	\N
+30	6	ReportesController	2026-05-26 02:33:46.506516	\N
+31	6	DashboardController	2026-05-26 02:33:46.506516	\N
+37	5	AsistenciasController	2026-05-26 16:29:21.945685	\N
+38	5	VisitantesController	2026-05-26 16:29:21.945685	\N
+40	5	DashboardController	2026-05-26 16:29:21.945685	\N
+41	2	ReportesController	2026-05-26 20:54:16.748618	\N
+42	2	ConfigController	2026-05-26 20:54:16.748618	\N
+43	2	EmpleadosController	2026-05-26 20:54:16.748618	\N
+44	2	CargosController	2026-05-26 20:54:16.748618	\N
+45	2	DepartamentosController	2026-05-26 20:54:16.748618	\N
+46	2	AsistenciasController	2026-05-26 20:54:16.748618	\N
+47	2	VisitantesController	2026-05-26 20:54:16.748618	\N
+49	2	PasantesController	2026-05-26 20:54:16.748618	\N
+50	2	UsuariosController	2026-05-26 20:54:16.748618	\N
+51	2	DashboardController	2026-05-26 20:54:16.748618	\N
+54	6	VisitantesController	2026-06-01 04:49:57.27028	\N
+55	2	HorariosController	2026-06-05 03:54:51.487854	\N
+56	2	AmonestacionesController	2026-06-05 09:19:44.234118	\N
+57	2	PermisosController	2026-06-05 12:07:06.536181	\N
+58	2	VacacionesController	2026-06-21 14:22:02.626529	\N
+59	2	NominaController	2026-07-16 12:43:18.158763	\N
+\.
+
+
+--
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.roles (id, nombre, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
+2	RRHH	Gestión de personal y asistencia	t	2026-04-12 14:15:24.492607	\N	\N	\N	\N	\N
+3	Turismo	Gestión de rutas y formación	t	2026-04-12 14:15:24.492607	\N	\N	\N	\N	\N
+5	Recepción	Registro de visitantes, visitas y marcaje de asistencias. Sin acceso a módulos de gestión.	t	2026-05-20 10:35:25.876512	\N	\N	\N	\N	\N
+4	Inventario	Gestión de bienes institucionales	t	2026-04-12 14:15:24.492607	2026-05-26 02:31:55.886056	\N	\N	\N	\N
+1	Administrador	Acceso total al sistema	t	2026-04-12 14:15:24.492607	2026-05-26 15:14:08.526225	\N	\N	\N	\N
+6	Solo Lectura	Prueba para verificar el insert del rol y otrogar permisos	t	2026-05-26 02:33:32.316047	2026-05-26 20:53:54.119892	\N	\N	\N	\N
+\.
+
+
+--
+-- Name: actividad_inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 1, true);
+
+
+--
+-- Name: actividades_ruta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.actividades_ruta_id_seq', 1, true);
+
+
+--
+-- Name: alertas_vistas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.alertas_vistas_id_seq', 9, true);
+
+
+--
+-- Name: amonestaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.amonestaciones_id_seq', 5, true);
+
+
+--
+-- Name: asistencias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
+
+
+--
+-- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 167, true);
+
+
+--
+-- Name: bono_vacacional_detalle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.bono_vacacional_detalle_id_seq', 9, true);
+
+
+--
+-- Name: bono_vacacional_periodos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.bono_vacacional_periodos_id_seq', 3, true);
+
+
+--
+-- Name: carga_familiar_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.carga_familiar_id_seq', 8, true);
+
+
+--
+-- Name: cargos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.cargos_id_seq', 7, true);
+
+
+--
+-- Name: categorias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.categorias_id_seq', 2, true);
+
+
+--
+-- Name: configuracion_sistema_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.configuracion_sistema_id_seq', 39, true);
+
+
+--
+-- Name: constancias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.constancias_id_seq', 18, true);
+
+
+--
+-- Name: cursos_realizados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.cursos_realizados_id_seq', 1, false);
+
+
+--
+-- Name: departamentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.departamentos_id_seq', 27, true);
+
+
+--
+-- Name: empleado_salarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.empleado_salarios_id_seq', 7, true);
+
+
+--
+-- Name: empleado_traslados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.empleado_traslados_id_seq', 1, false);
+
+
+--
+-- Name: empleados_egresos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.empleados_egresos_id_seq', 5, true);
+
+
+--
+-- Name: empleados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.empleados_id_seq', 4, true);
+
+
+--
+-- Name: expediente_documentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.expediente_documentos_id_seq', 4, true);
+
+
+--
+-- Name: experiencia_laboral_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.experiencia_laboral_id_seq', 1, false);
+
+
+--
+-- Name: faltas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.faltas_id_seq', 3, true);
+
+
+--
+-- Name: feriados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.feriados_id_seq', 12, true);
+
+
+--
+-- Name: horarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
+
+
+--
+-- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.inventario_id_seq', 1, true);
+
+
+--
+-- Name: municipio_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.municipio_id_seq', 3, true);
+
+
+--
+-- Name: oficios_emitidos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.oficios_emitidos_id_seq', 3, true);
+
+
+--
+-- Name: parroquia_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.parroquia_id_seq', 7, true);
+
+
+--
+-- Name: participantes_ruta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.participantes_ruta_id_seq', 4, true);
+
+
+--
+-- Name: participantes_taller_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.participantes_taller_id_seq', 2, true);
+
+
+--
+-- Name: pasante_documentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.pasante_documentos_id_seq', 7, true);
+
+
+--
+-- Name: pasantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.pasantes_id_seq', 2, true);
+
+
+--
+-- Name: password_resets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.password_resets_id_seq', 3, true);
+
+
+--
+-- Name: permisos_laborales_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.permisos_laborales_id_seq', 4, true);
+
+
+--
+-- Name: permisos_rol_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.permisos_rol_id_seq', 59, true);
+
+
+--
+-- Name: personas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.personas_id_seq', 8, true);
+
+
+--
+-- Name: puntos_ruta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.puntos_ruta_id_seq', 2, true);
+
+
+--
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.roles_id_seq', 6, true);
+
+
+--
+-- Name: ruta_informes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.ruta_informes_id_seq', 1, false);
+
+
+--
+-- Name: rutas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.rutas_id_seq', 2, true);
+
+
+--
+-- Name: taller_evidencias_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.taller_evidencias_id_seq', 1, false);
+
+
+--
+-- Name: taller_informes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.taller_informes_id_seq', 2, true);
+
+
+--
+-- Name: talleres_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.talleres_id_seq', 9, true);
+
+
+--
+-- Name: ubicaciones_formacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
+
+
+--
+-- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 2, true);
+
+
+--
+-- Name: usuarios_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.usuarios_id_seq', 3, true);
+
+
+--
+-- Name: vacaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.vacaciones_id_seq', 1, true);
+
+
+--
+-- Name: visitantes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.visitantes_id_seq', 4, true);
+
+
+--
+-- Name: visitas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.visitas_id_seq', 3, true);
+
+
+--
 -- Name: actividad_inventario actividad_inventario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1898,6 +3296,30 @@ ALTER TABLE ONLY public.actividades_ruta
 
 
 --
+-- Name: alertas_vistas alertas_vistas_id_usuario_clave_alerta_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.alertas_vistas
+    ADD CONSTRAINT alertas_vistas_id_usuario_clave_alerta_key UNIQUE (id_usuario, clave_alerta);
+
+
+--
+-- Name: alertas_vistas alertas_vistas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.alertas_vistas
+    ADD CONSTRAINT alertas_vistas_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: amonestaciones amonestaciones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.amonestaciones
+    ADD CONSTRAINT amonestaciones_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: asistencias asistencias_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1911,6 +3333,38 @@ ALTER TABLE ONLY public.asistencias
 
 ALTER TABLE ONLY public.audit_logs
     ADD CONSTRAINT audit_logs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: bono_vacacional_detalle bono_vacacional_detalle_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_detalle
+    ADD CONSTRAINT bono_vacacional_detalle_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: bono_vacacional_periodos bono_vacacional_periodos_periodo_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_periodos
+    ADD CONSTRAINT bono_vacacional_periodos_periodo_key UNIQUE (periodo);
+
+
+--
+-- Name: bono_vacacional_periodos bono_vacacional_periodos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_periodos
+    ADD CONSTRAINT bono_vacacional_periodos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: carga_familiar carga_familiar_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carga_familiar
+    ADD CONSTRAINT carga_familiar_pkey PRIMARY KEY (id);
 
 
 --
@@ -1962,6 +3416,22 @@ ALTER TABLE ONLY public.configuracion_sistema
 
 
 --
+-- Name: constancias constancias_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.constancias
+    ADD CONSTRAINT constancias_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cursos_realizados cursos_realizados_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cursos_realizados
+    ADD CONSTRAINT cursos_realizados_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: departamentos departamentos_nombre_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1975,6 +3445,30 @@ ALTER TABLE ONLY public.departamentos
 
 ALTER TABLE ONLY public.departamentos
     ADD CONSTRAINT departamentos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: empleado_salarios empleado_salarios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_salarios
+    ADD CONSTRAINT empleado_salarios_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: empleado_traslados empleado_traslados_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_traslados
+    ADD CONSTRAINT empleado_traslados_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: empleados_egresos empleados_egresos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleados_egresos
+    ADD CONSTRAINT empleados_egresos_pkey PRIMARY KEY (id);
 
 
 --
@@ -2002,19 +3496,43 @@ ALTER TABLE ONLY public.empleados
 
 
 --
+-- Name: expediente_documentos expediente_documentos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.expediente_documentos
+    ADD CONSTRAINT expediente_documentos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: experiencia_laboral experiencia_laboral_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.experiencia_laboral
+    ADD CONSTRAINT experiencia_laboral_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: faltas faltas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.faltas
+    ADD CONSTRAINT faltas_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: feriados feriados_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.feriados
+    ADD CONSTRAINT feriados_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: horarios horarios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.horarios
     ADD CONSTRAINT horarios_pkey PRIMARY KEY (id);
-
-
---
--- Name: instituciones_externas instituciones_externas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.instituciones_externas
-    ADD CONSTRAINT instituciones_externas_pkey PRIMARY KEY (id);
 
 
 --
@@ -2058,14 +3576,6 @@ ALTER TABLE ONLY public.oficios_emitidos
 
 
 --
--- Name: oficios oficios_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.oficios
-    ADD CONSTRAINT oficios_pkey PRIMARY KEY (id);
-
-
---
 -- Name: parroquia parroquia_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2103,6 +3613,14 @@ ALTER TABLE ONLY public.pasante_documentos
 
 ALTER TABLE ONLY public.pasantes
     ADD CONSTRAINT pasantes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: password_resets password_resets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_resets
+    ADD CONSTRAINT password_resets_pkey PRIMARY KEY (id);
 
 
 --
@@ -2210,14 +3728,6 @@ ALTER TABLE ONLY public.taller_informes
 
 
 --
--- Name: taller_inventario taller_inventario_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.taller_inventario
-    ADD CONSTRAINT taller_inventario_pkey PRIMARY KEY (id);
-
-
---
 -- Name: talleres talleres_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2258,14 +3768,6 @@ ALTER TABLE ONLY public.participantes_taller
 
 
 --
--- Name: taller_inventario uq_taller_inventario; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.taller_inventario
-    ADD CONSTRAINT uq_taller_inventario UNIQUE (id_taller, id_inventario);
-
-
---
 -- Name: usuarios usuarios_id_empleado_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2287,14 +3789,6 @@ ALTER TABLE ONLY public.usuarios
 
 ALTER TABLE ONLY public.usuarios
     ADD CONSTRAINT usuarios_username_key UNIQUE (username);
-
-
---
--- Name: vacaciones vacaciones_id_empleado_anio_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.vacaciones
-    ADD CONSTRAINT vacaciones_id_empleado_anio_key UNIQUE (id_empleado, anio);
 
 
 --
@@ -2337,10 +3831,31 @@ CREATE INDEX idx_act_inv_fecha ON public.actividad_inventario USING btree (fecha
 
 
 --
+-- Name: idx_act_inv_item_fecha; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_act_inv_item_fecha ON public.actividad_inventario USING btree (id_inventario, fecha DESC) WHERE (is_active = true);
+
+
+--
 -- Name: idx_act_ruta_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_act_ruta_fecha ON public.actividades_ruta USING btree (fecha);
+
+
+--
+-- Name: idx_alertas_vistas_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_alertas_vistas_usuario ON public.alertas_vistas USING btree (id_usuario);
+
+
+--
+-- Name: idx_amonestaciones_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_amonestaciones_empleado ON public.amonestaciones USING btree (id_empleado) WHERE (is_active = true);
 
 
 --
@@ -2355,6 +3870,83 @@ CREATE INDEX idx_asistencias_empleado_fecha ON public.asistencias USING btree (i
 --
 
 CREATE INDEX idx_asistencias_fecha ON public.asistencias USING btree (fecha);
+
+
+--
+-- Name: idx_bono_vac_detalle_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bono_vac_detalle_empleado ON public.bono_vacacional_detalle USING btree (id_empleado);
+
+
+--
+-- Name: idx_bono_vac_detalle_periodo; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_bono_vac_detalle_periodo ON public.bono_vacacional_detalle USING btree (id_periodo);
+
+
+--
+-- Name: idx_carga_familiar_persona; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_carga_familiar_persona ON public.carga_familiar USING btree (id_persona) WHERE (is_active = true);
+
+
+--
+-- Name: idx_constancias_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_constancias_empleado ON public.constancias USING btree (id_empleado) WHERE (is_active = true);
+
+
+--
+-- Name: idx_cursos_realizados_persona; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_cursos_realizados_persona ON public.cursos_realizados USING btree (id_persona) WHERE (is_active = true);
+
+
+--
+-- Name: idx_emp_egresos_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_emp_egresos_empleado ON public.empleados_egresos USING btree (id_empleado);
+
+
+--
+-- Name: idx_empleado_salarios_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_empleado_salarios_empleado ON public.empleado_salarios USING btree (id_empleado);
+
+
+--
+-- Name: idx_expediente_doc_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_expediente_doc_empleado ON public.expediente_documentos USING btree (id_empleado) WHERE (is_active = true);
+
+
+--
+-- Name: idx_experiencia_laboral_persona; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_experiencia_laboral_persona ON public.experiencia_laboral USING btree (id_persona) WHERE (is_active = true);
+
+
+--
+-- Name: idx_faltas_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_faltas_empleado ON public.faltas USING btree (id_empleado) WHERE (is_active = true);
+
+
+--
+-- Name: idx_feriados_mesdia; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_feriados_mesdia ON public.feriados USING btree (EXTRACT(month FROM fecha), EXTRACT(day FROM fecha));
 
 
 --
@@ -2379,10 +3971,45 @@ CREATE INDEX idx_logs_tabla ON public.audit_logs USING btree (tabla_afectada);
 
 
 --
+-- Name: idx_logs_tabla_operacion; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_logs_tabla_operacion ON public.audit_logs USING btree (tabla_afectada, operacion);
+
+
+--
+-- Name: idx_parroquia_municipio; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_parroquia_municipio ON public.parroquia USING btree (id_municipio);
+
+
+--
+-- Name: idx_part_ruta_ruta; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_part_ruta_ruta ON public.participantes_ruta USING btree (id_ruta) WHERE (is_active = true);
+
+
+--
 -- Name: idx_pasantes_persona; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_pasantes_persona ON public.pasantes USING btree (id_persona);
+
+
+--
+-- Name: idx_password_resets_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_password_resets_token ON public.password_resets USING btree (token_hash);
+
+
+--
+-- Name: idx_password_resets_usuario; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_password_resets_usuario ON public.password_resets USING btree (id_usuario);
 
 
 --
@@ -2414,6 +4041,13 @@ CREATE INDEX idx_personas_cedula ON public.personas USING btree (cedula);
 
 
 --
+-- Name: idx_personas_parroquia; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_personas_parroquia ON public.personas USING btree (parroquia_id) WHERE (is_active = true);
+
+
+--
 -- Name: idx_rutas_estado; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2439,6 +4073,13 @@ CREATE INDEX idx_talleres_estado ON public.talleres USING btree (estado);
 --
 
 CREATE INDEX idx_talleres_fecha ON public.talleres USING btree (fecha_inicio);
+
+
+--
+-- Name: idx_traslados_empleado; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_traslados_empleado ON public.empleado_traslados USING btree (id_empleado);
 
 
 --
@@ -2484,6 +4125,13 @@ CREATE INDEX idx_visitas_visitante ON public.visitas USING btree (id_visitante);
 
 
 --
+-- Name: uq_emp_egreso_abierto; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_emp_egreso_abierto ON public.empleados_egresos USING btree (id_empleado) WHERE (fecha_reingreso IS NULL);
+
+
+--
 -- Name: uq_puntos_ruta_orden; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2491,10 +4139,129 @@ CREATE UNIQUE INDEX uq_puntos_ruta_orden ON public.puntos_ruta USING btree (id_r
 
 
 --
+-- Name: INDEX uq_puntos_ruta_orden; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.uq_puntos_ruta_orden IS 'Garantiza que no existan dos paradas con el mismo orden dentro de una ruta activa';
+
+
+--
 -- Name: uq_ruta_informes_ruta; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX uq_ruta_informes_ruta ON public.ruta_informes USING btree (id_ruta);
+
+
+--
+-- Name: alertas_vistas alertas_vistas_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.alertas_vistas
+    ADD CONSTRAINT alertas_vistas_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id) ON DELETE CASCADE;
+
+
+--
+-- Name: amonestaciones amonestaciones_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.amonestaciones
+    ADD CONSTRAINT amonestaciones_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: bono_vacacional_detalle bono_vacacional_detalle_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_detalle
+    ADD CONSTRAINT bono_vacacional_detalle_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: bono_vacacional_detalle bono_vacacional_detalle_id_periodo_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bono_vacacional_detalle
+    ADD CONSTRAINT bono_vacacional_detalle_id_periodo_fkey FOREIGN KEY (id_periodo) REFERENCES public.bono_vacacional_periodos(id) ON DELETE CASCADE;
+
+
+--
+-- Name: carga_familiar carga_familiar_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.carga_familiar
+    ADD CONSTRAINT carga_familiar_id_persona_fkey FOREIGN KEY (id_persona) REFERENCES public.personas(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: constancias constancias_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.constancias
+    ADD CONSTRAINT constancias_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: cursos_realizados cursos_realizados_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cursos_realizados
+    ADD CONSTRAINT cursos_realizados_id_persona_fkey FOREIGN KEY (id_persona) REFERENCES public.personas(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: departamentos departamentos_id_padre_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.departamentos
+    ADD CONSTRAINT departamentos_id_padre_fkey FOREIGN KEY (id_padre) REFERENCES public.departamentos(id) ON DELETE SET NULL;
+
+
+--
+-- Name: empleado_salarios empleado_salarios_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_salarios
+    ADD CONSTRAINT empleado_salarios_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: empleado_traslados empleado_traslados_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleado_traslados
+    ADD CONSTRAINT empleado_traslados_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: empleados_egresos empleados_egresos_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.empleados_egresos
+    ADD CONSTRAINT empleados_egresos_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: expediente_documentos expediente_documentos_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.expediente_documentos
+    ADD CONSTRAINT expediente_documentos_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
+
+
+--
+-- Name: experiencia_laboral experiencia_laboral_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.experiencia_laboral
+    ADD CONSTRAINT experiencia_laboral_id_persona_fkey FOREIGN KEY (id_persona) REFERENCES public.personas(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: faltas faltas_id_empleado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.faltas
+    ADD CONSTRAINT faltas_id_empleado_fkey FOREIGN KEY (id_empleado) REFERENCES public.empleados(id) ON DELETE CASCADE;
 
 
 --
@@ -2642,22 +4409,6 @@ ALTER TABLE ONLY public.taller_informes
 
 
 --
--- Name: taller_inventario fk_taller_inv_item; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.taller_inventario
-    ADD CONSTRAINT fk_taller_inv_item FOREIGN KEY (id_inventario) REFERENCES public.inventario(id) ON DELETE RESTRICT;
-
-
---
--- Name: taller_inventario fk_taller_inv_taller; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.taller_inventario
-    ADD CONSTRAINT fk_taller_inv_taller FOREIGN KEY (id_taller) REFERENCES public.talleres(id) ON DELETE CASCADE;
-
-
---
 -- Name: talleres fk_talleres_facilitador; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2706,14 +4457,6 @@ ALTER TABLE ONLY public.oficios_emitidos
 
 
 --
--- Name: oficios oficios_id_institucion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.oficios
-    ADD CONSTRAINT oficios_id_institucion_fkey FOREIGN KEY (id_institucion) REFERENCES public.ubicaciones_formacion(id) ON DELETE RESTRICT;
-
-
---
 -- Name: parroquia parroquia_create_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2746,14 +4489,6 @@ ALTER TABLE ONLY public.parroquia
 
 
 --
--- Name: participantes_ruta participantes_ruta_id_institucion_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.participantes_ruta
-    ADD CONSTRAINT participantes_ruta_id_institucion_fkey FOREIGN KEY (id_institucion) REFERENCES public.instituciones_externas(id) ON DELETE SET NULL;
-
-
---
 -- Name: participantes_ruta participantes_ruta_id_persona_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2783,6 +4518,14 @@ ALTER TABLE ONLY public.participantes_taller
 
 ALTER TABLE ONLY public.pasantes
     ADD CONSTRAINT pasantes_id_persona_fkey FOREIGN KEY (id_persona) REFERENCES public.personas(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: password_resets password_resets_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_resets
+    ADD CONSTRAINT password_resets_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id) ON DELETE CASCADE;
 
 
 --
@@ -2874,14 +4617,6 @@ ALTER TABLE ONLY public.taller_evidencias
 
 
 --
--- Name: talleres talleres_id_oficio_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.talleres
-    ADD CONSTRAINT talleres_id_oficio_fkey FOREIGN KEY (id_oficio) REFERENCES public.oficios(id) ON DELETE SET NULL;
-
-
---
 -- Name: ubicaciones ubicaciones_departamento _d_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2934,127 +4669,6 @@ ALTER TABLE ONLY public.visitas
 --
 
 
--- ============================================================================
--- SEEDS DE SISTEMA (roles, permisos_rol, configuracion_sistema)
--- ============================================================================
 --
--- PostgreSQL database dump
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-061).
 --
-
--- Dumped from database version 17.4
--- Dumped by pg_dump version 17.4
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
---
--- Data for Name: configuracion_sistema; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.configuracion_sistema (id, clave, valor, descripcion, updated_at, updated_by) FROM stdin;
-1	director_nombre	Maria	Nombre del Director/Presidente de IMATUR	2026-05-30 21:34:12.333445	2
-2	director_apellido	Maza	Apellido del Director/Presidente	2026-05-30 21:34:12.372191	2
-3	director_cargo	Director	Cargo del firmante institucional	2026-05-30 21:34:12.413043	2
-4	resolucion_numero	025	N° de la Resolución de nombramiento	2026-05-30 21:34:12.453349	2
-5	resolucion_fecha	15 de marzo de 2024	Fecha de la Resolución (texto, ej: 15 de enero de 2025)	2026-05-30 21:34:12.493806	2
-10	correlativo_oficio_ruta	1	Último correlativo de oficio emitido en el año en curso	2026-05-08 16:57:20.880114	2
-11	ano_correlativo_ruta	2026	Año del correlativo activo (se reinicia automáticamente)	2026-05-08 16:57:20.940974	2
-12	firmante_cargo	Director General	\N	2026-05-20 10:35:25.894766	\N
-13	correlativo_oficio_formacion	0	\N	2026-05-20 10:35:25.894766	\N
-14	ano_correlativo_formacion	2026	\N	2026-05-20 10:35:25.894766	\N
-6	gaceta_numero	042	N° de la Gaceta Municipal Extraordinaria	2026-05-30 21:34:12.531695	2
-7	gaceta_fecha	20 de Enero del 2024	Fecha de la Gaceta (texto, ej: 20 de enero de 2025)	2026-05-30 21:34:12.568367	2
-8	telf_institucion	(0293) 431-4073	Teléfono institucional	2026-05-30 21:34:12.604648	2
-9	correo_institucion	imatur.cumana@gmail.com	Correo electrónico institucional	2026-05-30 21:34:12.646117	2
-15	meta_talleres_anio	100	Meta anual de actividades formativas a ejecutar	2026-05-30 21:34:12.687781	2
-16	meta_rutas_anio	100	Meta anual de rutas turísticas a ejecutar	2026-05-30 21:34:12.732515	2
-17	dias_preaviso_contrato	30	Días de anticipación para alertar sobre contratos vencientes	2026-05-30 21:34:12.803157	2
-18	dias_preaviso_pasante	15	Días de anticipación para alertar sobre pasantes próximos a culminar	2026-05-30 21:34:12.844755	2
-\.
-
-
---
--- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.roles (id, nombre, descripcion, is_active, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by) FROM stdin;
-2	RRHH	Gestión de personal y asistencia	t	2026-04-12 14:15:24.492607	\N	\N	\N	\N	\N
-3	Turismo	Gestión de rutas y formación	t	2026-04-12 14:15:24.492607	\N	\N	\N	\N	\N
-5	Recepción	Registro de visitantes, visitas y marcaje de asistencias. Sin acceso a módulos de gestión.	t	2026-05-20 10:35:25.876512	\N	\N	\N	\N	\N
-4	Inventario	Gestión de bienes institucionales	t	2026-04-12 14:15:24.492607	2026-05-26 02:31:55.886056	\N	\N	2	\N
-1	Administrador	Acceso total al sistema	t	2026-04-12 14:15:24.492607	2026-05-26 15:14:08.526225	\N	\N	2	\N
-6	Reportes Del Sistema	Prueba para verificar el insert del rol y otrogar permisos	t	2026-05-26 02:33:32.316047	2026-05-26 20:53:54.119892	\N	2	2	\N
-\.
-
-
---
--- Data for Name: permisos_rol; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.permisos_rol (id, id_rol, modulo, created_at, created_by) FROM stdin;
-1	1	*	2026-05-26 02:22:50.069328	\N
-11	3	DashboardController	2026-05-26 02:22:50.078989	\N
-12	3	RutasController	2026-05-26 02:22:50.078989	\N
-14	3	TalleresController	2026-05-26 02:22:50.078989	\N
-15	3	UbicacionesformacionController	2026-05-26 02:22:50.078989	\N
-16	3	PasantesController	2026-05-26 02:22:50.078989	\N
-17	3	VisitantesController	2026-05-26 02:22:50.078989	\N
-19	3	ReportesController	2026-05-26 02:22:50.078989	\N
-20	4	DashboardController	2026-05-26 02:22:50.079374	\N
-21	4	InventarioController	2026-05-26 02:22:50.079374	\N
-22	4	CategoriasController	2026-05-26 02:22:50.079374	\N
-23	4	UbicacionesController	2026-05-26 02:22:50.079374	\N
-24	4	ActividadesinventarioController	2026-05-26 02:22:50.079374	\N
-25	4	ReportesController	2026-05-26 02:22:50.079374	\N
-30	6	ReportesController	2026-05-26 02:33:46.506516	2
-31	6	DashboardController	2026-05-26 02:33:46.506516	2
-37	5	AsistenciasController	2026-05-26 16:29:21.945685	2
-38	5	VisitantesController	2026-05-26 16:29:21.945685	2
-40	5	DashboardController	2026-05-26 16:29:21.945685	2
-41	2	ReportesController	2026-05-26 20:54:16.748618	2
-42	2	ConfigController	2026-05-26 20:54:16.748618	2
-43	2	EmpleadosController	2026-05-26 20:54:16.748618	2
-44	2	CargosController	2026-05-26 20:54:16.748618	2
-45	2	DepartamentosController	2026-05-26 20:54:16.748618	2
-46	2	AsistenciasController	2026-05-26 20:54:16.748618	2
-47	2	VisitantesController	2026-05-26 20:54:16.748618	2
-49	2	PasantesController	2026-05-26 20:54:16.748618	2
-50	2	UsuariosController	2026-05-26 20:54:16.748618	2
-51	2	DashboardController	2026-05-26 20:54:16.748618	2
-\.
-
-
---
--- Name: configuracion_sistema_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.configuracion_sistema_id_seq', 20, true);
-
-
---
--- Name: permisos_rol_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.permisos_rol_id_seq', 53, true);
-
-
---
--- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.roles_id_seq', 6, true);
-
-
---
--- PostgreSQL database dump complete
---
-

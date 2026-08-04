@@ -25,16 +25,30 @@ Aplicación web **on-premise** (sin acceso a internet). MVC en PHP puro, sin fra
 # 1. Crear la base de datos
 createdb -U postgres "SIGTUR-IMATUR"
 
-# 2. Importar el esquema consolidado (base + migraciones 001-023 + seeds)
+# 2. Importar el esquema consolidado — un solo archivo, esto es todo
 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
-
-# 3. Aplicar las migraciones posteriores (024 a 052), en orden, desde:
-#    database/migrations/   (son idempotentes)
-#    Ej.: psql -U postgres -d "SIGTUR-IMATUR" -f database/migrations/052_indices_rendimiento.sql
 ```
+
+**No hay paso 3.** `database/schema_consolidado.sql` incluye el esquema base y
+**todas** las migraciones 001–061. No hay que aplicar nada de
+`database/migrations/`: esa carpeta se conserva como historial y para
+actualizar instalaciones antiguas, no para instalar desde cero.
+
+El consolidado deja sembrados los catálogos institucionales (roles y permisos,
+configuración del instituto, organigrama de 23 departamentos, cargos, horarios,
+feriados, municipios y parroquias) y **un usuario administrador de arranque**.
+Las tablas operativas (personal, inventario, talleres, rutas, visitantes…)
+quedan vacías, y los correlativos de oficios en 0.
 
 En Windows (Laragon), `psql` suele estar en
 `C:\Program Files\PostgreSQL\17\bin\psql.exe` (anteponer `PGPASSWORD=...`).
+
+> **Al regenerar el consolidado** (tras nuevas migraciones), volcar la BD con
+> `pg_dump --no-owner --no-privileges` excluyendo los datos de las tablas
+> operativas con `--exclude-table-data`, y mantener el bloque del administrador
+> de arranque **entre** los datos de `departamentos` y los de `municipio`:
+> necesita el catálogo ya cargado, y `municipio`/`parroquia` tienen columnas de
+> auditoría `NOT NULL` que apuntan a ese usuario.
 
 ### Configuración (credenciales)
 
@@ -53,7 +67,20 @@ Editar `config/config.php`:
 ### Acceso
 
 URL: `http://SIGTUR-IMATUR.test` o `http://localhost/SIGTUR-IMATUR/public`.
-Usuario de prueba: `admin` (la contraseña está en la tabla `usuarios`; cámbiala en el primer ingreso).
+
+En una instalación nueva, el consolidado crea el usuario de arranque:
+
+| Usuario | Contraseña   |
+|---------|--------------|
+| `admin` | `Sigtur2026` |
+
+> ⚠️ **Cambiar esta contraseña en el primer ingreso** (Perfil → Cambiar
+> contraseña). Está publicada en este repositorio, así que no sirve como
+> credencial real.
+
+Ese `admin` va montado sobre un empleado técnico ("Administrador del Sistema"),
+porque `usuarios.id_empleado` es `NOT NULL`. Una vez cargado el personal real y
+creado un administrador nominal, conviene desactivarlo.
 
 ---
 
