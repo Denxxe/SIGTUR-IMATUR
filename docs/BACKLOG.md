@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **062** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **063** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,18 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-04 — Bienes, Fase 2: movimientos, autorización y mantenimiento (mig. 063)
+
+| # | Entregable | Detalle |
+|---|-----------|---------|
+| ✅ | **Movimientos con origen y destino** | `actividad_inventario` no registraba **de dónde a dónde** iba el bien, que es justo lo que describe B-31. Ahora sí. Los tres traslados del cliente (depósito→departamento, departamento→depósito, departamento→departamento) se modelan con **un solo** tipo `Traslado` + origen/destino: el caso concreto se deduce de las ubicaciones y los reportes no dependen de cómo se nombró el traslado. |
+| ✅ | **Autorización por cargo + departamento** (B-32, B-64) | La Coordinadora de Bienes **no se elige en el formulario**: la resuelve el sistema con `ActividadInventario::autorizador()` a partir de `bienes_cargo_autoriza` + `bienes_depto_autoriza` (config, no nombres fijos en el código). Si el puesto está vacante, el módulo **bloquea el registro** y lo explica, en vez de dejar pasar movimientos sin autorizar. |
+| ✅ | **Mantenimiento como proceso, no como apunte** (B-33) | Nueva tabla `inventario_mantenimientos`: encargado de Servicios Generales *o* taller externo, falla reportada, trabajo realizado, costo y resultado (Reparado / Sin reparación / Irrecuperable). Índice único parcial que impide dos mantenimientos abiertos del mismo bien. Panel de "mantenimientos en curso" en el listado. |
+| ✅ | **Todo transaccional** | Un movimiento **cambia el estado del bien**, así que registro y efecto ocurren juntos o no ocurren: traslado→ubicación, asignación→responsable, salida→estatus En mantenimiento, retorno→Activo. Si el retorno es *Irrecuperable*, el bien vuelve a Activo con condición Dañado, a la espera del acto de baja (Fase 3). |
+| ✅ | **Reglas de negocio validadas** | No se mueve un bien dado de baja (B-38); no se traslada al mismo sitio; no hay doble salida a mantenimiento ni retorno sin mantenimiento abierto; un bien sin codificar solo admite asignación de responsable. |
+| ⚠️ Hallazgo | **CMI-I03 estaba a punto de quedar en 0** | El indicador "asignación de responsables" derivaba del último movimiento con tipo `'Asignacion'`, valor que la mig. 063 renombró. Se recalculó **directo sobre `inventario.id_responsable`** (columna de la Fase 1): más exacto y ya no depende del nombre del movimiento. |
+| ✅ | **Verificado con 18 pruebas sobre la BD** | Ciclo completo: autorización obligatoria, traslado con origen/destino, asignación, salida y retorno de mantenimiento, rechazos esperados, y **atomicidad** (una FK inválida revierte el movimiento sin dejar registro huérfano). |
 
 ### 2026-08-04 — Bienes, Fase 1 construida (mig. 062) — **cierra H-04**
 

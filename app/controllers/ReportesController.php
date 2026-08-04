@@ -2418,17 +2418,15 @@ class ReportesController extends Controller {
             $db->bind(':anio', $anioActual);
             $movInventario = $db->resultSet();
 
-            // INVENTARIO: Asignación responsable — durables cuyo ÚLTIMO movimiento es 'Asignacion'.
-            $db->query("SELECT
-                            (SELECT COUNT(*) FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja' AND tipo_bien = 'Durable') AS total_durables,
-                            COUNT(CASE WHEN u.tipo_movimiento = 'Asignacion' THEN 1 END) AS asignados
-                        FROM (
-                            SELECT DISTINCT ON (ai.id_inventario) ai.id_inventario, ai.tipo_movimiento
-                            FROM actividad_inventario ai
-                            INNER JOIN inventario i ON i.id = ai.id_inventario AND i.is_active = TRUE AND i.estatus <> 'Dado de baja' AND i.tipo_bien = 'Durable'
-                            WHERE ai.is_active = TRUE
-                            ORDER BY ai.id_inventario, ai.fecha DESC, ai.id DESC
-                        ) u");
+            // INVENTARIO: Asignación de responsables.
+            // Antes se derivaba del ÚLTIMO movimiento con tipo 'Asignacion'; desde la
+            // mig. 062 el responsable es una columna del bien (`id_responsable`), así
+            // que se cuenta directo: más exacto y sin depender del nombre del movimiento
+            // (que además cambió en la mig. 063).
+            $db->query("SELECT COUNT(*) AS total_durables,
+                               COUNT(id_responsable) AS asignados
+                          FROM inventario
+                         WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
             $asignacionInv = $db->single();
 
             // FORMACIÓN: Cobertura territorial por parroquia (año actual).

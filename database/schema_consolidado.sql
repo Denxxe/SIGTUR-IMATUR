@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–062.
+-- Cubre: esquema base + TODAS las migraciones 001–063.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -14,7 +14,7 @@
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 49 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 50 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
 --       - roles (5) y permisos_rol  ....... RBAC dinámico
 --       - configuracion_sistema ........... datos del instituto, RIF,
@@ -103,8 +103,26 @@ CREATE TABLE public.actividad_inventario (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    CONSTRAINT actividad_inventario_tipo_movimiento_check CHECK (((tipo_movimiento)::text = ANY ((ARRAY['Asignacion'::character varying, 'Devolucion'::character varying, 'Traslado'::character varying, 'Baja'::character varying, 'Mantenimiento'::character varying])::text[])))
+    id_ubicacion_origen integer,
+    id_ubicacion_destino integer,
+    autorizado_por integer,
+    fecha_retorno date,
+    CONSTRAINT actividad_inventario_tipo_movimiento_check CHECK (((tipo_movimiento)::text = ANY ((ARRAY['Traslado'::character varying, 'Asignación de responsable'::character varying, 'Salida a mantenimiento'::character varying, 'Retorno de mantenimiento'::character varying, 'Baja'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN actividad_inventario.autorizado_por; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.actividad_inventario.autorizado_por IS 'Empleado que autoriza el movimiento — la Coordinadora de Bienes (B-32).';
+
+
+--
+-- Name: COLUMN actividad_inventario.fecha_retorno; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.actividad_inventario.fecha_retorno IS 'Solo para salidas a mantenimiento: cuándo volvió el bien (B-33).';
 
 
 --
@@ -1163,6 +1181,53 @@ CREATE SEQUENCE public.inventario_id_seq
 --
 
 ALTER SEQUENCE public.inventario_id_seq OWNED BY public.inventario.id;
+
+
+--
+-- Name: inventario_mantenimientos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.inventario_mantenimientos (
+    id integer NOT NULL,
+    id_inventario integer NOT NULL,
+    id_actividad_salida integer,
+    fecha_salida date DEFAULT CURRENT_DATE NOT NULL,
+    fecha_retorno date,
+    id_empleado_encargado integer,
+    proveedor_externo character varying(200),
+    descripcion_falla text,
+    trabajo_realizado text,
+    costo numeric(14,2),
+    resultado character varying(30),
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    deleted_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    deleted_by integer,
+    CONSTRAINT inv_mant_resultado_check CHECK (((resultado IS NULL) OR ((resultado)::text = ANY ((ARRAY['Reparado'::character varying, 'Sin reparación'::character varying, 'Irrecuperable'::character varying])::text[]))))
+);
+
+
+--
+-- Name: inventario_mantenimientos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.inventario_mantenimientos_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: inventario_mantenimientos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.inventario_mantenimientos_id_seq OWNED BY public.inventario_mantenimientos.id;
 
 
 --
@@ -2522,6 +2587,13 @@ ALTER TABLE ONLY public.inventario ALTER COLUMN id SET DEFAULT nextval('public.i
 
 
 --
+-- Name: inventario_mantenimientos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_mantenimientos ALTER COLUMN id SET DEFAULT nextval('public.inventario_mantenimientos_id_seq'::regclass);
+
+
+--
 -- Name: municipio id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2754,6 +2826,8 @@ COPY public.configuracion_sistema (id, clave, valor, descripcion, updated_at, up
 25	ano_correlativo_constancia	0	Año del correlativo de constancias	2026-06-05 17:21:13.71886	\N
 6	gaceta_numero	042	N° de la Gaceta Municipal Extraordinaria	2026-06-28 17:01:54.985504	\N
 39	lema_institucion	Historia y Porvenir	Lema del instituto. Aparece al pie del carnet institucional.	2026-08-04 14:42:39.592851	\N
+40	bienes_depto_autoriza	23	Departamento cuya jefatura autoriza los movimientos de bienes (Coordinación de Compras, Bienes y Servicios).	2026-08-04 19:28:35.763964	\N
+41	bienes_cargo_autoriza	6	Cargo que autoriza los movimientos de bienes dentro de ese departamento.	2026-08-04 19:28:35.763964	\N
 7	gaceta_fecha	20 De Enero Del 2024	Fecha de la Gaceta (texto, ej: 20 de enero de 2025)	2026-06-28 17:01:55.030345	\N
 15	meta_talleres_anio	100	Meta anual de actividades formativas a ejecutar	2026-06-28 17:01:55.162101	\N
 16	meta_rutas_anio	100	Meta anual de rutas turísticas a ejecutar	2026-06-28 17:01:55.201958	\N
@@ -2996,7 +3070,7 @@ COPY public.roles (id, nombre, descripcion, is_active, created_at, updated_at, d
 -- Name: actividad_inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 1, true);
+SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 6, true);
 
 
 --
@@ -3031,7 +3105,7 @@ SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
 -- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 173, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 179, true);
 
 
 --
@@ -3073,7 +3147,7 @@ SELECT pg_catalog.setval('public.categorias_id_seq', 13, true);
 -- Name: configuracion_sistema_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.configuracion_sistema_id_seq', 39, true);
+SELECT pg_catalog.setval('public.configuracion_sistema_id_seq', 41, true);
 
 
 --
@@ -3164,7 +3238,14 @@ SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
 -- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_id_seq', 5, true);
+SELECT pg_catalog.setval('public.inventario_id_seq', 6, true);
+
+
+--
+-- Name: inventario_mantenimientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.inventario_mantenimientos_id_seq', 1, true);
 
 
 --
@@ -3304,7 +3385,7 @@ SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ubicaciones_id_seq', 4, true);
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 6, true);
 
 
 --
@@ -3597,6 +3678,14 @@ ALTER TABLE ONLY public.horarios
 
 ALTER TABLE ONLY public.inventario
     ADD CONSTRAINT inventario_codigo_bn_key UNIQUE (codigo_bn);
+
+
+--
+-- Name: inventario_mantenimientos inventario_mantenimientos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_mantenimientos
+    ADD CONSTRAINT inventario_mantenimientos_pkey PRIMARY KEY (id);
 
 
 --
@@ -3901,6 +3990,13 @@ CREATE INDEX idx_act_ruta_fecha ON public.actividades_ruta USING btree (fecha);
 
 
 --
+-- Name: idx_actinv_tipo; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_actinv_tipo ON public.actividad_inventario USING btree (tipo_movimiento);
+
+
+--
 -- Name: idx_alertas_vistas_usuario; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4003,6 +4099,13 @@ CREATE INDEX idx_faltas_empleado ON public.faltas USING btree (id_empleado) WHER
 --
 
 CREATE INDEX idx_feriados_mesdia ON public.feriados USING btree (EXTRACT(month FROM fecha), EXTRACT(day FROM fecha));
+
+
+--
+-- Name: idx_inv_mant_bien; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inv_mant_bien ON public.inventario_mantenimientos USING btree (id_inventario);
 
 
 --
@@ -4209,6 +4312,13 @@ CREATE UNIQUE INDEX uq_emp_egreso_abierto ON public.empleados_egresos USING btre
 
 
 --
+-- Name: uq_inv_mant_abierto; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_inv_mant_abierto ON public.inventario_mantenimientos USING btree (id_inventario) WHERE ((fecha_retorno IS NULL) AND (is_active = true));
+
+
+--
 -- Name: uq_puntos_ruta_orden; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4374,6 +4484,30 @@ ALTER TABLE ONLY public.actividades_ruta
 
 
 --
+-- Name: actividad_inventario fk_actinv_autorizado; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.actividad_inventario
+    ADD CONSTRAINT fk_actinv_autorizado FOREIGN KEY (autorizado_por) REFERENCES public.empleados(id) ON DELETE SET NULL;
+
+
+--
+-- Name: actividad_inventario fk_actinv_ubic_destino; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.actividad_inventario
+    ADD CONSTRAINT fk_actinv_ubic_destino FOREIGN KEY (id_ubicacion_destino) REFERENCES public.ubicaciones(id) ON DELETE SET NULL;
+
+
+--
+-- Name: actividad_inventario fk_actinv_ubic_origen; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.actividad_inventario
+    ADD CONSTRAINT fk_actinv_ubic_origen FOREIGN KEY (id_ubicacion_origen) REFERENCES public.ubicaciones(id) ON DELETE SET NULL;
+
+
+--
 -- Name: asistencias fk_asistencias_empleado; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4523,6 +4657,30 @@ ALTER TABLE ONLY public.usuarios
 
 ALTER TABLE ONLY public.usuarios
     ADD CONSTRAINT fk_usuarios_rol FOREIGN KEY (id_rol) REFERENCES public.roles(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: inventario_mantenimientos inventario_mantenimientos_id_actividad_salida_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_mantenimientos
+    ADD CONSTRAINT inventario_mantenimientos_id_actividad_salida_fkey FOREIGN KEY (id_actividad_salida) REFERENCES public.actividad_inventario(id) ON DELETE SET NULL;
+
+
+--
+-- Name: inventario_mantenimientos inventario_mantenimientos_id_empleado_encargado_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_mantenimientos
+    ADD CONSTRAINT inventario_mantenimientos_id_empleado_encargado_fkey FOREIGN KEY (id_empleado_encargado) REFERENCES public.empleados(id) ON DELETE SET NULL;
+
+
+--
+-- Name: inventario_mantenimientos inventario_mantenimientos_id_inventario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_mantenimientos
+    ADD CONSTRAINT inventario_mantenimientos_id_inventario_fkey FOREIGN KEY (id_inventario) REFERENCES public.inventario(id) ON DELETE CASCADE;
 
 
 --
@@ -4755,5 +4913,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-062).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-063).
 --

@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
 
-> **Estado: ✅ Fase 1 CONSTRUIDA** (migración 062, 2026-08-04). Ver §10 para lo que sigue.
+> **Estado: ✅ Fases 1 y 2 CONSTRUIDAS** (migraciones 062-063, 2026-08-04). Siguiente: **Fase 3 — documentos**. Ver §10.
 
 ---
 
@@ -321,7 +321,7 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 | B-71 | ▲ | **El BM-1 llega en papel.** ¿Existe la versión digital (Excel/Word) del archivo que arma la Alcaldía? Si la hay, la carga de códigos podría ser automática en vez de teclear bien por bien. |
 | B-72 | ○ | **Numeración del N° de orden.** Los números de la muestra van del 025 al 171 con saltos. ¿Los huecos son bienes ya dados de baja, o la Alcaldía numera de forma continua para toda la Alcaldía y no solo para IMATUR? |
 | B-63 | ▲ | **El "umbral" de B-45/B-47.** No es stock de consumibles, sino saber si *alcanzan* los bienes (sillas por empleado, mesas por departamento). ¿Cómo lo definirían: una cantidad esperada por departamento, o una relación contra el número de empleados? |
-| B-64 | ▲ | **La Coordinadora de Bienes autoriza los movimientos** (B-32). ¿Cómo la identifica el sistema — por el cargo de la persona, por su departamento, o se designa manualmente? |
+| ~~B-64~~ | ✅ | ~~¿Cómo identifica el sistema a la Coordinadora de Bienes?~~ **Respondida (2026-08-04): por CARGO + DEPARTAMENTO.** Implementado en la mig. 063 con las claves de configuración `bienes_cargo_autoriza` y `bienes_depto_autoriza`. |
 | B-65 | ▲ | **Sede del aeropuerto** (B-24): sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como una ubicación independiente con su propio responsable? |
 | B-66 | ▲ | **Contradicción con la migración 044:** se implementaron Durable/Fungible y cantidad respondiendo a D-IN05. Ahora B-07/B-09 dicen que no se llevan consumibles y que el registro es individual. ¿Confirmamos que se eliminan? |
 | B-67 | ○ | B-42 quedó sin definir: mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
@@ -342,7 +342,7 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 | Fase | Contenido | Depende de |
 |---|---|---|
 | ~~**1. Base**~~ | ✅ **HECHA** (mig. 062): `estatus` + `condicion` separados (**cierra H-04**) · código oficial por partes + flujo de codificación contra el BM-1 · categoría interna (11 sembradas) · origen/donación · costo/proveedor/garantía · responsable único · sedes y depósito | — |
-| **2. Movimientos** | Origen/destino · autorización · mantenimiento con retorno · corrección definitiva de H-04 | Fase 1 |
+| ~~**2. Movimientos**~~ | ✅ **HECHA** (mig. 063): origen/destino · autorización por cargo+departamento · mantenimiento con salida/retorno y proceso completo · todo transaccional | — |
 | **3. Documentos** | Adjuntos por bien (factura, informe, oficios) · generación del informe de bienes nuevos, acta de asignación, acta de baja · **recepción y conciliación del BM-1** | Fase 1 · formatos reales |
 | **4. Explotación** | Etiquetas con QR · reportes de §6 · alertas de §7 · hoja de vida del bien (B-36) | Fases 1-3 |
 | **5. Cierre** | Conteo por cambio de gestión · RBAC de §7 | Fase 4 |
