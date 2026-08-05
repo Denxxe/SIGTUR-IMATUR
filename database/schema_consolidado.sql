@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–067.
+-- Cubre: esquema base + TODAS las migraciones 001–068.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -3197,7 +3197,7 @@ COPY public.departamentos (id, nombre, descripcion, is_active, created_at, updat
 26	Bienestar Social	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
 27	Nómina	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
 4	Departamento de informática	Departamento de Telecomunicaciones e Informática.	t	2026-04-17 15:11:35.123254	2026-06-05 04:14:16.072951	\N	\N	\N	\N	3	Unidad
-28	Oficina de Información Turística (Aeropuerto)	Sede del Aeropuerto de Cumaná. Atiende al turista a su llegada; sus bienes se controlan aparte de la sede principal (B-24/B-65).	t	2026-08-05 15:30:24.276213	\N	\N	\N	\N	\N	6	Oficina
+28	Oficina de Información Turística (Aeropuerto)	Sede del Aeropuerto de Cumaná. Atiende al turista a su llegada; sus bienes se controlan aparte de la sede principal (B-24/B-65).	t	2026-08-05 15:30:24.276213	2026-08-05 15:51:53.971083	\N	\N	\N	\N	7	Oficina
 \.
 
 
@@ -5444,5 +5444,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-067).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-068).
 --

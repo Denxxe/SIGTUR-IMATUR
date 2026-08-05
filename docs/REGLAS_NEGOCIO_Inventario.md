@@ -1,6 +1,6 @@
 # Módulo de Bienes (Inventario) — Reglas de Negocio
 
-**Última actualización:** 2026-08-05 · **Migraciones:** 062–067
+**Última actualización:** 2026-08-05 · **Migraciones:** 062–068
 **Fuentes:** levantamiento con el cliente (`PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, B-01…B-72) y el **Formulario BM-1** real (`docs/formatos/`).
 **Plan y pendientes:** `docs/PLAN_MODULO_BIENES.md`.
 
@@ -159,7 +159,8 @@ movimiento en su momento.
 - **Dos sedes**: la principal y la **Oficina de Información Turística del
   Aeropuerto de Cumaná**, que tiene bienes bajo control propio (B-24). Desde la
   mig. 067 esa oficina es un **departamento más**, con su propio coordinador
-  —y por tanto su propio responsable (B-65).
+  —y por tanto su propio responsable (B-65). Cuelga de la **Dirección de
+  Planificación y Gestión Turística** (mig. 068).
 - El **depósito** es el área común de los bienes sin asignar. Todo bien que no
   esté asignado a un departamento debe estar ahí.
 

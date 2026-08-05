@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **067** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **068** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -44,7 +44,7 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 |---|-----------|-------------|
 | ✅ B-66 | *"Sí, se elimina"* | **R-10 cerrado.** Fuera `inventario.tipo_bien` y `cantidad`, más las constantes del modelo y las consultas CMI-I01/I03 que las usaban. IMATUR no lleva consumibles y el registro es individual. |
 | ✅ B-67 | *"Con una etiqueta Por retirar"* | El bien dado de baja sale del inventario activo pero sigue físicamente en IMATUR hasta que la Alcaldía lo retire. Se distingue **"Dado de baja · Por retirar"** de **"· Retirado"**, con acción y fecha para confirmar el retiro. |
-| ✅ B-65 | *"Como otro departamento, con su propio coordinador"* | **Verificado primero, como se pidió:** la sede del aeropuerto **no existía en ningún lado** — ni en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH; el único rastro era `ubicaciones.sede`. Se creó como **Oficina bajo Presidencia**, igual que OAC y las demás oficinas de staff. Por la mig. 066, su coordinador es automáticamente el responsable de sus bienes. ⚠️ **Su ubicación jerárquica queda por confirmar**: el organigrama oficial no la contempla. |
+| ✅ B-65 | *"Como otro departamento, con su propio coordinador"* | **Verificado primero, como se pidió:** la sede del aeropuerto **no existía en ningún lado** — ni en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH; el único rastro era `ubicaciones.sede`. Se creó como **Oficina**, y el cliente confirmó que cuelga de la **Dirección de Planificación y Gestión Turística** (mig. 068), junto a Promoción Turística y las demás coordinaciones del área. Por la mig. 066, su coordinador es automáticamente el responsable de sus bienes. |
 | ✅ B-63 | *"Por los números de empleados en los departamentos"* | Nueva tabla `inventario_dotacion` (unidades por empleado y categoría) y reporte **`/inventario/suficiencia`**: compara lo que hay en cada departamento contra lo que debería haber según su personal. Excluye el depósito (lo que está ahí no está en uso) y los bienes de baja/extraviados/robados. Sembradas 3 dotaciones de partida; las categorías que no se reparten por persona no se evalúan. |
 | ✅ B-69 / B-70 / B-72 | Costo = control interno · BM-1 = evento puntual · N° de orden = jurisdicción de la Alcaldía | **Sin cambios de código**: las tres confirman el diseño actual. |
 | ✅ Docs | **`REGLAS_NEGOCIO_Inventario.md` reescrito** | La versión de 2026-05-22 describía un CRUD y daba por vigentes `ruta_inventario`, `taller_inventario` y Durable/Fungible. Ahora documenta las 13 reglas reales (RN-IN01…RN-IN13) y **lo que el sistema no hace por decisión**. |
