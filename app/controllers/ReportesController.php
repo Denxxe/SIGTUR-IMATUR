@@ -1971,13 +1971,28 @@ class ReportesController extends Controller {
         $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.estatus, i.marca, i.modelo, i.serial,
                            c.nombre AS categoria,
                            u.nombre AS ubicacion,
-                           TRIM(COALESCE(p.nombre,'') || ' ' || COALESCE(p.apellido,'')) AS responsable
+                           p.nombre AS responsable
                     FROM inventario i
                     LEFT JOIN categorias c  ON i.id_categoria = c.id
                     LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
-                    LEFT JOIN empleados   e ON i.id_responsable = e.id
-                    LEFT JOIN personas    p ON e.id_persona = p.id
                     LEFT JOIN departamentos d ON u.\"departamento _d\" = d.id
+                    -- Responsable DERIVADO (B-68, mig. 066): la jefatura del
+                    -- departamento donde está el bien. No es una columna.
+                    LEFT JOIN LATERAL (
+                        SELECT TRIM(COALESCE(pr.nombre,'') || ' ' || COALESCE(pr.apellido,'')) AS nombre
+                          FROM empleados er
+                          INNER JOIN personas pr ON pr.id = er.id_persona
+                          LEFT  JOIN cargos   cr ON cr.id = er.id_cargo
+                         WHERE er.is_active = TRUE AND er.fecha_egreso IS NULL
+                           AND er.id_departamento = CASE
+                                 WHEN u.es_deposito THEN (SELECT NULLIF(valor,'')::int
+                                                            FROM configuracion_sistema
+                                                           WHERE clave = 'bienes_depto_autoriza')
+                                 ELSE u.\"departamento _d\" END
+                           AND cr.nivel_jerarquico IN ('Dirección','Coordinación')
+                         ORDER BY CASE cr.nivel_jerarquico WHEN 'Dirección' THEN 1 ELSE 2 END, er.id
+                         LIMIT 1
+                    ) p ON TRUE
                     WHERE {$where}
                     ORDER BY c.nombre ASC, i.nombre ASC");
         if ($estatus  !== '') $db->bind(':estatus', $estatus);
@@ -2438,14 +2453,28 @@ class ReportesController extends Controller {
             $movInventario = $db->resultSet();
 
             // INVENTARIO: Asignación de responsables.
-            // Antes se derivaba del ÚLTIMO movimiento con tipo 'Asignacion'; desde la
-            // mig. 062 el responsable es una columna del bien (`id_responsable`), así
-            // que se cuenta directo: más exacto y sin depender del nombre del movimiento
-            // (que además cambió en la mig. 063).
+            // Desde la mig. 066 (B-68) el responsable NO se almacena: se deriva del
+            // departamento donde está el bien. El indicador mide entonces cuántos
+            // bienes están en un departamento CON jefatura asignada — los que caen
+            // en un departamento sin director ni coordinador quedan sin responsable.
             $db->query("SELECT COUNT(*) AS total_durables,
-                               COUNT(id_responsable) AS asignados
-                          FROM inventario
-                         WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                               COUNT(resp.id) AS asignados
+                          FROM inventario i
+                          INNER JOIN ubicaciones u ON i.id_ubicacion = u.id
+                          LEFT JOIN LATERAL (
+                              SELECT er.id
+                                FROM empleados er
+                                LEFT JOIN cargos cr ON cr.id = er.id_cargo
+                               WHERE er.is_active = TRUE AND er.fecha_egreso IS NULL
+                                 AND er.id_departamento = CASE
+                                       WHEN u.es_deposito THEN (SELECT NULLIF(valor,'')::int
+                                                                  FROM configuracion_sistema
+                                                                 WHERE clave = 'bienes_depto_autoriza')
+                                       ELSE u.\"departamento _d\" END
+                                 AND cr.nivel_jerarquico IN ('Dirección','Coordinación')
+                               LIMIT 1
+                          ) resp ON TRUE
+                         WHERE i.is_active = TRUE AND i.estatus <> 'Dado de baja'");
             $asignacionInv = $db->single();
 
             // FORMACIÓN: Cobertura territorial por parroquia (año actual).

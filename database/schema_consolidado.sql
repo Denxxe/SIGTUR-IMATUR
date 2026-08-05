@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–065.
+-- Cubre: esquema base + TODAS las migraciones 001–066.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -109,6 +109,13 @@ CREATE TABLE public.actividad_inventario (
     fecha_retorno date,
     CONSTRAINT actividad_inventario_tipo_movimiento_check CHECK (((tipo_movimiento)::text = ANY ((ARRAY['Traslado'::character varying, 'Asignación de responsable'::character varying, 'Salida a mantenimiento'::character varying, 'Retorno de mantenimiento'::character varying, 'Baja'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN actividad_inventario.id_empleado_responsable; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.actividad_inventario.id_empleado_responsable IS 'Responsable en el momento del movimiento (histórico). Desde la mig. 066 el responsable actual del bien se DERIVA de su departamento, no se almacena.';
 
 
 --
@@ -1139,7 +1146,6 @@ CREATE TABLE public.inventario (
     proveedor character varying(200),
     tiene_garantia boolean DEFAULT false NOT NULL,
     garantia_vence date,
-    id_responsable integer,
     foto_url character varying(255),
     id_consolidado_bm1 integer,
     CONSTRAINT inventario_cantidad_chk CHECK ((cantidad >= 1)),
@@ -3339,7 +3345,7 @@ COPY public.roles (id, nombre, descripcion, is_active, created_at, updated_at, d
 -- Name: actividad_inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 10, true);
+SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 13, true);
 
 
 --
@@ -3374,7 +3380,7 @@ SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
 -- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 201, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 218, true);
 
 
 --
@@ -3465,7 +3471,7 @@ SELECT pg_catalog.setval('public.empleados_egresos_id_seq', 5, true);
 -- Name: empleados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.empleados_id_seq', 4, true);
+SELECT pg_catalog.setval('public.empleados_id_seq', 7, true);
 
 
 --
@@ -3507,49 +3513,49 @@ SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
 -- Name: inventario_consolidados_bm1_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_consolidados_bm1_id_seq', 1, true);
+SELECT pg_catalog.setval('public.inventario_consolidados_bm1_id_seq', 2, true);
 
 
 --
 -- Name: inventario_conteo_detalle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_conteo_detalle_id_seq', 2, true);
+SELECT pg_catalog.setval('public.inventario_conteo_detalle_id_seq', 3, true);
 
 
 --
 -- Name: inventario_conteos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_conteos_id_seq', 2, true);
+SELECT pg_catalog.setval('public.inventario_conteos_id_seq', 3, true);
 
 
 --
 -- Name: inventario_documentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_documentos_id_seq', 2, true);
+SELECT pg_catalog.setval('public.inventario_documentos_id_seq', 4, true);
 
 
 --
 -- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_id_seq', 9, true);
+SELECT pg_catalog.setval('public.inventario_id_seq', 12, true);
 
 
 --
 -- Name: inventario_mantenimiento_plan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_mantenimiento_plan_id_seq', 2, true);
+SELECT pg_catalog.setval('public.inventario_mantenimiento_plan_id_seq', 3, true);
 
 
 --
 -- Name: inventario_mantenimientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_mantenimientos_id_seq', 3, true);
+SELECT pg_catalog.setval('public.inventario_mantenimientos_id_seq', 4, true);
 
 
 --
@@ -3626,7 +3632,7 @@ SELECT pg_catalog.setval('public.permisos_rol_id_seq', 59, true);
 -- Name: personas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.personas_id_seq', 8, true);
+SELECT pg_catalog.setval('public.personas_id_seq', 11, true);
 
 
 --
@@ -3689,7 +3695,7 @@ SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ubicaciones_id_seq', 12, true);
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 17, true);
 
 
 --
@@ -4495,13 +4501,6 @@ CREATE INDEX idx_inventario_garantia ON public.inventario USING btree (garantia_
 
 
 --
--- Name: idx_inventario_responsable; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_inventario_responsable ON public.inventario USING btree (id_responsable);
-
-
---
 -- Name: idx_logs_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4958,14 +4957,6 @@ ALTER TABLE ONLY public.inventario
 
 
 --
--- Name: inventario fk_inventario_responsable; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventario
-    ADD CONSTRAINT fk_inventario_responsable FOREIGN KEY (id_responsable) REFERENCES public.empleados(id) ON DELETE SET NULL;
-
-
---
 -- Name: audit_logs fk_logs_usuario; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5347,5 +5338,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-065).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-066).
 --

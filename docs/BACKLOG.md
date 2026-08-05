@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **065** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **066** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,18 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-05 — Bienes: responsable automático (mig. 066) — responde B-68 y B-72
+
+| # | Cambio | Detalle |
+|---|--------|---------|
+| ✅ B-68 | **El responsable ya no se elige: se deduce** | Decisión del cliente: el responsable es la jefatura del departamento donde está el bien, y si entra alguien nuevo en ese cargo pasa a serlo de todos los bienes de su departamento. Se **eliminó** `inventario.id_responsable` y se deriva en la consulta: bien → ubicación → departamento → **Director** y, en su defecto, **Coordinador**. |
+| ✅ | **Por qué derivar y no recalcular** | Una columna almacenada habría que reescribirla al cambiar un cargo, al egresar un empleado o al trasladar un bien — y basta olvidar uno de esos casos para que el inventario muestre como responsable a alguien que ya no lo es. Derivándolo, **no puede quedar desactualizado**. El histórico se conserva en `actividad_inventario`, que guarda el responsable de cada movimiento en su momento. |
+| ✅ | **Bienes en depósito** | No pertenecen a ningún departamento (B-25), así que su custodio es la jefatura de la Coordinación de Bienes — la misma que autoriza los movimientos. |
+| ✅ | **Se retira la asignación manual** | El movimiento "Asignación de responsable" sale de los tipos seleccionables: para cambiar de responsable se traslada el bien o cambia la jefatura. El campo del formulario se sustituyó por un indicador explicativo. |
+| ⚠️ Hallazgo | **Dos consultas habrían reventado** | El reporte de inventario y el indicador **CMI-I03** usaban `i.id_responsable`, columna que esta migración elimina. Recalculados sobre la derivación; CMI-I03 ahora mide cuántos bienes están en un departamento **con jefatura asignada**, que es información útil (señala departamentos acéfalos). |
+| ✅ B-72 | **N° de orden: solo se transcribe** | Respuesta del cliente: la numeración la lleva la Alcaldía con criterio propio y garantiza que no se repita; IMATUR la desconoce y solo la copia. **No hay cambio de código**: el sistema ya se limita a transcribirla. La validación de N° de orden duplicado se mantiene como red contra errores de tecleo dentro de IMATUR. |
+| ✅ | **Verificado** | 9 pruebas sobre la BD con empleados reales: sin jefatura → sin responsable; entra coordinador → lo toma; entra director → tiene prioridad; **el director egresa → vuelve al coordinador solo**; bien en depósito → Coordinación de Bienes; traslado → cambia con la ubicación. Más regresión de las fases 3 y 4 (16 y 26 pruebas). |
 
 ### 2026-08-04 — Bienes, Fase 4: los 6 requisitos que no dependían de formatos (mig. 065)
 

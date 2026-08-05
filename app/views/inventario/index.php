@@ -241,14 +241,13 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <option value="">Seleccione...</option>
                             <?php foreach ($data['ubicaciones'] ?? [] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo htmlspecialchars($u->nombre); ?></option><?php endforeach; ?>
                         </select></div></div>
-                    <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_id_resp">Responsable</label>
-                        <select name="id_responsable" id="inv_id_resp" class="sig-select js-search">
-                            <option value="">Sin asignar (en depósito)</option>
-                            <?php foreach ($data['empleados'] ?? [] as $e): ?>
-                                <option value="<?php echo $e->id; ?>"><?php echo htmlspecialchars(trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? ''))); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small style="color:var(--text-tertiary)">Director o coordinador del departamento.</small></div></div>
+                    <div class="col-md-4"><div class="sig-field">
+                        <label class="sig-field__label">Responsable</label>
+                        <div class="sig-input" style="background:var(--surface-2);color:var(--text-secondary);display:flex;align-items:center;">
+                            <i class="bi bi-magic" style="margin-right:6px;"></i> Automático según la ubicación
+                        </div>
+                        <small style="color:var(--text-tertiary)">Es el director del departamento donde esté el bien (o su coordinador). Cambia solo si cambia la jefatura.</small>
+                    </div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_condicion">Condición física</label>
                         <select name="condicion" id="inv_condicion" class="sig-select">
                             <?php foreach (Inventario::CONDICIONES as $c): ?><option value="<?php echo $c; ?>"><?php echo $c; ?></option><?php endforeach; ?>
@@ -369,7 +368,6 @@ function editarInv(item) {
     v('inv_descripcion', item.descripcion);
     v('inv_id_cat', item.id_categoria);
     v('inv_id_ubi', item.id_ubicacion);
-    v('inv_id_resp', item.id_responsable);
     v('inv_condicion', item.condicion);
     v('inv_origen', item.origen || 'Compra');
     v('inv_donante', item.donante);

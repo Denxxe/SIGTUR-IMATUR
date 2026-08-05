@@ -109,8 +109,6 @@ class Inventario extends Model {
     private ?string $proveedor;
     private bool $tiene_garantia;
     private ?string $garantia_vence;
-    // Responsable
-    private ?int $id_responsable;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -145,7 +143,6 @@ class Inventario extends Model {
             $this->tiene_garantia    = !empty($data['tiene_garantia']);
             $this->garantia_vence    = ($data['garantia_vence'] ?? '') ?: null;
 
-            $this->id_responsable = !empty($data['id_responsable']) ? (int)$data['id_responsable'] : null;
         }
     }
 
@@ -178,6 +175,41 @@ class Inventario extends Model {
         return !in_array((string)$estatus, self::ESTATUS_NO_DISPONIBLE, true);
     }
 
+    /**
+     * Derivación del responsable (B-68, mig. 066).
+     *
+     * El responsable NO se almacena: se deduce de dónde está el bien.
+     *   bien → ubicación → departamento → jefatura de ese departamento
+     * Prioridad: Director y, en su defecto, Coordinador (B-26).
+     *
+     * Los bienes en **depósito** no pertenecen a ningún departamento
+     * (B-25): su custodio es la jefatura de la Coordinación de Bienes,
+     * la misma que autoriza los movimientos.
+     *
+     * Al derivarlo en la consulta, el dato no puede quedar desactualizado
+     * cuando cambia el director, alguien egresa o el bien se traslada.
+     */
+    private const LATERAL_RESPONSABLE = "
+        LEFT JOIN LATERAL (
+            SELECT er.id AS id,
+                   TRIM(COALESCE(pr.nombre,'') || ' ' || COALESCE(pr.apellido,'')) AS nombre,
+                   cr.nombre AS cargo
+              FROM empleados er
+              INNER JOIN personas pr ON pr.id = er.id_persona
+              LEFT  JOIN cargos   cr ON cr.id = er.id_cargo
+             WHERE er.is_active = TRUE AND er.fecha_egreso IS NULL
+               AND er.id_departamento = CASE
+                     WHEN u.es_deposito THEN (SELECT NULLIF(valor,'')::int
+                                                FROM configuracion_sistema
+                                               WHERE clave = 'bienes_depto_autoriza')
+                     ELSE u.\"departamento _d\"
+                   END
+               AND cr.nivel_jerarquico IN ('Dirección','Coordinación')
+             ORDER BY CASE cr.nivel_jerarquico WHEN 'Dirección' THEN 1 ELSE 2 END, er.id
+             LIMIT 1
+        ) resp ON TRUE
+    ";
+
     private const SELECT_BASE = "
         SELECT i.*,
                c.nombre  AS categoria,
@@ -185,14 +217,14 @@ class Inventario extends Model {
                u.sede    AS sede,
                u.es_deposito,
                d.nombre  AS departamento,
-               TRIM(COALESCE(p.nombre,'') || ' ' || COALESCE(p.apellido,'')) AS responsable
+               resp.id     AS id_responsable,
+               resp.nombre AS responsable,
+               resp.cargo  AS responsable_cargo
           FROM inventario i
           INNER JOIN categorias  c ON i.id_categoria = c.id
           INNER JOIN ubicaciones u ON i.id_ubicacion = u.id
           LEFT  JOIN departamentos d ON u.\"departamento _d\" = d.id
-          LEFT  JOIN empleados    e ON i.id_responsable = e.id
-          LEFT  JOIN personas     p ON e.id_persona = p.id
-    ";
+    " . self::LATERAL_RESPONSABLE;
 
     /**
      * Inventario ACTIVO: excluye los dados de baja (B-38).
@@ -289,8 +321,7 @@ class Inventario extends Model {
                    verificado_alcaldia=:verificado_alcaldia, fecha_verificacion=:fecha_verificacion,
                    origen=:origen, donante=:donante, costo_adquisicion=:costo_adquisicion,
                    fecha_adquisicion=:fecha_adquisicion, proveedor=:proveedor,
-                   tiene_garantia=:tiene_garantia, garantia_vence=:garantia_vence,
-                   id_responsable=:id_responsable";
+                   tiene_garantia=:tiene_garantia, garantia_vence=:garantia_vence";
 
         if ($this->id) {
             $previos = self::find($this->id);
@@ -303,13 +334,13 @@ class Inventario extends Model {
                  condicion, estatus, observaciones, codigo_bn, codigo_grupo, codigo_subgrupo,
                  codigo_seccion, nro_orden, verificado_alcaldia, fecha_verificacion,
                  origen, donante, costo_adquisicion, fecha_adquisicion, proveedor,
-                 tiene_garantia, garantia_vence, id_responsable, created_by)
+                 tiene_garantia, garantia_vence, created_by)
                 VALUES
                 (:id_categoria, :id_ubicacion, :nombre, :descripcion, :marca, :modelo, :serial,
                  :condicion, :estatus, :observaciones, :codigo_bn, :codigo_grupo, :codigo_subgrupo,
                  :codigo_seccion, :nro_orden, :verificado_alcaldia, :fecha_verificacion,
                  :origen, :donante, :costo_adquisicion, :fecha_adquisicion, :proveedor,
-                 :tiene_garantia, :garantia_vence, :id_responsable, :user_id)");
+                 :tiene_garantia, :garantia_vence, :user_id)");
         }
 
         $this->db->bind(':id_categoria',        $this->id_categoria);
@@ -336,7 +367,6 @@ class Inventario extends Model {
         $this->db->bind(':proveedor',           $this->proveedor);
         $this->db->bind(':tiene_garantia',      $this->tiene_garantia ? 't' : 'f');
         $this->db->bind(':garantia_vence',      $this->garantia_vence);
-        $this->db->bind(':id_responsable',      $this->id_responsable);
         $this->db->bind(':user_id',             $user_id);
 
         $result = $this->db->execute();

@@ -33,10 +33,17 @@ class ActividadInventario extends Model {
         self::MOV_BAJA,
     ];
 
-    /** Tipos que el usuario puede elegir al registrar (la baja tiene su propio flujo). */
+    /**
+     * Tipos que el usuario puede elegir al registrar.
+     * · La baja tiene su propio flujo.
+     * · MOV_RESPONSABLE quedó fuera desde la mig. 066 (B-68): el responsable
+     *   ya no se asigna, se DERIVA del departamento donde está el bien. Para
+     *   cambiarlo se traslada el bien o se cambia la jefatura del departamento.
+     *   Se conserva la constante para que los registros históricos sigan
+     *   mostrándose con su etiqueta.
+     */
     const TIPOS_MANUALES = [
         self::MOV_TRASLADO,
-        self::MOV_RESPONSABLE,
         self::MOV_SALIDA_MANT,
         self::MOV_RETORNO_MANT,
     ];
@@ -178,9 +185,9 @@ class ActividadInventario extends Model {
             throw new Exception('Este bien está dado de baja: ya no admite movimientos.');
         }
         // Sin código de la Alcaldía el bien aún no está formalmente inventariado.
-        if ($bien->estatus === Inventario::EST_SIN_CODIFICAR && $tipo !== self::MOV_RESPONSABLE) {
-            throw new Exception('El bien aún espera la codificación de la Alcaldía. '
-                . 'Solo puede asignársele un responsable hasta que tenga su N° de orden.');
+        if ($bien->estatus === Inventario::EST_SIN_CODIFICAR) {
+            throw new Exception('El bien aún espera la codificación de la Alcaldía: '
+                . 'no admite movimientos hasta que tenga su N° de orden.');
         }
 
         // B-32: la autorización de la Coordinadora de Bienes es obligatoria.
@@ -201,9 +208,6 @@ class ActividadInventario extends Model {
             if ($destino === $origen) {
                 throw new Exception('El bien ya se encuentra en esa ubicación.');
             }
-        }
-        if ($tipo === self::MOV_RESPONSABLE && !$resp) {
-            throw new Exception('Indica el empleado que queda como responsable del bien.');
         }
         if ($tipo === self::MOV_SALIDA_MANT && $bien->estatus === Inventario::EST_MANTENIMIENTO) {
             throw new Exception('El bien ya está en mantenimiento.');
@@ -247,15 +251,6 @@ class ActividadInventario extends Model {
                     $db->bind(':ubi', $destino);
                     $db->bind(':u',   $user_id);
                     $db->bind(':id',  $idBien);
-                    $db->execute();
-                    break;
-
-                case self::MOV_RESPONSABLE:
-                    $db->query("UPDATE inventario SET id_responsable=:r,
-                                    updated_at=CURRENT_TIMESTAMP, updated_by=:u WHERE id=:id");
-                    $db->bind(':r',  $resp);
-                    $db->bind(':u',  $user_id);
-                    $db->bind(':id', $idBien);
                     $db->execute();
                     break;
 

@@ -326,7 +326,7 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 | B-65 | ▲ | **Sede del aeropuerto** (B-24): sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como una ubicación independiente con su propio responsable? |
 | B-66 | ▲ | **Contradicción con la migración 044:** se implementaron Durable/Fungible y cantidad respondiendo a D-IN05. Ahora B-07/B-09 dicen que no se llevan consumibles y que el registro es individual. ¿Confirmamos que se eliminan? |
 | B-67 | ○ | B-42 quedó sin definir: mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
-| B-68 | ○ | ¿El responsable del bien se **deriva automáticamente** del director/coordinador del departamento, o se elige a mano? Cambia si hay que mantenerlo al cambiar el liderazgo. |
+| ~~B-68~~ | ✅ | ~~¿Responsable automático o manual?~~ **Respondida (2026-08-05): AUTOMÁTICO.** Se deduce del departamento donde está el bien (Director y, en su defecto, Coordinador); si entra alguien nuevo en ese cargo, pasa a ser responsable de todos los bienes de su departamento. Implementado en la mig. 066 — se eliminó `inventario.id_responsable` y se deriva en la consulta. |
 
 ### Formatos que faltan por pedir
 - [x] ~~Formato de inventario de la Alcaldía (B-02)~~ — **recibido**: Formulario BM-1, `docs/formatos/`
@@ -419,11 +419,11 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 | B-65 | ▲ | **Sede del aeropuerto.** Sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como ubicación independiente con su propio responsable? |
 | B-66 | ▲ | **Confirmar eliminación** de `tipo_bien` (Durable/Fungible) y `cantidad`. B-07 dice que no llevan consumibles y B-09 que el registro es individual, así que sobran. Hoy están sin uso pero siguen en la BD. |
 | B-67 | ○ | Mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
-| B-68 | ○ | ¿El responsable del bien se **deriva** del director/coordinador del departamento o se elige a mano? Cambia si hay que mantenerlo al rotar el liderazgo. |
+| ~~B-68~~ | ✅ | **Respondida:** automático, derivado del departamento (mig. 066). |
 | B-69 | ▲ | **Valores en "S/P".** El BM-1 trae *Valor unitario* y *Valor total* en `S/P` en todas las filas, pero B-17 dice que sí registran costo y factura. ¿Es solo control interno o la Alcaldía va a exigir el monto? |
 | B-70 | ▲ | ¿Cada cuánto devuelve la Alcaldía el BM-1 — con cada lote verificado, una vez al año, cuando se lo piden? |
 | B-71 | ▲ | ¿Existe el BM-1 en **digital** (Excel/Word)? Si la Alcaldía lo arma en computadora, la carga de códigos podría ser automática en vez de teclear bien por bien. |
-| B-72 | ○ | Los N° de orden de la muestra van del 025 al 171 con saltos. ¿Los huecos son bajas, o la Alcaldía numera de forma continua para toda la Alcaldía y no solo para IMATUR? |
+| ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Respondida (2026-08-05):** la numeración es un registro que lleva **la Alcaldía** con criterio propio, garantizando que no se repita en ningún bien. IMATUR la desconoce y solo la transcribe. Sin cambios de código: el sistema ya se limita a copiarla. |
 
 ### 12.4 Antes de usarlo en producción
 

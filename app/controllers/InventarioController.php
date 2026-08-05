@@ -173,7 +173,6 @@ class InventarioController extends Controller {
             'proveedor'         => trim($_POST['proveedor'] ?? '') ?: null,
             'tiene_garantia'    => $tieneGarantia,
             'garantia_vence'    => $garantiaVence ?: null,
-            'id_responsable'    => (int)($_POST['id_responsable'] ?? 0) ?: null,
         ];
 
         if (!empty($data['serial'])) {

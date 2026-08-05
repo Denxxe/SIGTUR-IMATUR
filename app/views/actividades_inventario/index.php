@@ -151,17 +151,7 @@ $enCurso     = $data['enCurso'] ?? [];
                                 <option value="<?php echo $u->id; ?>"><?php echo htmlspecialchars($u->nombre); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small style="color:var(--text-tertiary)">El origen se toma de donde está el bien ahora.</small></div></div>
-
-                    <!-- Asignación de responsable -->
-                    <div class="col-md-6" id="mov_wrap_resp" style="display:none;"><div class="sig-field">
-                        <label class="sig-field__label" for="mov_resp">Nuevo responsable <span class="req">*</span></label>
-                        <select name="id_empleado_responsable" id="mov_resp" class="sig-select js-search">
-                            <option value="">Seleccione...</option>
-                            <?php foreach ($data['empleados'] ?? [] as $e): ?>
-                                <option value="<?php echo $e->id; ?>"><?php echo htmlspecialchars(trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? ''))); ?></option>
-                            <?php endforeach; ?>
-                        </select></div></div>
+                        <small style="color:var(--text-tertiary)">El origen se toma de donde está el bien ahora. Al trasladarlo, el <strong>responsable cambia solo</strong> a la jefatura del departamento de destino.</small></div></div>
 
                     <!-- Salida a mantenimiento -->
                     <div class="col-12" id="mov_wrap_salida" style="display:none;">
@@ -221,7 +211,6 @@ $enCurso     = $data['enCurso'] ?? [];
 <script>
 var MOV = {
     traslado: <?php echo json_encode(ActividadInventario::MOV_TRASLADO); ?>,
-    resp:     <?php echo json_encode(ActividadInventario::MOV_RESPONSABLE); ?>,
     salida:   <?php echo json_encode(ActividadInventario::MOV_SALIDA_MANT); ?>,
     retorno:  <?php echo json_encode(ActividadInventario::MOV_RETORNO_MANT); ?>
 };
@@ -237,7 +226,6 @@ function movToggle() {
         });
     };
     mostrar('mov_wrap_destino', t === MOV.traslado, ['mov_destino']);
-    mostrar('mov_wrap_resp',    t === MOV.resp,     ['mov_resp']);
     mostrar('mov_wrap_salida',  t === MOV.salida,   []);
     mostrar('mov_wrap_retorno', t === MOV.retorno,  ['mov_resultado']);
 }
