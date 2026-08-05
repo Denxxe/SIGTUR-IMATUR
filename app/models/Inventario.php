@@ -74,14 +74,9 @@ class Inventario extends Model {
     const ORIGENES       = ['Compra', 'Donación'];
     const ORIGEN_DEFAULT = 'Compra';
 
-    /**
-     * Tipo de bien (mig. 044). Quedó sin uso: B-07 dice que no llevan
-     * consumibles y B-09 que el registro es individual. Se mantiene por
-     * compatibilidad hasta que el cliente confirme su eliminación (B-66).
-     */
-    const TIPOS_BIEN        = ['Durable', 'Fungible'];
-    const TIPO_BIEN_DEFAULT = 'Durable';
-    const TIPO_BIEN_BADGES  = ['Durable' => 'sig-badge--info', 'Fungible' => 'sig-badge--neutral'];
+    // `tipo_bien` (Durable/Fungible) y `cantidad` se ELIMINARON en la mig. 067
+    // (B-66): IMATUR no lleva consumibles y cada bien se registra
+    // individualmente aunque se compre en lote.
 
     private ?int $id;
     private ?int $id_categoria;
@@ -432,6 +427,47 @@ class Inventario extends Model {
         $out = array_fill_keys(self::ESTATUS, 0);
         foreach ($db->resultSet() as $r) $out[$r->estatus] = (int)$r->n;
         return $out;
+    }
+
+    /**
+     * Marca que la Alcaldía ya retiró físicamente un bien dado de baja (B-67).
+     * Mientras no ocurra, el bien aparece como "Dado de baja · Por retirar":
+     * ya salió del inventario activo (B-38) pero sigue ocupando espacio en
+     * IMATUR, y eso hay que poder verlo.
+     */
+    public static function marcarRetirado(int $id, ?string $fecha, $user_id = null): bool {
+        $bien = self::find($id);
+        if (!$bien) {
+            throw new Exception('El bien indicado no existe.');
+        }
+        if ($bien->estatus !== self::EST_BAJA) {
+            throw new Exception('Solo se puede marcar como retirado un bien que esté dado de baja.');
+        }
+        if (!empty($bien->retirado_alcaldia)) {
+            throw new Exception('Este bien ya figura como retirado por la Alcaldía.');
+        }
+        $db = new Database();
+        $db->query("UPDATE inventario
+                       SET retirado_alcaldia = TRUE, fecha_retiro = :f,
+                           updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':f',  $fecha ?: date('Y-m-d'));
+        $db->bind(':u',  $user_id);
+        $db->bind(':id', $id);
+        $ok = $db->execute();
+        self::auditStatic('inventario', 'UPDATE', $id, $bien,
+            ['retirado_alcaldia' => true, 'fecha_retiro' => $fecha], $user_id);
+        return $ok;
+    }
+
+    /** Bienes dados de baja que la Alcaldía todavía no ha venido a retirar (B-67). */
+    public static function porRetirar() {
+        $db = new Database();
+        $db->query(self::SELECT_BASE . "
+            WHERE i.is_active = TRUE AND i.estatus = :baja AND i.retirado_alcaldia = FALSE
+            ORDER BY i.updated_at DESC NULLS LAST, i.id DESC");
+        $db->bind(':baja', self::EST_BAJA);
+        return $db->resultSet();
     }
 
     public static function delete($id, $user_id = null) {

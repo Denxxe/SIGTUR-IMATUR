@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–066.
+-- Cubre: esquema base + TODAS las migraciones 001–067.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -14,12 +14,12 @@
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 55 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 56 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
 --       - roles (5) y permisos_rol  ....... RBAC dinámico
 --       - configuracion_sistema ........... datos del instituto, RIF,
 --                                           tolerancias, metas, nómina
---       - departamentos (23) .............. organigrama oficial IMATUR
+--       - departamentos (24) .............. organigrama + sede aeropuerto
 --       - cargos (5) ...................... niveles jerárquicos
 --       - horarios (5) .................... modalidades de jornada
 --       - feriados (12) ................... nacionales + Cumaná
@@ -1130,8 +1130,6 @@ CREATE TABLE public.inventario (
     created_by integer,
     updated_by integer,
     deleted_by integer,
-    tipo_bien character varying(20) DEFAULT 'Durable'::character varying NOT NULL,
-    cantidad integer DEFAULT 1 NOT NULL,
     estatus character varying(30) DEFAULT 'En espera de codificación'::character varying NOT NULL,
     codigo_grupo character varying(4),
     codigo_subgrupo character varying(4),
@@ -1148,11 +1146,11 @@ CREATE TABLE public.inventario (
     garantia_vence date,
     foto_url character varying(255),
     id_consolidado_bm1 integer,
-    CONSTRAINT inventario_cantidad_chk CHECK ((cantidad >= 1)),
+    retirado_alcaldia boolean DEFAULT false NOT NULL,
+    fecha_retiro date,
     CONSTRAINT inventario_condicion_check CHECK (((condicion IS NULL) OR ((condicion)::text = ANY ((ARRAY['Nuevo'::character varying, 'Bueno'::character varying, 'Regular'::character varying, 'Dañado'::character varying])::text[])))),
     CONSTRAINT inventario_estatus_check CHECK (((estatus)::text = ANY ((ARRAY['En espera de codificación'::character varying, 'Activo'::character varying, 'En mantenimiento'::character varying, 'Extraviado'::character varying, 'Robado'::character varying, 'Dado de baja'::character varying])::text[]))),
-    CONSTRAINT inventario_origen_check CHECK (((origen IS NULL) OR ((origen)::text = ANY ((ARRAY['Compra'::character varying, 'Donación'::character varying])::text[])))),
-    CONSTRAINT inventario_tipo_bien_chk CHECK (((tipo_bien)::text = ANY ((ARRAY['Durable'::character varying, 'Fungible'::character varying])::text[])))
+    CONSTRAINT inventario_origen_check CHECK (((origen IS NULL) OR ((origen)::text = ANY ((ARRAY['Compra'::character varying, 'Donación'::character varying])::text[]))))
 );
 
 
@@ -1175,6 +1173,13 @@ COMMENT ON COLUMN public.inventario.nro_orden IS 'N° de orden que asigna la Alc
 --
 
 COMMENT ON COLUMN public.inventario.id_consolidado_bm1 IS 'BM-1 en el que la Alcaldía asignó el código de este bien.';
+
+
+--
+-- Name: COLUMN inventario.retirado_alcaldia; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.inventario.retirado_alcaldia IS 'Solo aplica a bienes dados de baja: FALSE = sigue en IMATUR esperando que la Alcaldía lo retire ("Por retirar"); TRUE = ya se lo llevaron (B-67).';
 
 
 --
@@ -1356,6 +1361,51 @@ CREATE SEQUENCE public.inventario_documentos_id_seq
 --
 
 ALTER SEQUENCE public.inventario_documentos_id_seq OWNED BY public.inventario_documentos.id;
+
+
+--
+-- Name: inventario_dotacion; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.inventario_dotacion (
+    id integer NOT NULL,
+    id_categoria integer NOT NULL,
+    unidades_por_empleado numeric(6,2) DEFAULT 1 NOT NULL,
+    observaciones text,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone,
+    created_by integer,
+    updated_by integer,
+    CONSTRAINT inv_dotacion_unidades_check CHECK (((unidades_por_empleado > (0)::numeric) AND (unidades_por_empleado <= (99)::numeric)))
+);
+
+
+--
+-- Name: TABLE inventario_dotacion; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.inventario_dotacion IS 'B-63: cuántas unidades de cada categoría corresponden POR EMPLEADO. El reporte de suficiencia compara lo que hay en cada departamento contra lo que debería haber según su personal.';
+
+
+--
+-- Name: inventario_dotacion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.inventario_dotacion_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: inventario_dotacion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.inventario_dotacion_id_seq OWNED BY public.inventario_dotacion.id;
 
 
 --
@@ -2852,6 +2902,13 @@ ALTER TABLE ONLY public.inventario_documentos ALTER COLUMN id SET DEFAULT nextva
 
 
 --
+-- Name: inventario_dotacion id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_dotacion ALTER COLUMN id SET DEFAULT nextval('public.inventario_dotacion_id_seq'::regclass);
+
+
+--
 -- Name: inventario_mantenimiento_plan id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3140,6 +3197,7 @@ COPY public.departamentos (id, nombre, descripcion, is_active, created_at, updat
 26	Bienestar Social	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
 27	Nómina	\N	t	2026-06-05 03:44:31.144823	\N	\N	\N	\N	\N	5	Coordinación
 4	Departamento de informática	Departamento de Telecomunicaciones e Informática.	t	2026-04-17 15:11:35.123254	2026-06-05 04:14:16.072951	\N	\N	\N	\N	3	Unidad
+28	Oficina de Información Turística (Aeropuerto)	Sede del Aeropuerto de Cumaná. Atiende al turista a su llegada; sus bienes se controlan aparte de la sede principal (B-24/B-65).	t	2026-08-05 15:30:24.276213	\N	\N	\N	\N	\N	6	Oficina
 \.
 
 
@@ -3173,6 +3231,17 @@ COPY public.horarios (id, nombre, hora_entrada, hora_salida, dias_laborales, des
 4	OAC Matutino (7:00am–12:00pm)	07:00:00	12:00:00	L-V	Recepción / OAC, sub-grupo 1	t	2026-06-05 03:54:51.487854	\N	\N	\N	\N	\N
 5	Estándar	08:00:00	14:00:00	L-V	Horario general vigente	t	2026-06-05 03:54:51.487854	2026-06-21 16:57:53.74893	\N	\N	\N	\N
 6	Pasantes	10:30:00	12:00:00	L-V	.....	t	2026-07-09 14:23:24.556772	\N	\N	\N	\N	\N
+\.
+
+
+--
+-- Data for Name: inventario_dotacion; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.inventario_dotacion (id, id_categoria, unidades_por_empleado, observaciones, is_active, created_at, updated_at, created_by, updated_by) FROM stdin;
+1	4	0.50	Aproximadamente un punto telefónico por cada dos empleados	t	2026-08-05 15:30:24.276213	\N	\N	\N
+2	8	1.00	Un equipo por empleado	t	2026-08-05 15:30:24.276213	\N	\N	\N
+3	13	2.00	Al menos una silla y un puesto de trabajo por empleado	t	2026-08-05 15:30:24.276213	\N	\N	\N
 \.
 
 
@@ -3345,7 +3414,7 @@ COPY public.roles (id, nombre, descripcion, is_active, created_at, updated_at, d
 -- Name: actividad_inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 13, true);
+SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 16, true);
 
 
 --
@@ -3380,7 +3449,7 @@ SELECT pg_catalog.setval('public.asistencias_id_seq', 6, true);
 -- Name: audit_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.audit_logs_id_seq', 218, true);
+SELECT pg_catalog.setval('public.audit_logs_id_seq', 241, true);
 
 
 --
@@ -3443,7 +3512,7 @@ SELECT pg_catalog.setval('public.cursos_realizados_id_seq', 1, false);
 -- Name: departamentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.departamentos_id_seq', 27, true);
+SELECT pg_catalog.setval('public.departamentos_id_seq', 28, true);
 
 
 --
@@ -3471,7 +3540,7 @@ SELECT pg_catalog.setval('public.empleados_egresos_id_seq', 5, true);
 -- Name: empleados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.empleados_id_seq', 7, true);
+SELECT pg_catalog.setval('public.empleados_id_seq', 12, true);
 
 
 --
@@ -3513,49 +3582,56 @@ SELECT pg_catalog.setval('public.horarios_id_seq', 6, true);
 -- Name: inventario_consolidados_bm1_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_consolidados_bm1_id_seq', 2, true);
+SELECT pg_catalog.setval('public.inventario_consolidados_bm1_id_seq', 3, true);
 
 
 --
 -- Name: inventario_conteo_detalle_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_conteo_detalle_id_seq', 3, true);
+SELECT pg_catalog.setval('public.inventario_conteo_detalle_id_seq', 4, true);
 
 
 --
 -- Name: inventario_conteos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_conteos_id_seq', 3, true);
+SELECT pg_catalog.setval('public.inventario_conteos_id_seq', 4, true);
 
 
 --
 -- Name: inventario_documentos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_documentos_id_seq', 4, true);
+SELECT pg_catalog.setval('public.inventario_documentos_id_seq', 6, true);
+
+
+--
+-- Name: inventario_dotacion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.inventario_dotacion_id_seq', 3, true);
 
 
 --
 -- Name: inventario_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_id_seq', 12, true);
+SELECT pg_catalog.setval('public.inventario_id_seq', 17, true);
 
 
 --
 -- Name: inventario_mantenimiento_plan_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_mantenimiento_plan_id_seq', 3, true);
+SELECT pg_catalog.setval('public.inventario_mantenimiento_plan_id_seq', 4, true);
 
 
 --
 -- Name: inventario_mantenimientos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.inventario_mantenimientos_id_seq', 4, true);
+SELECT pg_catalog.setval('public.inventario_mantenimientos_id_seq', 5, true);
 
 
 --
@@ -3632,7 +3708,7 @@ SELECT pg_catalog.setval('public.permisos_rol_id_seq', 59, true);
 -- Name: personas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.personas_id_seq', 11, true);
+SELECT pg_catalog.setval('public.personas_id_seq', 16, true);
 
 
 --
@@ -3695,7 +3771,7 @@ SELECT pg_catalog.setval('public.ubicaciones_formacion_id_seq', 2, true);
 -- Name: ubicaciones_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.ubicaciones_id_seq', 17, true);
+SELECT pg_catalog.setval('public.ubicaciones_id_seq', 26, true);
 
 
 --
@@ -4020,6 +4096,14 @@ ALTER TABLE ONLY public.inventario_conteos
 
 ALTER TABLE ONLY public.inventario_documentos
     ADD CONSTRAINT inventario_documentos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: inventario_dotacion inventario_dotacion_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_dotacion
+    ADD CONSTRAINT inventario_dotacion_pkey PRIMARY KEY (id);
 
 
 --
@@ -4501,6 +4585,13 @@ CREATE INDEX idx_inventario_garantia ON public.inventario USING btree (garantia_
 
 
 --
+-- Name: idx_inventario_por_retirar; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_inventario_por_retirar ON public.inventario USING btree (retirado_alcaldia) WHERE (((estatus)::text = 'Dado de baja'::text) AND (retirado_alcaldia = false));
+
+
+--
 -- Name: idx_logs_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4687,6 +4778,13 @@ CREATE UNIQUE INDEX uq_inv_conteo_abierto ON public.inventario_conteos USING btr
 --
 
 CREATE UNIQUE INDEX uq_inv_conteo_bien ON public.inventario_conteo_detalle USING btree (id_conteo, id_inventario);
+
+
+--
+-- Name: uq_inv_dotacion_categoria; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_inv_dotacion_categoria ON public.inventario_dotacion USING btree (id_categoria) WHERE (is_active = true);
 
 
 --
@@ -5077,6 +5175,14 @@ ALTER TABLE ONLY public.inventario_documentos
 
 
 --
+-- Name: inventario_dotacion inventario_dotacion_id_categoria_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inventario_dotacion
+    ADD CONSTRAINT inventario_dotacion_id_categoria_fkey FOREIGN KEY (id_categoria) REFERENCES public.categorias(id) ON DELETE CASCADE;
+
+
+--
 -- Name: inventario_mantenimiento_plan inventario_mantenimiento_plan_id_inventario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5338,5 +5444,5 @@ ALTER TABLE ONLY public.visitas
 
 
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-066).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-067).
 --

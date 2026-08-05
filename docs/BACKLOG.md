@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **066** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **067** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -37,6 +37,20 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
 | ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
 | ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
+
+### 2026-08-05 — Bienes: 4 respuestas más del cliente implementadas (mig. 067)
+
+| # | Respuesta | Qué se hizo |
+|---|-----------|-------------|
+| ✅ B-66 | *"Sí, se elimina"* | **R-10 cerrado.** Fuera `inventario.tipo_bien` y `cantidad`, más las constantes del modelo y las consultas CMI-I01/I03 que las usaban. IMATUR no lleva consumibles y el registro es individual. |
+| ✅ B-67 | *"Con una etiqueta Por retirar"* | El bien dado de baja sale del inventario activo pero sigue físicamente en IMATUR hasta que la Alcaldía lo retire. Se distingue **"Dado de baja · Por retirar"** de **"· Retirado"**, con acción y fecha para confirmar el retiro. |
+| ✅ B-65 | *"Como otro departamento, con su propio coordinador"* | **Verificado primero, como se pidió:** la sede del aeropuerto **no existía en ningún lado** — ni en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH; el único rastro era `ubicaciones.sede`. Se creó como **Oficina bajo Presidencia**, igual que OAC y las demás oficinas de staff. Por la mig. 066, su coordinador es automáticamente el responsable de sus bienes. ⚠️ **Su ubicación jerárquica queda por confirmar**: el organigrama oficial no la contempla. |
+| ✅ B-63 | *"Por los números de empleados en los departamentos"* | Nueva tabla `inventario_dotacion` (unidades por empleado y categoría) y reporte **`/inventario/suficiencia`**: compara lo que hay en cada departamento contra lo que debería haber según su personal. Excluye el depósito (lo que está ahí no está en uso) y los bienes de baja/extraviados/robados. Sembradas 3 dotaciones de partida; las categorías que no se reparten por persona no se evalúan. |
+| ✅ B-69 / B-70 / B-72 | Costo = control interno · BM-1 = evento puntual · N° de orden = jurisdicción de la Alcaldía | **Sin cambios de código**: las tres confirman el diseño actual. |
+| ✅ Docs | **`REGLAS_NEGOCIO_Inventario.md` reescrito** | La versión de 2026-05-22 describía un CRUD y daba por vigentes `ruta_inventario`, `taller_inventario` y Durable/Fungible. Ahora documenta las 13 reglas reales (RN-IN01…RN-IN13) y **lo que el sistema no hace por decisión**. |
+| ✅ | **Verificado** | 22 pruebas nuevas sobre la BD (departamento del aeropuerto y su responsable derivado, ciclo Por retirar → Retirado con sus rechazos, análisis de suficiencia con déficit real y exclusión del depósito) + regresión completa: 16 + 26 + 9 pruebas de las fases anteriores, suite 18/18. |
+
+> **Queda 1 sola pregunta abierta del módulo: B-71** — ¿existe el BM-1 en digital? El cliente lo pedirá junto con los formatos pendientes.
 
 ### 2026-08-05 — Bienes: responsable automático (mig. 066) — responde B-68 y B-72
 

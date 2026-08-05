@@ -2438,9 +2438,11 @@ class ReportesController extends Controller {
 
             // INVENTARIO: Precisión del registro = bienes ya codificados por la Alcaldía
             // (mig. 062: el código llega con el BM-1; antes de eso el bien no tiene código).
+            // Desde la mig. 067 no hay `tipo_bien`: todo bien inventariado es
+            // durable y debe tener su código de la Alcaldía.
             $db->query("SELECT COUNT(*) AS total,
-                               COUNT(CASE WHEN (tipo_bien = 'Durable' AND codigo_bn IS NOT NULL AND TRIM(codigo_bn) <> '')
-                                            OR tipo_bien = 'Fungible' THEN 1 END) AS completos
+                               COUNT(CASE WHEN codigo_bn IS NOT NULL AND TRIM(codigo_bn) <> ''
+                                          THEN 1 END) AS completos
                         FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
             $precisionInv = $db->single();
 

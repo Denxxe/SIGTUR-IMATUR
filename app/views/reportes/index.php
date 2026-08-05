@@ -50,6 +50,7 @@ $secciones = [
             ['Conteos de Inventario', 'Verificación física por cambio de gestión, con acta imprimible.', 'inventario/conteos', 'bi-clipboard-check', '#7C3AED'],
             ['Mantenimiento Preventivo', 'Calendario de mantenimiento de equipos y avisos de vencimiento.', 'inventario/planMantenimiento', 'bi-tools', '#D97706'],
             ['Etiquetas de Bienes', 'Hoja imprimible con código y QR para pegar en cada bien.', 'inventario/etiquetas', 'bi-upc-scan', '#0891B2'],
+            ['Suficiencia de Bienes', 'Si alcanzan los bienes según el personal de cada departamento.', 'inventario/suficiencia', 'bi-clipboard-data', '#DB2777'],
         ],
     ],
     [

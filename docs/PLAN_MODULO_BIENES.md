@@ -2,8 +2,9 @@
 
 **Fecha:** 2026-08-04 · **Base:** respuestas del cliente en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` (Parte 1, B-01…B-59) + **Formulario BM-1 real** entregado el mismo día (§2-bis) · **Estado BD hoy:** migraciones hasta 061
 
-> **Estado: ✅ Fases 1, 2 y 4 completas · Fase 3 parcial** (migraciones 062-065, 2026-08-04).
-> **Lo único pendiente son 3 documentos bloqueados por los formatos del cliente — §12.**
+> **Estado: ✅ Fases 1, 2, 4 y 5 completas · Fase 3 parcial** (migraciones 062-067, 2026-08-05).
+> **8 de las 9 preguntas abiertas quedaron respondidas e implementadas.** Pendiente: 3 documentos
+> bloqueados por los formatos del cliente y la pregunta B-71 — §12.
 
 ---
 
@@ -317,15 +318,15 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 | ~~B-60~~ | ✅ | ~~Catálogo oficial de grupos/subgrupos/secciones.~~ **Ya no bloquea.** Conocemos la estructura y que los valores los asigna la Alcaldía; IMATUR solo los transcribe. Seguiría siendo útil para un desplegable, pero no es requisito. |
 | ~~B-61~~ | ✅ | ~~Ejemplos reales de código.~~ **Resuelta con el BM-1:** `2-01-108`, N° de orden de 3 dígitos con ceros a la izquierda (`084`, `131`, `171`…). |
 | ~~B-62~~ | ✅ | ~~Qué significa "cantidad" en el código.~~ **Resuelta:** es la cantidad de la fila y siempre vale 1; no forma parte del identificador. |
-| B-69 | ▲ | **Valores en S/P.** En el BM-1 las columnas *Valor unitario* y *Valor total* aparecen en `S/P` en todas las filas, pero B-17 dice que sí registran costo y factura. ¿El costo es solo control interno, o la Alcaldía va a empezar a exigir el monto declarado? |
-| B-70 | ▲ | **Recepción del BM-1.** ¿Cada cuánto lo devuelve la Alcaldía — con cada lote verificado, una vez al año, cuando se lo piden? Define si la conciliación es un evento puntual o una rutina. |
-| B-71 | ▲ | **El BM-1 llega en papel.** ¿Existe la versión digital (Excel/Word) del archivo que arma la Alcaldía? Si la hay, la carga de códigos podría ser automática en vez de teclear bien por bien. |
-| B-72 | ○ | **Numeración del N° de orden.** Los números de la muestra van del 025 al 171 con saltos. ¿Los huecos son bienes ya dados de baja, o la Alcaldía numera de forma continua para toda la Alcaldía y no solo para IMATUR? |
-| B-63 | ▲ | **El "umbral" de B-45/B-47.** No es stock de consumibles, sino saber si *alcanzan* los bienes (sillas por empleado, mesas por departamento). ¿Cómo lo definirían: una cantidad esperada por departamento, o una relación contra el número de empleados? |
+| ~~B-69~~ | ✅ | ~~¿El costo es control interno o la Alcaldía lo exigirá?~~ **Respondida (2026-08-05): es control INTERNO.** Para la Alcaldía es irrelevante, por eso su registro lleva `S/P` aunque IMATUR tenga el informe y la factura. Sin cambios: el sistema ya registra el costo internamente y no lo declara. |
+| ~~B-70~~ | ✅ | ~~¿Cada cuánto llega el BM-1?~~ **Respondida (2026-08-05): es un evento puntual**, sin periodicidad conocida. Sin cambios: el sistema registra cada recepción cuando ocurre, no asume calendario. |
+| B-71 | ▲ | **¿Existe el BM-1 en digital (Excel/Word)?** ⏳ El cliente lo pedirá junto con los demás formatos pendientes; si no existe, se seguirá entregando en físico. **Única pregunta abierta del módulo.** Si aparece, la carga de códigos podría ser automática en vez de teclear bien por bien. |
+| ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Respondida:** es un control de la Alcaldía; no es jurisdicción del sistema seguir la sucesión, solo transcribir lo que asignan y verificar que no se repita en otro bien de IMATUR. Ya implementado así. |
+| ~~B-63~~ | ✅ | ~~¿Cómo se define el umbral de mobiliario?~~ **Respondida (2026-08-05): por el número de empleados del departamento.** Implementado en la mig. 067: `inventario_dotacion` define unidades por empleado y por categoría, y el reporte de **Suficiencia** compara lo que hay contra lo que debería haber. |
 | ~~B-64~~ | ✅ | ~~¿Cómo identifica el sistema a la Coordinadora de Bienes?~~ **Respondida (2026-08-04): por CARGO + DEPARTAMENTO.** Implementado en la mig. 063 con las claves de configuración `bienes_cargo_autoriza` y `bienes_depto_autoriza`. |
-| B-65 | ▲ | **Sede del aeropuerto** (B-24): sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como una ubicación independiente con su propio responsable? |
-| B-66 | ▲ | **Contradicción con la migración 044:** se implementaron Durable/Fungible y cantidad respondiendo a D-IN05. Ahora B-07/B-09 dicen que no se llevan consumibles y que el registro es individual. ¿Confirmamos que se eliminan? |
-| B-67 | ○ | B-42 quedó sin definir: mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
+| ~~B-65~~ | ✅ | ~~¿La sede del aeropuerto es un departamento o una ubicación aparte?~~ **Respondida (2026-08-05): es un DEPARTAMENTO más, con su propio coordinador y por tanto su propio responsable.** Verificado antes de crearla: no existía en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH — el único rastro era `ubicaciones.sede`. Creada en la mig. 067 como Oficina bajo Presidencia. ⚠️ **Su ubicación jerárquica queda por confirmar**: el organigrama oficial no la contempla. |
+| ~~B-66~~ | ✅ | ~~¿Se eliminan `tipo_bien` y `cantidad`?~~ **Respondida (2026-08-05): SÍ.** Eliminadas en la mig. 067 junto con sus constantes y las consultas que las usaban (CMI-I01/I03). |
+| ~~B-67~~ | ✅ | ~~¿Cómo se refleja el bien dado de baja que espera retiro?~~ **Respondida (2026-08-05): con una etiqueta "Por retirar".** Implementado en la mig. 067 (`retirado_alcaldia` + `fecha_retiro`): el bien sale del inventario activo pero se distingue entre *Por retirar* y *Retirado*, con acción para confirmar cuándo la Alcaldía se lo llevó. |
 | ~~B-68~~ | ✅ | ~~¿Responsable automático o manual?~~ **Respondida (2026-08-05): AUTOMÁTICO.** Se deduce del departamento donde está el bien (Director y, en su defecto, Coordinador); si entra alguien nuevo en ese cargo, pasa a ser responsable de todos los bienes de su departamento. Implementado en la mig. 066 — se eliminó `inventario.id_responsable` y se deriva en la consulta. |
 
 ### Formatos que faltan por pedir
@@ -354,7 +355,7 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 
 ## 11. Nota sobre la documentación existente
 
-`docs/REGLAS_NEGOCIO_Inventario.md` quedó **obsoleto** (2026-05-22): describe `ruta_inventario` y `taller_inventario` (eliminadas en la mig. 050), y da por resueltas D-IN01/D-IN05 con criterios que estas respuestas contradicen. Debe reescribirse al cerrar la Fase 1, no antes.
+✅ **`docs/REGLAS_NEGOCIO_Inventario.md` reescrito por completo (2026-08-05).** La versión anterior (2026-05-22) describía el módulo como un CRUD y daba por vigentes estructuras ya eliminadas (`ruta_inventario`, `taller_inventario`, Durable/Fungible). Ahora documenta las 13 reglas reales (RN-IN01…RN-IN13) derivadas del levantamiento y del BM-1, más lo que el sistema **no** hace por decisión.
 
 ---
 
@@ -389,7 +390,7 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 > Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible.
 
-**Implementables ya** — ✅ **TODOS HECHOS** (mig. 065), salvo R-10
+**Implementables ya** — ✅ **TODOS HECHOS** (mig. 065 y 067)
 
 | # | Qué | Origen |
 |---|---|---|
@@ -399,7 +400,7 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 | ✅ R-7 | ~~Mantenimiento preventivo programado~~ **hecho** | B-56. Requiere la tabla `inventario_mantenimiento_plan`. |
 | ✅ R-8 | ~~Conteo por cambio de gestión~~ **hecho**, con acta imprimible | B-05, B-48, B-50. Es el **dolor #2**. |
 | ✅ R-9 | ~~RBAC del módulo~~ **hecho** (`InventarioController::puedeEscribir()`) | B-58. Hoy sigue el rol 4 genérico. |
-| ⏸ R-10 | Eliminar `tipo_bien` y `cantidad` de la BD — **lo único pendiente aquí** | Depende solo de confirmar **B-66**. |
+| ✅ R-10 | ~~Eliminar `tipo_bien` y `cantidad`~~ **hecho** (mig. 067) | B-66 confirmada por el cliente. | 
 
 ### 12.3 Preguntas salientes al cliente
 
@@ -415,13 +416,13 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 | # | | Pregunta |
 |---|---|---|
-| B-63 | ▲ | **Umbral de mobiliario.** No es stock de consumibles: es saber si *alcanzan* los bienes (sillas por empleado, mesas por departamento). ¿Cómo se define — cantidad esperada por departamento, o relación contra el número de empleados? |
-| B-65 | ▲ | **Sede del aeropuerto.** Sus bienes, ¿se asignan a algún departamento de IMATUR o la sede funciona como ubicación independiente con su propio responsable? |
-| B-66 | ▲ | **Confirmar eliminación** de `tipo_bien` (Durable/Fungible) y `cantidad`. B-07 dice que no llevan consumibles y B-09 que el registro es individual, así que sobran. Hoy están sin uso pero siguen en la BD. |
-| B-67 | ○ | Mientras el bien dado de baja espera que la Alcaldía lo retire, ¿debe reflejarse en algún lado (una ubicación "por retirar")? |
+| ~~B-63~~ | ✅ | **Respondida:** por número de empleados. Implementado (mig. 067). |
+| ~~B-65~~ | ✅ | **Respondida:** es un departamento propio con su coordinador. Creado (mig. 067). |
+| ~~B-66~~ | ✅ | **Respondida:** sí se eliminan. Hecho (mig. 067). |
+| ~~B-67~~ | ✅ | **Respondida:** etiqueta "Por retirar". Hecho (mig. 067). |
 | ~~B-68~~ | ✅ | **Respondida:** automático, derivado del departamento (mig. 066). |
-| B-69 | ▲ | **Valores en "S/P".** El BM-1 trae *Valor unitario* y *Valor total* en `S/P` en todas las filas, pero B-17 dice que sí registran costo y factura. ¿Es solo control interno o la Alcaldía va a exigir el monto? |
-| B-70 | ▲ | ¿Cada cuánto devuelve la Alcaldía el BM-1 — con cada lote verificado, una vez al año, cuando se lo piden? |
+| ~~B-69~~ | ✅ | **Respondida:** control interno; para la Alcaldía es irrelevante. |
+| ~~B-70~~ | ✅ | **Respondida:** evento puntual, sin periodicidad. |
 | B-71 | ▲ | ¿Existe el BM-1 en **digital** (Excel/Word)? Si la Alcaldía lo arma en computadora, la carga de códigos podría ser automática en vez de teclear bien por bien. |
 | ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Respondida (2026-08-05):** la numeración es un registro que lleva **la Alcaldía** con criterio propio, garantizando que no se repita en ningún bien. IMATUR la desconoce y solo la transcribe. Sin cambios de código: el sistema ya se limita a copiarla. |
 

@@ -409,6 +409,73 @@ class InventarioController extends Controller {
     }
 
     // =====================================================================
+    //  Retiro por la Alcaldía de un bien dado de baja (B-67)
+    // =====================================================================
+
+    /**
+     * Marca que la Alcaldía ya vino a llevarse el bien. Hasta entonces
+     * figura como "Dado de baja · Por retirar": fuera del inventario
+     * activo, pero todavía ocupando espacio en IMATUR.
+     */
+    public function marcarRetirado() {
+        if (!$this->requireEscritura('/inventario/index?ver=baja')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            $fecha = trim($_POST['fecha_retiro'] ?? '') ?: date('Y-m-d');
+            if ($fecha > date('Y-m-d')) throw new Exception('La fecha de retiro no puede ser futura.');
+            Inventario::marcarRetirado((int)($_POST['id'] ?? 0), $fecha, $this->getUserId());
+            flash('global_msg', 'Registrado: la Alcaldía retiró el bien.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/index?ver=baja');
+    }
+
+    // =====================================================================
+    //  Suficiencia de bienes por departamento (R-5b · B-63)
+    // =====================================================================
+
+    /** Compara los bienes de cada departamento contra su número de empleados. */
+    public function suficiencia() {
+        $this->view('inventario/suficiencia', [
+            'titulo'      => 'Suficiencia de bienes por departamento',
+            'analisis'    => DotacionInventario::analisis(),
+            'dotaciones'  => DotacionInventario::all(),
+            'sinDotacion' => DotacionInventario::categoriasSinDotacion(),
+        ]);
+    }
+
+    public function guardarDotacion() {
+        if (!$this->requireEscritura('/inventario/suficiencia')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            DotacionInventario::guardar(
+                (int)($_POST['id_categoria'] ?? 0),
+                $_POST['unidades_por_empleado'] ?? 0,
+                trim($_POST['observaciones'] ?? ''),
+                $this->getUserId()
+            );
+            flash('global_msg', 'Dotación por empleado actualizada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/suficiencia');
+    }
+
+    public function eliminarDotacion($id = 0) {
+        if (!$this->requireEscritura('/inventario/suficiencia')) return;
+        try {
+            DotacionInventario::eliminar((int)$id, $this->getUserId());
+            flash('global_msg', 'Dotación eliminada. Esa categoría deja de evaluarse.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/suficiencia');
+    }
+
+    // =====================================================================
     //  Etiquetas con QR (R-4 · B-14/B-15)
     // =====================================================================
 

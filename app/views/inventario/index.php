@@ -33,6 +33,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <a href="<?php echo URL_ROOT; ?>/inventario/planMantenimiento" class="btn-sig btn-sig--ghost">
             <i class="bi bi-tools"></i> Preventivo
         </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/suficiencia" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-clipboard-data"></i> Suficiencia
+        </a>
         <a href="<?php echo URL_ROOT; ?>/inventario/etiquetas" target="_blank" class="btn-sig btn-sig--ghost">
             <i class="bi bi-upc-scan"></i> Etiquetas
         </a>
@@ -178,7 +181,16 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php if (!empty($item->sede)): ?><br><small style="color:var(--text-tertiary)"><?php echo htmlspecialchars($item->sede); ?></small><?php endif; ?>
                         </td>
                         <td><?php echo !empty($item->responsable) ? htmlspecialchars($item->responsable) : '<span style="color:var(--text-tertiary)">Sin asignar</span>'; ?></td>
-                        <td><span class="sig-badge <?php echo $ecls; ?>"><?php echo htmlspecialchars($est); ?></span></td>
+                        <td>
+                            <span class="sig-badge <?php echo $ecls; ?>"><?php echo htmlspecialchars($est); ?></span>
+                            <?php if ($est === Inventario::EST_BAJA): ?>
+                                <?php if (empty($item->retirado_alcaldia)): ?>
+                                    <br><span class="sig-badge sig-badge--warning" title="Dado de baja, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
+                                <?php else: ?>
+                                    <br><small style="color:var(--text-tertiary)">Retirado <?php echo htmlspecialchars($item->fecha_retiro ?: ''); ?></small>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </td>
                         <td><span class="sig-badge <?php echo $ccls; ?>"><?php echo htmlspecialchars($item->condicion ?? '—'); ?></span></td>
                         <td class="col-actions">
                             <?php if ($sinCodigo): ?>
@@ -186,6 +198,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php endif; ?>
                             <a href="<?php echo URL_ROOT; ?>/inventario/detalle/<?php echo (int)$item->id; ?>" class="row-action row-action--view"><i class="bi bi-journal-text"></i> Hoja de vida</a>
                             <button class="row-action row-action--edit" onclick='editarInv(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
+                            <?php if ($est === Inventario::EST_BAJA && empty($item->retirado_alcaldia)): ?>
+                                <button class="row-action" onclick='marcarRetirado(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-truck"></i> Retirado por la Alcaldía</button>
+                            <?php endif; ?>
                             <a href="<?php echo URL_ROOT; ?>/inventario/delete/<?php echo $item->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                         </td>
                     </tr>
@@ -415,6 +430,42 @@ function codPreview() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', codPreview);
 });
+</script>
+
+
+<!-- ══════════ Modal: retiro por la Alcaldía (B-67) ══════════ -->
+<div class="modal fade" id="modalRet" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/inventario/marcarRetirado" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Retiro por la Alcaldía</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="ret_id">
+                <p style="margin-bottom:var(--sp-3);">
+                    Confirma que la Alcaldía ya se llevó <strong id="ret_nombre"></strong>.
+                    Hasta ahora figuraba como <em>Por retirar</em>: dado de baja pero todavía en las instalaciones.
+                </p>
+                <div class="sig-field">
+                    <label class="sig-field__label" for="ret_fecha">Fecha de retiro <span class="req">*</span></label>
+                    <input type="date" name="fecha_retiro" id="ret_fecha" class="sig-input" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo date('Y-m-d'); ?>">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Confirmar retiro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function marcarRetirado(item) {
+    document.getElementById('ret_id').value = item.id;
+    document.getElementById('ret_nombre').innerText = item.nombre || '';
+    new bootstrap.Modal(document.getElementById('modalRet')).show();
+}
 </script>
 
 <?php require_once '../app/views/inc/footer.php'; ?>
