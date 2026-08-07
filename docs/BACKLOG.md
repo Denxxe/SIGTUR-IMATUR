@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-04 · **Migraciones aplicadas:** hasta **068** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-07 · **Migraciones aplicadas:** hasta **068** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -17,7 +17,8 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ## 1. ESTADO GLOBAL
 
-- **RRHH:** completo salvo **Liquidación de Prestaciones Sociales** (2da entrega). **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
+- **RRHH:** completo salvo **Nómina**. **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
+- **Nómina:** 🔄 **replanteamiento con base sólida (2026-08-07).** Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
 - **Inventario (Bienes):** 🔄 **En replanteamiento.** El levantamiento del 2026-08-04 (59 preguntas respondidas) reveló que lo construido es un CRUD genérico, mientras que el instituto necesita un **expediente administrativo por bien** con ciclo de vida gobernado por la Alcaldía (codificación, actas, oficios). Plan por fases en `docs/PLAN_MODULO_BIENES.md`.
 - **Turismo (Rutas):** cuestionario de descubrimiento **pendiente de responder** (Parte 2 de `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`). Prioridad: R-07/R-08 (catálogo vs ejecución) — de esa respuesta depende si hay rediseño.
@@ -319,38 +320,50 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Preguntar:** ¿usan Gmail/Google Workspace (contraseña de aplicación), un correo institucional propio (gobernación/alcaldía), u otro proveedor?
 - **Al desbloquear:** completar `SMTP_HOST/PORT/USER/PASS/ENCRYPTION` en `config/config.php` (no requiere tocar código ni migraciones).
 
-### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — Bono Vacacional ✅ (v1), resto pendiente
-- **Hecho (2026-07-16, mig.059):** el cliente envió el formato oficial de **Bono Vacacional** (4 hojas por tipo de personal + resumen) que la Alcaldía exige. Se implementó v1 = **"registro + reporte"** (decisión del cliente): Talento Humano captura/verifica sueldo, primas y el total final (igual que hoy en Excel); el sistema organiza esos datos y exporta el `.xlsx` multi-hoja en el formato exacto. Nuevo: historial salarial por empleado (`empleado_salarios`, sección "Datos salariales" en el expediente), módulo `/nomina` (generar período, capturar/editar celdas, cerrar período, exportar), pantalla `/config` con los parámetros editables, y `XlsxMultiSheet` (escritor OOXML multi-hoja reusable, ver `CLAUDE.md`).
+### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — **avance grande el 2026-08-07**
 
-- **Estado de los 3 documentos de "nómina":**
+> **Análisis completo y modelo de cálculo extraído: `docs/PLAN_MODULO_NOMINA.md`. Leerlo antes de tocar el módulo.**
+
+- **Hecho (2026-07-16, mig.059):** Bono Vacacional v1 = **"registro + reporte"**: Talento Humano captura/verifica sueldo, primas y el total final; el sistema organiza y exporta el `.xlsx` multi-hoja en el formato exacto. Incluye `empleado_salarios`, módulo `/nomina`, parámetros en `/config` y `XlsxMultiSheet`.
+
+- **Nuevo (2026-08-07):** el cliente entregó **la plantilla real de nómina quincenal** (`INSTITUTO IMATUR JULIO 2026.xlsx`, con datos de prueba pero **fórmulas reales**) y 4 audios de Talento Humano (transcritos en `docs/formatos/transcripcion_audios_rrhh_2026-07-23.md`). De ahí se extrajo **el cálculo completo**: porcentajes de prima de profesionalización por grado, escala de antigüedad por años (con tope 30 %), transporte, hijos, deducciones, aportes patronales y alícuotas. **Ya no hay que adivinar la fórmula.**
+
+- **Tres cambios de fondo respecto de lo que creíamos** (detalle en el plan §1):
+  1. Los documentos de nómina son **3, no 2**: se suma la **nómina quincenal regular** — esto **responde la antigua pregunta 4**.
+  2. Los tipos de personal son **5, no 4**: falta **Comisión de Servicio**, con hoja y cálculo propios.
+  3. Las primas **no se capturan, se derivan**. `empleado_salarios` guarda los resultados cuando debería guardar las entradas (ver plan §4).
+
+- **Estado de los 3 documentos:**
 
   | Documento | Estado |
   |---|---|
-  | **Bono Vacacional** (formato con 4 hojas por tipo de personal) | ✅ Recibido y ya montado en el sistema |
-  | **Liquidación de Prestaciones Sociales** (`LIQUIDACION MES JULIO 2026.xls`) | ✅ Recibido, ⏳ pendiente de construir en el sistema (2ª entrega) |
-  | **Nómina mensual regular** (el pago normal de sueldo que se le manda cada mes a la Alcaldía) | ❌ **No confirmado** — el cliente no estaba seguro de si lo envió. El archivo de Liquidación es para **egresos/prestaciones**, no es la planilla de pago mensual corriente. Hay que pedirlo aparte si existe. |
+  | **Bono Vacacional** | ✅ Recibido y montado (v1, captura manual del total) |
+  | **Nómina quincenal regular** | ✅ **Recibida 2026-08-07** y descifrada. ⏳ Pendiente de construir |
+  | **Liquidación de Prestaciones Sociales** | ✅ Recibida. ⏳ Bloqueada por **1 sola pregunta** (N-3) |
 
-- **Lista de lo que necesitamos de RRHH (para dejar el módulo completo):**
-  1. **Datos reales (no formato, sino los números):** sueldo básico y primas (profesional, responsabilidad, antigüedad, por hijo, transporte, FOND, discapacidad, caja de ahorro) de **cada empleado activo** — hoy la pantalla de captura existe pero está vacía. Número de cuenta bancaria de nómina de cada empleado.
-  2. **Un ejemplo YA CALCULADO:** un mes de Bono Vacacional con montos reales de 2-3 empleados de distinto tipo (Alto Nivel, Empleado, Obrero, Contratado) — la plantilla enviada venía vacía, no se pudo verificar la fórmula del total.
-  3. **Parámetros/reglas a confirmar:** ¿los días 75/75/85/45 son correctos y con tope máximo al sumar años? Monto vigente de Cesta Ticket (¿cambia mensual o por Unidad Tributaria?). Tasa BCV y "días adicionales" para los intereses de prestaciones — ¿de dónde los sacan hoy?
-  4. **Formato faltante:** confirmar si existe un formato de **nómina mensual regular** distinto al de Liquidación y, si sí, pedirlo (igual que se hizo con Bono Vacacional).
+- **Preguntas abiertas — quedan 3** (antes eran 5):
 
-- **Preguntar al cliente (bloquea automatizar el cálculo, hoy es todo captura manual):**
-  1. ¿Nos pueden enviar un **mes de Bono Vacacional YA CALCULADO** (con montos reales de al menos 2-3 empleados de distinto tipo) para calibrar la fórmula exacta de la columna "FÓRMULA NUEVA DE BONO VACACIONAL + ALÍCUOTA"? La plantilla que enviaron estaba vacía — sin esto no se debe automatizar esa columna.
-  2. Los días base 75 (Alto Nivel/Empleados Fijos) / 85 (Obreros Fijos) / 45 (Contratados) — ¿son correctos? ¿Hay un **tope máximo** al sumar años de servicio (como el tope 30 de la LOTTT), o crecen sin límite?
-  3. ¿Cuál es el **monto actual de cesta ticket** y cada cuánto cambia (¿mensual, según Unidad Tributaria, otro)? Hoy quedó en 0 por defecto en Configuración.
-  4. ¿Nos pueden confirmar si el `LIQUIDACION MES JULIO 2026.xls` que enviaron es también el formato de la **nómina mensual normal** que se le envía a la Alcaldía, o falta ese formato aparte? (No estaban seguros al enviarlo.)
-  5. Para Liquidación: la tasa BCV mensual y los "días adicionales" (79→82/120→150 sobre 360) de la hoja `INTERESES` se ven tecleados a mano cada mes — ¿de dónde los saca hoy Talento Humano (tabla oficial, boletín BCV, otro)? Se necesita saber si hay una fuente publicada consultable o si siempre es carga manual.
+  | # | Pregunta | Bloquea |
+  |---|---|---|
+  | **N-1** | **Días base del bono vacacional: ¿75 para todos o 75/75/85/45 por tipo?** La plantilla de nómina usa **75 en todas las hojas**, incluidas obreros y contratados; nuestra config tiene 85 y 45. Se contradicen | `bono_vac_dias_*` y la alícuota |
+  | **N-2** | **Criterio de las semanas (×4 / ×5)** en SSO/LRPPF/aportes: ¿depende del mes, del tipo de personal, o es un error de la plantilla? | Toda la línea de deducciones |
+  | **N-3** | **"Días adicionales"** de la hoja `INTERESES` (79→82 / 120→150 sobre 360). En el audio **no entendió la pregunta** → reformular **con recorte de pantalla** | **Único insumo que falta para la Liquidación** |
 
-- **Para tener el módulo COMPLETAMENTE funcional falta:**
-  - [ ] Respuestas del cliente a las 5 preguntas de arriba.
-  - [ ] Cargar el **sueldo/primas real** de cada empleado activo en "Datos salariales" (hoy solo tiene datos de prueba ya eliminados) — sin esto `/nomina` genera períodos con montos en 0.
-  - [ ] Definir el **monto de cesta ticket** vigente en Configuración → Nómina.
-  - [ ] Con el ejemplo real calibrado, automatizar el cálculo de "TOTAL BONO VACACIONAL" (hoy es captura manual por fila).
-  - [ ] **Liquidación de Prestaciones Sociales** (2da entrega): tablas `liquidaciones` (snapshot al egreso, correlativo vía `ConfigSistema::generarNumeroOficio`) + `liquidacion_intereses_mensuales` (digitaliza la hoja `INTERESES` fila por fila, reusa `empleado_salarios` + `XlsxMultiSheet`); controlador/vistas; exportación de las 3 hojas (`FORMATO`/`INTERESES`/`INTERES DE MORA`).
-  - [ ] Confirmar si falta un formato de **nómina mensual normal** (pregunta 4) y, si sí, pedirlo y construir un 3er sub-módulo.
-  - [ ] Probar el flujo completo con datos reales de un mes cerrado y comparar el `.xlsx` exportado contra lo que el cliente realmente envía hoy a la Alcaldía, antes de usarlo en producción.
+  Menores: de dónde sale la **cantidad de divisas** de cada trabajador y si el bono de responsabilidad aplica solo a Alto Nivel y Comisión.
+
+- **Ya resueltas** (no volver a preguntar): ✅ existe formato de nómina regular aparte (era la pregunta 4) · ✅ cesta ticket cambia **mensualmente**, lo publica la **UNAPRE** · ✅ la **"tasa BCV" es el tipo de cambio del dólar** — el bono de responsabilidad se pacta en divisas y se paga al cambio · ✅ la **caja de ahorro no la paga la gobernación** (queda en 0 por regla) · ✅ los % de prima profesional por grado académico.
+
+- **⚠️ 7 defectos detectados en la plantilla del cliente** (plan §5), verificados contra los valores calculados: el tramo ≥23 años paga **el doble** la prima de antigüedad, el FAOV patronal de la hoja de Comisión está al **20 % en vez de 2 %**, la fórmula de antigüedad de esa hoja está **corrupta** (`C621`, `ij6f`), y la fila de Obreros del RESUMEN está **desplazada una columna**. Están en las fórmulas, así que sobreviven a cualquier mes real. **Avisárselo al cliente** — es la mejor justificación del módulo.
+
+- **Insumos operativos que siguen faltando:**
+  - [ ] Sueldo base, grado de instrucción, años en la administración pública, nº de hijos y **cuenta bancaria** de cada empleado activo (hoy `empleado_salarios` tiene 1 fila de prueba).
+  - [ ] Cesta ticket vigente **con su mes** (julio: 22.907; al 23/07 el cliente dijo 28.388 — cambia mensual).
+  - [ ] Tasa del dólar del período.
+  - [ ] La **tabla de escala salarial por grado** que Talento Humano ofreció en el último audio (tramo confuso, confirmar).
+
+- **Construcción pendiente** (fases N-A…N-E en el plan §6.3): motor de cálculo → entradas que faltan → nómina quincenal con export de 6 hojas → migrar Bono Vacacional a cálculo → Liquidación.
+
+> **Regla:** ningún número entra al código desde un audio. De 7 afirmaciones numéricas de las notas de voz, **3 resultaron equivocadas** al contrastarlas con la plantilla.
 
 ### 3.2 ✅ B13 — Mínimo de antigüedad para constancia — **DECIDIDO (2026-06-25): SIN mínimo**
 - **Decisión del cliente:** **no** se exige antigüedad mínima para emitir constancias (se descarta el "mínimo 6 meses"). El mínimo de contrato ya se aclaró en otra sesión.
@@ -418,13 +431,19 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 
 | # | Hallazgo | Estado | Cierra con |
 |---|----------|--------|-----------|
-| H-04 | Baja de bien no actualiza `condicion` | ⚠️ **Abierto** | D-IN10 (3.4) |
+| H-04 | Baja de bien no actualiza `condicion` | ✅ **Cerrado** (mig. 062): `estatus` (administrativo) quedó separado de `condicion` (físico); un bien dado de baja **sale** del inventario activo y ya no contamina KPIs ni CMI-I01/I03 | — |
 | H-09 | Columnas inertes | ✅ **Cerrado casi por completo** (mig. 060): eliminadas `participantes_ruta.id_institucion`, `rutas.nombre_facilitador_externo`, `talleres.id_oficio`. **Queda solo** `rutas.tiene_tarifa`/`tarifa_monto` | D-RT02 — usar o quitar del reporte |
 | H-10 | Tablas sin UI | ✅ **Cerrado** (mig. 060): `oficios` e `instituciones_externas` eliminadas (vacaciones ✅, `taller_inventario` ya lo estaba) | — |
 
 > Resueltos previamente: H-01, H-02, H-03 (visitas inmutables), H-05 (validaciones servidor), H-06 (correlativo atómico), H-07 (enums centralizados), H-08 (FKs validadas), H-11 (género M/F).
 
-> **Recordatorio sobre H-04:** no es solo una pregunta al cliente. Hoy `ActividadInventario::save()` no toca `inventario.condicion` e `Inventario::all()` solo filtra `is_active`, así que **un bien dado de Baja sigue apareciendo como activo** en el listado, los KPIs del dashboard y los indicadores CMI-I01/I03. El inventario reporta números incorrectos mientras esto siga abierto.
+**Hallazgos nuevos (auditoría 2026-08-07):**
+
+| # | Hallazgo | Estado |
+|---|----------|--------|
+| H-12 | **El sidebar contradice al RBAC dinámico.** El Router resuelve permisos desde `permisos_rol` (editable en *Roles y Permisos*), pero `views/inc/header.php` los tiene cableados por número de rol (`in_array($rol,[1,2,3,5])`, 8 casos). Todo rol creado desde la UI nace a medias: recibe el permiso pero **no ve el enlace**. Comprobado con el rol 6 «Solo Lectura», que tiene acceso a `VisitantesController` y no lo ve en el menú | ⚠️ **Abierto** — el sidebar debe consultar el mismo mapa que el Router (`RolesController::getMapaRbac()`) |
+| H-13 | **Tabla huérfana `actividades_ruta`**: cero referencias en `app/` desde que el módulo se retiró (2026-05-31). Mismo caso que las eliminadas en la mig. 060 | ⚠️ **Abierto** — candidata a mig. 069 |
+| H-14 | **`rutas.tiene_tarifa`/`tarifa_monto` nunca se escriben** pero sí se leen: `ReportesController.php:1298` y `reportes/rutas.php:257`. El reporte dice **«Gratuita» para toda ruta, siempre** — dato falso, no solo columna inerte | ⚠️ **Abierto** — o se implementa la captura o se quita del reporte (D-RT02) |
 
 ---
 
@@ -469,10 +488,10 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 > Detalle funcional en los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`.
 
-- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). 🔒 Falta: **Liquidación de Prestaciones Sociales**.
+- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). 🔒 Falta: **nómina quincenal** y **Liquidación de Prestaciones Sociales** — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía. 🔒 Falta: tarifa (D-RT02), informe/oficio automático al finalizar (D-RT03).
-- **Inventario:** ✅ bienes, categorías, ubicaciones, movimientos, bajas, **Durable/Fungible**, reportes/kardex. 🔒 Falta: responsable del bien (D-IN06), costo/proveedor (D-IN09), baja→condición (D-IN10).
+- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **3 documentos imprimibles** bloqueados por los formatos del cliente (informe de bienes nuevos, acta de baja, acta de asignación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
 - **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.
 
