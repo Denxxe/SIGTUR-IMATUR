@@ -6,7 +6,8 @@
 -- ============================================================
 
 SELECT setval('actividad_inventario_id_seq',   GREATEST((SELECT COALESCE(MAX(id), 1) FROM actividad_inventario),   (SELECT last_value FROM actividad_inventario_id_seq)));
-SELECT setval('actividades_ruta_id_seq',        GREATEST((SELECT COALESCE(MAX(id), 1) FROM actividades_ruta),        (SELECT last_value FROM actividades_ruta_id_seq)));
+-- `actividades_ruta_id_seq` retirado: la tabla se eliminó en la mig. 070 (H-13).
+-- Dejarlo haría fallar esta migración en cualquier instalación ya actualizada.
 SELECT setval('asistencias_id_seq',             GREATEST((SELECT COALESCE(MAX(id), 1) FROM asistencias),             (SELECT last_value FROM asistencias_id_seq)));
 SELECT setval('audit_logs_id_seq',              GREATEST((SELECT COALESCE(MAX(id), 1) FROM audit_logs),              (SELECT last_value FROM audit_logs_id_seq)));
 SELECT setval('cargos_id_seq',                  GREATEST((SELECT COALESCE(MAX(id), 1) FROM cargos),                  (SELECT last_value FROM cargos_id_seq)));
