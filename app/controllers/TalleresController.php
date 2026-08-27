@@ -1,6 +1,74 @@
 <?php
 class TalleresController extends Controller {
 
+    /** Formatos aceptados como evidencia: extensión → MIME real esperado. */
+    private const EVIDENCIA_MIMES = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
+        'pdf'  => 'application/pdf',
+    ];
+    private const EVIDENCIA_MAX_BYTES = 5 * 1024 * 1024;   // 5 MB, igual que expedientes/bienes
+
+    /**
+     * Guarda las evidencias subidas ($_FILES['evidencias'], múltiple) de un taller
+     * y devuelve las filas listas para `Taller::saveEvidencias()`.
+     *
+     * Los archivos van a **storage/uploads/talleres/**, FUERA del web root, y se
+     * sirven solo por `DescargaController::taller()` (roles 1 y 3) — mismo modelo
+     * que expedientes, pasantes, fotos y bienes. Antes se escribían en
+     * `public/uploads/talleres/`: quedaban accesibles por URL sin control de rol,
+     * y el enlace se rompía bajo el vhost donde `public/` es la raíz.
+     *
+     * Valida extensión **y MIME real** (no `$_FILES['type']`, que lo manda el
+     * cliente y se puede falsear) + tamaño máximo. Mismo criterio que
+     * `EmpleadosController::subirDocumento()` y `Controller::guardarFotoPersona()`.
+     */
+    private function procesarEvidencias(int $idTaller): array {
+        if ($idTaller <= 0) throw new Exception('Actividad no válida.');
+
+        $dir = dirname(dirname(__DIR__)) . '/storage/uploads/talleres/';
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new Exception('No se pudo preparar la carpeta de evidencias.');
+        }
+
+        $archivos = [];
+        $count    = count($_FILES['evidencias']['name']);
+
+        for ($i = 0; $i < $count; $i++) {
+            if ($_FILES['evidencias']['error'][$i] !== UPLOAD_ERR_OK) continue;
+
+            $original = (string)$_FILES['evidencias']['name'][$i];
+            $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+            if (!isset(self::EVIDENCIA_MIMES[$ext])) {
+                throw new Exception('Formato no permitido en "' . $original . '". Use JPG, PNG, GIF, WEBP o PDF.');
+            }
+            if ($_FILES['evidencias']['size'][$i] > self::EVIDENCIA_MAX_BYTES) {
+                throw new Exception('El archivo "' . $original . '" supera el límite de 5 MB.');
+            }
+            $mimeReal = function_exists('mime_content_type')
+                ? @mime_content_type($_FILES['evidencias']['tmp_name'][$i]) : null;
+            if ($mimeReal !== null && !in_array($mimeReal, self::EVIDENCIA_MIMES, true)) {
+                throw new Exception('El contenido de "' . $original . '" no corresponde a una imagen o PDF válido.');
+            }
+
+            $nombre = 'ev_' . $idTaller . '_' . time() . '_' . $i . '.' . $ext;
+            if (!move_uploaded_file($_FILES['evidencias']['tmp_name'][$i], $dir . $nombre)) {
+                throw new Exception('No se pudo guardar la evidencia "' . $original . '".');
+            }
+
+            $archivos[] = [
+                'archivo'         => $nombre,
+                'nombre_original' => $original,
+                'tipo_archivo'    => self::EVIDENCIA_MIMES[$ext],
+            ];
+        }
+
+        return $archivos;
+    }
+
     public function index() {
         // Auto-transición: Programado → En Curso cuando la fecha/hora de inicio ya llegó
         try { Taller::autoTransicionarProgramados(); } catch (\Exception $ignored) {}
@@ -115,28 +183,7 @@ class TalleresController extends Controller {
 
                 // Finalizado: procesar evidencias adjuntadas en el modal de edición
                 if ($data['estado'] === 'Finalizado' && !empty($_FILES['evidencias']['name'][0])) {
-                    $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
-                    if (!is_dir($dir)) mkdir($dir, 0755, true);
-                    $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
-                    $archivos = [];
-                    $count = count($_FILES['evidencias']['name']);
-                    for ($i = 0; $i < $count; $i++) {
-                        if ($_FILES['evidencias']['error'][$i] !== UPLOAD_ERR_OK) continue;
-                        $tipo = $_FILES['evidencias']['type'][$i];
-                        if (!in_array($tipo, $allowedTypes)) {
-                            throw new Exception('Tipo de archivo no permitido. Solo imágenes y PDF.');
-                        }
-                        $ext    = strtolower(pathinfo($_FILES['evidencias']['name'][$i], PATHINFO_EXTENSION));
-                        $nombre = 'ev_' . $data['id'] . '_' . time() . '_' . $i . '.' . $ext;
-                        if (!move_uploaded_file($_FILES['evidencias']['tmp_name'][$i], $dir . $nombre)) {
-                            throw new Exception('Error al mover el archivo de evidencia.');
-                        }
-                        $archivos[] = [
-                            'archivo'         => $nombre,
-                            'nombre_original' => $_FILES['evidencias']['name'][$i],
-                            'tipo_archivo'    => $tipo,
-                        ];
-                    }
+                    $archivos = $this->procesarEvidencias((int)$data['id']);
                     if (!empty($archivos)) {
                         Taller::saveEvidencias((int)$data['id'], $archivos, $userId);
                     }
@@ -740,30 +787,7 @@ class TalleresController extends Controller {
                 }
                 // Subir archivos de evidencia si se enviaron
                 if (!empty($_FILES['evidencias']['name'][0])) {
-                    $dir = dirname(dirname(__DIR__)) . '/public/uploads/talleres/';
-                    if (!is_dir($dir)) mkdir($dir, 0755, true);
-
-                    $allowedTypes = ['image/jpeg','image/png','image/gif','image/webp','application/pdf'];
-                    $archivos = [];
-                    $count    = count($_FILES['evidencias']['name']);
-
-                    for ($i = 0; $i < $count; $i++) {
-                        if ($_FILES['evidencias']['error'][$i] !== UPLOAD_ERR_OK) continue;
-                        $tipo = $_FILES['evidencias']['type'][$i];
-                        if (!in_array($tipo, $allowedTypes)) {
-                            throw new Exception('Tipo de archivo no permitido. Solo imágenes y PDF.');
-                        }
-                        $ext    = strtolower(pathinfo($_FILES['evidencias']['name'][$i], PATHINFO_EXTENSION));
-                        $nombre = 'ev_' . $id . '_' . time() . '_' . $i . '.' . $ext;
-                        if (!move_uploaded_file($_FILES['evidencias']['tmp_name'][$i], $dir . $nombre)) {
-                            throw new Exception('Error al mover el archivo de evidencia.');
-                        }
-                        $archivos[] = [
-                            'archivo'         => $nombre,
-                            'nombre_original' => $_FILES['evidencias']['name'][$i],
-                            'tipo_archivo'    => $tipo,
-                        ];
-                    }
+                    $archivos = $this->procesarEvidencias((int)$id);
                     if (!empty($archivos)) {
                         Taller::saveEvidencias((int)$id, $archivos, $userId);
                     }

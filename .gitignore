@@ -1,8 +1,6 @@
-# Archivos subidos por usuarios (datos personales / recaudos) — NO versionar
-public/uploads/**
-!public/uploads/
-!public/uploads/**/
-!public/uploads/**/.gitkeep
+# Los archivos subidos por usuarios viven en storage/uploads/ (fuera del web root)
+# y los ignora storage/uploads/.gitignore. Ya no existe public/uploads: se eliminó
+# al mover las evidencias de talleres a storage/ (2026-08-27).
 
 # Entorno / dependencias locales
 /vendor/

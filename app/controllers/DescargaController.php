@@ -17,6 +17,8 @@ class DescargaController extends Controller {
         'jpg'  => 'image/jpeg',
         'jpeg' => 'image/jpeg',
         'png'  => 'image/png',
+        'gif'  => 'image/gif',
+        'webp' => 'image/webp',
     ];
 
     private function rol(): int { return (int)($_SESSION['user_rol'] ?? 0); }
@@ -57,6 +59,18 @@ class DescargaController extends Controller {
         $row = $db->single();
         if (!$row || empty($row->archivo_url)) $this->abort(404, 'Documento no encontrado.');
         $this->stream('pasantes', $row->archivo_url, null);
+    }
+
+    /** Evidencia de una actividad de formación (foto o PDF) — Turismo / Admin. */
+    public function taller($idEv = 0) {
+        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT archivo, nombre_original FROM taller_evidencias
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idEv);
+        $row = $db->single();
+        if (!$row || empty($row->archivo)) $this->abort(404, 'Evidencia no encontrada.');
+        $this->stream('talleres', $row->archivo, $row->nombre_original ?? null);
     }
 
     /** Documento de respaldo de un bien (factura, actas, oficios) — Inventario / Admin. */

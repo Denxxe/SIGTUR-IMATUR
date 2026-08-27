@@ -255,7 +255,8 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
         <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:var(--sp-3);">
             <?php foreach ($data['evidencias'] as $ev): ?>
                 <?php
-                $url      = URL_ROOT . '/public/uploads/talleres/' . $ev->archivo;
+                // Los archivos viven fuera del web root; se sirven por rol.
+                $url      = URL_ROOT . '/descarga/taller/' . $ev->id;
                 $esPdf    = strtolower(pathinfo($ev->archivo, PATHINFO_EXTENSION)) === 'pdf';
                 $nombre   = htmlspecialchars($ev->nombre_original);
                 $fecha    = date('d/m/Y H:i', strtotime($ev->uploaded_at));
