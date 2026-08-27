@@ -104,9 +104,32 @@ class EmpleadosController extends Controller {
             'permiso_vigente'   => empty($empleado->fecha_egreso) ? PermisoLaboral::vigenteHoy($id) : null,
             'sueldo_actual'     => Sueldo::actual((int)$id),
             'historial_sueldos' => Sueldo::historial((int)$id),
+            // Insumos del cálculo de nómina (mig. 072)
+            'grados_nomina'     => Nomina::grados(),
+            'tipo_personal'     => Nomina::tipoPersonal($empleado),
+            'grado_derivado'    => Nomina::codigoGrado($empleado->nivel_academico ?? null),
+            'anios_admin'       => Nomina::aniosAdministracion($empleado),
         ];
 
         $this->view('empleados/detalle', $data);
+    }
+
+    /**
+     * Guarda los insumos de nómina de la ficha (mig. 072): cuenta bancaria,
+     * divisas del bono de responsabilidad, sueldo de la dependencia de origen
+     * y la corrección manual del código de grado de instrucción.
+     */
+    public function guardarDatosNomina() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/empleados/index'); return; }
+        $_POST = $this->sanitizePost();
+        $id = (int)($_POST['id_empleado'] ?? 0);
+        try {
+            Empleado::guardarDatosNomina($id, $_POST, $this->getUserId());
+            flash('global_msg', 'Datos de nómina actualizados.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/empleados/detalle/' . $id);
     }
 
     /**

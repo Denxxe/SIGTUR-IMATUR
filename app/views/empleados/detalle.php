@@ -568,6 +568,175 @@ $fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
     <?php endif; ?>
 </div>
 
+<?php
+// ── Insumos del cálculo de nómina (mig. 072) ──
+$tipoPersonal  = $data['tipo_personal']  ?? null;
+$gradoDerivado = $data['grado_derivado'] ?? null;
+$gradosNomina  = $data['grados_nomina']  ?? [];
+$gradoManual   = $e->codigo_grado ?? null;
+$gradoEfectivo = $gradoManual ?: $gradoDerivado;
+$esComision    = ($tipoPersonal === 'Comisión de Servicio');
+$llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio'], true);
+?>
+<div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
+    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <h5 style="margin:0;"><i class="bi bi-bank"></i> Datos de nómina</h5>
+        <?php if (!$egresado): ?>
+        <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalDatosNomina">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+        <?php endif; ?>
+    </div>
+    <table class="sig-table">
+        <tbody>
+            <tr>
+                <th style="width:33%;">Tipo de personal</th>
+                <td colspan="2">
+                    <span class="sig-badge sig-badge--brand"><?php echo htmlspecialchars($tipoPersonal ?? '—'); ?></span>
+                    <small style="color:var(--text-tertiary);">se deriva del cargo, el contrato y el origen — define su hoja en la nómina</small>
+                </td>
+            </tr>
+            <tr>
+                <th>Grado de instrucción (prima de profesionalización)</th>
+                <td colspan="2">
+                    <?php if ($gradoEfectivo): ?>
+                        <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($gradoEfectivo); ?></span>
+                        <?php if (isset($gradosNomina[$gradoEfectivo])): ?>
+                            <strong><?php echo number_format($gradosNomina[$gradoEfectivo]['porcentaje'], 0); ?>%</strong>
+                            <small style="color:var(--text-tertiary);"><?php echo htmlspecialchars($gradosNomina[$gradoEfectivo]['nombre']); ?></small>
+                        <?php endif; ?>
+                        <?php if ($gradoManual): ?>
+                            <small style="color:var(--text-tertiary);">· fijado a mano</small>
+                        <?php else: ?>
+                            <small style="color:var(--text-tertiary);">· derivado de «<?php echo htmlspecialchars($e->nivel_academico ?? ''); ?>»</small>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="sig-badge sig-badge--warning">Sin resolver</span>
+                        <small style="color:var(--text-secondary);">
+                            <?php if (empty($e->nivel_academico)): ?>
+                                No hay nivel académico registrado.
+                            <?php else: ?>
+                                «<?php echo htmlspecialchars($e->nivel_academico); ?>» no corresponde a ninguno de los
+                                6 grados de la escala. Fíjelo a mano para que la prima se calcule.
+                            <?php endif; ?>
+                        </small>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <tr>
+                <th>Años en la administración pública</th>
+                <td colspan="2">
+                    <strong><?php echo (int)($data['anios_admin'] ?? 0); ?></strong>
+                    <small style="color:var(--text-tertiary);">
+                        base de la prima de antigüedad
+                        <?php if (empty($e->fecha_ingreso_administracion)): ?>
+                            — <span style="color:var(--warning-600);">sin fecha propia, se usa la de ingreso a IMATUR</span>
+                        <?php endif; ?>
+                    </small>
+                </td>
+            </tr>
+            <tr>
+                <th>Cuenta de nómina</th>
+                <td colspan="2">
+                    <?php if (!empty($e->cuenta_nomina)): ?>
+                        <?php echo htmlspecialchars($e->cuenta_nomina); ?>
+                        <?php if (!empty($e->banco_nomina)): ?>
+                            <small style="color:var(--text-tertiary);">· <?php echo htmlspecialchars($e->banco_nomina); ?></small>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="sig-badge sig-badge--warning">Falta</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php if ($llevaDivisas): ?>
+            <tr>
+                <th>Bono de responsabilidad (en divisas)</th>
+                <td colspan="2">
+                    <?php echo $fmtMonto($e->divisas_bono_responsabilidad ?? 0); ?>
+                    <small style="color:var(--text-tertiary);">se paga en bolívares a la tasa del mes; la quincena paga la mitad</small>
+                </td>
+            </tr>
+            <?php endif; ?>
+            <?php if ($esComision): ?>
+            <tr>
+                <th>Sueldo de su dependencia de origen</th>
+                <td colspan="2">
+                    <?php echo $fmtMonto($e->sueldo_dependencia_origen ?? 0); ?>
+                    <small style="color:var(--text-tertiary);">IMATUR le paga la diferencia contra este monto</small>
+                </td>
+            </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
+
+<?php if (!$egresado): ?>
+<!-- Modal: Datos de nómina -->
+<div class="modal fade" id="modalDatosNomina" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/empleados/guardarDatosNomina" method="POST" class="modal-content">
+            <input type="hidden" name="id_empleado" value="<?php echo (int)$e->id; ?>">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-bank"></i> Datos de nómina</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="dn_grado">Grado de instrucción</label>
+                    <select name="codigo_grado" id="dn_grado" class="sig-input">
+                        <option value="">Derivar del nivel académico<?php echo $gradoDerivado ? ' (' . htmlspecialchars($gradoDerivado) . ')' : ' — hoy no se resuelve'; ?></option>
+                        <?php foreach ($gradosNomina as $cod => $g): ?>
+                            <option value="<?php echo htmlspecialchars($cod); ?>"<?php echo $gradoManual === $cod ? ' selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cod . ' — ' . $g['nombre'] . ' (' . number_format($g['porcentaje'], 0) . '%)'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="color:var(--text-tertiary);font-size:12px;">
+                        Déjelo en «Derivar» salvo que el mapeo no acierte con su nivel académico.
+                    </small>
+                </div>
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="sig-field mb-3">
+                            <label class="sig-field__label" for="dn_cuenta">Cuenta de nómina</label>
+                            <input type="text" name="cuenta_nomina" id="dn_cuenta" class="sig-input" maxlength="30"
+                                   value="<?php echo htmlspecialchars($e->cuenta_nomina ?? ''); ?>" placeholder="0102-0000-00-0000000000">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="sig-field mb-3">
+                            <label class="sig-field__label" for="dn_banco">Banco</label>
+                            <input type="text" name="banco_nomina" id="dn_banco" class="sig-input" maxlength="80"
+                                   value="<?php echo htmlspecialchars($e->banco_nomina ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="dn_divisas">Bono de responsabilidad (divisas)</label>
+                    <input type="number" step="0.01" min="0" name="divisas_bono_responsabilidad" id="dn_divisas" class="sig-input"
+                           value="<?php echo (float)($e->divisas_bono_responsabilidad ?? 0); ?>">
+                    <small style="color:var(--text-tertiary);font-size:12px;">
+                        Solo Alto Nivel y Comisión de Servicio. Se pacta en divisas y se paga al cambio del mes.
+                    </small>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label" for="dn_origen">Sueldo de la dependencia de origen</label>
+                    <input type="number" step="0.01" min="0" name="sueldo_dependencia_origen" id="dn_origen" class="sig-input"
+                           value="<?php echo (float)($e->sueldo_dependencia_origen ?? 0); ?>">
+                    <small style="color:var(--text-tertiary);font-size:12px;">
+                        Solo comisión de servicio: IMATUR paga la diferencia contra este monto.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php if (!$egresado): ?>
 <!-- Modal: Registrar sueldo -->
 <div class="modal fade" id="modalSueldo" tabindex="-1">

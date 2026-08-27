@@ -721,4 +721,74 @@ class Empleado extends Model
         if (empty($partes)) $partes[] = $d->d . ' día' . ($d->d != 1 ? 's' : '');
         return implode(', ', $partes);
     }
+
+    /**
+     * Datos que el cálculo de nómina necesita y no estaban en la ficha (mig. 072):
+     * cuenta bancaria de nómina, divisas del bono de responsabilidad, sueldo que
+     * paga la dependencia de origen (comisión de servicio) y la corrección
+     * manual del código de grado de instrucción.
+     *
+     * A diferencia de `Sueldo::guardar()`, esto NO es append-only: son datos
+     * corrientes de la ficha, no un histórico salarial. Toca `empleados` y
+     * `personas`, así que va transaccional.
+     */
+    public static function guardarDatosNomina(int $id, array $datos, $user_id = null): bool
+    {
+        $emp = self::find($id);
+        if (!$emp) throw new Exception('Empleado no encontrado.');
+
+        $cuenta  = trim((string)($datos['cuenta_nomina'] ?? ''));
+        $banco   = trim((string)($datos['banco_nomina'] ?? ''));
+        $divisas = round((float)($datos['divisas_bono_responsabilidad'] ?? 0), 2);
+        $origen  = round((float)($datos['sueldo_dependencia_origen'] ?? 0), 2);
+        $grado   = strtoupper(trim((string)($datos['codigo_grado'] ?? '')));
+
+        if ($divisas < 0 || $origen < 0) throw new Exception('Los montos no pueden ser negativos.');
+        // La cuenta bancaria venezolana son 20 dígitos; se acepta con o sin guiones.
+        if ($cuenta !== '' && !preg_match('/^[0-9\- ]{10,30}$/', $cuenta)) {
+            throw new Exception('La cuenta de nómina solo admite números (y guiones o espacios como separadores).');
+        }
+        if ($grado !== '' && !array_key_exists($grado, Nomina::grados())) {
+            throw new Exception('El código de grado de instrucción no es válido.');
+        }
+
+        $previos = ['cuenta_nomina' => $emp->cuenta_nomina ?? null, 'banco_nomina' => $emp->banco_nomina ?? null,
+                    'divisas_bono_responsabilidad' => $emp->divisas_bono_responsabilidad ?? null,
+                    'sueldo_dependencia_origen' => $emp->sueldo_dependencia_origen ?? null,
+                    'codigo_grado' => $emp->codigo_grado ?? null];
+
+        $db = new Database();
+        $db->beginTransaction();
+        try {
+            $db->query("UPDATE empleados
+                           SET cuenta_nomina = :cta, banco_nomina = :banco,
+                               divisas_bono_responsabilidad = :div, sueldo_dependencia_origen = :orig,
+                               updated_at = CURRENT_TIMESTAMP, updated_by = :uid
+                         WHERE id = :id");
+            $db->bind(':cta', $cuenta !== '' ? $cuenta : null);
+            $db->bind(':banco', $banco !== '' ? $banco : null);
+            $db->bind(':div', $divisas);
+            $db->bind(':orig', $origen);
+            $db->bind(':uid', $user_id);
+            $db->bind(':id', $id);
+            $db->execute();
+
+            $db->query("UPDATE personas SET codigo_grado = :g, updated_at = CURRENT_TIMESTAMP, updated_by = :uid WHERE id = :idp");
+            $db->bind(':g', $grado !== '' ? $grado : null);
+            $db->bind(':uid', $user_id);
+            $db->bind(':idp', (int)$emp->id_persona);
+            $db->execute();
+
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
+
+        self::auditStatic('empleados', 'UPDATE', $id, $previos,
+            ['cuenta_nomina' => $cuenta, 'banco_nomina' => $banco,
+             'divisas_bono_responsabilidad' => $divisas, 'sueldo_dependencia_origen' => $origen,
+             'codigo_grado' => $grado], $user_id);
+        return true;
+    }
 }
