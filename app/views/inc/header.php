@@ -34,139 +34,29 @@
             </div>
         </div>
 
-        <?php $rol = (int)($_SESSION['user_rol'] ?? 0); ?>
+        <?php
+        // El menú se genera desde el MISMO mapa de permisos que aplica el Router
+        // (`permisos_rol`, editable en Roles y Permisos). No cablear roles por
+        // número aquí: para agregar o mover un módulo, editar
+        // RolesController::getNavegacion(). Ver H-12 en docs/BACKLOG.md.
+        $rol = (int)($_SESSION['user_rol'] ?? 0);
+        $navGrupos = RolesController::getNavegacionVisible();
+        ?>
         <div class="sidebar__nav">
-            <!-- Dashboard — todos los roles -->
+            <!-- Panel Principal: todos los roles lo tienen (DashboardController es
+                 obligatorio en permisos_rol, ver RolesController::storePermisos) -->
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>">
                 <i class="bi bi-speedometer2"></i> <span>Panel Principal</span>
             </a>
 
-            <!-- RRHH — Administrador (1) y RRHH (2) -->
-            <?php if(in_array($rol, [1, 2])): ?>
-            <div class="sidebar__group-label">RRHH</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/empleados/index">
-                <i class="bi bi-person-badge"></i> <span>Empleados</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/cargos/index">
-                <i class="bi bi-briefcase"></i> <span>Cargos</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/departamentos/index">
-                <i class="bi bi-building"></i> <span>Departamentos</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/horarios/index">
-                <i class="bi bi-clock"></i> <span>Horarios</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/amonestaciones/index">
-                <i class="bi bi-flag"></i> <span>Amonestaciones</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/permisos/index">
-                <i class="bi bi-calendar2-week"></i> <span>Permisos y Reposos</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/vacaciones/index">
-                <i class="bi bi-umbrella"></i> <span>Vacaciones</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/nomina/index">
-                <i class="bi bi-cash-coin"></i> <span>Nómina</span>
-            </a>
-            <?php endif; ?>
-            <?php if(in_array($rol, [1, 2, 5])): ?>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/asistencias/index">
-                <i class="bi bi-clock-history"></i> <span>Asistencia</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Recepción — Administrador (1), RRHH (2), Turismo (3) y Recepción (5) -->
-            <?php if(in_array($rol, [1, 2, 3, 5])): ?>
-            <div class="sidebar__group-label">Recepción</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/visitantes/index">
-                <i class="bi bi-door-open"></i> <span>Visitas</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Inventario — Administrador (1) e Inventario (4) -->
-            <?php if(in_array($rol, [1, 4])): ?>
-            <div class="sidebar__group-label">Inventario</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/inventario/index">
-                <i class="bi bi-box-seam"></i> <span>Bienes</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/categorias/index">
-                <i class="bi bi-tags"></i> <span>Categorías</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/ubicaciones/index">
-                <i class="bi bi-geo-alt"></i> <span>Ubicaciones</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/actividadesinventario/index">
-                <i class="bi bi-arrow-left-right"></i> <span>Movimientos</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Formación — Administrador (1) y Turismo (3) -->
-            <?php if(in_array($rol, [1, 3])): ?>
-            <div class="sidebar__group-label">Formación</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/talleres/index">
-                <i class="bi bi-mortarboard"></i> <span>Talleres</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/ubicacionesformacion/index">
-                <i class="bi bi-pin-map"></i> <span>Sedes Formación</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/pasantes/index">
-                <i class="bi bi-person-video3"></i> <span>Pasantes</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Turismo — Administrador (1) y Turismo (3) -->
-            <?php if(in_array($rol, [1, 3])): ?>
-            <div class="sidebar__group-label">Turismo</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/rutas/index">
-                <i class="bi bi-compass"></i> <span>Rutas Turísticas</span>
-            </a>
-            <?php endif; ?>
-
-            <!-- Reportes — todos los roles -->
-            <div class="sidebar__group-label">Análisis</div>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/reportes/index">
-                <i class="bi bi-bar-chart-line"></i> <span>Reportes</span>
-            </a>
-
-            <!-- Sistema — Configuración, administración y recuperación (gating por permiso) -->
-            <?php
-            $canConfig   = in_array($rol, [1, 2]);
-            $canSysAdmin = ($rol == 1);
-            $canBitacora = ($rol == 1); // Bitácora exclusiva de Admin (no delegable, ver AuditoriaController::guardAdmin)
-            $canPapelera = ($rol == 1) || RolesController::roleHasModulo('AuditoriaPapelera');
-            if ($canConfig || $canSysAdmin || $canBitacora || $canPapelera):
-            ?>
-            <div class="sidebar__group-label">Sistema</div>
-            <?php if ($canConfig): ?>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/config/index">
-                <i class="bi bi-gear"></i> <span>Configuración</span>
-            </a>
-            <?php endif; ?>
-            <?php if ($canSysAdmin): ?>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/usuarios/index">
-                <i class="bi bi-people"></i> <span>Usuarios</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/roles/index">
-                <i class="bi bi-shield-lock"></i> <span>Roles y Permisos</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/municipio/index">
-                <i class="bi bi-map"></i> <span>Municipios</span>
-            </a>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/parroquia/index">
-                <i class="bi bi-signpost"></i> <span>Parroquias</span>
-            </a>
-            <?php endif; ?>
-            <?php if ($canBitacora): ?>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/auditoria/index">
-                <i class="bi bi-shield-check"></i> <span>Auditoría</span>
-            </a>
-            <?php endif; ?>
-            <?php if ($canPapelera): ?>
-            <a class="sidebar__item" href="<?php echo URL_ROOT; ?>/auditoria/papelera">
-                <i class="bi bi-recycle"></i> <span>Papelera</span>
-            </a>
-            <?php endif; ?>
-            <?php endif; ?>
+            <?php foreach ($navGrupos as $grupo => $items): ?>
+            <div class="sidebar__group-label"><?php echo htmlspecialchars($grupo); ?></div>
+                <?php foreach ($items as $item): ?>
+                <a class="sidebar__item" href="<?php echo URL_ROOT . $item['url']; ?>">
+                    <i class="bi <?php echo htmlspecialchars($item['icon']); ?>"></i> <span><?php echo htmlspecialchars($item['label']); ?></span>
+                </a>
+                <?php endforeach; ?>
+            <?php endforeach; ?>
         </div>
 
         <!-- Footer: Usuario -->
