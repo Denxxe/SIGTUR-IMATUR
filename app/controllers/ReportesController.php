@@ -1280,7 +1280,10 @@ class ReportesController extends Controller {
             $fechaDesde = trim($_GET['fecha_desde'] ?? '');
             $fechaHasta = trim($_GET['fecha_hasta'] ?? '');
             $rutas      = $this->queryRutas($estado, $tipo, $fechaDesde, $fechaHasta);
-            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Estado', 'Tarifa',
+            // Sin columna "Tarifa" (H-14): `rutas.tiene_tarifa`/`tarifa_monto` no se capturan en
+            // ningún formulario, así que exportaba "Gratuita" para toda ruta, siempre. Se reactiva
+            // cuando el cliente defina el flujo de cobro (D-RT02).
+            $headers = ['Ruta', 'Tipo', 'Fecha Visita', 'Hora', 'Departamento', 'Guía', 'Estado',
                         'Paradas', 'Participantes', 'Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'];
             $rows    = [];
             $tpInsc = 0; $tpAt = 0;
@@ -1295,7 +1298,6 @@ class ReportesController extends Controller {
                     $r->departamento_nombre ?? '-',
                     $r->facilitador_nombre ?? '-',
                     $r->estado,
-                    !empty($r->tiene_tarifa) ? number_format((float)$r->tarifa_monto, 2) : 'Gratuita',
                     (int)$r->total_puntos,
                     (int)$r->total_participantes,
                     (int)($r->mujeres ?? 0),
@@ -1305,8 +1307,8 @@ class ReportesController extends Controller {
                     (int)($r->total_atendidos ?? 0),
                 ];
             }
-            // Fila de totales
-            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
+            // Fila de totales — 14 columnas: Participantes en la 9.ª, Total Atendidos en la última
+            $rows[] = ['TOTALES', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
             $this->exportCsv('reporte_rutas', $headers, $rows);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');

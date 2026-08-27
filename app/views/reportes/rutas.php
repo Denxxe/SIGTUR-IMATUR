@@ -217,7 +217,10 @@
                 <th>Departamento</th>
                 <th>Guía</th>
                 <th>Estado</th>
-                <th>Tarifa</th>
+                <?php /* Columna "Tarifa" retirada (H-14): rutas.tiene_tarifa/tarifa_monto no se
+                        capturan en ningún formulario, así que el reporte informaba "Gratuita"
+                        para toda ruta, siempre — incluso si se cobró. Se reactiva cuando el
+                        cliente defina el flujo de cobro (D-RT02). */ ?>
                 <th style="text-align:center;">Paradas</th>
                 <th style="text-align:center;">Particip.</th>
                 <th style="text-align:center;">Atendidos</th>
@@ -226,7 +229,7 @@
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="10" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="9" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
@@ -252,13 +255,6 @@
                             elseif ($r->estado == 'Finalizada') $statusBadge = 'sig-badge--brand';
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
-                        </td>
-                        <td style="font-size:12px; color:var(--text-secondary);">
-                            <?php if (!empty($r->tiene_tarifa)): ?>
-                                <span class="sig-badge sig-badge--info"><?php echo number_format((float)$r->tarifa_monto, 2); ?></span>
-                            <?php else: ?>
-                                <span class="sig-badge sig-badge--neutral">Gratuita</span>
-                            <?php endif; ?>
                         </td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
