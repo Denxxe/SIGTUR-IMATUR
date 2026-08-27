@@ -128,8 +128,30 @@ class XlsxMultiSheet
         return mb_substr($n, 0, 31);
     }
 
-    /** Arma el .xlsx con todas las hojas registradas y lo envía como descarga (termina la ejecución). */
+    /**
+     * Arma el .xlsx con todas las hojas registradas y lo envía como descarga
+     * (termina la ejecución). Para obtener el archivo sin enviarlo —pruebas,
+     * o un reporte generado por tarea programada— usar `construir()`.
+     */
     public function descargar(string $filename): void
+    {
+        $tmp = $this->construir();
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.xlsx"');
+        header('Content-Length: ' . filesize($tmp));
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        readfile($tmp);
+        @unlink($tmp);
+        exit;
+    }
+
+    /**
+     * Arma el .xlsx y devuelve la ruta del archivo temporal, sin enviar nada
+     * ni terminar la ejecución. Quien llame es responsable de borrarlo.
+     */
+    public function construir(): string
     {
         $this->cerrarHoja();
         if (empty($this->sheets)) throw new Exception('No hay hojas para exportar.');
@@ -211,14 +233,7 @@ class XlsxMultiSheet
         $zip->addFromString('xl/styles.xml', $this->stylesXml());
         $zip->close();
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $filename . '_' . date('Y-m-d') . '.xlsx"');
-        header('Content-Length: ' . filesize($tmp));
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        readfile($tmp);
-        @unlink($tmp);
-        exit;
+        return $tmp;
     }
 
     private function stylesXml(): string
