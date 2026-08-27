@@ -15,6 +15,57 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 
 ---
 
+## 0. RUTA AL CIERRE — en qué orden trabajar
+
+> Actualizado 2026-08-27, tras cerrar H-12…H-15 y las fases N-A…N-D de Nómina.
+> El detalle de cada punto está en las secciones 3 (insumos del cliente) y 5 (programación).
+
+### 0.1 Se puede programar YA, sin esperar a nadie
+
+| # | Tarea | Tamaño | Por qué ahora |
+|---|---|---|---|
+| 1 | **Verificación en navegador** de lo construido este ciclo: las 4 pantallas de Nómina, la tarjeta «Datos de nómina» del expediente, Ubicaciones con sede/depósito, y el menú lateral con cada uno de los 6 roles | Corto | Todo se probó por BD y por pruebas automatizadas, **nada se abrió en el navegador**. Es el riesgo más alto que queda |
+| 2 | **Tarea programada de respaldo** (`schtasks` sobre `cron/respaldo_bd.php`) | Corto | El último respaldo es del 25 de junio. Dos meses sin respaldo automático |
+| 3 | **Generador de feriados movibles por año** — la fecha es calculable (algoritmo de Pascua); hoy hay que cargarlos a mano cada año o el conteo de vacaciones vuelve a fallar **en silencio** | Corto | Evita una regresión anual garantizada |
+| 4 | Deuda técnica de §5.2: `label[for]` en formularios restantes · whitelist en `Taller::actualizarPersona` · dividir `ReportesController` (~3.200 líneas) · estilos inline → clases · más pruebas | Gradual | No bloquea entrega; hacer cuando haya holgura |
+
+### 0.2 Espera al cliente (sección 3)
+
+Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entrega.**
+
+| Prioridad | Qué pedir | Desbloquea |
+|---|---|---|
+| 🔴 1 | **Informe/oficio de bienes nuevos** (formato) | R-1: el dolor #1 declarado del cliente |
+| 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (ver §2, mig. 073). Con un mes basta |
+| 🔴 3 | **Cuestionario de Rutas** (Parte 2, 64 preguntas) | Único módulo sin levantamiento. R-07/R-08 pueden forzar rediseño |
+| 🔴 4 | **N-3** — «días adicionales» de la hoja INTERESES, **con recorte de pantalla** | Fase N-E: Liquidación de Prestaciones Sociales |
+| 🟡 5 | Acta de baja + oficio de retiro · acta de asignación · oficio de donación | R-2 y R-3 |
+| 🟡 6 | **N-1** (días base 75 vs 85/45) y **N-2** (semanas ×4/×5) | No bloquean: son parámetros. Vuelven **definitivos** los montos |
+| 🟡 7 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
+| 🟢 8 | Planilla física de asistencia · D-RT02 tarifa · D-RT03 informe automático · D-FO05 metas · D-FO08-bis facilitadores · D-OF03 libro de correspondencia · D-TX03 históricos | Mejoras y reportes puntuales |
+
+### 0.3 Carga de datos — sin esto el sistema está correcto pero vacío
+
+| Qué | Estado hoy |
+|---|---|
+| Personal real | **3 empleados** de prueba |
+| Datos de nómina por trabajador (sueldo base, grado, fecha de ingreso a la administración, hijos, cuenta bancaria) | **1 fila** de prueba en `empleado_salarios` |
+| Cesta ticket y tasa del dólar por mes | 1 mes cargado (2026-07, valores de la plantilla) |
+| Catálogo de cargos | **5** cargos |
+| Los ~142 bienes | **0** — ya se puede cargar (ubicaciones sembradas en la mig. 069) |
+| Coordinador de *Compra de Bienes y Servicios* | **Vacante** → los movimientos de bienes están bloqueados por diseño (B-32) |
+| Datos institucionales de configuración | Revisar: firmante «Director General» vs cargo «Presidenta»; directora «Maria Maza» |
+| Configuración de producción | `URL_ROOT`, credenciales de BD (hoy `postgres/1234`), clave del admin, SMTP |
+
+### 0.4 Lo que ya NO falta
+
+Cerrado en el ciclo del 2026-08-27: los **4 defectos abiertos** de la auditoría (H-12 sidebar vs RBAC ·
+H-13 tabla huérfana · H-14 tarifa fantasma · H-15 evidencias públicas), el **módulo de Bienes
+inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-A a N-D de Nómina**
+(mig. 072/073). Detalle en la sección 2.
+
+---
+
 ## 1. ESTADO GLOBAL
 
 - **RRHH:** completo salvo **Nómina**. **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
@@ -476,7 +527,16 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Preguntar:** ¿usan Gmail/Google Workspace (contraseña de aplicación), un correo institucional propio (gobernación/alcaldía), u otro proveedor?
 - **Al desbloquear:** completar `SMTP_HOST/PORT/USER/PASS/ENCRYPTION` en `config/config.php` (no requiere tocar código ni migraciones).
 
-### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — **avance grande el 2026-08-07**
+### 3.1 🟡 Nómina / Liquidación (R-11 · D-RH34/D-RH14) — **construido: fases N-A a N-D (2026-08-27)**
+
+> **Estado:** el módulo **calcula**. Motor puro con 45 pruebas, porcentajes en tablas, parámetros
+> mensuales con vigencia, 5 tipos de personal, nómina quincenal con export de 6 hojas y bono
+> vacacional migrado al motor. Falta **N-E** (Liquidación), bloqueada por **N-3**.
+>
+> **Insumo nuevo que subió de prioridad:** un **mes de bono vacacional ya calculado**. La fórmula
+> del *total* no está en ninguna fuente, así que el sistema calcula una estimación bajo supuesto
+> declarado y muestra la diferencia contra el total confirmado (mig. 073). Con **un solo mes real**
+> se confirma o se corrige el supuesto — y entonces el total se calcula solo.
 
 > **Análisis completo y modelo de cálculo extraído: `docs/PLAN_MODULO_NOMINA.md`. Leerlo antes de tocar el módulo.**
 
@@ -631,6 +691,19 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 ---
 
 ## 6. VERIFICACIÓN MANUAL PENDIENTE (probar en navegador)
+
+**Pendiente 2026-08-27 — lo construido en este ciclo, probado por BD y por pruebas
+automatizadas pero NO abierto en el navegador. Es el riesgo más alto que queda:**
+
+- Las 4 pantallas de Nómina: `/nomina/parametros`, `/nomina/quincenal`, el detalle de una
+  quincena y el detalle de un período de bono vacacional (calculado vs confirmado).
+- La tarjeta **«Datos de nómina»** del expediente del empleado y su modal.
+- **Ubicaciones** con la columna Sede, el badge Depósito y el modal con sede + casilla de depósito.
+- El **menú lateral entrando con cada uno de los 6 roles**, comparándolo con lo que dice
+  *Roles y Permisos*. Es la prueba que destapó H-12 y la que lo cierra.
+- Las alertas `.sig-alert` de las 7 vistas del módulo de Bienes, que hasta ahora se veían como
+  texto plano y ya tienen estilo.
+- Subir una **evidencia de taller** y abrirla: ahora se sirve por `/descarga/taller/{id}`.
 
 - **B1** "botón Guardar de RRHH": no hay defecto estático; hacer un alta de empleado de punta a punta para cerrarlo.
 - Export **Excel/PDF** en cualquier listado CRUD.
