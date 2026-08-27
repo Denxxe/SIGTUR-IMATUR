@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **072** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -18,7 +18,7 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ## 1. ESTADO GLOBAL
 
 - **RRHH:** completo salvo **Nómina**. **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
-- **Nómina:** 🟢 **motor de cálculo construido (2026-08-27, mig. 072).** Fases N‑A/N‑B/N‑C hechas: las primas se derivan, los porcentajes viven en tablas, cesta ticket y tasa del dólar tienen vigencia mensual, hay quincena con snapshot/recálculo/cierre y export de 6 hojas. Las 3 preguntas abiertas **ya no bloquean** (N‑1 y N‑2 son parámetros). Falta **N‑D** (migrar el Bono Vacacional al motor) y **N‑E** (Liquidación, bloqueada por N‑3). Lo que realmente falta son **insumos**: sueldos base, grados, cuentas bancarias, cesta ticket y tasa de cada mes. Antes: replanteamiento (2026-08-07). Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
+- **Nómina:** 🟢 **motor de cálculo construido (2026-08-27, mig. 072).** Fases N‑A/N‑B/N‑C hechas: las primas se derivan, los porcentajes viven en tablas, cesta ticket y tasa del dólar tienen vigencia mensual, hay quincena con snapshot/recálculo/cierre y export de 6 hojas. Las 3 preguntas abiertas **ya no bloquean** (N‑1 y N‑2 son parámetros). Fases **N‑A a N‑D hechas** (mig. 072 y 073): el bono vacacional también calcula sus primas, aunque su **total** sigue confirmándose a mano porque la fórmula no está en ninguna fuente (el sistema muestra su estimación al lado, con la diferencia). Falta solo **N‑E** (Liquidación, bloqueada por N‑3). Lo que realmente falta son **insumos**: sueldos base, grados, cuentas bancarias, cesta ticket y tasa de cada mes. Antes: replanteamiento (2026-08-07). Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
 - **Inventario (Bienes):** 🔄 **En replanteamiento.** El levantamiento del 2026-08-04 (59 preguntas respondidas) reveló que lo construido es un CRUD genérico, mientras que el instituto necesita un **expediente administrativo por bien** con ciclo de vida gobernado por la Alcaldía (codificación, actas, oficios). Plan por fases en `docs/PLAN_MODULO_BIENES.md`.
 - **Turismo (Rutas):** cuestionario de descubrimiento **pendiente de responder** (Parte 2 de `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`). Prioridad: R-07/R-08 (catálogo vs ejecución) — de esa respuesta depende si hay rediseño.
@@ -27,6 +27,37 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-08-27 — Bono Vacacional al motor de cálculo (mig. 073 — fase N‑D)
+
+Las primas, el sueldo normal diario y la alícuota del bono vacacional ya las **calcula** el mismo
+motor de la nómina quincenal. Al compartirlo, los dos documentos no pueden discrepar en la misma prima
+del mismo trabajador. `BonoVacacional::TIPOS = Nomina::TIPOS` y `tipoPersonal()` delega, así que un
+trabajador cae en la misma hoja en ambos. Los días se cuentan **a la fecha de corte** del período y no
+a hoy: generar un período pasado ahora da el mismo número que dio entonces.
+
+**El total no se pudo calcular — y no se inventó.** La fórmula del monto que se paga no está en
+ninguna fuente: la plantilla documenta la *alícuota* (el devengo diario), no el total, y el mes ya
+calculado que el cliente prometió el 23/07 no llegó. Se resolvió así:
+
+- `total_calculado` = estimación del sistema bajo un supuesto **declarado**
+  (`sueldo normal diario × días correspondientes`), etiquetado como estimación en la BD, la UI y el `.xlsx`.
+- `total_bono_vacacional` sigue siendo la cifra oficial que confirma Talento Humano.
+- La UI, el cuadro resumen y el export muestran la **diferencia** entre ambos.
+
+Eso convierte la pregunta pendiente en un instrumento que se responde solo: **en cuanto llegue un mes
+real, la diferencia dice si el supuesto acierta.** Si acierta, el total pasa a calcularse; si no, la
+diferencia muestra por dónde corregir. Probado con un caso real: capturando 70.000 contra 76.467,44
+calculados, el sistema muestra −6.467,44 en la fila, en el resumen y en la hoja de Excel.
+
+Operación: `recalcular()` **preserva los totales confirmados** y el grado/escala — no pisa el trabajo
+de captura; `aceptarCalculados()` toma en bloque solo los vacíos, auditado; el período **exige el mes
+cargado** en `nomina_parametros_mes` porque la cesta ticket entra en el diario; y al cerrar se bloquean
+las tres vías de edición (recalcular, aceptar y capturar), verificado.
+
+**Con esto quedan hechas las fases N‑A a N‑D.** Falta solo **N‑E** (Liquidación de Prestaciones
+Sociales), bloqueada por la pregunta N‑3.
+
 
 ### 2026-08-27 — Nómina: motor de cálculo construido (mig. 072 — fases N‑A, N‑B y N‑C)
 

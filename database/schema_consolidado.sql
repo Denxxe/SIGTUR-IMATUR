@@ -5645,6 +5645,53 @@ SELECT v.clave, v.valor, v.descripcion
        ) AS v(clave, valor, descripcion)
  WHERE NOT EXISTS (SELECT 1 FROM public.configuracion_sistema c WHERE c.clave = v.clave);
 
+
+-- =====================================================================
+-- BONO VACACIONAL CALCULADO (migración 073)
+-- =====================================================================
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-072).
+-- Las primas del bono vacacional pasan de capturadas a calculadas con el
+-- motor de la mig. 072. El TOTAL sigue siendo de captura: su fórmula no
+-- está en ninguna fuente del cliente, así que se guarda `total_calculado`
+-- (estimación con supuesto explícito) al lado del confirmado.
+-- Ver database/migrations/073_*.sql y docs/PLAN_MODULO_NOMINA.md §6.4.
+-- =====================================================================
+
+-- ── Parámetros congelados del período ─────────────────────────────────
+ALTER TABLE public.bono_vacacional_periodos ADD COLUMN IF NOT EXISTS monto_cesta_ticket NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE public.bono_vacacional_periodos ADD COLUMN IF NOT EXISTS tasa_dolar         NUMERIC(14,4) NOT NULL DEFAULT 0;
+
+COMMENT ON COLUMN public.bono_vacacional_periodos.monto_cesta_ticket IS
+  'Cesta ticket del mes, congelada al generar (entra en el sueldo normal diario). Viene de nomina_parametros_mes.';
+
+-- ── Entradas del cálculo (auditoría del "por qué salió este número") ──
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS sueldo_base_quincenal  NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS codigo_grado           VARCHAR(10);
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS pct_profesionalizacion NUMERIC(6,3)  NOT NULL DEFAULT 0;
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS anios_administracion   SMALLINT      NOT NULL DEFAULT 0;
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS pct_antiguedad         NUMERIC(6,3)  NOT NULL DEFAULT 0;
+
+-- ── Resultados nuevos ─────────────────────────────────────────────────
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS sueldo_normal_diario NUMERIC(14,2) NOT NULL DEFAULT 0;
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS total_calculado      NUMERIC(14,2);
+ALTER TABLE public.bono_vacacional_detalle ADD COLUMN IF NOT EXISTS advertencias         TEXT;
+
+COMMENT ON COLUMN public.bono_vacacional_detalle.total_calculado IS
+  'ESTIMACIÓN del sistema bajo el supuesto sueldo_normal_diario x días correspondientes. NO es la fórmula del cliente: esa no está documentada en ninguna fuente. Se muestra junto a total_bono_vacacional (el confirmado por Talento Humano) para que la diferencia calibre el supuesto cuando llegue un mes real.';
+COMMENT ON COLUMN public.bono_vacacional_detalle.total_bono_vacacional IS
+  'Total que Talento Humano confirma o corrige. Sigue siendo la cifra oficial mientras la fórmula del total no esté confirmada por el cliente.';
+COMMENT ON COLUMN public.bono_vacacional_detalle.advertencias IS
+  'Lo que el cálculo no pudo resolver para este empleado. Se muestra en la UI antes de permitir el cierre.';
+
+-- ── Quinto tipo de personal ───────────────────────────────────────────
+-- 'Comisión de Servicio' mide exactamente 20 caracteres y la columna era
+-- VARCHAR(20): entraba justo. Se ensancha a 25 para no depender de eso.
+ALTER TABLE public.bono_vacacional_detalle ALTER COLUMN tipo_personal TYPE VARCHAR(25);
+
+ALTER TABLE public.bono_vacacional_detalle DROP CONSTRAINT IF EXISTS bono_vacacional_detalle_tipo_personal_check;
+ALTER TABLE public.bono_vacacional_detalle ADD CONSTRAINT bono_vacacional_detalle_tipo_personal_check
+    CHECK (tipo_personal IN ('Alto Nivel', 'Empleados Fijos', 'Obreros Fijos', 'Contratados', 'Comisión de Servicio'));
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-073).
 --

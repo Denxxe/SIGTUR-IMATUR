@@ -1,9 +1,11 @@
 # PLAN DEL MÓDULO DE NÓMINA — SIGTUR-IMATUR
 
 **Fecha:** 2026-08-07 · **Actualizado:** 2026-08-27
-**Estado:** fases **N‑A, N‑B y N‑C construidas** (mig. 072). Falta **N‑D** (migrar el Bono
-Vacacional al motor) y **N‑E** (Liquidación, bloqueada por N‑3). Las 3 preguntas siguen
-abiertas, pero **ya no bloquean el cálculo**: N‑1 y N‑2 entraron como parámetros. Ver §6.4.
+**Estado:** fases **N‑A, N‑B, N‑C y N‑D construidas** (mig. 072 y 073). Falta solo **N‑E**
+(Liquidación, bloqueada por N‑3). Las 3 preguntas siguen abiertas: N‑1 y N‑2 **ya no bloquean**
+(entraron como parámetros) y la fórmula del **total del bono vacacional** —que no está en
+ninguna fuente— se resolvió dejando la estimación del sistema al lado del total confirmado,
+con la diferencia visible. Ver §6.4 y §6.5.
 **Fuentes:** formato real `INSTITUTO IMATUR JULIO 2026.xlsx` (plantilla de nómina quincenal, **datos de
 prueba** — solo las fórmulas son fuente de verdad) + 4 audios de Talento Humano del 2026-07-23
 (transcripción en `docs/formatos/transcripcion_audios_rrhh_2026-07-23.md`).
@@ -197,7 +199,7 @@ aplica solo a Alto Nivel y Comisión.
 | **N‑A** | Motor de cálculo: tablas de % (profesionalización, antigüedad) como configuración, no como código; `Nomina::calcular()`; pruebas contra los valores de la plantilla | ✅ **HECHO** (mig. 072) |
 | **N‑B** | Entradas que faltan: cuenta bancaria, divisas, sueldo de dependencia de origen; mapeo `nivel_academico` → código de grado; histórico mensual de cesta ticket y tasa | ✅ **HECHO** (mig. 072) |
 | **N‑C** | Nómina quincenal: períodos, snapshot por empleado, cierre y **exportación de las 6 hojas** con `XlsxMultiSheet` | ✅ **HECHO** (mig. 072) |
-| **N‑D** | Migrar Bono Vacacional v1 de captura manual a cálculo, reusando el motor de N‑A | ⏳ Pendiente — el motor ya está, es reemplazar la captura del total por `Nomina::calcular()` |
+| **N‑D** | Migrar Bono Vacacional v1 de captura manual a cálculo, reusando el motor de N‑A | ✅ **HECHO** (mig. 073) — con una salvedad: **el total sigue de captura** porque su fórmula no está en ninguna fuente. Ver §6.5 |
 | **N‑E** | Liquidación de Prestaciones Sociales | 🔒 Bloqueada por **N‑3** |
 
 ### 6.4 Qué quedó construido (2026-08-27, mig. 072)
@@ -238,3 +240,38 @@ extrajo `XlsxMultiSheet::construir()` de `descargar()`, para poder verificar el 
 > **Regla que no se negocia:** nada de esto se programa contra lo dicho en un audio. Cada número entra al
 > código sólo si está en un formato del cliente o confirmado por escrito. Un `85` oído como `45` termina
 > en un pago real.
+
+### 6.5 Bono Vacacional migrado al motor (2026-08-27, mig. 073) — y el hueco que queda
+
+Las primas, el sueldo normal diario y la alícuota ya pasan por `Nomina::calcular()`. Al compartir
+motor con la quincenal, los dos documentos **no pueden discrepar** en la misma prima del mismo
+trabajador. `BonoVacacional::TIPOS = Nomina::TIPOS` y `tipoPersonal()` delega, así que un trabajador
+cae en la misma hoja en ambos documentos. Los días se cuentan **a la fecha de corte** del período, no
+a hoy: generar un período pasado da el mismo número que dio entonces (antes no).
+
+**El total no se pudo calcular, y no se inventó.** La plantilla del cliente documenta la *alícuota*
+—el devengo diario— pero no el monto que se paga; el «mes de bono vacacional ya calculado con números
+reales» que Talento Humano prometió en el audio del 23/07 no llegó. Ante eso había tres salidas:
+
+1. dejar el total en captura pura, como estaba (el sistema no aporta nada);
+2. deducir una fórmula y presentarla como buena (el error más caro posible en un módulo de pago);
+3. calcular una estimación **bajo un supuesto declarado** y mostrarla junto al total confirmado.
+
+Se tomó la tercera. `total_calculado` = `sueldo_normal_diario × días correspondientes`, etiquetado como
+estimación en la BD (comentario de columna), en la UI y en el `.xlsx`. `total_bono_vacacional` sigue
+siendo la cifra oficial. La UI, el cuadro resumen y el export muestran la **diferencia** entre ambos.
+
+Eso convierte la pregunta pendiente en un instrumento que se responde solo: **en cuanto el cliente
+entregue un mes real, la diferencia dice si el supuesto acierta.** Si acierta, el total pasa a
+calcularse y `aceptarCalculados()` se vuelve el flujo normal; si no, la diferencia muestra por dónde
+corregir. Mientras tanto el sistema no afirma un número que no puede sostener.
+
+Detalles de operación: `recalcular()` **preserva los totales confirmados** y el grado/escala (no pisa
+el trabajo de captura); `aceptarCalculados()` toma en bloque solo los que están vacíos, auditado igual
+que la captura fila por fila; el período **exige el mes cargado** en `nomina_parametros_mes`, porque la
+cesta ticket entra en el diario; y al cerrar se bloquean las tres vías de edición (verificado).
+
+**Lo que queda de la fórmula N‑1 aquí:** los días del bono salen de `bono_vac_dias_*` (contrato
+colectivo: 75/75/85/45/75) y la alícuota se recalcula con esos mismos días, no con
+`nomina_dias_bono_vac_base`. Las dos fuentes se contradicen — es exactamente N‑1 — y por eso conviven
+como parámetros hasta que el cliente aclare cuál manda.
