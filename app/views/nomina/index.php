@@ -7,9 +7,22 @@
         <p class="page__subtitle">Registro y reporte del Bono Vacacional en el formato exacto que se envía a la Alcaldía. Talento Humano captura/verifica los montos; el sistema los organiza y exporta.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/nomina/quincenal" class="btn-sig btn-sig--ghost"><i class="bi bi-cash-stack"></i> Nómina quincenal</a>
+        <a href="<?php echo URL_ROOT; ?>/nomina/parametros" class="btn-sig btn-sig--ghost"><i class="bi bi-sliders"></i> Parámetros</a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalNuevoPeriodo">
             <i class="bi bi-plus-lg"></i> Generar período
         </button>
+    </div>
+</div>
+
+<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <i class="bi bi-info-circle"></i>
+    <div>
+        <strong>Este módulo lleva tres documentos.</strong>
+        La <a href="<?php echo URL_ROOT; ?>/nomina/quincenal">nómina quincenal</a> es el pago corriente y
+        el sistema la <em>calcula</em>; el bono vacacional de esta pantalla sigue con el total de
+        captura manual (v1) hasta migrarlo al motor de cálculo; la liquidación de prestaciones
+        sociales está pendiente de un insumo del cliente.
     </div>
 </div>
 
