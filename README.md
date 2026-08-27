@@ -30,7 +30,7 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 ```
 
 **No hay paso 3.** `database/schema_consolidado.sql` incluye el esquema base y
-**todas** las migraciones 001–068. No hay que aplicar nada de
+**todas** las migraciones 001–071. No hay que aplicar nada de
 `database/migrations/`: esa carpeta se conserva como historial y para
 actualizar instalaciones antiguas, no para instalar desde cero.
 

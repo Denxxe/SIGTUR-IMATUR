@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-07 · **Migraciones aplicadas:** hasta **068** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **071** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -27,6 +27,93 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-08-27 — Feriados movibles de Carnaval y Semana Santa (mig. 071)
+
+`Vacacion::diasHabiles()` excluye fines de semana **y feriados**, y el modelo `Feriado` ya distinguía
+bien los fijos (`recurrente = TRUE`, año centinela 2000, comparados por mes-día) de los movibles
+(`recurrente = FALSE`, fecha puntual). El problema era de **datos**: la tabla solo tenía los 12 fijos,
+sin un solo Carnaval ni Semana Santa. El sistema contaba esos 4 días como hábiles y **le descontaba a
+cada trabajador vacaciones que no le corresponden** — sin error visible, solo días mal restados.
+
+Cargados 2026, 2027 y 2028 (12 filas). Las fechas dependen de la Pascua, así que se calcularon con el
+algoritmo Gregoriano anónimo y se **verificaron por dos vías**: contra `easter_date()` de PHP (las 3
+pascuas coinciden) y comprobando que cada día derivado cae en su día de semana (Miércoles de Ceniza en
+miércoles, Lunes de Carnaval en lunes…). Se incluye 2026 aunque ya pasó, porque los períodos se
+registran de forma retroactiva.
+
+Efecto comprobado con `Vacacion::diasHabiles()`:
+
+| Rango | Antes | Ahora |
+|---|---|---|
+| Semana de Carnaval 2026 (lun-vie) | 5 | **3** |
+| Semana Santa 2026 (lun-vie) | 5 | **3** |
+| Semanas de control sin feriados | 5 / 10 | 5 / 10 (sin cambio) |
+
+> **⚠️ Mantenimiento anual.** Estos feriados no se repiten en la misma fecha: hay que cargar los del
+> año siguiente antes de que llegue, desde `/vacaciones/feriados` **sin** marcar «se repite cada año»,
+> o extendiendo la mig. 071. Si nadie lo hace, el conteo vuelve a fallar en silencio. Vale la pena
+> evaluar un generador por año (la fecha es calculable), pero no se construyó en este ciclo.
+
+### 2026-08-27 — Los tres defectos restantes de la auditoría (cierra H-13, H-14 y H-15)
+
+| # | Qué se hizo |
+|---|---|
+| **H-15** | **Las evidencias de talleres salen del web root.** Eran el último archivo de usuario en `public/uploads/`: legibles por URL sin control de rol, y con el enlace roto bajo el vhost donde `public/` es la raíz. Ahora van a `storage/uploads/talleres/` servidas por `DescargaController::taller()` (roles 1,3). El bloque de subida estaba **duplicado** en `store()` y `cambiarEstado()` y ninguna copia validaba MIME real ni tamaño: se unificó en `TalleresController::procesarEvidencias()` con extensión + MIME real + ≤5 MB, igual que expedientes y bienes. **`public/uploads/` se eliminó por completo** (quedaban dos carpetas vacías de la migración de junio) y se limpió su bloque del `.gitignore`. La tabla `taller_evidencias` estaba en 0 filas, así que no hubo archivos que mover. |
+| **H-14** | **Se retiró la columna Tarifa del reporte de rutas** (vista + export a Excel, con su fila de totales recolumnada de 15 a 14 columnas; el PDF nunca la traía). Informaba «Gratuita» para toda ruta, siempre, porque `tiene_tarifa`/`tarifa_monto` no se capturan en ningún formulario. Las columnas **se conservan** esperando D-RT02. |
+| **H-13** | **`DROP TABLE actividades_ruta`** (mig. 070). Verificado antes de soltarla: 0 filas, 0 referencias en `app/` y **0 registros en `audit_logs`** — por eso, a diferencia de `id_oficio`/`instituciones_externas`, no hizo falta conservar su etiqueta en `auditoria/index.php`. Se retiró también su `setval` de `009_fix_sequences.sql`, que habría hecho fallar esa migración en cualquier instalación ya actualizada. **56 → 55 tablas.** |
+
+De paso se corrigieron referencias muertas en `CLAUDE.md`: el módulo «ActividadesRuta» y la tabla
+`ruta_inventario` (eliminada en la mig. 019) seguían listados como vigentes, y el reporte de rutas
+figuraba con «filtros estado/dificultad» cuando `nivel_dificultad` se eliminó en la mig. 021.
+
+### 2026-08-27 — El menú lateral pasa a leer el RBAC real (cierra H-12, sin migración)
+
+El sidebar tenía los permisos cableados por número de rol en 8 bloques de `views/inc/header.php`,
+mientras el Router los resolvía desde `permisos_rol`. Ahora hay **una sola definición**:
+`RolesController::getNavegacion()` (token de permiso → url, etiqueta, ícono, grupo) y
+`getNavegacionVisible()`, que filtra con `roleHasModulo()`. Agregar un módulo al menú = agregar una
+fila. Los 8 `in_array($rol, [...])` desaparecieron.
+
+Fallaba en los dos sentidos, y los dos quedaron corregidos:
+
+| Caso | Antes | Ahora |
+|---|---|---|
+| Rol 2 (RRHH) con `PasantesController` y `UsuariosController` | Tenía el permiso, **no veía el enlace** | Los ve |
+| Rol 6 (Solo Lectura) con `VisitantesController` | Tenía el permiso, no veía el enlace | Lo ve |
+| Rol 5 (Recepción) **sin** `ReportesController` | Veía «Reportes» → *Acceso Denegado* | Ya no aparece |
+
+Lo **no delegable** queda declarado en la misma tabla con `soloAdmin`: Bitácora (exclusiva del
+Administrador por `AuditoriaController::guardAdmin`, mig. 055), Municipios y Parroquias (catálogos
+geográficos, fuera de `getModulos()`). `VisitasController` se excluye a propósito del menú: es acceso
+directo desde Visitantes. Verificado simulando los 6 roles contra `permisos_rol`.
+
+> **Efecto colateral a tener en cuenta:** ahora el menú refleja *exactamente* lo que dice
+> *Roles y Permisos*. Si RRHH no debe administrar usuarios, la corrección es quitarle
+> `UsuariosController` en esa pantalla — ya no hay un segundo criterio escondido en la vista.
+
+### 2026-08-27 — Semilla de ubicaciones: el módulo de Bienes era inalcanzable (mig. 069)
+
+`InventarioController::store()` exige `id_ubicacion > 0` y la tabla `ubicaciones` estaba **vacía**:
+era literalmente imposible registrar un bien, así que las migraciones 062-067 (cuatro fases de
+trabajo) no se podían usar. La mig. 069 siembra **una ubicación por departamento activo** —el
+departamento es la unidad de responsabilidad, y el responsable del bien se deriva de él (mig. 066)—
+más el **Depósito General** (`es_deposito`), y asigna la `sede` de cada una: la Oficina del
+Aeropuerto en *Aeropuerto de Cumaná*, el resto en *Sede Principal*. Total: 24 oficinas + 1 depósito.
+Idempotente; verificada aplicándola tres veces.
+
+Al sembrarla salió a la luz un hueco de la Fase 1: **`ubicaciones.sede` y `es_deposito` se leían en
+todo el módulo** (`Inventario::LATERAL_RESPONSABLE`, `DotacionInventario`, el reporte de suficiencia,
+los filtros de depósito) **pero no se escribían en ninguna parte** — no estaban en `Ubicacion::save()`,
+ni en el controlador, ni en el modal. Una semilla que la UI no puede mantener no sirve, así que se
+completaron: enum `Ubicacion::SEDES` (patrón H-07), columna Sede y badge *Depósito* en el listado,
+selector de sede y casilla de depósito en el modal.
+
+Los nombres de las ubicaciones arrancan iguales a los del departamento porque es el dato cierto; el
+cliente los renombra a su referencia real (planta, mezzanina, cubículo) y puede crear varias por
+departamento. **Sigue pendiente de datos, no de código:** cargar los ~142 bienes reales y asignar el
+Coordinador de *Compra de Bienes y Servicios* (mientras el puesto esté vacante el sistema bloquea los
+movimientos, por diseño B-32 — hoy el responsable derivado sale como vacante).
 
 ### 2026-08-04 — Instalación desde cero reparada: `schema_consolidado.sql` autosuficiente (sin migración)
 
@@ -159,7 +246,7 @@ Auditoría: estas estructuras existían en la BD pero **ninguna parte del sistem
 | ✅ | `rutas.nombre_facilitador_externo` | Solo se **leía** en el reporte de Rutas (`ReportesController::rutas`), nunca se capturaba en ninguna pantalla → siempre NULL. Cierra **D-RT04**. |
 | ✅ | `participantes_ruta.id_institucion` + tabla `instituciones_externas` | `RutasController` insertaba **siempre `null`**; la tabla quedó en 0 filas y sin UI desde que se retiró el módulo de instituciones externas (2026-05-31). Cierra **D-RT05** (el indicador CMI de "instituciones participantes" queda descartado). |
 | ✅ | `talleres.id_oficio` + tabla `oficios` | Cero referencias en `TalleresController`, modelo `Taller` y vistas. `oficios` (oficios **recibidos**, externos → IMATUR) nunca tuvo CRUD; sus 2 únicas filas eran basura de prueba (asuntos `"klkkl"`, `"kjhgfd"`). Cierra **D-FO06**. |
-| ⏸️ | `rutas.tiene_tarifa` / `tarifa_monto` | **NO se eliminó**: sigue pendiente de decisión del cliente (D-RT02). Ojo: hoy solo se lee, nunca se escribe → la columna "Tarifa" del reporte **siempre dice "Gratuita"**. O se implementa la captura o se quita del reporte. |
+| ⏸️ | `rutas.tiene_tarifa` / `tarifa_monto` | **NO se eliminó**: sigue pendiente de decisión del cliente (D-RT02). *Actualización 2026-08-27:* ya **no se lee en ninguna parte** — se retiró del reporte porque informaba "Gratuita" siempre (H-14). Las columnas quedan inertes de verdad, esperando D-RT02. |
 
 - **No confundir:** `oficios_emitidos` (oficios **salientes** generados desde rutas) sí está en uso y no se tocó.
 - **Código ajustado:** `Ruta::inscribir()` pierde el parámetro `$id_institucion` (firma nueva: `(id_ruta, id_persona, user_id, observaciones)`), `Ruta::inscribirLibre()` y `RutasController` dejan de enviarlo, y el `COALESCE` del facilitador en `ReportesController` se simplifica.
@@ -406,7 +493,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 ### 3.5 Turismo (Rutas)
 | ID | Pregunta |
 |----|----------|
-| 🟡 D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y cuál es el flujo de pago? (columnas `tiene_tarifa`/`tarifa_monto` existen pero **nunca se escriben** → el reporte siempre dice "Gratuita"). **Única pregunta viva de Turismo.** |
+| 🟡 D-RT02 | Tarifa Cumaná Histórica: ¿quién cobra y cuál es el flujo de pago? Las columnas `tiene_tarifa`/`tarifa_monto` existen pero nunca se capturaron; desde el 2026-08-27 **tampoco se reportan** (H-14), así que el sistema ya no afirma nada falso. La respuesta define si se construye la captura o se eliminan las columnas. **Única pregunta viva de Turismo.** |
 | 🟡 D-RT03 | Al **Finalizar** una ruta, ¿generar informe/oficio automáticamente? |
 | ✅ D-RT05 | ~~Instituciones participantes en rutas~~ — **CERRADO 2026-08-04:** eliminado (mig. 060). El indicador CMI queda descartado. |
 | ✅ D-RT04 | ~~Facilitador externo: ¿lista o texto libre?~~ — **CERRADO 2026-08-04:** columna eliminada (mig. 060), nunca se usó. |
@@ -432,7 +519,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | # | Hallazgo | Estado | Cierra con |
 |---|----------|--------|-----------|
 | H-04 | Baja de bien no actualiza `condicion` | ✅ **Cerrado** (mig. 062): `estatus` (administrativo) quedó separado de `condicion` (físico); un bien dado de baja **sale** del inventario activo y ya no contamina KPIs ni CMI-I01/I03 | — |
-| H-09 | Columnas inertes | ✅ **Cerrado casi por completo** (mig. 060): eliminadas `participantes_ruta.id_institucion`, `rutas.nombre_facilitador_externo`, `talleres.id_oficio`. **Queda solo** `rutas.tiene_tarifa`/`tarifa_monto` | D-RT02 — usar o quitar del reporte |
+| H-09 | Columnas inertes | ✅ **Cerrado** (mig. 060 + H-14): eliminadas `participantes_ruta.id_institucion`, `rutas.nombre_facilitador_externo`, `talleres.id_oficio`. `rutas.tiene_tarifa`/`tarifa_monto` se conservan pero ya **no se leen** (se quitaron del reporte el 2026-08-27), así que dejaron de producir un dato falso | D-RT02 decide si se capturan o se eliminan |
 | H-10 | Tablas sin UI | ✅ **Cerrado** (mig. 060): `oficios` e `instituciones_externas` eliminadas (vacaciones ✅, `taller_inventario` ya lo estaba) | — |
 
 > Resueltos previamente: H-01, H-02, H-03 (visitas inmutables), H-05 (validaciones servidor), H-06 (correlativo atómico), H-07 (enums centralizados), H-08 (FKs validadas), H-11 (género M/F).
@@ -441,9 +528,10 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 
 | # | Hallazgo | Estado |
 |---|----------|--------|
-| H-12 | **El sidebar contradice al RBAC dinámico.** El Router resuelve permisos desde `permisos_rol` (editable en *Roles y Permisos*), pero `views/inc/header.php` los tiene cableados por número de rol (`in_array($rol,[1,2,3,5])`, 8 casos). Todo rol creado desde la UI nace a medias: recibe el permiso pero **no ve el enlace**. Comprobado con el rol 6 «Solo Lectura», que tiene acceso a `VisitantesController` y no lo ve en el menú | ⚠️ **Abierto** — el sidebar debe consultar el mismo mapa que el Router (`RolesController::getMapaRbac()`) |
-| H-13 | **Tabla huérfana `actividades_ruta`**: cero referencias en `app/` desde que el módulo se retiró (2026-05-31). Mismo caso que las eliminadas en la mig. 060 | ⚠️ **Abierto** — candidata a mig. 069 |
-| H-14 | **`rutas.tiene_tarifa`/`tarifa_monto` nunca se escriben** pero sí se leen: `ReportesController.php:1298` y `reportes/rutas.php:257`. El reporte dice **«Gratuita» para toda ruta, siempre** — dato falso, no solo columna inerte | ⚠️ **Abierto** — o se implementa la captura o se quita del reporte (D-RT02) |
+| H-12 | **El sidebar contradice al RBAC dinámico.** El Router resuelve permisos desde `permisos_rol` (editable en *Roles y Permisos*), pero `views/inc/header.php` los tenía cableados por número de rol (`in_array($rol,[1,2,3,5])`, 8 casos) | ✅ **Cerrado (2026-08-27, sin migración).** El sidebar se genera con `RolesController::getNavegacion()` + `getNavegacionVisible()`, que resuelven la visibilidad con `roleHasModulo()` — el mismo mapa del Router. Fallaba en **los dos sentidos** y ambos quedaron corregidos: el rol 2 tenía `PasantesController`/`UsuariosController` y no veía los enlaces, el rol 6 tenía `VisitantesController` y tampoco; al revés, «Reportes» se mostraba a todos y el rol 5 (que no lo tiene) aterrizaba en *Acceso Denegado*. Lo no delegable (Bitácora, Municipios, Parroquias) queda marcado con `soloAdmin` en la misma definición. Verificado simulando los 6 roles |
+| H-13 | **Tabla huérfana `actividades_ruta`**: cero referencias en `app/` desde que el módulo se retiró (2026-05-31) | ✅ **Cerrado (mig. 070).** `DROP TABLE ... CASCADE`. Verificado antes de soltarla: 0 filas, 0 referencias en `app/`, **0 registros en `audit_logs`** — por eso no hizo falta conservar etiqueta en `auditoria/index.php`. Se retiró también su `setval` de `009_fix_sequences.sql`, que habría hecho fallar esa migración en instalaciones ya actualizadas. 56 → 55 tablas |
+| H-14 | **`rutas.tiene_tarifa`/`tarifa_monto` nunca se escriben** pero sí se leían: el reporte decía **«Gratuita» para toda ruta, siempre** — dato falso, no solo columna inerte | ✅ **Cerrado (2026-08-27, sin migración).** Se retiró la columna Tarifa del reporte de rutas (vista + export a Excel, con su fila de totales recolumnada). El PDF nunca la traía. **Las columnas se conservan** a la espera de D-RT02: si el cliente confirma que se cobra, se implementa la captura y se reactiva; si descarta el cobro, se eliminan |
+| H-15 | **Las evidencias de talleres eran el último archivo de usuario en `public/uploads/`**: legibles por URL sin control de rol, y el enlace `URL_ROOT.'/public/uploads/...'` **se rompía bajo el vhost** `SIGTUR-IMATUR.test` (donde `public/` ya es la raíz), así que solo se veían en una de las dos URLs documentadas. El bloque de subida además estaba **duplicado** en `store()` y `cambiarEstado()`, y ninguna copia validaba MIME real ni tamaño (confiaban en `$_FILES['type']`, que lo manda el cliente) | ✅ **Cerrado (2026-08-27, sin migración).** Van a `storage/uploads/talleres/` servidas por `DescargaController::taller()` (roles 1,3); subida unificada en `TalleresController::procesarEvidencias()` con extensión + MIME real + ≤5 MB, igual que expedientes/bienes. **`public/uploads/` se eliminó por completo** (quedaban dos carpetas vacías de la migración de junio) y se limpió su bloque del `.gitignore` |
 
 ---
 
@@ -490,7 +578,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 - **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). 🔒 Falta: **nómina quincenal** y **Liquidación de Prestaciones Sociales** — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
-- **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía. 🔒 Falta: tarifa (D-RT02), informe/oficio automático al finalizar (D-RT03).
+- **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía, informe con demografía. 🔒 Falta: tarifa (D-RT02 — ya no se reporta un dato falso, ver H-14), disparar el informe automáticamente al Finalizar (D-RT03), y **responder el cuestionario de descubrimiento** (R-07/R-08 pueden forzar rediseño).
 - **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **3 documentos imprimibles** bloqueados por los formatos del cliente (informe de bienes nuevos, acta de baja, acta de asignación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
 - **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.

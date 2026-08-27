@@ -1,5 +1,9 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-08-04 — **Módulo de Bienes: Fases 1, 2 y 4 completas, Fase 3 parcial** (mig. 062-065): `estatus` separado de `condicion` (cierra H-04), código oficial por partes con flujo de codificación contra el BM-1, datos de adquisición, responsable único, sedes y 11 categorías internas. **Fase 2**: movimientos con origen/destino y autorización por cargo+departamento, mantenimiento con salida/retorno registrado (`inventario_mantenimientos`), todo transaccional. **Fase 3**: expediente documental por bien, recepción del BM-1 y hoja de vida; falta la generación de documentos (bloqueada por los formatos del cliente). **Fase 4**: etiquetas con QR, reportes filtrables para la Presidencia, alertas de garantía/preventivo/sin codificar, mantenimiento preventivo programado, conteo por cambio de gestión con acta, y **lectura/escritura por rol** (`InventarioController::puedeEscribir()`, B-58). **Lo único que falta son 3 documentos bloqueados por los formatos del cliente: `docs/PLAN_MODULO_BIENES.md` §12.** Antes: **Módulo de Bienes en replanteamiento**: el levantamiento con el cliente (59 preguntas respondidas) mostró que lo construido es un CRUD genérico y lo que hace falta es un expediente administrativo por bien; plan por fases en `docs/PLAN_MODULO_BIENES.md`. Antes en la misma fecha: carnet rediseñado según el modelo físico (mig. 061), limpieza de columnas inertes (mig. 060) y **`database/schema_consolidado.sql` regenerado y ahora es autosuficiente (001–068)**: instalar desde cero = importar ese único archivo, sin migraciones encima. Incluye catálogos institucionales sembrados y un administrador de arranque (`admin`/`Sigtur2026`, cambiar al primer ingreso). Verificado cargándolo en una BD vacía: 49 tablas, 0 errores. Antes, el consolidado cubría solo hasta la 023 y el README mandaba aplicar 024–052, así que **toda instalación nueva quedaba sin las migraciones 053–059** (carnet, auditoría de login, alertas vistas, recuperación de contraseña, nómina).
+**Última actualización:** 2026-08-27 (b) — **Cierre de los 4 defectos abiertos + feriados movibles (mig. 070-071).** (1) Las **evidencias de talleres** eran el último archivo de usuario en `public/uploads/`: legibles por URL sin control de rol y con el enlace roto bajo el vhost donde `public/` es la raíz. Ahora van a `storage/uploads/talleres/` servidas por `DescargaController::taller()`, con el bloque de subida unificado en `TalleresController::procesarEvidencias()` (antes duplicado y sin validar MIME real ni tamaño). **`public/uploads/` ya no existe — no reintroducirlo.** (2) **H-14**: se retiró la columna Tarifa del reporte de rutas (informaba «Gratuita» siempre). (3) **H-13**: `DROP TABLE actividades_ruta` (mig. 070), 56 → 55 tablas. (4) **Feriados movibles** de Carnaval y Semana Santa 2026-2028 (mig. 071): faltaban por completo y el conteo de vacaciones descontaba 4 días hábiles de más al año.
+
+**Anterior:** 2026-08-27 — **El menú lateral pasa a leer el RBAC real (cierra H-12) + semilla de ubicaciones (mig. 069).** El sidebar tenía los permisos cableados por número de rol en 8 bloques de `header.php` mientras el Router los resolvía desde `permisos_rol`; ahora se genera con `RolesController::getNavegacion()`/`getNavegacionVisible()` filtrando por `roleHasModulo()` — **ver la sección «Sidebar» del RBAC antes de tocar el menú**. La mig. 069 siembra `ubicaciones` (una por departamento + Depósito General, con su sede): sin esas filas era **imposible registrar un bien**, así que las fases 1-4 del módulo (mig. 062-067) estaban inalcanzables. De paso se completó un hueco de la Fase 1: `ubicaciones.sede`/`es_deposito` se leían en todo el módulo pero no se escribían en ninguna parte.
+
+**Anterior:** 2026-08-04 — **Módulo de Bienes: Fases 1, 2 y 4 completas, Fase 3 parcial** (mig. 062-065): `estatus` separado de `condicion` (cierra H-04), código oficial por partes con flujo de codificación contra el BM-1, datos de adquisición, responsable único, sedes y 11 categorías internas. **Fase 2**: movimientos con origen/destino y autorización por cargo+departamento, mantenimiento con salida/retorno registrado (`inventario_mantenimientos`), todo transaccional. **Fase 3**: expediente documental por bien, recepción del BM-1 y hoja de vida; falta la generación de documentos (bloqueada por los formatos del cliente). **Fase 4**: etiquetas con QR, reportes filtrables para la Presidencia, alertas de garantía/preventivo/sin codificar, mantenimiento preventivo programado, conteo por cambio de gestión con acta, y **lectura/escritura por rol** (`InventarioController::puedeEscribir()`, B-58). **Lo único que falta son 3 documentos bloqueados por los formatos del cliente: `docs/PLAN_MODULO_BIENES.md` §12.** Antes: **Módulo de Bienes en replanteamiento**: el levantamiento con el cliente (59 preguntas respondidas) mostró que lo construido es un CRUD genérico y lo que hace falta es un expediente administrativo por bien; plan por fases en `docs/PLAN_MODULO_BIENES.md`. Antes en la misma fecha: carnet rediseñado según el modelo físico (mig. 061), limpieza de columnas inertes (mig. 060) y **`database/schema_consolidado.sql` regenerado y ahora es autosuficiente (001–068)**: instalar desde cero = importar ese único archivo, sin migraciones encima. Incluye catálogos institucionales sembrados y un administrador de arranque (`admin`/`Sigtur2026`, cambiar al primer ingreso). Verificado cargándolo en una BD vacía: 49 tablas, 0 errores. Antes, el consolidado cubría solo hasta la 023 y el README mandaba aplicar 024–052, así que **toda instalación nueva quedaba sin las migraciones 053–059** (carnet, auditoría de login, alertas vistas, recuperación de contraseña, nómina).
 
 **Anterior:** 2026-07-16 (migración 059; **Nómina — Bono Vacacional v1** "registro + reporte": historial salarial por empleado (`empleado_salarios`), módulo `/nomina` (períodos + captura/edición + cierre), escritor OOXML multi-hoja reusable `XlsxMultiSheet` para exportar en el formato exacto que exige la Alcaldía; días base por tipo de personal configurables. Liquidación de Prestaciones Sociales queda para una 2da entrega — ver `docs/BACKLOG.md` §3.1 — suite `php tests/run.php` 18/18 ✓)  
 **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 · Custom MVC (sin Composer)
@@ -45,7 +49,7 @@ app/
 | **RRHH** | Empleados, Cargos, Departamentos, Asistencias, Vacaciones, **Nomina** | personas, empleados, cargos, departamentos, asistencias, horarios*, permisos_laborales*, vacaciones*, empleado_salarios, bono_vacacional_periodos/detalle |
 | **Inventario** | Inventario, Categorias, Ubicaciones, ActividadesInventario | inventario, categorias, ubicaciones, actividad_inventario |
 | **Formación** | Talleres, UbicacionesFormacion, Pasantes | talleres, ubicaciones_formacion, pasantes, pasante_documentos, taller_informes, taller_inventario, participantes_taller |
-| **Turismo** | Rutas, ActividadesRuta, Visitantes, Visitas | rutas, puntos_ruta, actividades_ruta, ruta_inventario, visitantes, visitas |
+| **Turismo** | Rutas, Visitantes, Visitas | rutas, puntos_ruta, participantes_ruta, ruta_informes, oficios_emitidos, visitantes, visitas |
 | **Ubicación** | Municipio, Parroquia | municipio, parroquia |
 | **Sistema** | Usuarios, Roles, Auditoria, **Config** | usuarios, roles, audit_logs, configuracion_sistema |
 | **Reportes** | Reportes, Dashboard | — (queries JOIN sobre todas las tablas) |
@@ -69,7 +73,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 |--------|--------|--------------------------------------|
 | 1 | Administrador | `'*'` — acceso total sin restricción |
 | 2 | RRHH | Dashboard, Empleados, Cargos, Departamentos, Horarios, Amonestaciones, Permisos, Asistencias, Visitantes, Visitas, Reportes, Config |
-| 3 | Turismo | Dashboard, Rutas, ActividadesRuta, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
+| 3 | Turismo | Dashboard, Rutas, Talleres, UbicacionesFormacion, Pasantes, Visitantes, Visitas, Reportes |
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 | 5 | Recepción | Dashboard, Visitantes, Visitas, Asistencias |
 
@@ -84,17 +88,27 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | `permisos`, `exportarPermisosCsv` | [1, 2] |
 | `indicadores`, `index` | todos |
 
-### Sidebar por rol (header.php)
+### Sidebar (header.php) — generado desde el RBAC, no cableado (H-12, 2026-08-27)
 
-| Sección | Condición PHP |
-|---------|--------------|
-| RRHH | `in_array($rol, [1, 2])` |
-| Inventario | `in_array($rol, [1, 4])` |
-| Formación | `in_array($rol, [1, 3])` |
-| Turismo (Rutas + Actividades) | `in_array($rol, [1, 3])` |
-| Visitantes / Visitas / Asistencias | `in_array($rol, [1, 2, 3, 5])` |
-| Análisis / Reportes | todos los roles |
-| Sistema + Configuración | `in_array($rol, [1, 2])` |
+El menú **no** tiene condiciones por número de rol. `header.php` recorre
+`RolesController::getNavegacionVisible()`, que filtra `getNavegacion()` con `roleHasModulo()` — el
+**mismo mapa** (`permisos_rol`) que aplica el Router. Consecuencias prácticas:
+
+- **Para agregar o mover un módulo del menú, editar `RolesController::getNavegacion()`** (token de
+  permiso → `url`, `label`, `icon`, `grupo`). No tocar la vista. El orden del array es el orden de
+  aparición y los grupos se dibujan según su primera aparición; los grupos sin ítems no se dibujan.
+- **Nunca escribir `in_array($rol, [...])` en el sidebar.** Antes había 8 bloques así y contradecían
+  al RBAC en ambos sentidos: roles con permiso que no veían el enlace (rol 2 → Pasantes/Usuarios;
+  rol 6 → Visitas) y un enlace visible para todos que llevaba a *Acceso Denegado* (rol 5 → Reportes).
+- Lo **no delegable** se marca con `'soloAdmin' => true` en la misma definición, porque no vive en
+  `permisos_rol`: Bitácora (`AuditoriaController::guardAdmin`, mig. 055), Municipios y Parroquias
+  (fuera de `getModulos()`). `AuditoriaPapelera` **sí** es delegable y se resuelve normal.
+- `DashboardController` se pinta siempre, arriba y sin etiqueta de grupo (todo rol lo tiene:
+  `storePermisos()` lo agrega de oficio). `VisitasController` se excluye del menú a propósito — es
+  acceso directo desde Visitantes.
+- Los guards **por método** son otra capa y siguen siendo válidos: el enlace «Ver centro de alertas»
+  de la campana usa `in_array($rol,[1,2])` porque replica el `requireRoles([1,2])` de
+  `ReportesController::alertas()`, no un permiso de módulo.
 
 ---
 
@@ -141,7 +155,7 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | Tabla | Descripción |
 |-------|-------------|
 | `categorias` | Clasificación de bienes |
-| `ubicaciones` | Oficinas/almacenes; FK `"departamento _d"` (columna con espacio) |
+| `ubicaciones` | Oficinas/almacenes; FK `"departamento _d"` (columna con espacio); `sede` (enum `Ubicacion::SEDES`) y `es_deposito`. **Sembrada en la mig. 069**: una por departamento + Depósito General — sin filas aquí es imposible registrar un bien |
 | `inventario` | Bienes: codigo_bn, marca, modelo, serial, condicion |
 | `actividad_inventario` | Movimientos: Asignacion/Devolucion/Traslado/Baja/Mantenimiento |
 
@@ -159,10 +173,8 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 #### Turismo
 | Tabla | Descripción |
 |-------|-------------|
-| `rutas` | Itinerarios; `requiere_formacion BOOL` *(006)*; `tiene_tarifa BOOL`, `tarifa_monto DECIMAL` *(007)* — ⚠️ **tarifa nunca se escribe desde la UI**, ver D-RT02. (`nivel_dificultad` eliminado en 021; `nombre_facilitador_externo` en **060**) |
+| `rutas` | Itinerarios; `requiere_formacion BOOL` *(006)*; `tiene_tarifa BOOL`, `tarifa_monto DECIMAL` *(007)* — ⚠️ **nunca se escriben desde la UI** y desde el 2026-08-27 **tampoco se leen**: se retiraron del reporte de rutas porque informaban «Gratuita» para toda ruta, siempre (H-14). Las columnas se conservan a la espera de D-RT02; si el cliente descarta el cobro, se eliminan. **No volver a mostrarlas sin implementar la captura.** (`nivel_dificultad` eliminado en 021; `nombre_facilitador_externo` en **060**) |
 | `puntos_ruta` | Paradas con lat/lon y orden |
-| `actividades_ruta` | Eventos programados por ruta |
-| `ruta_inventario` | Bienes asignados a una ruta |
 | `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)*; representante del menor *(038)*. (`id_institucion` eliminado en **060**) |
 | `visitantes` | Personas externas que visitan IMATUR físicamente |
 | `visitas` | Marcaje entrada/salida; `id_empleado` (empleado visitado) |
@@ -248,9 +260,14 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | 065 | `065_bienes_fase4_conteo_preventivo.sql` | OK Ejecutado (2026-08-04) | **Bienes, Fase 4.** `inventario_conteos` + `inventario_conteo_detalle` = **conteo por cambio de gestion** (el dolor #2, B-05/B-48): al abrirlo se **congela** lo que el sistema cree tener de cada bien (ubicacion, estatus, condicion) y luego se registra lo hallado; el acta compara ambos. Indice unico parcial: **un solo conteo abierto** a la vez. El cierre exige que no queden bienes sin verificar, y **no modifica los bienes** - las diferencias se corrigen con movimientos normales, para que quede rastro. `inventario_mantenimiento_plan` = **preventivo programado** (B-56); al retornar de un mantenimiento el calendario avanza solo (`PlanMantenimiento::marcarRealizado`). Config `dias_aviso_garantia` / `dias_aviso_mantenimiento` / `dias_alerta_sin_codificar` para los umbrales del Centro de Alertas. Idempotente. |
 | 066 | `066_bienes_responsable_automatico.sql` | OK Ejecutado (2026-08-05) | **El responsable del bien pasa a ser AUTOMATICO** (B-68). Se **elimina** `inventario.id_responsable`: el responsable ya no se almacena, se **deriva** en la consulta (`Inventario::LATERAL_RESPONSABLE`) siguiendo bien -> ubicacion -> departamento -> jefatura, con prioridad **Director** y en su defecto **Coordinador** (`cargos.nivel_jerarquico`). Los bienes en **deposito** no pertenecen a un departamento: su custodio es la jefatura de la Coordinacion de Bienes (`bienes_depto_autoriza`). **Por que derivar y no recalcular:** una columna almacenada habria que reescribirla al cambiar un cargo, al egresar un empleado o al trasladar un bien, y basta olvidar un caso para mostrar como responsable a quien ya no lo es. El historico no se pierde: `actividad_inventario.id_empleado_responsable` guarda el responsable de cada movimiento. El tipo de movimiento `Asignacion de responsable` sale de `TIPOS_MANUALES` (se conserva la constante para registros historicos). CMI-I03 y el reporte de inventario recalculados sobre la derivacion. |
 | 067 | `067_bienes_respuestas_cliente.sql` | OK Ejecutado (2026-08-05) | **Respuestas del cliente B-63, B-65, B-66, B-67.** **B-66:** se ELIMINAN `inventario.tipo_bien` y `cantidad` (R-10) — IMATUR no lleva consumibles y el registro es individual; se limpiaron tambien las constantes del modelo y las consultas CMI-I01/I03 que las usaban. **B-67:** `retirado_alcaldia` + `fecha_retiro` — el bien dado de baja sigue en IMATUR hasta que la Alcaldia lo retire, y se distingue "Dado de baja · Por retirar" de "· Retirado" (`Inventario::marcarRetirado()` / `porRetirar()`). **B-65:** la **Oficina de Informacion Turistica (Aeropuerto)** pasa a ser un DEPARTAMENTO (Oficina bajo Presidencia) con su propio coordinador — y por la mig. 066 ese coordinador es automaticamente el responsable de sus bienes. Verificado antes de crearla: no existia en `departamentos` ni en el organigrama oficial. Su ubicacion jerarquica se confirmo en la mig. 068 (pasa a Planificacion y Gestion Turistica). **B-63:** `inventario_dotacion` (unidades por empleado y categoria) + reporte `/inventario/suficiencia`: compara los bienes de cada departamento contra su numero de empleados. Excluye deposito y bienes de baja/extraviados/robados. Idempotente. |
+| 071 | `071_feriados_movibles.sql` | ✅ Ejecutado (2026-08-27) | **Feriados movibles: Carnaval y Semana Santa (2026-2028).** `Vacacion::diasHabiles()` excluye fines de semana **y feriados**, y `Feriado` ya distinguía fijos (`recurrente = TRUE`, año centinela 2000, comparados por mes-día) de movibles (`recurrente = FALSE`, fecha puntual) — pero la tabla solo tenía los **12 fijos**: ningún Carnaval ni Semana Santa. El sistema contaba esos 4 días como hábiles y **descontaba vacaciones que no correspondían**. Las fechas se calcularon con el algoritmo Gregoriano anónimo y se verificaron por dos vías (contra `easter_date()` de PHP y comprobando el día de semana de cada uno). Verificado el efecto: una semana de Carnaval pasa de 5 a **3** días hábiles; semanas de control siguen en 5 y 10. **⚠️ Mantenimiento anual:** no se repiten en la misma fecha, hay que cargar los del año siguiente desde `/vacaciones/feriados` (sin marcar «se repite cada año») o extendiendo esta migración; si nadie los carga, el conteo vuelve a fallar **en silencio**. |
+| 070 | `070_drop_actividades_ruta.sql` | ✅ Ejecutado (2026-08-27) | **DROP TABLE `actividades_ruta`** (cierra **H-13**). El módulo "Actividades de ruta" se retiró el 2026-05-31; la tabla quedó atrás con **cero referencias** en `app/`, **0 filas** y **0 registros** en `audit_logs` — verificado antes de soltarla, por eso (a diferencia de `id_oficio`/`instituciones_externas`) no hizo falta conservar etiqueta en `auditoria/index.php`. `CASCADE` cubre sus 2 FKs, el índice `idx_act_ruta_fecha`, la PK y la secuencia. Se **retiró también su `setval` de `009_fix_sequences.sql`**: dejarlo haría fallar esa migración en cualquier instalación ya actualizada. 56 → **55 tablas**. |
+| 069 | `069_ubicaciones_semilla.sql` | ✅ Ejecutado (2026-08-27) | **Semilla de ubicaciones — desbloquea el registro de bienes.** `InventarioController::store()` exige `id_ubicacion > 0` y la tabla estaba **vacía**: era imposible registrar un bien, así que las fases 1-4 (mig. 062-067) no se podían usar. Siembra **una ubicación por departamento activo** (el departamento es la unidad de responsabilidad: el responsable se deriva de él, mig. 066) + el **Depósito General** (`es_deposito`, área común de los bienes sin asignar, B-23/B-25) y asigna la `sede` de cada una (B-24): Oficina del Aeropuerto → *Aeropuerto de Cumaná*, resto → *Sede Principal*. Total 24 oficinas + 1 depósito. Los nombres arrancan iguales a los del departamento (dato cierto) y se renombran desde la UI; la relación es 1:N, se pueden crear varias por departamento. **De paso se completó un hueco de la Fase 1:** `sede` y `es_deposito` se **leían** en todo el módulo (`Inventario::LATERAL_RESPONSABLE`, `DotacionInventario`, reporte de suficiencia, filtro de depósito) pero **no se escribían en ninguna parte** — faltaban en `Ubicacion::save()`, en el controlador y en el modal; ahora se capturan (enum `Ubicacion::SEDES`, patrón H-07). Idempotente (verificada aplicándola 3 veces). Pendiente de **datos**: cargar los ~142 bienes y asignar el Coordinador de *Compra de Bienes y Servicios* (vacante = movimientos bloqueados por diseño, B-32). |
 | 068 | `068_aeropuerto_bajo_planificacion.sql` | OK Ejecutado (2026-08-05) | La **Oficina de Informacion Turistica (Aeropuerto)** pasa de Presidencia a la **Direccion de Planificacion y Gestion Turistica**, que es donde encaja por funcion (atencion al turista), junto a Promocion Turistica, Calidad y Servicios Turisticos, Proyectos e Inversion, Formacion y Comunicacion. La mig. 067 la habia creado bajo Presidencia por analogia con las oficinas de staff, marcandolo como *por confirmar*; el cliente confirmo esta ubicacion. Solo cambia la jerarquia: **no afecta a los bienes ni a su responsable**, que se deriva del departamento del bien (mig. 066), no de su posicion en el organigrama. Idempotente. |
 
-> **Fuente única de verdad (regenerado 2026-08-04):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–068** (56 tablas) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (49 tablas, 0 errores, login funcional).
+> **Fuente única de verdad (regenerado 2026-08-04, ampliado con las mig. 069-071 el 2026-08-27):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–071** (**55 tablas**) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 55 tablas, 25 ubicaciones, 24 feriados, 0 errores).
+>
+> ⚠️ **Al editar el consolidado a mano**, recordar que el dump abre con `SELECT pg_catalog.set_config('search_path', '', false)`: **toda** sentencia añadida debe calificar el esquema (`public.tabla`), o falla con «no existe la relación». Y si inserta filas con ids explícitos, el `setval` correspondiente del final debe quedar por delante del último id (pasó con `feriados_id_seq`, 12 → 24 en la mig. 071).
 >
 > **Instalar desde cero = importar ese archivo y nada más.** No hay que aplicar ninguna migración encima; `database/migrations/` queda como historial y para actualizar instalaciones antiguas.
 >
@@ -288,7 +305,7 @@ created_by, updated_by, deleted_by  ← INT (id del usuario)
 | Talleres con filtros estado/tipo | 1, 3 | CSV + PDF |
 | Dossier integral de taller | 1, 3 | Excel (multi-sección) |
 | Participantes de un taller | 1, 3 | CSV |
-| Rutas con filtros estado/dificultad | 1, 3 | CSV + PDF |
+| Rutas con filtros estado/tipo | 1, 3 | CSV + PDF |
 | Pasantes con estado y tutor | 1, 3 | CSV + PDF |
 | Inventario con filtros condición/categoría | 1, 4 | CSV + PDF |
 | Bienes dados de baja | 1, 4 | CSV |
@@ -351,7 +368,9 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 
 **Anti-IDOR en borrados de registros hijos:** `EmpleadosController::eliminarFamiliar/Curso/Experiencia` validan que el registro pertenezca a la **persona** del empleado (`personaDeEmpleado()` + `find()` del registro) antes de borrar; `eliminarDocumento` valida `id_empleado`. Al agregar nuevos borrados de sub-registros por id, replicar esta verificación de pertenencia. (Las transacciones ya están aplicadas donde se requieren: `Empleado::save/procesarEgreso/reingresar/trasladar`, Pasantes, Roles, ConfigSistema; los demás guardados son de una sola sentencia = atómicos.)
 
-**Documentos privados — almacenamiento y descarga:** los recaudos de expediente, los documentos de pasantes y las **fotos de personas (carnet)** se guardan **fuera del web root** en `storage/uploads/{expedientes,pasantes,fotos}/` (no accesibles por URL). Se sirven **solo** vía `DescargaController::expediente($idDoc)` (rol 1,2) / `::pasante($idDoc)` (rol 1,3) / `::foto($idPersona)` (rol 1,2,3), que resuelven el archivo por **id de registro** (no por ruta: usan `basename()` del valor guardado → sin path traversal), validan rol e `is_active`, y hacen stream con `Content-Disposition: inline`. Las vistas enlazan a `/descarga/expediente/{id}`, `/descarga/pasante/{id}` y `/descarga/foto/{idPersona}`. La subida valida extensión **y MIME real** (`mime_content_type`). `DescargaController` está en `$accesoSiempre` del Router (hace su propio chequeo de rol). **Las evidencias de talleres siguen en `public/uploads/talleres/`** (baja sensibilidad). Nuevos uploads guardan solo el nombre en `archivo_url`; los valores antiguos (`/uploads/...`) siguen funcionando por el `basename()`.
+**Documentos privados — almacenamiento y descarga:** **TODO** archivo subido por usuarios vive **fuera del web root**, en `storage/uploads/{expedientes,pasantes,fotos,bienes,talleres}/` (no accesible por URL). Se sirve **solo** vía `DescargaController`: `::expediente($idDoc)` (rol 1,2) · `::pasante($idDoc)` (rol 1,3) · `::foto($idPersona)` (rol 1,2,3) · `::bien($idDoc)`/`::bm1($id)`/`::fotoBien($id)` (rol 1,4) · `::taller($idEv)` (rol 1,3). Cada método resuelve el archivo por **id de registro** (nunca por ruta: `basename()` del valor guardado → sin path traversal), valida rol e `is_active`, y hace stream con `Content-Disposition: inline`. Las vistas enlazan a `/descarga/<tipo>/{id}`. La subida valida extensión **y MIME real** (`mime_content_type`, NO `$_FILES['type']` que lo manda el cliente) + tamaño ≤5 MB. `DescargaController` está en `$accesoSiempre` del Router (hace su propio chequeo de rol). Nuevos uploads guardan solo el nombre de archivo; los valores antiguos (`/uploads/...`) siguen funcionando por el `basename()`.
+
+> **`public/uploads/` ya no existe** (eliminado el 2026-08-27). Las evidencias de talleres eran la última excepción: se escribían ahí, quedaban legibles por URL sin control de rol y el enlace `URL_ROOT.'/public/uploads/...'` **se rompía bajo el vhost donde `public/` es la raíz** (`SIGTUR-IMATUR.test`). Ahora usan `TalleresController::procesarEvidencias()` (helper único; antes el bloque de subida estaba duplicado en `store()` y `cambiarEstado()`, y ninguna de las dos copias validaba MIME real ni tamaño). **No reintroducir `public/uploads`**: cualquier archivo nuevo va a `storage/uploads/<sub>/` + su método en `DescargaController`.
 
 **Búsqueda global (header):** `BuscarController::index()` busca en empleados/inventario/talleres/rutas/visitantes con resultados **gated por rol** (cada módulo solo si el rol tiene acceso). Es accesible para cualquier usuario autenticado (incluido en `$accesoSiempre` del Router junto a `PerfilController`). El input vive en `header.php` (GET a `/buscar/index?q=`).
 
@@ -546,7 +565,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 createdb -U postgres "SIGTUR-IMATUR"
 
 # 3. Importar el esquema consolidado — UN SOLO ARCHIVO, esto es toda la BD
-#    (esquema base + migraciones 001-068 + catálogos + admin de arranque):
+#    (esquema base + migraciones 001-071 + catálogos + admin de arranque):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
 # 4. NO HAY PASO 4. No se aplica ninguna migración encima del consolidado.
@@ -559,7 +578,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 #    Login de arranque: admin / Sigtur2026  <-- CAMBIAR EN EL PRIMER INGRESO
 ```
 
-> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–068). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
+> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–071). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
 
 ---
 
@@ -601,6 +620,6 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-068 + catálogos + admin de arranque; no aplicar migraciones encima** |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-071 + catálogos + admin de arranque; no aplicar migraciones encima** |
 | Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Schema base original (historial) | `database/schema.sql` |
