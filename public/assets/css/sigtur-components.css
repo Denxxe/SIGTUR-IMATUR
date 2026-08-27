@@ -705,3 +705,38 @@ form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
 [data-theme="dark"] .sig-table thead th { background: #1a2033; color: var(--text-secondary); }
 [data-theme="dark"] .sig-card__footer { background: rgba(255, 255, 255, 0.02) !important; }
 
+
+/* ===== SIG-ALERT =====
+   Aviso en bloque dentro del contenido (distinto del toast, que es efímero).
+   Se usaba en las 7 vistas del módulo de Bienes y en Nómina SIN estar definido
+   aquí: los avisos se renderizaban como texto plano, incluido el que bloquea
+   los movimientos de bienes. Definido el 2026-08-27.
+   Estructura: <div class="sig-alert sig-alert--info"><i class="bi ..."></i> texto </div> */
+.sig-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md, 8px);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-muted-subtle);
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+}
+.sig-alert > i:first-child { font-size: 16px; line-height: 1.4; flex: 0 0 auto; }
+.sig-alert strong { color: var(--text-primary); }
+.sig-alert a { color: inherit; text-decoration: underline; font-weight: 600; }
+
+.sig-alert--info    { background: var(--info-50);    border-color: var(--info-500);    color: var(--info-600); }
+.sig-alert--success { background: var(--success-50); border-color: var(--success-500); color: var(--success-600, #059669); }
+.sig-alert--warning { background: var(--warning-50); border-color: var(--warning-500); color: var(--warning-600); }
+.sig-alert--danger  { background: var(--danger-50);  border-color: var(--danger-500);  color: var(--danger-600); }
+.sig-alert--info strong, .sig-alert--success strong,
+.sig-alert--warning strong, .sig-alert--danger strong { color: inherit; }
+
+[data-theme="dark"] .sig-alert          { background: rgba(148, 163, 184, 0.08); border-color: rgba(148, 163, 184, 0.18); color: var(--text-secondary); }
+[data-theme="dark"] .sig-alert--info    { background: rgba(59, 130, 246, 0.12);  border-color: rgba(59, 130, 246, 0.3);  color: #93c5fd; }
+[data-theme="dark"] .sig-alert--success { background: rgba(16, 185, 129, 0.12);  border-color: rgba(16, 185, 129, 0.3);  color: #6ee7b7; }
+[data-theme="dark"] .sig-alert--warning { background: rgba(245, 158, 11, 0.12);  border-color: rgba(245, 158, 11, 0.3);  color: #fcd34d; }
+[data-theme="dark"] .sig-alert--danger  { background: rgba(239, 68, 68, 0.12);   border-color: rgba(239, 68, 68, 0.3);   color: #fca5a5; }
