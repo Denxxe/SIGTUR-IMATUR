@@ -1,6 +1,9 @@
 # PLAN DEL MÓDULO DE NÓMINA — SIGTUR-IMATUR
 
-**Fecha:** 2026-08-07 · **Estado:** análisis cerrado, construcción pendiente de 3 confirmaciones
+**Fecha:** 2026-08-07 · **Actualizado:** 2026-08-27
+**Estado:** fases **N‑A, N‑B y N‑C construidas** (mig. 072). Falta **N‑D** (migrar el Bono
+Vacacional al motor) y **N‑E** (Liquidación, bloqueada por N‑3). Las 3 preguntas siguen
+abiertas, pero **ya no bloquean el cálculo**: N‑1 y N‑2 entraron como parámetros. Ver §6.4.
 **Fuentes:** formato real `INSTITUTO IMATUR JULIO 2026.xlsx` (plantilla de nómina quincenal, **datos de
 prueba** — solo las fórmulas son fuente de verdad) + 4 audios de Talento Humano del 2026-07-23
 (transcripción en `docs/formatos/transcripcion_audios_rrhh_2026-07-23.md`).
@@ -189,13 +192,48 @@ aplica solo a Alto Nivel y Comisión.
 
 ### 6.3 Fases propuestas
 
-| Fase | Alcance |
-|---|---|
-| **N‑A** | Motor de cálculo: tablas de % (profesionalización, antigüedad) como configuración, no como código; `Nomina::calcularQuincena($empleado, $periodo)`; pruebas contra los valores de la plantilla |
-| **N‑B** | Entradas que faltan: cuenta bancaria, divisas, sueldo de dependencia de origen; mapeo `nivel_academico` → código de grado; histórico mensual de cesta ticket y tasa |
-| **N‑C** | Nómina quincenal: períodos, snapshot por empleado, cierre y **exportación de las 6 hojas** con `XlsxMultiSheet` |
-| **N‑D** | Migrar Bono Vacacional v1 de captura manual a cálculo, reusando el motor de N‑A |
-| **N‑E** | Liquidación de Prestaciones Sociales (desbloquea con N‑3) |
+| Fase | Alcance | Estado |
+|---|---|---|
+| **N‑A** | Motor de cálculo: tablas de % (profesionalización, antigüedad) como configuración, no como código; `Nomina::calcular()`; pruebas contra los valores de la plantilla | ✅ **HECHO** (mig. 072) |
+| **N‑B** | Entradas que faltan: cuenta bancaria, divisas, sueldo de dependencia de origen; mapeo `nivel_academico` → código de grado; histórico mensual de cesta ticket y tasa | ✅ **HECHO** (mig. 072) |
+| **N‑C** | Nómina quincenal: períodos, snapshot por empleado, cierre y **exportación de las 6 hojas** con `XlsxMultiSheet` | ✅ **HECHO** (mig. 072) |
+| **N‑D** | Migrar Bono Vacacional v1 de captura manual a cálculo, reusando el motor de N‑A | ⏳ Pendiente — el motor ya está, es reemplazar la captura del total por `Nomina::calcular()` |
+| **N‑E** | Liquidación de Prestaciones Sociales | 🔒 Bloqueada por **N‑3** |
+
+### 6.4 Qué quedó construido (2026-08-27, mig. 072)
+
+**Motor.** `Nomina::calcular()` es una **función pura**: recibe todas las entradas explícitas y
+devuelve los 30 conceptos de la quincena sin tocar la BD. Por eso se puede probar contra los valores
+ya calculados de la plantilla — hay **45 casos** en `tests/run.php`, incluido el que fija la prima de
+antigüedad del tramo ≥23 años en **56,40** (el defecto #1 del cliente paga 112,80). Los intermedios
+se calculan sin redondear y solo se redondea la salida, como hace Excel; redondear en cascada
+desviaría los totales.
+
+**Los porcentajes son datos, no código.** `nomina_grados` (6 filas) y `nomina_antiguedad` (23 filas,
+con la fila 23 marcada como tope). Se sale del patrón H-07 a propósito: H-07 centraliza los valores de
+dominio del *software*, y estos son cifras de contratación colectiva que el cliente renegocia.
+
+**Nada de silencios.** Si el grado de instrucción no se reconoce, el empleado se **reporta** en vez de
+cobrar 0 % — es exactamente el defecto #7 de la plantilla. Cada fila de `nomina_detalle` guarda sus
+`advertencias` (sin sueldo registrado, grado no reconocido, sin cuenta bancaria, comisión sin sueldo de
+origen) y la quincena las muestra agrupadas antes de dejar cerrar. Probado contra los 3 empleados
+reales de la base: los 3 salieron con advertencias correctas, incluido uno cuyo `nivel_academico` es
+«Universitario», que es ambiguo y no se mapea.
+
+**Reconstruible.** `nomina_periodos` congela cesta ticket, tasa del dólar y semanas; `nomina_detalle`
+guarda las **entradas** del cálculo además de los resultados. Un período cerrado se puede auditar
+número por número. En Borrador se puede **recalcular** (incorpora correcciones de ficha sin perder el
+período); cerrado queda inmutable — verificado que el recálculo se rechaza.
+
+**Las dos preguntas abiertas no bloquean.** N‑1 (días base del bono vacacional) y N‑2 (semanas ×4/×5)
+entran como **parámetros**: N‑1 en `configuracion_sistema`, N‑2 se elige por período en el propio
+formulario, con la contradicción de la plantilla explicada ahí mismo. El cálculo funciona; lo que no
+es definitivo es el número, hasta que el cliente confirme.
+
+**Export.** 6 hojas (5 tipos de personal + RESUMEN) con `XlsxMultiSheet`. La hoja de Comisión de
+Servicio agrega las dos columnas propias (sueldo de la dependencia y diferencia a pagar). Verificado
+que el `.xlsx` generado es un ZIP válido de 6 hojas con los datos calculados dentro. De paso se
+extrajo `XlsxMultiSheet::construir()` de `descargar()`, para poder verificar el archivo sin enviarlo.
 
 > **Regla que no se negocia:** nada de esto se programa contra lo dicho en un audio. Cada número entra al
 > código sólo si está en un formato del cliente o confirmado por escrito. Un `85` oído como `45` termina

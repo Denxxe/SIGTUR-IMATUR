@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **071** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **072** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -18,7 +18,7 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ## 1. ESTADO GLOBAL
 
 - **RRHH:** completo salvo **Nómina**. **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
-- **Nómina:** 🔄 **replanteamiento con base sólida (2026-08-07).** Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
+- **Nómina:** 🟢 **motor de cálculo construido (2026-08-27, mig. 072).** Fases N‑A/N‑B/N‑C hechas: las primas se derivan, los porcentajes viven en tablas, cesta ticket y tasa del dólar tienen vigencia mensual, hay quincena con snapshot/recálculo/cierre y export de 6 hojas. Las 3 preguntas abiertas **ya no bloquean** (N‑1 y N‑2 son parámetros). Falta **N‑D** (migrar el Bono Vacacional al motor) y **N‑E** (Liquidación, bloqueada por N‑3). Lo que realmente falta son **insumos**: sueldos base, grados, cuentas bancarias, cesta ticket y tasa de cada mes. Antes: replanteamiento (2026-08-07). Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
 - **Inventario (Bienes):** 🔄 **En replanteamiento.** El levantamiento del 2026-08-04 (59 preguntas respondidas) reveló que lo construido es un CRUD genérico, mientras que el instituto necesita un **expediente administrativo por bien** con ciclo de vida gobernado por la Alcaldía (codificación, actas, oficios). Plan por fases en `docs/PLAN_MODULO_BIENES.md`.
 - **Turismo (Rutas):** cuestionario de descubrimiento **pendiente de responder** (Parte 2 de `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`). Prioridad: R-07/R-08 (catálogo vs ejecución) — de esa respuesta depende si hay rediseño.
@@ -27,6 +27,44 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-08-27 — Nómina: motor de cálculo construido (mig. 072 — fases N‑A, N‑B y N‑C)
+
+El Bono Vacacional v1 era "registro + reporte" porque no teníamos las fórmulas. La plantilla real las
+trajo, y muestran que **las primas se derivan** de cuatro entradas: sueldo base, grado de instrucción,
+años en la administración pública y nº de hijos. Ya no hay que capturarlas.
+
+**Qué se construyó**
+
+| | |
+|---|---|
+| **Motor** | `Nomina::calcular()` es una **función pura** — todas las entradas explícitas, sin tocar la BD — así que se puede probar contra los valores ya calculados de la plantilla. **45 casos** en `tests/run.php` (suite: 18 → 67, todos pasan). Los intermedios no se redondean y solo se redondea la salida, como Excel. |
+| **Porcentajes como datos** | `nomina_grados` (6 filas, BACH 0 % … DR 40 %) y `nomina_antiguedad` (23 filas, incrementos por tramo, tope 30 % desde el año 23). Fuera del patrón H‑07 a propósito: H‑07 centraliza valores de dominio del software, y estos son cifras de contratación colectiva. |
+| **Parámetros con vigencia** | `nomina_parametros_mes`: cesta ticket y tasa del dólar **por mes**. Eran escalares sin histórico, así que un mes pasado no se podía reconstruir. Una quincena **no se puede generar** si su mes no está cargado — mejor bloquear que producir un número plausible. |
+| **Entradas nuevas en la ficha** | `empleados.cuenta_nomina`/`banco_nomina`/`divisas_bono_responsabilidad`/`sueldo_dependencia_origen` y `personas.codigo_grado`, con su tarjeta "Datos de nómina" en el expediente. |
+| **Quinto tipo de personal** | *Comisión de Servicio*, derivado de `institucion_origen <> 'IMATUR'` sin captura nueva. **Tiene prioridad sobre el nivel jerárquico**: un director en comisión va a su hoja, porque ahí se calcula la diferencia contra la dependencia de origen. |
+| **Quincena** | `nomina_periodos` congela cesta ticket, tasa y semanas; `nomina_detalle` guarda las **entradas** además de los resultados, para auditar de dónde sale cada número. Recálculo en Borrador, inmutable al cerrar. Export de **6 hojas** con `XlsxMultiSheet`. |
+
+**Ninguna cifra queda en silencio.** Si el grado de instrucción no se reconoce, el empleado se
+**reporta** en vez de cobrar 0 % — es el defecto #7 de la plantilla del cliente. Cada fila lleva sus
+`advertencias` y la vista las agrupa antes de dejar cerrar. Probado contra los 3 empleados reales de la
+base: los 3 salieron con advertencias correctas, uno de ellos porque su `nivel_academico` es
+«Universitario», que es ambiguo y no se mapea a ninguno de los 6 grados.
+
+**El defecto #1 del cliente quedó fijado en una prueba.** Su hoja aplica el 30 % de antigüedad al
+sueldo mensual y paga **112,80**; sobre el quincenal corresponden **56,40**. El test lo afirma con ese
+número, así que cualquier cambio futuro que lo rompa se detecta.
+
+**Las preguntas abiertas ya no bloquean.** N‑1 (días base del bono vacacional: 75 en toda la plantilla
+vs. 85/45 en nuestra configuración) es una clave de configuración; N‑2 (semanas ×4/×5) se elige por
+período en el propio formulario, con la contradicción explicada ahí mismo. El cálculo funciona; el
+número no es definitivo hasta que el cliente confirme.
+
+De paso: se extrajo `XlsxMultiSheet::construir()` de `descargar()` para poder verificar el `.xlsx` sin
+enviarlo (comprobado: ZIP válido de 6 hojas con los datos dentro), y se **definió el CSS de
+`.sig-alert`**, que se usaba en 7 vistas del módulo de Bienes sin existir en ninguna hoja de estilos —
+esos avisos, incluido el que bloquea los movimientos de bienes, se renderizaban como texto plano.
+
 
 ### 2026-08-27 — Feriados movibles de Carnaval y Semana Santa (mig. 071)
 
@@ -576,7 +614,7 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 > Detalle funcional en los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`.
 
-- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). 🔒 Falta: **nómina quincenal** y **Liquidación de Prestaciones Sociales** — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
+- **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). **nómina quincenal calculada (mig. 072)**: motor puro con 45 pruebas, porcentajes en tablas, parámetros mensuales con vigencia, 5 tipos de personal, advertencias por empleado, recálculo y cierre, export de 6 hojas. 🔒 Falta: migrar el **Bono Vacacional** al motor (N‑D) y la **Liquidación de Prestaciones Sociales** (N‑E, bloqueada por N‑3) — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía, informe con demografía. 🔒 Falta: tarifa (D-RT02 — ya no se reporta un dato falso, ver H-14), disparar el informe automáticamente al Finalizar (D-RT03), y **responder el cuestionario de descubrimiento** (R-07/R-08 pueden forzar rediseño).
 - **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **3 documentos imprimibles** bloqueados por los formatos del cliente (informe de bienes nuevos, acta de baja, acta de asignación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
