@@ -153,47 +153,6 @@ ALTER SEQUENCE public.actividad_inventario_id_seq OWNED BY public.actividad_inve
 
 
 --
--- Name: actividades_ruta; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.actividades_ruta (
-    id integer NOT NULL,
-    id_ruta integer NOT NULL,
-    nombre character varying(200) NOT NULL,
-    descripcion text,
-    fecha date,
-    id_empleado_responsable integer,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone,
-    deleted_at timestamp without time zone,
-    created_by integer,
-    updated_by integer,
-    deleted_by integer
-);
-
-
---
--- Name: actividades_ruta_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.actividades_ruta_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: actividades_ruta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.actividades_ruta_id_seq OWNED BY public.actividades_ruta.id;
-
-
---
 -- Name: alertas_vistas; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2706,13 +2665,6 @@ ALTER TABLE ONLY public.actividad_inventario ALTER COLUMN id SET DEFAULT nextval
 
 
 --
--- Name: actividades_ruta id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.actividades_ruta ALTER COLUMN id SET DEFAULT nextval('public.actividades_ruta_id_seq'::regclass);
-
-
---
 -- Name: alertas_vistas id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3218,6 +3170,18 @@ COPY public.feriados (id, fecha, nombre, recurrente, is_active, created_at, upda
 10	2000-12-24	Nochebuena	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
 11	2000-12-31	Fin de Año	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
 12	2000-10-12	Día de la Resistencia Indígena	t	t	2026-06-21 14:22:02.581279	\N	\N	\N	\N	\N
+13	2026-02-16	Lunes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+14	2026-02-17	Martes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+15	2026-04-02	Jueves Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+16	2026-04-03	Viernes Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+17	2027-02-08	Lunes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+18	2027-02-09	Martes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+19	2027-03-25	Jueves Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+20	2027-03-26	Viernes Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+21	2028-02-28	Lunes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+22	2028-02-29	Martes de Carnaval	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+23	2028-04-13	Jueves Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
+24	2028-04-14	Viernes Santo	f	t	2026-08-27 00:00:00	\N	\N	\N	\N	\N
 \.
 
 
@@ -3418,13 +3382,6 @@ SELECT pg_catalog.setval('public.actividad_inventario_id_seq', 16, true);
 
 
 --
--- Name: actividades_ruta_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.actividades_ruta_id_seq', 1, true);
-
-
---
 -- Name: alertas_vistas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -3568,7 +3525,7 @@ SELECT pg_catalog.setval('public.faltas_id_seq', 3, true);
 -- Name: feriados_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.feriados_id_seq', 12, true);
+SELECT pg_catalog.setval('public.feriados_id_seq', 24, true);
 
 
 --
@@ -3808,14 +3765,6 @@ SELECT pg_catalog.setval('public.visitas_id_seq', 3, true);
 
 ALTER TABLE ONLY public.actividad_inventario
     ADD CONSTRAINT actividad_inventario_pkey PRIMARY KEY (id);
-
-
---
--- Name: actividades_ruta actividades_ruta_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.actividades_ruta
-    ADD CONSTRAINT actividades_ruta_pkey PRIMARY KEY (id);
 
 
 --
@@ -4417,13 +4366,6 @@ CREATE INDEX idx_act_inv_item_fecha ON public.actividad_inventario USING btree (
 
 
 --
--- Name: idx_act_ruta_fecha; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_act_ruta_fecha ON public.actividades_ruta USING btree (fecha);
-
-
---
 -- Name: idx_actinv_tipo; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4951,22 +4893,6 @@ ALTER TABLE ONLY public.actividad_inventario
 
 
 --
--- Name: actividades_ruta fk_act_ruta; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.actividades_ruta
-    ADD CONSTRAINT fk_act_ruta FOREIGN KEY (id_ruta) REFERENCES public.rutas(id) ON DELETE CASCADE;
-
-
---
--- Name: actividades_ruta fk_act_ruta_emp; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.actividades_ruta
-    ADD CONSTRAINT fk_act_ruta_emp FOREIGN KEY (id_empleado_responsable) REFERENCES public.empleados(id) ON DELETE SET NULL;
-
-
---
 -- Name: actividad_inventario fk_actinv_autorizado; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5443,6 +5369,53 @@ ALTER TABLE ONLY public.visitas
 --
 
 
+-- =====================================================================
+-- CATÁLOGO DE UBICACIONES (migración 069)
+-- =====================================================================
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-068).
+-- Va al final del archivo a propósito: después de los `setval`, para que
+-- las filas tomen sus ids de la secuencia ya posicionada. Si estuviera en
+-- la sección de catálogos, el `setval` posterior dejaría la secuencia
+-- atrasada y el primer alta desde la UI colisionaría.
+--
+-- Sin estas filas es IMPOSIBLE registrar un bien: `id_ubicacion` es
+-- obligatorio. Una ubicación por departamento (el responsable del bien se
+-- deriva del departamento de su ubicación, mig. 066) + el depósito de los
+-- bienes sin asignar (B-23/B-25). Los nombres arrancan iguales a los del
+-- departamento; se renombran desde Inventario -> Ubicaciones.
+--
+-- Idempotente. Ver database/migrations/069_ubicaciones_semilla.sql.
+-- =====================================================================
+
+INSERT INTO public.ubicaciones (nombre, descripcion, "departamento _d", sede, es_deposito)
+SELECT d.nombre,
+       'Espacio físico asignado a ' || d.nombre ||
+       '. Renombrar según la referencia real del sitio.',
+       d.id,
+       CASE WHEN d.nombre ILIKE '%Aeropuerto%' THEN 'Aeropuerto de Cumaná'
+            ELSE 'Sede Principal' END,
+       FALSE
+  FROM public.departamentos d
+ WHERE d.is_active
+   AND NOT EXISTS (SELECT 1 FROM public.ubicaciones u
+                    WHERE u."departamento _d" = d.id
+                      AND u.nombre = d.nombre);
+
+INSERT INTO public.ubicaciones (nombre, descripcion, "departamento _d", sede, es_deposito)
+SELECT 'Depósito General',
+       'Área común donde permanecen los bienes que no están asignados a un '
+       || 'departamento. Su responsable se deriva del departamento que '
+       || 'autoriza los bienes (bienes_depto_autoriza), no de este.',
+       (SELECT id FROM public.departamentos
+         WHERE nombre = 'Compra de Bienes y Servicios' AND is_active
+         LIMIT 1),
+       'Sede Principal',
+       TRUE
+ WHERE EXISTS (SELECT 1 FROM public.departamentos
+                WHERE nombre = 'Compra de Bienes y Servicios' AND is_active)
+   AND NOT EXISTS (SELECT 1 FROM public.ubicaciones WHERE es_deposito AND is_active);
+
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-069).
 --
