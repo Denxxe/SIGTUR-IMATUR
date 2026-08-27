@@ -10,6 +10,7 @@ class UbicacionesController extends Controller {
             'titulo' => 'Configuración: Sedes y Almacenes',
             'ubicaciones'  => $ubicaciones,
             'departamentos' => Departamento::all(),
+            'sedes'         => Ubicacion::SEDES,
         ];
         $this->view('ubicaciones/index', $data);
     }
@@ -17,12 +18,18 @@ class UbicacionesController extends Controller {
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = $this->sanitizePost();
-            
+
+            // `sede` se valida contra la whitelist Ubicacion::SEDES (el modelo
+            // vuelve a filtrarla); `es_deposito` marca el área común de los
+            // bienes sin asignar (B-23/B-25), de donde el sistema deriva el
+            // responsable vía `bienes_depto_autoriza`.
             $data = [
                 'id' => isset($_POST['id']) ? (int)$_POST['id'] : null,
                 'nombre' => trim($_POST['nombre']),
                 'descripcion' => trim($_POST['descripcion']),
                 'id_departamento' => isset($_POST['id_departamento']) ? (int)$_POST['id_departamento'] : 0,
+                'sede' => trim($_POST['sede'] ?? ''),
+                'es_deposito' => !empty($_POST['es_deposito']),
             ];
 
             $esEdicion = !empty($data['id']);

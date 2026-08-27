@@ -19,6 +19,7 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre de Sede/Almacén</th>
+                <th>Sede</th>
                 <th>Departamento</th>
                 <th>Referencia</th>
                 <th class="col-actions">Acciones</th>
@@ -26,11 +27,17 @@
         </thead>
         <tbody>
             <?php if (empty($data['ubicaciones'])): ?>
-                <tr><td colspan="5" class="sig-table-empty">No hay ubicaciones registradas.</td></tr>
+                <tr><td colspan="6" class="sig-table-empty">No hay ubicaciones registradas.</td></tr>
             <?php else: foreach ($data['ubicaciones'] as $ubi): ?>
                 <tr>
                     <td><span class="cell-id"><?php echo $ubi->id; ?></span></td>
-                    <td class="cell-strong"><?php echo $ubi->nombre; ?></td>
+                    <td class="cell-strong">
+                        <?php echo $ubi->nombre; ?>
+                        <?php if (!empty($ubi->es_deposito)): ?>
+                            <br><span class="sig-badge sig-badge--warning"><i class="bi bi-archive"></i> Depósito</span>
+                        <?php endif; ?>
+                    </td>
+                    <td style="font-size:13px"><?php echo htmlspecialchars($ubi->sede ?? '—'); ?></td>
                     <td>
                         <?php if (!empty($ubi->departamento_nombre)): ?>
                             <span class="sig-badge sig-badge--info"><i class="bi bi-building"></i> <?php echo htmlspecialchars($ubi->departamento_nombre); ?></span>
@@ -67,7 +74,26 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Referencia</label><textarea name="descripcion" id="ubi_descripcion" class="sig-textarea" rows="3"></textarea></div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="ubi_sede">Sede <span class="req">*</span></label>
+                    <select name="sede" id="ubi_sede" class="sig-input" required>
+                        <?php foreach ($data['sedes'] ?? [] as $sede): ?>
+                            <option value="<?php echo htmlspecialchars($sede); ?>"><?php echo htmlspecialchars($sede); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_descripcion">Referencia</label><textarea name="descripcion" id="ubi_descripcion" class="sig-textarea" rows="3"></textarea></div>
+                <div class="sig-field">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                        <input type="checkbox" name="es_deposito" id="ubi_es_deposito" value="1">
+                        Es el <strong>depósito</strong> de bienes sin asignar
+                    </label>
+                    <small style="display:block;color:var(--text-tertiary);font-size:12px;margin-top:4px;">
+                        Todo bien que no esté asignado a un departamento debe estar en un depósito.
+                        Su responsable no sale de este departamento, sino del que autoriza los bienes
+                        (configurable en <em>Configuración</em>).
+                    </small>
+                </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button><button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button></div>
         </form>
@@ -87,6 +113,9 @@
         document.getElementById('ubi_nombre').value = ubi.nombre;
         document.getElementById('ubi_descripcion').value = ubi.descripcion || '';
         document.getElementById('ubi_departamento').value = ubi.id_departamento || '';
+        document.getElementById('ubi_sede').value = ubi.sede || '<?php echo Ubicacion::SEDE_DEFAULT; ?>';
+        // Mismo criterio defensivo que inventario/index.php para booleanos de PDO.
+        document.getElementById('ubi_es_deposito').checked = (ubi.es_deposito === true || ubi.es_deposito === 't' || ubi.es_deposito === '1');
         new bootstrap.Modal(document.getElementById('modalUbi')).show();
     }
 </script>
