@@ -24,6 +24,9 @@ class NominaController extends Controller {
         $this->view('nomina/index', [
             'titulo'   => 'Nómina — Bono Vacacional',
             'periodos' => BonoVacacional::periodos(),
+            // Generar un período exige el mes cargado: la cesta ticket entra en
+            // el sueldo diario y en la alícuota (mig. 073).
+            'meses'    => Nomina::parametrosMesTodos(),
         ]);
     }
 
@@ -300,7 +303,7 @@ class NominaController extends Controller {
         header('Location: ' . URL_ROOT . '/nomina/index');
     }
 
-    /** Vista del período: las 4 secciones por tipo de personal + resumen. */
+    /** Vista del período: las 5 secciones por tipo de personal + resumen. */
     public function verPeriodo($id) {
         $periodo = BonoVacacional::find((int)$id);
         if (!$periodo) {
@@ -309,11 +312,46 @@ class NominaController extends Controller {
             return;
         }
         $this->view('nomina/periodo', [
-            'titulo'  => 'Bono Vacacional — ' . $periodo->periodo,
-            'periodo' => $periodo,
-            'grupos'  => BonoVacacional::detallePorPeriodo((int)$id),
-            'resumen' => BonoVacacional::resumen((int)$id),
+            'titulo'       => 'Bono Vacacional — ' . $periodo->periodo,
+            'periodo'      => $periodo,
+            'grupos'       => BonoVacacional::detallePorPeriodo((int)$id),
+            'resumen'      => BonoVacacional::resumen((int)$id),
+            'advertencias' => BonoVacacional::advertencias((int)$id),
         ]);
+    }
+
+    /**
+     * Recalcula el período en Borrador con los datos actuales de las fichas,
+     * **preservando los totales ya confirmados** por Talento Humano.
+     */
+    public function recalcularPeriodo($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
+        $this->requireRoles([1, 2]);
+        try {
+            $n = BonoVacacional::recalcular((int)$id, $this->getUserId());
+            flash('global_msg', 'Período recalculado: ' . $n . ' empleado(s). Los totales ya confirmados se conservaron.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/verPeriodo/' . $id);
+    }
+
+    /**
+     * Da por confirmados los totales calculados que aún estaban vacíos. Atajo
+     * para validar la estimación en bloque, auditado igual que la captura.
+     */
+    public function aceptarCalculados($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
+        $this->requireRoles([1, 2]);
+        try {
+            $n = BonoVacacional::aceptarCalculados((int)$id, $this->getUserId());
+            flash('global_msg', $n > 0
+                ? 'Se tomaron como confirmados ' . $n . ' total(es) calculado(s).'
+                : 'No había totales pendientes de confirmar.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/verPeriodo/' . $id);
     }
 
     /** Guarda/corrige celdas de captura manual de una fila de detalle. */
@@ -358,10 +396,12 @@ class NominaController extends Controller {
 
         $encabezados = [
             'N°', 'Cédula', 'Apellidos y Nombres', 'Género', 'Cargo', 'Fecha Ingreso Admón. Pública',
-            'Días Vacaciones', 'Grado/Escala', 'Sueldo Básico', 'Prima Profesional', 'Prima Antigüedad',
-            'N° Hijos', 'Monto Hijo', 'Prima por Hijo', 'Bono Transporte', 'Prima Discapacidad',
-            'Caja de Ahorro', 'Sueldo Integral', 'Cuenta Bancaria', 'Monto Cesta Ticket', 'Alícuotas',
-            'Total Bono Vacacional',
+            'Años Admón.', 'Días Vacaciones', 'Grado/Escala', 'Grado Instrucción', '% Prof.', '% Antig.',
+            'Sueldo Básico Mensual', 'Sueldo Base Quincenal', 'Prima Profesionalización', 'Prima Antigüedad',
+            'N° Hijos', 'Monto Hijo', 'Prima por Hijos', 'Bono Transporte', 'Prima Discapacidad',
+            'Caja de Ahorro', 'Sueldo Integral Diario', 'Sueldo Normal Diario', 'Cuenta Bancaria',
+            'Monto Cesta Ticket', 'Alícuota', 'Total Calculado', 'Total Confirmado', 'Diferencia',
+            'Observaciones',
         ];
         $ncol = count($encabezados);
 
@@ -371,9 +411,15 @@ class NominaController extends Controller {
         foreach (BonoVacacional::TIPOS as $tipo) {
             $filas = $grupos[$tipo] ?? [];
             $xlsx->nuevaHoja($tipo);
-            $xlsx->membrete('NÓMINA DE CÁLCULO BONO VACACIONAL — ' . strtoupper($tipo) . ' — ' . $periodo->periodo, $ncol);
+            $xlsx->membrete('NÓMINA DE CÁLCULO BONO VACACIONAL — ' . mb_strtoupper($tipo, 'UTF-8') . ' — ' . $periodo->periodo, $ncol,
+                'Corte: ' . date('d/m/Y', strtotime($periodo->fecha_corte))
+                . ' · Cesta ticket: ' . $fmt($periodo->monto_cesta_ticket ?? 0)
+                . ' · "Total calculado" es la estimación del sistema; "Total confirmado" es la cifra oficial de Talento Humano');
             $xlsx->filaCeldas($encabezados, XlsxMultiSheet::S_HEADER);
             foreach ($filas as $i => $f) {
+                $tConf = $f->total_bono_vacacional;
+                $tCalc = $f->total_calculado;
+                $dif   = ($tConf !== null && $tCalc !== null) ? ((float)$tConf - (float)$tCalc) : null;
                 $xlsx->filaCeldas([
                     $i + 1,
                     $f->cedula,
@@ -381,38 +427,56 @@ class NominaController extends Controller {
                     $f->genero,
                     $f->cargo,
                     $f->fecha_ingreso_administracion ?: $f->fecha_ingreso,
-                    $f->dias_vacaciones,
-                    $f->grado_escala,
+                    (int)$f->anios_administracion,
+                    (int)$f->dias_vacaciones,
+                    $f->grado_escala ?: '—',
+                    $f->codigo_grado ?: '—',
+                    number_format((float)$f->pct_profesionalizacion, 2, ',', '.'),
+                    number_format((float)$f->pct_antiguedad, 2, ',', '.'),
                     $fmt($f->sueldo_basico),
+                    $fmt($f->sueldo_base_quincenal),
                     $fmt($f->prima_profesional),
                     $fmt($f->prima_antiguedad),
-                    $f->n_hijos,
+                    (int)$f->n_hijos,
                     $fmt($f->monto_hijo),
                     $fmt($f->prima_por_hijo),
                     $fmt($f->bono_transporte),
                     $fmt($f->prima_discapacidad),
                     $fmt($f->caja_ahorro),
                     $fmt($f->sueldo_integral),
-                    $f->cuenta_bancaria,
+                    $fmt($f->sueldo_normal_diario),
+                    $f->cuenta_bancaria ?: '—',
                     $fmt($f->monto_cesta_ticket),
                     $fmt($f->alicuotas),
-                    $f->total_bono_vacacional !== null ? $fmt($f->total_bono_vacacional) : '',
+                    $tCalc !== null ? $fmt($tCalc) : '',
+                    $tConf !== null ? $fmt($tConf) : '',
+                    $dif !== null ? $fmt($dif) : '',
+                    $f->advertencias ?: '',
                 ], ($i % 2 ? XlsxMultiSheet::S_ZEBRA : XlsxMultiSheet::S_DATA));
             }
-            $totalTipo = array_sum(array_map(fn($f) => (float)($f->total_bono_vacacional ?? 0), $filas));
-            $xlsx->filaFusionada('TOTAL ' . strtoupper($tipo) . ': ' . count($filas) . ' empleado(s) · ' . $fmt($totalTipo), $ncol, XlsxMultiSheet::S_TOTAL);
+            $r = $resumen[$tipo];
+            $xlsx->filaFusionada(
+                'TOTAL ' . mb_strtoupper($tipo, 'UTF-8') . ': ' . $r['cantidad'] . ' empleado(s)'
+                . ' · Calculado ' . $fmt($r['total_calculado'])
+                . ' · Confirmado ' . $fmt($r['total'])
+                . ($r['sin_confirmar'] > 0 ? ' · ' . $r['sin_confirmar'] . ' sin confirmar' : ''),
+                $ncol, XlsxMultiSheet::S_TOTAL);
         }
 
+        $colsResumen = ['Tipo de Personal', 'Cantidad de Trabajadores', 'Total Calculado', 'Total Confirmado', 'Diferencia', 'Sin Confirmar'];
         $xlsx->nuevaHoja('Cuadro Resumen');
-        $xlsx->membrete('CUADRO RESUMEN — IMPACTO BONO VACACIONAL — ' . $periodo->periodo, 3);
-        $xlsx->filaCeldas(['Tipo de Personal', 'Cantidad de Trabajadores', 'Monto Total Bono Vacacional'], XlsxMultiSheet::S_HEADER);
-        $totalGeneral = 0.0; $cantidadGeneral = 0;
+        $xlsx->membrete('CUADRO RESUMEN — IMPACTO BONO VACACIONAL — ' . $periodo->periodo, count($colsResumen));
+        $xlsx->filaCeldas($colsResumen, XlsxMultiSheet::S_HEADER);
+        $tc = 0.0; $tf = 0.0; $cant = 0; $sc = 0;
         foreach ($resumen as $tipo => $r) {
-            $xlsx->filaCeldas([$tipo, $r['cantidad'], $fmt($r['total'])], XlsxMultiSheet::S_DATA);
-            $totalGeneral += $r['total'];
-            $cantidadGeneral += $r['cantidad'];
+            $xlsx->filaCeldas([
+                $tipo, $r['cantidad'], $fmt($r['total_calculado']), $fmt($r['total']),
+                $fmt($r['total'] - $r['total_calculado']), $r['sin_confirmar'],
+            ], XlsxMultiSheet::S_DATA);
+            $tc += $r['total_calculado']; $tf += $r['total'];
+            $cant += $r['cantidad'];      $sc += $r['sin_confirmar'];
         }
-        $xlsx->filaCeldas(['TOTAL', $cantidadGeneral, $fmt($totalGeneral)], XlsxMultiSheet::S_TOTAL);
+        $xlsx->filaCeldas(['TOTAL', $cant, $fmt($tc), $fmt($tf), $fmt($tf - $tc), $sc], XlsxMultiSheet::S_TOTAL);
 
         $xlsx->descargar('bono_vacacional_' . $periodo->periodo);
     }
