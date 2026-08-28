@@ -8,9 +8,22 @@
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/vacaciones/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button type="button" class="btn-sig btn-sig--ghost" data-bs-toggle="modal" data-bs-target="#modalGenerar"><i class="bi bi-calendar2-plus"></i> Generar Carnaval y Semana Santa</button>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalFeriado"><i class="bi bi-plus-lg"></i> Agregar Feriado</button>
     </div>
 </div>
+
+<?php if (!empty($data['aniosFaltan'])): ?>
+<div class="sig-alert sig-alert--warning anim-slide-up">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+        <strong>Faltan los feriados movibles de <?php echo implode(', ', $data['aniosFaltan']); ?>.</strong>
+        Carnaval y Semana Santa cambian de fecha cada año. Mientras no estén cargados, el sistema los
+        cuenta como días hábiles y <strong>descuenta vacaciones que no corresponden</strong> — sin mostrar
+        ningún error. Usa «Generar Carnaval y Semana Santa» para cargarlos.
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar feriado…">
     <table class="sig-table">
@@ -38,17 +51,44 @@
     </table>
 </div>
 
+<div class="modal fade" id="modalGenerar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/vacaciones/generarFeriados" method="POST" class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Generar feriados movibles</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p style="font-size:13px;margin-bottom:14px">
+                    Calcula el <strong>Lunes y Martes de Carnaval</strong> y el <strong>Jueves y Viernes Santo</strong>
+                    del año indicado a partir del Domingo de Resurrección, y los carga como feriados puntuales.
+                </p>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="anio_generar">Año <span class="req">*</span></label>
+                    <input type="number" id="anio_generar" name="anio" class="sig-input" required
+                           min="2000" max="2100" value="<?php echo (int)date('Y') + 1; ?>">
+                </div>
+                <p style="font-size:12px;color:var(--text-muted,#6b7280);margin:0">
+                    Se puede repetir sin riesgo: si una fecha ya está registrada, se omite. Tampoco vuelve a crear
+                    un feriado que se haya eliminado a propósito.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-calendar2-plus"></i> Generar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="modal fade" id="modalFeriado" tabindex="-1">
     <div class="modal-dialog">
         <form action="<?php echo URL_ROOT; ?>/vacaciones/agregarFeriado" method="POST" class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Nuevo Feriado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
-                    <input type="date" name="fecha" class="sig-input" required></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Nombre <span class="req">*</span></label>
-                    <input type="text" name="nombre" class="sig-input" required placeholder="Ej: Lunes de Carnaval"></div>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-                    <input type="checkbox" name="recurrente" value="1">
+                <div class="sig-field mb-3"><label class="sig-field__label" for="fecha">Fecha <span class="req">*</span></label>
+                    <input id="fecha" type="date" name="fecha" class="sig-input" required></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="nombre">Nombre <span class="req">*</span></label>
+                    <input id="nombre" type="text" name="nombre" class="sig-input" required placeholder="Ej: Lunes de Carnaval"></div>
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer" for="recurrente">
+                    <input id="recurrente" type="checkbox" name="recurrente" value="1">
                     Se repite cada año (mismo mes/día) — desmarca para feriados movibles
                 </label>
             </div>

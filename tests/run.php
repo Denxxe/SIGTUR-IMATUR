@@ -19,6 +19,7 @@ require_once APP_ROOT . '/app/models/Usuario.php';
 require_once APP_ROOT . '/app/models/Vacacion.php';
 require_once APP_ROOT . '/app/models/Empleado.php';
 require_once APP_ROOT . '/app/models/Nomina.php';
+require_once APP_ROOT . '/app/models/Feriado.php';
 
 $tests = 0; $fails = 0;
 
@@ -209,6 +210,59 @@ $e2 = (object)['fecha_ingreso' => '2010-06-01', 'fecha_ingreso_administracion' =
 eq(Nomina::aniosAdministracion($e2, '2026-07-31'), 16, 'sin fecha de administración cae a la de ingreso');
 $e3 = (object)['fecha_ingreso' => '2030-01-01', 'fecha_ingreso_administracion' => null];
 eq(Nomina::aniosAdministracion($e3, '2026-07-31'), 0, 'ingreso futuro → 0 años');
+
+// =====================================================================
+// Feriado — Pascua y feriados movibles (generador anual)
+// =====================================================================
+// Sin esto, Carnaval y Semana Santa se cargan a mano cada año y, si nadie
+// lo hace, el conteo de días hábiles de vacaciones falla EN SILENCIO.
+
+echo "\n== Feriado::pascua (algoritmo Gregoriano anónimo) ==\n";
+// Fechas de referencia verificadas contra la mig. 071 y easter_date() de PHP.
+eq(Feriado::pascua(2026), '2026-04-05', 'Pascua 2026');
+eq(Feriado::pascua(2027), '2027-03-28', 'Pascua 2027');
+eq(Feriado::pascua(2028), '2028-04-16', 'Pascua 2028');
+eq(Feriado::pascua(2029), '2029-04-01', 'Pascua 2029 (el primer año sin cargar)');
+// Casos límite conocidos del algoritmo: los extremos del rango posible.
+eq(Feriado::pascua(2038), '2038-04-25', 'Pascua más tardía posible (25 de abril)');
+eq(Feriado::pascua(2285), '2285-03-22', 'Pascua más temprana posible (22 de marzo)');
+
+// Contraste contra easter_date() donde la extensión calendar esté disponible.
+// Su rango llega solo hasta 2037 — motivo de más para no depender de ella:
+// nuestra implementación sí resuelve 2038 y 2285, comprobados arriba.
+if (function_exists('easter_date')) {
+    $coinciden = true;
+    for ($a = 2026; $a <= 2037; $a++) {
+        if (date('Y-m-d', easter_date($a)) !== Feriado::pascua($a)) { $coinciden = false; break; }
+    }
+    check($coinciden, 'coincide con easter_date() de PHP en todo su rango (2026-2037)');
+}
+
+echo "\n== Feriado::movibles ==\n";
+$m2026 = Feriado::movibles(2026);
+eq(count($m2026), 4, '4 feriados movibles por año');
+// Estas 4 fechas son exactamente las que cargó la mig. 071 a mano.
+eq(array_keys($m2026), ['2026-02-16', '2026-02-17', '2026-04-02', '2026-04-03'],
+   '2026 reproduce las fechas de la mig. 071');
+eq($m2026['2026-02-16'], 'Lunes de Carnaval',  'nombra el Lunes de Carnaval');
+eq($m2026['2026-04-03'], 'Viernes Santo',      'nombra el Viernes Santo');
+eq(array_keys(Feriado::movibles(2027)), ['2027-02-08', '2027-02-09', '2027-03-25', '2027-03-26'],
+   '2027 reproduce las fechas de la mig. 071');
+eq(array_keys(Feriado::movibles(2028)), ['2028-02-28', '2028-02-29', '2028-04-13', '2028-04-14'],
+   '2028 reproduce las fechas de la mig. 071 (año bisiesto)');
+
+// Cada día derivado tiene que caer en su día de semana: es la comprobación que
+// atrapa un offset equivocado, que de otro modo pasaría inadvertido.
+echo "\n== Feriado::movibles — cada día cae en su día de semana ==\n";
+$diaSemanaOk = true; $anioFalla = null;
+foreach (range(2026, 2060) as $a) {
+    $esperado = ['Lunes de Carnaval' => 'Mon', 'Martes de Carnaval' => 'Tue',
+                 'Jueves Santo' => 'Thu', 'Viernes Santo' => 'Fri'];
+    foreach (Feriado::movibles($a) as $fecha => $nombre) {
+        if (date('D', strtotime($fecha)) !== $esperado[$nombre]) { $diaSemanaOk = false; $anioFalla = $a; break 2; }
+    }
+}
+check($diaSemanaOk, 'en 2026-2060 cada feriado cae en su día de semana' . ($anioFalla ? " (falla en $anioFalla)" : ''));
 
 echo "\n" . str_repeat('-', 48) . "\n";
 echo "$tests pruebas ejecutadas, $fails fallo(s).\n";

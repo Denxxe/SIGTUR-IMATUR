@@ -130,7 +130,36 @@ class VacacionesController extends Controller {
 
     // ── Calendario de feriados (afecta el conteo de días hábiles) ─────────────
     public function feriados() {
-        $this->view('vacaciones/feriados', ['titulo' => 'Feriados', 'feriados' => Feriado::all()]);
+        $this->view('vacaciones/feriados', [
+            'titulo'      => 'Feriados',
+            'feriados'    => Feriado::all(),
+            // Años próximos sin Carnaval/Semana Santa cargados: su ausencia no
+            // produce ningún error, solo días de vacaciones mal descontados,
+            // así que hay que avisarlo antes de que ocurra.
+            'aniosFaltan' => Feriado::aniosSinMovibles(3),
+        ]);
+    }
+
+    /** Calcula y carga Carnaval y Semana Santa de un año (idempotente). */
+    public function generarFeriados() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/vacaciones/feriados'); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            $anio = (int)($_POST['anio'] ?? 0);
+            if ($anio < 2000 || $anio > 2100) throw new Exception('Indica un año entre 2000 y 2100.');
+
+            $r = Feriado::generarAnio($anio, $this->getUserId());
+
+            if ($r['creados'] === 0) {
+                flash('global_msg', "Los feriados movibles de $anio ya estaban cargados.", 'info');
+            } else {
+                flash('global_msg', "Se cargaron {$r['creados']} feriados movibles de $anio"
+                    . ($r['existentes'] > 0 ? " ({$r['existentes']} ya existían)." : '.'));
+            }
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/vacaciones/feriados');
     }
 
     public function agregarFeriado() {
