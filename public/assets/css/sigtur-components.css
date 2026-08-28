@@ -740,3 +740,20 @@ form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
 [data-theme="dark"] .sig-alert--success { background: rgba(16, 185, 129, 0.12);  border-color: rgba(16, 185, 129, 0.3);  color: #6ee7b7; }
 [data-theme="dark"] .sig-alert--warning { background: rgba(245, 158, 11, 0.12);  border-color: rgba(245, 158, 11, 0.3);  color: #fcd34d; }
 [data-theme="dark"] .sig-alert--danger  { background: rgba(239, 68, 68, 0.12);   border-color: rgba(239, 68, 68, 0.3);   color: #fca5a5; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILIDADES
+   ───────────────────────────────────────────────────────────────────────────
+   Complementan a las de Bootstrap 5 (ya cargado en assets/libs/), que cubren
+   text-center / text-end / d-none y demás. Aquí solo va lo que Bootstrap no
+   trae.
+
+   Llevan `!important` a propósito: sustituyen estilos `style=""` inline, y un
+   inline gana a cualquier regla sin `!important`. Sin la marca, la sustitución
+   cambiaría el aspecto en cuanto otra regla tocara la misma propiedad —por
+   ejemplo `.sig-table th { text-align: left }`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Cifras de ancho fijo: alinea las columnas numéricas de las tablas y evita
+   que los montos "bailen" al cambiar de dígito. Se usa junto a .text-end. */
+.u-num { font-variant-numeric: tabular-nums !important; }

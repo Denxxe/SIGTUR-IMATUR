@@ -38,20 +38,20 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/talleres" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Desde</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_inicio">Desde</label>
+                    <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Hasta</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_fin">Hasta</label>
+                    <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Estado</label>
-                    <select name="estado" class="sig-select">
+                    <label class="sig-field__label" for="estado">Estado</label>
+                    <select id="estado" name="estado" class="sig-select">
                         <option value="">Todos</option>
                         <?php foreach (['Programado','En Curso','Finalizado','Cancelado'] as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['estado_filtro'] ?? '') === $opt) echo 'selected'; ?>><?php echo $opt; ?></option>
@@ -61,8 +61,8 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Tipo</label>
-                    <select name="tipo_actividad" class="sig-select">
+                    <label class="sig-field__label" for="tipo_actividad">Tipo</label>
+                    <select id="tipo_actividad" name="tipo_actividad" class="sig-select">
                         <option value="">Todos los tipos</option>
                         <?php foreach (['Taller','Charla','Inducción'] as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['tipo_filtro'] ?? '') === $opt) echo 'selected'; ?>><?php echo $opt; ?></option>
@@ -72,8 +72,8 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Buscar</label>
-                    <input type="text" name="nombre" class="sig-input" placeholder="Nombre de actividad..." value="<?php echo htmlspecialchars($data['nombre_filtro'] ?? ''); ?>">
+                    <label class="sig-field__label" for="nombre">Buscar</label>
+                    <input id="nombre" type="text" name="nombre" class="sig-input" placeholder="Nombre de actividad..." value="<?php echo htmlspecialchars($data['nombre_filtro'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
@@ -144,8 +144,8 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
                 <th>Tipo · Ámbito</th>
                 <th>Facilitador</th>
                 <th>Fecha</th>
-                <th style="text-align:center;">Demografía</th>
-                <th style="text-align:center;">Ocupación</th>
+                <th class="text-center">Demografía</th>
+                <th class="text-center">Ocupación</th>
                 <th>Estado</th>
                 <th class="col-actions">Dossier</th>
             </tr>
@@ -177,7 +177,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
                     </td>
                     <td style="font-size:13px;font-weight:600;color:var(--text-secondary);"><?php echo htmlspecialchars(($t->facilitador_nombre ?? '') . ' ' . ($t->facilitador_apellido ?? '')); ?></td>
                     <td style="font-size:12px;color:var(--text-tertiary);white-space:nowrap;"><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'now')); ?></td>
-                    <td style="text-align:center;">
+                    <td class="text-center">
                         <?php if (isset($t->total_atendidas) && $t->total_atendidas > 0): ?>
                             <div style="display:flex;justify-content:center;gap:var(--sp-3);">
                                 <span title="Mujeres"  style="font-size:11px;font-weight:700;color:var(--brand-500);">♀ <?php echo (int)($t->mujeres ?? 0); ?></span>
@@ -189,7 +189,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
                             <span style="font-size:11px;color:var(--text-tertiary);font-style:italic;">Sin informe</span>
                         <?php endif; ?>
                     </td>
-                    <td style="text-align:center;">
+                    <td class="text-center">
                         <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:4px;"><?php echo $inscritos; ?> / <?php echo $cupoMax; ?></div>
                         <div style="height:5px;width:80px;background:var(--bg-muted);border-radius:3px;margin:0 auto;overflow:hidden;">
                             <div style="height:100%;width:<?php echo $pct; ?>%;background:<?php echo $pctColor; ?>;border-radius:3px;"></div>

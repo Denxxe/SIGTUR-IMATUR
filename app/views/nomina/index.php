@@ -47,9 +47,9 @@
             <tr>
                 <th>Período</th>
                 <th>Fecha de corte</th>
-                <th style="text-align:center;">Empleados</th>
-                <th style="text-align:right;">Total calculado</th>
-                <th style="text-align:right;">Total confirmado</th>
+                <th class="text-center">Empleados</th>
+                <th class="text-end">Total calculado</th>
+                <th class="text-end">Total confirmado</th>
                 <th>Estado</th>
                 <th class="col-actions">Acciones</th>
             </tr>
@@ -122,8 +122,8 @@
                     </small>
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Fecha de corte</label>
-                    <input type="date" name="fecha_corte" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                    <label class="sig-field__label" for="fecha_corte">Fecha de corte</label>
+                    <input id="fecha_corte" type="date" name="fecha_corte" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                 </div>
             </div>
             <div class="modal-footer">

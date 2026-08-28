@@ -62,11 +62,11 @@
             <div class="modal-body">
                 <input type="hidden" name="id" id="ubif_id">
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                    <label class="sig-field__label" for="ubif_nombre">Nombre <span class="req">*</span></label>
                     <input type="text" name="nombre" id="ubif_nombre" class="sig-input" required placeholder="Ej: Liceo Bolivariano">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Tipo de Espacio</label>
+                    <label class="sig-field__label" for="ubif_tipo">Tipo de Espacio</label>
                     <select name="tipo" id="ubif_tipo" class="sig-select">
                         <option value="Escuela">Escuela</option>
                         <option value="Liceo">Liceo</option>
@@ -76,7 +76,7 @@
                     </select>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Parroquia <span class="req">*</span></label>
+                    <label class="sig-field__label" for="ubif_parroquia">Parroquia <span class="req">*</span></label>
                     <select name="parroquia" id="ubif_parroquia" class="sig-select" required>
                         <option value="">Seleccione una parroquia</option>
                         <?php foreach ($data['parroquias'] ?? [] as $p): ?>
@@ -85,7 +85,7 @@
                     </select>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Dirección <span class="req">*</span></label>
+                    <label class="sig-field__label" for="ubif_direccion">Dirección <span class="req">*</span></label>
                     <textarea name="direccion" id="ubif_direccion" class="sig-textarea" rows="2" required></textarea>
                 </div>
             </div>

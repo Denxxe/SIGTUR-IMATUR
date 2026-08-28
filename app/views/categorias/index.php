@@ -49,8 +49,8 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="cat_id">
-                <div class="sig-field mb-3"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="cat_nombre" class="sig-input" required placeholder="Ej: Electrónica"></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Descripción</label><textarea name="descripcion" id="cat_descripcion" class="sig-textarea" rows="3"></textarea></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="cat_nombre">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="cat_nombre" class="sig-input" required placeholder="Ej: Electrónica"></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="cat_descripcion">Descripción</label><textarea name="descripcion" id="cat_descripcion" class="sig-textarea" rows="3"></textarea></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cerrar</button><button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button></div>
         </form>

@@ -41,8 +41,8 @@
                 <th>Período</th>
                 <th>Quincena</th>
                 <th>Corte</th>
-                <th style="text-align:center;">Trabajadores</th>
-                <th style="text-align:right;">Total neto</th>
+                <th class="text-center">Trabajadores</th>
+                <th class="text-end">Total neto</th>
                 <th>Estado</th>
                 <th class="col-actions">Acciones</th>
             </tr>

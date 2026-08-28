@@ -69,11 +69,11 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="municipio_id">
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Nombre del Municipio <span class="req">*</span></label>
+                        <label class="sig-field__label" for="municipio_nombre">Nombre del Municipio <span class="req">*</span></label>
                         <input type="text" class="sig-input" name="nombre" id="municipio_nombre" required placeholder="Ej: Sucre">
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Código Postal <span class="req">*</span></label>
+                        <label class="sig-field__label" for="municipio_cp">Código Postal <span class="req">*</span></label>
                         <input type="text" class="sig-input" name="codigo_postal" id="municipio_cp" required placeholder="Ej: 6101">
                     </div>
                 </div>

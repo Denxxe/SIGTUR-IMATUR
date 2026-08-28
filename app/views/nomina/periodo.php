@@ -107,10 +107,10 @@ $delta = $totConf - $totCalc;
                 <thead>
                     <tr>
                         <th>Tipo de personal</th>
-                        <th style="text-align:center;">Trab.</th>
-                        <th style="text-align:right;">Total calculado</th>
-                        <th style="text-align:right;">Total confirmado</th>
-                        <th style="text-align:right;">Diferencia</th>
+                        <th class="text-center">Trab.</th>
+                        <th class="text-end">Total calculado</th>
+                        <th class="text-end">Total confirmado</th>
+                        <th class="text-end">Diferencia</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -119,8 +119,8 @@ $delta = $totConf - $totCalc;
                     ?>
                     <tr<?php echo $r['cantidad'] === 0 ? ' style="opacity:.5;"' : ''; ?>>
                         <td class="cell-strong"><?php echo htmlspecialchars($tipo); ?></td>
-                        <td style="text-align:center;"><?php echo (int)$r['cantidad']; ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($r['total_calculado']); ?></td>
+                        <td class="text-center"><?php echo (int)$r['cantidad']; ?></td>
+                        <td class="text-end u-num"><?php echo $fmt($r['total_calculado']); ?></td>
                         <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
                             <?php echo $r['sin_confirmar'] === $r['cantidad'] && $r['cantidad'] > 0 ? '—' : $fmt($r['total']); ?>
                         </td>
@@ -131,9 +131,9 @@ $delta = $totConf - $totCalc;
                     <?php endforeach; ?>
                     <tr style="border-top:2px solid var(--border-subtle);font-weight:700;">
                         <td>TOTAL</td>
-                        <td style="text-align:center;"><?php echo $cantidad; ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($totCalc); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($totConf); ?></td>
+                        <td class="text-center"><?php echo $cantidad; ?></td>
+                        <td class="text-end u-num"><?php echo $fmt($totCalc); ?></td>
+                        <td class="text-end u-num"><?php echo $fmt($totConf); ?></td>
                         <td style="text-align:right;font-variant-numeric:tabular-nums;<?php echo abs($delta) > 0.01 ? 'color:var(--warning-600);' : ''; ?>"><?php echo $fmt($delta); ?></td>
                     </tr>
                 </tbody>
@@ -156,17 +156,17 @@ $delta = $totConf - $totCalc;
                     <tr>
                         <th>Cédula</th>
                         <th>Nombre y cargo</th>
-                        <th style="text-align:center;">Días</th>
+                        <th class="text-center">Días</th>
                         <th>Grado</th>
-                        <th style="text-align:right;">Base quinc.</th>
-                        <th style="text-align:right;">Prima prof.</th>
-                        <th style="text-align:right;">Prima antig.</th>
-                        <th style="text-align:right;">Transp.</th>
-                        <th style="text-align:right;">Hijos</th>
-                        <th style="text-align:right;">Diario</th>
-                        <th style="text-align:right;">Alícuota</th>
-                        <th style="text-align:right;">Total calculado</th>
-                        <th style="text-align:right;">Total confirmado</th>
+                        <th class="text-end">Base quinc.</th>
+                        <th class="text-end">Prima prof.</th>
+                        <th class="text-end">Prima antig.</th>
+                        <th class="text-end">Transp.</th>
+                        <th class="text-end">Hijos</th>
+                        <th class="text-end">Diario</th>
+                        <th class="text-end">Alícuota</th>
+                        <th class="text-end">Total calculado</th>
+                        <th class="text-end">Total confirmado</th>
                         <?php if (!$cerrado): ?><th class="col-actions">Guardar</th><?php endif; ?>
                     </tr>
                 </thead>
@@ -195,19 +195,19 @@ $delta = $totConf - $totCalc;
                                     <span style="color:var(--text-tertiary);font-style:italic;">sin grado</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($f->sueldo_base_quincenal); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($f->prima_profesional); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;">
+                            <td class="text-end u-num"><?php echo $fmt($f->sueldo_base_quincenal); ?></td>
+                            <td class="text-end u-num"><?php echo $fmt($f->prima_profesional); ?></td>
+                            <td class="text-end u-num">
                                 <?php echo $fmt($f->prima_antiguedad); ?>
                                 <br><small style="color:var(--text-tertiary);"><?php echo (int)$f->anios_administracion; ?>a · <?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
                             </td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($f->bono_transporte); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;">
+                            <td class="text-end u-num"><?php echo $fmt($f->bono_transporte); ?></td>
+                            <td class="text-end u-num">
                                 <?php echo $fmt($f->prima_por_hijo); ?>
                                 <?php if ((int)$f->n_hijos > 0): ?><br><small style="color:var(--text-tertiary);"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
                             </td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($f->sueldo_normal_diario); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $fmt($f->alicuotas); ?></td>
+                            <td class="text-end u-num"><?php echo $fmt($f->sueldo_normal_diario); ?></td>
+                            <td class="text-end u-num"><?php echo $fmt($f->alicuotas); ?></td>
                             <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-secondary);"><?php echo $tCalc !== null ? $fmt($tCalc) : '—'; ?></td>
 
                             <?php if ($cerrado): ?>
@@ -221,7 +221,7 @@ $delta = $totConf - $totCalc;
                                 <form action="<?php echo URL_ROOT; ?>/nomina/guardarDetalle" method="POST" style="display:contents;">
                                     <input type="hidden" name="id_detalle" value="<?php echo (int)$f->id; ?>">
                                     <input type="hidden" name="grado_escala" value="<?php echo htmlspecialchars($f->grado_escala ?? ''); ?>">
-                                    <td style="text-align:right;">
+                                    <td class="text-end">
                                         <input type="number" step="0.01" min="0" name="total_bono_vacacional" class="sig-input"
                                                style="width:110px;text-align:right;"
                                                value="<?php echo $tConf !== null ? $tConf : ''; ?>"

@@ -36,8 +36,8 @@
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/inventario" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Condición</label>
-                    <select name="condicion" class="sig-select">
+                    <label class="sig-field__label" for="condicion">Condición</label>
+                    <select id="condicion" name="condicion" class="sig-select">
                         <option value="">Todas las condiciones</option>
                         <?php foreach (Inventario::CONDICIONES as $c): ?>
                             <option value="<?php echo $c; ?>" <?php if (($data['filtro_condicion'] ?? '') === $c) echo 'selected'; ?>><?php echo $c; ?></option>
@@ -47,22 +47,22 @@
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Categoría (contiene)</label>
-                    <input type="text" name="categoria" class="sig-input" placeholder="Ej: mobiliario, tecnología..." value="<?php echo htmlspecialchars($data['filtro_categoria'] ?? ''); ?>">
+                    <label class="sig-field__label" for="categoria">Categoría (contiene)</label>
+                    <input id="categoria" type="text" name="categoria" class="sig-input" placeholder="Ej: mobiliario, tecnología..." value="<?php echo htmlspecialchars($data['filtro_categoria'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Ubicación (contiene)</label>
-                    <input type="text" name="ubicacion" class="sig-input" placeholder="Ej: oficina, almacén..." value="<?php echo htmlspecialchars($data['filtro_ubicacion'] ?? ''); ?>">
+                    <label class="sig-field__label" for="ubicacion">Ubicación (contiene)</label>
+                    <input id="ubicacion" type="text" name="ubicacion" class="sig-input" placeholder="Ej: oficina, almacén..." value="<?php echo htmlspecialchars($data['filtro_ubicacion'] ?? ''); ?>">
                 </div>
             </div>
             <!-- Filtros de la Fase 4 (R-5): con ellos este reporte cubre las
                  listas que pide la Presidencia en B-51. -->
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Estatus</label>
-                    <select name="estatus" class="sig-select">
+                    <label class="sig-field__label" for="estatus">Estatus</label>
+                    <select id="estatus" name="estatus" class="sig-select">
                         <option value="">Todos</option>
                         <?php foreach (Inventario::ESTATUS as $e): if ($e === Inventario::EST_BAJA) continue; ?>
                             <option value="<?php echo $e; ?>" <?php if (($data['filtro_estatus'] ?? '') === $e) echo 'selected'; ?>><?php echo $e; ?></option>
@@ -72,8 +72,8 @@
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Origen</label>
-                    <select name="origen" class="sig-select">
+                    <label class="sig-field__label" for="origen">Origen</label>
+                    <select id="origen" name="origen" class="sig-select">
                         <option value="">Todos</option>
                         <?php foreach (Inventario::ORIGENES as $o): ?>
                             <option value="<?php echo $o; ?>" <?php if (($data['filtro_origen'] ?? '') === $o) echo 'selected'; ?>><?php echo $o; ?></option>
@@ -83,14 +83,14 @@
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Departamento (contiene)</label>
-                    <input type="text" name="departamento" class="sig-input" placeholder="Ej: planificación..." value="<?php echo htmlspecialchars($data['filtro_departamento'] ?? ''); ?>">
+                    <label class="sig-field__label" for="departamento">Departamento (contiene)</label>
+                    <input id="departamento" type="text" name="departamento" class="sig-input" placeholder="Ej: planificación..." value="<?php echo htmlspecialchars($data['filtro_departamento'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;height:42px;">
-                        <input type="checkbox" name="deposito" value="1" <?php if (!empty($data['filtro_deposito'])) echo 'checked'; ?>> Solo los que están en depósito
+                    <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;height:42px;" for="deposito">
+                        <input id="deposito" type="checkbox" name="deposito" value="1" <?php if (!empty($data['filtro_deposito'])) echo 'checked'; ?>> Solo los que están en depósito
                     </label>
                 </div>
             </div>
@@ -143,8 +143,8 @@
                 <th>Categoría</th>
                 <th>Ubicación</th>
                 <th>Responsable</th>
-                <th style="text-align:center;">Estatus</th>
-                <th style="text-align:center;">Condición</th>
+                <th class="text-center">Estatus</th>
+                <th class="text-center">Condición</th>
                 <th>Marca / Modelo</th>
                 <th>Serial</th>
             </tr>
@@ -169,8 +169,8 @@
                         <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->categoria ?? 'Sin cat.'); ?></span></td>
                         <td style="font-size:12px;"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
                         <td style="font-size:12px;"><?php echo !empty($r->responsable) ? htmlspecialchars($r->responsable) : '<span style="color:var(--text-tertiary);">Sin asignar</span>'; ?></td>
-                        <td style="text-align:center;"><span class="sig-badge <?php echo Inventario::ESTATUS_BADGES[$r->estatus ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estatus ?? '—'); ?></span></td>
-                        <td style="text-align:center;"><span class="sig-badge <?php echo $condBadge; ?>"><?php echo htmlspecialchars($r->condicion ?? '—'); ?></span></td>
+                        <td class="text-center"><span class="sig-badge <?php echo Inventario::ESTATUS_BADGES[$r->estatus ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estatus ?? '—'); ?></span></td>
+                        <td class="text-center"><span class="sig-badge <?php echo $condBadge; ?>"><?php echo htmlspecialchars($r->condicion ?? '—'); ?></span></td>
                         <td style="font-size:12px;color:var(--text-secondary);">
                             <?php echo htmlspecialchars($r->marca ?? '—'); ?>
                             <?php if (!empty($r->modelo)): ?><br><span style="color:var(--text-tertiary);"><?php echo htmlspecialchars($r->modelo); ?></span><?php endif; ?>

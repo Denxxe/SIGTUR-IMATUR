@@ -29,22 +29,22 @@
             <div class="row g-4 mb-4">
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Cédula de Identidad <span class="req">*</span></label>
-                        <input type="text" name="cedula" class="sig-input" required
+                        <label class="sig-field__label" for="cedula">Cédula de Identidad <span class="req">*</span></label>
+                        <input id="cedula" type="text" name="cedula" class="sig-input" required
                                value="<?php echo $data['pasante']->cedula; ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Nombres <span class="req">*</span></label>
-                        <input type="text" name="nombre" class="sig-input" required
+                        <label class="sig-field__label" for="nombre">Nombres <span class="req">*</span></label>
+                        <input id="nombre" type="text" name="nombre" class="sig-input" required
                                value="<?php echo $data['pasante']->nombre; ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Apellidos <span class="req">*</span></label>
-                        <input type="text" name="apellido" class="sig-input" required
+                        <label class="sig-field__label" for="apellido">Apellidos <span class="req">*</span></label>
+                        <input id="apellido" type="text" name="apellido" class="sig-input" required
                                value="<?php echo $data['pasante']->apellido; ?>">
                     </div>
                 </div>
@@ -59,22 +59,22 @@
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Institución de Origen <span class="req">*</span></label>
-                        <input type="text" name="institucion" class="sig-input" required
+                        <label class="sig-field__label" for="institucion">Institución de Origen <span class="req">*</span></label>
+                        <input id="institucion" type="text" name="institucion" class="sig-input" required
                                value="<?php echo $data['pasante']->institucion; ?>">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Carrera / Especialidad <span class="req">*</span></label>
-                        <input type="text" name="carrera" class="sig-input" required
+                        <label class="sig-field__label" for="carrera">Carrera / Especialidad <span class="req">*</span></label>
+                        <input id="carrera" type="text" name="carrera" class="sig-input" required
                                value="<?php echo $data['pasante']->carrera; ?>">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Tutor Institucional (IMATUR)</label>
-                        <select name="id_tutor_institucional" class="sig-select">
+                        <label class="sig-field__label" for="id_tutor_institucional">Tutor Institucional (IMATUR)</label>
+                        <select id="id_tutor_institucional" name="id_tutor_institucional" class="sig-select">
                             <option value="">-- Sin asignar --</option>
                             <?php foreach ($data['empleados'] ?? [] as $e): ?>
                                 <option value="<?php echo $e->id; ?>"
@@ -87,11 +87,11 @@
                 </div>
                 <div class="col-md-12">
                     <div class="sig-field">
-                        <label class="sig-field__label">
+                        <label class="sig-field__label" for="tutor_externo">
                             Responsable externo
                             <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Persona en la institución a quien se dirige la carta de aceptación</span>
                         </label>
-                        <input type="text" name="tutor_externo" class="sig-input"
+                        <input id="tutor_externo" type="text" name="tutor_externo" class="sig-input"
                                value="<?php echo htmlspecialchars($data['pasante']->tutor_externo ?? ''); ?>"
                                placeholder="Ej: Prof. Rosa Rincón, Responsable de Gestión de Proyecto">
                     </div>
@@ -111,15 +111,15 @@
                 <?php endif; ?>
                 <div class="col-md-3">
                     <div class="sig-field">
-                        <label class="sig-field__label">Fecha Inicio</label>
-                        <input type="date" name="fecha_inicio" class="sig-input"
+                        <label class="sig-field__label" for="fecha_inicio">Fecha Inicio</label>
+                        <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input"
                                value="<?php echo $data['pasante']->fecha_inicio; ?>">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="sig-field">
-                        <label class="sig-field__label">Fecha Culminación</label>
-                        <input type="date" name="fecha_fin" class="sig-input"
+                        <label class="sig-field__label" for="fecha_fin">Fecha Culminación</label>
+                        <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input"
                                value="<?php echo $data['pasante']->fecha_fin; ?>">
                     </div>
                 </div>
@@ -134,7 +134,7 @@
             <div class="row g-4 mb-4">
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Estado Institucional <span class="req">*</span></label>
+                        <label class="sig-field__label" for="selectEstado">Estado Institucional <span class="req">*</span></label>
                         <select name="estado" id="selectEstado" class="sig-select" required onchange="toggleEvaluacion()">
                             <?php
                             $estados = ['Postulado', 'Aceptado', 'En Curso', 'Culminado', 'Rechazado'];
@@ -152,8 +152,8 @@
                 <div class="col-md-6 seccion-evaluacion" id="campoEvaluacion"
                      style="<?php echo ($data['pasante']->estado == 'Culminado') ? '' : 'display:none;'; ?>">
                     <div class="sig-field">
-                        <label class="sig-field__label">Evaluación / Comentario Final</label>
-                        <textarea name="evaluacion" class="sig-textarea" rows="2"
+                        <label class="sig-field__label" for="evaluacion">Evaluación / Comentario Final</label>
+                        <textarea id="evaluacion" name="evaluacion" class="sig-textarea" rows="2"
                                   placeholder="Observaciones del tutor sobre el desempeño..."><?php echo $data['pasante']->evaluacion ?? ''; ?></textarea>
                     </div>
                 </div>
@@ -161,8 +161,8 @@
                 <div class="col-md-2 seccion-evaluacion" id="campoNota"
                      style="<?php echo ($data['pasante']->estado == 'Culminado') ? '' : 'display:none;'; ?>">
                     <div class="sig-field">
-                        <label class="sig-field__label">Nota (0–20)</label>
-                        <input type="number" name="nota" class="sig-input" min="0" max="20" step="0.01"
+                        <label class="sig-field__label" for="nota">Nota (0–20)</label>
+                        <input id="nota" type="number" name="nota" class="sig-input" min="0" max="20" step="0.01"
                                placeholder="Ej: 18.5"
                                value="<?php echo $data['pasante']->nota ?? ''; ?>">
                     </div>

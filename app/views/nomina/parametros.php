@@ -25,8 +25,8 @@
                 <thead>
                     <tr>
                         <th>Mes</th>
-                        <th style="text-align:right;">Cesta ticket</th>
-                        <th style="text-align:right;">Tasa del dólar</th>
+                        <th class="text-end">Cesta ticket</th>
+                        <th class="text-end">Tasa del dólar</th>
                         <th>Observaciones</th>
                         <th class="col-actions">Acciones</th>
                     </tr>
@@ -39,8 +39,8 @@
                     <?php else: foreach ($data['meses'] as $m): ?>
                         <tr>
                             <td class="cell-strong"><?php echo htmlspecialchars($m->periodo); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo number_format((float)$m->monto_cesta_ticket, 2, ',', '.'); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo number_format((float)$m->tasa_dolar, 4, ',', '.'); ?></td>
+                            <td class="text-end u-num"><?php echo number_format((float)$m->monto_cesta_ticket, 2, ',', '.'); ?></td>
+                            <td class="text-end u-num"><?php echo number_format((float)$m->tasa_dolar, 4, ',', '.'); ?></td>
                             <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($m->observaciones ?? '—'); ?></td>
                             <td class="col-actions">
                                 <button class="row-action row-action--edit"
@@ -66,13 +66,13 @@
             <div class="sig-card__body" style="padding:0;">
                 <div class="sig-table-wrap" data-no-export>
                     <table class="sig-table">
-                        <thead><tr><th>Código</th><th>Grado de instrucción</th><th style="text-align:right;">%</th></tr></thead>
+                        <thead><tr><th>Código</th><th>Grado de instrucción</th><th class="text-end">%</th></tr></thead>
                         <tbody>
                             <?php foreach ($data['grados'] ?? [] as $cod => $g): ?>
                                 <tr>
                                     <td class="cell-strong"><?php echo htmlspecialchars($cod); ?></td>
                                     <td><?php echo htmlspecialchars($g['nombre']); ?></td>
-                                    <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo number_format($g['porcentaje'], 2, ',', '.'); ?></td>
+                                    <td class="text-end u-num"><?php echo number_format($g['porcentaje'], 2, ',', '.'); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -91,7 +91,7 @@
             <div class="sig-card__body" style="padding:0;">
                 <div class="sig-table-wrap" data-no-export style="max-height:340px;overflow-y:auto;">
                     <table class="sig-table">
-                        <thead><tr><th>Años</th><th style="text-align:right;">%</th></tr></thead>
+                        <thead><tr><th>Años</th><th class="text-end">%</th></tr></thead>
                         <tbody>
                             <?php foreach ($data['escala'] ?? [] as $t): ?>
                                 <tr>
@@ -99,7 +99,7 @@
                                         <?php echo (int)$t->anios; ?>
                                         <?php if ($t->es_tope): ?><span class="sig-badge sig-badge--info">y más — tope</span><?php endif; ?>
                                     </td>
-                                    <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo number_format((float)$t->porcentaje, 2, ',', '.'); ?></td>
+                                    <td class="text-end u-num"><?php echo number_format((float)$t->porcentaje, 2, ',', '.'); ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

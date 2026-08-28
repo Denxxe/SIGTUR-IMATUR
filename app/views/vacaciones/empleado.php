@@ -55,13 +55,13 @@ $baseServ = Vacacion::fechaBaseServicio($e);
                 <form action="<?php echo URL_ROOT; ?>/vacaciones/registrar" method="POST">
                     <input type="hidden" name="id_empleado" value="<?php echo (int)$e->id; ?>">
                     <div class="row g-3">
-                        <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Desde <span class="req">*</span></label>
-                            <input type="date" name="fecha_inicio" class="sig-input" required></div></div>
-                        <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Hasta <span class="req">*</span></label>
-                            <input type="date" name="fecha_fin" class="sig-input" required></div></div>
+                        <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="fecha_inicio">Desde <span class="req">*</span></label>
+                            <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" required></div></div>
+                        <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="fecha_fin">Hasta <span class="req">*</span></label>
+                            <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" required></div></div>
                         <div class="col-md-4 d-flex align-items-end"><button type="submit" class="btn-sig btn-sig--primary w-100"><i class="bi bi-check-lg"></i> Registrar</button></div>
-                        <div class="col-12"><div class="sig-field"><label class="sig-field__label">Observaciones</label>
-                            <input type="text" name="observaciones" class="sig-input" placeholder="Opcional"></div></div>
+                        <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="observaciones">Observaciones</label>
+                            <input id="observaciones" type="text" name="observaciones" class="sig-input" placeholder="Opcional"></div></div>
                     </div>
                     <small style="color:var(--text-tertiary)"><i class="bi bi-info-circle"></i> Se cuentan solo días hábiles (sin fines de semana ni feriados).</small>
                 </form>
@@ -75,8 +75,8 @@ $baseServ = Vacacion::fechaBaseServicio($e);
             <div class="sig-card__body">
                 <form action="<?php echo URL_ROOT; ?>/vacaciones/guardarAjuste" method="POST">
                     <input type="hidden" name="id_empleado" value="<?php echo (int)$e->id; ?>">
-                    <div class="sig-field"><label class="sig-field__label">Días ya disfrutados antes del sistema</label>
-                        <input type="number" name="ajuste" class="sig-input" min="0" value="<?php echo (int)$data['ajuste']; ?>"></div>
+                    <div class="sig-field"><label class="sig-field__label" for="ajuste">Días ya disfrutados antes del sistema</label>
+                        <input id="ajuste" type="number" name="ajuste" class="sig-input" min="0" value="<?php echo (int)$data['ajuste']; ?>"></div>
                     <small style="color:var(--text-tertiary);display:block;margin:6px 0">Se resta del saldo. Cárgalo una sola vez al poner el módulo en marcha.</small>
                     <button type="submit" class="btn-sig btn-sig--ghost"><i class="bi bi-floppy"></i> Guardar ajuste</button>
                 </form>

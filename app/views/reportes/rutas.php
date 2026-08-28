@@ -81,8 +81,8 @@
         <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-5);">
             <div style="display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:flex-end;">
                 <div class="sig-field" style="margin:0; min-width:170px;">
-                    <label class="sig-field__label">Estado</label>
-                    <select name="estado" class="sig-select">
+                    <label class="sig-field__label" for="estado">Estado</label>
+                    <select id="estado" name="estado" class="sig-select">
                         <option value="">Todos los estados</option>
                         <?php foreach (['Activa','Inactiva','En Mantenimiento','Finalizada'] as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>>
@@ -92,8 +92,8 @@
                     </select>
                 </div>
                 <div class="sig-field" style="margin:0; min-width:190px;">
-                    <label class="sig-field__label">Tipo de Ruta</label>
-                    <select name="tipo_ruta" class="sig-select">
+                    <label class="sig-field__label" for="tipo_ruta">Tipo de Ruta</label>
+                    <select id="tipo_ruta" name="tipo_ruta" class="sig-select">
                         <option value="">Todos los tipos</option>
                         <?php foreach (Ruta::$TIPOS_RUTA as $opt): ?>
                             <option value="<?php echo htmlspecialchars($opt); ?>" <?php if (($data['filtro_tipo'] ?? '') === $opt) echo 'selected'; ?>>
@@ -103,12 +103,12 @@
                     </select>
                 </div>
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Fecha visita desde</label>
-                    <input type="date" name="fecha_desde" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_desde'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_desde">Fecha visita desde</label>
+                    <input id="fecha_desde" type="date" name="fecha_desde" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_desde'] ?? ''); ?>">
                 </div>
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Hasta</label>
-                    <input type="date" name="fecha_hasta" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_hasta'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_hasta">Hasta</label>
+                    <input id="fecha_hasta" type="date" name="fecha_hasta" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_hasta'] ?? ''); ?>">
                 </div>
                 <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm">
                     <i class="bi bi-funnel"></i> Filtrar
@@ -162,13 +162,13 @@
             <thead>
                 <tr>
                     <th>Tipo de Ruta</th>
-                    <th style="text-align:center;">Rutas</th>
-                    <th style="text-align:center;">Finalizadas</th>
-                    <th style="text-align:center;">Mujeres</th>
-                    <th style="text-align:center;">Hombres</th>
-                    <th style="text-align:center;">Niñas</th>
-                    <th style="text-align:center;">Niños</th>
-                    <th style="text-align:center;">Total Atendidos</th>
+                    <th class="text-center">Rutas</th>
+                    <th class="text-center">Finalizadas</th>
+                    <th class="text-center">Mujeres</th>
+                    <th class="text-center">Hombres</th>
+                    <th class="text-center">Niñas</th>
+                    <th class="text-center">Niños</th>
+                    <th class="text-center">Total Atendidos</th>
                 </tr>
             </thead>
             <tbody>
@@ -181,23 +181,23 @@
                 ?>
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($st->tipo_ruta); ?></td>
-                    <td style="text-align:center;"><?php echo (int)$st->rutas; ?></td>
+                    <td class="text-center"><?php echo (int)$st->rutas; ?></td>
                     <td style="text-align:center; color:#7C3AED; font-weight:700;"><?php echo (int)$st->finalizadas; ?></td>
-                    <td style="text-align:center;"><?php echo (int)$st->mujeres; ?></td>
-                    <td style="text-align:center;"><?php echo (int)$st->hombres; ?></td>
-                    <td style="text-align:center;"><?php echo (int)$st->ninas; ?></td>
-                    <td style="text-align:center;"><?php echo (int)$st->ninos; ?></td>
+                    <td class="text-center"><?php echo (int)$st->mujeres; ?></td>
+                    <td class="text-center"><?php echo (int)$st->hombres; ?></td>
+                    <td class="text-center"><?php echo (int)$st->ninas; ?></td>
+                    <td class="text-center"><?php echo (int)$st->ninos; ?></td>
                     <td style="text-align:center; font-weight:800; color:var(--success-600);"><?php echo (int)$st->total_atendidos; ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <tr style="background:var(--bg-muted-subtle); font-weight:800;">
                     <td>TOTAL</td>
-                    <td style="text-align:center;"><?php echo $gR; ?></td>
+                    <td class="text-center"><?php echo $gR; ?></td>
                     <td style="text-align:center; color:#7C3AED;"><?php echo $gF; ?></td>
-                    <td style="text-align:center;"><?php echo $gM; ?></td>
-                    <td style="text-align:center;"><?php echo $gH; ?></td>
-                    <td style="text-align:center;"><?php echo $gNa; ?></td>
-                    <td style="text-align:center;"><?php echo $gNo; ?></td>
+                    <td class="text-center"><?php echo $gM; ?></td>
+                    <td class="text-center"><?php echo $gH; ?></td>
+                    <td class="text-center"><?php echo $gNa; ?></td>
+                    <td class="text-center"><?php echo $gNo; ?></td>
                     <td style="text-align:center; color:var(--success-600);"><?php echo $gT; ?></td>
                 </tr>
             </tbody>
@@ -221,9 +221,9 @@
                         capturan en ningún formulario, así que el reporte informaba "Gratuita"
                         para toda ruta, siempre — incluso si se cobró. Se reactiva cuando el
                         cliente defina el flujo de cobro (D-RT02). */ ?>
-                <th style="text-align:center;">Paradas</th>
-                <th style="text-align:center;">Particip.</th>
-                <th style="text-align:center;">Atendidos</th>
+                <th class="text-center">Paradas</th>
+                <th class="text-center">Particip.</th>
+                <th class="text-center">Atendidos</th>
             </tr>
         </thead>
         <tbody>

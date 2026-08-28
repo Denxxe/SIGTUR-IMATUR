@@ -57,25 +57,25 @@ $hm = fn($t) => !empty($t) ? substr($t, 0, 5) : '—';
             <div class="modal-body">
                 <input type="hidden" name="id" id="hor_id">
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                    <label class="sig-field__label" for="hor_nombre">Nombre <span class="req">*</span></label>
                     <input type="text" name="nombre" id="hor_nombre" class="sig-input" required placeholder="Ej: Estándar (8:00am–2:00pm)">
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Entrada <span class="req">*</span></label>
+                            <label class="sig-field__label" for="hor_hora_entrada">Entrada <span class="req">*</span></label>
                             <input type="time" name="hora_entrada" id="hor_hora_entrada" class="sig-input" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Salida <span class="req">*</span></label>
+                            <label class="sig-field__label" for="hor_hora_salida">Salida <span class="req">*</span></label>
                             <input type="time" name="hora_salida" id="hor_hora_salida" class="sig-input" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Días laborales</label>
+                            <label class="sig-field__label" for="hor_dias">Días laborales</label>
                             <select name="dias_laborales" id="hor_dias" class="sig-select">
                                 <?php foreach (Horario::DIAS_OPCIONES as $val => $lbl): ?>
                                     <option value="<?php echo htmlspecialchars($val); ?>"<?php echo $val === Horario::DIAS_DEFAULT ? ' selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
@@ -85,7 +85,7 @@ $hm = fn($t) => !empty($t) ? substr($t, 0, 5) : '—';
                     </div>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Descripción</label>
+                    <label class="sig-field__label" for="hor_descripcion">Descripción</label>
                     <textarea name="descripcion" id="hor_descripcion" class="sig-textarea" rows="2"></textarea>
                 </div>
             </div>

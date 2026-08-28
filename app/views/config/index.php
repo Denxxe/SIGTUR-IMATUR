@@ -35,32 +35,32 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Nombre</label>
-                            <input type="text" name="director_nombre" class="sig-input"
+                            <label class="sig-field__label" for="director_nombre">Nombre</label>
+                            <input id="director_nombre" type="text" name="director_nombre" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['director_nombre']['valor'] ?? ''); ?>"
                                    placeholder="Ej: María">
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Apellido</label>
-                            <input type="text" name="director_apellido" class="sig-input"
+                            <label class="sig-field__label" for="director_apellido">Apellido</label>
+                            <input id="director_apellido" type="text" name="director_apellido" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['director_apellido']['valor'] ?? ''); ?>"
                                    placeholder="Ej: González">
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Cargo</label>
-                            <input type="text" name="director_cargo" class="sig-input"
+                            <label class="sig-field__label" for="director_cargo">Cargo</label>
+                            <input id="director_cargo" type="text" name="director_cargo" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['director_cargo']['valor'] ?? ''); ?>"
                                    placeholder="Ej: Director General">
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">RIF institucional</label>
-                            <input type="text" name="rif_institucional" class="sig-input"
+                            <label class="sig-field__label" for="rif_institucional">RIF institucional</label>
+                            <input id="rif_institucional" type="text" name="rif_institucional" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['rif_institucional']['valor'] ?? ConfigSistema::RIF_DEFAULT); ?>"
                                    placeholder="G-20008498-7">
                             <small style="color:var(--text-tertiary)">Aparece en constancias, oficios, fichas y reportes.</small>
@@ -84,32 +84,32 @@
                 <div class="row g-3">
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">N° Resolución</label>
-                            <input type="text" name="resolucion_numero" class="sig-input"
+                            <label class="sig-field__label" for="resolucion_numero">N° Resolución</label>
+                            <input id="resolucion_numero" type="text" name="resolucion_numero" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['resolucion_numero']['valor'] ?? ''); ?>"
                                    placeholder="025">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Fecha</label>
-                            <input type="text" name="resolucion_fecha" class="sig-input"
+                            <label class="sig-field__label" for="resolucion_fecha">Fecha</label>
+                            <input id="resolucion_fecha" type="text" name="resolucion_fecha" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['resolucion_fecha']['valor'] ?? ''); ?>"
                                    placeholder="15 ene 2024">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">N° Gaceta</label>
-                            <input type="text" name="gaceta_numero" class="sig-input"
+                            <label class="sig-field__label" for="gaceta_numero">N° Gaceta</label>
+                            <input id="gaceta_numero" type="text" name="gaceta_numero" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['gaceta_numero']['valor'] ?? ''); ?>"
                                    placeholder="042">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Fecha</label>
-                            <input type="text" name="gaceta_fecha" class="sig-input"
+                            <label class="sig-field__label" for="gaceta_fecha">Fecha</label>
+                            <input id="gaceta_fecha" type="text" name="gaceta_fecha" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['gaceta_fecha']['valor'] ?? ''); ?>"
                                    placeholder="20 ene 2024">
                         </div>
@@ -137,16 +137,16 @@
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Teléfono</label>
-                            <input type="text" name="telf_institucion" class="sig-input"
+                            <label class="sig-field__label" for="telf_institucion">Teléfono</label>
+                            <input id="telf_institucion" type="text" name="telf_institucion" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['telf_institucion']['valor'] ?? ''); ?>"
                                    placeholder="(0293) 431-4073">
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Correo electrónico</label>
-                            <input type="email" name="correo_institucion" class="sig-input"
+                            <label class="sig-field__label" for="correo_institucion">Correo electrónico</label>
+                            <input id="correo_institucion" type="email" name="correo_institucion" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['correo_institucion']['valor'] ?? ''); ?>"
                                    placeholder="Sucreimatur@gmail.com">
                             <small style="color:var(--text-tertiary)">Aparece en el carnet, constancias y oficios. Es además el <strong>remitente</strong> de los correos de recuperación de contraseña.</small>
@@ -154,8 +154,8 @@
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Dirección</label>
-                            <input type="text" name="direccion_institucion" class="sig-input"
+                            <label class="sig-field__label" for="direccion_institucion">Dirección</label>
+                            <input id="direccion_institucion" type="text" name="direccion_institucion" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['direccion_institucion']['valor'] ?? ''); ?>"
                                    placeholder="Estado Sucre, municipio Sucre, Cumaná, Calle Sucre, Casa Nº11">
                             <small style="color:var(--text-tertiary)">Se imprime al pie del carnet institucional.</small>
@@ -163,8 +163,8 @@
                     </div>
                     <div class="col-12">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Lema institucional</label>
-                            <input type="text" name="lema_institucion" class="sig-input"
+                            <label class="sig-field__label" for="lema_institucion">Lema institucional</label>
+                            <input id="lema_institucion" type="text" name="lema_institucion" class="sig-input"
                                    value="<?php echo htmlspecialchars($cfg['lema_institucion']['valor'] ?? ''); ?>"
                                    placeholder="Historia y Porvenir">
                             <small style="color:var(--text-tertiary)">Frase que cierra el carnet institucional.</small>
@@ -344,16 +344,16 @@
                 <div class="row g-3">
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Último N° emitido</label>
-                            <input type="number" name="correlativo_oficio" class="sig-input" min="0"
+                            <label class="sig-field__label" for="correlativo_oficio">Último N° emitido</label>
+                            <input id="correlativo_oficio" type="number" name="correlativo_oficio" class="sig-input" min="0"
                                    style="text-align:center; font-size:1.1rem; font-weight:700;"
                                    value="<?php echo (int)($cfg['correlativo_oficio']['valor'] ?? 0); ?>">
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Año del correlativo</label>
-                            <input type="number" name="ano_correlativo" class="sig-input" min="2020"
+                            <label class="sig-field__label" for="ano_correlativo">Año del correlativo</label>
+                            <input id="ano_correlativo" type="number" name="ano_correlativo" class="sig-input" min="2020"
                                    style="text-align:center; font-size:1.1rem; font-weight:700;"
                                    value="<?php echo (int)($cfg['ano_correlativo']['valor'] ?? date('Y')); ?>">
                         </div>
@@ -399,29 +399,29 @@
                 <div class="row g-3">
                     <div class="col-6 col-md-3">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Alto Nivel <small>(+años)</small></label>
-                            <input type="number" name="bono_vac_dias_alto_nivel" class="sig-input" min="0"
+                            <label class="sig-field__label" for="bono_vac_dias_alto_nivel">Alto Nivel <small>(+años)</small></label>
+                            <input id="bono_vac_dias_alto_nivel" type="number" name="bono_vac_dias_alto_nivel" class="sig-input" min="0"
                                    value="<?php echo (int)($cfg['bono_vac_dias_alto_nivel']['valor'] ?? 75); ?>">
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Empleados Fijos <small>(+años)</small></label>
-                            <input type="number" name="bono_vac_dias_empleados_fijos" class="sig-input" min="0"
+                            <label class="sig-field__label" for="bono_vac_dias_empleados_fijos">Empleados Fijos <small>(+años)</small></label>
+                            <input id="bono_vac_dias_empleados_fijos" type="number" name="bono_vac_dias_empleados_fijos" class="sig-input" min="0"
                                    value="<?php echo (int)($cfg['bono_vac_dias_empleados_fijos']['valor'] ?? 75); ?>">
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Obreros Fijos <small>(fijo)</small></label>
-                            <input type="number" name="bono_vac_dias_obreros_fijos" class="sig-input" min="0"
+                            <label class="sig-field__label" for="bono_vac_dias_obreros_fijos">Obreros Fijos <small>(fijo)</small></label>
+                            <input id="bono_vac_dias_obreros_fijos" type="number" name="bono_vac_dias_obreros_fijos" class="sig-input" min="0"
                                    value="<?php echo (int)($cfg['bono_vac_dias_obreros_fijos']['valor'] ?? 85); ?>">
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">Contratados <small>(+años)</small></label>
-                            <input type="number" name="bono_vac_dias_contratados" class="sig-input" min="0"
+                            <label class="sig-field__label" for="bono_vac_dias_contratados">Contratados <small>(+años)</small></label>
+                            <input id="bono_vac_dias_contratados" type="number" name="bono_vac_dias_contratados" class="sig-input" min="0"
                                    value="<?php echo (int)($cfg['bono_vac_dias_contratados']['valor'] ?? 45); ?>">
                         </div>
                     </div>
@@ -438,8 +438,8 @@
             </div>
             <div class="sig-card__body" style="padding:var(--sp-4);">
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Monto mensual (Bs)</label>
-                    <input type="number" step="0.01" name="monto_cesta_ticket" class="sig-input" min="0"
+                    <label class="sig-field__label" for="monto_cesta_ticket">Monto mensual (Bs)</label>
+                    <input id="monto_cesta_ticket" type="number" step="0.01" name="monto_cesta_ticket" class="sig-input" min="0"
                            value="<?php echo htmlspecialchars($cfg['monto_cesta_ticket']['valor'] ?? '0'); ?>">
                     <small style="color:var(--text-tertiary)">Usado en el cálculo del Bono Vacacional (/nomina).</small>
                 </div>

@@ -27,20 +27,20 @@
             <div class="row g-4 mb-8">
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Cédula de Identidad <span class="req">*</span></label>
-                        <input type="text" name="cedula" class="sig-input" placeholder="12345678 (solo números)" required>
+                        <label class="sig-field__label" for="cedula">Cédula de Identidad <span class="req">*</span></label>
+                        <input id="cedula" type="text" name="cedula" class="sig-input" placeholder="12345678 (solo números)" required>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Nombres <span class="req">*</span></label>
-                        <input type="text" name="nombre" class="sig-input" required placeholder="Ej: María José">
+                        <label class="sig-field__label" for="nombre">Nombres <span class="req">*</span></label>
+                        <input id="nombre" type="text" name="nombre" class="sig-input" required placeholder="Ej: María José">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Apellidos <span class="req">*</span></label>
-                        <input type="text" name="apellido" class="sig-input" required placeholder="Ej: Perez Silva">
+                        <label class="sig-field__label" for="apellido">Apellidos <span class="req">*</span></label>
+                        <input id="apellido" type="text" name="apellido" class="sig-input" required placeholder="Ej: Perez Silva">
                     </div>
                 </div>
             </div>
@@ -53,20 +53,20 @@
             <div class="row g-4 mb-8">
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Institución de Origen <span class="req">*</span></label>
-                        <input type="text" name="institucion" class="sig-input" placeholder="Ej: UDO, UPTOS Clodosbaldo Russian..." required>
+                        <label class="sig-field__label" for="institucion">Institución de Origen <span class="req">*</span></label>
+                        <input id="institucion" type="text" name="institucion" class="sig-input" placeholder="Ej: UDO, UPTOS Clodosbaldo Russian..." required>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Carrera / Especialidad <span class="req">*</span></label>
-                        <input type="text" name="carrera" class="sig-input" required placeholder="Ej: Turismo, Administración, Informática...">
+                        <label class="sig-field__label" for="carrera">Carrera / Especialidad <span class="req">*</span></label>
+                        <input id="carrera" type="text" name="carrera" class="sig-input" required placeholder="Ej: Turismo, Administración, Informática...">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">Tutor Institucional (IMATUR)</label>
-                        <select name="id_tutor_institucional" class="sig-select">
+                        <label class="sig-field__label" for="id_tutor_institucional">Tutor Institucional (IMATUR)</label>
+                        <select id="id_tutor_institucional" name="id_tutor_institucional" class="sig-select">
                             <option value="">-- Seleccionar Tutor (Opcional) --</option>
                             <?php if(isset($data['empleados'])): ?>
                             <?php foreach($data['empleados'] ?? [] as $e): ?>
@@ -78,24 +78,24 @@
                 </div>
                 <div class="col-md-12">
                     <div class="sig-field">
-                        <label class="sig-field__label">
+                        <label class="sig-field__label" for="tutor_externo">
                             Responsable externo
                             <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Persona en la institución a quien se dirige la carta de aceptación</span>
                         </label>
-                        <input type="text" name="tutor_externo" class="sig-input"
+                        <input id="tutor_externo" type="text" name="tutor_externo" class="sig-input"
                                placeholder="Ej: Prof. Rosa Rincón, Responsable de Gestión de Proyecto">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="sig-field">
-                        <label class="sig-field__label">Fecha Inicio</label>
-                        <input type="date" name="fecha_inicio" class="sig-input">
+                        <label class="sig-field__label" for="fecha_inicio">Fecha Inicio</label>
+                        <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="sig-field">
-                        <label class="sig-field__label">Fecha Culminación</label>
-                        <input type="date" name="fecha_fin" class="sig-input">
+                        <label class="sig-field__label" for="fecha_fin">Fecha Culminación</label>
+                        <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input">
                     </div>
                 </div>
             </div>

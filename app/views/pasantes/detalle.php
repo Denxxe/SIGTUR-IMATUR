@@ -129,8 +129,8 @@
                     <thead>
                         <tr>
                             <th>Tipo Documento</th>
-                            <th style="text-align:center;">Estado Físico</th>
-                            <th style="text-align:center;">Digital</th>
+                            <th class="text-center">Estado Físico</th>
+                            <th class="text-center">Digital</th>
                             <th>Observaciones</th>
                         </tr>
                     </thead>
@@ -148,14 +148,14 @@
                                         <span class="cell-strong"><?php echo isset($doc->tipo_documento) ? $doc->tipo_documento : 'Documento'; ?></span>
                                     </div>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="text-center">
                                     <?php if(isset($doc->entregado) && $doc->entregado): ?>
                                         <span class="sig-badge sig-badge--success"><i class="bi bi-check-circle"></i> Recibido</span>
                                     <?php else: ?>
                                         <span class="sig-badge sig-badge--danger"><i class="bi bi-x-circle"></i> Pendiente</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="text-center">
                                     <?php if(isset($doc->archivo_url) && $doc->archivo_url): ?>
                                         <a href="<?php echo URL_ROOT; ?>/descarga/pasante/<?php echo (int)$doc->id; ?>" target="_blank" class="row-action row-action--view" style="width:auto; padding:0 var(--sp-3);">
                                             <i class="bi bi-file-pdf"></i> Ver PDF
@@ -189,8 +189,8 @@
       <div class="modal-body">
         <input type="hidden" name="id_pasante" value="<?php echo (int)$data['pasante']->id; ?>">
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
-        <div class="sig-field"><label class="sig-field__label">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
-          <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
+        <div class="sig-field"><label class="sig-field__label" for="foto">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
+          <input id="foto" type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -214,8 +214,8 @@
                   <i class="bi bi-info-circle-fill"></i> Al registrar el documento, se marcará automáticamente como <strong>Entregado</strong> en el expediente físico.
               </div>
               <div class="sig-field mb-4">
-                  <label class="sig-field__label">Tipo de Documento <span class="req">*</span></label>
-                  <select name="tipo_documento" class="sig-select" required>
+                  <label class="sig-field__label" for="tipo_documento">Tipo de Documento <span class="req">*</span></label>
+                  <select id="tipo_documento" name="tipo_documento" class="sig-select" required>
                       <option value="">Seleccione un tipo...</option>
                       <option value="Carta de Postulación">Carta de Postulación (Origen)</option>
                       <option value="Carta de Aceptación">Carta de Aceptación (IMATUR)</option>
@@ -224,12 +224,12 @@
                   </select>
               </div>
               <div class="sig-field mb-4">
-                  <label class="sig-field__label">Archivo Digital (PDF/Imagen)</label>
-                  <input type="file" name="archivo" class="sig-input" accept=".pdf,.jpeg,.jpg,.png" style="padding-top:10px;">
+                  <label class="sig-field__label" for="archivo">Archivo Digital (PDF/Imagen)</label>
+                  <input id="archivo" type="file" name="archivo" class="sig-input" accept=".pdf,.jpeg,.jpg,.png" style="padding-top:10px;">
               </div>
               <div class="sig-field">
-                  <label class="sig-field__label">Observaciones</label>
-                  <textarea name="observaciones" class="sig-textarea" rows="2" placeholder="Ej: Firmada por el Director académico..."></textarea>
+                  <label class="sig-field__label" for="observaciones">Observaciones</label>
+                  <textarea id="observaciones" name="observaciones" class="sig-textarea" rows="2" placeholder="Ej: Firmada por el Director académico..."></textarea>
               </div>
           </div>
           <div class="modal-footer">
@@ -261,14 +261,14 @@
                     <div class="sig-field mb-4">
                         <label class="sig-field__label">Tipo de aceptación</label>
                         <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                                <input type="radio" name="tipo" value="individual" checked onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;" for="tipo">
+                                <input id="tipo" type="radio" name="tipo" value="individual" checked onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
                                 <span><strong>Individual</strong> — carta solo para este pasante</span>
                             </label>
                         </div>
                         <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
-                                <input type="radio" name="tipo" value="grupo" onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;" for="tipo_2">
+                                <input id="tipo_2" type="radio" name="tipo" value="grupo" onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
                                 <span><strong>En grupo</strong> — compartirá la carta con otros pasantes (máx. 4 total)</span>
                             </label>
                         </div>

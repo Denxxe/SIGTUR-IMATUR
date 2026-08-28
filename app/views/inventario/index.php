@@ -81,8 +81,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
 <form method="GET" action="<?php echo URL_ROOT; ?>/inventario/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
     <?php if ($ver !== ''): ?><input type="hidden" name="ver" value="<?php echo htmlspecialchars($ver); ?>"><?php endif; ?>
     <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label">Categoría</label>
-        <select name="categoria" class="sig-select js-search" style="min-width:190px;" onchange="this.form.submit()">
+        <label class="sig-field__label" for="categoria">Categoría</label>
+        <select id="categoria" name="categoria" class="sig-select js-search" style="min-width:190px;" onchange="this.form.submit()">
             <option value="">Todas</option>
             <?php foreach ($data['categorias'] ?? [] as $c): ?>
                 <option value="<?php echo $c->id; ?>" <?php echo ((int)($data['f_categoria'] ?? 0) === (int)$c->id) ? 'selected' : ''; ?>><?php echo htmlspecialchars($c->nombre); ?></option>
@@ -90,8 +90,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         </select>
     </div>
     <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label">Ubicación</label>
-        <select name="ubicacion" class="sig-select js-search" style="min-width:180px;" onchange="this.form.submit()">
+        <label class="sig-field__label" for="ubicacion">Ubicación</label>
+        <select id="ubicacion" name="ubicacion" class="sig-select js-search" style="min-width:180px;" onchange="this.form.submit()">
             <option value="">Todas</option>
             <?php foreach ($data['ubicaciones'] ?? [] as $u): ?>
                 <option value="<?php echo $u->id; ?>" <?php echo ((int)($data['f_ubicacion'] ?? 0) === (int)$u->id) ? 'selected' : ''; ?>><?php echo htmlspecialchars($u->nombre); ?></option>
@@ -100,8 +100,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
     </div>
     <?php if ($ver === ''): ?>
     <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label">Estatus</label>
-        <select name="estatus" class="sig-select" style="min-width:170px;" onchange="this.form.submit()">
+        <label class="sig-field__label" for="estatus">Estatus</label>
+        <select id="estatus" name="estatus" class="sig-select" style="min-width:170px;" onchange="this.form.submit()">
             <option value="">Todos</option>
             <?php foreach (Inventario::ESTATUS as $e): if ($e === Inventario::EST_BAJA) continue; ?>
                 <option value="<?php echo $e; ?>" <?php echo (($data['f_estatus'] ?? '') === $e) ? 'selected' : ''; ?>><?php echo $e; ?></option>
@@ -110,8 +110,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
     </div>
     <?php endif; ?>
     <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label">Condición</label>
-        <select name="condicion" class="sig-select" style="min-width:150px;" onchange="this.form.submit()">
+        <label class="sig-field__label" for="condicion">Condición</label>
+        <select id="condicion" name="condicion" class="sig-select" style="min-width:150px;" onchange="this.form.submit()">
             <option value="">Todas</option>
             <?php foreach (Inventario::CONDICIONES as $c): ?>
                 <option value="<?php echo $c; ?>" <?php echo (($data['f_condicion'] ?? '') === $c) ? 'selected' : ''; ?>><?php echo $c; ?></option>
@@ -119,8 +119,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         </select>
     </div>
     <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label">Origen</label>
-        <select name="origen" class="sig-select" style="min-width:140px;" onchange="this.form.submit()">
+        <label class="sig-field__label" for="origen">Origen</label>
+        <select id="origen" name="origen" class="sig-select" style="min-width:140px;" onchange="this.form.submit()">
             <option value="">Todos</option>
             <?php foreach (Inventario::ORIGENES as $o): ?>
                 <option value="<?php echo $o; ?>" <?php echo (($data['f_origen'] ?? '') === $o) ? 'selected' : ''; ?>><?php echo $o; ?></option>
@@ -291,7 +291,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_proveedor">Proveedor</label>
                         <input type="text" name="proveedor" id="inv_proveedor" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field" style="margin:0;">
-                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;">
+                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;" for="inv_tiene_gar">
                             <input type="checkbox" name="tiene_garantia" id="inv_tiene_gar" value="1" onchange="invToggleGarantia()"> Tiene garantía
                         </label></div></div>
                     <div class="col-md-4" id="inv_wrap_gar" style="display:none;"><div class="sig-field"><label class="sig-field__label" for="inv_gar_vence">Vence el <span class="req">*</span></label>

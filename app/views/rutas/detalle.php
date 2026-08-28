@@ -127,7 +127,7 @@
         $cupo       = $data['ruta']->cupo_maximo ?? 0;
         $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
         ?>
-        <div style="text-align:right;">
+        <div class="text-end">
             <div style="font-size:12px; font-weight:700; color:var(--text-primary);">
                 <?php echo $inscritos; ?> / <?php echo $cupo; ?>
                 <span style="color:var(--text-tertiary); font-weight:500;">(<?php echo $porcentaje; ?>%)</span>
@@ -364,7 +364,7 @@ sort($duplicados, SORT_NUMERIC);
                 <!-- ═══ BLOQUE CON CÉDULA ═══════════════════════════════════ -->
                 <div id="bloque_cedula_ruta">
                     <div class="sig-field" style="margin-bottom:var(--sp-2);">
-                        <label class="sig-field__label">
+                        <label class="sig-field__label" for="part_cedula">
                             Cédula del participante
                             <i class="bi bi-search" id="ico_buscar_part" style="margin-left:4px; color:var(--text-tertiary);" title="Búsqueda automática"></i>
                             <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— si ya está registrado, sus datos se completan solos</span>
@@ -379,31 +379,31 @@ sort($duplicados, SORT_NUMERIC);
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                    <label class="sig-field__label" for="part_nombre">Nombre <span class="req">*</span></label>
                                     <input type="text" name="nombre" id="part_nombre" class="sig-input" placeholder="Ej: Carlos">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Apellido <span class="req">*</span></label>
+                                    <label class="sig-field__label" for="part_apellido">Apellido <span class="req">*</span></label>
                                     <input type="text" name="apellido" id="part_apellido" class="sig-input" placeholder="Ej: González">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Teléfono</label>
+                                    <label class="sig-field__label" for="part_telefono">Teléfono</label>
                                     <input type="text" name="telefono" id="part_telefono" class="sig-input" placeholder="0412-1234567">
                                 </div>
                             </div>
                             <div class="col-md-5">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Correo electrónico</label>
+                                    <label class="sig-field__label" for="part_correo">Correo electrónico</label>
                                     <input type="email" name="correo" id="part_correo" class="sig-input" placeholder="ejemplo@correo.com">
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Género</label>
+                                    <label class="sig-field__label" for="part_genero">Género</label>
                                     <select name="genero" id="part_genero" class="sig-select">
                                         <option value="">—</option>
                                         <option value="M">Masculino</option>
@@ -413,13 +413,13 @@ sort($duplicados, SORT_NUMERIC);
                             </div>
                             <div class="col-md-4">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Fecha de nacimiento <span id="part_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                    <label class="sig-field__label" for="part_fecha_nac">Fecha de nacimiento <span id="part_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
                                     <input type="date" name="fecha_nacimiento" id="part_fecha_nac" class="sig-input js-edad" data-edad-target="part_edad_label">
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Parroquia</label>
+                                    <label class="sig-field__label" for="part_parroquia">Parroquia</label>
                                     <select name="parroquia_id" id="part_parroquia" class="sig-select">
                                         <option value="">— Seleccione parroquia —</option>
                                         <?php foreach ($data['parroquias'] ?? [] as $par): ?>
@@ -433,7 +433,7 @@ sort($duplicados, SORT_NUMERIC);
                             </div>
                             <div class="col-12">
                                 <div class="sig-field" style="margin:0;">
-                                    <label class="sig-field__label">Dirección</label>
+                                    <label class="sig-field__label" for="part_direccion">Dirección</label>
                                     <input type="text" name="direccion" id="part_direccion" class="sig-input" placeholder="Urb. Las Palmas, Calle 5, Casa 12">
                                 </div>
                             </div>
@@ -446,19 +446,19 @@ sort($duplicados, SORT_NUMERIC);
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                <label class="sig-field__label" for="part_nombre_libre">Nombre <span class="req">*</span></label>
                                 <input type="text" name="nombre_libre" id="part_nombre_libre" class="sig-input" placeholder="Nombre(s)">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Apellido</label>
-                                <input type="text" name="apellido_libre" class="sig-input" placeholder="Apellido(s)">
+                                <label class="sig-field__label" for="apellido_libre">Apellido</label>
+                                <input id="apellido_libre" type="text" name="apellido_libre" class="sig-input" placeholder="Apellido(s)">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Fecha de nacimiento <span class="req">*</span> <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                <label class="sig-field__label" for="libre_fecha_nac">Fecha de nacimiento <span class="req">*</span> <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
                                 <input type="date" name="fecha_nac_libre" id="libre_fecha_nac" class="sig-input" required
                                        max="<?php echo date('Y-m-d', strtotime('-5 years')); ?>"
                                        min="<?php echo date('Y-m-d', strtotime('-12 years +1 day')); ?>">
@@ -467,8 +467,8 @@ sort($duplicados, SORT_NUMERIC);
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Género</label>
-                                <select name="genero_libre" class="sig-select">
+                                <label class="sig-field__label" for="genero_libre">Género</label>
+                                <select id="genero_libre" name="genero_libre" class="sig-select">
                                     <option value="">—</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -477,8 +477,8 @@ sort($duplicados, SORT_NUMERIC);
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">N° ID Escolar <small style="color:var(--text-tertiary);">(opcional)</small></label>
-                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene ID escolar"
+                                <label class="sig-field__label" for="cedula_libre">N° ID Escolar <small style="color:var(--text-tertiary);">(opcional)</small></label>
+                                <input id="cedula_libre" type="text" name="cedula_libre" class="sig-input" placeholder="Si tiene ID escolar"
                                        pattern="^[A-Za-z0-9\-]{3,20}$" title="Letras, números y guiones (3 a 20 caracteres)">
                             </div>
                         </div>
@@ -491,14 +491,14 @@ sort($duplicados, SORT_NUMERIC);
                         </div>
                         <div class="col-md-7">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
-                                <input type="text" name="nombre_representante" class="sig-input" placeholder="Ej: Ana Pérez" required>
+                                <label class="sig-field__label" for="nombre_representante">Nombre del representante <span class="req">*</span></label>
+                                <input id="nombre_representante" type="text" name="nombre_representante" class="sig-input" placeholder="Ej: Ana Pérez" required>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <div class="sig-field" style="margin:0;">
-                                <label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
-                                <input type="text" name="cedula_representante" class="sig-input" placeholder="12345678 (solo números)" required>
+                                <label class="sig-field__label" for="cedula_representante">Cédula del representante <span class="req">*</span></label>
+                                <input id="cedula_representante" type="text" name="cedula_representante" class="sig-input" placeholder="12345678 (solo números)" required>
                             </div>
                         </div>
                     </div>
@@ -523,8 +523,8 @@ sort($duplicados, SORT_NUMERIC);
 
                 <!-- Observaciones -->
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Observaciones <small style="color:var(--text-tertiary);">(opcional)</small></label>
-                    <input type="text" name="observaciones" class="sig-input" placeholder="Notas adicionales sobre este participante">
+                    <label class="sig-field__label" for="observaciones">Observaciones <small style="color:var(--text-tertiary);">(opcional)</small></label>
+                    <input id="observaciones" type="text" name="observaciones" class="sig-input" placeholder="Notas adicionales sobre este participante">
                 </div>
             </div>
             <div class="modal-footer">
@@ -549,29 +549,29 @@ sort($duplicados, SORT_NUMERIC);
                 <input type="hidden" name="punto_id" id="pt_id">
                 <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id ?? ''; ?>">
                 <div class="sig-field mb-4">
-                    <label class="sig-field__label">Nombre del Punto <span class="req">*</span></label>
+                    <label class="sig-field__label" for="pt_nombre">Nombre del Punto <span class="req">*</span></label>
                     <input type="text" name="punto_nombre" id="pt_nombre" class="sig-input" required placeholder="Ej: Mirador de la Cruz">
                 </div>
                 <div class="sig-field mb-4">
-                    <label class="sig-field__label">Descripción</label>
+                    <label class="sig-field__label" for="pt_descripcion">Descripción</label>
                     <textarea name="punto_descripcion" id="pt_descripcion" class="sig-textarea" rows="2"></textarea>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Orden <span class="req">*</span></label>
+                            <label class="sig-field__label" for="pt_orden">Orden <span class="req">*</span></label>
                             <input type="number" name="orden" id="pt_orden" class="sig-input" value="1" min="1" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Latitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-90 a 90)</span></label>
+                            <label class="sig-field__label" for="pt_lat">Latitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-90 a 90)</span></label>
                             <input type="text" name="latitud" id="pt_lat" class="sig-input" placeholder="Ej: 10.4594" autocomplete="off">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Longitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-180 a 180)</span></label>
+                            <label class="sig-field__label" for="pt_lng">Longitud <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(-180 a 180)</span></label>
                             <input type="text" name="longitud" id="pt_lng" class="sig-input" placeholder="Ej: -64.1741" autocomplete="off">
                         </div>
                     </div>

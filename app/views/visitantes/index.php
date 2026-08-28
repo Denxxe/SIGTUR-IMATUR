@@ -44,7 +44,7 @@ function visUrl(array $f, int $p): string {
     <table class="sig-table">
         <thead>
             <tr>
-                <th style="text-align:center;">Entrada</th>
+                <th class="text-center">Entrada</th>
                 <th>Cédula</th>
                 <th>Nombre y Apellido</th>
                 <th>Teléfono</th>
@@ -62,7 +62,7 @@ function visUrl(array $f, int $p): string {
             <?php else: ?>
                 <?php foreach ($data['movimientos'] as $v): ?>
                     <tr>
-                        <td style="text-align:center;">
+                        <td class="text-center">
                             <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono); font-size:11px; font-weight:700;">
                                 <?php echo date('d/m H:i', strtotime($v->hora_entrada)); ?>
                             </span>
@@ -167,7 +167,7 @@ function visUrl(array $f, int $p): string {
                 <div class="row g-3 mb-3">
                     <div class="col-md-8">
                         <div class="sig-field">
-                            <label class="sig-field__label">Cédula del visitante</label>
+                            <label class="sig-field__label" for="m_cedula">Cédula del visitante</label>
                             <div style="display:flex; gap:8px;">
                                 <input type="text" id="m_cedula" name="cedula"
                                        class="sig-input" placeholder="Ingrese la cédula y presione Buscar"
@@ -189,37 +189,37 @@ function visUrl(array $f, int $p): string {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                <label class="sig-field__label" for="m_nombre">Nombre <span class="req">*</span></label>
                                 <input type="text" name="nombre" id="m_nombre" class="sig-input" required placeholder="Nombre">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Apellido <span class="req">*</span></label>
+                                <label class="sig-field__label" for="m_apellido">Apellido <span class="req">*</span></label>
                                 <input type="text" name="apellido" id="m_apellido" class="sig-input" required placeholder="Apellido">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Institución / Procedencia</label>
+                                <label class="sig-field__label" for="m_procedencia">Institución / Procedencia</label>
                                 <input type="text" name="procedencia" id="m_procedencia" class="sig-input" placeholder="Institución que representa">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Teléfono</label>
+                                <label class="sig-field__label" for="m_telefono">Teléfono</label>
                                 <input type="text" name="telefono" id="m_telefono" class="sig-input" placeholder="04XX-XXXXXXX">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Correo electrónico</label>
+                                <label class="sig-field__label" for="m_correo">Correo electrónico</label>
                                 <input type="email" name="correo" id="m_correo" class="sig-input" placeholder="correo@ejemplo.com">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Género</label>
+                                <label class="sig-field__label" for="m_genero">Género</label>
                                 <select name="genero" id="m_genero" class="sig-select">
                                     <option value="">Sin especificar</option>
                                     <option value="M">Masculino</option>
@@ -233,8 +233,8 @@ function visUrl(array $f, int $p): string {
                 <!-- Motivo de la visita -->
                 <div style="border-top:1px solid var(--border-subtle); padding-top:var(--sp-4);">
                     <div class="sig-field">
-                        <label class="sig-field__label">Motivo de la visita</label>
-                        <select name="motivo" class="sig-select">
+                        <label class="sig-field__label" for="motivo">Motivo de la visita</label>
+                        <select id="motivo" name="motivo" class="sig-select">
                             <option value="">Sin especificar</option>
                             <option value="Reunión de trabajo">Reunión de trabajo</option>
                             <option value="Trámite administrativo">Trámite administrativo</option>

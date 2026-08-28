@@ -92,7 +92,7 @@
 
                 <!-- Solo en creación -->
                 <div class="sig-field mb-3" id="div_empleado">
-                    <label class="sig-field__label">Empleado <span class="req">*</span></label>
+                    <label class="sig-field__label" for="user_id_empleado">Empleado <span class="req">*</span></label>
                     <select name="id_empleado" id="user_id_empleado" class="sig-select js-search">
                         <option value="">Seleccione al empleado...</option>
                         <?php foreach ($data['empleados_sin_cuenta'] ?? [] as $e): ?>
@@ -110,7 +110,7 @@
                 </div>
 
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Rol en el Sistema <span class="req">*</span></label>
+                    <label class="sig-field__label" for="user_id_rol">Rol en el Sistema <span class="req">*</span></label>
                     <select name="id_rol" id="user_id_rol" class="sig-select" required>
                         <?php foreach ($data['roles'] ?? [] as $r): ?>
                             <option value="<?php echo $r->id; ?>"><?php echo htmlspecialchars($r->nombre); ?></option>
@@ -119,13 +119,13 @@
                 </div>
 
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Username <span class="req">*</span></label>
+                    <label class="sig-field__label" for="user_username">Username <span class="req">*</span></label>
                     <input type="text" name="username" id="user_username" class="sig-input" required
                            placeholder="Ej: jperaza.rrhh" autocomplete="off">
                 </div>
 
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Contraseña <span class="req" id="pass_req_star">*</span></label>
+                    <label class="sig-field__label" for="user_password">Contraseña <span class="req" id="pass_req_star">*</span></label>
                     <input type="password" name="password" id="user_password" class="sig-input"
                            placeholder="Mínimo 6 caracteres" autocomplete="new-password" minlength="6">
                     <small id="pass_default_hint" style="color:var(--text-secondary);font-size:11px;display:none;">
@@ -134,7 +134,7 @@
                 </div>
 
                 <div class="sig-field mb-3" id="div_confirmar">
-                    <label class="sig-field__label">Confirmar Contraseña <span class="req">*</span></label>
+                    <label class="sig-field__label" for="user_password2">Confirmar Contraseña <span class="req">*</span></label>
                     <input type="password" id="user_password2" class="sig-input"
                            placeholder="Repita la contraseña" autocomplete="new-password">
                     <small id="pass_mismatch" style="display:none; color:var(--danger-500); font-size:11px;">

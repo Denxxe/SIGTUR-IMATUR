@@ -67,20 +67,20 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/bajasInventario" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha baja desde</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_inicio">Fecha baja desde</label>
+                    <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha baja hasta</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_fin">Fecha baja hasta</label>
+                    <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="sig-field">
-                    <label class="sig-field__label">Categoría (contiene)</label>
-                    <input type="text" name="categoria" class="sig-input" placeholder="Ej: mobiliario, tecnología..." value="<?php echo htmlspecialchars($data['filtro_cat'] ?? ''); ?>">
+                    <label class="sig-field__label" for="categoria">Categoría (contiene)</label>
+                    <input id="categoria" type="text" name="categoria" class="sig-input" placeholder="Ej: mobiliario, tecnología..." value="<?php echo htmlspecialchars($data['filtro_cat'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
@@ -110,7 +110,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                 <th>Ubicación</th>
                 <th>Marca / Modelo</th>
                 <th>Serial</th>
-                <th style="text-align:center;">Condición</th>
+                <th class="text-center">Condición</th>
                 <th>Fecha de Baja</th>
                 <th>Dado de baja por</th>
                 <th>Motivo</th>
@@ -137,7 +137,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                         <?php if (!empty($b->modelo)): ?><br><span style="color:var(--text-tertiary);"><?php echo htmlspecialchars($b->modelo); ?></span><?php endif; ?>
                     </td>
                     <td style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);"><?php echo htmlspecialchars($b->serial ?? '—'); ?></td>
-                    <td style="text-align:center;"><span class="sig-badge <?php echo $condCls; ?>"><?php echo htmlspecialchars($b->condicion ?? '—'); ?></span></td>
+                    <td class="text-center"><span class="sig-badge <?php echo $condCls; ?>"><?php echo htmlspecialchars($b->condicion ?? '—'); ?></span></td>
                     <td style="font-size:12px;white-space:nowrap;"><?php echo $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '—'; ?></td>
                     <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->eliminado_por ?? '—'); ?></td>
                     <td style="font-size:12px;color:var(--text-secondary);max-width:220px;white-space:normal;"><?php echo htmlspecialchars($b->motivo_baja ?? '—'); ?></td>

@@ -78,7 +78,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarParticipantesCsv/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
             </a>
-            <div style="text-align:right;">
+            <div class="text-end">
                 <div style="font-size:12px; font-weight:700; color:var(--text-primary);">
                     <?php echo $inscritos; ?> / <?php echo $cupo; ?> <span style="color:var(--text-tertiary); font-weight:500;">(<?php echo $porcentaje; ?>%)</span>
                 </div>
@@ -305,7 +305,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                     <i class="bi bi-info-circle"></i> Las actividades internas se inscriben directamente desde el registro de empleados.
                 </div>
                 <div class="sig-field">
-                    <label class="sig-field__label">Empleado <span class="req">*</span></label>
+                    <label class="sig-field__label" for="sel_empleado">Empleado <span class="req">*</span></label>
                     <select name="id_empleado_persona" id="sel_empleado" class="sig-select js-search">
                         <option value="">— Seleccione empleado —</option>
                         <?php foreach ($data['empleados'] as $emp): ?>
@@ -338,7 +338,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                 <!-- ── BLOQUE PERSONA CON CÉDULA ─────────────────────────── -->
                 <div id="bloque_persona">
                     <div class="sig-field" style="margin-bottom:var(--sp-1);">
-                        <label class="sig-field__label">
+                        <label class="sig-field__label" for="insc_cedula_busqueda">
                             Cédula del participante
                             <i class="bi bi-search" id="ico_buscar" style="margin-left:4px; color:var(--text-tertiary);" title="Búsqueda automática"></i>
                             <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— si ya está registrado, sus datos se completan solos</span>
@@ -351,32 +351,32 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                    <label class="sig-field__label" for="insc_nombre">Nombre <span class="req">*</span></label>
                                     <input type="text" name="nombre" id="insc_nombre" class="sig-input" placeholder="Ej: Carlos">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Apellido <span class="req">*</span></label>
+                                    <label class="sig-field__label" for="insc_apellido">Apellido <span class="req">*</span></label>
                                     <input type="text" name="apellido" id="insc_apellido" class="sig-input" placeholder="Ej: González">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Teléfono</label>
+                                    <label class="sig-field__label" for="insc_telefono">Teléfono</label>
                                     <input type="text" name="telefono" id="insc_telefono" class="sig-input" placeholder="0412-1234567">
                                 </div>
                             </div>
                             <div class="col-md-5">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Correo electrónico</label>
+                                    <label class="sig-field__label" for="insc_correo">Correo electrónico</label>
                                     <input type="email" name="correo" id="insc_correo" class="sig-input" placeholder="ejemplo@correo.com">
                                     <div class="invalid-feedback" id="msg_correo"></div>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Género</label>
+                                    <label class="sig-field__label" for="insc_genero">Género</label>
                                     <select name="genero" id="insc_genero" class="sig-select">
                                         <option value="">—</option>
                                         <option value="M">Masculino</option>
@@ -386,13 +386,13 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                             </div>
                             <div class="col-md-4">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Fecha de nacimiento <span id="insc_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                    <label class="sig-field__label" for="insc_fecha_nac">Fecha de nacimiento <span id="insc_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
                                     <input type="date" name="fecha_nacimiento" id="insc_fecha_nac" class="sig-input js-edad" data-edad-target="insc_edad_label">
                                 </div>
                             </div>
                             <div class="col-md-8">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Parroquia</label>
+                                    <label class="sig-field__label" for="insc_parroquia">Parroquia</label>
                                     <select name="parroquia_id" id="insc_parroquia" class="sig-select">
                                         <option value="">— Seleccione parroquia —</option>
                                         <?php foreach ($data['parroquias'] as $par): ?>
@@ -406,7 +406,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                             </div>
                             <div class="col-12">
                                 <div class="sig-field">
-                                    <label class="sig-field__label">Dirección</label>
+                                    <label class="sig-field__label" for="insc_direccion">Dirección</label>
                                     <input type="text" name="direccion" id="insc_direccion" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
                                 </div>
                             </div>
@@ -419,19 +419,19 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                                <label class="sig-field__label" for="insc_nombre_libre">Nombre <span class="req">*</span></label>
                                 <input type="text" name="nombre_libre" id="insc_nombre_libre" class="sig-input" placeholder="Ej: Carlos">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">Apellido</label>
-                                <input type="text" name="apellido_libre" class="sig-input" placeholder="Ej: González">
+                                <label class="sig-field__label" for="apellido_libre">Apellido</label>
+                                <input id="apellido_libre" type="text" name="apellido_libre" class="sig-input" placeholder="Ej: González">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field">
-                                <label class="sig-field__label">Fecha de nacimiento <span class="req">*</span> <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
+                                <label class="sig-field__label" for="libre_fecha_nac">Fecha de nacimiento <span class="req">*</span> <span id="libre_edad_label" style="color:var(--text-tertiary); font-weight:400;"></span></label>
                                 <input type="date" name="fecha_nac_libre" id="libre_fecha_nac" class="sig-input" required
                                        max="<?php echo date('Y-m-d', strtotime('-5 years')); ?>"
                                        min="<?php echo date('Y-m-d', strtotime('-12 years +1 day')); ?>">
@@ -440,8 +440,8 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field">
-                                <label class="sig-field__label">Género</label>
-                                <select name="genero_libre" class="sig-select">
+                                <label class="sig-field__label" for="genero_libre">Género</label>
+                                <select id="genero_libre" name="genero_libre" class="sig-select">
                                     <option value="">—</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -450,14 +450,14 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-md-4">
                             <div class="sig-field">
-                                <label class="sig-field__label">N° ID Escolar</label>
-                                <input type="text" name="cedula_libre" class="sig-input" placeholder="Opcional">
+                                <label class="sig-field__label" for="cedula_libre">N° ID Escolar</label>
+                                <input id="cedula_libre" type="text" name="cedula_libre" class="sig-input" placeholder="Opcional">
                             </div>
                         </div>
                         <div class="col-md-8">
                             <div class="sig-field">
-                                <label class="sig-field__label">Parroquia</label>
-                                <select name="parroquia_id_libre" class="sig-select">
+                                <label class="sig-field__label" for="parroquia_id_libre">Parroquia</label>
+                                <select id="parroquia_id_libre" name="parroquia_id_libre" class="sig-select">
                                     <option value="">— Seleccione parroquia —</option>
                                     <?php foreach ($data['parroquias'] as $par): ?>
                                         <option value="<?php echo $par->id; ?>">
@@ -470,8 +470,8 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-12">
                             <div class="sig-field">
-                                <label class="sig-field__label">Dirección</label>
-                                <input type="text" name="direccion_libre" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
+                                <label class="sig-field__label" for="direccion_libre">Dirección</label>
+                                <input id="direccion_libre" type="text" name="direccion_libre" class="sig-input" placeholder="Ej: Urb. Las Palmas, Calle 5, Casa 12">
                             </div>
                         </div>
                         <div class="col-12">
@@ -483,14 +483,14 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-md-7">
                             <div class="sig-field">
-                                <label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
-                                <input type="text" name="nombre_docente" class="sig-input" placeholder="Ej: María Rodríguez" required>
+                                <label class="sig-field__label" for="nombre_docente">Nombre del representante <span class="req">*</span></label>
+                                <input id="nombre_docente" type="text" name="nombre_docente" class="sig-input" placeholder="Ej: María Rodríguez" required>
                             </div>
                         </div>
                         <div class="col-md-5">
                             <div class="sig-field">
-                                <label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
-                                <input type="text" name="cedula_docente" class="sig-input" placeholder="12345678 (solo números)" required>
+                                <label class="sig-field__label" for="cedula_docente">Cédula del representante <span class="req">*</span></label>
+                                <input id="cedula_docente" type="text" name="cedula_docente" class="sig-input" placeholder="12345678 (solo números)" required>
                             </div>
                         </div>
                     </div>
@@ -985,40 +985,40 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                 <div id="ep_bloque_persona" style="display:none;">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Cédula</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_cedula">Cédula</label>
                                 <input type="text" id="ep_cedula" class="sig-input" readonly style="background:var(--bg-muted-subtle);">
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_nombre">Nombre <span class="req">*</span></label>
                                 <input type="text" name="nombre" id="ep_nombre" class="sig-input"></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Apellido <span class="req">*</span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_apellido">Apellido <span class="req">*</span></label>
                                 <input type="text" name="apellido" id="ep_apellido" class="sig-input"></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Teléfono</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_telefono">Teléfono</label>
                                 <input type="text" name="telefono" id="ep_telefono" class="sig-input"></div>
                         </div>
                         <div class="col-md-5">
-                            <div class="sig-field"><label class="sig-field__label">Correo</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_correo">Correo</label>
                                 <input type="email" name="correo" id="ep_correo" class="sig-input">
                                 <div class="invalid-feedback" id="ep_msg_correo"></div></div>
                         </div>
                         <div class="col-md-3">
-                            <div class="sig-field"><label class="sig-field__label">Género</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_genero">Género</label>
                                 <select name="genero" id="ep_genero" class="sig-select">
                                     <option value="">—</option><option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
                                 </select></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Fecha de nacimiento</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_fecha_nac">Fecha de nacimiento</label>
                                 <input type="date" name="fecha_nacimiento" id="ep_fecha_nac" class="sig-input"></div>
                         </div>
                         <div class="col-md-8">
-                            <div class="sig-field"><label class="sig-field__label">Parroquia</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_parroquia">Parroquia</label>
                                 <select name="parroquia_id" id="ep_parroquia" class="sig-select">
                                     <option value="">— Seleccione —</option>
                                     <?php foreach ($data['parroquias'] ?? [] as $par): ?>
@@ -1027,7 +1027,7 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                                 </select></div>
                         </div>
                         <div class="col-12">
-                            <div class="sig-field"><label class="sig-field__label">Dirección</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_direccion">Dirección</label>
                                 <input type="text" name="direccion" id="ep_direccion" class="sig-input"></div>
                         </div>
                     </div>
@@ -1040,33 +1040,33 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                 <div id="ep_bloque_libre" style="display:none;">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="sig-field"><label class="sig-field__label">Nombre <span class="req">*</span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_nombre_libre">Nombre <span class="req">*</span></label>
                                 <input type="text" name="nombre_libre" id="ep_nombre_libre" class="sig-input"></div>
                         </div>
                         <div class="col-md-6">
-                            <div class="sig-field"><label class="sig-field__label">Apellido</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_apellido_libre">Apellido</label>
                                 <input type="text" name="apellido_libre" id="ep_apellido_libre" class="sig-input"></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Fecha de nacimiento <span class="req">*</span> <span id="ep_edad_label" style="color:var(--text-tertiary);font-weight:400;"></span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_fecha_nac_libre">Fecha de nacimiento <span class="req">*</span> <span id="ep_edad_label" style="color:var(--text-tertiary);font-weight:400;"></span></label>
                                 <input type="date" name="fecha_nac_libre" id="ep_fecha_nac_libre" class="sig-input"
                                        max="<?php echo date('Y-m-d', strtotime('-5 years')); ?>"
                                        min="<?php echo date('Y-m-d', strtotime('-12 years +1 day')); ?>">
                                 <span id="ep_edad_error" style="display:none;font-size:11px;color:var(--danger-600);"></span></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">Género</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_genero_libre">Género</label>
                                 <select name="genero_libre" id="ep_genero_libre" class="sig-select">
                                     <option value="">—</option><option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
                                 </select></div>
                         </div>
                         <div class="col-md-4">
-                            <div class="sig-field"><label class="sig-field__label">N° ID Escolar</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_cedula_libre">N° ID Escolar</label>
                                 <input type="text" name="cedula_libre" id="ep_cedula_libre" class="sig-input"></div>
                         </div>
                         <div class="col-md-8">
-                            <div class="sig-field"><label class="sig-field__label">Parroquia</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_parroquia_libre">Parroquia</label>
                                 <select name="parroquia_id_libre" id="ep_parroquia_libre" class="sig-select">
                                     <option value="">— Seleccione —</option>
                                     <?php foreach ($data['parroquias'] ?? [] as $par): ?>
@@ -1075,15 +1075,15 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                                 </select></div>
                         </div>
                         <div class="col-12">
-                            <div class="sig-field"><label class="sig-field__label">Dirección</label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_direccion_libre">Dirección</label>
                                 <input type="text" name="direccion_libre" id="ep_direccion_libre" class="sig-input"></div>
                         </div>
                         <div class="col-md-7">
-                            <div class="sig-field"><label class="sig-field__label">Nombre del representante <span class="req">*</span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_nombre_docente">Nombre del representante <span class="req">*</span></label>
                                 <input type="text" name="nombre_docente" id="ep_nombre_docente" class="sig-input" required></div>
                         </div>
                         <div class="col-md-5">
-                            <div class="sig-field"><label class="sig-field__label">Cédula del representante <span class="req">*</span></label>
+                            <div class="sig-field"><label class="sig-field__label" for="ep_cedula_docente">Cédula del representante <span class="req">*</span></label>
                                 <input type="text" name="cedula_docente" id="ep_cedula_docente" class="sig-input" required></div>
                         </div>
                     </div>

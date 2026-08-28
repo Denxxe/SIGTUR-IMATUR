@@ -37,57 +37,57 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
     <div class="wz-step" data-step="0">
         <h5 class="mb-4"><i class="bi bi-person-vcard"></i> Datos personales</h5>
         <div class="row g-3">
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Cédula <span class="req">*</span></label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="emp_cedula">Cédula <span class="req">*</span></label>
                 <input type="text" name="cedula" id="emp_cedula" class="sig-input" required value="<?php echo $val('cedula'); ?>">
                 <small id="emp_cedula_msg" style="display:block;margin-top:4px;font-weight:600;"></small></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nombres <span class="req">*</span></label>
-                <input type="text" name="nombre" class="sig-input" required value="<?php echo $val('nombre'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Apellidos <span class="req">*</span></label>
-                <input type="text" name="apellido" class="sig-input" required value="<?php echo $val('apellido'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Género <span class="req">*</span></label>
-                <select name="genero" class="sig-select" required>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="nombre">Nombres <span class="req">*</span></label>
+                <input id="nombre" type="text" name="nombre" class="sig-input" required value="<?php echo $val('nombre'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="apellido">Apellidos <span class="req">*</span></label>
+                <input id="apellido" type="text" name="apellido" class="sig-input" required value="<?php echo $val('apellido'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="genero">Género <span class="req">*</span></label>
+                <select id="genero" name="genero" class="sig-select" required>
                     <option value="M" <?php echo $sel('genero','M'); ?>>Masculino</option>
                     <option value="F" <?php echo $sel('genero','F'); ?>>Femenino</option>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de nacimiento <span class="req">*</span></label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="emp_fecha_nac">Fecha de nacimiento <span class="req">*</span></label>
                 <input type="date" name="fecha_nacimiento" id="emp_fecha_nac" class="sig-input js-edad" required
                        data-edad-min="18" data-edad-max="65" data-edad-target="emp_edad_badge"
                        value="<?php echo $val('fecha_nacimiento'); ?>">
                 <small id="emp_edad_badge" style="display:block;margin-top:4px;font-weight:600;"></small>
                 <small style="color:var(--text-tertiary)">18–65 años · comisión de servicio: 18–70.</small></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Teléfono <span class="req">*</span></label>
-                <input type="text" name="telefono" class="sig-input" required value="<?php echo $val('telefono'); ?>"></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Correo electrónico</label>
-                <input type="email" name="correo" class="sig-input" value="<?php echo $val('correo'); ?>"></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Parroquia <span class="req">*</span></label>
-                <select name="parroquia_id" class="sig-select" required>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="telefono">Teléfono <span class="req">*</span></label>
+                <input id="telefono" type="text" name="telefono" class="sig-input" required value="<?php echo $val('telefono'); ?>"></div></div>
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="correo">Correo electrónico</label>
+                <input id="correo" type="email" name="correo" class="sig-input" value="<?php echo $val('correo'); ?>"></div></div>
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="parroquia_id">Parroquia <span class="req">*</span></label>
+                <select id="parroquia_id" name="parroquia_id" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach ($data['parroquias'] ?? [] as $pq): ?>
                         <option value="<?php echo $pq->id; ?>" <?php echo $sel('parroquia_id',$pq->id); ?>><?php echo htmlspecialchars($pq->nombre); ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">Dirección de habitación <span class="req">*</span></label>
-                <textarea name="direccion" class="sig-textarea" rows="2" required><?php echo $val('direccion'); ?></textarea></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">RIF <span class="req">*</span></label>
-                <input type="text" name="rif" class="sig-input" placeholder="V-XXXXXXXXX" required value="<?php echo $val('rif'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Estado civil</label>
-                <select name="estado_civil" class="sig-select">
+            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label" for="direccion">Dirección de habitación <span class="req">*</span></label>
+                <textarea id="direccion" name="direccion" class="sig-textarea" rows="2" required><?php echo $val('direccion'); ?></textarea></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="rif">RIF <span class="req">*</span></label>
+                <input id="rif" type="text" name="rif" class="sig-input" placeholder="V-XXXXXXXXX" required value="<?php echo $val('rif'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="estado_civil">Estado civil</label>
+                <select id="estado_civil" name="estado_civil" class="sig-select">
                     <option value="">— Seleccione —</option>
                     <?php foreach (Empleado::ESTADOS_CIVILES as $ec): ?>
                         <option value="<?php echo $ec; ?>" <?php echo $sel('estado_civil',$ec); ?>><?php echo $ec; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">¿Discapacidad?</label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_disc">¿Discapacidad?</label>
                 <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="discapacidad" id="wz_disc" value="1" <?php echo $chk('discapacidad'); ?> onchange="wzToggleDisc()">
                     <label class="form-check-label" for="wz_disc">Sí, posee discapacidad</label></div></div></div>
-            <div class="col-md-12" id="wz_disc_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label">Detalle de la discapacidad / ajuste de horario</label>
-                <input type="text" name="discapacidad_detalle" class="sig-input" value="<?php echo $val('discapacidad_detalle'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Centro de votación</label>
-                <input type="text" name="centro_votacion" class="sig-input" value="<?php echo $val('centro_votacion'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Consejo comunal</label>
-                <input type="text" name="consejo_comunal" class="sig-input" value="<?php echo $val('consejo_comunal'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Comuna</label>
-                <input type="text" name="comuna" class="sig-input" value="<?php echo $val('comuna'); ?>"></div></div>
+            <div class="col-md-12" id="wz_disc_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label" for="discapacidad_detalle">Detalle de la discapacidad / ajuste de horario</label>
+                <input id="discapacidad_detalle" type="text" name="discapacidad_detalle" class="sig-input" value="<?php echo $val('discapacidad_detalle'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="centro_votacion">Centro de votación</label>
+                <input id="centro_votacion" type="text" name="centro_votacion" class="sig-input" value="<?php echo $val('centro_votacion'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="consejo_comunal">Consejo comunal</label>
+                <input id="consejo_comunal" type="text" name="consejo_comunal" class="sig-input" value="<?php echo $val('consejo_comunal'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="comuna">Comuna</label>
+                <input id="comuna" type="text" name="comuna" class="sig-input" value="<?php echo $val('comuna'); ?>"></div></div>
         </div>
     </div>
 
@@ -95,8 +95,8 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
     <div class="wz-step" data-step="1" style="display:none">
         <h5 class="mb-4"><i class="bi bi-mortarboard"></i> Formación académica</h5>
         <div class="row g-3">
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nivel académico</label>
-                <select name="nivel_academico" class="sig-select js-search">
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="nivel_academico">Nivel académico</label>
+                <select id="nivel_academico" name="nivel_academico" class="sig-select js-search">
                     <option value="">— Seleccione —</option>
                     <?php $nivActual = $e->nivel_academico ?? null;
                           if (!empty($nivActual) && !in_array($nivActual, Empleado::NIVELES_ACADEMICOS, true)): ?>
@@ -106,12 +106,12 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                         <option value="<?php echo $na; ?>" <?php echo $sel('nivel_academico',$na); ?>><?php echo $na; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Profesión</label>
-                <input type="text" name="profesion" class="sig-input" value="<?php echo $val('profesion'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de graduación</label>
-                <input type="date" name="fecha_graduacion" class="sig-input" value="<?php echo $val('fecha_graduacion'); ?>"></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Institución académica</label>
-                <input type="text" name="institucion_academica" class="sig-input" value="<?php echo $val('institucion_academica'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="profesion">Profesión</label>
+                <input id="profesion" type="text" name="profesion" class="sig-input" value="<?php echo $val('profesion'); ?>"></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="fecha_graduacion">Fecha de graduación</label>
+                <input id="fecha_graduacion" type="date" name="fecha_graduacion" class="sig-input" value="<?php echo $val('fecha_graduacion'); ?>"></div></div>
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="institucion_academica">Institución académica</label>
+                <input id="institucion_academica" type="text" name="institucion_academica" class="sig-input" value="<?php echo $val('institucion_academica'); ?>"></div></div>
         </div>
         <p style="color:var(--text-tertiary);font-size:12px;margin-top:var(--sp-3)"><i class="bi bi-info-circle"></i> Los cursos realizados se gestionan en el expediente tras crear el empleado.</p>
     </div>
@@ -120,43 +120,43 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
     <div class="wz-step" data-step="2" style="display:none">
         <h5 class="mb-4"><i class="bi bi-building"></i> Datos institucionales</h5>
         <div class="row g-3">
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Cargo <span class="req">*</span></label>
-                <select name="id_cargo" class="sig-select" required>
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="id_cargo">Cargo <span class="req">*</span></label>
+                <select id="id_cargo" name="id_cargo" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach ($data['cargos'] ?? [] as $c): ?>
                         <option value="<?php echo $c->id; ?>" <?php echo $sel('id_cargo',$c->id); ?>><?php echo htmlspecialchars($c->nombre); ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label">Departamento <span class="req">*</span></label>
-                <select name="id_departamento" class="sig-select" required>
+            <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="id_departamento">Departamento <span class="req">*</span></label>
+                <select id="id_departamento" name="id_departamento" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach ($data['departamentos'] ?? [] as $d): ?>
                         <option value="<?php echo $d->id; ?>" <?php echo $sel('id_departamento',$d->id); ?>><?php echo htmlspecialchars($d->nombre); ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Nro. Expediente</label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="nro_expediente">Nro. Expediente</label>
                 <?php if ($isEdit): ?>
-                    <input type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo $val('nro_expediente'); ?>">
+                    <input id="nro_expediente" type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo $val('nro_expediente'); ?>">
                     <small style="color:var(--text-tertiary)">Folio permanente del expediente.</small>
                 <?php else: ?>
                     <input type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo htmlspecialchars($data['proximo_expediente'] ?? ''); ?>"
                            style="background:var(--bg-muted);color:var(--text-secondary)">
                     <small style="color:var(--text-tertiary)"><i class="bi bi-magic"></i> Asignado automáticamente por el sistema al registrar.</small>
                 <?php endif; ?></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Clasificación <span class="req">*</span></label>
-                <select name="clasificacion" class="sig-select" required>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="clasificacion">Clasificación <span class="req">*</span></label>
+                <select id="clasificacion" name="clasificacion" class="sig-select" required>
                     <option value="">— Seleccione —</option>
                     <?php foreach (Empleado::CLASIFICACIONES as $cl): ?>
                         <option value="<?php echo $cl; ?>" <?php echo $sel('clasificacion',$cl); ?>><?php echo $cl; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Tipo de contrato <span class="req">*</span></label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_tipo_contrato">Tipo de contrato <span class="req">*</span></label>
                 <select name="tipo_contrato" id="wz_tipo_contrato" class="sig-select" required onchange="wzVencToggle()">
                     <?php foreach (Empleado::TIPOS_CONTRATO as $tc): ?>
                         <option value="<?php echo $tc; ?>" <?php echo $isEdit ? $sel('tipo_contrato',$tc) : ($tc === Empleado::TIPO_CONTRATO_DEFAULT ? 'selected' : ''); ?>><?php echo $tc; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Institución / Nómina <span class="req">*</span></label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_origen">Institución / Nómina <span class="req">*</span></label>
                 <select name="institucion_origen" id="wz_origen" class="sig-select" required onchange="wzOrigenCambio()">
                     <?php foreach (Empleado::INSTITUCIONES_ORIGEN as $io): ?>
                         <option value="<?php echo $io; ?>" <?php echo $isEdit ? $sel('institucion_origen',$io) : ($io === Empleado::INSTITUCION_ORIGEN_DEFAULT ? 'selected' : ''); ?>><?php echo $io; ?></option>
@@ -165,38 +165,38 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Comisión de servicio</label>
                 <div style="padding-top:8px"><span id="wz_comision_info" class="sig-badge sig-badge--neutral">—</span>
                     <small style="display:block;color:var(--text-tertiary);margin-top:2px">Se determina por la institución de origen.</small></div></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Horario asignado</label>
-                <select name="id_horario" class="sig-select">
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="id_horario">Horario asignado</label>
+                <select id="id_horario" name="id_horario" class="sig-select">
                     <option value="">— Sin horario —</option>
                     <?php foreach ($data['horarios'] ?? [] as $h): ?>
                         <option value="<?php echo $h->id; ?>" <?php echo $sel('id_horario',$h->id); ?>><?php echo htmlspecialchars($h->nombre); ?> (<?php echo substr($h->hora_entrada,0,5); ?>–<?php echo substr($h->hora_salida,0,5); ?>)</option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Grupo (Servicios Generales)</label>
-                <select name="grupo_rotacion" class="sig-select">
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="grupo_rotacion">Grupo (Servicios Generales)</label>
+                <select id="grupo_rotacion" name="grupo_rotacion" class="sig-select">
                     <option value="">— No aplica —</option>
                     <?php foreach (Empleado::GRUPOS_ROTACION as $g): ?>
                         <option value="<?php echo $g; ?>" <?php echo $sel('grupo_rotacion',$g); ?>>Grupo <?php echo $g; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Fecha de ingreso <span class="req">*</span></label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingreso">Fecha de ingreso <span class="req">*</span></label>
                 <input type="date" name="fecha_ingreso" id="wz_fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>" oninput="wzVencCalc()"></div></div>
-            <div class="col-md-4" id="wz_ingadm_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label">Ingreso a la administración pública <small style="color:var(--text-secondary)">(comisión)</small></label>
+            <div class="col-md-4" id="wz_ingadm_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingadm">Ingreso a la administración pública <small style="color:var(--text-secondary)">(comisión)</small></label>
                 <input type="date" name="fecha_ingreso_administracion" id="wz_fecha_ingadm" class="sig-input" value="<?php echo $val('fecha_ingreso_administracion'); ?>">
                 <small style="color:var(--text-tertiary)">Antigüedad para vacaciones: fecha original en Alcaldía/Gobernación.</small></div></div>
-            <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
+            <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_venc">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
                 <input type="date" name="fecha_vencimiento_contrato" id="wz_fecha_venc" class="sig-input" value="<?php echo $val('fecha_vencimiento_contrato'); ?>" oninput="wzVencCalc()">
                 <small id="wz_venc_info" style="display:block;margin-top:4px;color:var(--text-tertiary)">Mínimo 3 meses desde el ingreso.</small></div></div>
-            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label">¿Usa uniforme?</label>
+            <div class="col-md-12"><div class="sig-field"><label class="sig-field__label" for="wz_uniforme">¿Usa uniforme?</label>
                 <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="uniforme" id="wz_uniforme" value="1" <?php echo $chk('uniforme'); ?> onchange="wzToggleUniforme()">
                     <label class="form-check-label" for="wz_uniforme">Sí, registrar tallas</label></div></div></div>
             <div class="col-12" id="wz_tallas_wrap" style="display:none"><div class="row g-3">
-                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Talla camisa</label>
-                    <input type="text" name="talla_camisa" class="sig-input" value="<?php echo $val('talla_camisa'); ?>"></div></div>
-                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Talla pantalón</label>
-                    <input type="text" name="talla_pantalon" class="sig-input" value="<?php echo $val('talla_pantalon'); ?>"></div></div>
-                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Talla zapato</label>
-                    <input type="text" name="talla_zapato" class="sig-input" value="<?php echo $val('talla_zapato'); ?>"></div></div>
+                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="talla_camisa">Talla camisa</label>
+                    <input id="talla_camisa" type="text" name="talla_camisa" class="sig-input" value="<?php echo $val('talla_camisa'); ?>"></div></div>
+                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="talla_pantalon">Talla pantalón</label>
+                    <input id="talla_pantalon" type="text" name="talla_pantalon" class="sig-input" value="<?php echo $val('talla_pantalon'); ?>"></div></div>
+                <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="talla_zapato">Talla zapato</label>
+                    <input id="talla_zapato" type="text" name="talla_zapato" class="sig-input" value="<?php echo $val('talla_zapato'); ?>"></div></div>
             </div></div>
         </div>
     </div>

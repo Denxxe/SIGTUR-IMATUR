@@ -168,7 +168,7 @@
                     <tr>
                         <th style="padding-left:var(--sp-8);">Cédula</th>
                         <th>Nombre Completo</th>
-                        <th style="text-align:center;">Estatus de Asistencia</th>
+                        <th class="text-center">Estatus de Asistencia</th>
                         <th style="padding-right:var(--sp-8);">Firma de Control</th>
                     </tr>
                 </thead>
@@ -198,7 +198,7 @@
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="text-align:center;">
+                                <td class="text-center">
                                     <?php if (isset($p->asistio) && $p->asistio): ?>
                                         <span class="sig-badge sig-badge--success"><i class="bi bi-check-circle"></i> Presente</span>
                                     <?php else: ?>

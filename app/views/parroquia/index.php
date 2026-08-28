@@ -69,11 +69,11 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="parroquia_id">
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                        <label class="sig-field__label" for="parroquia_nombre">Nombre <span class="req">*</span></label>
                         <input type="text" class="sig-input" name="nombre" id="parroquia_nombre" required placeholder="Ej: Altagracia">
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Municipio <span class="req">*</span></label>
+                        <label class="sig-field__label" for="parroquia_municipio">Municipio <span class="req">*</span></label>
                         <select class="sig-select" name="id_municipio" id="parroquia_municipio" required>
                             <option value="">Seleccione un municipio...</option>
                             <?php foreach ($data['municipios'] ?? [] as $mun): ?>

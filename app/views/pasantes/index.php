@@ -29,8 +29,8 @@
                 <th>Nombre y Apellido</th>
                 <th>Institución / Carrera</th>
                 <th>Tutor Institucional</th>
-                <th style="text-align:center;">Inicio</th>
-                <th style="text-align:center;">Fin</th>
+                <th class="text-center">Inicio</th>
+                <th class="text-center">Fin</th>
                 <th>Estado</th>
                 <th class="col-actions">Acciones</th>
             </tr>

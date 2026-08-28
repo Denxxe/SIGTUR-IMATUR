@@ -114,16 +114,16 @@ $egresado = !empty($e->fecha_egreso);
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Tipo de falta <span class="req">*</span></label>
-                    <select name="tipo" class="sig-select" required>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="tipo">Tipo de falta <span class="req">*</span></label>
+                    <select id="tipo" name="tipo" class="sig-select" required>
                         <?php foreach (Falta::TIPOS as $t): ?>
                             <option value="<?php echo $t; ?>"><?php echo $t; ?></option>
                         <?php endforeach; ?>
                     </select></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
-                    <input type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
-                <div class="sig-field"><label class="sig-field__label">Motivo / observación</label>
-                    <textarea name="motivo" class="sig-textarea" rows="2"></textarea></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="fecha">Fecha <span class="req">*</span></label>
+                    <input id="fecha" type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
+                <div class="sig-field"><label class="sig-field__label" for="motivo">Motivo / observación</label>
+                    <textarea id="motivo" name="motivo" class="sig-textarea" rows="2"></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -141,10 +141,10 @@ $egresado = !empty($e->fecha_egreso);
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
-                    <input type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
-                <div class="sig-field"><label class="sig-field__label">Motivo <span class="req">*</span></label>
-                    <textarea name="motivo" class="sig-textarea" rows="3" required></textarea></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="fecha_2">Fecha <span class="req">*</span></label>
+                    <input id="fecha_2" type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
+                <div class="sig-field"><label class="sig-field__label" for="motivo_2">Motivo <span class="req">*</span></label>
+                    <textarea id="motivo_2" name="motivo" class="sig-textarea" rows="3" required></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -165,8 +165,8 @@ $egresado = !empty($e->fecha_egreso);
             <div class="modal-body">
                 <p style="font-size:13px;color:var(--text-secondary)">Indique el motivo por el cual se anula este registro. Quedará en el histórico y la auditoría.</p>
                 <div class="sig-field">
-                    <label class="sig-field__label">Motivo de la anulación <span class="req">*</span></label>
-                    <textarea name="motivo_anulacion" class="sig-textarea" rows="3" required></textarea>
+                    <label class="sig-field__label" for="motivo_anulacion">Motivo de la anulación <span class="req">*</span></label>
+                    <textarea id="motivo_anulacion" name="motivo_anulacion" class="sig-textarea" rows="3" required></textarea>
                 </div>
             </div>
             <div class="modal-footer">

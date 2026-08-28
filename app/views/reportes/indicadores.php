@@ -466,8 +466,8 @@ $derivados = [
                     <thead>
                         <tr>
                             <th>Tipo de Contrato</th>
-                            <th style="text-align:center;">Empleados</th>
-                            <th style="text-align:center;">% del Total</th>
+                            <th class="text-center">Empleados</th>
+                            <th class="text-center">% del Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -483,7 +483,7 @@ $derivados = [
                         <tr>
                             <td class="cell-strong"><?php echo htmlspecialchars($ec->tipo_contrato ?? '—'); ?></td>
                             <td style="text-align:center;font-weight:700;color:#3B82F6;"><?php echo (int)($ec->total ?? 0); ?></td>
-                            <td style="text-align:center;">
+                            <td class="text-center">
                                 <div style="display:flex;align-items:center;gap:var(--sp-2);">
                                     <div style="flex:1;height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
                                         <div style="height:100%;width:<?php echo $pctEc; ?>%;background:#3B82F6;"></div>
@@ -612,7 +612,7 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
                 </div>
                 <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">actividades finalizadas en el año</div>
             </div>
-            <div style="text-align:right;">
+            <div class="text-end">
                 <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colTall; ?>;line-height:1;"><?php echo $pctTall; ?>%</div>
                 <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
             </div>
@@ -826,9 +826,9 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
                     <thead>
                         <tr>
                             <th>Facilitador</th>
-                            <th style="text-align:center;">Actividades</th>
-                            <th style="text-align:center;">Personas Formadas</th>
-                            <th style="text-align:center;">Promedio/Actividad</th>
+                            <th class="text-center">Actividades</th>
+                            <th class="text-center">Personas Formadas</th>
+                            <th class="text-center">Promedio/Actividad</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -881,7 +881,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                 </div>
                 <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">rutas finalizadas (ejecutadas) este año</div>
             </div>
-            <div style="text-align:right;">
+            <div class="text-end">
                 <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colR; ?>;line-height:1;"><?php echo $pctR; ?>%</div>
                 <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
             </div>
@@ -926,9 +926,9 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                     <thead>
                         <tr>
                             <th>Tipo de Ruta</th>
-                            <th style="text-align:center;">Rutas</th>
-                            <th style="text-align:center;">Participantes</th>
-                            <th style="text-align:center;">%</th>
+                            <th class="text-center">Rutas</th>
+                            <th class="text-center">Participantes</th>
+                            <th class="text-center">%</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -944,7 +944,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                                 <td class="cell-strong"><?php echo htmlspecialchars($rt->tipo_ruta ?? '—'); ?></td>
                                 <td style="text-align:center;font-weight:700;color:#D97706;"><?php echo (int)($rt->rutas ?? 0); ?></td>
                                 <td style="text-align:center;font-weight:700;color:var(--text-primary);"><?php echo number_format((int)($rt->participantes ?? 0)); ?></td>
-                                <td style="text-align:center;">
+                                <td class="text-center">
                                     <div style="display:flex;align-items:center;gap:var(--sp-2);">
                                         <div style="flex:1;height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
                                             <div style="height:100%;width:<?php echo $pctRt; ?>%;background:#D97706;"></div>
@@ -1098,7 +1098,7 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                     <thead>
                         <tr>
                             <th>Tipo de Movimiento</th>
-                            <th style="text-align:center;">Cantidad</th>
+                            <th class="text-center">Cantidad</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1131,7 +1131,7 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                     <thead>
                         <tr>
                             <th>Departamento</th>
-                            <th style="text-align:center;">Empleados</th>
+                            <th class="text-center">Empleados</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1159,7 +1159,7 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                     <thead>
                         <tr>
                             <th>Categoría</th>
-                            <th style="text-align:center;">Bienes</th>
+                            <th class="text-center">Bienes</th>
                         </tr>
                     </thead>
                     <tbody>

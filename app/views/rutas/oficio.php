@@ -131,17 +131,17 @@ if (!empty($oficiosPrevios)):
                 </div>
                 <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
                     <div class="sig-field">
-                        <label class="sig-field__label">Nombre completo <span class="req">*</span></label>
+                        <label class="sig-field__label" for="of_dest_nombre">Nombre completo <span class="req">*</span></label>
                         <input type="text" name="destinatario_nombre" id="of_dest_nombre" class="sig-input"
                                placeholder="Ej: María González" required oninput="actualizar()">
                     </div>
                     <div class="sig-field">
-                        <label class="sig-field__label">Cargo / Institución</label>
+                        <label class="sig-field__label" for="of_dest_cargo">Cargo / Institución</label>
                         <input type="text" name="destinatario_cargo" id="of_dest_cargo" class="sig-input"
                                placeholder="Ej: Directora del Museo de Cumaná" oninput="actualizar()">
                     </div>
                     <div class="sig-field">
-                        <label class="sig-field__label">Espacio a visitar</label>
+                        <label class="sig-field__label" for="of_espacio">Espacio a visitar</label>
                         <input type="text" name="espacio" id="of_espacio" class="sig-input"
                                list="list_puntos"
                                value="<?php echo htmlspecialchars($ruta->nombre ?? ''); ?>"
@@ -155,14 +155,14 @@ if (!empty($oficiosPrevios)):
                     <div class="row g-3">
                         <div class="col-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">N° Estudiantes</label>
+                                <label class="sig-field__label" for="of_est">N° Estudiantes</label>
                                 <input type="number" name="num_estudiantes" id="of_est" class="sig-input"
                                        value="<?php echo (int)$data['total_participantes']; ?>" min="0" oninput="actualizar()">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="sig-field">
-                                <label class="sig-field__label">N° Adultos</label>
+                                <label class="sig-field__label" for="of_adu">N° Adultos</label>
                                 <input type="number" name="num_adultos" id="of_adu" class="sig-input"
                                        value="0" min="0" oninput="actualizar()">
                             </div>

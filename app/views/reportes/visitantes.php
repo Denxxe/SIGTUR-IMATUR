@@ -39,35 +39,35 @@
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/visitantes" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Desde</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo $data['fecha_inicio'] ?? ''; ?>">
+                    <label class="sig-field__label" for="fecha_inicio">Desde</label>
+                    <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" value="<?php echo $data['fecha_inicio'] ?? ''; ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Hasta</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo $data['fecha_fin'] ?? ''; ?>">
+                    <label class="sig-field__label" for="fecha_fin">Hasta</label>
+                    <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" value="<?php echo $data['fecha_fin'] ?? ''; ?>">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Buscar visitante</label>
+                    <label class="sig-field__label" for="buscar">Buscar visitante</label>
                     <div style="position:relative;">
                         <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;pointer-events:none;"></i>
-                        <input type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_buscar'] ?? ''); ?>">
+                        <input id="buscar" type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_buscar'] ?? ''); ?>">
                     </div>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Motivo</label>
-                    <input type="text" name="motivo" class="sig-input" placeholder="Ej: reunión, trámite..." value="<?php echo htmlspecialchars($data['filtro_motivo'] ?? ''); ?>">
+                    <label class="sig-field__label" for="motivo">Motivo</label>
+                    <input id="motivo" type="text" name="motivo" class="sig-input" placeholder="Ej: reunión, trámite..." value="<?php echo htmlspecialchars($data['filtro_motivo'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-1">
                 <div class="sig-field">
-                    <label class="sig-field__label">Género</label>
-                    <select name="genero" class="sig-input">
+                    <label class="sig-field__label" for="genero">Género</label>
+                    <select id="genero" name="genero" class="sig-input">
                         <option value="">Todos</option>
                         <option value="M" <?php echo ($data['filtro_genero']??'')==='M'?'selected':''; ?>>Masc.</option>
                         <option value="F" <?php echo ($data['filtro_genero']??'')==='F'?'selected':''; ?>>Fem.</option>

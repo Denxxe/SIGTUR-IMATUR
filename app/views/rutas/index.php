@@ -34,15 +34,15 @@ function rutaUrl(array $f, int $p): string {
 <form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/rutas/index" style="margin-bottom:var(--sp-4);">
     <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5); display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap;">
         <div style="flex:1; min-width:200px;">
-            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
+            <label class="sig-field__label" style="font-size:11px;" for="buscar">Buscar</label>
             <div class="tabla-search">
                 <i class="bi bi-search"></i>
-                <input type="text" name="buscar" class="sig-input" style="padding-left:32px;width:100%;" placeholder="Nombre, descripción o guía…" value="<?php echo htmlspecialchars($flt['buscar'] ?? ''); ?>">
+                <input id="buscar" type="text" name="buscar" class="sig-input" style="padding-left:32px;width:100%;" placeholder="Nombre, descripción o guía…" value="<?php echo htmlspecialchars($flt['buscar'] ?? ''); ?>">
             </div>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Estado</label>
-            <select name="estado" class="sig-input" style="min-width:150px;">
+            <label class="sig-field__label" style="font-size:11px;" for="estado">Estado</label>
+            <select id="estado" name="estado" class="sig-input" style="min-width:150px;">
                 <option value="">Todos</option>
                 <?php foreach (Ruta::ESTADOS as $est): ?>
                     <option value="<?php echo $est; ?>" <?php echo ($flt['estado'] ?? '') === $est ? 'selected' : ''; ?>><?php echo $est; ?></option>
@@ -50,8 +50,8 @@ function rutaUrl(array $f, int $p): string {
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Tipo</label>
-            <select name="tipo" class="sig-input" style="min-width:150px;">
+            <label class="sig-field__label" style="font-size:11px;" for="tipo">Tipo</label>
+            <select id="tipo" name="tipo" class="sig-input" style="min-width:150px;">
                 <option value="">Todos</option>
                 <?php foreach (Ruta::$TIPOS_RUTA as $tp): ?>
                     <option value="<?php echo htmlspecialchars($tp); ?>" <?php echo ($flt['tipo'] ?? '') === $tp ? 'selected' : ''; ?>><?php echo htmlspecialchars($tp); ?></option>
@@ -59,22 +59,22 @@ function rutaUrl(array $f, int $p): string {
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Período</label>
+            <label class="sig-field__label" style="font-size:11px;" for="periodo">Período</label>
             <?php $perActual = $flt['periodo'] ?? '';
                   $periodos = ['' => 'Todos', 'proximos' => 'Próximas', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasadas']; ?>
-            <select name="periodo" class="sig-input" style="min-width:130px;">
+            <select id="periodo" name="periodo" class="sig-input" style="min-width:130px;">
                 <?php foreach ($periodos as $val => $lbl): ?>
                     <option value="<?php echo $val; ?>" <?php echo $perActual === $val ? 'selected' : ''; ?>><?php echo $lbl; ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Desde</label>
-            <input type="date" name="fecha_desde" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
+            <label class="sig-field__label" style="font-size:11px;" for="fecha_desde">Desde</label>
+            <input id="fecha_desde" type="date" name="fecha_desde" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
-            <input type="date" name="fecha_hasta" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
+            <label class="sig-field__label" style="font-size:11px;" for="fecha_hasta">Hasta</label>
+            <input id="fecha_hasta" type="date" name="fecha_hasta" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
         </div>
         <div style="display:flex; gap:var(--sp-2);">
             <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
@@ -234,14 +234,14 @@ $estadoColores = [
                     <!-- Nombre + duración -->
                     <div class="col-md-7">
                         <div class="sig-field">
-                            <label class="sig-field__label">Nombre de la Ruta <span class="req">*</span></label>
+                            <label class="sig-field__label" for="rut_nombre">Nombre de la Ruta <span class="req">*</span></label>
                             <input type="text" name="nombre" id="rut_nombre" class="sig-input" required
                                    minlength="3" placeholder="Ej: Ruta Histórica de Cumaná">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Duración <span style="font-size:11px;font-weight:400;color:var(--text-tertiary);">H:MM</span></label>
+                            <label class="sig-field__label" for="rut_duracion">Duración <span style="font-size:11px;font-weight:400;color:var(--text-tertiary);">H:MM</span></label>
                             <input type="text" name="duracion_estimada" id="rut_duracion" class="sig-input"
                                    pattern="^\d{1,2}:\d{2}$"
                                    placeholder="Ej: 2:30"
@@ -251,7 +251,7 @@ $estadoColores = [
                     </div>
                     <div class="col-md-2">
                         <div class="sig-field">
-                            <label class="sig-field__label">Cupo Máx.</label>
+                            <label class="sig-field__label" for="rut_cupo">Cupo Máx.</label>
                             <input type="number" name="cupo_maximo" id="rut_cupo" class="sig-input" value="20" min="1" max="200">
                         </div>
                     </div>
@@ -259,7 +259,7 @@ $estadoColores = [
                     <!-- Descripción -->
                     <div class="col-12">
                         <div class="sig-field">
-                            <label class="sig-field__label">Descripción</label>
+                            <label class="sig-field__label" for="rut_descripcion">Descripción</label>
                             <textarea name="descripcion" id="rut_descripcion" class="sig-textarea" rows="2"
                                       placeholder="Objetivos del recorrido y atractivos..."></textarea>
                         </div>
@@ -268,7 +268,7 @@ $estadoColores = [
                     <!-- Tipo de ruta + Dificultad + Estado -->
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Tipo de Ruta <span class="req">*</span></label>
+                            <label class="sig-field__label" for="rut_tipo">Tipo de Ruta <span class="req">*</span></label>
                             <select name="tipo_ruta" id="rut_tipo" class="sig-select">
                                 <option value="General">General</option>
                                 <option value="Cumaná Histórica">Cumaná Histórica</option>
@@ -279,7 +279,7 @@ $estadoColores = [
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Estado</label>
+                            <label class="sig-field__label" for="rut_estado">Estado</label>
                             <select name="estado" id="rut_estado" class="sig-select">
                                 <?php foreach (Ruta::ESTADOS as $est): ?>
                                 <option value="<?php echo $est; ?>"><?php echo $est === Ruta::ESTADO_TERMINAL ? $est . ' (ejecutada)' : $est; ?></option>
@@ -292,7 +292,7 @@ $estadoColores = [
                     </div>
                     <div class="col-md-4">
                         <div class="sig-field">
-                            <label class="sig-field__label">Departamento responsable</label>
+                            <label class="sig-field__label" for="rut_depto">Departamento responsable</label>
                             <select name="id_departamento" id="rut_depto" class="sig-select">
                                 <option value="">Sin asignar</option>
                                 <?php foreach ($data['departamentos'] ?? [] as $d): ?>
@@ -305,7 +305,7 @@ $estadoColores = [
                     <!-- Facilitador -->
                     <div class="col-md-6">
                         <div class="sig-field">
-                            <label class="sig-field__label">Facilitador / Guía responsable</label>
+                            <label class="sig-field__label" for="rut_facilitador">Facilitador / Guía responsable</label>
                             <select name="id_facilitador" id="rut_facilitador" class="sig-select js-search">
                                 <option value="">Sin asignar</option>
                                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
@@ -320,7 +320,7 @@ $estadoColores = [
                     <!-- Fecha y hora de visita -->
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Fecha de Visita</label>
+                            <label class="sig-field__label" for="rut_fecha">Fecha de Visita</label>
                             <input type="date" name="fecha_visita" id="rut_fecha" class="sig-input"
                                    min="<?php echo date('Y-m-d'); ?>">
                             <div class="invalid-feedback" id="msg_fecha_ruta">La fecha no puede ser anterior a hoy.</div>
@@ -328,7 +328,7 @@ $estadoColores = [
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Hora de Visita</label>
+                            <label class="sig-field__label" for="rut_hora">Hora de Visita</label>
                             <input type="time" name="hora_visita" id="rut_hora" class="sig-input">
                         </div>
                     </div>
@@ -349,7 +349,7 @@ $estadoColores = [
                     <!-- Motivo de mantenimiento — solo visible cuando estado = En Mantenimiento -->
                     <div id="sec_motivo_mant" class="col-12" style="display:none;">
                         <div class="sig-field" style="margin:0;">
-                            <label class="sig-field__label">
+                            <label class="sig-field__label" for="rut_motivo_mant">
                                 <i class="bi bi-tools" style="color:#F59E0B;"></i>
                                 Motivo de Mantenimiento <span class="req">*</span>
                             </label>

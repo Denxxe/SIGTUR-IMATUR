@@ -69,14 +69,14 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                 <thead>
                     <tr>
                         <th>Tipo de personal</th>
-                        <th style="text-align:center;">Trab.</th>
-                        <th style="text-align:right;">Sueldo normal</th>
-                        <th style="text-align:right;">SSO</th>
-                        <th style="text-align:right;">FAOV</th>
-                        <th style="text-align:right;">LRPPF</th>
-                        <th style="text-align:right;">Deducciones</th>
-                        <th style="text-align:right;">Neto a cobrar</th>
-                        <th style="text-align:right;">Aportes patronales</th>
+                        <th class="text-center">Trab.</th>
+                        <th class="text-end">Sueldo normal</th>
+                        <th class="text-end">SSO</th>
+                        <th class="text-end">FAOV</th>
+                        <th class="text-end">LRPPF</th>
+                        <th class="text-end">Deducciones</th>
+                        <th class="text-end">Neto a cobrar</th>
+                        <th class="text-end">Aportes patronales</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -87,26 +87,26 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                     ?>
                         <tr<?php echo $r['cantidad'] === 0 ? ' style="opacity:.5;"' : ''; ?>>
                             <td class="cell-strong"><?php echo htmlspecialchars($tipo); ?></td>
-                            <td style="text-align:center;"><?php echo $r['cantidad']; ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['total_sueldo']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['sso']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['faov']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['lrppf']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['total_deducciones']); ?></td>
+                            <td class="text-center"><?php echo $r['cantidad']; ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['total_sueldo']); ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['sso']); ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['faov']); ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['lrppf']); ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['total_deducciones']); ?></td>
                             <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;"><?php echo $m($r['total_neto']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($r['total_aportes']); ?></td>
+                            <td class="text-end u-num"><?php echo $m($r['total_aportes']); ?></td>
                         </tr>
                     <?php endforeach; ?>
                     <tr style="border-top:2px solid var(--border-strong,var(--border-subtle));font-weight:700;">
                         <td>TOTAL GENERAL</td>
-                        <td style="text-align:center;"><?php echo $tot['cantidad']; ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['total_sueldo']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['sso']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['faov']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['lrppf']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['total_deducciones']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['total_neto']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($tot['total_aportes']); ?></td>
+                        <td class="text-center"><?php echo $tot['cantidad']; ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['total_sueldo']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['sso']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['faov']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['lrppf']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['total_deducciones']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['total_neto']); ?></td>
+                        <td class="text-end u-num"><?php echo $m($tot['total_aportes']); ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -129,17 +129,17 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                         <th>Cédula</th>
                         <th>Apellidos y Nombres</th>
                         <th>Grado</th>
-                        <th style="text-align:center;">Años</th>
-                        <th style="text-align:right;">Base quincenal</th>
-                        <th style="text-align:right;">Prima prof.</th>
-                        <th style="text-align:right;">Prima antig.</th>
-                        <th style="text-align:right;">Transporte</th>
-                        <th style="text-align:right;">Hijos</th>
-                        <th style="text-align:right;">Sueldo normal</th>
-                        <th style="text-align:right;">Deducciones</th>
-                        <th style="text-align:right;">Neto</th>
-                        <?php if ($esComision): ?><th style="text-align:right;">Dif. a pagar</th><?php endif; ?>
-                        <th style="text-align:right;">Bono resp.</th>
+                        <th class="text-center">Años</th>
+                        <th class="text-end">Base quincenal</th>
+                        <th class="text-end">Prima prof.</th>
+                        <th class="text-end">Prima antig.</th>
+                        <th class="text-end">Transporte</th>
+                        <th class="text-end">Hijos</th>
+                        <th class="text-end">Sueldo normal</th>
+                        <th class="text-end">Deducciones</th>
+                        <th class="text-end">Neto</th>
+                        <?php if ($esComision): ?><th class="text-end">Dif. a pagar</th><?php endif; ?>
+                        <th class="text-end">Bono resp.</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -162,15 +162,15 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                                     <span style="color:var(--text-tertiary);font-style:italic;">sin grado</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="text-align:center;">
+                            <td class="text-center">
                                 <?php echo (int)$f->anios_administracion; ?>
                                 <br><small style="color:var(--text-tertiary);"><?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
                             </td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($f->sueldo_base_quincenal); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($f->prima_profesionalizacion); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($f->prima_antiguedad); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($f->bono_transporte); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;">
+                            <td class="text-end u-num"><?php echo $m($f->sueldo_base_quincenal); ?></td>
+                            <td class="text-end u-num"><?php echo $m($f->prima_profesionalizacion); ?></td>
+                            <td class="text-end u-num"><?php echo $m($f->prima_antiguedad); ?></td>
+                            <td class="text-end u-num"><?php echo $m($f->bono_transporte); ?></td>
+                            <td class="text-end u-num">
                                 <?php echo $m($f->prima_por_hijos); ?>
                                 <?php if ((int)$f->n_hijos > 0): ?><br><small style="color:var(--text-tertiary);"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
                             </td>
@@ -183,7 +183,7 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                                     <br><small style="color:var(--text-tertiary);">origen <?php echo $m($f->sueldo_dependencia_origen); ?></small>
                                 </td>
                             <?php endif; ?>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;"><?php echo $m($f->bono_responsabilidad); ?></td>
+                            <td class="text-end u-num"><?php echo $m($f->bono_responsabilidad); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

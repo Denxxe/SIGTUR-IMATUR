@@ -130,7 +130,7 @@ $filtro = $data['filtro'] ?? '';
                 <p style="margin-bottom:var(--sp-3);"><strong id="v_nombre"></strong></p>
                 <div class="row g-3">
                     <div class="col-12"><div class="sig-field" style="margin:0;">
-                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;">
+                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;" for="v_hallado">
                             <input type="checkbox" name="hallado" id="v_hallado" value="1" checked onchange="vToggle()"> El bien apareció físicamente
                         </label></div></div>
                     <div class="col-md-7" id="v_wrap_ubi"><div class="sig-field"><label class="sig-field__label" for="v_ubi">¿Dónde está?</label>

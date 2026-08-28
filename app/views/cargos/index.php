@@ -70,15 +70,15 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="cargo_id">
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Nombre del Cargo <span class="req">*</span></label>
+                        <label class="sig-field__label" for="cargo_nombre">Nombre del Cargo <span class="req">*</span></label>
                         <input type="text" class="sig-input" name="nombre" id="cargo_nombre" required placeholder="Ej: Especialista III">
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Descripción</label>
+                        <label class="sig-field__label" for="cargo_descripcion">Descripción</label>
                         <textarea class="sig-textarea" name="descripcion" id="cargo_descripcion" rows="3" placeholder="Funciones del cargo..."></textarea>
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Nivel jerárquico <span class="req">*</span></label>
+                        <label class="sig-field__label" for="cargo_nivel">Nivel jerárquico <span class="req">*</span></label>
                         <select class="sig-select" name="nivel_jerarquico" id="cargo_nivel" required>
                             <?php foreach (Cargo::NIVELES as $nv): ?>
                                 <option value="<?php echo $nv; ?>"<?php echo $nv === Cargo::NIVEL_DEFAULT ? ' selected' : ''; ?>><?php echo $nv; ?></option>

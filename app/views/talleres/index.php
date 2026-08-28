@@ -45,15 +45,15 @@ function esAtrasada($t): bool {
 <form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/talleres/index" style="margin-bottom:var(--sp-4);">
     <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5); display:flex; align-items:flex-end; gap:var(--sp-3); flex-wrap:wrap;">
         <div style="flex:1; min-width:200px;">
-            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
+            <label class="sig-field__label" style="font-size:11px;" for="buscar">Buscar</label>
             <div style="position:relative;">
                 <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;pointer-events:none;"></i>
-                <input type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre o facilitador…" value="<?php echo htmlspecialchars($filtros['buscar'] ?? ''); ?>">
+                <input id="buscar" type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre o facilitador…" value="<?php echo htmlspecialchars($filtros['buscar'] ?? ''); ?>">
             </div>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Estado</label>
-            <select name="estado" class="sig-input" style="min-width:140px;">
+            <label class="sig-field__label" style="font-size:11px;" for="estado">Estado</label>
+            <select id="estado" name="estado" class="sig-input" style="min-width:140px;">
                 <option value="">Todos</option>
                 <?php foreach (Taller::ESTADOS as $est): ?>
                 <option value="<?php echo $est; ?>" <?php echo ($filtros['estado'] ?? '') === $est ? 'selected' : ''; ?>><?php echo $est; ?></option>
@@ -61,8 +61,8 @@ function esAtrasada($t): bool {
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Tipo</label>
-            <select name="tipo" class="sig-input" style="min-width:130px;">
+            <label class="sig-field__label" style="font-size:11px;" for="tipo">Tipo</label>
+            <select id="tipo" name="tipo" class="sig-input" style="min-width:130px;">
                 <option value="">Todos</option>
                 <?php foreach (Taller::TIPOS_ACTIVIDAD as $tp): ?>
                 <option value="<?php echo $tp; ?>" <?php echo ($filtros['tipo'] ?? '') === $tp ? 'selected' : ''; ?>><?php echo $tp; ?></option>
@@ -70,30 +70,30 @@ function esAtrasada($t): bool {
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Ámbito</label>
-            <select name="es_interna" class="sig-input" style="min-width:120px;">
+            <label class="sig-field__label" style="font-size:11px;" for="es_interna">Ámbito</label>
+            <select id="es_interna" name="es_interna" class="sig-input" style="min-width:120px;">
                 <option value="">Todos</option>
                 <option value="1" <?php echo ($filtros['es_interna'] ?? '') === '1' ? 'selected' : ''; ?>>Interna</option>
                 <option value="0" <?php echo ($filtros['es_interna'] ?? '') === '0' ? 'selected' : ''; ?>>Externa</option>
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Período</label>
+            <label class="sig-field__label" style="font-size:11px;" for="periodo">Período</label>
             <?php $perActual = $filtros['periodo'] ?? '';
                   $periodos = ['' => 'Todos', 'proximos' => 'Próximos', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasados']; ?>
-            <select name="periodo" class="sig-input" style="min-width:130px;">
+            <select id="periodo" name="periodo" class="sig-input" style="min-width:130px;">
                 <?php foreach ($periodos as $val => $lbl): ?>
                     <option value="<?php echo $val; ?>" <?php echo $perActual === $val ? 'selected' : ''; ?>><?php echo $lbl; ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Desde</label>
-            <input type="date" name="fecha_inicio" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio'] ?? ''); ?>">
+            <label class="sig-field__label" style="font-size:11px;" for="fecha_inicio">Desde</label>
+            <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio'] ?? ''); ?>">
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
-            <input type="date" name="fecha_fin" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_fin'] ?? ''); ?>">
+            <label class="sig-field__label" style="font-size:11px;" for="fecha_fin">Hasta</label>
+            <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($filtros['fecha_fin'] ?? ''); ?>">
         </div>
         <div style="display:flex; gap:var(--sp-2);">
             <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
@@ -255,7 +255,7 @@ function esAtrasada($t): bool {
                                 </label>
                             </div>
                             <div id="bloque_tipo_ente" style="display:flex; align-items:center; gap:var(--sp-2);">
-                                <label class="sig-field__label" style="margin:0; white-space:nowrap;">Dirigida a:</label>
+                                <label class="sig-field__label" style="margin:0; white-space:nowrap;" for="tal_tipo_ente">Dirigida a:</label>
                                 <select name="tipo_ente" id="tal_tipo_ente" class="sig-select" style="min-width:180px;">
                                     <option value="">Sin especificar</option>
                                     <option value="Escuela">Escuela</option>
@@ -269,7 +269,7 @@ function esAtrasada($t): bool {
 
                     <div class="col-md-6">
                         <div class="sig-field">
-                            <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_nombre">Nombre <span class="req">*</span></label>
                             <input type="text" name="nombre" id="tal_nombre" class="sig-input" required placeholder="Ej: Taller de Turismo Sostenible" oninput="checkFormValid();checkDuplicado();">
                         </div>
                     </div>
@@ -279,7 +279,7 @@ function esAtrasada($t): bool {
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Tipo <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_tipo">Tipo <span class="req">*</span></label>
                             <select name="tipo_actividad" id="tal_tipo" class="sig-select" required>
                                 <?php foreach (Taller::TIPOS_ACTIVIDAD as $t): ?>
                                 <option value="<?php echo $t; ?>"><?php echo $t; ?></option>
@@ -289,7 +289,7 @@ function esAtrasada($t): bool {
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Estado <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_estado">Estado <span class="req">*</span></label>
                             <select name="estado" id="tal_estado" class="sig-select" required>
                                 <option value="Programado">Programado</option>
                             </select>
@@ -298,33 +298,33 @@ function esAtrasada($t): bool {
 
                     <div class="col-12">
                         <div class="sig-field">
-                            <label class="sig-field__label">Descripción</label>
+                            <label class="sig-field__label" for="tal_descripcion">Descripción</label>
                             <textarea name="descripcion" id="tal_descripcion" class="sig-textarea" rows="2" placeholder="Objetivos y contenido..."></textarea>
                         </div>
                     </div>
 
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Fecha Inicio <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_fecha_inicio">Fecha Inicio <span class="req">*</span></label>
                             <input type="date" name="fecha_inicio" id="tal_fecha_inicio" class="sig-input" required>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Fecha Fin</label>
+                            <label class="sig-field__label" for="tal_fecha_fin">Fecha Fin</label>
                             <input type="date" name="fecha_fin" id="tal_fecha_fin" class="sig-input">
                             <div class="invalid-feedback" id="msg_fecha_fin"></div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Hora Inicio</label>
+                            <label class="sig-field__label" for="tal_hora_inicio">Hora Inicio</label>
                             <input type="time" name="hora_inicio" id="tal_hora_inicio" class="sig-input">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="sig-field">
-                            <label class="sig-field__label">Hora Fin</label>
+                            <label class="sig-field__label" for="tal_hora_fin">Hora Fin</label>
                             <input type="time" name="hora_fin" id="tal_hora_fin" class="sig-input">
                             <div class="invalid-feedback" id="msg_hora_fin"></div>
                         </div>
@@ -332,7 +332,7 @@ function esAtrasada($t): bool {
 
                     <div class="col-md-5" id="bloque_sede">
                         <div class="sig-field">
-                            <label class="sig-field__label">Sede / Institución</label>
+                            <label class="sig-field__label" for="tal_ubicacion">Sede / Institución</label>
                             <select name="id_ubicacion_formacion" id="tal_ubicacion" class="sig-select">
                                 <option value="">Seleccione una sede...</option>
                                 <?php foreach ($data['ubicaciones'] ?? [] as $u): ?>
@@ -347,7 +347,7 @@ function esAtrasada($t): bool {
                     </div>
                     <div class="col-md-5">
                         <div class="sig-field">
-                            <label class="sig-field__label">Facilitador <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_facilitador">Facilitador <span class="req">*</span></label>
                             <select name="id_facilitador" id="tal_facilitador" class="sig-select js-search" required>
                                 <option value="">Seleccione un facilitador...</option>
                                 <?php foreach ($data['empleados'] ?? [] as $e): ?>
@@ -358,7 +358,7 @@ function esAtrasada($t): bool {
                     </div>
                     <div class="col-md-2">
                         <div class="sig-field">
-                            <label class="sig-field__label">Cupo Máx.</label>
+                            <label class="sig-field__label" for="tal_cupo">Cupo Máx.</label>
                             <input type="number" name="cupo_maximo" id="tal_cupo" class="sig-input" value="30" min="1" max="200">
                         </div>
                     </div>
@@ -366,7 +366,7 @@ function esAtrasada($t): bool {
                     <!-- Motivo cancelación — solo visible al seleccionar Cancelado en edición -->
                     <div id="sec_edit_cancelado" class="col-12" style="display:none;">
                         <div class="sig-field">
-                            <label class="sig-field__label">Motivo de cancelación <span class="req">*</span></label>
+                            <label class="sig-field__label" for="tal_motivo_cancelacion">Motivo de cancelación <span class="req">*</span></label>
                             <textarea name="motivo_cancelacion" id="tal_motivo_cancelacion" class="sig-textarea" rows="3"
                                       placeholder="Indique el motivo por el que se cancela esta actividad..."></textarea>
                         </div>
@@ -386,7 +386,7 @@ function esAtrasada($t): bool {
                             Si ya las cargó anteriormente, puede continuar sin adjuntar nuevas.
                         </div>
                         <div class="sig-field">
-                            <label class="sig-field__label">Adjuntar evidencias <span id="ev_edit_req" style="font-size:11px; color:var(--text-tertiary); font-weight:400;">(obligatorio si no hay evidencias previas)</span></label>
+                            <label class="sig-field__label" for="ev_edit_files">Adjuntar evidencias <span id="ev_edit_req" style="font-size:11px; color:var(--text-tertiary); font-weight:400;">(obligatorio si no hay evidencias previas)</span></label>
                             <input type="file" name="evidencias[]" id="ev_edit_files" class="sig-input"
                                    multiple accept="image/*,application/pdf">
                             <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">
@@ -424,7 +424,7 @@ function esAtrasada($t): bool {
                 </div>
 
                 <div class="sig-field">
-                    <label class="sig-field__label">Nuevo estado <span class="req">*</span></label>
+                    <label class="sig-field__label" for="ce_nuevo_estado">Nuevo estado <span class="req">*</span></label>
                     <select id="ce_nuevo_estado" name="nuevo_estado" class="sig-select">
                         <option value="">Seleccione...</option>
                     </select>
@@ -433,7 +433,7 @@ function esAtrasada($t): bool {
                 <!-- Sección Cancelado -->
                 <div id="sec_ce_cancelado" style="display:none;">
                     <div class="sig-field">
-                        <label class="sig-field__label">Motivo de cancelación <span class="req">*</span></label>
+                        <label class="sig-field__label" for="ce_motivo">Motivo de cancelación <span class="req">*</span></label>
                         <textarea id="ce_motivo" name="motivo_cancelacion" class="sig-textarea" rows="3"
                                   placeholder="Indique el motivo por el que se cancela..."></textarea>
                     </div>
@@ -447,7 +447,7 @@ function esAtrasada($t): bool {
                 <!-- Sección Finalizado — subir evidencias -->
                 <div id="sec_ce_finalizado" style="display:none;">
                     <div class="sig-field">
-                        <label class="sig-field__label">Evidencias <span class="req">*</span></label>
+                        <label class="sig-field__label" for="ce_evidencias">Evidencias <span class="req">*</span></label>
                         <input type="file" id="ce_evidencias" name="evidencias[]" class="sig-input"
                                multiple accept="image/*,application/pdf">
                         <p style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">

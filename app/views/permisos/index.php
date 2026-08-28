@@ -17,15 +17,15 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
 
 <!-- Filtros -->
 <form method="GET" action="<?php echo URL_ROOT; ?>/permisos/index" class="anim-slide-up" style="display:flex;gap:var(--sp-3);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap">
-    <div class="sig-field" style="margin:0"><label class="sig-field__label">Categoría</label>
-        <select name="categoria" class="sig-select">
+    <div class="sig-field" style="margin:0"><label class="sig-field__label" for="categoria">Categoría</label>
+        <select id="categoria" name="categoria" class="sig-select">
             <option value="">Todas</option>
             <?php foreach (PermisoLaboral::CATEGORIAS as $c): ?>
                 <option value="<?php echo $c; ?>" <?php echo $flt['categoria']===$c?'selected':''; ?>><?php echo $c; ?></option>
             <?php endforeach; ?>
         </select></div>
-    <div class="sig-field" style="margin:0"><label class="sig-field__label">Estado</label>
-        <select name="estado" class="sig-select">
+    <div class="sig-field" style="margin:0"><label class="sig-field__label" for="estado">Estado</label>
+        <select id="estado" name="estado" class="sig-select">
             <option value="">Todos</option>
             <?php foreach (PermisoLaboral::ESTADOS as $es): ?>
                 <option value="<?php echo $es; ?>" <?php echo $flt['estado']===$es?'selected':''; ?>><?php echo $es; ?></option>
@@ -75,32 +75,32 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
             <div class="modal-header"><h5 class="modal-title">Registrar permiso / reposo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="sig-field mb-3"><label class="sig-field__label">Empleado <span class="req">*</span></label>
-                    <select name="id_empleado" class="sig-select js-search" required>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="id_empleado">Empleado <span class="req">*</span></label>
+                    <select id="id_empleado" name="id_empleado" class="sig-select js-search" required>
                         <option value="">Seleccione empleado...</option>
                         <?php foreach ($data['empleados'] ?? [] as $e): ?>
                             <option value="<?php echo $e->id; ?>"><?php echo htmlspecialchars(($e->nombre ?? '').' '.($e->apellido ?? '')); ?> (<?php echo htmlspecialchars($e->cedula ?? ''); ?>)</option>
                         <?php endforeach; ?>
                     </select></div>
                 <div class="row g-3 mb-3">
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Categoría <span class="req">*</span></label>
+                    <div class="col-6"><div class="sig-field"><label class="sig-field__label" for="pl_categoria">Categoría <span class="req">*</span></label>
                         <select name="categoria" id="pl_categoria" class="sig-select" required onchange="plCascada()">
                             <option value="">Seleccione...</option>
                             <?php foreach (PermisoLaboral::CATEGORIAS as $c): ?><option value="<?php echo $c; ?>"><?php echo $c; ?></option><?php endforeach; ?>
                         </select></div></div>
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Tipo <span class="req">*</span></label>
+                    <div class="col-6"><div class="sig-field"><label class="sig-field__label" for="pl_tipo">Tipo <span class="req">*</span></label>
                         <select name="tipo_permiso" id="pl_tipo" class="sig-select" required><option value="">Seleccione categoría primero</option></select></div></div>
                 </div>
                 <div class="row g-3 mb-3">
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Desde <span class="req">*</span></label>
+                    <div class="col-6"><div class="sig-field"><label class="sig-field__label" for="pl_fecha_inicio">Desde <span class="req">*</span></label>
                         <input type="date" name="fecha_inicio" id="pl_fecha_inicio" class="sig-input" required value="<?php echo date('Y-m-d'); ?>" onchange="plCalcularDuracion()"></div></div>
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Hasta <span class="req">*</span></label>
+                    <div class="col-6"><div class="sig-field"><label class="sig-field__label" for="pl_fecha_fin">Hasta <span class="req">*</span></label>
                         <input type="date" name="fecha_fin" id="pl_fecha_fin" class="sig-input" required value="<?php echo date('Y-m-d'); ?>" onchange="plCalcularDuracion()"></div></div>
                 </div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Duración <small style="color:var(--text-secondary)">(calculada automáticamente; puede ajustarla, ej. "72 horas", "6 meses")</small></label>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="pl_duracion">Duración <small style="color:var(--text-secondary)">(calculada automáticamente; puede ajustarla, ej. "72 horas", "6 meses")</small></label>
                     <input type="text" name="duracion" id="pl_duracion" class="sig-input" oninput="pl_duracionManual = true"></div>
-                <div class="sig-field"><label class="sig-field__label">Motivo / observación</label>
-                    <textarea name="motivo" class="sig-textarea" rows="2"></textarea></div>
+                <div class="sig-field"><label class="sig-field__label" for="motivo">Motivo / observación</label>
+                    <textarea id="motivo" name="motivo" class="sig-textarea" rows="2"></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>

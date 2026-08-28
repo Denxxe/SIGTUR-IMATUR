@@ -64,9 +64,9 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="ubi_id">
-                <div class="sig-field mb-3"><label class="sig-field__label">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="ubi_nombre" class="sig-input" required placeholder="Ej: Mezzanina - Oficina RRHH"></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_nombre">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="ubi_nombre" class="sig-input" required placeholder="Ej: Mezzanina - Oficina RRHH"></div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Departamento <span class="req">*</span></label>
+                    <label class="sig-field__label" for="ubi_departamento">Departamento <span class="req">*</span></label>
                     <select name="id_departamento" id="ubi_departamento" class="sig-input" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach ($data['departamentos'] ?? [] as $dep): ?>
@@ -84,7 +84,7 @@
                 </div>
                 <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_descripcion">Referencia</label><textarea name="descripcion" id="ubi_descripcion" class="sig-textarea" rows="3"></textarea></div>
                 <div class="sig-field">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer" for="ubi_es_deposito">
                         <input type="checkbox" name="es_deposito" id="ubi_es_deposito" value="1">
                         Es el <strong>depósito</strong> de bienes sin asignar
                     </label>

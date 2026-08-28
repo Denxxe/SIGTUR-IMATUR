@@ -60,20 +60,20 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/pasantes" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha inicio desde</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_inicio">Fecha inicio desde</label>
+                    <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha fin hasta</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_fin">Fecha fin hasta</label>
+                    <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Estado</label>
-                    <select name="estado" class="sig-select">
+                    <label class="sig-field__label" for="estado">Estado</label>
+                    <select id="estado" name="estado" class="sig-select">
                         <option value="">Todos</option>
                         <?php foreach (['Postulado','Aceptado','En Curso','Culminado','Rechazado'] as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>><?php echo $opt; ?></option>
@@ -83,8 +83,8 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
             </div>
             <div class="col-md-4">
                 <div class="sig-field">
-                    <label class="sig-field__label">Buscar</label>
-                    <input type="text" name="buscar" class="sig-input" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_busca'] ?? ''); ?>">
+                    <label class="sig-field__label" for="buscar">Buscar</label>
+                    <input id="buscar" type="text" name="buscar" class="sig-input" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_busca'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
@@ -113,10 +113,10 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                 <th>Contacto</th>
                 <th>Institución / Carrera</th>
                 <th>Tutor IMATUR</th>
-                <th style="text-align:center;">Fecha Inicio</th>
-                <th style="text-align:center;">Fecha Fin</th>
-                <th style="text-align:center;">Estado</th>
-                <th style="text-align:center;">Nota / Evaluación</th>
+                <th class="text-center">Fecha Inicio</th>
+                <th class="text-center">Fecha Fin</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Nota / Evaluación</th>
             </tr>
         </thead>
         <tbody>
@@ -155,7 +155,7 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                     <td style="text-align:center;font-size:12px;white-space:nowrap;">
                         <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span style="color:var(--text-tertiary);font-style:italic;">En curso</span>'; ?>
                     </td>
-                    <td style="text-align:center;">
+                    <td class="text-center">
                         <span class="sig-badge <?php echo $bdg[$p->estado ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($p->estado ?? '—'); ?></span>
                     </td>
                     <?php $tieneNota = $p->nota !== null && $p->nota !== ''; $tieneEval = !empty($p->evaluacion); ?>

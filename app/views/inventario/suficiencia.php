@@ -44,9 +44,9 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
 <div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="20" data-buscar-placeholder="Buscar departamento o categoría…">
     <table class="sig-table">
         <thead><tr>
-            <th>Departamento</th><th>Categoría</th><th style="text-align:center;">Empleados</th>
-            <th style="text-align:center;">Por empleado</th><th style="text-align:center;">Debería haber</th>
-            <th style="text-align:center;">Hay</th><th style="text-align:center;">Faltan</th>
+            <th>Departamento</th><th>Categoría</th><th class="text-center">Empleados</th>
+            <th class="text-center">Por empleado</th><th class="text-center">Debería haber</th>
+            <th class="text-center">Hay</th><th class="text-center">Faltan</th>
         </tr></thead>
         <tbody>
             <?php if (empty($filas)): ?>
@@ -58,11 +58,11 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($f['departamento']); ?></td>
                         <td><?php echo htmlspecialchars($f['categoria']); ?></td>
-                        <td style="text-align:center;"><?php echo $f['empleados']; ?></td>
+                        <td class="text-center"><?php echo $f['empleados']; ?></td>
                         <td style="text-align:center;color:var(--text-tertiary);"><?php echo rtrim(rtrim(number_format($f['ratio'], 2, ',', ''), '0'), ','); ?></td>
-                        <td style="text-align:center;"><?php echo $f['deberia']; ?></td>
-                        <td style="text-align:center;"><?php echo $f['hay']; ?></td>
-                        <td style="text-align:center;">
+                        <td class="text-center"><?php echo $f['deberia']; ?></td>
+                        <td class="text-center"><?php echo $f['hay']; ?></td>
+                        <td class="text-center">
                             <?php if ($f['deficit'] > 0): ?>
                                 <span class="sig-badge sig-badge--danger"><?php echo $f['deficit']; ?></span>
                             <?php else: ?>
@@ -85,12 +85,12 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
         <?php else: ?>
             <div class="sig-table-wrap">
                 <table class="sig-table">
-                    <thead><tr><th>Categoría</th><th style="text-align:center;">Unidades por empleado</th><th>Criterio</th><th class="col-actions">Acciones</th></tr></thead>
+                    <thead><tr><th>Categoría</th><th class="text-center">Unidades por empleado</th><th>Criterio</th><th class="col-actions">Acciones</th></tr></thead>
                     <tbody>
                     <?php foreach ($data['dotaciones'] as $d): ?>
                         <tr>
                             <td class="cell-strong"><?php echo htmlspecialchars($d->categoria); ?></td>
-                            <td style="text-align:center;"><?php echo rtrim(rtrim(number_format((float)$d->unidades_por_empleado, 2, ',', ''), '0'), ','); ?></td>
+                            <td class="text-center"><?php echo rtrim(rtrim(number_format((float)$d->unidades_por_empleado, 2, ',', ''), '0'), ','); ?></td>
                             <td style="font-size:12.5px;color:var(--text-secondary);"><?php echo htmlspecialchars($d->observaciones ?: '—'); ?></td>
                             <td class="col-actions">
                                 <?php if ($puedeEscribir): ?>

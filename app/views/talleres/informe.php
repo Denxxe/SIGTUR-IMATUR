@@ -37,8 +37,8 @@
             <div class="row g-4 mb-8">
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Unidad Estadal</label>
-                        <input type="text" name="unidad_estadal" class="sig-input" value="<?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?>">
+                        <label class="sig-field__label" for="unidad_estadal">Unidad Estadal</label>
+                        <input id="unidad_estadal" type="text" name="unidad_estadal" class="sig-input" value="<?php echo $data['informe']->unidad_estadal ?? 'Sucre'; ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -49,14 +49,14 @@
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Lugar exacto y municipio</label>
-                        <input type="text" name="lugar_exacto" class="sig-input" value="<?php echo $data['informe']->lugar_exacto ?? ($data['taller']->ubicacion ?? ''); ?>" placeholder="Ej: Plaza Bolívar, Cumaná">
+                        <label class="sig-field__label" for="lugar_exacto">Lugar exacto y municipio</label>
+                        <input id="lugar_exacto" type="text" name="lugar_exacto" class="sig-input" value="<?php echo $data['informe']->lugar_exacto ?? ($data['taller']->ubicacion ?? ''); ?>" placeholder="Ej: Plaza Bolívar, Cumaná">
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="sig-field">
-                        <label class="sig-field__label">Instituciones o empresas presentes</label>
-                        <input type="text" name="instituciones_presentes" class="sig-input" value="<?php echo $data['informe']->instituciones_presentes ?? ''; ?>" placeholder="Ej: Alcaldía, Policía Municipal, Voceros Comunales...">
+                        <label class="sig-field__label" for="instituciones_presentes">Instituciones o empresas presentes</label>
+                        <input id="instituciones_presentes" type="text" name="instituciones_presentes" class="sig-input" value="<?php echo $data['informe']->instituciones_presentes ?? ''; ?>" placeholder="Ej: Alcaldía, Policía Municipal, Voceros Comunales...">
                     </div>
                 </div>
             </div>
@@ -86,25 +86,25 @@
             <div class="row g-4 mb-8" style="align-items:flex-end;">
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Mujeres</label>
+                        <label class="sig-field__label" for="inf_mujeres">Mujeres</label>
                         <input type="number" id="inf_mujeres" name="mujeres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->mujeres ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Hombres</label>
+                        <label class="sig-field__label" for="inf_hombres">Hombres</label>
                         <input type="number" id="inf_hombres" name="hombres" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->hombres ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Niñas <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
+                        <label class="sig-field__label" for="inf_ninas">Niñas <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
                         <input type="number" id="inf_ninas" name="ninas" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninas ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label">Niños <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
+                        <label class="sig-field__label" for="inf_ninos">Niños <span style="font-size:10px; font-weight:400; color:var(--text-tertiary);">(5–11 años)</span></label>
                         <input type="number" id="inf_ninos" name="ninos" class="sig-input" style="text-align:center;" min="0" value="<?php echo $data['informe']->ninos ?? 0; ?>" required>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
                 <p style="margin:0; font-size:12px; font-weight:600; text-transform:uppercase;">Instituto Municipal de Turismo</p>
             </div>
         </div>
-        <div style="text-align: right;">
+        <div class="text-end">
             <h3 style="margin:0; font-size:18px; color:#555;">REPORTE DE ACTIVIDAD</h3>
             <p style="margin:5px 0 0; font-size:11px; color:#888;">Emitido el: <?php echo date('d/m/Y'); ?></p>
         </div>

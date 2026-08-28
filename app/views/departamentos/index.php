@@ -66,13 +66,13 @@ $tipoBadge = function ($t) {
             <div class="modal-body">
                 <input type="hidden" name="id" id="dpto_id">
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                    <label class="sig-field__label" for="dpto_nombre">Nombre <span class="req">*</span></label>
                     <input type="text" name="nombre" id="dpto_nombre" class="sig-input" required placeholder="Ej: Dirección de Administración">
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <div class="sig-field">
-                            <label class="sig-field__label">Tipo de unidad</label>
+                            <label class="sig-field__label" for="dpto_tipo_unidad">Tipo de unidad</label>
                             <select name="tipo_unidad" id="dpto_tipo_unidad" class="sig-select">
                                 <option value="">— Seleccione —</option>
                                 <?php foreach (Departamento::TIPOS_UNIDAD as $t): ?>
@@ -83,7 +83,7 @@ $tipoBadge = function ($t) {
                     </div>
                     <div class="col-md-6">
                         <div class="sig-field">
-                            <label class="sig-field__label">Unidad superior</label>
+                            <label class="sig-field__label" for="dpto_id_padre">Unidad superior</label>
                             <select name="id_padre" id="dpto_id_padre" class="sig-select">
                                 <option value="">— Ninguna (nivel raíz) —</option>
                                 <?php foreach ($data['departamentos'] ?? [] as $opt): ?>
@@ -94,7 +94,7 @@ $tipoBadge = function ($t) {
                     </div>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Descripción / Funciones</label>
+                    <label class="sig-field__label" for="dpto_descripcion">Descripción / Funciones</label>
                     <textarea name="descripcion" id="dpto_descripcion" class="sig-textarea" rows="3"></textarea>
                 </div>
             </div>

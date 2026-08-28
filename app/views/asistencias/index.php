@@ -68,7 +68,7 @@ function asisUrl(array $f, int $p): string {
             <span class="sig-badge sig-badge--neutral" id="clock" style="font-size:14px;padding:6px 14px">--:--:--</span>
             <span style="font-size:11px;color:var(--text-tertiary)">Tolerancia de puntualidad: <?php echo $tol; ?> min</span>
             <div id="motivoTempranoWrap" style="display:none;flex:1 1 100%;">
-                <label class="sig-field__label" style="color:var(--danger-600)">
+                <label class="sig-field__label" style="color:var(--danger-600)" for="motivo_temprano">
                     <i class="bi bi-exclamation-triangle-fill"></i> Sale antes de su horario (<span id="motivoHoraProgramada"></span>) — indique el motivo:
                 </label>
                 <textarea name="motivo_temprano" id="motivo_temprano" class="sig-input" rows="2" placeholder="Motivo de la salida anticipada..."></textarea>

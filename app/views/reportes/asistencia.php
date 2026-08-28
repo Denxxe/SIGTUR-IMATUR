@@ -37,20 +37,20 @@ $qs = http_build_query(array_filter([
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/asistencia" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha Inicio</label>
-                    <input type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_inicio">Fecha Inicio</label>
+                    <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_inicio'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="sig-field">
-                    <label class="sig-field__label">Fecha Fin</label>
-                    <input type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
+                    <label class="sig-field__label" for="fecha_fin">Fecha Fin</label>
+                    <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_fin'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Departamento</label>
-                    <select name="departamento" class="sig-select">
+                    <label class="sig-field__label" for="departamento">Departamento</label>
+                    <select id="departamento" name="departamento" class="sig-select">
                         <option value="">Todos los departamentos</option>
                         <?php foreach ($data['departamentos'] ?? [] as $dep): ?>
                             <option value="<?php echo $dep->id; ?>" <?php if (($data['filtro_depto'] ?? '') == $dep->id) echo 'selected'; ?>>
@@ -62,8 +62,8 @@ $qs = http_build_query(array_filter([
             </div>
             <div class="col-md-3">
                 <div class="sig-field">
-                    <label class="sig-field__label">Buscar empleado</label>
-                    <input type="text" name="buscar" class="sig-input" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_busca'] ?? ''); ?>">
+                    <label class="sig-field__label" for="buscar">Buscar empleado</label>
+                    <input id="buscar" type="text" name="buscar" class="sig-input" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_busca'] ?? ''); ?>">
                 </div>
             </div>
             <div class="col-md-2">
@@ -132,10 +132,10 @@ $qs = http_build_query(array_filter([
                 <th>Empleado / Cédula</th>
                 <th>Departamento</th>
                 <th>Tipo Contrato</th>
-                <th style="text-align:center;">Entrada</th>
-                <th style="text-align:center;">Salida</th>
-                <th style="text-align:center;">Horas</th>
-                <th style="text-align:center;">Puntualidad</th>
+                <th class="text-center">Entrada</th>
+                <th class="text-center">Salida</th>
+                <th class="text-center">Horas</th>
+                <th class="text-center">Puntualidad</th>
                 <th>Observación</th>
             </tr>
         </thead>
@@ -160,10 +160,10 @@ $qs = http_build_query(array_filter([
                             ?>
                             <span class="sig-badge sig-badge--sm <?php echo $tcColor[$tc] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($tc); ?></span>
                         </td>
-                        <td style="text-align:center;">
+                        <td class="text-center">
                             <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);"><?php echo date('H:i', strtotime($r->hora_entrada ?? 'now')); ?></span>
                         </td>
-                        <td style="text-align:center;">
+                        <td class="text-center">
                             <?php if ($r->hora_salida): ?>
                                 <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono);"><?php echo date('H:i', strtotime($r->hora_salida)); ?></span>
                             <?php else: ?>
@@ -171,7 +171,7 @@ $qs = http_build_query(array_filter([
                             <?php endif; ?>
                         </td>
                         <td style="text-align:center;font-family:var(--font-mono);font-size:12px;"><?php echo $r->horas !== null ? number_format((float)$r->horas, 2) : '—'; ?></td>
-                        <td style="text-align:center;">
+                        <td class="text-center">
                             <?php
                             $mt = $r->minutos_tarde;
                             if ($mt === null) {

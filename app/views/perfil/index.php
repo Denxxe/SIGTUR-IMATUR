@@ -61,8 +61,8 @@
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/cambiarUsername" method="POST">
                     <div class="sig-field mb-4">
-                        <label class="sig-field__label">Nuevo nombre de usuario</label>
-                        <input type="text" name="username" class="sig-input" required minlength="3"
+                        <label class="sig-field__label" for="username">Nuevo nombre de usuario</label>
+                        <input id="username" type="text" name="username" class="sig-input" required minlength="3"
                                value="<?php echo htmlspecialchars($u->username ?? ''); ?>"
                                autocomplete="off" placeholder="Mínimo 3 caracteres">
                     </div>
@@ -86,15 +86,15 @@
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/cambiarPassword" method="POST" onsubmit="return validarFormPerfil(this)">
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Contraseña actual <span class="req">*</span></label>
-                        <input type="password" name="password_actual" class="sig-input" required autocomplete="current-password">
+                        <label class="sig-field__label" for="password_actual">Contraseña actual <span class="req">*</span></label>
+                        <input id="password_actual" type="password" name="password_actual" class="sig-input" required autocomplete="current-password">
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Nueva contraseña <span class="req">*</span></label>
+                        <label class="sig-field__label" for="pf_nuevo">Nueva contraseña <span class="req">*</span></label>
                         <input type="password" name="password_nuevo" id="pf_nuevo" class="sig-input" required minlength="6" autocomplete="new-password" placeholder="Mínimo 6 caracteres">
                     </div>
                     <div class="sig-field mb-4">
-                        <label class="sig-field__label">Confirmar nueva contraseña <span class="req">*</span></label>
+                        <label class="sig-field__label" for="pf_confirmar">Confirmar nueva contraseña <span class="req">*</span></label>
                         <input type="password" name="password_confirmar" id="pf_confirmar" class="sig-input" required autocomplete="new-password" placeholder="Repite la contraseña">
                         <small id="pf_mismatch" style="display:none;color:var(--danger-500);font-size:11px;">
                             <i class="bi bi-exclamation-triangle"></i> Las contraseñas no coinciden.
