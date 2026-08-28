@@ -86,7 +86,31 @@ creado un administrador nominal, conviene desactivarlo.
 
 ## Tareas programadas (cron / Programador de tareas de Windows)
 
-Ambas son scripts CLI fuera de `public/`:
+Ambas son scripts CLI fuera de `public/`, y **el sistema depende de ellas**: sin `SIGTUR-Estados`
+los talleres se quedan en *Programado* aunque su fecha de inicio ya haya pasado, y sin
+`SIGTUR-Respaldo` no hay copias de la base.
+
+**Instalación (recomendada) — un solo comando:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File cron\instalar_tareas.ps1
+```
+
+Deduce solo la ruta del proyecto y de `php.exe`, y es idempotente: reejecutarlo reemplaza las tareas
+en vez de duplicarlas. Opciones: `-HoraRespaldo "23:00"`, `-MinutosEstados 10`, `-Desinstalar`.
+
+**Verificar que quedaron bien** (lo importante es `Último resultado: 0`):
+
+```powershell
+schtasks /Run   /TN "SIGTUR-Respaldo"
+schtasks /Query /TN "SIGTUR-Respaldo" /V /FO LIST
+```
+
+> Las tareas se crean **para el usuario actual**, así que corren cuando ese usuario tiene sesión
+> iniciada. En un servidor donde deban correr siempre, recrearlas con `/RU SYSTEM` desde una consola
+> elevada.
+
+Equivalente manual, si se prefiere no usar el script:
 
 ```bat
 :: Transiciones automáticas de estado de talleres (cada ~10 min)
