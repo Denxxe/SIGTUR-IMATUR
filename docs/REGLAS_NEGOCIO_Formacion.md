@@ -1,5 +1,12 @@
 # Módulo de Formación — Reglas de Negocio
 
+**Última actualización:** 2026-08-28 · **Migraciones:** hasta 073
+**Pendientes y preguntas abiertas:** `docs/BACKLOG.md` §3.6.
+
+> **Revisión del 2026-08-28.** Se corrigió la tabla de entidades, que seguía listando
+> `participantes_taller.es_brigadista` y `taller_inventario`, **eliminados en la migración 050**
+> por no usarse. El módulo está completo salvo una decisión opcional del cliente (D-NEW01).
+
 ## Contexto institucional
 
 IMATUR imparte actividades de formación denominadas genéricamente **Inducciones, Charlas y Talleres** (usadas como sinónimos según el contexto). Las actividades se dividen en dos grandes categorías: **internas** y **externas**.
@@ -89,9 +96,10 @@ No aplica a actividades internas ni a la edición de registros existentes.
 
 ## RN-F09 — Múltiples facilitadores
 
-- Actualmente el sistema soporta **un facilitador principal** por actividad (`id_facilitador`).
+- El sistema soporta **un facilitador principal** por actividad (`id_facilitador`).
 - Para actividades internas, el facilitador puede ser una persona externa al Departamento de Formación.
-- **Pendiente (v3.0):** soporte para múltiples facilitadores mediante tabla `taller_facilitadores`.
+- 🔒 **Solo si el cliente lo pide** (D-FO08-bis / pregunta **D3**): varios facilitadores por actividad,
+  mediante una tabla `taller_facilitadores`. No se construye a priori.
 
 ---
 
@@ -99,8 +107,12 @@ No aplica a actividades internas ni a la edición de registros existentes.
 
 - El resumen de actividades se genera **trimestralmente** (normalmente).
 - El informe incluye: metas, logros, planificación semanal (internas y externas).
-- Ya existe `taller_informes` para el resumen por actividad individual.
-- **Pendiente:** informe agregado trimestral.
+- `taller_informes` cubre el resumen por actividad individual, con su vista imprimible
+  (`talleres/informe_imprimible.php`) y export CSV.
+- **Metas ✅:** `meta_talleres_anio` y `meta_rutas_anio` (Configuración) alimentan el indicador
+  *planificado vs. ejecutado* de `/reportes/indicadores`. Hoy valen **100 cada una, de relleno**:
+  🔒 falta que el cliente dé las metas reales (pregunta **D4**) para que el indicador diga algo.
+- **Pendiente menor:** informe agregado trimestral (hoy se arma sumando los individuales).
 
 ---
 
@@ -140,5 +152,25 @@ Programado → En Curso → Finalizado
 | Tabla | Campos nuevos (migración 006) |
 |-------|-------------------------------|
 | `talleres` | `es_interna BOOLEAN`, `tipo_ente VARCHAR(50)` |
-| `participantes_taller` | `es_brigadista BOOLEAN`, `nombre_docente VARCHAR(100)`, `cedula_docente VARCHAR(20)` |
+| `participantes_taller` | `nombre_docente VARCHAR(100)`, `cedula_docente VARCHAR(20)` |
 | `rutas` | `requiere_formacion BOOLEAN` |
+
+**Eliminados (migración 050)** — no volver a referenciarlos: `participantes_taller.es_brigadista`
+(D-FO08) y la tabla `taller_inventario` (D-FO07). Ninguno llegó a usarse; `Taller::inscribir()` ya
+no recibe `$esBrigadista`. `talleres.id_oficio` y la tabla `oficios` se eliminaron en la **mig. 060**
+(D-FO06): si el cliente pide llevar registro de oficios recibidos, se construye como módulo propio.
+
+---
+
+## Documentos y correlativos
+
+Las **evidencias** de un taller se guardan en `storage/uploads/talleres/`, **fuera de la raíz web**,
+y se sirven por `DescargaController::taller()` con control de rol (1 y 3). La subida valida extensión,
+**MIME real** y tamaño ≤5 MB en `TalleresController::procesarEvidencias()` (hallazgo **H-15**).
+
+🔒 **D-NEW01 / pregunta D5 — sin resolver.** Las claves `correlativo_oficio_formacion` y
+`ano_correlativo_formacion` existen en `configuracion_sistema` desde la **mig. 007**, pero
+**nada las usa**: no hay oficio de formación en el sistema. Antes de construirlo hace falta saber
+del cliente **qué dice ese documento y a quién se dirige** — igual que con los formatos de Bienes,
+inventarlo garantiza rehacerlo. `oficios_emitidos` tampoco tiene `id_taller`, así que el día que se
+confirme requiere migración además de UI.

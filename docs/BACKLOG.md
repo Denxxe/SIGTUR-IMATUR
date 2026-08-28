@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-27 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
+**Última actualización:** 2026-08-28 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -25,8 +25,8 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
 | 1 | **Verificación en navegador** de lo construido este ciclo: las 4 pantallas de Nómina, la tarjeta «Datos de nómina» del expediente, Ubicaciones con sede/depósito, y el menú lateral con cada uno de los 6 roles | Corto | Todo se probó por BD y por pruebas automatizadas, **nada se abrió en el navegador**. Es el riesgo más alto que queda |
-| 2 | **Tarea programada de respaldo** (`schtasks` sobre `cron/respaldo_bd.php`) | Corto | El último respaldo es del 25 de junio. Dos meses sin respaldo automático |
-| 3 | **Generador de feriados movibles por año** — la fecha es calculable (algoritmo de Pascua); hoy hay que cargarlos a mano cada año o el conteo de vacaciones vuelve a fallar **en silencio** | Corto | Evita una regresión anual garantizada |
+| 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver §2 |
+| 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver §2 |
 | 4 | Deuda técnica de §5.2: `label[for]` en formularios restantes · whitelist en `Taller::actualizarPersona` · dividir `ReportesController` (~3.200 líneas) · estilos inline → clases · más pruebas | Gradual | No bloquea entrega; hacer cuando haya holgura |
 
 ### 0.2 Espera al cliente (sección 3)
@@ -78,6 +78,134 @@ inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-
 ---
 
 ## 2. LO RESUELTO EN ESTE CICLO
+
+### 2026-08-28 (2) — Deuda técnica: ReportesController partido, a11y de formularios y utilidades CSS (sin migración)
+
+**`ReportesController`: 3.405 → 101 líneas.** Reunía **101 métodos** de siete áreas distintas en un
+solo archivo. Se repartió en 8 traits bajo `app/controllers/reportes/` (`Rrhh`, `Formacion`, `Turismo`,
+`Inventario`, `Recepcion`, `Sistema`, `Indicadores`, `Export`), dejando en el controlador solo el índice
+y los tres helpers transversales (`requireRoles`, `qsFiltros`, `renderReporte`).
+
+Se eligió **traits** y no clases colaboradoras justamente porque no cambia nada: se componen en la misma
+clase, así que `$this`, los métodos privados y las firmas siguen siendo los mismos. **Ninguna URL, ruta
+o llamada cambió.** Se incluyen con `require_once` porque el autocargador de `public/index.php` solo
+mira rutas planas y no entra en subdirectorios.
+
+La corrección no se dio por buena "a ojo", se **demostró** por tres vías:
+
+| Comprobación | Resultado |
+|---|---|
+| API por reflexión, antes vs. después (nombre + visibilidad + firma con tipos y defaults) | **101 métodos, 0 diferencias** |
+| Cuerpos de los 101 métodos, comparados uno a uno contra la versión en git | **0 distintos** — mismo hash `ace02895ad58` del conjunto |
+| Prueba de humo en runtime: un método privado de 5 traits distintos contra la BD real | Todos ejecutan (`queryAuditoria` → 141 filas, `queryRutas` → 2) |
+
+De paso, el parser destapó un método que un primer barrido no veía: `fmtMesLargo` es
+`private static`, y el patrón inicial solo contemplaba `private function`. Por eso el conteo se
+contrastó contra la reflexión antes de mover una sola línea.
+
+**Accesibilidad de formularios: de 88 a 393 `label[for]`** (de 469 etiquetas). Se automatizó, pero
+solo sobre los casos seguros, y con dos resguardos: los `id` se deduplican **contra los de
+`inc/header.php` y `inc/footer.php`**, porque el requisito es que sean únicos en la *página* y toda
+vista incluye el layout; y donde el control ya tenía `id` se **reutiliza** en vez de inventar otro
+(144 de los 305). Verificado después: **0 `id` duplicados y 0 `for=` apuntando a un `id` inexistente**
+en las 67 vistas.
+
+**Quedan 76 sin tocar, a propósito:** 59 están dentro de un `foreach` —un `id` estático se repetiría en
+cada fila, que es peor que no tenerlo— y 17 no tienen un control asociable. Esos necesitan un `id`
+generado por PHP y hay que verlos caso por caso.
+
+**Estilos inline: 2.361 → 2.199.** Aquí lo que más valía era **no** hacer el reemplazo masivo. Al
+abrirlo aparecieron tres cosas que lo desaconsejan:
+
+1. **Un `style=` inline gana a cualquier regla sin `!important`.** Cambiarlo por una clase normal no es
+   neutral: `.sig-table th { text-align: left }` se impondría donde antes mandaba el inline. La
+   sustitución solo es fiel si la utilidad lleva `!important`.
+2. **Bootstrap 5 ya está cargado en local** (`assets/libs/bootstrap.min.css`) y sus utilidades ya son
+   `!important` — `text-center`, `text-end`, `d-none`. No hacía falta CSS nuevo salvo `.u-num`
+   (cifras tabulares), que Bootstrap no trae.
+3. **Dos trampas que habrían roto cosas en silencio:**
+   - `display:none` → `.d-none` **rompería 143 sitios** que hacen `el.style.display = '…'` por JS: el
+     `!important` de la clase le gana al inline del toggle, y el elemento ya no volvería a aparecer.
+     **Familia descartada.**
+   - **19 vistas standalone** (constancia, ficha técnica, carnets, oficios, listas de asistencia,
+     login…) **no incluyen el layout y por tanto no cargan Bootstrap**. Cambiarles un inline por una
+     clase las dejaría sin estilo. **Excluidas.**
+
+Así que se migró solo lo demostrable: los `style` cuya lista de declaraciones coincide **entera** con
+`text-align:center`, `text-align:right` o `text-align:right` + `tabular-nums`, y únicamente en las 67
+vistas que sí cargan Bootstrap. No hay ninguna regla `text-align` con `!important` en el proyecto, así
+que no hay con quién competir y el valor calculado no cambia. Los `style` **mixtos** se dejaron
+intactos. Se documentó la capa de utilidades al final de `sigtur-components.css`, explicando por qué
+lleva `!important`.
+
+> **Para quien siga con esto:** el resto de los 2.199 **no es mecánico**. Cada familia necesita su
+> propio análisis de especificidad, y `color`/`padding`/`margin` sí chocan con reglas `!important` ya
+> existentes (overrides del modal de Bootstrap, tema oscuro y `@media print`).
+
+Estado tras el ciclo: **0 errores de sintaxis** en el proyecto, **81/81 pruebas** y la API de reportes
+intacta.
+
+### 2026-08-28 — Tareas programadas, generador de feriados y saneo de la documentación (sin migración)
+
+**Las dos tareas programadas existen y ejecutan.** No había **ninguna** (`schtasks /query` vacío), y
+faltaban **dos**, no una: además del respaldo —cuyo último archivo era del **26 de junio**— estaba sin
+programar `cron/actualizar_estados.php`, así que **los talleres nunca pasaban solos de *Programado* a
+*En Curso***: se quedaban en Programado aunque la fecha de inicio ya hubiera llegado. Se creó
+`cron/instalar_tareas.ps1`, que deduce solo la ruta del proyecto y de `php.exe`, es idempotente (`/F`)
+y trae `-Desinstalar`, para poder reejecutarlo tal cual en el servidor de producción. Verificado de
+punta a punta: ambas tareas lanzadas desde el Programador devuelven **resultado 0** y el respaldo
+produjo un `.sql` real de 253 KB.
+
+> Corren como el usuario actual, o sea cuando ese usuario tiene sesión iniciada. En un servidor donde
+> deban correr siempre, recrearlas con `/RU SYSTEM` desde una consola elevada.
+
+**Los feriados movibles se calculan.** La mig. 071 cargó Carnaval y Semana Santa **a mano** para
+2026-2028, con la advertencia de que había que agregar cada año nuevo o el conteo de vacaciones
+volvería a fallar en silencio. Se acababan en 2028. Ahora `Feriado::pascua()` (algoritmo Gregoriano
+anónimo, implementado a mano porque `easter_date()` vive en la extensión `calendar` **y solo llega
+hasta 2037**) y `Feriado::movibles()` son **funciones puras**, y `Feriado::generarAnio()` carga lo que
+falte desde la UI (`/vacaciones/feriados` → «Generar Carnaval y Semana Santa»).
+
+La prueba de que el generador es correcto es que **reproduce exactamente las 12 fechas que la mig. 071
+cargó a mano**, año por año, incluido el bisiesto. Se sumaron **14 casos** (suite 67 → **81**,
+todas pasan): las 3 pascuas de referencia más 2029, los dos extremos del algoritmo (25 de abril de
+2038 y 22 de marzo de 2285), el contraste con `easter_date()` en todo su rango, y una verificación de
+que **en 2026-2060 cada feriado cae en su día de semana** — que es lo que atraparía un offset
+equivocado. Probado también contra la BD: 2029 generó sus 4 feriados, repetirlo no duplicó nada, y
+`Vacacion::diasHabiles()` bajó Semana Santa 2029 de **5 a 3** días.
+
+Dos decisiones de diseño: regenerar **no resucita** un feriado eliminado a propósito (se omite la fecha
+si ya existe una fila, activa o no), y la pantalla **avisa** cuando a los próximos 3 años les faltan
+sus movibles (`Feriado::aniosSinMovibles`), porque el síntoma de este dato es que no se nota.
+
+**Documentación saneada.** Los `REGLAS_NEGOCIO_*.md` habían quedado atrás respecto del código:
+
+| Archivo | Qué decía de más o de menos |
+|---|---|
+| **Rutas** | Describía **cuatro estructuras ya eliminadas** (`instituciones_externas`, `nombre_facilitador_externo`, `ruta_inventario`, `nivel_dificultad`), daba el mapa Leaflet por pendiente estando construido, omitía el estado `Finalizada` y publicaba un formato de correlativo equivocado (`RUTA-007/2026`; el real es `007/2026`, sin prefijo) |
+| **RRHH** | Cuatro secciones como «UI pendiente» o «lógica pendiente» (permisos, vacaciones, horarios, expediente) estando hechas; BRH-02/06/07 abiertas estando cerradas; y la ruta de expedientes en `public/uploads/`, **que se eliminó** (H-15) |
+| **Visitantes** | BVIS-04 y BVIS-05 como pendientes: ambas hechas. **Módulo sin pendientes** |
+| **Formación** | Listaba `es_brigadista` y `taller_inventario`, eliminados en la mig. 050 |
+| **Inventario** | «crear las ubicaciones» como tarea pendiente: la mig. 069 sembró 25 |
+| **Pasantes** | Al día; se fechó y se dejó constancia de que sus 6 brechas están cerradas |
+
+**Dos correcciones de fondo al propio backlog:**
+
+- **D-FO05 no era una pregunta de diseño.** El indicador *planificado vs. ejecutado* **ya está
+  construido** (`meta_talleres_anio`/`meta_rutas_anio` en Configuración, leídas por
+  `ReportesController`). Lo que falta es el **número real** — hoy hay 100 de relleno. Pasa de
+  «decidir» a «pedir un dato» (§3.6).
+- **D-NEW01 es más grande de lo que parecía.** No es cablear una llamada: las claves de correlativo
+  existen desde la mig. 007 pero **nada las usa**, `oficios_emitidos` **no tiene `id_taller`**, y sobre
+  todo **no se sabe qué dice el documento ni a quién se dirige**. Queda bloqueada por el cliente, en la
+  misma categoría que los formatos de Bienes (§3.6).
+
+**Un falso positivo, para que no se vuelva a levantar:** se sospechó que
+`UbicacionesFormacionController.php` rompería en Linux por una discrepancia de mayúsculas con el
+`ucwords()` del Router. **No es cierto:** git tiene el archivo commiteado como
+`UbicacionesformacionController.php`, que es justo lo que el Router busca. La discrepancia estaba solo
+en la copia de trabajo de Windows (`core.ignorecase = true`). Se alineó el disco; no hubo cambio que
+commitear.
 
 ### 2026-08-27 — Bono Vacacional al motor de cálculo (mig. 073 — fase N‑D)
 
@@ -170,10 +298,11 @@ Efecto comprobado con `Vacacion::diasHabiles()`:
 | Semana Santa 2026 (lun-vie) | 5 | **3** |
 | Semanas de control sin feriados | 5 / 10 | 5 / 10 (sin cambio) |
 
-> **⚠️ Mantenimiento anual.** Estos feriados no se repiten en la misma fecha: hay que cargar los del
-> año siguiente antes de que llegue, desde `/vacaciones/feriados` **sin** marcar «se repite cada año»,
-> o extendiendo la mig. 071. Si nadie lo hace, el conteo vuelve a fallar en silencio. Vale la pena
-> evaluar un generador por año (la fecha es calculable), pero no se construyó en este ciclo.
+> **⚠️ Mantenimiento anual — resuelto el 2026-08-28.** Estos feriados no se repiten en la misma fecha,
+> así que había que cargar los del año siguiente a mano o el conteo volvía a fallar en silencio. Ya
+> **se calculan**: `Feriado::generarAnio()` y el botón «Generar Carnaval y Semana Santa» de
+> `/vacaciones/feriados`. La pantalla además avisa si a los próximos 3 años les faltan. Ver la
+> entrada del 2026-08-28.
 
 ### 2026-08-27 — Los tres defectos restantes de la auditoría (cierra H-13, H-14 y H-15)
 
@@ -631,8 +760,8 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | ID | Pregunta |
 |----|----------|
 | ✅ D-FO06 | ~~¿CRUD de **oficios base** (`oficios`) + vínculo con `talleres.id_oficio`?~~ — **CERRADO 2026-08-04:** tabla y columna eliminadas (mig. 060). Si el cliente pide llevar registro de oficios **recibidos**, se construye desde cero como módulo propio. |
-| 🟢 D-FO05 | ¿Parámetros internos de meta para comparar planificado vs ejecutado? |
-| 🟢 D-NEW01 | ¿Activar en UI el correlativo de oficios de formación (FORM-XXX)? |
+| ⚠️ D-FO05 | **Reclasificada (2026-08-28): ya está construido, falta el dato.** `meta_talleres_anio` y `meta_rutas_anio` existen en Configuración y alimentan el indicador *planificado vs. ejecutado* (`ReportesController` ~L2291). Hoy valen **100 cada una, de relleno**. No es una decisión de diseño: hay que **pedir las metas reales** (pregunta D4) |
+| 🔒 D-NEW01 | **¿Activar el correlativo de oficios de formación (`FORM-XXX`)?** Precisado el 2026-08-28: **no es "cablear una llamada".** Las claves `correlativo_oficio_formacion`/`ano_correlativo_formacion` existen desde la mig. 007 pero **nada las usa**, y `oficios_emitidos` **no tiene `id_taller`**. Falta lo esencial: **qué dice ese documento y a quién se dirige**. Construirlo a ciegas repite el error que se evitó con los formatos de Bienes. Requiere migración + flujo tipo `/rutas/oficio` (~550 líneas de referencia) |
 
 ### 3.7 Transversal
 | ID | Pregunta |
@@ -680,13 +809,13 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| 🟢 **a11y en formularios restantes** | Hecho login + botones ícono del header. Falta vincular `label[for]` en los formularios de los demás módulos (empleados, inventario, visitantes…). |
+| ⚠️ **a11y en formularios restantes** | **2026-08-28: de 88 a 393 `label[for]`** (de 469). Automatizado con verificación de unicidad. **Quedan 76**, deliberadamente: 59 dentro de bucles `foreach` (un `id` estático se repetiría en cada iteración) y 17 sin control asociable. Requieren `id` generado por PHP, caso por caso. |
 | 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
-| 🟢 **Dividir `ReportesController`** (~3200 líneas al 2026-07-09) | Separar por área cuando convenga (mantenibilidad). |
-| 🟢 **Migrar estilos inline a clases** | ~1900 `style=""` en vistas al 2026-07-09; consolidar en utilidades CSS (gradual). |
-| 🟢 **Programar la tarea de respaldo en el servidor** | `cron/respaldo_bd.php` ya funciona; falta crear la tarea (`schtasks`). Operativo. |
+| ✅ ~~**Dividir `ReportesController`**~~ | **Hecho (2026-08-28): 3.405 → 101 líneas.** Repartido en 8 traits bajo `app/controllers/reportes/`. API y cuerpos **byte-idénticos** (verificado por reflexión y por hash). Ver §2. |
+| ⚠️ **Migrar estilos inline a clases** | **2026-08-28: 2.361 → 2.199** (162 sustituidos por utilidades de Bootstrap ya cargadas). Solo se migró la parte **demostrablemente fiel**; el resto **no es mecánico** y hay dos trampas documentadas en §2 que conviene leer antes de continuar. |
+| ✅ ~~**Programar la tarea de respaldo en el servidor**~~ | **Hecho (2026-08-28)** con `cron/instalar_tareas.ps1`, que crea las **dos** tareas y es idempotente. Reejecutar en el servidor de producción. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
-| 🟢 **Ampliar la suite de pruebas** | Base creada (`tests/run.php`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
+| 🟢 **Ampliar la suite de pruebas** | **81 pruebas al 2026-08-28** (67 → 81 con las de `Feriado`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
 
 ---
 

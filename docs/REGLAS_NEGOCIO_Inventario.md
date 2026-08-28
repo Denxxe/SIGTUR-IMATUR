@@ -1,6 +1,6 @@
 # Módulo de Bienes (Inventario) — Reglas de Negocio
 
-**Última actualización:** 2026-08-05 · **Migraciones:** 062–068
+**Última actualización:** 2026-08-28 · **Migraciones:** 062–069
 **Fuentes:** levantamiento con el cliente (`PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, B-01…B-72) y el **Formulario BM-1** real (`docs/formatos/`).
 **Plan y pendientes:** `docs/PLAN_MODULO_BIENES.md`.
 
@@ -330,8 +330,16 @@ asignación de bien a responsable.
 **Preguntas abiertas:** B-71 (¿existe el BM-1 en digital? permitiría carga
 automática de códigos).
 
-**Operativo antes de producción:** cargar los ~142 bienes reales, crear las
-ubicaciones y asignar el cargo de Coordinador en Compras, Bienes y Servicios
-—mientras esté vacante, los movimientos están bloqueados por diseño.
+**Operativo antes de producción:** cargar los ~142 bienes reales y asignar el cargo
+de Coordinador en Compras, Bienes y Servicios —mientras esté vacante, los movimientos
+están bloqueados por diseño (B-32).
+
+> Las **ubicaciones ya no faltan**: la mig. 069 sembró 25 (una por departamento activo,
+> más el Depósito General), con su `sede` asignada —la Oficina del Aeropuerto en
+> *Aeropuerto de Cumaná*, el resto en *Sede Principal*. Antes la tabla estaba vacía y
+> `InventarioController::store()` exige `id_ubicacion > 0`, así que **era imposible
+> registrar un bien**: las cuatro fases construidas no se podían usar. Los nombres
+> arrancan iguales a los del departamento; el cliente los renombra a su referencia real
+> (planta, mezzanina, cubículo) y puede crear varias por departamento.
 
 Detalle completo en `docs/PLAN_MODULO_BIENES.md` §12.

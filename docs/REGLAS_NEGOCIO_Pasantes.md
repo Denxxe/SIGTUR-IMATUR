@@ -1,6 +1,12 @@
 # Módulo de Pasantes — Reglas de Negocio
 
-**Última actualización:** 2026-05-22
+**Última actualización:** 2026-08-28 · **Migraciones:** hasta 073
+
+> **Revisión del 2026-08-28.** Verificado contra el código: **las 6 brechas (BPS-01…BPS-06)
+> están cerradas y el módulo no tiene pendientes.** Se confirma también que el carnet de pasante
+> (mig. 053) y el preaviso de fin de pasantía (`dias_preaviso_pasante`, Centro de Alertas) están
+> operativos, y que el correlativo de oficio de pasante (`generarNumeroOficio('pasante')`) sí se
+> usa —a diferencia del de formación, que quedó sin cablear (ver `REGLAS_NEGOCIO_Formacion.md`).
 
 ## Contexto institucional
 

@@ -2,6 +2,11 @@
 
 **Última actualización:** 2026-06-04
 
+> **Revisión del 2026-08-28.** Cuatro secciones seguían marcadas como «UI pendiente» o
+> «lógica pendiente» (permisos, vacaciones, horarios, expediente) cuando ya estaban construidas,
+> y la ruta de subida de expedientes apuntaba a `public/uploads/`, que **se eliminó**. Corregido
+> contra el código. Estado por módulo al día: `docs/BACKLOG.md` §7.
+>
 > **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente) y a su hoja de ruta (sección 12 del modelo). Preguntas abiertas/decisiones (backlog único): `docs/BACKLOG.md`.
 
 ## Contexto institucional
@@ -80,7 +85,7 @@ Además del marcaje automático, el sistema permite registro manual de asistenci
 
 ---
 
-## RN-RH06 — Permisos, Reposos y Ausencias (taxonomía confirmada, UI pendiente)
+## RN-RH06 — Permisos, Reposos y Ausencias ✅
 
 La tabla `permisos_laborales` existe desde migración 002. **Taxonomía confirmada (2026-06-04, ver `MODELO_NEGOCIO_RRHH.md` 4.2):** reposo médico, permiso médico a familiar, diligencia, duelo, maternidad/paternidad (post-parto), personal, estudios; + vacaciones y falta sin justificar.
 
@@ -89,11 +94,13 @@ La tabla `permisos_laborales` existe desde migración 002. **Taxonomía confirma
 - **Justificadas e injustificadas se gestionan por separado** (RN-RH13); las injustificadas alimentan amonestaciones (RN-RH03c).
 - **Log con timestamp de solicitud** y correlativo (RN-RH14).
 
-**✅ Implementado (migración 032 — R-8):** `PermisosController` + modelo `PermisoLaboral` + `permisos/index.php`. Reposo y Permiso se distinguen por `categoria` (D-RH32); `tipo_permiso` con la taxonomía; `duracion` texto libre; **En curso/Concluido derivado** de `fecha_fin`; flujo Pendiente→Aprobado/Rechazado/Anulado (D-RH03). **Vacaciones NO incluido** (fórmula pendiente).
+**✅ Implementado (migración 032 — R-8):** `PermisosController` + modelo `PermisoLaboral` + `permisos/index.php`. Reposo y Permiso se distinguen por `categoria` (D-RH32); `tipo_permiso` con la taxonomía; `duracion` texto libre; **En curso/Concluido derivado** de `fecha_fin`; flujo Pendiente→Aprobado/Rechazado/Anulado (D-RH03). **Vacaciones se gestionan aparte**, en su
+propio módulo (RN-RH07), porque llevan cálculo de días hábiles y saldo acumulado.
+Reporte de permisos por tipo/empleado/período: `reportes/permisos.php` (**BRH-06 cerrada**).
 
 ---
 
-## RN-RH07 — Vacaciones (reglas parciales, lógica pendiente)
+## RN-RH07 — Vacaciones ✅
 
 La tabla `vacaciones` existe desde migración 002.
 
@@ -102,11 +109,26 @@ La tabla `vacaciones` existe desde migración 002.
 - Vacaciones **no disfrutadas se acumulan** — nunca se pierden; sumatoria automática al período siguiente (D-RH06).
 - Comisión de servicio: vacaciones coordinadas con Alcaldía/Gobernación.
 
-**Pendiente:** fórmula de días por años de servicio y cálculo automático vs manual (D-RH04, D-RH05, D-NEW05). UI sin implementar (R-8).
+**✅ Implementado (migraciones 045/046 y 071):** módulo `/vacaciones` (`VacacionesController` +
+modelo `Vacacion`), resolviendo D-RH04, D-RH05 y D-NEW05.
+
+- **Fórmula (`Vacacion::diasPorAnios`):** 15 días hábiles + 1 por año de servicio, **tope 30**.
+- **Antigüedad:** cuenta desde `fecha_ingreso_administracion` (administración pública) cuando existe,
+  no desde el ingreso a IMATUR — así la comisión de servicio no pierde años.
+- **Días hábiles (`Vacacion::diasHabiles`):** excluye fines de semana **y feriados** (tabla `feriados`).
+- **Feriados:** los fijos son recurrentes (se comparan por mes-día); Carnaval y Semana Santa son
+  **movibles** y se **calculan** con `Feriado::generarAnio($anio)` desde el Domingo de Resurrección
+  (botón «Generar Carnaval y Semana Santa» en `/vacaciones/feriados`). La mig. 071 cargó 2026-2028.
+  ⚠️ Si un año se queda sin sus 4 movibles, el conteo falla **en silencio**: descuenta días que no
+  corresponden, sin error visible. Por eso la pantalla avisa cuando faltan.
+- **Saldo acumulado** (no se pierde, D-RH06) con **ajuste inicial** para arrancar con el histórico real.
+- Reporte de saldo por empleado: `/reportes/vacacionesSaldo` (**BRH-07 cerrada**).
+
+🔒 Lo único pendiente es el **cobro** del bono vacacional, que vive en Nómina (ver `PLAN_MODULO_NOMINA.md`).
 
 ---
 
-## RN-RH08 — Horarios y Modalidades (definidas, UI pendiente)
+## RN-RH08 — Horarios y Modalidades ✅
 
 La tabla `horarios` existe desde migración 002. Cada empleado tiene `id_horario` FK.
 
@@ -117,15 +139,25 @@ La tabla `horarios` existe desde migración 002. Cada empleado tiene `id_horario
 - **Horario ajustado:** estudiantes/personas con discapacidad (D-RH36).
 - **En Ruta / Actividad:** el día asignado el empleado no asiste presencial (RN-RH15).
 
-**✅ Implementado (migración 028 — R-6):** catálogo `horarios` con CRUD (`HorariosController`/`Horario`/`horarios/index.php`) + seed de modalidades (Estándar, OAC Matutino/Vespertino, Servicios Generales). `empleados.grupo_rotacion` (A/B) para la rotación de Servicios Generales. Horario ajustado = horario más del catálogo asignable (D-RH36). Config `minutos_tolerancia_puntualidad` (default 15) lista para R-7.
+**✅ Implementado (migración 028 — R-6):** catálogo `horarios` con CRUD (`HorariosController`/`Horario`/`horarios/index.php`) + seed de modalidades (Estándar, OAC Matutino/Vespertino, Servicios Generales). `empleados.grupo_rotacion` (A/B) para la rotación de Servicios Generales. Horario ajustado = horario más del catálogo asignable (D-RH36). Config `minutos_tolerancia_puntualidad` (default **5** en la base actual) usada por R-7, y
+`minutos_tolerancia_salida_temprana` (default 10, mig. 056) — **independiente** de la anterior:
+si un empleado marca salida antes de su hora, más allá de esa tolerancia, el motivo es obligatorio.
 
 ---
 
-## RN-RH10 — Expediente y Documentos (confirmado 2026-06-04, pendiente R-5)
+## RN-RH10 — Expediente y Documentos ✅
 
 - El expediente se organiza **por departamento**; el sistema asigna un **código interno** al trabajador.
 - Recaudos: CV, cédula ampliada, partida de nacimiento, título Bachiller/Profesional, fondo negro del título, RIF, referencia bancaria, recaudos de carga familiar, Ficha Técnica, documentación de estudiante/discapacidad si aplica.
-- **Modelo híbrido (D-RH22) — ✅ implementado mig.033:** subida de archivos (PDF/JPG/PNG ≤5MB) con convención `Tipo_Empleado_{id}` en `public/uploads/expedientes/` + checklist con **detección de recaudos faltantes** (`ExpedienteDocumento::recaudosEstado`). Sección "Recaudos del Expediente" en `empleados/detalle.php`. Catálogo en `ExpedienteDocumento::RECAUDOS`.
+- **Modelo híbrido (D-RH22) — ✅ implementado mig.033:** subida de archivos (PDF/JPG/PNG ≤5MB) con
+  convención `Tipo_Empleado_{id}` + checklist con **detección de recaudos faltantes**
+  (`ExpedienteDocumento::recaudosEstado`). Sección "Recaudos del Expediente" en `empleados/detalle.php`.
+  Catálogo en `ExpedienteDocumento::RECAUDOS`.
+- **⚠️ Los archivos NO viven en `public/`.** Van a `storage/uploads/expedientes/`
+  (`EmpleadosController.php`), **fuera de la raíz web**, y se sirven por `DescargaController`, que
+  valida el rol antes de entregarlos. `public/uploads/` se eliminó por completo el 2026-08-27
+  (hallazgo **H-15**): cualquier documento allí era legible por URL, sin control de acceso.
+- **Folio automático (B2, mig. 040):** `EXP-####` derivado del `id`, no editable desde la UI.
 
 ---
 
@@ -189,12 +221,12 @@ Mapa hacia la hoja de ruta de `MODELO_NEGOCIO_RRHH.md` sección 12 (R-1…R-11).
 | ID | Descripción | Estado | Roadmap |
 |----|-------------|--------|---------|
 | BRH-01 | UI para Permisos/Reposos Laborales | ✅ Hecho (migración 032) | R-8 |
-| BRH-02 | UI para Vacaciones con cálculo de saldo | ⚠️ Reglas parciales — falta fórmula (D-RH04/05/NEW05) | R-8 |
+| BRH-02 | UI para Vacaciones con cálculo de saldo | ✅ Hecho (mig. 045/046) — fórmula 15+1 tope 30, días hábiles sin feriados, saldo acumulado y ajuste inicial | R-8 |
 | BRH-03 | UI para Horarios (modalidades + grupos A/B + sub-grupos OAC) | ✅ Hecho (migración 028) | R-6 |
 | BRH-04 | `marcar()` usaba `$user_id = 1` hardcodeado | ✅ Corregido en Fase 2.5 | — |
 | BRH-05 | Alertas por contratos próximos a vencer | ✅ Implementado en Dashboard | — |
-| BRH-06 | Reporte de permisos por tipo/empleado/período | ❓ Pendiente — requiere BRH-01 | R-8 |
-| BRH-07 | Reporte de saldo de vacaciones por empleado | ❓ Pendiente — requiere BRH-02 | R-8 |
+| BRH-06 | Reporte de permisos por tipo/empleado/período | ✅ Hecho — `reportes/permisos.php` | R-8 |
+| BRH-07 | Reporte de saldo de vacaciones por empleado | ✅ Hecho — `/reportes/vacacionesSaldo` | R-8 |
 | BRH-08 | Fix DEFAULT `tipo_contrato` → 'Contratado'; deprecar 'Suplente' | ✅ Hecho (migración 025) | R-3 |
 | BRH-09 | Separar estabilidad / origen-nómina / comisión de servicio | ✅ Hecho (migración 025) | R-3 |
 | BRH-10 | Ampliar campos de empleado + generador de Ficha Técnica + asistente multi-paso | ✅ Hecho (migraciones 026 y 030) | R-2 / R-2b |
@@ -204,4 +236,4 @@ Mapa hacia la hoja de ruta de `MODELO_NEGOCIO_RRHH.md` sección 12 (R-1…R-11).
 | BRH-14 | Asistencia: puntualidad/ausentismo/horas-reporte + En Ruta | ✅ Hecho (migración 029) | R-7 |
 | BRH-15 | Amonestaciones + conteo faltas injustificadas + alerta despido | ✅ Hecho (migración 031) | R-9 |
 | BRH-16 | Documentos generados (constancias) con correlativo + log | ✅ Hecho (migración 034) | R-10 |
-| BRH-17 | Generación de nómina para Alcaldía/Gobernación | ❓ Futuro — requiere D-RH34 | R-11 |
+| BRH-17 | Generación de nómina para Alcaldía/Gobernación | ⚠️ **Parcial (mig. 072/073).** El motor **calcula**: nómina quincenal con export de 6 hojas, 5 tipos de personal, primas derivadas y bono vacacional. 🔒 Falta la **Liquidación de Prestaciones Sociales**, bloqueada por la pregunta N-3 | R-11 |
