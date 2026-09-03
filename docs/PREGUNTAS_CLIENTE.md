@@ -1,6 +1,6 @@
 # Lo que necesitamos de IMATUR para cerrar el sistema
 
-**Para:** IMATUR · **Actualizado:** 2026-08-27
+**Para:** IMATUR · **Actualizado:** 2026-09-03 (recoge el cambio de procedimiento de Bienes del 2026-09-02)
 
 El sistema está construido y funcionando. Lo que falta para dejarlo al 100 % **ya casi no es
 programación**: son documentos, datos y tres confirmaciones que dependen de criterios de la institución.
@@ -14,13 +14,14 @@ cada punto.
 
 | | Cuántos | Qué desbloquea |
 |---|---|---|
-| **A. Formatos y respuestas que bloquean programación** | 6 | Los últimos 4 documentos que el sistema no puede generar todavía, y el módulo de Liquidación |
+| **A. Formatos y respuestas que bloquean programación** | 9 | Los 4 documentos que el sistema no puede generar todavía, la **nueva codificación de bienes** y el módulo de Liquidación |
 | **B. Datos para poner en marcha** | 7 | Que el sistema deje de estar vacío. Sin esto está correcto pero no sirve |
 | **C. Confirmaciones que afinan números ya calculados** | 3 | El cálculo ya funciona; estas respuestas lo vuelven definitivo |
 | **D. Decisiones opcionales** | 5 | Mejoras que solo construimos si las quieren |
 
-**Los tres puntos más urgentes:** el **informe de bienes nuevos** (A1), el **mes de bono vacacional ya
-calculado** (A5) y el **cuestionario de Rutas** (A6).
+**Los cuatro puntos más urgentes:** la **relación de bienes nuevos** con el formato nuevo (A1), el
+**archivo digital del inventario de la encargada** (A7), el **mes de bono vacacional ya calculado**
+(A5) y el **cuestionario de Rutas** (A6).
 
 ---
 
@@ -28,27 +29,44 @@ calculado** (A5) y el **cuestionario de Rutas** (A6).
 
 Sin estos no podemos construir. Todo lo demás del sistema ya está hecho.
 
-### A1 ⭐ Informe u oficio de bienes nuevos — **el más urgente**
+> ### Nota del 2026-09-02 — nos avisaron del cambio de procedimiento en Bienes
+>
+> Entendido: como IMATUR es un ente autónomo, después de la **última revisión y asignación de códigos
+> de la Alcaldía** (que todavía está pendiente), **IMATUR asignará el código de sus propios bienes**
+> continuando la secuencia desde el último que les dejen, y la Alcaldía solo recibirá la **relación**
+> de los bienes nuevos —con su código y su monto— para mantener su registro. **La base del sistema
+> sirve igual**; ajustamos quién ejecuta la codificación. Los puntos A1, A2 y A7 recogen lo que
+> necesitamos para eso.
 
-El documento que IMATUR le envía a la Alcaldía para que inspeccione y codifique los bienes nuevos.
-Ustedes lo señalaron como su principal dolor. **Necesitamos el formato** (físico o digital) para que el
-sistema lo genere; si lo inventamos, habría que rehacerlo.
+### A1 ⭐ Relación / informe de bienes nuevos — **el más urgente**
 
-### A2 Acta administrativa de baja + oficio de retiro
+El documento que IMATUR le envía a la Alcaldía con los bienes que entran nuevos. **Con el
+procedimiento nuevo ya no pide inspección**: es la relación de los bienes **ya codificados por
+IMATUR**, con su código y su monto.
 
-El acta que firman la Coordinadora de Bienes y la Presidencia cuando un bien se da de baja, y el oficio
-que se le manda después a la Alcaldía para que lo retire.
+**Necesitamos el formato nuevo** (en digital, si lo tienen) para que el sistema lo genere; si lo
+inventamos, habría que rehacerlo.
 
-> El proceso de baja **ya funciona** en el sistema: el bien sale del inventario activo y se distingue
-> entre *Por retirar* y *Retirado*. Lo único que falta es el documento imprimible.
+### A2 Acta de Desincorporación
 
-### A3 Acta u oficio de asignación de un bien a un trabajador
+El acta que firman la Coordinadora de Bienes y la Presidencia, que **lista todos los bienes que se van
+a retirar** y que la Alcaldía **firma y sella** como aval de que ya fueron desincorporados.
 
-El documento que firma el trabajador cuando recibe un bien bajo su responsabilidad.
+Anotado: **se llamará «Acta de Desincorporación»** en todo el sistema, y **ya no habrá oficio de
+retiro** — un solo documento en lugar de dos.
+
+> El proceso **ya funciona a nivel de datos**: el bien sale del inventario activo y se distingue entre
+> *Por retirar* y *Retirado*. Falta el documento imprimible y agrupar los bienes **por acta**.
+
+### A3 Acta de asignación de un bien a un trabajador («acta de encargado»)
+
+El documento que firma el trabajador cuando recibe un bien bajo su responsabilidad. Confirmado que
+**sigue vigente**.
 
 ### A4 Oficio de donación
 
-El sistema ya registra el origen «Donación» con su oficio adjunto; falta el formato para generarlo.
+Confirmado que **sigue vigente**. El sistema ya registra el origen «Donación» con su oficio adjunto;
+falta el formato para generarlo.
 
 ### A5 ⭐ Un mes de bono vacacional **ya calculado**, con números reales
 
@@ -78,6 +96,44 @@ recorrido y paradas— que se reutiliza cada vez, o cada salida se arma desde ce
 
 De esa respuesta depende si el módulo queda como está o hay que rediseñar parte de él. **Preferimos
 preguntar antes que rehacer después.**
+
+### A7 ⭐ Los archivos digitales — incluido el inventario que lleva la encargada
+
+Nos confirmaron que **existe versión digital de los documentos** y de un **inventario interno que la
+encargada lleva aparte**. **Ese archivo es muy valioso para nosotros** y lo pedimos formalmente:
+
+- Nos deja **cargar los ~142 bienes de una vez** en lugar de teclearlos uno por uno.
+- Nos da la **lista de códigos que ya están en uso** (la clasificación que usan de verdad).
+- Nos da el **último número de la secuencia**, que es justo el punto de partida que necesitamos.
+
+Sobre los saltos en el N° de orden: entendido que **no son bajas**, sino que el listado está ordenado
+**por departamento y no por código**. Cuando tengamos el digital lo ordenamos por código y lo
+confirmamos.
+
+### A8 Cinco preguntas cortas sobre la codificación propia
+
+Sin estas no podemos programar la asignación de códigos:
+
+1. **¿Desde qué número arrancamos?** Mientras la Alcaldía no haga esa última revisión, ¿esperamos, o
+   partimos del mayor N° de orden de su listado interno?
+2. **¿La secuencia es una sola para todo IMATUR**, o una por cada grupo-subgrupo-sección? ¿Sigue siendo
+   de 3 dígitos — qué hacemos al pasar de 999?
+3. **¿Cuál es la lista de grupos, subgrupos y secciones** que pueden usar? Antes la Alcaldía asignaba
+   esos valores y ustedes solo los copiaban; si ahora clasifican, el sistema necesita la lista (o al
+   menos los que usan hoy) para no dejarlos escribir cualquier cosa.
+4. **¿El código de un bien desincorporado se reutiliza**, o la numeración nunca se recicla?
+5. **¿La Alcaldía les devuelve algo** al recibir la relación (acuse, sello, un inventario nuevo)? ¿Y
+   cada cuánto se le envía: por lote, mensual, cada vez que entra un bien?
+
+**Y un pedido:** si tienen **por escrito** la notificación de la Alcaldía con este procedimiento nuevo,
+nos ayudaría tenerla. Cambia quién responde por la codificación, y conviene que quede en el expediente
+y no solo de palabra.
+
+### A9 Dos detalles del Acta de Desincorporación
+
+¿**Quién firma** por IMATUR además de la Coordinadora de Bienes y la Presidencia? ¿Lleva **número
+correlativo**? ¿Y el acta ya firmada y sellada **se carga al sistema** para que quede como aval y marque
+los bienes como retirados?
 
 ---
 
@@ -115,8 +171,8 @@ al menos los que estén en uso.
 
 ### B5 Los ~142 bienes reales
 
-Ya se puede cargar: la estructura y las ubicaciones están listas. Si tienen el inventario en Excel,
-podemos cargarlo de una vez en lugar de teclearlo bien por bien.
+Ya se puede cargar: la estructura y las ubicaciones están listas. **Con el archivo digital del punto
+A7** los cargamos de una vez, en lugar de teclearlos bien por bien.
 
 ### B6 Asignar el Coordinador de *Compra de Bienes y Servicios*
 
@@ -233,7 +289,13 @@ señalamos para que puedan revisar los meses ya pagados con ese archivo.
 - **Bienes** *(levantamiento del 2026-08-04/05, 59 preguntas)*: responsable del bien automático por
   departamento · costo y proveedor como control interno · baja y mantenimiento · la Oficina del
   Aeropuerto es un departamento propio bajo Planificación y Gestión Turística · destino del bien dado de
-  baja · numeración de la Alcaldía · umbral de mobiliario por número de empleados. ✔️
+  baja · umbral de mobiliario por número de empleados. ✔️
+- **Bienes, cambio del 2026-09-02:** IMATUR asignará el código de sus bienes continuando la secuencia ·
+  la Alcaldía solo recibe la relación · el acta pasa a llamarse **Acta de Desincorporación**, por lote y
+  sellada por la Alcaldía como aval · **no habrá oficio de retiro** · el acta de encargado y el oficio de
+  donación siguen vigentes · los saltos en el N° de orden son por el orden del listado, no bajas ·
+  existe versión digital de los documentos y del inventario interno. ✔️ *(Lo que aún necesitamos de esto
+  está en A1, A2, A7, A8 y A9.)*
 - **Nómina:** existe un formato de nómina quincenal aparte del de Liquidación · la cesta ticket la
   actualiza la UNAPRE cada mes · la «tasa BCV» es el tipo de cambio del dólar · la gobernación no paga
   caja de ahorro · los porcentajes de prima profesional por grado académico · la escala de antigüedad

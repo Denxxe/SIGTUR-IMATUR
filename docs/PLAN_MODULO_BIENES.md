@@ -5,6 +5,13 @@
 > **Estado: ✅ Fases 1, 2, 4 y 5 completas · Fase 3 parcial** (migraciones 062-067, 2026-08-05).
 > **8 de las 9 preguntas abiertas quedaron respondidas e implementadas.** Pendiente: 3 documentos
 > bloqueados por los formatos del cliente y la pregunta B-71 — §12.
+>
+> ### ⚠️ 2026-09-02 — CAMBIO DE PROCEDIMIENTO: **leer §2-ter antes que nada**
+> IMATUR pasa a **asignar el código** de sus propios bienes (la Alcaldía ya no viene a codificar,
+> solo recibe la relación) y el acta de baja pasa a ser **Acta de Desincorporación** por lote, sin
+> oficio de retiro. La base construida sigue sirviendo, pero hay 7 consecuencias en el código
+> (C-1…C-7), **B-60 se reabre** y hay 8 preguntas nuevas (B-73…B-80). **Nada de esto está
+> implementado todavía.**
 
 ---
 
@@ -111,6 +118,70 @@ El formato, con datos verdaderos de IMATUR:
 **2. Marca, modelo y serial van dentro de la descripción.** El formulario no tiene columnas propias: el aire acondicionado aparece como *"AIRE ACONDICIONADO MARCA HYUNDAI DE 36 MIL BTU COLOR BEIGE MODELO: PISO TECHO SERIAL: 540K51799013708016068"*. Conviene **seguir capturando `marca`/`modelo`/`serial` por separado** y que el sistema **componga** ese texto al exportar — se gana poder filtrar y buscar sin perder fidelidad al formato. Matiza B-13: el serial no es el identificador, pero sí se registra.
 
 **3. Los valores van en "S/P" (sin precio).** Las columnas *Valor unitario* y *Valor total* aparecen en `S/P` en **todas** las filas, aunque B-17 dijo que sí registran costo y factura. El costo se lleva internamente pero no se declara en este formulario → nueva pregunta **B-69**.
+
+---
+
+## 2-ter. CAMBIO DE PROCEDIMIENTO (notificado el 2026-09-02): IMATUR codifica sus propios bienes
+
+> **Origen:** el cliente informó que la Alcaldía le notificó un procedimiento nuevo. **No es una
+> corrección de lo levantado en agosto: es un cambio real del circuito**, y hay que tratarlo como tal.
+
+### Lo que cambia
+
+| | Antes (lo implementado, mig. 062-067) | Ahora |
+|---|---|---|
+| **Quién asigna el código** | La Alcaldía, en una inspección física | **IMATUR**, como ente autónomo |
+| **Punto de partida** | — | El **último código que la Alcaldía deje** en su última revisión y asignación — **esa revisión todavía NO se ha hecho** |
+| **Rol de la Alcaldía** | Inspecciona, codifica, devuelve el BM-1 | **Recibe la relación** de bienes nuevos para mantener su registro patrimonial. Ya no viene a codificar |
+| **El informe de bienes nuevos** | Solicitud de inspección: lote de bienes **sin** código | **Relación informativa**: lote **ya codificado**, con **monto** y los demás datos del formato |
+| **Acta de baja** | Acta + **oficio de retiro** a la Alcaldía (2 documentos) | **Acta de Desincorporación** (1 documento). Lista todos los bienes a retirar; la Alcaldía **firma y sella** y eso es el **aval** del retiro. **El oficio de retiro sale del alcance** |
+| **Acta de asignación** ("acta de encargado") | Pendiente de formato | **Sigue vigente**, hay que hacerla |
+| **Oficio de donación** | Pendiente de formato | **Sigue vigente** |
+
+**Lo que NO cambia** — y por eso el módulo construido sigue sirviendo: el formato del código, el
+registro individual, los dos ejes (código oficial + categoría interna), el expediente documental por
+bien, movimientos, mantenimiento, responsable derivado, conteo por cambio de gestión y la propiedad
+patrimonial de la Alcaldía. **La base es la misma; cambia quién ejecuta la codificación.**
+
+### Consecuencias en el código (por construir)
+
+| # | Qué | Detalle |
+|---|---|---|
+| **C-1** | **Secuencia propia de N° de orden** | `Inventario::siguienteNroOrden()` = `MAX(nro_orden)` sobre todos los bienes vs. un **punto de partida configurable** (clave nueva en `configuracion_sistema`), y el modal de codificación lo propone. Hoy el campo es de tecleo libre y el único control es `findByNroOrden()` (anti-repetido), que **se conserva** |
+| **C-2** | **La codificación deja de esperar** | Un bien nuevo puede codificarse en el acto. `EST_SIN_CODIFICAR` **no se elimina**: sigue describiendo el lote histórico que aguarda la última revisión de la Alcaldía, y la alerta `dias_alerta_sin_codificar` sigue teniendo sentido para él |
+| **C-3** | **`verificado_alcaldia` cambia de significado** | Hoy `codificar()` lo pone en `TRUE` porque el código venía del BM-1. Con código propio, «verificado por la Alcaldía» y «codificado» dejan de ser lo mismo: hay que separar *codificado por IMATUR* de *reconocido por la Alcaldía* (o dejar de escribir la bandera al codificar internamente) |
+| **C-4** | **Grupo/subgrupo/sección necesitan catálogo** | ⚠️ **Reabre B-60.** Se cerró con «IMATUR solo transcribe, basta validar el formato». Si ahora IMATUR **clasifica**, hace falta la lista de valores válidos: sin ella, ante un bien que no se parezca a nada ya registrado no hay con qué decidir. Mitigación: **sembrar el catálogo desde el listado digital** de la encargada (los códigos ya en uso) y permitir agregar |
+| **C-5** | **Acta de Desincorporación por lote** | Tabla nueva (cabecera + renglones, mismo patrón que `inventario_consolidados_bm1`): se arma con los bienes a retirar, se imprime, y al **registrar el acta firmada y sellada** (con su escaneado adjunto) se marcan **todos** sus bienes como retirados. Hoy `marcarRetirado()` es **bien por bien** y no existe la entidad acta. La distinción *Por retirar* / *Retirado* (B-67) se conserva y encaja perfecto |
+| **C-6** | **Renombrar en la UI** | El documento debe decir **«Acta de Desincorporación»** (exigencia explícita del cliente). La pestaña del listado ya dice *Desincorporados*; queda por decidir si el estatus `Dado de baja` se renombra a `Desincorporado` en toda la UI (implica migración por el CHECK) |
+| **C-7** | **Etiquetas y relación con monto** | Las etiquetas QR ya no dependen de la Alcaldía (corregir el texto «Solo se listan bienes ya codificados por la Alcaldía»). La relación saliente **sí declara el monto** → matiza **B-69**, que había cerrado el costo como control interno |
+
+> **La conciliación del BM-1 se conserva.** La última revisión sigue pendiente y hay que poder cargar
+> los códigos que traiga; además el histórico ya recibido debe quedar trazable. Deja de ser el camino
+> normal de codificación, no deja de existir.
+
+### Insumos nuevos que el cliente ofreció (2026-09-02)
+
+- **Los formatos nuevos**, cuando los tenga (los cuatro documentos siguen bloqueados hasta entonces).
+- ✅ **B-71 respondida: SÍ existe versión digital** de los documentos — y además de un **inventario
+  interno que la encargada lleva aparte**. **Hay que pedir ese archivo:** habilita la carga masiva de
+  los ~142 bienes, el catálogo de códigos ya usados (C-4) y el punto de partida de la secuencia (C-1).
+- ✅ **B-72 reinterpretada:** los **saltos en el N° de orden no son bajas**. El listado de la Alcaldía
+  está **ordenado por departamento, no por código**, así que los códigos *parecen* desordenados. Al
+  recibir el digital se ordena por código y se confirma. **Implicación técnica:** el punto de partida
+  es el `MAX` del archivo completo, nunca el último de una hoja o de un departamento.
+
+### Preguntas nuevas para el cliente
+
+| # | Pregunta | Por qué importa |
+|---|---|---|
+| **B-73** | Mientras la Alcaldía no haga esa última revisión, **¿desde qué número arrancamos?** ¿Esperamos la revisión, o partimos del mayor N° de orden del listado interno? | Sin punto de partida no se puede codificar (C-1). Es lo primero que hace falta |
+| **B-74** | La secuencia del N° de orden, **¿es una sola para todo IMATUR** o una por grupo-subgrupo-sección? ¿Sigue siendo de 3 dígitos — qué se hace al pasar de 999? | Define el algoritmo del siguiente número |
+| **B-75** | Si IMATUR ahora clasifica: **¿cuál es la lista de grupos/subgrupos/secciones** que pueden usar? (o al menos los que usan hoy) | Reabre B-60 (C-4) |
+| **B-76** | **¿El código de un bien desincorporado se reutiliza**, o la secuencia nunca recicla? | Evita colisiones y decide si `findByNroOrden` debe mirar también los desincorporados |
+| **B-77** | La relación de bienes nuevos: **¿el monto va en Bs a la fecha de compra?** ¿Cada cuánto se envía — por lote, mensual, al recibir cada bien? | Contenido y disparador del documento |
+| **B-78** | **¿La Alcaldía devuelve algo** (acuse, sello, un BM-1 nuevo) al recibir la relación? | Decide si hay que seguir modelando un documento entrante |
+| **B-79** | **Acta de Desincorporación:** ¿quién firma por IMATUR? ¿Lleva correlativo? ¿Se adjunta el escaneado firmado y **eso** marca los bienes como retirados? | Define la tabla y el flujo del C-5 |
+| **B-80** | **¿Tienen por escrito la notificación** de la Alcaldía con el procedimiento nuevo? | Cambia quién responde por la codificación; conviene tenerlo en el expediente y no depender de una comunicación verbal |
 
 ---
 
@@ -315,13 +386,13 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 
 | # | | Pregunta |
 |---|---|---|
-| ~~B-60~~ | ✅ | ~~Catálogo oficial de grupos/subgrupos/secciones.~~ **Ya no bloquea.** Conocemos la estructura y que los valores los asigna la Alcaldía; IMATUR solo los transcribe. Seguiría siendo útil para un desplegable, pero no es requisito. |
+| **B-60** | 🔴 | **REABIERTA (2026-09-02).** Catálogo oficial de grupos/subgrupos/secciones. Se había cerrado porque «IMATUR solo transcribe»; con el procedimiento nuevo **IMATUR clasifica**, así que el catálogo pasa de comodidad a **requisito** — ver §2-ter C-4 y B-75. |
 | ~~B-61~~ | ✅ | ~~Ejemplos reales de código.~~ **Resuelta con el BM-1:** `2-01-108`, N° de orden de 3 dígitos con ceros a la izquierda (`084`, `131`, `171`…). |
 | ~~B-62~~ | ✅ | ~~Qué significa "cantidad" en el código.~~ **Resuelta:** es la cantidad de la fila y siempre vale 1; no forma parte del identificador. |
 | ~~B-69~~ | ✅ | ~~¿El costo es control interno o la Alcaldía lo exigirá?~~ **Respondida (2026-08-05): es control INTERNO.** Para la Alcaldía es irrelevante, por eso su registro lleva `S/P` aunque IMATUR tenga el informe y la factura. Sin cambios: el sistema ya registra el costo internamente y no lo declara. |
 | ~~B-70~~ | ✅ | ~~¿Cada cuánto llega el BM-1?~~ **Respondida (2026-08-05): es un evento puntual**, sin periodicidad conocida. Sin cambios: el sistema registra cada recepción cuando ocurre, no asume calendario. |
-| B-71 | ▲ | **¿Existe el BM-1 en digital (Excel/Word)?** ⏳ El cliente lo pedirá junto con los demás formatos pendientes; si no existe, se seguirá entregando en físico. **Única pregunta abierta del módulo.** Si aparece, la carga de códigos podría ser automática en vez de teclear bien por bien. |
-| ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Respondida:** es un control de la Alcaldía; no es jurisdicción del sistema seguir la sucesión, solo transcribir lo que asignan y verificar que no se repita en otro bien de IMATUR. Ya implementado así. |
+| ~~B-71~~ | ✅ | ~~¿Existe el BM-1 en digital?~~ **Respondida (2026-09-02): SÍ**, existe versión digital de **todos** los documentos, y además de un **inventario interno que la encargada lleva aparte**. **Pedir ese archivo:** habilita carga masiva de los ~142 bienes, el catálogo de códigos ya usados y el punto de partida de la secuencia. |
+| ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Reinterpretada (2026-09-02): NO son bajas.** El listado está ordenado **por departamento, no por código**, y por eso los códigos parecen desordenados. Se confirmará al ordenar el archivo digital por código. **Implicación:** el punto de partida es el `MAX` de **todo** el archivo, no el último de una hoja o departamento. |
 | ~~B-63~~ | ✅ | ~~¿Cómo se define el umbral de mobiliario?~~ **Respondida (2026-08-05): por el número de empleados del departamento.** Implementado en la mig. 067: `inventario_dotacion` define unidades por empleado y por categoría, y el reporte de **Suficiencia** compara lo que hay contra lo que debería haber. |
 | ~~B-64~~ | ✅ | ~~¿Cómo identifica el sistema a la Coordinadora de Bienes?~~ **Respondida (2026-08-04): por CARGO + DEPARTAMENTO.** Implementado en la mig. 063 con las claves de configuración `bienes_cargo_autoriza` y `bienes_depto_autoriza`. |
 | ~~B-65~~ | ✅ | ~~¿La sede del aeropuerto es un departamento o una ubicación aparte?~~ **Respondida (2026-08-05): es un DEPARTAMENTO más, con su propio coordinador y por tanto su propio responsable.** Verificado antes de crearla: no existía en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH — el único rastro era `ubicaciones.sede`. Creada en la mig. 067 y ubicada bajo la **Dirección de Planificación y Gestión Turística** (mig. 068, confirmado por el cliente). |
@@ -331,11 +402,18 @@ Por eso el sistema necesita **dos ejes independientes**: el **código oficial** 
 
 ### Formatos que faltan por pedir
 - [x] ~~Formato de inventario de la Alcaldía (B-02)~~ — **recibido**: Formulario BM-1, `docs/formatos/`
-- [ ] **Informe / oficio de bienes nuevos** que IMATUR envía a la Alcaldía ← **el más urgente ahora**
-- [ ] Acta administrativa de baja
-- [ ] Oficio de asignación de bien a un empleado
-- [ ] Oficio de donación
-- [ ] Versión digital del BM-1, si existe (B-71)
+> **Actualizado 2026-09-02 (§2-ter):** el cliente enviará los formatos **nuevos** cuando los tenga —
+> el procedimiento cambió, así que los formatos viejos ya no sirven de referencia para dos de ellos.
+
+- [ ] **Relación / informe de bienes nuevos** que IMATUR envía a la Alcaldía ← **el más urgente**.
+      Ahora lleva el **código que IMATUR asigna** y el **monto**
+- [ ] **Acta de Desincorporación** (por lote; la Alcaldía firma y sella = aval). ~~Oficio de retiro~~
+      **fuera del alcance**
+- [ ] **Acta de asignación** de bien a un empleado ("acta de encargado") — sigue vigente
+- [ ] Oficio de donación — sigue vigente
+- [x] ~~Versión digital del BM-1, si existe (B-71)~~ — **respondido: SÍ existe** versión digital de
+      todos los documentos, **y de un inventario interno que la encargada lleva aparte**. **Pedir ese
+      archivo** (carga masiva de los ~142 bienes + catálogo de códigos + punto de partida)
 
 ---
 
@@ -384,11 +462,14 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 | # | Qué | Por qué está bloqueado |
 |---|---|---|
-| R-1 | **Informe / oficio de bienes nuevos** para enviar a la Alcaldía | Es el **dolor #1 declarado** (B-05). Sin el formato real, cualquier cosa que generemos habría que rehacerla. |
-| R-2 | **Acta administrativa de baja** (firma Coordinadora + Presidencia) + oficio de retiro a la Alcaldía | B-39. Ídem: hace falta el formato. |
-| R-3 | **Acta / oficio de asignación** de bien a responsable, que firma el empleado | B-29. Ídem. |
+| R-1 | **Relación / informe de bienes nuevos** para enviar a la Alcaldía | Es el **dolor #1 declarado** (B-05). Sin el formato real, cualquier cosa que generemos habría que rehacerla. **Cambió de naturaleza (§2-ter):** ahora lleva el código que asigna IMATUR y el monto, y es informativa — no pide inspección. |
+| R-2 | **Acta de Desincorporación** (firma Coordinadora + Presidencia; la Alcaldía firma y sella como aval) | B-39. **Reducida y renombrada (§2-ter):** un solo documento **por lote**, ~~sin oficio de retiro~~. El nombre «Acta de Desincorporación» es exigencia del cliente. |
+| R-3 | **Acta de asignación** de bien a responsable, que firma el empleado ("acta de encargado") | B-29. Sigue vigente. Ídem: hace falta el formato. |
+| R-11 | **Oficio de donación** | Sigue vigente. Ídem. |
+| R-12 | **Codificación interna con secuencia propia** (C-1…C-4, C-7) | 🔒 No es formato: espera el **punto de partida** (B-73) y el **catálogo de grupos/subgrupos/secciones** (B-75, reabre B-60). El resto es programable en cuanto lleguen esos dos datos. |
+| R-13 | **Acta de Desincorporación por lote a nivel de datos** (C-5, C-6) | La tabla y el flujo (registrar el acta sellada → marcar retirados todos sus bienes) **se pueden construir sin el formato**; solo el imprimible depende de él. |
 
-> Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible.
+> Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible y el agrupamiento por acta.
 
 **Implementables ya** — ✅ **TODOS HECHOS** (mig. 065 y 067)
 
@@ -404,13 +485,20 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 ### 12.3 Preguntas salientes al cliente
 
-**Bloquean R-1, R-2 y R-3 — pedir los formatos físicos:**
+**Bloquean R-1, R-2, R-3 y R-11 — pedir los formatos** (el cliente los enviará *cuando tenga los
+nuevos*, 2026-09-02; **pedirlos en digital**, que sí existen):
 
-- [ ] Informe/oficio de bienes nuevos que IMATUR envía a la Alcaldía ← **el más urgente**
-- [ ] Acta administrativa de baja
-- [ ] Oficio de retiro que se manda a la Alcaldía tras la baja
-- [ ] Acta/oficio de asignación de un bien a un empleado
+- [ ] Relación/informe de bienes nuevos, **con código y monto** ← **el más urgente**
+- [ ] **Acta de Desincorporación** (por lote)
+- [x] ~~Oficio de retiro tras la baja~~ — **ELIMINADO del alcance** (§2-ter): el acta sellada es el aval
+- [ ] Acta de asignación de un bien a un empleado ("acta de encargado")
 - [ ] Oficio de donación
+- [ ] **El inventario interno que la encargada lleva aparte** (archivo digital) — no es un formato,
+      es el insumo que desbloquea la carga de los ~142 bienes, el catálogo de códigos y el punto de
+      partida de la secuencia
+
+**Bloquean R-12 (codificación interna):** B-73 (punto de partida) y B-75 (catálogo de
+grupos/subgrupos/secciones). Las 8 preguntas nuevas están en **§2-ter**.
 
 **Preguntas abiertas** (ninguna bloquea lo implementable):
 
@@ -421,10 +509,11 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 | ~~B-66~~ | ✅ | **Respondida:** sí se eliminan. Hecho (mig. 067). |
 | ~~B-67~~ | ✅ | **Respondida:** etiqueta "Por retirar". Hecho (mig. 067). |
 | ~~B-68~~ | ✅ | **Respondida:** automático, derivado del departamento (mig. 066). |
-| ~~B-69~~ | ✅ | **Respondida:** control interno; para la Alcaldía es irrelevante. |
+| ~~B-69~~ | ⚠️ | **Matizada (2026-09-02):** era control interno, pero el **monto sí se declara** en la relación de bienes nuevos del procedimiento nuevo. El dato ya se captura. |
 | ~~B-70~~ | ✅ | **Respondida:** evento puntual, sin periodicidad. |
-| B-71 | ▲ | ¿Existe el BM-1 en **digital** (Excel/Word)? Si la Alcaldía lo arma en computadora, la carga de códigos podría ser automática en vez de teclear bien por bien. |
-| ~~B-72~~ | ✅ | ~~¿Qué significan los saltos en el N° de orden?~~ **Respondida (2026-08-05):** la numeración es un registro que lleva **la Alcaldía** con criterio propio, garantizando que no se repita en ningún bien. IMATUR la desconoce y solo la transcribe. Sin cambios de código: el sistema ya se limita a copiarla. |
+| ~~B-71~~ | ✅ | **Respondida (2026-09-02): SÍ hay digital** de todos los documentos y del **inventario interno de la encargada**. Pedir los archivos. |
+| ~~B-72~~ | ✅ | **Reinterpretada (2026-09-02): los saltos NO son bajas** — el listado va por departamento, no por código. Se confirma al ordenar el digital por código. |
+| **B-73…B-80** | 🔒 | **Nuevas (2026-09-02)** — punto de partida de la secuencia · alcance y longitud de la numeración · catálogo de clasificación · reutilización de códigos · contenido y frecuencia de la relación · si la Alcaldía devuelve acuse · firmas/correlativo del acta de desincorporación · notificación por escrito del procedimiento. **Enunciadas en §2-ter.** |
 
 ### 12.4 Antes de usarlo en producción
 

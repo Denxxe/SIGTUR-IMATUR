@@ -33,9 +33,35 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 >
 > El análisis y el plan de construcción derivado están en **`docs/PLAN_MODULO_BIENES.md`**.
 >
-> **Quedaron 9 preguntas abiertas o nuevas (B-60 a B-68)** — ver §9 de ese plan. Las dos
-> que bloquean el arranque son el **catálogo oficial de grupos/subgrupos/secciones de la
-> Alcaldía** y **tres ejemplos reales de código BN**.
+> ~~**Quedaron 9 preguntas abiertas o nuevas (B-60 a B-68)**~~ — B-63…B-72 se cerraron entre el
+> 2026-08-05 y el 2026-09-02 (mig. 062-069). Estado al día en §9 y §12 del plan.
+
+> ## ⚠️ ACTUALIZACIÓN 2026-09-02 — cambió el procedimiento: **varias respuestas de abajo quedaron superadas**
+>
+> La Alcaldía notificó a IMATUR un procedimiento nuevo. **Lo que sigue vigente es el formato del
+> código y todo el expediente por bien; cambia quién codifica.**
+>
+> | | Ahora |
+> |---|---|
+> | **Codificación** | La asigna **IMATUR**, como ente autónomo, continuando la secuencia desde el último N° de orden que la Alcaldía deje en su **última revisión — que todavía no se ha hecho**. La Alcaldía **ya no viene a codificar** |
+> | **Oficio de bienes nuevos** | Pasa a ser una **relación informativa** de bienes **ya codificados**, con su **monto**, para que la Alcaldía mantenga su registro patrimonial |
+> | **Baja** | El documento es el **Acta de Desincorporación**, **por lote**; la Alcaldía la **firma y sella** y eso es el aval del retiro. **No habrá oficio de retiro** |
+> | **Acta de encargado** y **oficio de donación** | **Siguen vigentes** |
+>
+> **Respuestas de este cuestionario que quedan superadas (no citarlas como vigentes):**
+> **B-03**, **B-10**, **B-11**, **B-12** y **B-14** (quién codifica y cuándo) · **B-39** y **B-40**
+> (el oficio de retiro deja de existir; el aval es el acta sellada) · **B-72** (los saltos en el N° de
+> orden **no son bajas**: el listado va **por departamento, no por código**).
+>
+> **Respuestas nuevas de la misma conversación:** **B-71 = SÍ** existe versión digital de todos los
+> documentos **y de un inventario interno que la encargada lleva aparte** (pedirlo: desbloquea la carga
+> de los ~142 bienes, el catálogo de códigos en uso y el punto de partida de la secuencia) · **B-69
+> matizada**: el monto **sí** se declara en la relación.
+>
+> **Preguntas nuevas B-73…B-80** (punto de partida · alcance y longitud de la secuencia · catálogo de
+> clasificación —**reabre B-60**— · reutilización de códigos · contenido y frecuencia de la relación ·
+> acuse de la Alcaldía · firmas y correlativo del acta · notificación por escrito): enunciadas en
+> **`docs/PLAN_MODULO_BIENES.md` §2-ter**, y en lenguaje de cliente en `PREGUNTAS_CLIENTE.md` A7-A9.
 
 ## A. Panorama general
 
@@ -57,6 +83,11 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 | B-09 | ○ | ¿Existen bienes que se compran **en lote** y se registran juntos (ej. 20 sillas iguales)? ¿Cada silla lleva su código o el lote completo lleva uno? | se registra individual asi se compre en lote. cada uno lleva su codigo.
 
 ## C. Identificación del bien
+
+> ⚠️ **B-10, B-11, B-12 y B-14 quedaron superadas el 2026-09-02:** el código lo asigna ahora **IMATUR**
+> (secuencia propia desde el último que deje la Alcaldía), un bien nuevo **ya no espera** inspección
+> para tener su N° de orden, y la etiqueta puede imprimirse en el acto. El **formato del código no
+> cambia**. Ver el bloque de actualización al inicio de la Parte 1.
 
 | # | | Pregunta |
 |---|---|----------|
@@ -109,6 +140,12 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 | B-36 | 💡 | ¿Le serviría un **historial completo por bien** ("hoja de vida"): desde que se compró, cada movimiento, cada reparación, hasta la baja? | si estaria bien un historial por cada bien, de los movimeintos, desde que se compro, hasta que se daño y los traslado, movimeinto , persona encargada del bien, fecha... etc.
 
 ## H. Bajas y desincorporación
+
+> ⚠️ **Actualizado 2026-09-02:** el documento se llama **Acta de Desincorporación** (así debe
+> mostrarse en el sistema), es **por lote** —lista todos los bienes que se van a retirar— y la
+> Alcaldía la **firma y sella** como aval. **El oficio de retiro de B-39/B-40 deja de existir.**
+> Lo demás de esta sección sigue vigente: motivos, firmas de Coordinadora + Presidencia, denuncia en
+> robo/pérdida, y que el bien sale del inventario activo conservando su registro (B-38).
 
 | # | | Pregunta |
 |---|---|----------|
@@ -299,14 +336,23 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 Esto es lo que más acelera el trabajo. **Un formato real evita semanas de suposiciones.**
 
 ### Bienes
-- [ ] Formato de inventario que se entrega a la Contraloría o la Alcaldía
-- [ ] Acta o formato de **entrega de bien a un empleado**
-- [ ] Acta o formato de **baja/desincorporación**
-- [ ] Lista de **categorías** de bienes que usan
-- [ ] Lista de **ubicaciones** (oficinas, depósitos)
-- [ ] 3 ejemplos reales de **código BN** (para entender el formato)
-- [ ] Último inventario físico realizado (aunque esté en papel)
-- [ ] Si controlan consumibles: lista de ítems y sus mínimos
+
+> **Estado al 2026-09-02.** El cliente enviará los formatos **nuevos** cuando los tenga: dos de ellos
+> cambiaron con el procedimiento. **Pedirlos en digital** — confirmó que existen.
+
+- [x] ~~Formato de inventario que se entrega a la Alcaldía~~ — **recibido:** Formulario BM-1 (`docs/formatos/`)
+- [ ] **Relación/informe de bienes nuevos**, con el **código que asigna IMATUR** y el **monto** ← *el más urgente*
+- [ ] **Acta de Desincorporación** (por lote, sellada por la Alcaldía). ~~Oficio de retiro~~: fuera del alcance
+- [ ] Acta o formato de **entrega de bien a un empleado** ("acta de encargado")
+- [ ] **Oficio de donación**
+- [ ] ⭐ **El inventario interno que la encargada lleva aparte, en digital** — desbloquea la carga de
+      los ~142 bienes, la lista de códigos en uso y el punto de partida de la secuencia
+- [ ] **Lista de grupos / subgrupos / secciones** que pueden usar al codificar (B-75, reabre B-60)
+- [ ] Si la tienen: la **notificación por escrito** de la Alcaldía con el procedimiento nuevo (B-80)
+- [x] ~~Lista de **categorías** de bienes~~ — 11 categorías internas sembradas (mig. 062), a validar con el cliente
+- [x] ~~Lista de **ubicaciones**~~ — sembradas en la mig. 069 (una por departamento + Depósito General)
+- [x] ~~3 ejemplos reales de **código BN**~~ — obtenidos del BM-1 (`2-01-108` + N° de orden de 3 dígitos)
+- [x] ~~Si controlan consumibles: lista de ítems y sus mínimos~~ — **no controlan consumibles** (B-07)
 
 ### Rutas
 - [ ] **Informe de una ruta ya ejecutada** ← *el más importante*
@@ -328,7 +374,21 @@ Estas son las respuestas que **más impacto tendrían** si difieren de lo que as
 
 ### Bienes
 
-| Pregunta | Lo que el sistema asume hoy | Riesgo si la respuesta difiere |
+> ### ✅ Esta tabla es **historia**: describe el estado anterior a las mig. 062-069
+> Todas sus filas se resolvieron con el levantamiento y la reconstrucción del módulo (H-04 cerrado,
+> responsable derivado, costo/proveedor/garantía, 11 categorías, ubicaciones sembradas, estatus vs
+> condición). **Se conserva para saber de dónde venía cada decisión**, no como estado actual — para eso,
+> `docs/PLAN_MODULO_BIENES.md` §12.
+>
+> **El riesgo vivo es otro, y es del 2026-09-02:**
+>
+> | Cambio | Lo que el sistema hace hoy | Qué implica |
+> |---|---|---|
+> | **IMATUR codifica** (ya no la Alcaldía) | `Inventario::codificar()` **transcribe** el código de un BM-1 recibido y marca `verificado_alcaldia = TRUE` | Secuencia propia con punto de partida configurable, separar «codificado» de «verificado por la Alcaldía», y **catálogo de clasificación** (reabre B-60). C-1…C-4 del plan |
+> | **Acta de Desincorporación por lote** | `marcarRetirado()` confirma el retiro **bien por bien**; no existe la entidad acta | Tabla cabecera+renglones; al cargar el acta sellada se marcan retirados todos sus bienes. C-5/C-6 |
+> | **La relación declara el monto** | El costo se captura pero se documentaba como control interno (B-69) | Solo cambia el documento; el dato ya está |
+
+| Pregunta | Lo que el sistema asumía (pre-062) | Riesgo que tenía |
 |---|---|---|
 | **B-38** (baja desaparece o no) | 🔴 **Bug conocido (H-04):** registrar un movimiento de "Baja" **no** cambia la condición del bien ni lo saca del listado activo. Sigue contándose en KPIs e indicadores CMI-I01/I03 | **El inventario reporta números incorrectos hoy.** Se arregla en cualquier escenario; la respuesta solo define si se marca "Dado de baja" o se excluye |
 | **B-26/B-27** (responsable) | No existe responsable en la ficha del bien; solo se registra un empleado en cada *movimiento* | Si el responsable debe ser nominal y permanente → columna nueva o tabla de asignación (**cambio de esquema**) |
@@ -356,10 +416,18 @@ Estas son las respuestas que **más impacto tendrían** si difieren de lo que as
 ## Preguntas ya cerradas — no volver a abrir
 
 - **D-RT01:** cada registro es una ejecución independiente *(pero conviene revalidarlo con R-07: se decidió temprano y es la base del módulo)*
-- **D-IN01:** la baja solo requiere registro interno, sin acto administrativo imprimible *(revalidar con B-39)*
-- **D-IN05:** Durable/Fungible — implementado en la migración 044
+- ~~**D-IN01:** la baja solo requiere registro interno, sin acto administrativo imprimible~~ —
+  **DESMENTIDA por B-39:** la baja **sí** es un acto administrativo con acta firmada. Desde el
+  2026-09-02 ese documento es el **Acta de Desincorporación**, por lote y sellada por la Alcaldía.
+  *(Buen ejemplo de por qué se revalidan las decisiones tempranas.)*
+- ~~**D-IN05:** Durable/Fungible — implementado en la migración 044~~ — **revertido:** `tipo_bien` y
+  `cantidad` se eliminaron en la mig. 067 (B-66); IMATUR no lleva consumibles y el registro es individual
 - Módulos retirados: instituciones externas, actividades de ruta, inventario de ruta, inventario de taller, nivel de dificultad
 
 ## Nota sobre la documentación de estos módulos
 
-`docs/REGLAS_NEGOCIO_Inventario.md` y `docs/REGLAS_NEGOCIO_Rutas.md` están **desactualizados** (última revisión 2026-05-22). Describen como vigentes estructuras ya eliminadas: `ruta_inventario`, `taller_inventario`, `nivel_dificultad`, `instituciones_externas` y `nombre_facilitador_externo`. Conviene reescribirlos **después** de esta ronda de preguntas, con las respuestas en la mano.
+~~`docs/REGLAS_NEGOCIO_Inventario.md` y `docs/REGLAS_NEGOCIO_Rutas.md` están **desactualizados**~~ —
+✅ **Hecho.** `REGLAS_NEGOCIO_Inventario.md` se reescribió por completo el 2026-08-05 con las
+respuestas en la mano (RN-IN01…RN-IN13) y se actualizó el **2026-09-03** con el cambio de
+procedimiento; `REGLAS_NEGOCIO_Rutas.md` se saneó el 2026-08-28. Ninguno de los dos describe ya
+estructuras eliminadas.

@@ -1,6 +1,10 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-08-28 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
+**Última actualización:** 2026-09-03 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
+
+> ⚠️ **2026-09-02 — Bienes: la Alcaldía cambió el procedimiento de codificación.** IMATUR pasa a
+> asignar el código de sus propios bienes y el acta de baja pasa a ser **Acta de Desincorporación**
+> por lote (sin oficio de retiro). **Ver §3.4** y `docs/PLAN_MODULO_BIENES.md` §2-ter.
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -27,7 +31,9 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | 1 | **Verificación en navegador** de lo construido este ciclo: las 4 pantallas de Nómina, la tarjeta «Datos de nómina» del expediente, Ubicaciones con sede/depósito, y el menú lateral con cada uno de los 6 roles | Corto | Todo se probó por BD y por pruebas automatizadas, **nada se abrió en el navegador**. Es el riesgo más alto que queda |
 | 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver §2 |
 | 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver §2 |
-| 4 | Deuda técnica de §5.2: `label[for]` en formularios restantes · whitelist en `Taller::actualizarPersona` · dividir `ReportesController` (~3.200 líneas) · estilos inline → clases · más pruebas | Gradual | No bloquea entrega; hacer cuando haya holgura |
+| 4 | 🔴 **Corregir H-16** — el reporte «Bienes Dados de Baja» consulta la **papelera** (`is_active = FALSE`) en vez de `estatus = 'Dado de baja'`: las desincorporaciones reales no aparecen y los registros borrados por error sí. Listado + 2 exportaciones | Corto | Es un **dato falso** en un reporte, como H-14. Y la desincorporación acaba de ganar peso con el cambio del 2026-09-02 |
+| 5 | **Acta de Desincorporación a nivel de datos** (C-5): tabla del acta + lote + marcar retirados en bloque al cargarla firmada | Medio | El **flujo** no depende del formato del cliente; solo el imprimible. Adelanta la mitad del trabajo |
+| 6 | Deuda técnica de §5.2: `label[for]` en los formularios restantes (quedan 76, dentro de bucles) · whitelist en `Taller::actualizarPersona` · estilos inline → clases (quedan ~2.199) · más pruebas. *(Dividir `ReportesController` ya se hizo el 2026-08-28: 3.405 → 101 líneas.)* | Gradual | No bloquea entrega; hacer cuando haya holgura |
 
 ### 0.2 Espera al cliente (sección 3)
 
@@ -35,11 +41,11 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
-| 🔴 1 | **Informe/oficio de bienes nuevos** (formato) | R-1: el dolor #1 declarado del cliente |
+| 🔴 1 | **Relación/informe de bienes nuevos** (formato **nuevo**, ver §3.4) + **B-73** punto de partida de la secuencia + **B-75** catálogo de clasificación | R-1 y R-12: el dolor #1 del cliente, ahora con IMATUR codificando |
 | 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (ver §2, mig. 073). Con un mes basta |
 | 🔴 3 | **Cuestionario de Rutas** (Parte 2, 64 preguntas) | Único módulo sin levantamiento. R-07/R-08 pueden forzar rediseño |
 | 🔴 4 | **N-3** — «días adicionales» de la hoja INTERESES, **con recorte de pantalla** | Fase N-E: Liquidación de Prestaciones Sociales |
-| 🟡 5 | Acta de baja + oficio de retiro · acta de asignación · oficio de donación | R-2 y R-3 |
+| 🟡 5 | **Acta de Desincorporación** · acta de asignación · oficio de donación · **el inventario digital de la encargada** (~~oficio de retiro~~: fuera del alcance) | R-2, R-3, R-11 y la carga de los ~142 bienes |
 | 🟡 6 | **N-1** (días base 75 vs 85/45) y **N-2** (semanas ×4/×5) | No bloquean: son parámetros. Vuelven **definitivos** los montos |
 | 🟡 7 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
 | 🟢 8 | Planilla física de asistencia · D-RT02 tarifa · D-RT03 informe automático · D-FO05 metas · D-FO08-bis facilitadores · D-OF03 libro de correspondencia · D-TX03 históricos | Mejoras y reportes puntuales |
@@ -52,7 +58,7 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 | Datos de nómina por trabajador (sueldo base, grado, fecha de ingreso a la administración, hijos, cuenta bancaria) | **1 fila** de prueba en `empleado_salarios` |
 | Cesta ticket y tasa del dólar por mes | 1 mes cargado (2026-07, valores de la plantilla) |
 | Catálogo de cargos | **5** cargos |
-| Los ~142 bienes | **0** — ya se puede cargar (ubicaciones sembradas en la mig. 069) |
+| Los ~142 bienes | **0** — ya se puede cargar (ubicaciones sembradas en la mig. 069). **2026-09-02: pedir el inventario digital que lleva la encargada** — permite carga masiva en vez de tecleo, y de paso trae el catálogo de códigos en uso y el punto de partida de la secuencia (B-73/B-75) |
 | Coordinador de *Compra de Bienes y Servicios* | **Vacante** → los movimientos de bienes están bloqueados por diseño (B-32) |
 | Datos institucionales de configuración | Revisar: firmante «Director General» vs cargo «Presidenta»; directora «Maria Maza» |
 | Configuración de producción | `URL_ROOT`, credenciales de BD (hoy `postgres/1234`), clave del admin, SMTP |
@@ -71,7 +77,7 @@ inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-
 - **RRHH:** completo salvo **Nómina**. **Bono Vacacional v1 ✅** (registro + reporte, mig.059); Vacaciones (días) ✅; egreso/reingreso ✅; traslados ✅; disciplina ✅; constancias ✅.
 - **Nómina:** 🟢 **motor de cálculo construido (2026-08-27, mig. 072).** Fases N‑A/N‑B/N‑C hechas: las primas se derivan, los porcentajes viven en tablas, cesta ticket y tasa del dólar tienen vigencia mensual, hay quincena con snapshot/recálculo/cierre y export de 6 hojas. Las 3 preguntas abiertas **ya no bloquean** (N‑1 y N‑2 son parámetros). Fases **N‑A a N‑D hechas** (mig. 072 y 073): el bono vacacional también calcula sus primas, aunque su **total** sigue confirmándose a mano porque la fórmula no está en ninguna fuente (el sistema muestra su estimación al lado, con la diferencia). Falta solo **N‑E** (Liquidación, bloqueada por N‑3). Lo que realmente falta son **insumos**: sueldos base, grados, cuentas bancarias, cesta ticket y tasa de cada mes. Antes: replanteamiento (2026-08-07). Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
-- **Inventario (Bienes):** 🔄 **En replanteamiento.** El levantamiento del 2026-08-04 (59 preguntas respondidas) reveló que lo construido es un CRUD genérico, mientras que el instituto necesita un **expediente administrativo por bien** con ciclo de vida gobernado por la Alcaldía (codificación, actas, oficios). Plan por fases en `docs/PLAN_MODULO_BIENES.md`.
+- **Inventario (Bienes):** fases 1-4 construidas (mig. 062-069) sobre el levantamiento del 2026-08-04 (59 preguntas), que reveló que lo que hacía falta era un **expediente administrativo por bien**, no un CRUD. ⚠️ **2026-09-02: la Alcaldía cambió el procedimiento** — IMATUR pasa a **asignar el código** de sus bienes y el acta de baja pasa a ser **Acta de Desincorporación** por lote (sin oficio de retiro). Lo construido sirve igual, pero hay **7 cambios de código pendientes**, **B-60 reabierta** y 8 preguntas nuevas: ver §3.4 y `docs/PLAN_MODULO_BIENES.md` §2-ter.
 - **Turismo (Rutas):** cuestionario de descubrimiento **pendiente de responder** (Parte 2 de `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`). Prioridad: R-07/R-08 (catálogo vs ejecución) — de esa respuesta depende si hay rediseño.
 - **Cuello de botella de la entrega:** ya **no es código**, son **decisiones/insumos del cliente** (sección 3).
 
@@ -387,7 +393,9 @@ movimientos, por diseño B-32 — hoy el responsable derivado sale como vacante)
 | ✅ Docs | **`REGLAS_NEGOCIO_Inventario.md` reescrito** | La versión de 2026-05-22 describía un CRUD y daba por vigentes `ruta_inventario`, `taller_inventario` y Durable/Fungible. Ahora documenta las 13 reglas reales (RN-IN01…RN-IN13) y **lo que el sistema no hace por decisión**. |
 | ✅ | **Verificado** | 22 pruebas nuevas sobre la BD (departamento del aeropuerto y su responsable derivado, ciclo Por retirar → Retirado con sus rechazos, análisis de suficiencia con déficit real y exclusión del depósito) + regresión completa: 16 + 26 + 9 pruebas de las fases anteriores, suite 18/18. |
 
-> **Queda 1 sola pregunta abierta del módulo: B-71** — ¿existe el BM-1 en digital? El cliente lo pedirá junto con los formatos pendientes.
+> ~~**Queda 1 sola pregunta abierta del módulo: B-71**~~ — **superado el 2026-09-02** (§3.4): B-71 y
+> B-72 quedaron respondidas, pero el **cambio de procedimiento** abrió 8 preguntas nuevas
+> (B-73…B-80) y **reabrió B-60**.
 
 ### 2026-08-05 — Bienes: responsable automático (mig. 066) — responde B-68 y B-72
 
@@ -718,7 +726,38 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Decisión del cliente:** los cargos son **transversales/generales** (no por departamento), tal como ya estaba implementado. El empleado tiene `id_cargo` e `id_departamento` independientes; un mismo catálogo de cargos sirve para todos los departamentos.
 - **Acción:** ninguna. Se evaluó vincular cargo↔departamento (mig. tentativa 053) y se **descartó/revirtió** por esta decisión.
 
-### 3.4 ✅ Inventario — **LEVANTAMIENTO COMPLETO (2026-08-04)**
+### 3.4 ⚠️ Inventario — levantamiento completo (2026-08-04), **pero el procedimiento cambió (2026-09-02)**
+
+> ### 🔴 2026-09-02 — La Alcaldía notificó un procedimiento nuevo: **IMATUR codifica sus propios bienes**
+>
+> Detalle completo, consecuencias en el código (C-1…C-7) y las 8 preguntas nuevas (B-73…B-80) en
+> **`docs/PLAN_MODULO_BIENES.md` §2-ter**. Resumen:
+>
+> | Qué cambia | |
+> |---|---|
+> | **Codificación** | IMATUR asigna el código, **continuando la secuencia** desde el último que la Alcaldía deje en su **última revisión — que todavía no se ha hecho**. La Alcaldía ya no viene a codificar |
+> | **Informe de bienes nuevos** | Deja de pedir inspección: pasa a ser una **relación** de bienes **ya codificados**, con su **monto**, para que la Alcaldía mantenga su registro patrimonial |
+> | **Acta de baja** | Se llama **Acta de Desincorporación** (así debe mostrarse), es **por lote** y la Alcaldía la **firma y sella** = aval del retiro. **El oficio de retiro sale del alcance** |
+> | **Acta de asignación** ("acta de encargado") y **oficio de donación** | **Siguen vigentes**, hay que construirlos |
+> | **Formatos** | El cliente los enviará **cuando tenga los nuevos** (dos de los cuatro cambiaron) |
+>
+> **Lo construido sigue sirviendo** (registro, expediente, movimientos, mantenimiento, responsable
+> derivado, conteo): cambia **quién ejecuta** la codificación. Pero **nada de esto está
+> implementado** y hay dos bloqueos nuevos que no son formatos:
+>
+> - **B-73 — punto de partida de la secuencia** (sin él no se puede codificar).
+> - **B-75 — catálogo de grupos/subgrupos/secciones**: **reabre B-60**, que se había cerrado con el
+>   argumento «IMATUR solo transcribe». Si ahora clasifica, necesita la lista de valores válidos.
+>
+> **Respuestas útiles de la misma conversación:**
+> - ✅ **B-71: sí hay versión digital** de todos los documentos **y de un inventario interno que la
+>   encargada lleva aparte** → **pedir ese archivo**: desbloquea la carga de los ~142 bienes, el
+>   catálogo de códigos en uso y el punto de partida.
+> - ✅ **B-72: los saltos en el N° de orden NO son bajas** — el listado va **por departamento, no por
+>   código**. Se confirmará al ordenar el digital por código. El punto de partida es el `MAX` de
+>   **todo** el archivo, no el último de una hoja.
+> - ⚠️ **B-69 matizada:** el costo era control interno, pero el **monto sí se declara** en la nueva
+>   relación. El dato ya se captura.
 
 El cliente respondió las **59 preguntas** del cuestionario de descubrimiento
 (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 1). El análisis y el plan de
@@ -746,7 +785,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | 🔴 Hallazgo | **El código oficial no clasifica.** Sillas, mesas, pizarra, aire acondicionado y router comparten `2-01-108`. El catálogo de la Alcaldía **no distingue** equipo tecnológico de mobiliario → el sistema necesita **dos ejes**: código oficial (para la Alcaldía) + categoría interna (para los reportes de la Presidencia). |
 | 🟡 B-69…B-72 | Nuevas: valores en "S/P" pese a que sí registran costo · cada cuánto llega el BM-1 · si existe versión digital (permitiría carga automática de códigos) · si los saltos en el N° de orden son bajas. |
 | 🟡 B-63…B-68 | Umbral de mobiliario · cómo identificar a la Coordinadora de Bienes · sede del aeropuerto · confirmar eliminación de `tipo_bien`/`cantidad` (mig. 044) · destino del bien dado de baja · responsable derivado o manual. Ver §9 del plan. |
-| 🔴 Formatos | **Informe de bienes nuevos** que IMATUR envía a la Alcaldía (el más urgente ahora), acta de baja, oficio de asignación, oficio de donación. El formato de inventario de la Alcaldía **ya se recibió**. |
+| 🔴 Formatos | **Actualizado 2026-09-02:** **relación de bienes nuevos** (el más urgente — ahora con código y monto), **Acta de Desincorporación** (por lote), **acta de asignación** y **oficio de donación**. ~~Oficio de retiro~~ **eliminado del alcance**. El cliente los enviará **cuando tenga los formatos nuevos**; pedirlos **en digital**. El formato de inventario de la Alcaldía (BM-1) **ya se recibió**. |
 
 ### 3.5 Turismo (Rutas)
 | ID | Pregunta |
@@ -789,6 +828,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | H-12 | **El sidebar contradice al RBAC dinámico.** El Router resuelve permisos desde `permisos_rol` (editable en *Roles y Permisos*), pero `views/inc/header.php` los tenía cableados por número de rol (`in_array($rol,[1,2,3,5])`, 8 casos) | ✅ **Cerrado (2026-08-27, sin migración).** El sidebar se genera con `RolesController::getNavegacion()` + `getNavegacionVisible()`, que resuelven la visibilidad con `roleHasModulo()` — el mismo mapa del Router. Fallaba en **los dos sentidos** y ambos quedaron corregidos: el rol 2 tenía `PasantesController`/`UsuariosController` y no veía los enlaces, el rol 6 tenía `VisitantesController` y tampoco; al revés, «Reportes» se mostraba a todos y el rol 5 (que no lo tiene) aterrizaba en *Acceso Denegado*. Lo no delegable (Bitácora, Municipios, Parroquias) queda marcado con `soloAdmin` en la misma definición. Verificado simulando los 6 roles |
 | H-13 | **Tabla huérfana `actividades_ruta`**: cero referencias en `app/` desde que el módulo se retiró (2026-05-31) | ✅ **Cerrado (mig. 070).** `DROP TABLE ... CASCADE`. Verificado antes de soltarla: 0 filas, 0 referencias en `app/`, **0 registros en `audit_logs`** — por eso no hizo falta conservar etiqueta en `auditoria/index.php`. Se retiró también su `setval` de `009_fix_sequences.sql`, que habría hecho fallar esa migración en instalaciones ya actualizadas. 56 → 55 tablas |
 | H-14 | **`rutas.tiene_tarifa`/`tarifa_monto` nunca se escriben** pero sí se leían: el reporte decía **«Gratuita» para toda ruta, siempre** — dato falso, no solo columna inerte | ✅ **Cerrado (2026-08-27, sin migración).** Se retiró la columna Tarifa del reporte de rutas (vista + export a Excel, con su fila de totales recolumnada). El PDF nunca la traía. **Las columnas se conservan** a la espera de D-RT02: si el cliente confirma que se cobra, se implementa la captura y se reactiva; si descarta el cobro, se eliminan |
+| **H-16** | 🔴 **ABIERTO (2026-09-03) — el reporte «Bienes Dados de Baja» mide la papelera, no las desincorporaciones.** Desde la mig. 062 una baja es `estatus = 'Dado de baja'` **conservando `is_active = TRUE`** (el bien sale del inventario activo pero su registro se preserva, B-38), mientras `is_active = FALSE` es la **papelera** de registros creados por error. Las tres consultas de `ReportesInventarioTrait::bajasInventario()` (listado + total histórico + bajas del año) filtran por `is_active = FALSE AND deleted_at IS NOT NULL`: **una desincorporación real nunca aparece**, y un registro borrado por equivocación **sí** aparece contado como baja. Es el mismo error de fondo que H-04, sobrevivió a la reconstrucción del módulo porque el reporte no se revisó al separar `estatus` de `condicion` | ⏳ **Por corregir.** El dato correcto ya existe: `Inventario::desincorporados()` (filtra `EST_BAJA`), que es lo que usa la pestaña *Desincorporados* del listado. Hay que apuntar el reporte y sus **dos exportaciones** ahí, y fechar por el movimiento de baja (`actividad_inventario`) en vez de por `deleted_at`. Sin migración. Documentado en `INDICADORES_GESTION.md` §4.7. **Gana relevancia con el cambio del 2026-09-02:** la desincorporación pasa a ser el flujo con documento propio (Acta de Desincorporación) |
 | H-15 | **Las evidencias de talleres eran el último archivo de usuario en `public/uploads/`**: legibles por URL sin control de rol, y el enlace `URL_ROOT.'/public/uploads/...'` **se rompía bajo el vhost** `SIGTUR-IMATUR.test` (donde `public/` ya es la raíz), así que solo se veían en una de las dos URLs documentadas. El bloque de subida además estaba **duplicado** en `store()` y `cambiarEstado()`, y ninguna copia validaba MIME real ni tamaño (confiaban en `$_FILES['type']`, que lo manda el cliente) | ✅ **Cerrado (2026-08-27, sin migración).** Van a `storage/uploads/talleres/` servidas por `DescargaController::taller()` (roles 1,3); subida unificada en `TalleresController::procesarEvidencias()` con extensión + MIME real + ≤5 MB, igual que expedientes/bienes. **`public/uploads/` se eliminó por completo** (quedaban dos carpetas vacías de la migración de junio) y se limpió su bloque del `.gitignore` |
 
 ---
@@ -799,6 +839,10 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 
 | Módulo | Tarea | Origen |
 |--------|-------|--------|
+| **Bienes** | 🔴 **Corregir H-16**: el reporte de bienes dados de baja apunta a la papelera en vez de a `estatus = 'Dado de baja'` (listado + 2 exportaciones). Sin migración, sin esperar al cliente | §4 H-16 |
+| **Bienes** | **Acta de Desincorporación a nivel de datos** (R-13/C-5): tabla cabecera+renglones, armado del lote, y al cargar el acta sellada marcar retirados todos sus bienes. **Solo el imprimible depende del formato**; el flujo no | §3.4 · plan §2-ter |
+| **Bienes** | **Renombrar «Dado de baja» → «Desincorporación»** en la UI (C-6). Decidir si se toca solo el rótulo del documento o también el valor del estatus (eso sí requiere migración por el CHECK) | §3.4 · plan §2-ter |
+| **Bienes** | **Codificación interna con secuencia propia** (R-12/C-1…C-4, C-7) — 🔒 espera **B-73** (punto de partida) y **B-75** (catálogo de clasificación). El motor se puede construir antes si el punto de partida queda como clave de configuración | §3.4 · plan §2-ter |
 | RRHH | Réplica imprimible del **formato físico de asistencia** — 🔒 necesita el **formato real** (planilla oficial) del cliente para ser fiel | MOD-RRHH 6.2 |
 | Formación | Tabla `taller_facilitadores` (múltiples facilitadores) — solo si el cliente lo pide | D-FO08-bis |
 | Transversal | Importación de datos históricos desde Excel (depende de D-TX03) | D-TX03 |
@@ -850,7 +894,7 @@ automatizadas pero NO abierto en el navegador. Es el riesgo más alto que queda:
 - **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). **nómina quincenal calculada (mig. 072)**: motor puro con 45 pruebas, porcentajes en tablas, parámetros mensuales con vigencia, 5 tipos de personal, advertencias por empleado, recálculo y cierre, export de 6 hojas. 🔒 Falta: migrar el **Bono Vacacional** al motor (N‑D) y la **Liquidación de Prestaciones Sociales** (N‑E, bloqueada por N‑3) — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ rutas por ejecución, puntos+mapa Leaflet offline, participantes, oficios, estado Finalizada, demografía, informe con demografía. 🔒 Falta: tarifa (D-RT02 — ya no se reporta un dato falso, ver H-14), disparar el informe automáticamente al Finalizar (D-RT03), y **responder el cuestionario de descubrimiento** (R-07/R-08 pueden forzar rediseño).
-- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **3 documentos imprimibles** bloqueados por los formatos del cliente (informe de bienes nuevos, acta de baja, acta de asignación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
+- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **4 documentos imprimibles** bloqueados por los formatos del cliente (relación de bienes nuevos, **Acta de Desincorporación**, acta de asignación, oficio de donación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. ⚠️ **Y adaptar el módulo al procedimiento nuevo del 2026-09-02** (IMATUR codifica: C-1…C-7 en §2-ter; bloqueado por B-73 y B-75). *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
 - **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.
 

@@ -84,7 +84,7 @@ El dashboard es **role-aware**: cada bloque solo se calcula y muestra según el 
 |-----------|----------------|----------------------------|--------|
 | **Bienes activos** | Patrimonio operativo total. | `COUNT(*)` de bienes activos. | `inventario` |
 | **Bienes en alerta** | Patrimonio que requiere atención. | `COUNT(*)` con `condicion IN ('Dañado','En Reparación')`. | `inventario` |
-| **Bajas del año** | Desincorporaciones del año. | `COUNT(*)` de bienes con `is_active = FALSE`, `deleted_at` en el año actual. | `inventario` |
+| **Bajas del año** | Desincorporaciones del año. | `COUNT(*)` de bienes con `is_active = FALSE`, `deleted_at` en el año actual. 🔴 **Mide la papelera, no las bajas** — ver H-16 en §4.7. | `inventario` |
 | **Tasa de deterioro** | % del patrimonio en mal estado. | `bienes_en_alerta / total_bienes × 100`. | `inventario` |
 | **Bienes por condición** | Distribución del estado del patrimonio. | `COUNT(*)` agrupado por `condicion`. | `inventario` |
 
@@ -254,10 +254,24 @@ Lista permisos/reposos que **se solapan** con el período (`fecha_inicio ≤ has
 
 ### 4.7 Reporte de Bienes Dados de Baja · roles 1, 4
 
-| KPI | Fórmula | Fuente |
+> ### 🔴 H-16 — este reporte mide la **papelera**, no las desincorporaciones (detectado 2026-09-03)
+>
+> Desde la mig. 062 una baja es `estatus = 'Dado de baja'` **conservando `is_active = TRUE`** (el bien
+> sale del inventario activo pero su registro se preserva, B-38), mientras `is_active = FALSE` es la
+> **papelera** de registros creados por error. Las tres consultas de este reporte filtran por
+> `is_active = FALSE AND deleted_at IS NOT NULL`, así que:
+>
+> - una **desincorporación real nunca aparece** aquí;
+> - un registro **borrado por equivocación sí** aparece, contado como baja.
+>
+> El dato correcto ya existe en el modelo: `Inventario::desincorporados()` (filtra por `EST_BAJA`), que
+> es lo que usa la pestaña *Desincorporados* del listado. Pendiente de corregir en
+> `ReportesInventarioTrait::bajasInventario()` y sus dos exportaciones — ver `BACKLOG.md` §4.
+
+| KPI | Fórmula **hoy en el código** (defectuosa) | Fuente |
 |-----|---------|--------|
-| Total histórico de bajas | `COUNT(*)` con `is_active=FALSE AND deleted_at IS NOT NULL`. | `inventario` |
-| Bajas del año | Igual, con `EXTRACT(YEAR FROM deleted_at) = año actual`. | `inventario` |
+| Total histórico de bajas | `COUNT(*)` con `is_active=FALSE AND deleted_at IS NOT NULL`. **Debería ser** `estatus = 'Dado de baja'`. | `inventario` |
+| Bajas del año | Igual, con `EXTRACT(YEAR FROM deleted_at) = año actual`. **Debería** fecharse por el movimiento de baja. | `inventario` |
 
 ---
 

@@ -1,6 +1,7 @@
 # Módulo de Bienes (Inventario) — Reglas de Negocio
 
-**Última actualización:** 2026-08-28 · **Migraciones:** 062–069
+**Última actualización:** 2026-09-03 · **Migraciones:** 062–069
+**⚠️ Cambio de procedimiento (2026-09-02):** IMATUR pasa a **asignar** el código de sus bienes y el acta de baja pasa a ser **Acta de Desincorporación** (sin oficio de retiro). Ver RN-IN02, RN-IN03 y RN-IN09 — **regla vigente, código aún no adaptado**.
 **Fuentes:** levantamiento con el cliente (`PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, B-01…B-72) y el **Formulario BM-1** real (`docs/formatos/`).
 **Plan y pendientes:** `docs/PLAN_MODULO_BIENES.md`.
 
@@ -15,10 +16,13 @@
 Los bienes de IMATUR los gestiona la **Coordinación de Compras, Bienes y
 Servicios** (B-01), adscrita a la Dirección de Administración.
 
-IMATUR **no es dueño del proceso de codificación**: los bienes pertenecen
-patrimonialmente a la **Alcaldía del Municipio Sucre**, que es quien asigna el
-código oficial, pega la etiqueta física y lleva el registro consolidado. El
-sistema modela ese reparto de responsabilidades, no un inventario autónomo.
+Los bienes pertenecen patrimonialmente a la **Alcaldía del Municipio Sucre**,
+que lleva el registro consolidado. Hasta ahora IMATUR **no era dueño del
+proceso de codificación** (la Alcaldía asignaba el código y pegaba la
+etiqueta); desde la notificación del **2026-09-02**, IMATUR —como ente
+autónomo— **asigna el código** y le pasa la relación a la Alcaldía, que
+conserva la propiedad y el registro patrimonial. El sistema modela ese reparto
+de responsabilidades, no un inventario autónomo.
 
 **Escala:** ~142 bienes (B-04). El valor del módulo está en el control
 documental y la trazabilidad, no en el volumen.
@@ -44,21 +48,43 @@ unidad es un registro con su propio código (B-09). No existe el concepto de
 
 ---
 
-## RN-IN02 — El código oficial lo asigna la Alcaldía
+## RN-IN02 — El código oficial: de transcribirlo a asignarlo
 
-Formato del **Formulario BM-1**:
+> ### ⚠️ CAMBIO DE PROCEDIMIENTO (notificado por el cliente el 2026-09-02)
+>
+> **IMATUR pasa a asignar el código de sus propios bienes.** Como ente
+> autónomo, después de la **última revisión y asignación de códigos de la
+> Alcaldía** —que **todavía no se ha hecho**— IMATUR continúa la secuencia a
+> partir del último código que la Alcaldía le deje. La Alcaldía **ya no viene a
+> codificar**: solo recibe la **relación** de los bienes que entran nuevos
+> (código asignado, monto y el resto de los datos del informe) para mantener su
+> registro patrimonial.
+>
+> **Lo que NO cambia:** el formato del código, el registro individual, los dos
+> ejes (código oficial + categoría interna), la propiedad patrimonial de la
+> Alcaldía y todo el expediente por bien. La base del sistema sirve igual.
+>
+> **Estado: regla vigente, código NO adaptado todavía.** Hoy `Inventario::codificar()`
+> transcribe el código contra un BM-1 recibido y `verificado_alcaldia` significa
+> "la Alcaldía lo verificó". Lo que falta construir está en
+> `docs/PLAN_MODULO_BIENES.md` §2-ter, y depende de dos insumos: el **punto de
+> partida de la secuencia** (esa última revisión pendiente) y el **catálogo de
+> grupos/subgrupos/secciones** (B-60, reabierta).
+
+Formato del **Formulario BM-1** (sin cambios):
 
 ```
 GRUPO - SUB-GRUPO - SECCIÓN - N° DE ORDEN
   2   -    01     -   108   -     084
 ```
 
-- Lo asigna el **Departamento de Bienes de la Alcaldía**, nunca IMATUR (B-11).
-- El **N° de orden** es un registro que lleva la Alcaldía con criterio propio;
-  garantiza que no se repita en ningún bien. IMATUR **desconoce la lógica** de
-  esa numeración y solo la transcribe (B-72). El sistema **no genera ni
-  predice** números: únicamente valida que no se repita dentro de IMATUR, como
-  red contra errores de tecleo.
+- **Hasta la última revisión de la Alcaldía:** lo asigna el **Departamento de
+  Bienes de la Alcaldía** y IMATUR solo lo transcribe (B-11). Los bienes
+  históricos y el lote que espera esa revisión siguen esta regla.
+- **Después de esa revisión:** lo asigna **IMATUR**, continuando la secuencia
+  desde el último N° de orden entregado. La numeración deja de ser opaca (B-72
+  queda superada para los bienes nuevos): el sistema debe **proponer** el
+  siguiente y garantizar que no se repita.
 - En la BD el código vive **por partes** (`codigo_grupo`, `codigo_subgrupo`,
   `codigo_seccion`, `nro_orden`) y `codigo_bn` guarda el compuesto que arma
   `Inventario::componerCodigo()`.
@@ -72,25 +98,47 @@ GRUPO - SUB-GRUPO - SECCIÓN - N° DE ORDEN
 
 ## RN-IN03 — Ciclo de codificación
 
-Un bien **nace sin código** (B-12). El circuito tiene tres piezas y solo dos
-son responsabilidad del sistema:
+### Ciclo nuevo (a partir de la notificación del 2026-09-02)
+
+El circuito pierde la espera: la codificación deja de depender de una visita.
 
 ```
 ① REGISTRO INTERNO (el sistema)
    Alta con descripción, marca/modelo/serial, departamento, costo, factura,
-   origen → estatus "En espera de codificación"
+   origen
                     ↓
-② INFORME A LA ALCALDÍA (el sistema)   ⏳ pendiente del formato real
-   Lote de bienes nuevos para que vengan a inspeccionar
+② CODIFICACIÓN INTERNA (el sistema)   ⏳ por construir
+   IMATUR asigna grupo-subgrupo-sección + el siguiente N° de orden de su
+   secuencia → estatus "Activo". Ya no se espera a nadie
+                    ↓
+③ RELACIÓN A LA ALCALDÍA (el sistema)   ⏳ pendiente del formato nuevo
+   Lote de bienes nuevos YA codificados, con su monto, para que la Alcaldía
+   mantenga su registro patrimonial. Es informativa: no pide inspección
+```
+
+La **conciliación del BM-1 se conserva** (`inventario_consolidados_bm1`) por dos
+razones: la última revisión de la Alcaldía todavía está pendiente y hay que
+poder cargar los códigos que traiga, y el histórico ya recibido debe quedar
+trazable.
+
+### Ciclo anterior (vigente hasta esa última revisión)
+
+Un bien **nace sin código** (B-12). Tres piezas, dos del sistema:
+
+```
+① REGISTRO INTERNO → estatus "En espera de codificación"
+                    ↓
+② INFORME A LA ALCALDÍA: lote de bienes nuevos para que inspeccionen
                     ↓
         Inspección física de la Alcaldía
                     ↓
-③ BM-1 CONSOLIDADO (lo devuelve la Alcaldía)  ← documento ENTRANTE
-   Trae grupo-subgrupo-sección + N° de orden por bien
+③ BM-1 CONSOLIDADO (documento ENTRANTE): trae el código por bien
                     ↓
    CONCILIACIÓN: se transcriben los códigos, se marca verificado y se
    archiva el formulario → estatus "Activo"
 ```
+
+**Esto es lo que hay implementado hoy** (`/inventario/consolidados`).
 
 **El BM-1 no lo genera el sistema**: es el registro consolidado que la Alcaldía
 elabora y devuelve. Se registra cada recepción (`inventario_consolidados_bm1`),
@@ -213,10 +261,24 @@ fecha **avanza sola**.
 
 **Motivos** (B-37): robo, deterioro, pérdida.
 
-**Es un acto administrativo**, no un movimiento más (B-39): requiere acta
-firmada por la **Coordinadora de Bienes y la Presidencia**, más un **oficio a
-la Alcaldía** para que venga a retirar el bien. La Contraloría se entera por
-ese mismo oficio (B-40).
+**Es un acto administrativo**, no un movimiento más (B-39): requiere el
+**Acta de Desincorporación** firmada por la **Coordinadora de Bienes y la
+Presidencia**.
+
+> ### ⚠️ CAMBIO (cliente, 2026-09-02)
+>
+> 1. El documento se llama **Acta de Desincorporación** y **así debe aparecer
+>    en el sistema** — no "acta de baja".
+> 2. **Ya no hay oficio de retiro.** El acta lista **todos los bienes que se
+>    van a retirar**; la Alcaldía la **firma y sella**, y ese acta sellada es el
+>    **aval** de que los bienes fueron desincorporados y retirados. Un solo
+>    documento en lugar de dos.
+> 3. Por tanto el acta es **por lote**, no por bien, y al registrarla firmada se
+>    marcan retirados todos los bienes que contiene.
+>
+> **Estado: regla vigente, código NO adaptado.** Hoy `Inventario::marcarRetirado()`
+> confirma el retiro **bien por bien** y no existe la entidad "acta". Ver
+> `docs/PLAN_MODULO_BIENES.md` §2-ter.
 
 En caso de **robo o pérdida** se suma la **denuncia** y la averiguación
 administrativa (B-41).
@@ -242,9 +304,11 @@ sirven por id de registro con control de rol, igual que los recaudos de RRHH.
 **Origen del bien** (B-18): `Compra` o `Donación`. La donación exige registrar
 **quién dona** y se acredita con su oficio.
 
-**Costo:** se registra junto con la factura, pero es **control interno**. Para
-la Alcaldía es irrelevante — por eso el BM-1 trae `S/P` en las columnas de
-valor aun cuando IMATUR tenga el informe y la factura (B-69).
+**Costo:** se registra junto con la factura. Era **control interno** (B-69: por
+eso el BM-1 trae `S/P` en las columnas de valor), pero con el procedimiento
+nuevo el **monto sí se declara** en la relación de bienes nuevos que IMATUR le
+envía a la Alcaldía (cliente, 2026-09-02). El dato ya se captura; lo que falta
+es el documento que lo publique.
 
 **Garantía** (B-20): se lleva control interno con su fecha de vencimiento y
 aviso anticipado.
@@ -317,18 +381,32 @@ documentos, mantenimientos y movimientos en una sola pantalla.
 | Consumibles | No se controlan (B-07) |
 | Generar el BM-1 | Es un documento entrante: lo hace la Alcaldía |
 | Asignar responsables a mano | Se derivan (RN-IN05) |
-| Predecir el N° de orden | Es jurisdicción de la Alcaldía (B-72) |
+| ~~Predecir el N° de orden~~ | **Ya no aplica (2026-09-02):** con el procedimiento nuevo el sistema **sí** propone el siguiente de la secuencia (RN-IN02) |
 
 ---
 
 ## Pendientes
 
-**Bloqueados por formatos del cliente:** informe de bienes nuevos a la Alcaldía
-(el dolor #1), acta administrativa de baja + oficio de retiro, y acta de
-asignación de bien a responsable.
+**Bloqueados por formatos del cliente** — el cliente los enviará *cuando tenga
+los formatos nuevos* (2026-09-02), porque el procedimiento cambió:
 
-**Preguntas abiertas:** B-71 (¿existe el BM-1 en digital? permitiría carga
-automática de códigos).
+- **Informe/relación de bienes nuevos** a la Alcaldía (el dolor #1) — ahora
+  lleva el **código que IMATUR asigna** y el **monto**.
+- **Acta de Desincorporación** (por lote, la Alcaldía firma y sella = aval).
+  **El oficio de retiro se elimina del alcance.**
+- **Acta de asignación** de bien a responsable ("acta de encargado") — sigue
+  vigente.
+- **Oficio de donación** — sigue vigente.
+
+**Por construir tras el cambio de procedimiento** (ver `PLAN_MODULO_BIENES.md`
+§2-ter): codificación interna con secuencia propia y acta de desincorporación
+por lote.
+
+**Preguntas abiertas:** ✅ B-71 respondida (2026-09-02): **sí existe versión
+digital** de los documentos, e incluso de un **inventario interno que la
+encargada lleva aparte** — hay que pedir esos archivos (habilitan carga masiva
+de los ~142 bienes y el punto de partida de la secuencia). Nuevas: **B-73…B-80**
+en `PLAN_MODULO_BIENES.md` §2-ter.
 
 **Operativo antes de producción:** cargar los ~142 bienes reales y asignar el cargo
 de Coordinador en Compras, Bienes y Servicios —mientras esté vacante, los movimientos
