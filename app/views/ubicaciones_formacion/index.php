@@ -32,10 +32,10 @@
             <?php else: ?>
                 <?php foreach ($data['ubicaciones'] as $u): ?>
                     <tr>
-                        <td class="cell-strong"><?php echo $u->nombre; ?></td>
-                        <td><span class="sig-badge sig-badge--info"><?php echo $u->tipo; ?></span></td>
-                        <td><?php echo $u->nombre_parroquia; ?></td>
-                        <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo $u->direccion; ?></td>
+                        <td class="cell-strong"><?php echo htmlspecialchars($u->nombre ?? ''); ?></td>
+                        <td><span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($u->tipo ?? ''); ?></span></td>
+                        <td><?php echo htmlspecialchars($u->nombre_parroquia ?? ''); ?></td>
+                        <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo htmlspecialchars($u->direccion ?? ''); ?></td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($u); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
@@ -80,7 +80,7 @@
                     <select name="parroquia" id="ubif_parroquia" class="sig-select" required>
                         <option value="">Seleccione una parroquia</option>
                         <?php foreach ($data['parroquias'] ?? [] as $p): ?>
-                            <option value="<?php echo $p->id; ?>"><?php echo $p->nombre; ?></option>
+                            <option value="<?php echo $p->id; ?>"><?php echo htmlspecialchars($p->nombre ?? ''); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

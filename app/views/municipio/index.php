@@ -33,8 +33,8 @@
                 <?php foreach ($data['municipio'] as $mun): ?>
                     <tr>
                         <td><span class="cell-id"><?php echo $mun->id; ?></span></td>
-                        <td class="cell-strong"><?php echo $mun->nombre; ?></td>
-                        <td><?php echo $mun->codigo_postal; ?></td>
+                        <td class="cell-strong"><?php echo htmlspecialchars($mun->nombre ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($mun->codigo_postal ?? ''); ?></td>
                         <td>
                             <?php if (!empty($mun->creado_por)): ?>
                                 <span class="sig-badge sig-badge--neutral"><i class="bi bi-person"></i> <?php echo htmlspecialchars($mun->creado_por); ?></span>

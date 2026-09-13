@@ -31,21 +31,21 @@
                     <div class="sig-field">
                         <label class="sig-field__label" for="cedula">Cédula de Identidad <span class="req">*</span></label>
                         <input id="cedula" type="text" name="cedula" class="sig-input" required
-                               value="<?php echo $data['pasante']->cedula; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->cedula ?? ''); ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label" for="nombre">Nombres <span class="req">*</span></label>
                         <input id="nombre" type="text" name="nombre" class="sig-input" required
-                               value="<?php echo $data['pasante']->nombre; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->nombre ?? ''); ?>">
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label" for="apellido">Apellidos <span class="req">*</span></label>
                         <input id="apellido" type="text" name="apellido" class="sig-input" required
-                               value="<?php echo $data['pasante']->apellido; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->apellido ?? ''); ?>">
                     </div>
                 </div>
             </div>
@@ -61,14 +61,14 @@
                     <div class="sig-field">
                         <label class="sig-field__label" for="institucion">Institución de Origen <span class="req">*</span></label>
                         <input id="institucion" type="text" name="institucion" class="sig-input" required
-                               value="<?php echo $data['pasante']->institucion; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->institucion ?? ''); ?>">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="sig-field">
                         <label class="sig-field__label" for="carrera">Carrera / Especialidad <span class="req">*</span></label>
                         <input id="carrera" type="text" name="carrera" class="sig-input" required
-                               value="<?php echo $data['pasante']->carrera; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->carrera ?? ''); ?>">
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -113,14 +113,14 @@
                     <div class="sig-field">
                         <label class="sig-field__label" for="fecha_inicio">Fecha Inicio</label>
                         <input id="fecha_inicio" type="date" name="fecha_inicio" class="sig-input"
-                               value="<?php echo $data['pasante']->fecha_inicio; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->fecha_inicio ?? ''); ?>">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="sig-field">
                         <label class="sig-field__label" for="fecha_fin">Fecha Culminación</label>
                         <input id="fecha_fin" type="date" name="fecha_fin" class="sig-input"
-                               value="<?php echo $data['pasante']->fecha_fin; ?>">
+                               value="<?php echo htmlspecialchars($data['pasante']->fecha_fin ?? ''); ?>">
                     </div>
                 </div>
             </div>

@@ -43,11 +43,11 @@
             <?php else: ?>
                 <?php foreach ($data['pasantes'] as $p): ?>
                     <tr>
-                        <td class="cell-id"><?php echo $p->cedula; ?></td>
-                        <td class="cell-strong"><?php echo $p->nombre . ' ' . $p->apellido; ?></td>
+                        <td class="cell-id"><?php echo htmlspecialchars($p->cedula ?? ''); ?></td>
+                        <td class="cell-strong"><?php echo htmlspecialchars(trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''))); ?></td>
                         <td>
-                            <div style="font-weight:600; font-size:13px; color:var(--text-primary);"><?php echo $p->institucion; ?></div>
-                            <div style="font-size:12px; color:var(--text-tertiary);"><?php echo $p->carrera; ?></div>
+                            <div style="font-weight:600; font-size:13px; color:var(--text-primary);"><?php echo htmlspecialchars($p->institucion ?? ''); ?></div>
+                            <div style="font-size:12px; color:var(--text-tertiary);"><?php echo htmlspecialchars($p->carrera ?? ''); ?></div>
                         </td>
                         <td>
                             <?php if ($p->id_tutor_institucional): ?>
@@ -74,7 +74,7 @@
                             elseif ($p->estado == 'Culminado') $badgeClass = 'sig-badge--success';
                             elseif ($p->estado == 'Rechazado') $badgeClass = 'sig-badge--danger';
                             ?>
-                            <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo $p->estado; ?></span>
+                            <span class="sig-badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($p->estado ?? ''); ?></span>
                         </td>
                         <td class="col-actions">
                             <a href="<?php echo URL_ROOT; ?>/pasantes/detalle/<?php echo $p->id; ?>" class="row-action row-action--view" title="Ver Expediente">

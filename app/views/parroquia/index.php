@@ -33,8 +33,8 @@
                 <?php foreach ($data['parroquia'] as $par): ?>
                     <tr>
                         <td><span class="cell-id"><?php echo $par->id; ?></span></td>
-                        <td class="cell-strong"><?php echo $par->nombre; ?></td>
-                        <td><span class="sig-badge sig-badge--brand"><?php echo $par->municipio; ?></span></td>
+                        <td class="cell-strong"><?php echo htmlspecialchars($par->nombre ?? ''); ?></td>
+                        <td><span class="sig-badge sig-badge--brand"><?php echo htmlspecialchars($par->municipio ?? ''); ?></span></td>
                         <td>
                             <?php if (!empty($par->creado_por)): ?>
                                 <span class="sig-badge sig-badge--neutral"><i class="bi bi-person"></i> <?php echo htmlspecialchars($par->creado_por); ?></span>
@@ -77,7 +77,7 @@
                         <select class="sig-select" name="id_municipio" id="parroquia_municipio" required>
                             <option value="">Seleccione un municipio...</option>
                             <?php foreach ($data['municipios'] ?? [] as $mun): ?>
-                                <option value="<?php echo $mun->id; ?>"><?php echo $mun->nombre; ?></option>
+                                <option value="<?php echo $mun->id; ?>"><?php echo htmlspecialchars($mun->nombre ?? ''); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>

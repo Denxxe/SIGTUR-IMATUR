@@ -32,7 +32,7 @@
                 <tr>
                     <td><span class="cell-id"><?php echo $ubi->id; ?></span></td>
                     <td class="cell-strong">
-                        <?php echo $ubi->nombre; ?>
+                        <?php echo htmlspecialchars($ubi->nombre ?? ''); ?>
                         <?php if (!empty($ubi->es_deposito)): ?>
                             <br><span class="sig-badge sig-badge--warning"><i class="bi bi-archive"></i> Depósito</span>
                         <?php endif; ?>
@@ -45,7 +45,7 @@
                             <span style="color:var(--text-tertiary);font-style:italic;">Sin departamento</span>
                         <?php endif; ?>
                     </td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo $ubi->descripcion; ?></td>
+                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($ubi->descripcion ?? ''); ?></td>
                     <td class="col-actions">
                         <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($ubi); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                         <a href="<?php echo URL_ROOT; ?>/ubicaciones/delete/<?php echo $ubi->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>

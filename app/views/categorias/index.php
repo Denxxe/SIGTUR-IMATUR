@@ -29,8 +29,8 @@
             <?php else: foreach ($data['categorias'] as $cat): ?>
                 <tr>
                     <td><span class="cell-id"><?php echo $cat->id; ?></span></td>
-                    <td class="cell-strong"><?php echo $cat->nombre; ?></td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo $cat->descripcion; ?></td>
+                    <td class="cell-strong"><?php echo htmlspecialchars($cat->nombre ?? ''); ?></td>
+                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($cat->descripcion ?? ''); ?></td>
                     <td class="col-actions">
                         <button class="row-action row-action--edit" onclick='editarCat(<?php echo json_encode($cat); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                         <a href="<?php echo URL_ROOT; ?>/categorias/delete/<?php echo $cat->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>

@@ -42,7 +42,7 @@
                         <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
                             <?php echo ($pad > 0 ? '<span style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
                         </td>
-                        <td style="color:var(--text-secondary);font-size:13px"><?php echo $cargo->descripcion; ?></td>
+                        <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($cargo->descripcion ?? ''); ?></td>
                         <td class="col-actions">
                             <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
