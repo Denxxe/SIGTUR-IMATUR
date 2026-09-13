@@ -21,7 +21,8 @@ cada punto.
 
 **Los cuatro puntos más urgentes:** la **relación de bienes nuevos** con el formato nuevo (A1), el
 **archivo digital del inventario de la encargada** (A7), el **mes de bono vacacional ya calculado**
-(A5) y el **cuestionario de Rutas** (A6).
+(A5) y, de Rutas, **los nombres de los estados y cómo funciona el cobro** (A6 — el resto de ese
+cuestionario ya lo respondieron y con eso arrancamos).
 
 ---
 
@@ -85,17 +86,52 @@ cuanto nos entreguen un mes real, esa diferencia nos dice si el supuesto es corr
 
 **Con un solo mes basta.** Puede ser un mes ya pagado, con los nombres que sea.
 
-### A6 ⭐ Cuestionario de Rutas Turísticas
+### A6 ⭐ Rutas Turísticas — gracias por las respuestas, y quedan **cuatro cosas** por cerrar
 
-Se lo enviamos junto con el de Bienes (que sí respondieron completo, gracias). Es el **único módulo del
-que todavía no tenemos el levantamiento**.
+Recibimos las respuestas a las primeras 16 preguntas y **fueron justo las que hacían falta**. Con
+ellas confirmamos que **sí existe un catálogo de rutas** y que dos salidas de «Cumaná Histórica» son
+la misma ruta ejecutada dos veces. Eso significa que **vamos a reorganizar el módulo** para que
+funcione como trabajan ustedes: el catálogo por un lado (las seis rutas, con su recorrido y su
+tarifa) y las salidas por otro (cada fecha, con su grupo, su guía y su aprobación).
 
-La pregunta que más pesa: cuando «Cumaná Histórica» se hace el 10 de marzo y otra vez el 20 de abril,
-**¿son dos rutas distintas o la misma ruta ejecutada dos veces?** ¿Y existe un catálogo de rutas —con su
-recorrido y paradas— que se reutiliza cada vez, o cada salida se arma desde cero?
+**Ya estamos trabajando en eso.** No hace falta que respondan nada para que avancemos. Lo que sí
+necesitamos, cuando puedan, es:
 
-De esa respuesta depende si el módulo queda como está o hay que rediseñar parte de él. **Preferimos
-preguntar antes que rehacer después.**
+**1. Los nombres de los estados de una salida** *(quedó en blanco — es la pregunta R-14)*
+
+Desde que se solicita hasta que termina, ¿cómo la llaman ustedes en cada momento? Por lo que nos
+contaron, imaginamos algo como *Solicitada → Aprobada → Programada → Ejecutada*, más *Cancelada*.
+**Pero preferimos usar sus palabras, no las nuestras**, porque son las que van a ver en pantalla.
+
+**2. El cobro — cómo funciona en la práctica**
+
+Nos dijeron los montos (5 $ Cumaná Histórica, 15 $ Río Brito, 25 $ Las Maritas y Playa Colorada) y
+que las instituciones públicas y los menores de 8 años no pagan. Falta:
+
+- ¿**Quién recibe el dinero**: IMATUR o la Alcaldía?
+- ¿**Cómo se paga**: efectivo el día de la salida, transferencia previa, punto de venta?
+- ¿**Qué comprobante** se entrega? *(si tienen uno, nos sirve muchísimo verlo)*
+- ¿El sistema debe **llevar la cuenta de lo cobrado**, o basta con dejar constancia de que la salida
+  tenía tarifa? **Esta es la que más cambia el trabajo.**
+- ¿**Quién autoriza** una exoneración fuera de los dos casos ya conocidos?
+
+**3. Dos formatos**
+
+- El **oficio de solicitud** que envían los colegios *(quedaron en pasárnoslo)*.
+- El **informe de una ruta ya ejecutada** — es el documento más importante del módulo.
+
+**4. Tres dudas cortas que nos dejaron sus propias respuestas**
+
+- **Exploradores de Cumaná**: nos dijeron que *"es lo mismo que Cumaná Histórica, solo cambia el
+  público"*. ¿La anotamos como **una ruta aparte** o como **la misma ruta con dos modalidades**?
+- **Las edades**: Exploradores es de 4 a 8 años. ¿Hay **tope**, o un niño de 9 puede ir igual? ¿Y
+  las rutas de playa tienen edad mínima? *(hoy el sistema no deja registrar a un niño de 4 — lo
+  estamos corrigiendo)*
+- **Altos de Cumaná**: ¿tiene tarifa fija? ¿La cobra IMATUR o la posada? ¿Les serviría que el
+  sistema lleve un **directorio de las posadas y aliados** con los que coordinan?
+
+El resto del cuestionario (las paradas de cada ruta, los guías, los participantes, el informe) lo
+podemos ir viendo con calma: no nos frena.
 
 ### A7 ⭐ Los archivos digitales — incluido el inventario que lleva la encargada
 
@@ -300,7 +336,15 @@ señalamos para que puedan revisar los meses ya pagados con ese archivo.
   actualiza la UNAPRE cada mes · la «tasa BCV» es el tipo de cambio del dólar · la gobernación no paga
   caja de ahorro · los porcentajes de prima profesional por grado académico · la escala de antigüedad
   con tope de 30 %. ✔️
-- **Rutas:** el facilitador externo y la institución participante se retiraron por no usarse. ✔️
+- **Rutas (respuestas del 2026-09-03):** existe un **catálogo** de rutas con su recorrido y sus puntos ·
+  dos salidas de la misma ruta son **la misma ruta ejecutada dos veces** · puede haber **varios grupos
+  el mismo día** con guías rotativos · **sí se cobra** (5 $ / 15 $ / 25 $ por persona, gratis para
+  instituciones públicas y menores de 8 años) · la salida nace de una **solicitud** (particular o
+  institucional por oficio) y **la aprueba la Presidencia** · se **cancela con motivo** (gasolina, clima,
+  el grupo cancela) y se **reprograma conservando la misma salida** · los cinco puntos de Cumaná
+  Histórica. ✔️ *(Con esto ya empezamos a reorganizar el módulo. Lo que falta está en A6.)*
+  **Nota:** el facilitador externo y la institución participante se habían retirado por no usarse; con
+  estas respuestas **vuelven** — las instituciones sí importan y sí hay más de un guía por salida.
 
 ---
 

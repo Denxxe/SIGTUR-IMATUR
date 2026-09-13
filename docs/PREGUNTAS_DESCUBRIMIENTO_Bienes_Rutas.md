@@ -195,43 +195,51 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 
 # PARTE 2 — RUTAS TURÍSTICAS
 
-> ## ⏳ PENDIENTE DE RESPONDER
-> Sin anotaciones del cliente al 2026-08-04. La pregunta que más conviene resolver
-> primero es **R-07/R-08** (¿una ruta es un catálogo reutilizable o cada salida es un
-> registro independiente?): de su respuesta depende si el módulo necesita rediseño.
+> ## 🟡 RESPONDIDO PARCIALMENTE — 2026-09-03
+> El cliente contestó **R-01 … R-16** (secciones A, B y C), es decir el bloque que **define la
+> estructura de datos**. **R-14 quedó en blanco** y las secciones **D a L (R-17 … R-64) siguen
+> pendientes**.
+>
+> El análisis y el plan de reconstrucción derivado están en **`docs/PLAN_MODULO_RUTAS.md`**.
+>
+> **Lo que estas 15 respuestas cambian:** R-07/R-08/R-09 confirman que **sí existe un catálogo
+> reutilizable** y que una salida es una **ejecución** de ese catálogo → el modelo actual (una fila
+> de `rutas` por salida) **necesita rediseño**, no ajustes. R-02 confirma que **sí se cobra** y da
+> los montos → **D-RT02 deja de ser una incógnita** (falta el flujo de cobro, R-36…R-42). R-11
+> **reabre** el registro de la institución solicitante, eliminado en la mig. 060.
 
 ## A. Panorama general
 
-| # | | Pregunta |
-|---|---|----------|
-| R-01 | ⭐ | ¿Qué es exactamente una "ruta turística" para IMATUR? Descríbala como se la explicaría a alguien que nunca la ha visto. |
-| R-02 | ⭐ | ¿Cuáles son **todas** las rutas o programas que ofrecen hoy? *(nombres oficiales, sin abreviar)* |
-| R-03 | ⭐ | ¿Cómo se organiza y registra una ruta **hoy**? (oficios en papel, Excel, WhatsApp, nada) |
-| R-04 | ▲ | ¿Con qué frecuencia se ejecutan? (semanal, mensual, por temporada, solo cuando lo piden) |
-| R-05 | ▲ | ¿Cuántas personas participan típicamente en una ruta? ¿Y cuál es el máximo que pueden atender? |
-| R-06 | ▲ | ¿Qué es lo que más se les complica hoy al organizar una ruta? |
+| # | | Pregunta | Respuesta del cliente (2026-09-03) |
+|---|---|----------|------------------------------------|
+| R-01 | ⭐ | ¿Qué es exactamente una "ruta turística" para IMATUR? Descríbala como se la explicaría a alguien que nunca la ha visto. | Es un paseo, pero con la diferencia de que **los empleados tienen que exponer** ciertos lugares del centro histórico o del sitio: **narran** al turista la historia cultural de cada elemento —curiosidades, notas, datos varios— de forma dinámica, para que el turista sienta una **inmersión**. Hay lugares donde además se hacen **actividades recreativas**: trivias, fotos, planes vacacionales, etc. |
+| R-02 | ⭐ | ¿Cuáles son **todas** las rutas o programas que ofrecen hoy? *(nombres oficiales, sin abreviar)* | **Seis programas, con tarifa:**<br>• **Cumaná Histórica** — 5 $ por adulto; **niños menores de 8 años, gratis**. Para todo público.<br>• **Exploradores de Cumaná** — **gratuita**. Para niños de **4 a 8 años**. *Es el mismo recorrido que Cumaná Histórica; solo cambia el público objetivo.*<br>• **Playa Las Maritas** — 25 $ por persona.<br>• **Río Brito** — 15 $ por persona.<br>• **Playa Colorada** — 25 $ por persona.<br>• **Altos de Cumaná** — "se cuadra"; **enlace con personas en posadas**, etc. |
+| R-03 | ⭐ | ¿Cómo se organiza y registra una ruta **hoy**? (oficios en papel, Excel, WhatsApp, nada) | Se realiza un **oficio con días de antelación** para poder ejecutar la ruta. Eso aplica **solo a escuelas e instituciones públicas**; en ese caso **Cumaná Histórica es gratuita**. ⚠️ *Cómo se registra hoy (papel/Excel/nada) quedó **sin responder**: "aún no se sabe, queda en espera de respuesta".* |
+| R-04 | ▲ | ¿Con qué frecuencia se ejecutan? (semanal, mensual, por temporada, solo cuando lo piden) | Por lo general **2-3 salidas semanales**, dependiendo de la salida; y además **cuando lo piden** particularmente. |
+| R-05 | ▲ | ¿Cuántas personas participan típicamente en una ruta? ¿Y cuál es el máximo que pueden atender? | **Promedio: entre 15 y 30 personas.** El **máximo atendido** en una ruta ha sido de **120 personas**. |
+| R-06 | ▲ | ¿Qué es lo que más se les complica hoy al organizar una ruta? | Lo más complicado: **la logística**, **la puntualidad del turista** y **la coordinación con las fundaciones externas** para conseguir acceso al lugar — depende de dónde se vaya a realizar la ruta.<br><br>**Puntos habituales de Cumaná Histórica** *(dato aportado en la misma respuesta, adelanta R-17)*: Castillo San Antonio de la Eminencia · Fortaleza Santa María de la Cabeza · Basílica Menor Santa Inés · Callejones de Santa Inés y El Alacrán · Casa Natal de Antonio José de Sucre. |
 
 ## B. La ruta como concepto
 
 > **Esta sección es la más importante del módulo.** Define toda la estructura de datos.
 
-| # | | Pregunta |
-|---|---|----------|
-| R-07 | ⭐ | Si "Cumaná Histórica" se hace el 10 de marzo y otra vez el 20 de abril, ¿eso son **dos rutas distintas** o **la misma ruta ejecutada dos veces**? |
-| R-08 | ⭐ | ¿Existe un **catálogo** de rutas (el recorrido, los puntos, la duración) que se reutiliza cada vez que se programa una salida? ¿O cada salida se arma desde cero? |
-| R-09 | ⭐ | ¿Una misma ruta puede tener **varios grupos el mismo día** (mañana y tarde)? |
-| R-10 | ▲ | ¿Las rutas cambian de recorrido según el grupo, o el itinerario es siempre el mismo? |
+| # | | Pregunta | Respuesta del cliente (2026-09-03) |
+|---|---|----------|------------------------------------|
+| R-07 | ⭐ | Si "Cumaná Histórica" se hace el 10 de marzo y otra vez el 20 de abril, ¿eso son **dos rutas distintas** o **la misma ruta ejecutada dos veces**? | **"En los registros saldría la misma ruta ejecutada 2 veces, pero en diferente tiempo."** ⚠️ *Contradice D-RT01, la decisión sobre la que está construido el módulo.* |
+| R-08 | ⭐ | ¿Existe un **catálogo** de rutas (el recorrido, los puntos, la duración) que se reutiliza cada vez que se programa una salida? ¿O cada salida se arma desde cero? | **"Existe un catálogo"** de todos estos puntos: cuándo comienza y cuándo termina, los puntos de la ruta, el recorrido — **todo lleva un catálogo.** |
+| R-09 | ⭐ | ¿Una misma ruta puede tener **varios grupos el mismo día** (mañana y tarde)? | **Sí.** Puede tener **diferentes grupos con guías rotativos**, según la planificación. Incluso **en una misma mañana** se han hecho **dos salidas de la misma ruta** (dos Cumaná Histórica) y también **dos rutas distintas a la vez** (Cumaná Histórica y Río Brito). Depende de la planificación. |
+| R-10 | ▲ | ¿Las rutas cambian de recorrido según el grupo, o el itinerario es siempre el mismo? | **Puede cambiar en algún punto.** Si hay varios grupos en la misma ruta al mismo tiempo, **se cambia un poco el itinerario y el orden de los puntos** (para no coincidir). |
 
 ## C. Programación de una salida
 
-| # | | Pregunta |
-|---|---|----------|
-| R-11 | ⭐ | ¿Cómo nace una ruta? ¿Un colegio la solicita, IMATUR la programa, ambas? |
-| R-12 | ▲ | Si un colegio la solicita, ¿cómo lo hace? ¿Mandan un oficio? *(pedir un ejemplo real)* |
-| R-13 | ▲ | ¿Hay que **aprobar** la salida antes de ejecutarla? ¿Quién aprueba? |
-| R-14 | ⭐ | ¿Qué estados atraviesa una ruta desde que se planifica hasta que termina? Nómbrelos con las palabras que usan ustedes. |
-| R-15 | ▲ | ¿Puede **cancelarse**? ¿Por qué motivos? ¿Se registra el motivo? |
-| R-16 | ▲ | ¿Se reprograma por lluvia u otra causa? ¿Se considera la misma salida o una nueva? |
+| # | | Pregunta | Respuesta del cliente (2026-09-03) |
+|---|---|----------|------------------------------------|
+| R-11 | ⭐ | ¿Cómo nace una ruta? ¿Un colegio la solicita, IMATUR la programa, ambas? | **Dos orígenes:** el **turista particular** la solicita, y las **instituciones públicas** la solicitan **mediante un oficio que queda archivado en IMATUR**. ⚠️ *Reabre el registro de la institución solicitante (eliminado en la mig. 060, D-RT05).* |
+| R-12 | ▲ | Si un colegio la solicita, ¿cómo lo hace? ¿Mandan un oficio? *(pedir un ejemplo real)* | **Lo reciben en físico**, y **también puede recibirse en digital**. 📎 *El cliente quedó en enviar el formato.* |
+| R-13 | ▲ | ¿Hay que **aprobar** la salida antes de ejecutarla? ¿Quién aprueba? | **Sí. La decisión final la tiene la Presidenta** (actualmente **María Maza**), **tanto para solicitudes particulares como institucionales**. |
+| R-14 | ⭐ | ¿Qué estados atraviesa una ruta desde que se planifica hasta que termina? Nómbrelos con las palabras que usan ustedes. | ⛔ **SIN RESPONDER.** *(Se infiere de R-13/R-15/R-16 una secuencia Solicitada → Aprobada → Programada → Ejecutada, más Cancelada y Reprogramada, pero hacen falta **los nombres exactos que usa IMATUR**.)* |
+| R-15 | ▲ | ¿Puede **cancelarse**? ¿Por qué motivos? ¿Se registra el motivo? | **Sí se puede.** Motivos: **falta de gasolina**, **clima/tiempo**, o **que el grupo cancele**. **Sí se le coloca motivo de cancelación.** |
+| R-16 | ▲ | ¿Se reprograma por lluvia u otra causa? ¿Se considera la misma salida o una nueva? | **Se reprograma y se considera la misma salida**, solo que con el cambio de fecha. |
 
 ## D. Recorrido y puntos
 
@@ -355,13 +363,20 @@ Esto es lo que más acelera el trabajo. **Un formato real evita semanas de supos
 - [x] ~~Si controlan consumibles: lista de ítems y sus mínimos~~ — **no controlan consumibles** (B-07)
 
 ### Rutas
-- [ ] **Informe de una ruta ya ejecutada** ← *el más importante*
-- [ ] Oficio de solicitud de un colegio
+
+> **Estado al 2026-09-03.** Con R-01…R-16 respondidas, el orden de urgencia cambió: lo que ahora
+> bloquea el rediseño no es un formato, sino **R-14** (los nombres de los estados) y el bloque de
+> **cobro** (R-36…R-42).
+
+- [ ] ⭐ **Formato del oficio de solicitud** de un colegio/institución — *el cliente quedó en enviarlo* (R-12)
+- [ ] ⭐ **Informe de una ruta ya ejecutada** ← *el documento más importante del módulo* (R-47/R-48)
+- [ ] **Itinerario detallado** de al menos una ruta *(de Cumaná Histórica ya se conocen los 5 puntos por R-06; faltan las otras cinco)*
 - [ ] Oficio de respuesta/invitación que emite IMATUR
 - [ ] Planilla de registro de participantes usada en campo
 - [ ] Autorización del representante para menores
-- [ ] Itinerario detallado de al menos una ruta
 - [ ] Reporte mensual o anual de rutas que entregan a la Presidencia
+- [ ] **Comprobante de cobro** (recibo/factura/planilla de depósito) de una ruta pagada — nuevo, se
+      desprende de R-02: **sí se cobra** (5 $ / 15 $ / 25 $ por persona)
 
 ---
 ---
@@ -401,28 +416,42 @@ Estas son las respuestas que **más impacto tendrían** si difieren de lo que as
 
 ### Rutas
 
-| Pregunta | Lo que el sistema asume hoy | Riesgo si la respuesta difiere |
+> ### 🔴 ACTUALIZADO 2026-09-03 — las respuestas llegaron y **confirmaron el peor escenario**
+> Esta tabla ya no es una lista de riesgos hipotéticos: **cuatro de sus filas se materializaron.**
+> El plan de reconstrucción está en **`docs/PLAN_MODULO_RUTAS.md`**.
+
+| Pregunta | Lo que el sistema asume hoy | Veredicto con la respuesta en la mano |
 |---|---|---|
-| **R-07/R-08** (ruta vs ejecución) | 🔴 **La decisión más cara.** Cada fila de `rutas` es **una ejecución independiente**; no hay catálogo reutilizable. Si repiten Cumaná Histórica 20 veces, hay 20 filas con sus puntos duplicados | Si esperan un catálogo + salidas programadas → **rediseño del módulo** (separar `rutas` de `ejecuciones_ruta`, migrar puntos). Es la pregunta que más conviene resolver primero |
-| **R-36 a R-40** (tarifas) | Columnas `tiene_tarifa`/`tarifa_monto` existen pero **nunca se escriben** desde ninguna pantalla → el reporte dice **"Gratuita" siempre** | Si sí cobran → hay que construir la captura y decidir si se registran pagos. Si no cobran → quitar la columna del reporte. **Hoy el reporte muestra información falsa** |
-| **R-26** (institución del grupo) | Eliminado en la migración 060 (nunca se usó) | Si lo necesitan → se reconstruye desde cero. Conviene confirmarlo antes de que el cliente lo pida |
-| **R-31/R-32** (guía externo) | Eliminado en la migración 060 | Igual que arriba |
-| **R-14** (estados) | `Activa`, `Inactiva`, `En Mantenimiento`, `Finalizada` | "En Mantenimiento" es un estado extraño para una salida programada; sugiere que el modelo se pensó como catálogo. Se conecta con R-07 |
-| **R-23** (grupo escolar) | Se registra participante por participante | Si con el docente y la cantidad basta, el flujo actual es innecesariamente pesado para el usuario |
-| **R-47/R-50** (informe) | Existe `ruta_informes` con demografía y resumen | Contrastar contra el informe real; probablemente falten campos |
-| **R-02** (rutas ofrecidas) | Catálogo fijo en un CHECK: `Cumaná Histórica`, `Exploradores de Cumaná`, `Comunitaria`, `General` | Si hay más programas → migración para ampliar el CHECK |
-| **R-49/R-63** (fotos) | No hay evidencias fotográficas en rutas (Talleres sí las tiene) | Asimetría entre módulos que quizá no es intencional |
+| **R-07/R-08/R-09** (ruta vs ejecución) | 🔴 Cada fila de `rutas` es **una ejecución independiente**; no hay catálogo reutilizable. Si repiten Cumaná Histórica 20 veces, hay 20 filas con sus puntos duplicados | 🔴 **CONFIRMADO EL RIESGO.** El cliente dice que **existe un catálogo** y que dos salidas de Cumaná Histórica son *"la misma ruta ejecutada 2 veces"*. Además hay **varios grupos el mismo día con guías rotativos**. → **Rediseño**: separar `rutas` (catálogo) de `ruta_ejecuciones` (salidas). **D-RT01 queda desmentida** |
+| **R-36 a R-42** (tarifas) | Columnas `tiene_tarifa`/`tarifa_monto` existen pero **nunca se escriben**; desde el 2026-08-27 tampoco se leen (H-14) | 🟠 **SÍ SE COBRA** (R-02): 5 $ Cumaná Histórica · 15 $ Río Brito · 25 $ Las Maritas y Playa Colorada · Exploradores gratuita · gratis para instituciones públicas y menores de 8 años. → Las columnas **no se eliminan**: se capturan. **Falta el flujo** (quién recibe, comprobante, contabilidad): R-37…R-40 sin responder |
+| **R-11/R-26** (institución del grupo) | Eliminado en la migración 060 (nunca se usó) | 🟠 **HAY QUE RECONSTRUIRLO.** R-11: *"las instituciones públicas lo solicitan mediante un oficio que se queda en IMATUR"*, y la gratuidad depende de que el solicitante sea institución pública. **D-RT05 queda desmentida** |
+| **R-14** (estados) | `Activa`, `Inactiva`, `En Mantenimiento`, `Finalizada` | 🔴 **Inservible para el flujo real.** R-13 exige **aprobación de la Presidencia**, R-15 **cancelación con motivo**, R-16 **reprogramación conservando la misma salida**. Ninguno existe. ⛔ **R-14 quedó sin responder** — hacen falta los nombres exactos antes de fijar el CHECK |
+| **R-02** (rutas ofrecidas) | CHECK fijo: `Cumaná Histórica`, `Exploradores de Cumaná`, `Comunitaria`, `General` | 🟠 **Faltan 4 programas**: Playa Las Maritas, Río Brito, Playa Colorada, Altos de Cumaná. Y `Comunitaria`/`General` no los nombró el cliente. → Con el rediseño el CHECK **desaparece**: los programas pasan a ser **filas del catálogo**, no un enum |
+| **R-01/R-10** (actividades por punto) | `actividades_ruta` se **eliminó en la mig. 070** por no usarse | 🟡 **Puede tener que volver.** R-01: *"hay lugares donde se hacen actividades recreativas: trivias, fotos, planes vacacionales"*. Confirmar en R-17…R-21 si eso se **registra** o solo se hace |
+| **R-05** (volumen) | `cupo_maximo` default 20; paginación de servidor ya implementada | 🟢 **Sin riesgo.** 15-30 típico, 120 máximo. El default 20 conviene subirlo o dejarlo por ruta del catálogo |
+| **R-31/R-32** (guía externo) | Eliminado en la migración 060 | ⏳ **Sin responder.** R-09 menciona *"guías rotativos"* — al menos hay **varios guías por ruta**, no uno solo. El `id_facilitador` único de hoy se queda corto |
+| **R-23** (grupo escolar) | Se registra participante por participante | ⏳ **Sin responder.** Con 120 personas en una salida, el flujo actual sería muy pesado |
+| **R-47/R-50** (informe) | Existe `ruta_informes` con demografía y resumen | ⏳ **Sin responder.** Falta el formato real |
+| **R-49/R-63** (fotos) | No hay evidencias fotográficas en rutas (Talleres sí las tiene) | ⏳ **Sin responder**, pero R-01 menciona fotos como actividad |
 
 ## Preguntas ya cerradas — no volver a abrir
 
-- **D-RT01:** cada registro es una ejecución independiente *(pero conviene revalidarlo con R-07: se decidió temprano y es la base del módulo)*
+- ~~**D-RT01:** cada registro es una ejecución independiente~~ — 🔴 **DESMENTIDA por R-07/R-08
+  (2026-09-03):** el cliente confirmó que **existe un catálogo reutilizable** y que dos salidas de la
+  misma ruta son *"la misma ruta ejecutada 2 veces"*. Se decidió temprano, sin levantamiento, y era la
+  base del módulo. **Segunda decisión temprana que el levantamiento tumba** (la primera fue D-IN01).
+  Plan de reconstrucción: `docs/PLAN_MODULO_RUTAS.md`
+- ~~**D-RT05:** instituciones participantes — eliminado (mig. 060)~~ — 🟠 **DESMENTIDA por R-11:** la
+  institución solicitante **sí importa** (solicita por oficio, y de ella depende la gratuidad)
 - ~~**D-IN01:** la baja solo requiere registro interno, sin acto administrativo imprimible~~ —
   **DESMENTIDA por B-39:** la baja **sí** es un acto administrativo con acta firmada. Desde el
   2026-09-02 ese documento es el **Acta de Desincorporación**, por lote y sellada por la Alcaldía.
   *(Buen ejemplo de por qué se revalidan las decisiones tempranas.)*
 - ~~**D-IN05:** Durable/Fungible — implementado en la migración 044~~ — **revertido:** `tipo_bien` y
   `cantidad` se eliminaron en la mig. 067 (B-66); IMATUR no lleva consumibles y el registro es individual
-- Módulos retirados: instituciones externas, actividades de ruta, inventario de ruta, inventario de taller, nivel de dificultad
+- Módulos retirados: ~~instituciones externas~~ (**reabierto**, ver arriba), actividades de ruta
+  *(a revisar con R-17…R-21: R-01 menciona trivias y actividades recreativas)*, inventario de ruta,
+  inventario de taller, nivel de dificultad
 
 ## Nota sobre la documentación de estos módulos
 
