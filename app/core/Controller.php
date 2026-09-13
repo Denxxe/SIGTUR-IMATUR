@@ -2,10 +2,16 @@
 /**
  * Clase Controller: Clase base de controladores
  * Carga los modelos y las vistas
+ *
+ * NOTA DE SEGURIDAD: el Router despacha por URL cualquier método PÚBLICO de
+ * un controlador (/controlador/metodo/param). Por eso los helpers de esta
+ * clase base son `protected`: si fueran públicos, `model`, `view` y
+ * `getUserId` quedarían expuestos como endpoints. Un método nuevo aquí solo
+ * debe ser público si se pretende que sea una URL.
  */
 class Controller {
     // Método para cargar el modelo
-    public function model($model) {
+    protected function model($model) {
         // Requerir el archivo del modelo
         require_once('../app/models/' . $model . '.php');
         // Instanciar el modelo
@@ -13,7 +19,7 @@ class Controller {
     }
 
     // Método para cargar la vista
-    public function view($view, $data = []) {
+    protected function view($view, $data = []) {
         // Comprobar si el archivo de la vista existe
         if (file_exists('../app/views/' . $view . '.php')) {
             require_once('../app/views/' . $view . '.php');
@@ -24,7 +30,7 @@ class Controller {
     }
 
     // Helper para obtener User ID de la sesión actual
-    public function getUserId() {
+    protected function getUserId() {
         return $_SESSION['user_id'] ?? null;
     }
 

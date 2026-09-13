@@ -74,8 +74,12 @@ class Router {
         $this->currentController = new $this->currentController;
 
         // 4. Verificar si existe el método en el controlador
+        //    Solo se despacha lo PÚBLICO y no mágico: `method_exists()` por sí
+        //    solo devuelve true para métodos protected/private, y llamarlos
+        //    desde aquí sería un error fatal. Lo que no es despachable cae al
+        //    método por defecto (index), igual que una URL inexistente.
         if (isset($url[1])) {
-            if (method_exists($this->currentController, $url[1])) {
+            if ($this->esDespachable($this->currentController, $url[1])) {
                 $this->currentMethod = $url[1];
                 unset($url[1]);
             }
@@ -104,6 +108,18 @@ class Router {
 
         // 6. Ejecutar el callback con parámetros
         call_user_func_array([$this->currentController, $this->currentMethod], $this->params);
+    }
+
+    /**
+     * ¿Ese nombre corresponde a una acción invocable por URL?
+     * Debe ser un método público de instancia y no un método mágico
+     * (__construct, __call, …), que nunca son acciones.
+     */
+    private function esDespachable($controlador, string $metodo): bool {
+        if ($metodo === '' || strpos($metodo, '__') === 0) return false;
+        if (!method_exists($controlador, $metodo)) return false;
+        $ref = new ReflectionMethod($controlador, $metodo);
+        return $ref->isPublic() && !$ref->isStatic();
     }
 
     public function getUrl() {
