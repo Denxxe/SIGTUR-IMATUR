@@ -153,6 +153,13 @@ class AuditoriaController extends Controller {
     public function restaurar($tabla, $id) {
         $this->guard('AuditoriaPapelera');
 
+        // Restaurar muta estado: solo por POST (el token anti-duplicado del
+        // Router también se valida únicamente en POST).
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . URL_ROOT . '/auditoria/papelera');
+            exit;
+        }
+
         $id = (int)$id;
         $tabla = strtolower(trim($tabla));
 
