@@ -3,36 +3,48 @@
 -- SIGTUR-IMATUR — ESQUEMA CONSOLIDADO (INSTALACIÓN DESDE CERO)
 -- =====================================================================
 --
--- Generado: 2026-08-04  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–068.
+-- Generado: 2026-08-27  ·  PostgreSQL 17
+-- Cubre: esquema base + TODAS las migraciones 001–073.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
 -- incluidas. Las migraciones sueltas se conservan solo como historial
 -- y para actualizar instalaciones antiguas.
 --
+-- Al actualizar este archivo, actualizar TAMBIÉN los conteos de abajo:
+-- quien instala desde cero no tiene otra forma de saber qué recibe.
+--
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 56 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 60 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
---       - roles (5) y permisos_rol  ....... RBAC dinámico
---       - configuracion_sistema ........... datos del instituto, RIF,
+--       - roles (6) y permisos_rol (35) ... RBAC dinámico
+--       - configuracion_sistema (37) ...... datos del instituto, RIF,
 --                                           tolerancias, metas, nómina
 --       - departamentos (24) .............. organigrama + sede aeropuerto
---       - cargos (5) ...................... niveles jerárquicos
+--       - cargos (5) ...................... cargos base del organigrama
 --       - horarios (5) .................... modalidades de jornada
---       - feriados (12) ................... nacionales + Cumaná
---       - categorias (11) ................. clasificación interna de bienes
+--       - feriados (24) ................... 12 fijos (nacionales + Cumaná)
+--                                           + Carnaval y Semana Santa ya
+--                                           calculados de 2026 a 2028
+--       - categorias (13) ................. clasificación interna de bienes
+--       - ubicaciones ..................... una por departamento + el
+--                                           Depósito General (sin ellas NO
+--                                           se puede registrar un bien)
+--       - nomina_grados (6) ............... % de prima por grado de
+--                                           instrucción
+--       - nomina_antiguedad (23) .......... % de prima por años de
+--                                           servicio, con tope en 30 %
 --       - municipio (2) / parroquia (7) ... geografía de Sucre
 --   · Un usuario administrador de arranque (ver el final del archivo).
 --
 -- ---------------------------------------------------------------------
 -- QUÉ **NO** INCLUYE (se carga operando el sistema)
 -- ---------------------------------------------------------------------
---   Personal, usuarios reales, inventario, bienes, ubicaciones físicas,
---   categorías, talleres, rutas, visitantes, pasantes, asistencias,
---   constancias, nómina y bitácora. Todas esas tablas quedan vacías.
+--   Personal, usuarios reales, bienes, talleres, rutas, visitantes,
+--   pasantes, asistencias, constancias, nómina y bitácora. Todas esas
+--   tablas quedan vacías.
 --
 --   Los correlativos de oficios (constancias, rutas, formación,
 --   pasantes) quedan reiniciados en 0.
