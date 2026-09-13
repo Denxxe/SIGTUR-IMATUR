@@ -42,7 +42,7 @@
         $rol = (int)($_SESSION['user_rol'] ?? 0);
         $navGrupos = RolesController::getNavegacionVisible();
         ?>
-        <div class="sidebar__nav">
+        <div class="sidebar__nav" id="sidebarNav">
             <!-- Panel Principal: todos los roles lo tienen (DashboardController es
                  obligatorio en permisos_rol, ver RolesController::storePermisos) -->
             <a class="sidebar__item" href="<?php echo URL_ROOT; ?>">
@@ -73,6 +73,53 @@
             </a>
         </div>
     </nav>
+
+    <script>
+    /* ============ POSICIÓN DEL MENÚ LATERAL ENTRE PANTALLAS ============
+       Cada navegación es una carga completa de página, así que el contenedor
+       del menú vuelve a nacer con scrollTop = 0 y el usuario pierde el punto
+       donde estaba (se nota con los roles que ven muchos módulos). Se guarda
+       la posición mientras se desplaza y se restaura AQUÍ MISMO —dentro del
+       propio <nav>, antes de que el navegador pinte— para que no se vea el
+       salto hacia arriba.
+       Es sessionStorage a propósito: la posición vale para esta pestaña y
+       esta sesión; no debe sobrevivir a un cierre de sesión. */
+    (function () {
+        var nav = document.getElementById('sidebarNav');
+        if (!nav) return;
+        var CLAVE = 'sigtur.sidebarScroll';
+
+        function leer() {
+            try { return parseInt(sessionStorage.getItem(CLAVE), 10) || 0; }
+            catch (e) { return 0; }   // modo privado / almacenamiento bloqueado
+        }
+        function guardar() {
+            try { sessionStorage.setItem(CLAVE, String(nav.scrollTop)); } catch (e) {}
+        }
+
+        var guardado = leer();
+        if (guardado > 0) {
+            nav.scrollTop = guardado;
+            // Red de seguridad: si el navegador aún no había calculado el alto
+            // final del menú, el scrollTop se recorta a 0. Solo se reintenta en
+            // ese caso, para no pisar un desplazamiento del usuario.
+            document.addEventListener('DOMContentLoaded', function () {
+                if (nav.scrollTop === 0) nav.scrollTop = guardado;
+            });
+        }
+
+        // Guardar mientras se desplaza, como mucho una vez por frame.
+        var pendiente = false;
+        nav.addEventListener('scroll', function () {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(function () { pendiente = false; guardar(); });
+        }, { passive: true });
+
+        // Y al abandonar la página, por si el último scroll no alcanzó a guardarse.
+        window.addEventListener('pagehide', guardar);
+    })();
+    </script>
 
     <!-- ========== MAIN AREA ========== -->
     <div class="main-area">
