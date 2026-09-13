@@ -51,17 +51,49 @@ class NominaController extends Controller {
         ]);
     }
 
+    /**
+     * Consulta la tasa oficial del BCV y la devuelve como SUGERENCIA (mig. 074).
+     * No guarda nada: quien decide es Talento Humano, que la confirma o la
+     * corrige en el formulario. Un fallo aquí nunca bloquea la nómina — se
+     * responde con el motivo y el usuario sigue cargando la tasa a mano.
+     */
+    public function consultarTasa() {
+        $this->requireRoles([1, 2]);
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            echo json_encode(['ok' => true] + TasaBcv::consultar());
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
     public function guardarParametros() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
         $this->requireRoles([1, 2]);
         $_POST = $this->sanitizePost();
         try {
+            $tasa = (float)str_replace(',', '.', $_POST['tasa_dolar'] ?? '0');
+
+            // La tasa cuenta como "del BCV" solo si el usuario guardó EXACTAMENTE
+            // lo que la consulta sugirió. Si la retocó, aunque sea un decimal, el
+            // número ya es suyo y se registra como Manual: el respaldo documental
+            // del BCV no ampara un valor que no es el que el BCV publicó.
+            $txtSugerida = trim($_POST['tasa_sugerida'] ?? '');
+            $sugerida = $txtSugerida !== '' ? (float)str_replace(',', '.', $txtSugerida) : null;
+            $vieneDelBcv = $sugerida !== null && abs($sugerida - $tasa) < 0.00005;
+
             Nomina::guardarParametrosMes(
                 trim($_POST['periodo'] ?? ''),
                 (float)str_replace(',', '.', $_POST['monto_cesta_ticket'] ?? '0'),
-                (float)str_replace(',', '.', $_POST['tasa_dolar'] ?? '0'),
+                $tasa,
                 $_POST['observaciones'] ?? null,
-                $this->getUserId()
+                $this->getUserId(),
+                [
+                    'fuente'        => $vieneDelBcv ? 'BCV' : 'Manual',
+                    'fecha_valor'   => $_POST['tasa_fecha_valor'] ?? null,
+                    'consultada_at' => $_POST['tasa_consultada_at'] ?? null,
+                ]
             );
             flash('global_msg', 'Parámetros del mes guardados.');
         } catch (Exception $e) {

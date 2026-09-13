@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-27  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–073.
+-- Cubre: esquema base + TODAS las migraciones 001–074.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -5704,6 +5704,33 @@ ALTER TABLE public.bono_vacacional_detalle DROP CONSTRAINT IF EXISTS bono_vacaci
 ALTER TABLE public.bono_vacacional_detalle ADD CONSTRAINT bono_vacacional_detalle_tipo_personal_check
     CHECK (tipo_personal IN ('Alto Nivel', 'Empleados Fijos', 'Obreros Fijos', 'Contratados', 'Comisión de Servicio'));
 
+
+-- =====================================================================
+-- NOMINA: ORIGEN DE LA TASA DEL DOLAR (migracion 074)
+-- =====================================================================
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-073).
+-- Trazabilidad de donde salio la tasa del mes: la pantalla de parametros
+-- puede SUGERIRLA consultando bcv.org.ve, pero Talento Humano la confirma.
+-- Ver database/migrations/074_nomina_tasa_origen.sql. Idempotente.
+-- =====================================================================
+
+ALTER TABLE public.nomina_parametros_mes ADD COLUMN IF NOT EXISTS tasa_fuente VARCHAR(20);
+ALTER TABLE public.nomina_parametros_mes ADD COLUMN IF NOT EXISTS tasa_fecha_valor DATE;
+ALTER TABLE public.nomina_parametros_mes ADD COLUMN IF NOT EXISTS tasa_consultada_at TIMESTAMP;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'nomina_parametros_mes_tasa_fuente_chk'
+    ) THEN
+        ALTER TABLE public.nomina_parametros_mes
+            ADD CONSTRAINT nomina_parametros_mes_tasa_fuente_chk
+            CHECK (tasa_fuente IS NULL OR tasa_fuente IN ('BCV', 'Manual'));
+    END IF;
+END $$;
+
+UPDATE public.nomina_parametros_mes SET tasa_fuente = 'Manual' WHERE tasa_fuente IS NULL;
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-074).
 --

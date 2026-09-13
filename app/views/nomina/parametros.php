@@ -27,13 +27,14 @@
                         <th>Mes</th>
                         <th class="text-end">Cesta ticket</th>
                         <th class="text-end">Tasa del dólar</th>
+                        <th>Origen de la tasa</th>
                         <th>Observaciones</th>
                         <th class="col-actions">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($data['meses'])): ?>
-                        <tr><td colspan="5" class="sig-table-empty">
+                        <tr><td colspan="6" class="sig-table-empty">
                             Ningún mes cargado. Sin la cesta ticket y la tasa del dólar del mes no se puede generar la nómina.
                         </td></tr>
                     <?php else: foreach ($data['meses'] as $m): ?>
@@ -41,6 +42,18 @@
                             <td class="cell-strong"><?php echo htmlspecialchars($m->periodo); ?></td>
                             <td class="text-end u-num"><?php echo number_format((float)$m->monto_cesta_ticket, 2, ',', '.'); ?></td>
                             <td class="text-end u-num"><?php echo number_format((float)$m->tasa_dolar, 4, ',', '.'); ?></td>
+                            <td style="font-size:12px;">
+                                <?php if (($m->tasa_fuente ?? '') === 'BCV'): ?>
+                                    <span class="sig-badge sig-badge--info"><i class="bi bi-bank"></i> BCV</span>
+                                    <?php if (!empty($m->tasa_fecha_valor)): ?>
+                                        <div style="color:var(--text-tertiary);margin-top:2px;">
+                                            Fecha valor <?php echo date('d/m/Y', strtotime($m->tasa_fecha_valor)); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="sig-badge sig-badge--neutral"><i class="bi bi-pencil"></i> Manual</span>
+                                <?php endif; ?>
+                            </td>
                             <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($m->observaciones ?? '—'); ?></td>
                             <td class="col-actions">
                                 <button class="row-action row-action--edit"
@@ -177,8 +190,22 @@
                 </div>
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="pm_tasa">Tasa del dólar <span class="req">*</span></label>
-                    <input type="number" step="0.0001" min="0" name="tasa_dolar" id="pm_tasa" class="sig-input" required>
-                    <small style="color:var(--text-tertiary);font-size:12px;">Con ella se paga el bono de responsabilidad, que se pacta en divisas.</small>
+                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                        <input type="number" step="0.0001" min="0" name="tasa_dolar" id="pm_tasa" class="sig-input" required style="flex:1;">
+                        <button type="button" class="btn-sig btn-sig--ghost" id="btnConsultarBcv"
+                                onclick="consultarBcv()" style="white-space:nowrap;">
+                            <i class="bi bi-cloud-arrow-down"></i> Consultar BCV
+                        </button>
+                    </div>
+                    <!-- Lo que sugirió el BCV, para que el servidor pueda saber si
+                         el usuario guardó ese valor tal cual o lo corrigió. -->
+                    <input type="hidden" name="tasa_sugerida"      id="pm_tasa_sugerida">
+                    <input type="hidden" name="tasa_fecha_valor"   id="pm_tasa_fecha_valor">
+                    <input type="hidden" name="tasa_consultada_at" id="pm_tasa_consultada_at">
+                    <small id="pm_tasa_ayuda" style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:4px;">
+                        Con ella se paga el bono de responsabilidad, que se pacta en divisas.
+                    </small>
+                    <div id="pm_tasa_aviso" style="display:none;font-size:12px;margin-top:6px;"></div>
                 </div>
                 <div class="sig-field">
                     <label class="sig-field__label" for="pm_obs">Observaciones</label>
@@ -194,10 +221,66 @@
 </div>
 
 <script>
+    // La sugerencia del BCV no sobrevive a reabrir el modal: si se limpiara solo
+    // el campo visible, el servidor seguiría viendo la sugerencia anterior y
+    // marcaría como "del BCV" una tasa tecleada a mano.
+    function limpiarSugerenciaBcv() {
+        ['pm_tasa_sugerida', 'pm_tasa_fecha_valor', 'pm_tasa_consultada_at']
+            .forEach(function (id) { document.getElementById(id).value = ''; });
+        document.getElementById('pm_tasa_aviso').style.display = 'none';
+    }
+
     function nuevoMes() {
         document.getElementById('modalMesLabel').innerText = 'Cargar parámetros del mes';
         document.querySelector('#modalMes form').reset();
         document.getElementById('pm_periodo').readOnly = false;
+        limpiarSugerenciaBcv();
+    }
+
+    /**
+     * Pide la tasa oficial al BCV y la ofrece como sugerencia. No guarda nada:
+     * rellena el campo para que Talento Humano la confirme o la corrija.
+     */
+    function consultarBcv() {
+        var btn    = document.getElementById('btnConsultarBcv');
+        var aviso  = document.getElementById('pm_tasa_aviso');
+        var previo = btn.innerHTML;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Consultando…';
+        aviso.style.display = 'none';
+
+        fetch('<?php echo URL_ROOT; ?>/nomina/consultarTasa', { headers: { 'Accept': 'application/json' } })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (!d.ok) { throw new Error(d.error || 'No se pudo consultar el BCV.'); }
+
+                document.getElementById('pm_tasa').value                = d.tasa;
+                document.getElementById('pm_tasa_sugerida').value       = d.tasa;
+                document.getElementById('pm_tasa_fecha_valor').value    = d.fecha_valor || '';
+                document.getElementById('pm_tasa_consultada_at').value  = d.consultada_at || '';
+
+                // La fecha valor es el dato que evita el malentendido: el BCV no
+                // publica "la tasa de hoy", publica la del próximo día hábil.
+                var fecha = d.fecha_valor
+                    ? d.fecha_valor.split('-').reverse().join('/')
+                    : 'sin fecha publicada';
+                aviso.style.color = 'var(--success-700, #15803d)';
+                aviso.innerHTML = '<i class="bi bi-check-circle"></i> Tasa oficial del BCV con <strong>fecha valor '
+                    + fecha + '</strong>. Verifique que corresponde al mes que está cargando; '
+                    + 'si la modifica, se guardará como manual.';
+                aviso.style.display = 'block';
+            })
+            .catch(function (e) {
+                aviso.style.color = 'var(--danger-700, #b91c1c)';
+                aviso.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + e.message
+                    + ' Puede cargar la tasa a mano.';
+                aviso.style.display = 'block';
+            })
+            .finally(function () {
+                btn.disabled = false;
+                btn.innerHTML = previo;
+            });
     }
     function editarMes(m) {
         document.getElementById('modalMesLabel').innerText = 'Editar ' + m.periodo;
@@ -206,6 +289,13 @@
         document.getElementById('pm_cesta').value = m.monto_cesta_ticket;
         document.getElementById('pm_tasa').value  = m.tasa_dolar;
         document.getElementById('pm_obs').value   = m.observaciones || '';
+        limpiarSugerenciaBcv();
+        // Una tasa que ya venía del BCV conserva su procedencia si no se toca.
+        if (m.tasa_fuente === 'BCV') {
+            document.getElementById('pm_tasa_sugerida').value      = m.tasa_dolar;
+            document.getElementById('pm_tasa_fecha_valor').value   = m.tasa_fecha_valor || '';
+            document.getElementById('pm_tasa_consultada_at').value = m.tasa_consultada_at || '';
+        }
         new bootstrap.Modal(document.getElementById('modalMes')).show();
     }
 </script>

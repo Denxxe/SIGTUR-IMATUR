@@ -192,35 +192,62 @@ class Nomina extends Model
         return $db->resultSet();
     }
 
-    /** Alta/edición de los parámetros de un mes (upsert por período). */
-    public static function guardarParametrosMes(string $periodo, float $cesta, float $tasa, ?string $obs, ?int $userId = null): bool
+    /**
+     * Alta/edición de los parámetros de un mes (upsert por período).
+     *
+     * `$origenTasa` deja constancia de de dónde salió la tasa (mig. 074): 'BCV'
+     * si la sugirió la consulta a bcv.org.ve y el usuario la aceptó tal cual, o
+     * 'Manual' si la tecleó o la corrigió. La decisión de cuál es no se toma
+     * aquí: la toma el controlador comparando lo sugerido con lo enviado, que
+     * es el único punto que conoce ambas cosas.
+     *
+     * @param array{fuente?:string, fecha_valor?:?string, consultada_at?:?string} $origenTasa
+     */
+    public static function guardarParametrosMes(string $periodo, float $cesta, float $tasa, ?string $obs, ?int $userId = null, array $origenTasa = []): bool
     {
         if (!preg_match('/^\d{4}-\d{2}$/', $periodo)) {
             throw new Exception('Formato de período inválido (use AAAA-MM, ej. 2026-08).');
         }
         if ($cesta < 0 || $tasa < 0) throw new Exception('Los montos no pueden ser negativos.');
 
+        $fuente = ($origenTasa['fuente'] ?? 'Manual') === 'BCV' ? 'BCV' : 'Manual';
+        // La fecha valor y el momento de consulta solo tienen sentido si el
+        // número vino del BCV; si se tecleó, se limpian para no dejar un dato
+        // que sugiera un respaldo que no existe.
+        $fechaValor = $fuente === 'BCV' ? ($origenTasa['fecha_valor'] ?? null) : null;
+        $consultada = $fuente === 'BCV' ? ($origenTasa['consultada_at'] ?? null) : null;
+        if ($fechaValor !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaValor)) {
+            $fechaValor = null;
+        }
+
         $previo = self::parametrosMes($periodo);
         $db = new Database();
         if ($previo) {
             $db->query("UPDATE nomina_parametros_mes
                            SET monto_cesta_ticket = :c, tasa_dolar = :t, observaciones = :o,
+                               tasa_fuente = :tf, tasa_fecha_valor = :tfv, tasa_consultada_at = :tca,
                                updated_at = CURRENT_TIMESTAMP, updated_by = :u
                          WHERE periodo = :p");
         } else {
-            $db->query("INSERT INTO nomina_parametros_mes (periodo, monto_cesta_ticket, tasa_dolar, observaciones, created_by)
-                        VALUES (:p, :c, :t, :o, :u)");
+            $db->query("INSERT INTO nomina_parametros_mes
+                            (periodo, monto_cesta_ticket, tasa_dolar, observaciones,
+                             tasa_fuente, tasa_fecha_valor, tasa_consultada_at, created_by)
+                        VALUES (:p, :c, :t, :o, :tf, :tfv, :tca, :u)");
         }
         $db->bind(':p', $periodo);
         $db->bind(':c', round($cesta, 2));
         $db->bind(':t', round($tasa, 4));
         $db->bind(':o', $obs !== null && trim($obs) !== '' ? trim($obs) : null);
+        $db->bind(':tf',  $fuente);
+        $db->bind(':tfv', $fechaValor);
+        $db->bind(':tca', $consultada);
         $db->bind(':u', $userId);
         $result = $db->execute();
 
         self::auditStatic('nomina_parametros_mes', $previo ? 'UPDATE' : 'INSERT',
             (int)($previo->id ?? 0), $previo ? self::toArrayStatic($previo) : null,
-            ['periodo' => $periodo, 'monto_cesta_ticket' => $cesta, 'tasa_dolar' => $tasa], $userId);
+            ['periodo' => $periodo, 'monto_cesta_ticket' => $cesta, 'tasa_dolar' => $tasa,
+             'tasa_fuente' => $fuente, 'tasa_fecha_valor' => $fechaValor], $userId);
         return $result;
     }
 

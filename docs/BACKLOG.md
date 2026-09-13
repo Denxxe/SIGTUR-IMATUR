@@ -88,6 +88,44 @@ inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-
 
 ## 2. LO RESUELTO EN ESTE CICLO
 
+### 2026-09-13 — La tasa del dólar se consulta al BCV, como sugerencia (mig. 074)
+
+Cargar los parámetros del mes obligaba a ir a buscar la tasa a mano. Ahora el botón **Consultar BCV**
+de `/nomina/parametros` la trae y la propone; **Talento Humano la confirma o la corrige**.
+
+**Por qué sugerencia y no automático.** No está confirmado que la tasa que IMATUR aplica sea la del BCV
+del día — la plantilla del cliente trae **36,58 y 36,23 en hojas distintas del mismo período**, lo que
+apunta a un criterio propio (pregunta **N-4**, ya en `PREGUNTAS_CLIENTE.md` §C4). Dar el dato por bueno
+automáticamente produciría nóminas mal calculadas **en silencio y con aire de autoridad**, que es peor
+que el campo manual. La consulta ocurre **solo al cargar el parámetro**: el cálculo de la quincena nunca
+sale a internet, toma la tasa ya congelada en `nomina_periodos`.
+
+**Trazabilidad (mig. 074).** `nomina_parametros_mes` gana `tasa_fuente` (BCV/Manual), `tasa_fecha_valor`
+y `tasa_consultada_at`. La procedencia la decide el controlador comparando lo sugerido con lo guardado:
+**si el usuario retoca el número, aunque sea un decimal, queda como Manual** y se limpian fecha valor y
+momento de consulta — el respaldo del BCV no puede amparar un valor que el BCV no publicó. Verificado en
+navegador: alta → `BCV` + fecha valor; edición del número → `Manual` + fecha en blanco; ambas en la
+bitácora.
+
+**El BCV no tiene API.** Se lee su portada (bloque `id="dolar"`). Se descartaron los espejos JSON tras
+comprobarlos: `ve.dolarapi.com` iba **4 días atrasado** (832,49 contra 842,21 oficial, ~1,2 %) y
+`pydolarve.org` no respondía. Para un ente público la fuente citable en auditoría es el BCV.
+
+> **Dos hallazgos técnicos que valen para el futuro:**
+> 1. **El BCV publica con fecha valor adelantada**, no «la tasa de hoy»: un domingo su portada ya muestra
+>    la del martes siguiente. Guardar `CURRENT_DATE` habría guardado una fecha falsa; se lee el atributo
+>    `content` en ISO de la propia página.
+> 2. **El servidor del BCV entrega la cadena de certificados equivocada** (manda un intermedio Sectigo
+>    que no es el que firmó su certificado). Los navegadores lo disimulan buscando el que falta (AIA);
+>    OpenSSL, que es lo que usa PHP, no — de ahí que todos los ejemplos de internet traigan
+>    `CURLOPT_SSL_VERIFYPEER => false`. **Aquí no se apagó la verificación**: se versionó el intermedio
+>    correcto en `storage/certs/bcv-sectigo-ca.pem` (vence 2036, con su LEEME), así que la verificación
+>    queda activa y además anclada a la CA esperada. Apagarla habría dejado que un intermediario dictara
+>    la tasa con la que se paga la nómina.
+
+Si el BCV cambia su página o su CA, `TasaBcv::consultar()` lanza un mensaje que dice qué pasó y la tasa
+se sigue cargando a mano: **nunca bloquea la nómina**.
+
 ### 2026-08-28 (2) — Deuda técnica: ReportesController partido, a11y de formularios y utilidades CSS (sin migración)
 
 **`ReportesController`: 3.405 → 101 líneas.** Reunía **101 métodos** de siete áreas distintas en un
@@ -697,13 +735,14 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
   | **Nómina quincenal regular** | ✅ **Recibida 2026-08-07** y descifrada. ⏳ Pendiente de construir |
   | **Liquidación de Prestaciones Sociales** | ✅ Recibida. ⏳ Bloqueada por **1 sola pregunta** (N-3) |
 
-- **Preguntas abiertas — quedan 3** (antes eran 5):
+- **Preguntas abiertas — quedan 4**:
 
   | # | Pregunta | Bloquea |
   |---|---|---|
   | **N-1** | **Días base del bono vacacional: ¿75 para todos o 75/75/85/45 por tipo?** La plantilla de nómina usa **75 en todas las hojas**, incluidas obreros y contratados; nuestra config tiene 85 y 45. Se contradicen | `bono_vac_dias_*` y la alícuota |
   | **N-2** | **Criterio de las semanas (×4 / ×5)** en SSO/LRPPF/aportes: ¿depende del mes, del tipo de personal, o es un error de la plantilla? | Toda la línea de deducciones |
   | **N-3** | **"Días adicionales"** de la hoja `INTERESES` (79→82 / 120→150 sobre 360). En el audio **no entendió la pregunta** → reformular **con recorte de pantalla** | **Único insumo que falta para la Liquidación** |
+  | **N-4** 🆕 | **¿Qué tasa del dólar aplican, exactamente?** ¿La oficial del BCV o una que indica la Alcaldía/Gobernación? Si es la del BCV, **¿de qué día** (pago / cierre de mes / armado de la nómina)? Y sobre todo: **¿es una sola por mes?** — la plantilla trae **36,58 y 36,23 en hojas distintas del mismo período**, y hoy el sistema guarda **una tasa por mes** (`nomina_parametros_mes.periodo` es UNIQUE). Si cada nómina lleva la suya, hay que cambiar el modelo | **No bloquea**: el botón *Consultar BCV* ya funciona y la captura manual sigue. Define si la sugerencia automática es confiable y si el modelo de datos aguanta |
 
   Menores: de dónde sale la **cantidad de divisas** de cada trabajador y si el bono de responsabilidad aplica solo a Alto Nivel y Comisión.
 
@@ -714,7 +753,7 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 - **Insumos operativos que siguen faltando:**
   - [ ] Sueldo base, grado de instrucción, años en la administración pública, nº de hijos y **cuenta bancaria** de cada empleado activo (hoy `empleado_salarios` tiene 1 fila de prueba).
   - [ ] Cesta ticket vigente **con su mes** (julio: 22.907; al 23/07 el cliente dijo 28.388 — cambia mensual).
-  - [ ] Tasa del dólar del período.
+  - [ ] Tasa del dólar del período. **Desde 2026-09-13 el sistema la sugiere** consultando el BCV (botón en `/nomina/parametros`, mig. 074); lo que falta es **confirmar el criterio** (N-4), no el dato.
   - [ ] La **tabla de escala salarial por grado** que Talento Humano ofreció en el último audio (tramo confuso, confirmar).
 
 - **Construcción pendiente** (fases N-A…N-E en el plan §6.3): motor de cálculo → entradas que faltan → nómina quincenal con export de 6 hojas → migrar Bono Vacacional a cálculo → Liquidación.

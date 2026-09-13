@@ -1,6 +1,6 @@
 # Lo que necesitamos de IMATUR para cerrar el sistema
 
-**Para:** IMATUR · **Actualizado:** 2026-09-03 (recoge el cambio de procedimiento de Bienes del 2026-09-02)
+**Para:** IMATUR · **Actualizado:** 2026-09-13
 
 El sistema está construido y funcionando. Lo que falta para dejarlo al 100 % **ya casi no es
 programación**: son documentos, datos y tres confirmaciones que dependen de criterios de la institución.
@@ -15,9 +15,9 @@ cada punto.
 | | Cuántos | Qué desbloquea |
 |---|---|---|
 | **A. Formatos y respuestas que bloquean programación** | 9 | Los 4 documentos que el sistema no puede generar todavía, la **nueva codificación de bienes** y el módulo de Liquidación |
-| **B. Datos para poner en marcha** | 7 | Que el sistema deje de estar vacío. Sin esto está correcto pero no sirve |
-| **C. Confirmaciones que afinan números ya calculados** | 3 | El cálculo ya funciona; estas respuestas lo vuelven definitivo |
-| **D. Decisiones opcionales** | 5 | Mejoras que solo construimos si las quieren |
+| **B. Datos para poner en marcha** | 8 | Que el sistema deje de estar vacío. Sin esto está correcto pero no sirve |
+| **C. Confirmaciones que afinan números ya calculados** | 4 | El cálculo ya funciona; estas respuestas lo vuelven definitivo |
+| **D. Decisiones opcionales** | 6 | Mejoras que solo construimos si las quieren |
 
 **Los cuatro puntos más urgentes:** la **relación de bienes nuevos** con el formato nuevo (A1), el
 **archivo digital del inventario de la encargada** (A7), el **mes de bono vacacional ya calculado**
@@ -120,7 +120,7 @@ que las instituciones públicas y los menores de 8 años no pagan. Falta:
 - El **oficio de solicitud** que envían los colegios *(quedaron en pasárnoslo)*.
 - El **informe de una ruta ya ejecutada** — es el documento más importante del módulo.
 
-**4. Tres dudas cortas que nos dejaron sus propias respuestas**
+**4. Cinco dudas cortas que nos dejaron sus propias respuestas**
 
 - **Exploradores de Cumaná**: nos dijeron que *"es lo mismo que Cumaná Histórica, solo cambia el
   público"*. ¿La anotamos como **una ruta aparte** o como **la misma ruta con dos modalidades**?
@@ -129,9 +129,15 @@ que las instituciones públicas y los menores de 8 años no pagan. Falta:
   estamos corrigiendo)*
 - **Altos de Cumaná**: ¿tiene tarifa fija? ¿La cobra IMATUR o la posada? ¿Les serviría que el
   sistema lleve un **directorio de las posadas y aliados** con los que coordinan?
+- **¿Cómo llevan hoy el registro de una ruta?** *(esta quedó en espera)* ¿En Excel, en papel, o no se
+  lleva? Lo preguntamos porque de ahí depende **cuánto historial hay que cargar** al arrancar: si hay
+  un Excel con las salidas de este año, lo subimos de una vez.
+- **Los guías**: nos hablaron de *"guías rotativos"*. ¿**Cuántos guías van en una salida** — uno o
+  varios? ¿Y quieren que quede registrado **quiénes fueron** en cada una? *(hoy el sistema solo admite
+  uno por ruta; si normalmente son varios, hay que cambiarlo)*
 
-El resto del cuestionario (las paradas de cada ruta, los guías, los participantes, el informe) lo
-podemos ir viendo con calma: no nos frena.
+El resto del cuestionario (las paradas de cada ruta, los participantes, el informe) lo podemos ir
+viendo con calma: no nos frena.
 
 ### A7 ⭐ Los archivos digitales — incluido el inventario que lleva la encargada
 
@@ -200,6 +206,11 @@ Por cada trabajador activo:
 Ambos cambian todos los meses. El sistema ya tiene la pantalla para cargarlos mes a mes; necesitamos
 los valores. Indíquennos **de qué mes es cada monto**.
 
+> **Novedad:** la **tasa del dólar** ya no hace falta buscarla. La pantalla trae un botón *Consultar
+> BCV* que la trae sola y la propone; ustedes la confirman. Lo que sí necesitamos es que nos digan
+> **qué tasa aplican** — ver **C4**. La **cesta ticket** sigue siendo captura manual: la publica la
+> UNAPRE y no hay de dónde leerla automáticamente.
+
 ### B4 Catálogo de cargos
 
 Hoy el sistema tiene **5 cargos**. Necesitamos el listado completo del Manual Descriptivo de Cargos, o
@@ -225,12 +236,25 @@ usan Gmail, hace falta una «contraseña de aplicación».
 > Sin esto, la recuperación de contraseña por correo no funciona. El respaldo actual es que el
 > administrador la restablezca a mano.
 
+### B8 Cuántos bienes le tocan a cada trabajador (para el reporte de suficiencia)
+
+El sistema ya tiene el reporte **Suficiencia de Bienes**, que compara lo que hay en cada departamento
+contra lo que debería haber según su personal. Lo que no tenemos son **sus números**: hoy están puestas
+tres dotaciones de ejemplo, inventadas por nosotros.
+
+Necesitamos, aunque sea aproximado: **¿cuántas sillas por empleado? ¿cuántas mesas o escritorios?
+¿computadoras?** Y si hay categorías que **no** se reparten por persona (un aire acondicionado es del
+espacio, no de cada trabajador), díganos cuáles, para no evaluarlas.
+
+> Sin esto el reporte funciona, pero compara contra un número inventado, así que su resultado no
+> significa nada todavía.
+
 ---
 
 # C · Confirmaciones que afinan números ya calculados
 
-El cálculo de nómina **ya funciona**: estos tres puntos están puestos como parámetros ajustables. Lo que
-falta es confirmar cuál es el correcto para que los montos sean definitivos.
+El cálculo de nómina **ya funciona**: estos cuatro puntos están puestos como parámetros ajustables. Lo
+que falta es confirmar cuál es el correcto para que los montos sean definitivos.
 
 ### C1 ⭐ Días base del bono vacacional: ¿75 para todos, o 75 / 85 / 45 según el tipo?
 
@@ -254,6 +278,30 @@ Nos referimos a los valores que van cambiando: **79, 82, 120, 150 sobre 360**. �
 oficial, de un boletín, o los calcula Talento Humano cada mes?
 
 **Esta es la única pregunta que nos falta para construir la Liquidación de Prestaciones Sociales.**
+
+### C4 ⭐ La tasa del dólar: ¿**cuál** tasa usan, exactamente?
+
+Acabamos de agregar un botón que **consulta la tasa oficial del BCV** y la propone al cargar el mes, para
+que no haya que buscarla ni teclearla. **El sistema no la da por buena solo:** la muestra, ustedes la
+confirman o la corrigen, y queda registrado si el número salió del BCV o lo escribieron a mano.
+
+Pero antes de confiar en ese botón necesitamos saber qué tasa aplican de verdad:
+
+1. ¿Es la **tasa oficial del BCV**, o una que les indica la Alcaldía o la Gobernación?
+2. Si es la del BCV, **¿de qué día?** ¿La del día que se paga, la del último día del mes, la del día en
+   que se arma la nómina?
+3. **¿Es una sola por mes?** Se lo preguntamos porque en la plantilla que nos enviaron aparecen **dos
+   tasas distintas en el mismo período: 36,58 en una hoja y 36,23 en otra.** Si eso es correcto y cada
+   nómina lleva su propia tasa, tenemos que cambiar cómo lo guarda el sistema (hoy guarda **una por
+   mes**). Si fue un descuido de la plantilla, nos quedamos como estamos.
+
+> **Un detalle que conviene saber:** el BCV no publica «la tasa de hoy». Publica una tasa con su **fecha
+> valor**, que es el día en que rige y que suele ser el **próximo día hábil**. Por eso el sistema les
+> muestra siempre esa fecha junto al número, para que confirmen que corresponde al mes que están
+> cargando. Un domingo, por ejemplo, la página del BCV ya muestra la tasa del martes siguiente.
+
+*Mientras no respondan, el botón funciona igual y la tasa se puede cargar a mano como hasta ahora: esto
+no bloquea nada.* Relacionado con **B3**.
 
 ### Y dos cosas menores de nómina
 
@@ -288,9 +336,17 @@ Hoy se registra uno solo.
 Hoy hay un valor de relleno (100 talleres y 100 rutas al año). Si nos dan las metas reales, el indicador
 empieza a decir algo.
 
-### D5 Otras dos, menores
+### D5 ¿Llevar un registro de los entes con los que coordinan el acceso a los puntos de ruta?
 
-- ¿Activamos la **numeración correlativa de oficios de formación** (por ejemplo, `FORM-001/2026`)?
+Nos dijeron que **coordinar con fundaciones y entes externos** es uno de los tres dolores del módulo de
+Rutas. Si les sirve, el sistema puede guardar, por cada punto del recorrido, **quién lo custodia** y en
+qué va la gestión del permiso, para que no haya que reconstruirlo de memoria en cada salida.
+
+### D6 Otras tres, menores
+
+- **Oficios de formación**: podemos numerarlos correlativamente (`FORM-001/2026`), pero antes
+  necesitamos saber **qué dice ese oficio y a quién va dirigido**. Sin eso estaríamos inventando un
+  documento, que es justo el error que evitamos con los formatos de Bienes.
 - ¿Quieren un **libro de correspondencia** unificado, que liste en un solo lugar los oficios emitidos y
   recibidos de todos los módulos?
 - ¿Desean **cargar datos históricos** que hoy estén en Excel o papel? Si es así, ¿de qué módulos, y nos
