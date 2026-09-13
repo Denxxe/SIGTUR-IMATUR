@@ -26,3 +26,8 @@
 *.pdf   binary
 *.xlsx  binary
 *.xls   binary
+
+# Certificados: son texto, pero su fin de linea no se toca (los consume
+# OpenSSL, no un editor). Ver storage/certs/LEEME.md.
+*.pem   -text
+*.crt   -text
