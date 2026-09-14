@@ -67,7 +67,7 @@ $tipoBadge = function ($t) {
                 <input type="hidden" name="id" id="dpto_id">
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="dpto_nombre">Nombre <span class="req">*</span></label>
-                    <input type="text" name="nombre" id="dpto_nombre" class="sig-input" required placeholder="Ej: Dirección de Administración">
+                    <input type="text" name="nombre" id="dpto_nombre" class="sig-input" required data-nombre-libre placeholder="Ej: Dirección de Administración">
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">

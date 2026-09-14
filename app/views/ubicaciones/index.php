@@ -64,7 +64,7 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="ubi_id">
-                <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_nombre">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="ubi_nombre" class="sig-input" required placeholder="Ej: Mezzanina - Oficina RRHH"></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_nombre">Nombre <span class="req">*</span></label><input type="text" name="nombre" id="ubi_nombre" class="sig-input" required data-nombre-libre placeholder="Ej: Mezzanina - Oficina RRHH"></div>
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="ubi_departamento">Departamento <span class="req">*</span></label>
                     <select name="id_departamento" id="ubi_departamento" class="sig-input" required>

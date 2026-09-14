@@ -353,12 +353,26 @@ function initSigturValidations() {
             if(input.value) formatCedula({target: input}); // Format existing
         }
         
-        // NOMBRES Y APELLIDOS
-        if (name.includes('nombre') || name.includes('apellido') || id.includes('nombre') || id.includes('apellido')) {
+        // NOMBRES Y APELLIDOS — solo letras y espacios.
+        //
+        // Excepción `data-nombre-libre`: hay campos que se llaman "nombre" pero
+        // NO son el nombre de una persona, sino la denominación de algo — un
+        // horario ("OAC Matutino (7:00am–12:00pm)"), un departamento
+        // ("Relaciones Inter-Institucionales"), un feriado ("Santa Inés
+        // (Cumaná)") o un grado ("Profesional / Licenciado"). Con la regla de
+        // persona, esos registros **no se pueden guardar**: el formulario se
+        // niega a enviarse y el usuario solo ve "Hazlo coincidir con el formato
+        // solicitado". Marcándolos, se les aplica la capitalización de texto
+        // libre (B5), que respeta números y signos.
+        const nombreLibre = input.hasAttribute('data-nombre-libre');
+        if (!nombreLibre && (name.includes('nombre') || name.includes('apellido') || id.includes('nombre') || id.includes('apellido'))) {
             // Permitir solo letras y espacios
             input.setAttribute('pattern', '^[a-zA-ZáéíóúÁÉÍÓÚñÑ\\s]+$');
             input.title = "Solo puede contener letras y espacios.";
             input.addEventListener('input', formatNombreApellido);
+        } else if (nombreLibre && (type === 'text' || input.tagName === 'TEXTAREA')) {
+            input.addEventListener('input', formatCapitalizar);
+            if (input.value) formatCapitalizar({ target: input });
         }
 
         // TELÉFONOS — prefijo venezolano (select) + 7 dígitos

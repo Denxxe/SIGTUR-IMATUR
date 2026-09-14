@@ -58,7 +58,7 @@ $hm = fn($t) => !empty($t) ? substr($t, 0, 5) : '—';
                 <input type="hidden" name="id" id="hor_id">
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="hor_nombre">Nombre <span class="req">*</span></label>
-                    <input type="text" name="nombre" id="hor_nombre" class="sig-input" required placeholder="Ej: Estándar (8:00am–2:00pm)">
+                    <input type="text" name="nombre" id="hor_nombre" class="sig-input" required data-nombre-libre placeholder="Ej: Estándar (8:00am–2:00pm)">
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">

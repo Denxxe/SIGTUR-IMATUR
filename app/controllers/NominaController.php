@@ -46,9 +46,79 @@ class NominaController extends Controller {
             'titulo'    => 'Nómina — Parámetros del mes',
             'meses'     => Nomina::parametrosMesTodos(),
             'escalares' => Nomina::params(),
-            'grados'    => Nomina::grados(),
+            // `gradosTodos()` (no `grados()`) porque la pantalla también edita:
+            // hay que poder ver y reactivar un grado dado de baja.
+            'grados'    => Nomina::gradosTodos(),
             'escala'    => Nomina::escalaAntiguedad(),
         ]);
+    }
+
+    // =====================================================================
+    // Edición de los porcentajes (contratación colectiva, no código)
+    // =====================================================================
+    //
+    // Editar aquí NO altera nóminas ya calculadas: cada fila de
+    // `nomina_detalle` guarda los porcentajes con los que se calculó. Un
+    // período en Borrador sí los toma al recalcular, que es lo buscado.
+
+    public function guardarGrado() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireRoles([1, 2]);
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::guardarGrado($_POST, $this->getUserId());
+            Nomina::invalidarCache();
+            flash('global_msg', 'Grado de instrucción guardado. Las quincenas en borrador tomarán el nuevo porcentaje al recalcularlas; las cerradas no cambian.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    public function desactivarGrado() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireRoles([1, 2]);
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::desactivarGrado($_POST['codigo'] ?? '', $this->getUserId());
+            Nomina::invalidarCache();
+            flash('global_msg', 'Grado dado de baja. El personal que lo tenga registrado aparecerá con una advertencia en la próxima nómina.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    public function guardarAntiguedad() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireRoles([1, 2]);
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::guardarTramoAntiguedad(
+                (int)($_POST['anios'] ?? 0),
+                $_POST['porcentaje'] ?? '0',
+                $this->getUserId()
+            );
+            Nomina::invalidarCache();
+            flash('global_msg', 'Tramo de antigüedad guardado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    public function eliminarAntiguedad() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireRoles([1, 2]);
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::eliminarTramoAntiguedad((int)($_POST['anios'] ?? 0), $this->getUserId());
+            Nomina::invalidarCache();
+            flash('global_msg', 'Tramo eliminado. El tope pasó al año más alto que quedó en la escala.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
     }
 
     /**

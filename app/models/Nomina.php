@@ -138,6 +138,34 @@ class Nomina extends Model
         return $out;
     }
 
+    /**
+     * Catálogo completo de grados, **incluidos los desactivados**, para la
+     * pantalla de edición. `grados()` solo trae los vigentes porque alimenta
+     * el cálculo; aquí hace falta ver también lo que se dio de baja.
+     */
+    public static function gradosTodos(): array
+    {
+        $db = new Database();
+        $db->query("SELECT id, codigo, nombre, porcentaje, orden, is_active
+                      FROM nomina_grados ORDER BY orden, codigo");
+        return $db->resultSet();
+    }
+
+    /**
+     * ¿Ese código tiene una fila vigente en la tabla?
+     * Se pregunta aparte de `pctGrado()` porque 0 % es un valor **legítimo**
+     * (el Bachiller cobra 0 %): sin esta comprobación no se puede distinguir
+     * "cobra 0 %" de "el grado ya no existe", y la segunda debe avisarse.
+     */
+    public static function gradoActivo(?string $codigo): bool
+    {
+        if (!$codigo) return false;
+        $db = new Database();
+        $db->query("SELECT 1 FROM nomina_grados WHERE codigo = :c AND is_active = TRUE");
+        $db->bind(':c', $codigo);
+        return (bool) $db->single();
+    }
+
     /** % de prima de profesionalización de un código de grado (0 si no existe). */
     public static function pctGrado(?string $codigo): float
     {
@@ -170,6 +198,166 @@ class Nomina extends Model
         $db = new Database();
         $db->query("SELECT anios, porcentaje, es_tope FROM nomina_antiguedad ORDER BY anios");
         return $db->resultSet();
+    }
+
+    // =====================================================================
+    // Edición de los porcentajes (son PARÁMETROS, no valores de dominio)
+    // =====================================================================
+    //
+    // Los % de profesionalización y antigüedad salen de la contratación
+    // colectiva y cambian cuando el contrato cambia, así que viven en tablas
+    // y se editan desde /nomina/parametros — no se tocan en el código.
+    //
+    // ⚠️ EDITARLOS **NO** REESCRIBE NÓMINAS YA CALCULADAS. Cada fila de
+    // `nomina_detalle` guarda el `pct_profesionalizacion` y el
+    // `pct_antiguedad` con los que se calculó, así que un período cerrado
+    // conserva sus números. Un período en **Borrador** sí toma los valores
+    // nuevos al recalcular, que es justamente lo que se quiere.
+
+    /**
+     * Alta o edición de un grado de instrucción.
+     * El `codigo` es la clave con la que lo referencian `MAPEO_GRADO` y
+     * `personas.codigo_grado`: se fija al crear y **no se puede cambiar**
+     * después, porque renombrarlo dejaría huérfanas las fichas que lo usan.
+     */
+    public static function guardarGrado(array $d, ?int $userId = null): void
+    {
+        $codigo = strtoupper(trim($d['codigo'] ?? ''));
+        $nombre = trim($d['nombre'] ?? '');
+        $pct    = (float) str_replace(',', '.', (string)($d['porcentaje'] ?? '0'));
+        $orden  = (int)($d['orden'] ?? 0);
+        $activo = !empty($d['is_active']);
+
+        if (!preg_match('/^[A-Z0-9_]{2,10}$/', $codigo)) {
+            throw new Exception('El código debe tener entre 2 y 10 caracteres (letras, números o guion bajo), sin espacios.');
+        }
+        if ($nombre === '') throw new Exception('Indique el nombre del grado de instrucción.');
+        if ($pct < 0 || $pct > 100) throw new Exception('El porcentaje debe estar entre 0 y 100.');
+
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_grados WHERE codigo = :c");
+        $db->bind(':c', $codigo);
+        $previo = $db->single();
+
+        if ($previo) {
+            $db->query("UPDATE nomina_grados
+                           SET nombre = :n, porcentaje = :p, orden = :o, is_active = :a,
+                               updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                         WHERE codigo = :c");
+        } else {
+            $db->query("INSERT INTO nomina_grados (codigo, nombre, porcentaje, orden, is_active)
+                        VALUES (:c, :n, :p, :o, :a)");
+        }
+        $db->bind(':c', $codigo);
+        $db->bind(':n', $nombre);
+        $db->bind(':p', round($pct, 3));
+        $db->bind(':o', $orden);
+        $db->bind(':a', $activo, PDO::PARAM_BOOL);
+        if ($previo) $db->bind(':u', $userId);
+        $db->execute();
+
+        self::auditStatic('nomina_grados', $previo ? 'UPDATE' : 'INSERT',
+            (int)($previo->id ?? 0), $previo ? self::toArrayStatic($previo) : null,
+            ['codigo' => $codigo, 'nombre' => $nombre, 'porcentaje' => $pct,
+             'orden' => $orden, 'is_active' => $activo], $userId);
+    }
+
+    /**
+     * Da de baja un grado (no lo borra: `is_active = FALSE`).
+     * No se elimina de verdad porque `nomina_detalle` histórico lo referencia
+     * por código y porque reactivarlo debe ser trivial.
+     */
+    public static function desactivarGrado(string $codigo, ?int $userId = null): void
+    {
+        $codigo = strtoupper(trim($codigo));
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_grados WHERE codigo = :c");
+        $db->bind(':c', $codigo);
+        $previo = $db->single();
+        if (!$previo) throw new Exception('El grado indicado no existe.');
+
+        $db->query("UPDATE nomina_grados SET is_active = FALSE,
+                           updated_at = CURRENT_TIMESTAMP, updated_by = :u WHERE codigo = :c");
+        $db->bind(':c', $codigo);
+        $db->bind(':u', $userId);
+        $db->execute();
+
+        self::auditStatic('nomina_grados', 'UPDATE', (int)$previo->id,
+            self::toArrayStatic($previo), ['is_active' => false], $userId);
+    }
+
+    /**
+     * Alta o edición de un tramo de la escala de antigüedad.
+     *
+     * El tope NO es una regla aparte: `pctAntiguedad()` toma el tramo más alto
+     * que no supere los años del trabajador, así que **el último tramo rige
+     * para todos los años siguientes**. Por eso `es_tope` se recalcula solo
+     * (ver `sincronizarTope()`) en vez de dejar que alguien lo marque a mano y
+     * quede contradiciendo a la tabla.
+     */
+    public static function guardarTramoAntiguedad(int $anios, $porcentaje, ?int $userId = null): void
+    {
+        $pct = (float) str_replace(',', '.', (string)$porcentaje);
+        if ($anios < 1 || $anios > 60)  throw new Exception('Los años deben estar entre 1 y 60.');
+        if ($pct < 0   || $pct > 100)   throw new Exception('El porcentaje debe estar entre 0 y 100.');
+
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_antiguedad WHERE anios = :a");
+        $db->bind(':a', $anios);
+        $previo = $db->single();
+
+        if ($previo) {
+            $db->query("UPDATE nomina_antiguedad SET porcentaje = :p,
+                               updated_at = CURRENT_TIMESTAMP, updated_by = :u WHERE anios = :a");
+            $db->bind(':u', $userId);
+        } else {
+            $db->query("INSERT INTO nomina_antiguedad (anios, porcentaje) VALUES (:a, :p)");
+        }
+        $db->bind(':a', $anios);
+        $db->bind(':p', round($pct, 3));
+        $db->execute();
+
+        self::sincronizarTope();
+        self::auditStatic('nomina_antiguedad', $previo ? 'UPDATE' : 'INSERT', $anios,
+            $previo ? self::toArrayStatic($previo) : null,
+            ['anios' => $anios, 'porcentaje' => $pct], $userId);
+    }
+
+    /**
+     * Elimina un tramo. Aquí sí se borra de verdad (la tabla es una escala,
+     * no un histórico: lo que se pagó ya quedó guardado en `nomina_detalle`).
+     * Se impide vaciarla por completo: sin tramos, toda prima de antigüedad
+     * pasaría a 0 en silencio.
+     */
+    public static function eliminarTramoAntiguedad(int $anios, ?int $userId = null): void
+    {
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_antiguedad WHERE anios = :a");
+        $db->bind(':a', $anios);
+        $previo = $db->single();
+        if (!$previo) throw new Exception('El tramo indicado no existe.');
+
+        $db->query("SELECT COUNT(*) AS n FROM nomina_antiguedad");
+        if ((int)$db->single()->n <= 1) {
+            throw new Exception('No se puede eliminar el único tramo de la escala: la prima de antigüedad quedaría en 0 para todos.');
+        }
+
+        $db->query("DELETE FROM nomina_antiguedad WHERE anios = :a");
+        $db->bind(':a', $anios);
+        $db->execute();
+
+        self::sincronizarTope();
+        self::auditStatic('nomina_antiguedad', 'DELETE', $anios,
+            self::toArrayStatic($previo), null, $userId);
+    }
+
+    /** Marca como tope el tramo más alto y desmarca el resto. */
+    private static function sincronizarTope(): void
+    {
+        $db = new Database();
+        $db->query("UPDATE nomina_antiguedad
+                       SET es_tope = (anios = (SELECT MAX(anios) FROM nomina_antiguedad))");
+        $db->execute();
     }
 
     /**
@@ -334,6 +522,13 @@ class Nomina extends Model
             $adv[] = empty($empleado->nivel_academico)
                 ? 'Sin grado de instrucción registrado: la prima de profesionalización queda en 0.'
                 : 'Grado de instrucción no reconocido ("' . $empleado->nivel_academico . '"): corregirlo en la ficha para que la prima de profesionalización se calcule.';
+        } elseif (!self::gradoActivo($codigo)) {
+            // El grado se resuelve pero ya no tiene fila vigente en la tabla de
+            // porcentajes (lo dieron de baja desde /nomina/parametros). Sin este
+            // aviso cobraría 0 % sin que nadie se entere — el mismo silencio que
+            // es el defecto #7 de la plantilla del cliente.
+            $adv[] = 'El grado "' . $codigo . '" no está vigente en la tabla de prima de profesionalización: '
+                   . 'la prima queda en 0. Reactívelo en Nómina → Parámetros o corrija la ficha.';
         }
 
         $anios = self::aniosAdministracion($empleado, $fechaCorte);

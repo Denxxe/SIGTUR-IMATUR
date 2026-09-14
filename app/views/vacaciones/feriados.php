@@ -86,7 +86,7 @@
                 <div class="sig-field mb-3"><label class="sig-field__label" for="fecha">Fecha <span class="req">*</span></label>
                     <input id="fecha" type="date" name="fecha" class="sig-input" required></div>
                 <div class="sig-field mb-3"><label class="sig-field__label" for="nombre">Nombre <span class="req">*</span></label>
-                    <input id="nombre" type="text" name="nombre" class="sig-input" required placeholder="Ej: Lunes de Carnaval"></div>
+                    <input id="nombre" type="text" name="nombre" class="sig-input" required data-nombre-libre placeholder="Ej: Lunes de Carnaval"></div>
                 <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer" for="recurrente">
                     <input id="recurrente" type="checkbox" name="recurrente" value="1">
                     Se repite cada año (mismo mes/día) — desmarca para feriados movibles

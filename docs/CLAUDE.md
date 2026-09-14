@@ -440,6 +440,18 @@ se carga a mano: **nunca bloquea la nómina**.
 
 **Botones de acción en tablas (convención global, automática):** usar la clase `.row-action` (+ variante `--edit` / `--del` / `--view`, o ninguna para neutro) con **un ícono Bootstrap** y el texto de la acción. `initRowActions()` (`sigtur-validations.js`) deja **solo el ícono** y mueve el texto a `title`/`aria-label` (tooltip), dando un patrón visual uniforme y moderno en todo el sistema (cuadrado 32px vía `.is-icon`). No hace falta escribir el markup icon-only a mano: poner ícono + texto y el helper lo colapsa. Se auto-aplica en carga y en `shown.bs.modal`; para filas inyectadas por AJAX, llamar `window.initRowActions()` tras insertarlas. Si un `.row-action` no tiene ícono, conserva su texto.
 
+**Nombres que NO son de persona — `data-nombre-libre` (2026-09-14):** el validador global aplica la
+regla de nombre de persona (**solo letras y espacios**) a todo input cuyo `name`/`id` contenga
+`nombre` o `apellido`. Eso rompía en silencio los catálogos cuyo "nombre" es una **denominación**:
+`horarios` («OAC Matutino (7:00am–12:00pm)»), `departamentos` («Relaciones Inter-Institucionales»),
+`ubicaciones`, `feriados` («Santa Inés (Cumaná)») y `nomina_grados` («Profesional / Licenciado»).
+**11 registros reales no se podían editar y volver a guardar**: el formulario se negaba a enviarse y
+el usuario solo veía «Hazlo coincidir con el formato solicitado» — y los propios *placeholders* de
+esos formularios sugerían valores que la regla rechazaba. Marcar el input con **`data-nombre-libre`**
+lo exime del patrón y le aplica la capitalización de texto libre (`formatCapitalizar`, B5), que
+respeta números y signos. Aplicado en esas 5 vistas. **Al crear un campo `nombre` que no sea el de
+una persona, marcarlo.** El saneo del servidor (`sanitizePost`) no cambia.
+
 **Teléfonos (convención global, automática):** todo `<input name="telefono">` (o `type="tel"`/id con "telefono") se transforma en **[select de prefijo VE] + [campo de 7 dígitos]** vía `initTelefonoInput` (`sigtur-validations.js`). Prefijos: **solo móviles** `0412/0414/0416/0424/0426` (los fijos no se muestran; si un registro legado trae otro prefijo, se agrega como opción al editar). El input original se oculta y conserva el valor combinado (`0XXX`+7 = 11 dígitos) para el POST — **no requiere cambios en controladores/modelos**. Valida exactamente 7 dígitos (`setCustomValidity` + `required` movido al campo visible). Sincroniza con autocompletado por cédula (intercepta asignaciones a `.value` con un descriptor). Se auto-aplica en carga y en `shown.bs.modal`.
 
 **Edad / fecha de nacimiento (convención global):** cualquier `<input type="date" class="js-edad">` muestra la edad calculada en vivo y valida el rango con `data-edad-min` / `data-edad-max` (años). Opcional `data-edad-target="idElemento"` para escribir la edad en un elemento existente (si no, crea un `<small>` debajo). Aplica restricciones nativas `min`/`max` al datepicker y `setCustomValidity`. El helper (`initEdadInput` + `sigturEdad`) vive en `sigtur-validations.js` y se auto-conecta en carga y en `shown.bs.modal`; para filas dinámicas, llamar `initSigturValidations()` tras insertarlas. El rango puede ajustarse en vivo: cambiar `data-edad-min/max` y disparar `input.dispatchEvent(new Event('edad:refresh'))`. Ejemplos: empleado `data-edad-min="18"` con `data-edad-max` **dinámico 65↔70** según comisión de servicio (`wzAjustarEdadMax()` en `form.php`; el servidor valida lo mismo en `EmpleadosController`: comisión 18–70, no comisión 18–65); participantes libres (niños) 5–11 en talleres/rutas. Carga familiar usa `js-edad` sin min/max (solo muestra edad).
