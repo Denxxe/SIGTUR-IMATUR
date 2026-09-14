@@ -156,6 +156,11 @@ function sigturFechaLarga(d) {
     return d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
 }
 
+/** "14/9/26" — formato corto para el sello de la esquina. */
+function sigturFechaCorta(d) {
+    return d.getDate() + '/' + (d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(-2);
+}
+
 /** "9:31 a. m." */
 function sigturHoraCorta(d) {
     let h = d.getHours();
@@ -269,6 +274,13 @@ async function sigturExportarTabla(table, modo, trs) {
     // los encabezados del navegador.
     let h = '<html><head><meta charset="UTF-8"><title></title><style>'
         + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:14mm 12mm}'
+        // Sello de emisión en la esquina, DIBUJADO POR EL DOCUMENTO.
+        // Sustituye a la fecha que ponía Chrome en su encabezado: esa venía
+        // acompañada de la URL y del nombre del módulo, que no debían salir en
+        // un documento oficial, y al quitar el margen de página se fue todo.
+        // Al ser `position:fixed`, Chrome lo repite en TODAS las hojas — que es
+        // justo lo que se quiere en un listado de varias páginas.
+        + '.sello{position:fixed;top:5mm;left:12mm;font-size:8px;color:#777;letter-spacing:.02em}'
         + '.mbr{display:flex;align-items:center;gap:14px;margin-bottom:4px}'
         + '.mbr img{height:62px;width:auto;object-fit:contain;flex-shrink:0}'
         + '.lg-hueco{width:62px;flex-shrink:0}'
@@ -290,6 +302,9 @@ async function sigturExportarTabla(table, modo, trs) {
         // de página no tiene dónde ponerlos. El aire del documento lo da el
         // padding del body, no el margen de página.
         + '@page{size:landscape;margin:0}</style></head><body>';
+    // Fecha y hora cortas en la esquina (la marca de emisión que el navegador
+    // ponía antes). Va antes del membrete para que quede en la capa de arriba.
+    h += '<div class="sello">' + esc(sigturFechaCorta(ahora) + ', ' + sigturHoraCorta(ahora)) + '</div>';
     h += '<div class="mbr">' + logoImg(logos.alcaldia, 'Alcaldía de Cumaná')
        + '<div class="mb">' + membrete.map(esc).join('<br>') + '</div>'
        + logoImg(logos.imatur, 'IMATUR') + '</div>';
