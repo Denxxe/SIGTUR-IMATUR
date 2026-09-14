@@ -132,7 +132,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
     <?php endif; ?>
 </form>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10"
+     data-titulo-export="Listado de Bienes Institucionales">
     <table class="sig-table">
         <thead><tr>
             <th>Código oficial</th><th>Bien</th><th>Categoría</th><th>Ubicación</th>

@@ -116,7 +116,8 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
     <?php endif; ?>
 </form>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10" data-buscar-placeholder="Buscar por nombre, cédula, cargo o departamento…">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="10" data-buscar-placeholder="Buscar por nombre, cédula, cargo o departamento…"
+     data-titulo-export="<?php echo $egView ? 'Listado de Personal Egresado' : 'Listado de Personal Activo'; ?>">
     <table class="sig-table">
         <thead>
             <tr>

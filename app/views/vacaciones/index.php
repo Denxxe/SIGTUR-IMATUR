@@ -13,7 +13,8 @@
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por nombre o cédula…">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="15" data-buscar-placeholder="Buscar por nombre o cédula…"
+     data-titulo-export="Saldo de Vacaciones del Personal">
     <table class="sig-table">
         <thead>
             <tr>

@@ -132,9 +132,37 @@ function sigturSlug(s) {
     return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
         .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'listado';
 }
-function sigturTituloListado() {
+/**
+ * Título del documento exportado.
+ *
+ * El `.page__title` nombra la PANTALLA ("Módulo de Pasantes", "Gestión de
+ * Personal"), que se lee bien en el sistema pero mal como encabezado de un
+ * documento oficial. Por eso el listado puede declarar su propio nombre con
+ * `data-titulo-export` en el `.sig-table-wrap`; si no lo trae, se cae al
+ * título de la pantalla como antes.
+ */
+function sigturTituloListado(table) {
+    const wrap = table ? table.closest('[data-titulo-export]') : null;
+    const propio = wrap ? (wrap.dataset.tituloExport || '').trim() : '';
+    if (propio) return propio;
     const h = document.querySelector('.page__title');
     return ((h ? h.textContent : document.title) || 'Listado').trim();
+}
+
+/** "14 de septiembre de 2026" — para el pie de los documentos. */
+function sigturFechaLarga(d) {
+    const meses = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                   'agosto','septiembre','octubre','noviembre','diciembre'];
+    return d.getDate() + ' de ' + meses[d.getMonth()] + ' de ' + d.getFullYear();
+}
+
+/** "9:31 a. m." */
+function sigturHoraCorta(d) {
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const suf = h < 12 ? 'a. m.' : 'p. m.';
+    h = h % 12 || 12;
+    return h + ':' + m + ' ' + suf;
 }
 // Convierte la tabla en {headers, rows} de texto, saltando columnas de acciones
 // (th/td con clase col-actions o atributo data-no-export).
@@ -175,11 +203,13 @@ function sigturLogosBase64() {
 }
 
 async function sigturExportarTabla(table, modo, trs) {
-    const titulo = sigturTituloListado();
+    const titulo = sigturTituloListado(table);
     const { headers, rows } = sigturTablaMatriz(table, trs);
     if (!headers.length) { if (window.showToast) showToast('Exportar', 'No hay datos para exportar.', 'warning'); return; }
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const fecha = new Date().toLocaleString('es-VE');
+    const ahora = new Date();
+    const emitido = 'Emitido en Cumaná el ' + sigturFechaLarga(ahora) + ' a las ' + sigturHoraCorta(ahora);
+    const conteo = rows.length + (rows.length === 1 ? ' registro' : ' registros');
     const rif = window.SIGTUR_RIF || 'G-20008498-7';
     // Mismas cinco líneas que el membrete del servidor
     // (app/views/inc/membrete.php, XlsxMultiSheet y ReportesExportTrait).
@@ -191,33 +221,30 @@ async function sigturExportarTabla(table, modo, trs) {
     const ncol = Math.max(1, headers.length);
 
     if (modo === 'excel') {
-        const logos = await sigturLogosBase64();
-        const imgTd = (src, rowspan) => src
-            ? '<td rowspan="' + rowspan + '" class="lg"><img src="' + src + '" height="48"></td>'
-            : '<td rowspan="' + rowspan + '"></td>';
-        // 3 columnas: logo | membrete (texto) | logo — solo si hay ≥3 columnas de datos;
-        // si la tabla es muy angosta, se omiten los logos laterales para no romper el layout.
-        const usarLogos = ncol >= 3 && (logos.alcaldia || logos.imatur);
-        const filasMembrete = 5; // 3 líneas institucionales + título + meta
+        // ⚠️ SIN LOGOS A PROPÓSITO. Este archivo es un .xls en formato HTML, y
+        // Excel NO renderiza imágenes en `data:` URI al importarlo: salían dos
+        // recuadros con una X roja a los lados del membrete. Peor que no
+        // ponerlos. Las celdas de logo además estrechaban la primera y la
+        // última columna (la cédula se partía en dos líneas).
+        // Los logos SÍ salen en el `.xlsx` real que generan los reportes del
+        // servidor (XlsxLogos, imagen incrustada de verdad) y en el PDF.
+        const span = ' colspan="' + ncol + '"';
 
         let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8">'
             + '<style>td,th{mso-number-format:"\\@";border:1px solid #ccd;padding:5px 9px;'
-            + 'font-family:Calibri,Arial,sans-serif;font-size:11pt}'
-            + 'th{background:#1b5e20;color:#fff;font-weight:bold;padding:7px 9px}'
-            + '.mb{font-weight:bold;text-align:center;border:none;font-size:11pt;padding:3px 4px;text-transform:uppercase}'
-            + '.ttl{font-size:16pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none;padding:8px 4px}'
-            + '.mt{border:none;color:#555;text-align:center;padding:4px}'
-            + '.lg{border:none;text-align:center;vertical-align:middle;width:70px}</style></head><body><table>';
+            + 'font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:nowrap}'
+            + 'th{background:#1b5e20;color:#fff;font-weight:bold;padding:7px 9px;text-align:center}'
+            + '.mb{font-weight:bold;text-align:center;border:none;font-size:10pt;padding:2px 4px;text-transform:uppercase}'
+            + '.ttl{font-size:15pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none;padding:10px 4px}'
+            + '.mt{border:none;color:#555;text-align:center;padding:3px;font-size:10pt}'
+            + '.sep{border:none;height:6px}</style></head><body><table>';
 
-        const ncolTexto = usarLogos ? ncol - 2 : ncol;
-        const spanTexto = ' colspan="' + Math.max(1, ncolTexto) + '"';
-        if (usarLogos) h += '<tr>' + imgTd(logos.alcaldia, filasMembrete) + '<td' + spanTexto + ' class="mb">' + esc(membrete[0]) + '</td>' + imgTd(logos.imatur, filasMembrete) + '</tr>';
-        else h += '<tr><td' + spanTexto + ' class="mb">' + esc(membrete[0]) + '</td></tr>';
-        for (let i = 1; i < membrete.length; i++) h += '<tr><td' + spanTexto + ' class="mb">' + esc(membrete[i]) + '</td></tr>';
-        h += '<tr><td' + spanTexto + ' class="ttl">' + esc(titulo) + '</td></tr>';
-        h += '<tr><td' + spanTexto + ' class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</td></tr>';
-        const span = ' colspan="' + ncol + '"';
-        h += '<tr><td' + span + ' class="mt"></td></tr>';
+        membrete.forEach(l => { h += '<tr><td' + span + ' class="mb">' + esc(l) + '</td></tr>'; });
+        h += '<tr><td' + span + ' class="sep"></td></tr>';
+        h += '<tr><td' + span + ' class="ttl">' + esc(titulo) + '</td></tr>';
+        h += '<tr><td' + span + ' class="mt">' + esc(emitido) + '</td></tr>';
+        h += '<tr><td' + span + ' class="mt">' + esc(conteo) + '</td></tr>';
+        h += '<tr><td' + span + ' class="sep"></td></tr>';
         h += '<tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
         rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
         h += '</table></body></html>';
@@ -231,18 +258,38 @@ async function sigturExportarTabla(table, modo, trs) {
     }
 
     // PDF: documento limpio en un iframe oculto → diálogo de impresión (Guardar como PDF).
+    // Aquí los logos SÍ se pueden incrustar: lo pinta el navegador, no Excel.
+    const logos = await sigturLogosBase64();
+    const logoImg = (src, alt) => src
+        ? '<img src="' + src + '" alt="' + alt + '">'
+        : '<span class="lg-hueco"></span>';
+
     let h = '<html><head><meta charset="UTF-8"><title>' + esc(titulo) + '</title><style>'
-        + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:22px}'
-        + '.mb{text-align:center;font-size:11px;color:#555;line-height:1.5;text-transform:uppercase;font-weight:600}'
-        + 'h1{font-size:16px;text-align:center;margin:6px 0 2px}'
-        + '.mt{text-align:center;font-size:11px;color:#666;margin-bottom:14px}'
-        + 'table{width:100%;border-collapse:collapse;font-size:11px}'
+        + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0}'
+        + '.mbr{display:flex;align-items:center;gap:14px;margin-bottom:4px}'
+        + '.mbr img{height:62px;width:auto;object-fit:contain;flex-shrink:0}'
+        + '.lg-hueco{width:62px;flex-shrink:0}'
+        + '.mb{flex:1;text-align:center;font-size:10px;color:#111;line-height:1.65;'
+        + 'text-transform:uppercase;font-weight:700;letter-spacing:.01em}'
+        + '.regla{border:none;border-top:1px solid #111;margin:4px 0 14px}'
+        + 'h1{font-size:15px;text-align:center;margin:0 0 3px;letter-spacing:.01em}'
+        + '.mt{text-align:center;font-size:10.5px;color:#555;margin:0}'
+        + '.mt b{color:#222}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:14px}'
         + 'th,td{border:1px solid #999;padding:5px 7px;text-align:left}'
-        + 'th{background:#1b5e20;color:#fff}tr:nth-child(even) td{background:#f3f6f3}'
+        + 'th{background:#1b5e20;color:#fff;text-align:center}'
+        + 'tbody tr:nth-child(even) td{background:#f3f6f3}'
+        // El membrete se repite en cada hoja: un listado largo no puede tener
+        // páginas sueltas sin identificación institucional.
+        + 'thead{display:table-header-group}'
         + '@page{size:landscape;margin:12mm}</style></head><body>';
-    h += '<div class="mb">' + membrete.map(esc).join('<br>') + '</div>';
+    h += '<div class="mbr">' + logoImg(logos.alcaldia, 'Alcaldía de Cumaná')
+       + '<div class="mb">' + membrete.map(esc).join('<br>') + '</div>'
+       + logoImg(logos.imatur, 'IMATUR') + '</div>';
+    h += '<hr class="regla">';
     h += '<h1>' + esc(titulo) + '</h1>';
-    h += '<div class="mt">Generado: ' + esc(fecha) + ' · ' + rows.length + ' registro(s)</div>';
+    h += '<div class="mt">' + esc(emitido) + '</div>';
+    h += '<div class="mt"><b>' + esc(conteo) + '</b></div>';
     h += '<table><thead><tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>';
     rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
     h += '</tbody></table></body></html>';
@@ -252,6 +299,12 @@ async function sigturExportarTabla(table, modo, trs) {
     document.body.appendChild(ifr);
     const doc = ifr.contentWindow.document;
     doc.open(); doc.write(h); doc.close();
+    // Esperar a que los logos estén decodificados: si se abre el diálogo antes,
+    // el PDF sale con los huecos vacíos donde van las imágenes.
+    const imgs = Array.from(doc.images || []);
+    await Promise.all(imgs.map(im => im.complete
+        ? Promise.resolve()
+        : new Promise(res => { im.onload = im.onerror = res; })));
     setTimeout(() => {
         try { ifr.contentWindow.focus(); ifr.contentWindow.print(); } catch (e) {}
         setTimeout(() => ifr.remove(), 1500);

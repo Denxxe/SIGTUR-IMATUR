@@ -69,7 +69,8 @@ $enCurso     = $data['enCurso'] ?? [];
     </div>
 <?php endif; ?>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="12" data-buscar-placeholder="Buscar por bien, código, tipo o responsable…">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="12" data-buscar-placeholder="Buscar por bien, código, tipo o responsable…"
+     data-titulo-export="Listado de Movimientos de Bienes">
     <table class="sig-table">
         <thead><tr>
             <th>Fecha</th><th>Bien</th><th>Movimiento</th><th>Recorrido</th>

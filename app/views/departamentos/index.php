@@ -23,7 +23,8 @@ $tipoBadge = function ($t) {
     </div>
 </div>
 
-<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="100" data-buscar-placeholder="Buscar unidad…">
+<div class="sig-table-wrap anim-slide-up" data-tabla-buscable data-por-pagina="100" data-buscar-placeholder="Buscar unidad…"
+     data-titulo-export="Estructura Organizativa de IMATUR">
     <table class="sig-table">
         <thead>
             <tr>
