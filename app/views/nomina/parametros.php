@@ -184,11 +184,15 @@
 </div>
 
 <div class="sig-card anim-slide-up">
-    <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-sliders"></i> Montos y porcentajes del cálculo</div></div>
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-sliders"></i> Montos y porcentajes del cálculo</div>
+        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="editarEscalares()">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+    </div>
     <div class="sig-card__body">
         <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--sp-3);">
-            Se editan en <a href="<?php echo URL_ROOT; ?>/config/index">Configuración</a>. Ninguno está
-            escrito en el código: son parámetros de contratación colectiva.
+            Ninguno está escrito en el código: son parámetros de contratación colectiva y se editan aquí.
         </p>
         <div class="row">
             <?php
@@ -216,6 +220,25 @@
                 </div>
             <?php endforeach; ?>
         </div>
+        <hr style="margin:var(--sp-4) 0;border:none;border-top:1px solid var(--border-subtle);">
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:var(--sp-2);">
+            <i class="bi bi-calendar2-check"></i> Días base del bono vacacional, por tipo de personal
+        </div>
+        <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:var(--sp-3);">
+            Beneficio de <strong>contrato colectivo</strong>, superior al mínimo de la LOTTT (15 + 1 por año, tope 30).
+        </p>
+        <div class="row">
+            <?php foreach (($data['diasBono'] ?? []) as $tipo => $dias): ?>
+                <div class="col-md-3 col-sm-6" style="margin-bottom:var(--sp-3);">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);"><?php echo htmlspecialchars($tipo); ?></div>
+                    <div style="font-weight:700;font-variant-numeric:tabular-nums;">
+                        <?php echo ($dias === null || $dias === '') ? '—' : (int)$dias . ' días'; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
         <div class="sig-alert sig-alert--warning" style="margin-top:var(--sp-3);">
             <i class="bi bi-exclamation-triangle"></i>
             <div>
@@ -227,6 +250,102 @@
                 definitivo hasta que se aclaren.
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Modal: montos, porcentajes y días base -->
+<div class="modal fade" id="modalEscalares" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form action="<?php echo URL_ROOT; ?>/nomina/guardarEscalares" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Montos y porcentajes del cálculo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--sp-3);">
+                    Cambiarlos no altera una quincena ya cerrada. Una en borrador los toma al recalcularla.
+                </p>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                    Montos
+                </div>
+                <div class="row g-3" style="margin-bottom:var(--sp-4);">
+                    <?php
+                    // Cada grupo lleva su paso: los montos en bolívares admiten
+                    // céntimos; los porcentajes, tres decimales (hay tramos como
+                    // 1,7 %); los días y las semanas son enteros.
+                    $grupos = [
+                        'montos' => ['paso' => '0.01', 'campos' => [
+                            'nomina_bono_transporte_mensual' => 'Bono de transporte (mensual, Bs)',
+                            'nomina_monto_por_hijo'          => 'Prima por hijo (quincenal, Bs)',
+                            'nomina_becas_por_hijo'          => 'Becas por hijo (Bs)',
+                        ]],
+                        'porcentajes' => ['paso' => '0.001', 'campos' => [
+                            'nomina_pct_sso_trabajador'   => 'SSO trabajador %',
+                            'nomina_pct_faov_trabajador'  => 'FAOV trabajador %',
+                            'nomina_pct_lrppf_trabajador' => 'LRPPF trabajador %',
+                            'nomina_pct_sso_patronal'     => 'SSO patronal %',
+                            'nomina_pct_faov_patronal'    => 'FAOV patronal %',
+                            'nomina_pct_rpe_patronal'     => 'RPE patronal %',
+                        ]],
+                        'dias' => ['paso' => '1', 'campos' => [
+                            'nomina_semanas_default'    => 'Semanas (SSO/LRPPF/aportes)',
+                            'nomina_dias_bono_vac_base' => 'Días base bono vacacional',
+                            'nomina_dias_bono_fin_anio' => 'Días bono fin de año',
+                            'nomina_dias_base_anio'     => 'Días base del año',
+                        ]],
+                    ];
+                    $pintar = function(array $campos, string $paso) use ($data) {
+                        foreach ($campos as $clave => $label):
+                            $val = $data['escalares'][$clave] ?? '';
+                    ?>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="sig-field" style="margin:0;">
+                                <label class="sig-field__label" for="esc_<?php echo $clave; ?>"><?php echo $label; ?></label>
+                                <input type="number" step="<?php echo $paso; ?>" min="0"
+                                       name="<?php echo $clave; ?>" id="esc_<?php echo $clave; ?>"
+                                       class="sig-input" value="<?php echo htmlspecialchars((string)$val); ?>">
+                            </div>
+                        </div>
+                    <?php endforeach; };
+                    $pintar($grupos['montos']['campos'], $grupos['montos']['paso']); ?>
+                </div>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                    Deducciones y aportes
+                </div>
+                <div class="row g-3" style="margin-bottom:var(--sp-4);">
+                    <?php $pintar($grupos['porcentajes']['campos'], $grupos['porcentajes']['paso']); ?>
+                </div>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                    Días y semanas
+                </div>
+                <div class="row g-3" style="margin-bottom:var(--sp-4);">
+                    <?php $pintar($grupos['dias']['campos'], $grupos['dias']['paso']); ?>
+                </div>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                    Días base del bono vacacional, por tipo de personal
+                </div>
+                <div class="row g-3">
+                    <?php foreach (BonoVacacional::CONFIG_DIAS as $tipo => $clave): ?>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="sig-field" style="margin:0;">
+                                <label class="sig-field__label" for="esc_<?php echo $clave; ?>"><?php echo htmlspecialchars($tipo); ?></label>
+                                <input type="number" step="1" min="0"
+                                       name="<?php echo $clave; ?>" id="esc_<?php echo $clave; ?>"
+                                       class="sig-input" value="<?php echo htmlspecialchars((string)($data['diasBono'][$tipo] ?? '')); ?>">
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -368,6 +487,10 @@
         ['pm_tasa_sugerida', 'pm_tasa_fecha_valor', 'pm_tasa_consultada_at']
             .forEach(function (id) { document.getElementById(id).value = ''; });
         document.getElementById('pm_tasa_aviso').style.display = 'none';
+    }
+
+    function editarEscalares() {
+        new bootstrap.Modal(document.getElementById('modalEscalares')).show();
     }
 
     // ── Grados de instrucción ────────────────────────────────────────────

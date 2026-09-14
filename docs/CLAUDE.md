@@ -410,6 +410,26 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 
 **Respaldos automáticos de BD (tarea programada):** `cron/respaldo_bd.php` (solo CLI) genera un volcado `pg_dump` en formato SQL plano en `storage/backups/` con nombre fechado (`sigtur_YYYY-MM-DD_His.sql`) y **rota** conservando los últimos `BACKUP_RETENTION` (config, default 14). La contraseña se pasa por `PGPASSWORD` (entorno), no en la línea de comandos; `PG_DUMP_PATH` (config) apunta a `pg_dump.exe`. Carpeta **fuera de `public/`** (no accesible por web) y con `.gitignore` (los dumps no se versionan). Programar en el Programador de tareas de Windows (p. ej. diario). **Restaurar:** crear BD vacía + `psql -d "SIGTUR-IMATUR" -f <archivo>.sql`. Log en `storage/backups/_backup.log`.
 
+**Parámetros de nómina: UNA sola pantalla (2026-09-14).** Todo lo que interviene en el cálculo se
+administra en `/nomina/parametros`, **nada está fijo en el código**: cesta ticket y tasa del dólar por
+mes (`nomina_parametros_mes`), porcentajes de profesionalización (`nomina_grados`) y de antigüedad
+(`nomina_antiguedad`), y los escalares `nomina_*` + `bono_vac_dias_*` de `configuracion_sistema`
+(`NominaController::guardarEscalares()`, que **solo acepta las claves declaradas por
+`Nomina::params()` y `BonoVacacional::CONFIG_DIAS`** — nunca lo que venga en el POST, para que ese
+endpoint no escriba cualquier otra configuración). La sección de nómina se **quitó de `/config`**, que
+queda con un enlace: tener los mismos valores en dos formularios era pedir que se desincronizaran.
+
+> **Lo que se encontró al moverlo** (y por qué convenía moverlo): (1) los **13 escalares `nomina_*`**
+> —SSO, FAOV, LRPPF, aportes patronales, transporte, prima por hijo, becas, semanas, días base— **no
+> eran editables en ninguna pantalla**: `/config` nunca los renderizó, y como `ConfigController::store()`
+> solo actualiza las claves presentes en el POST, no había forma de tocarlos desde la UI pese a que la
+> vista de nómina decía «Se editan en Configuración». (2) `bono_vac_dias_comision` (5.º tipo de
+> personal, mig. 072) **faltaba** en el formulario de `/config`, así que los días de Comisión de
+> Servicio tampoco se podían cambiar. (3) El escalar `monto_cesta_ticket` de `configuracion_sistema`
+> está **muerto**: desde la mig. 072 la cesta ticket vive por mes en `nomina_parametros_mes` y es de
+> ahí de donde leen `Nomina` y `BonoVacacional`. Se retiró el campo (la fila queda, inofensiva);
+> mostrarlo hacía creer que se estaba fijando la cesta ticket del cálculo.
+
 **Consulta al BCV (`app/core/TasaBcv.php`, mig. 074):** el BCV **no tiene API** — se lee su portada
 (bloque `id="dolar"`; la fecha valor sale del atributo `content` en ISO, no del texto en español). Dos
 cosas que no son obvias y ya costaron tiempo: (1) **el BCV publica con fecha valor adelantada** —un

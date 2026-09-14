@@ -50,6 +50,12 @@ class NominaController extends Controller {
             // hay que poder ver y reactivar un grado dado de baja.
             'grados'    => Nomina::gradosTodos(),
             'escala'    => Nomina::escalaAntiguedad(),
+            // Días base del bono vacacional por tipo de personal: estaban en
+            // /config, separados del resto de los parámetros de nómina.
+            'diasBono'  => array_map(
+                fn($clave) => ConfigSistema::get($clave),
+                BonoVacacional::CONFIG_DIAS
+            ),
         ]);
     }
 
@@ -83,6 +89,49 @@ class NominaController extends Controller {
             Nomina::desactivarGrado($_POST['codigo'] ?? '', $this->getUserId());
             Nomina::invalidarCache();
             flash('global_msg', 'Grado dado de baja. El personal que lo tenga registrado aparecerá con una advertencia en la próxima nómina.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    /**
+     * Montos, porcentajes y días base del cálculo (claves de
+     * `configuracion_sistema`). Viven aquí, junto a lo demás que interviene
+     * en la nómina, en vez de repartidos entre dos pantallas.
+     *
+     * Solo se aceptan las claves declaradas por el modelo — nunca lo que
+     * venga en el POST —, para que este endpoint no se pueda usar para
+     * escribir cualquier otra configuración del sistema.
+     */
+    public function guardarEscalares() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireRoles([1, 2]);
+        $_POST = $this->sanitizePost();
+
+        $permitidas = array_merge(
+            array_keys(Nomina::params()),          // nomina_*
+            array_values(BonoVacacional::CONFIG_DIAS) // bono_vac_dias_*
+        );
+
+        $guardados = 0;
+        try {
+            foreach ($permitidas as $clave) {
+                if (!isset($_POST[$clave])) continue;
+                $valor = str_replace(',', '.', trim($_POST[$clave]));
+                if ($valor === '' || !is_numeric($valor)) {
+                    throw new Exception('El valor de "' . $clave . '" debe ser un número.');
+                }
+                if ((float)$valor < 0) {
+                    throw new Exception('El valor de "' . $clave . '" no puede ser negativo.');
+                }
+                ConfigSistema::set($clave, $valor, $this->getUserId());
+                $guardados++;
+            }
+            // Los escalares se memoizan por petición: sin esto, la pantalla
+            // que se dibuja después del redirect mostraría los valores viejos.
+            Nomina::invalidarCache();
+            flash('global_msg', $guardados . ' valor(es) guardado(s). Las quincenas en borrador los tomarán al recalcularlas; las cerradas no cambian.');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
