@@ -262,8 +262,13 @@ async function sigturExportarTabla(table, modo, trs) {
         ? '<img src="' + src + '" alt="' + alt + '">'
         : '<span class="lg-hueco"></span>';
 
-    let h = '<html><head><meta charset="UTF-8"><title>' + esc(titulo) + '</title><style>'
-        + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0}'
+    // El <title> se deja vacío A PROPÓSITO: Chrome lo imprime en el encabezado
+    // de cada hoja junto a la fecha y la URL. Con @page{margin:0} no queda sitio
+    // para esa franja y desaparece (ver más abajo); el título vacío es el
+    // segundo cinturón, para que ni siquiera aparezca si el usuario reactiva
+    // los encabezados del navegador.
+    let h = '<html><head><meta charset="UTF-8"><title></title><style>'
+        + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:14mm 12mm}'
         + '.mbr{display:flex;align-items:center;gap:14px;margin-bottom:4px}'
         + '.mbr img{height:62px;width:auto;object-fit:contain;flex-shrink:0}'
         + '.lg-hueco{width:62px;flex-shrink:0}'
@@ -280,7 +285,11 @@ async function sigturExportarTabla(table, modo, trs) {
         // El membrete se repite en cada hoja: un listado largo no puede tener
         // páginas sueltas sin identificación institucional.
         + 'thead{display:table-header-group}'
-        + '@page{size:landscape;margin:12mm}</style></head><body>';
+        // `margin:0` en @page es lo que quita el encabezado y el pie que Chrome
+        // dibuja por su cuenta (fecha · título · URL · nº de página): sin margen
+        // de página no tiene dónde ponerlos. El aire del documento lo da el
+        // padding del body, no el margen de página.
+        + '@page{size:landscape;margin:0}</style></head><body>';
     h += '<div class="mbr">' + logoImg(logos.alcaldia, 'Alcaldía de Cumaná')
        + '<div class="mb">' + membrete.map(esc).join('<br>') + '</div>'
        + logoImg(logos.imatur, 'IMATUR') + '</div>';

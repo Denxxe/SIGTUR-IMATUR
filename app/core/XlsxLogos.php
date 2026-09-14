@@ -9,8 +9,15 @@
  */
 class XlsxLogos
 {
-    /** Alto de destino común a ambos logos (px); el ancho se deriva de su proporción real. */
-    const ALTO_PX = 46;
+    /**
+     * Alto de destino común a ambos logos (px); el ancho se deriva de su
+     * proporción real. Ambos logos son verticales (Alcaldía 204×278, IMATUR
+     * 451×553), así que a poca altura quedan diminutos: a 46 px medían 34 y
+     * 38 px de ancho y se perdían al lado del membrete. El bloque institucional
+     * son 5 filas de 18 pt ≈ 120 px, de modo que 100 px lo acompaña sin
+     * desbordarlo (quedan ~73 y ~82 px de ancho).
+     */
+    const ALTO_PX = 100;
 
     private static ?array $cache = null;
 

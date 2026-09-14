@@ -28,7 +28,9 @@ $niveles = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio'];
   .firmas { display:flex; justify-content:space-between; margin-top:1.6cm; }
   .firma { width:45%; text-align:center; border-top:1px solid #000; padding-top:4px; font-size:9pt; }
   .btn-print { position:fixed; top:12px; right:12px; padding:8px 18px; background:#2563EB; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; font-family:sans-serif; }
-  @media print { .btn-print { display:none; } .page { padding:1.1cm 1.5cm; } }
+  /* Padding en la hoja y @page sin margen: con margen de página, Chrome usa esa
+     franja para imprimir su encabezado (fecha · título · URL). */
+  @media print { .btn-print { display:none; } .page { padding:1.4cm 1.6cm; } @page { size:A4; margin:0; } }
 </style>
 </head>
 <body>

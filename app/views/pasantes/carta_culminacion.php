@@ -33,8 +33,10 @@
             body { background: #fff; }
             .ctrl-bar { display: none !important; }
             .page-wrap { max-width: 100%; margin: 0; box-shadow: none; border-radius: 0; }
-            .letter { padding: 28px 36px 32px; }
-            @page { size: A4 portrait; margin: 1.5cm 1.8cm; }
+            /* Padding en vez de margen de @page: así Chrome no tiene franja
+               donde imprimir su encabezado (fecha · título · URL). */
+            .letter { padding: 1.5cm 1.8cm; }
+            @page { size: A4 portrait; margin: 0; }
         }
     </style>
 </head>

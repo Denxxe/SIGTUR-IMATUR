@@ -146,8 +146,11 @@
                 box-shadow: none;
                 border-radius: 0;
             }
-            .letter { padding: 28px 36px 32px; }
-            @page { size: A4 portrait; margin: 1.5cm 1.8cm; }
+            /* El margen de la hoja lo da este padding y NO @page: con margen de
+               página, Chrome usa esa franja para su propio encabezado
+               (fecha · título · URL). En un oficio eso no puede salir. */
+            .letter { padding: 1.5cm 1.8cm; }
+            @page { size: A4 portrait; margin: 0; }
         }
     </style>
 </head>

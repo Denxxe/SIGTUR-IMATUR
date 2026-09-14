@@ -211,14 +211,19 @@
             body { background: #fff; }
             .ctrl-bar { display: none !important; }
             .page-wrap {
+                /* El aire de la hoja lo da este padding y NO el margen de @page:
+                   con margen de página, Chrome aprovecha esa franja para
+                   imprimir su propio encabezado (fecha · título · URL · nº de
+                   página). Con margin:0 no tiene dónde ponerlo y desaparece. */
                 margin: 0;
+                padding: 1.2cm 1.4cm;
                 box-shadow: none;
                 border-radius: 0;
                 max-width: 100%;
             }
             @page {
                 size: landscape;
-                margin: 1.2cm 1.4cm;
+                margin: 0;
             }
         }
     </style>

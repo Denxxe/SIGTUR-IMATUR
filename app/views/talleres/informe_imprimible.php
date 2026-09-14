@@ -57,8 +57,10 @@
         @media print {
             body { background: #fff; }
             .ctrl-bar { display: none !important; }
-            .page-wrap { margin: 0; box-shadow: none; padding: 20px 28px 28px; max-width: 100%; border-radius: 0; }
-            @page { size: A4 portrait; margin: 1.2cm 1.5cm; }
+            /* Padding en vez de margen de @page: así Chrome no tiene franja
+               donde imprimir su encabezado (fecha · título · URL). */
+            .page-wrap { margin: 0; box-shadow: none; padding: 1.2cm 1.5cm; max-width: 100%; border-radius: 0; }
+            @page { size: A4 portrait; margin: 0; }
         }
     </style>
 </head>
