@@ -60,8 +60,8 @@
             // RIF institucional (fuente única) para los exportadores del lado cliente.
             window.SIGTUR_RIF = <?php echo json_encode(ConfigSistema::rif()); ?>;
             // Logos institucionales para el membrete de la exportación a Excel (sigturExportarTabla).
-            window.SIGTUR_LOGO_ALCALDIA = <?php echo json_encode(URL_ROOT . '/public/assets/images/Logo.png'); ?>;
-            window.SIGTUR_LOGO_IMATUR = <?php echo json_encode(URL_ROOT . '/public/assets/images/Logo_imatur-removebg-preview.png'); ?>;
+            window.SIGTUR_LOGO_ALCALDIA = <?php echo json_encode(ConfigSistema::urlLogoAlcaldia()); ?>;
+            window.SIGTUR_LOGO_IMATUR = <?php echo json_encode(ConfigSistema::urlLogoImatur()); ?>;
 
             // Inyecta el token en todos los formularios POST (salvo data-no-token).
             function sigturInjectTokens() {

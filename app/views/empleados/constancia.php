@@ -70,18 +70,7 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
 <button class="btn-print" onclick="window.print()">&#128438; Imprimir / PDF</button>
 <div class="page">
 
-  <div class="header">
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" style="max-width:76px;max-height:76px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-    <div class="header-text">
-      <div class="linea1">República Bolivariana de Venezuela<br>Alcaldía Bolivariana del Municipio Sucre</div>
-      <div class="linea2">Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>Cumaná, Estado Sucre — RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
-    </div>
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:76px;max-height:76px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-  </div>
+  <?php $mb = ['alto_logo' => 76, 'margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
 
   <div class="doc-nro"><strong>N° <?php echo $v($co->numero); ?></strong></div>
 

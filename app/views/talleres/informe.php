@@ -148,18 +148,10 @@
 
 <!-- Plantilla de Impresión Oficial -->
 <div class="print-container">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 30px;">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <img src="<?php echo URL_ROOT; ?>/assets/images/Logo_imatur-removebg-preview.png" alt="Logo" style="width:60px;">
-            <div>
-                <h2 style="margin:0; font-size:22px;">IMATUR</h2>
-                <p style="margin:0; font-size:12px; font-weight:600; text-transform:uppercase;">Instituto Municipal de Turismo</p>
-            </div>
-        </div>
-        <div class="text-end">
-            <h3 style="margin:0; font-size:18px; color:#555;">REPORTE DE ACTIVIDAD</h3>
-            <p style="margin:5px 0 0; font-size:11px; color:#888;">Emitido el: <?php echo date('d/m/Y'); ?></p>
-        </div>
+    <?php $mb = ['alto_logo' => 58, 'tamano' => '9pt', 'margen_inf' => '12px']; require '../app/views/inc/membrete.php'; ?>
+    <div style="text-align:center; margin-bottom:24px;">
+        <h3 style="margin:0; font-size:16px; color:#333; text-transform:uppercase; letter-spacing:.04em;">Reporte de Actividad</h3>
+        <p style="margin:4px 0 0; font-size:11px; color:#888;">Emitido el: <?php echo date('d/m/Y'); ?></p>
     </div>
 
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">

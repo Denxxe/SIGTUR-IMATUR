@@ -17,9 +17,12 @@ class XlsxLogos
     private static function logos(): array
     {
         if (self::$cache !== null) return self::$cache;
+        // Rutas desde ConfigSistema (fuente única). Antes apuntaban a mano a
+        // `Logo.png` como "Alcaldía", pero ese archivo es el de IMATUR: las
+        // exportaciones salían con el mismo logo a los dos lados.
         $defs = [
-            ['archivo' => APP_ROOT . '/public/assets/images/Logo.png', 'nombre' => 'LogoAlcaldia'],
-            ['archivo' => APP_ROOT . '/public/assets/images/Logo_imatur-removebg-preview.png', 'nombre' => 'LogoImatur'],
+            ['archivo' => ConfigSistema::rutaLogoAlcaldia(), 'nombre' => 'LogoAlcaldia'],
+            ['archivo' => ConfigSistema::rutaLogoImatur(),   'nombre' => 'LogoImatur'],
         ];
         $out = [];
         foreach ($defs as $d) {

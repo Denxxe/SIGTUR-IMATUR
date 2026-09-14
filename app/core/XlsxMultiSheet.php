@@ -99,9 +99,14 @@ class XlsxMultiSheet
     public function membrete(string $titulo, int $ncol, string $metaExtra = ''): void
     {
         $usuario = $_SESSION['user_username'] ?? 'Sistema';
+        // Mismas cinco líneas que el membrete de los documentos imprimibles
+        // (app/views/inc/membrete.php), para que un Excel y un oficio del
+        // sistema no parezcan salir de dos instituciones distintas.
         $this->filaFusionada('REPÚBLICA BOLIVARIANA DE VENEZUELA', $ncol, self::S_INSTITUCIONAL, 18);
         $this->filaFusionada('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', $ncol, self::S_INSTITUCIONAL, 18);
-        $this->filaFusionada('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaFusionada('INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)', $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaFusionada('CUMANÁ, ESTADO SUCRE', $ncol, self::S_INSTITUCIONAL, 18);
+        $this->filaFusionada('RIF. ' . ConfigSistema::rif(), $ncol, self::S_INSTITUCIONAL, 18);
         $this->filaVacia(6);
         $this->filaFusionada($titulo, $ncol, self::S_TITULO, 24);
         $this->filaFusionada('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, $ncol, self::S_META, 16);

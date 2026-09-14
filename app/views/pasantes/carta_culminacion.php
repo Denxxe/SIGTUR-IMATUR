@@ -62,20 +62,7 @@ if (!empty($p->fecha_inicio) && !empty($p->fecha_fin)) {
 <div class="page-wrap">
     <div class="letter">
 
-        <div class="letter-header">
-            <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía">
-            <div class="letter-header-text">
-                <p>
-                    República Bolivariana de Venezuela<br>
-                    Alcaldía Bolivariana del Municipio Sucre<br>
-                    Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
-                    Cumaná, Estado Sucre<br>
-                    RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
-                </p>
-            </div>
-            <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
-        </div>
-        <hr class="letter-divider">
+        <?php require '../app/views/inc/membrete.php'; ?>
 
         <p class="letter-date">Cumaná, <?php echo htmlspecialchars($data['fecha_hoy']); ?></p>
 

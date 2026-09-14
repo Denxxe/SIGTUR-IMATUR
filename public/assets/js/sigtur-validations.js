@@ -181,9 +181,13 @@ async function sigturExportarTabla(table, modo, trs) {
     const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const fecha = new Date().toLocaleString('es-VE');
     const rif = window.SIGTUR_RIF || 'G-20008498-7';
-    const membrete = ['República Bolivariana de Venezuela',
-        'Alcaldía Bolivariana del Municipio Sucre',
-        'Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' + rif];
+    // Mismas cinco líneas que el membrete del servidor
+    // (app/views/inc/membrete.php, XlsxMultiSheet y ReportesExportTrait).
+    const membrete = ['REPÚBLICA BOLIVARIANA DE VENEZUELA',
+        'ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE',
+        'INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)',
+        'CUMANÁ, ESTADO SUCRE',
+        'RIF. ' + rif];
     const ncol = Math.max(1, headers.length);
 
     if (modo === 'excel') {

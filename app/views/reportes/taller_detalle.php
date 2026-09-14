@@ -25,17 +25,8 @@
 
 <div class="print-area anim-slide-up">
     <!-- MEMBRETE INSTITUCIONAL (solo impresión/PDF) -->
-    <div class="d-none d-print-block" style="padding:0 0 16px; margin-bottom:20px; border-bottom:3px solid #1a56db; display:flex; align-items:center; gap:20px;">
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía de Cumaná" style="height:60px; width:auto;">
-        <div style="flex:1; text-align:center;">
-            <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.02em; line-height:1.6; color:#111827;">
-                República Bolivariana de Venezuela<br>
-                Alcaldía Bolivariana del Municipio Sucre<br>
-                Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)
-            </div>
-            <div style="font-size:10px; font-weight:600; color:#6b7280; margin-top:4px;">RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
-        </div>
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR" style="height:60px; width:auto;">
+    <div class="d-none d-print-block" style="margin-bottom:20px;">
+        <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '0']; require '../app/views/inc/membrete.php'; ?>
     </div>
 
     <!-- SECCIÓN 1: FICHA TÉCNICA -->

@@ -35,21 +35,7 @@ $niveles = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio'];
 <button class="btn-print" onclick="window.print()">&#128438; Imprimir / PDF</button>
 <div class="page">
 
-  <div class="header">
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:60px;max-height:60px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-    <div class="header-text">
-      REPÚBLICA BOLIVARIANA DE VENEZUELA<br>
-      ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE<br>
-      INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)<br>
-      CUMANÁ, ESTADO SUCRE — RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
-    </div>
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" style="max-width:60px;max-height:60px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-  </div>
-  <div class="divider"></div>
+  <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
   <div class="titulo">Ficha Técnica del Trabajador</div>
 
   <!-- DATOS PERSONALES -->

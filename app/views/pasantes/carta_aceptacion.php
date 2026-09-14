@@ -63,24 +63,7 @@
 <div class="page">
 
   <!-- ── Encabezado institucional ── -->
-  <div class="header">
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png"
-           alt="Logo" style="max-width:60px;max-height:60px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-    <div class="header-text">
-      REPÚBLICA BOLIVARIANA DE VENEZUELA<br>
-      ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE<br>
-      INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)<br>
-      CUMANÁ, ESTADO SUCRE<br>
-      RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
-    </div>
-    <div class="logo-box">
-      <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png"
-           alt="IMATUR" style="max-width:60px;max-height:60px;object-fit:contain;" onerror="this.style.display='none'">
-    </div>
-  </div>
-  <div class="divider"></div>
+  <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
 
   <!-- ── Número de oficio y fecha ── -->
   <?php

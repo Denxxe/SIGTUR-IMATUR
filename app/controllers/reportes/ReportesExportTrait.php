@@ -101,9 +101,13 @@ trait ReportesExportTrait {
         };
 
         $usuario = $_SESSION['user_username'] ?? 'Sistema';
+        // Mismas cinco líneas que app/views/inc/membrete.php y que
+        // XlsxMultiSheet::membrete(): un solo membrete para todo el sistema.
         $rowMerged('REPÚBLICA BOLIVARIANA DE VENEZUELA', 1, 18);
         $rowMerged('ALCALDÍA BOLIVARIANA DEL MUNICIPIO SUCRE', 1, 18);
-        $rowMerged('Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF ' . ConfigSistema::rif(), 1, 18);
+        $rowMerged('INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)', 1, 18);
+        $rowMerged('CUMANÁ, ESTADO SUCRE', 1, 18);
+        $rowMerged('RIF. ' . ConfigSistema::rif(), 1, 18);
         $rnum++; $sheetRows .= '<row r="' . $rnum . '" ht="6" customHeight="1"/>'; // fila en blanco (aire para los logos)
         $rowMerged($titulo, 2, 24);
         $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, 3, 16);

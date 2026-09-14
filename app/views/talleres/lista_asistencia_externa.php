@@ -84,6 +84,8 @@ $offset = 0;
     <div class="hoja-lbl">Hoja <?php echo $hojaNum; ?> / <?php echo $totalHojas; ?></div>
     <?php endif; ?>
 
+    <?php $mb = ['alto_logo' => 52, 'tamano' => '8.5pt', 'margen_inf' => '10px']; require '../app/views/inc/membrete.php'; ?>
+
     <!-- Encabezado -->
     <div class="header-box">
         <table class="meta-table" style="flex:1;margin-right:12px;">

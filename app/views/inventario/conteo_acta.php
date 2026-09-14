@@ -14,10 +14,7 @@ $r   = $data['resumen'];
 $dif = $data['detalle'] ?? [];
 $cv  = fn($x) => htmlspecialchars((string)($x ?? ''));
 
-$rif       = ConfigSistema::rif();
-$direccion = ConfigSistema::get('direccion_institucion');
-$logoAlc   = URL_ROOT . '/public/assets/images/Logo.png';
-$logoImg   = URL_ROOT . '/public/assets/images/Logo_imatur-removebg-preview.png';
+// El RIF y los logos los resuelve el partial del membrete (inc/membrete.php).
 
 $meses = ['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 $fechaLarga = function ($f) use ($meses) {
@@ -73,17 +70,7 @@ $fechaLarga = function ($f) use ($meses) {
   <div class="toolbar"><button class="btn" onclick="window.print()">&#128438; Imprimir / PDF</button></div>
 
   <div class="hoja">
-    <div class="membrete">
-      <img src="<?php echo $logoAlc; ?>" onerror="this.style.display='none'" alt="">
-      <div class="txt">
-        <b>República Bolivariana de Venezuela</b>
-        <b>Alcaldía del Municipio Sucre</b>
-        <b>Instituto Municipal Autónomo de Turismo</b>
-        <small>IMATUR · RIF: <?php echo $cv($rif); ?></small>
-        <?php if ($direccion): ?><small><?php echo $cv($direccion); ?></small><?php endif; ?>
-      </div>
-      <img src="<?php echo $logoImg; ?>" onerror="this.style.display='none'" alt="">
-    </div>
+    <?php $mb = ['alto_logo' => 58, 'tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
 
     <h1>Acta de Conteo Físico de Bienes</h1>
     <div class="sub">N° <?php echo str_pad((string)(int)$c->id, 4, '0', STR_PAD_LEFT); ?> · <?php echo $cv($c->motivo); ?></div>

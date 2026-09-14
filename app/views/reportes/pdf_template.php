@@ -240,19 +240,7 @@
     </div>
 
     <!-- ── Cabecera institucional ── -->
-    <div class="inst-header">
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía de Cumaná">
-        <div class="inst-text">
-            <h2>
-                República Bolivariana de Venezuela<br>
-                Alcaldía Bolivariana del Municipio Sucre<br>
-                Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
-                Cumaná, Estado Sucre
-            </h2>
-            <div class="rif">RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?></div>
-        </div>
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
-    </div>
+    <?php $mb = ['alto_logo' => 62, 'margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
 
     <!-- ── Barra título ── -->
     <div class="report-bar">

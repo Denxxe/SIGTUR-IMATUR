@@ -80,20 +80,7 @@ $fechaFormato = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller-
 
 <div class="page-wrap">
 
-    <div class="header">
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="Alcaldía">
-        <div class="header-center">
-            <p>
-                República Bolivariana de Venezuela<br>
-                Alcaldía Bolivariana del Municipio Sucre<br>
-                Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
-                Cumaná, Estado Sucre<br>
-                RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
-            </p>
-        </div>
-        <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR">
-    </div>
-    <hr class="divider">
+    <?php $mb = ['alto_logo' => 58, 'margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
 
     <div class="doc-title">Reporte de Actividad IMATUR-SUCRE</div>
 

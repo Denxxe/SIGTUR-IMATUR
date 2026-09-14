@@ -189,21 +189,7 @@ if (!empty($oficiosPrevios)):
                     padding:40px 48px 36px;
                     font-family:'Times New Roman',Times,Georgia,serif; font-size:11pt; color:#111; line-height:1.7;">
 
-            <!-- Header 3 columnas -->
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
-                <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo.png" alt="" style="height:68px; width:auto; object-fit:contain; flex-shrink:0;">
-                <div style="flex:1; text-align:center; font-family:Arial,sans-serif;">
-                    <p style="font-size:9.5pt; font-weight:700; text-transform:uppercase; line-height:1.7; color:#111; letter-spacing:.01em;">
-                        República Bolivariana de Venezuela<br>
-                        Alcaldía Bolivariana del Municipio Sucre<br>
-                        Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE)<br>
-                        Cumaná, Estado Sucre<br>
-                        RIF. <?php echo htmlspecialchars(ConfigSistema::rif()); ?>
-                    </p>
-                </div>
-                <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="" style="height:68px; width:auto; object-fit:contain; flex-shrink:0;">
-            </div>
-            <hr style="border:none; border-top:1px solid #111; margin:6px 0 28px;">
+            <?php require '../app/views/inc/membrete.php'; ?>
 
             <p style="text-align:right; margin-bottom:20px;">Cumaná, <?php echo $data['fecha_hoy']; ?></p>
 

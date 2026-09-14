@@ -5,6 +5,40 @@ class ConfigSistema extends Model {
     const RIF_DEFAULT = 'G-20008498-7';
 
     /**
+     * Logos del membrete institucional — FUENTE ÚNICA.
+     *
+     * ⚠️ Ojo con los nombres de archivo: `Logo.png` **es el logo de IMATUR**,
+     * pese a que todo el sistema lo venía usando como si fuera el de la
+     * Alcaldía. El de la Alcaldía es `NR2.png` («ALCALDÍA DE CUMANÁ»), que
+     * hasta 2026-09-14 no se usaba en ningún membrete: por eso los documentos
+     * salían con el mismo logo repetido a izquierda y derecha.
+     *
+     * No volver a escribir estas rutas a mano en vistas ni exportadores.
+     */
+    const LOGO_ALCALDIA = 'NR2.png';
+    const LOGO_IMATUR   = 'Logo_imatur-removebg-preview.png';
+
+    /** URL pública del logo de la Alcaldía (para <img> y para el JS). */
+    public static function urlLogoAlcaldia(): string {
+        return URL_ROOT . '/public/assets/images/' . self::LOGO_ALCALDIA;
+    }
+
+    /** URL pública del logo de IMATUR. */
+    public static function urlLogoImatur(): string {
+        return URL_ROOT . '/public/assets/images/' . self::LOGO_IMATUR;
+    }
+
+    /** Ruta en disco del logo de la Alcaldía (para los exportadores XLSX/PDF). */
+    public static function rutaLogoAlcaldia(): string {
+        return APP_ROOT . '/public/assets/images/' . self::LOGO_ALCALDIA;
+    }
+
+    /** Ruta en disco del logo de IMATUR. */
+    public static function rutaLogoImatur(): string {
+        return APP_ROOT . '/public/assets/images/' . self::LOGO_IMATUR;
+    }
+
+    /**
      * RIF institucional (fuente única). Lee la clave `rif_institucional` de
      * configuracion_sistema; si está vacía o no existe, usa RIF_DEFAULT.
      */

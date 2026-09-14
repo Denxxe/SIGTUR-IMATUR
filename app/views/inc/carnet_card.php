@@ -38,7 +38,7 @@ $correo    = ConfigSistema::get('correo_institucion');
 $direccion = ConfigSistema::get('direccion_institucion');
 $lema      = ConfigSistema::get('lema_institucion');
 
-$logoAlcaldia = URL_ROOT . '/public/assets/images/Logo.png';
+$logoAlcaldia = ConfigSistema::urlLogoAlcaldia();
 $fotoUrl      = URL_ROOT . '/descarga/foto/' . (int)($carnet['id_persona'] ?? 0);
 $esPasante    = ($carnet['tipo'] ?? '') === 'PASANTE';
 
