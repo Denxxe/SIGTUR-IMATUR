@@ -51,7 +51,10 @@ class Router {
                 // PerfilController, BuscarController y DescargaController: accesibles por
                 // cualquier usuario autenticado (gestión de cuenta / búsqueda / descarga de
                 // archivos privados). Cada uno aplica su propia restricción de rol por recurso.
-                $accesoSiempre = in_array($this->currentController, ['PerfilController', 'BuscarController', 'DescargaController'], true);
+                // ExportarController solo da formato a lo que el usuario ya
+                // tiene en pantalla (el listado que le mostró su propio módulo,
+                // ya filtrado por el RBAC de ese módulo): no expone datos nuevos.
+                $accesoSiempre = in_array($this->currentController, ['PerfilController', 'BuscarController', 'DescargaController', 'ExportarController'], true);
 
                 // AuditoriaController tiene permisos a nivel de método.
                 $accesoAuditoria = $this->currentController === 'AuditoriaController'
@@ -97,7 +100,11 @@ class Router {
             $ctrl   = get_class($this->currentController);
             $metodo = $this->currentMethod;
             $metodosExentos = ['marcarAsistencia', 'marcarAsistenciaMasiva', 'marcarAlertasVistas'];
-            $exento = ($ctrl === 'AuthController') || in_array($metodo, $metodosExentos, true);
+            // ExportarController no escribe nada: solo devuelve un archivo con lo
+            // que el usuario ya tiene en pantalla. Exigirle el token impediría
+            // exportar dos veces seguidas sin recargar la página.
+            $controladoresExentos = ['AuthController', 'ExportarController'];
+            $exento = in_array($ctrl, $controladoresExentos, true) || in_array($metodo, $metodosExentos, true);
             if (!$exento && !sigtur_token_consumir($_POST['_token'] ?? null)) {
                 flash('global_msg', 'Solicitud duplicada o expirada: la operación no se repitió para evitar registros duplicados. Verifica si los datos ya se guardaron.', 'warning');
                 $destino = $_SERVER['HTTP_REFERER'] ?? (URL_ROOT . '/dashboard');

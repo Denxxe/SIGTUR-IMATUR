@@ -16,6 +16,21 @@ trait ReportesExportTrait {
     // =========================================================================
 
     /** Índice de columna (1→A, 27→AA) para celdas .xlsx */
+    /**
+     * "Emitido en Cumaná el 14 de septiembre de 2026 a las 9:31 a. m."
+     * Misma redacción que el exportador del lado cliente (sigturExportarTabla),
+     * para que el .xlsx y el PDF de un mismo listado no difieran en el pie.
+     */
+    private function pieEmitido(): string {
+        $meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        $h   = (int)date('G');
+        $suf = $h < 12 ? 'a. m.' : 'p. m.';
+        $h12 = $h % 12 ?: 12;
+        return 'Emitido en Cumaná el ' . (int)date('j') . ' de ' . $meses[(int)date('n')]
+             . ' de ' . date('Y') . ' a las ' . $h12 . ':' . date('i') . ' ' . $suf;
+    }
+
     private function colLetter(int $n): string {
         $s = '';
         while ($n > 0) { $m = ($n - 1) % 26; $s = chr(65 + $m) . $s; $n = intdiv($n - 1, 26); }
@@ -29,8 +44,13 @@ trait ReportesExportTrait {
      * Todas las celdas son texto (preserva cédulas/códigos con ceros).
      * Mantiene el nombre exportCsv para no tocar los llamadores.
      */
-    private function exportCsv($filename, $headers, $rows) {
-        $titulo = ucwords(str_replace('_', ' ', $filename));
+    private function exportCsv($filename, $headers, $rows, ?string $tituloExplicito = null) {
+        // El título sale del nombre de archivo salvo que el llamador lo indique.
+        // Derivarlo del slug pierde tildes y mayúsculas ("Listado De Pasantes
+        // Registrados"), así que los listados mandan el suyo tal cual.
+        $titulo = $tituloExplicito !== null && trim($tituloExplicito) !== ''
+            ? trim($tituloExplicito)
+            : ucwords(str_replace('_', ' ', $filename));
         $ncol   = max(1, count($headers));
         [$sheetRows, $merges, $dataStart] = $this->construirHojaMembrete($titulo, $ncol,
             function ($rowMerged, $rowCells) use ($headers, $rows) {
@@ -110,7 +130,9 @@ trait ReportesExportTrait {
         $rowMerged('RIF. ' . ConfigSistema::rif(), 1, 18);
         $rnum++; $sheetRows .= '<row r="' . $rnum . '" ht="6" customHeight="1"/>'; // fila en blanco (aire para los logos)
         $rowMerged($titulo, 2, 24);
-        $rowMerged('Generado por ' . $usuario . ' · ' . date('d/m/Y H:i') . $metaExtra, 3, 16);
+        // Mismo pie que el PDF: fecha en palabras y hora sin segundos.
+        $rowMerged($this->pieEmitido() . $metaExtra, 3, 16);
+        $rowMerged('Generado por ' . $usuario, 3, 14);
         $rnum++; $sheetRows .= '<row r="' . $rnum . '" ht="8" customHeight="1"/>'; // fila en blanco
         $dataStart = $rnum + 1;
 

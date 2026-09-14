@@ -218,42 +218,40 @@ async function sigturExportarTabla(table, modo, trs) {
         'INSTITUTO MUNICIPAL AUTÓNOMO DE TURISMO (IMATUR-SUCRE)',
         'CUMANÁ, ESTADO SUCRE',
         'RIF. ' + rif];
-    const ncol = Math.max(1, headers.length);
-
     if (modo === 'excel') {
-        // ⚠️ SIN LOGOS A PROPÓSITO. Este archivo es un .xls en formato HTML, y
-        // Excel NO renderiza imágenes en `data:` URI al importarlo: salían dos
-        // recuadros con una X roja a los lados del membrete. Peor que no
-        // ponerlos. Las celdas de logo además estrechaban la primera y la
-        // última columna (la cédula se partía en dos líneas).
-        // Los logos SÍ salen en el `.xlsx` real que generan los reportes del
-        // servidor (XlsxLogos, imagen incrustada de verdad) y en el PDF.
-        const span = ' colspan="' + ncol + '"';
-
-        let h = '<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8">'
-            + '<style>td,th{mso-number-format:"\\@";border:1px solid #ccd;padding:5px 9px;'
-            + 'font-family:Calibri,Arial,sans-serif;font-size:11pt;white-space:nowrap}'
-            + 'th{background:#1b5e20;color:#fff;font-weight:bold;padding:7px 9px;text-align:center}'
-            + '.mb{font-weight:bold;text-align:center;border:none;font-size:10pt;padding:2px 4px;text-transform:uppercase}'
-            + '.ttl{font-size:15pt;font-weight:bold;text-align:center;background:#e8f5e9;border:none;padding:10px 4px}'
-            + '.mt{border:none;color:#555;text-align:center;padding:3px;font-size:10pt}'
-            + '.sep{border:none;height:6px}</style></head><body><table>';
-
-        membrete.forEach(l => { h += '<tr><td' + span + ' class="mb">' + esc(l) + '</td></tr>'; });
-        h += '<tr><td' + span + ' class="sep"></td></tr>';
-        h += '<tr><td' + span + ' class="ttl">' + esc(titulo) + '</td></tr>';
-        h += '<tr><td' + span + ' class="mt">' + esc(emitido) + '</td></tr>';
-        h += '<tr><td' + span + ' class="mt">' + esc(conteo) + '</td></tr>';
-        h += '<tr><td' + span + ' class="sep"></td></tr>';
-        h += '<tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
-        rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
-        h += '</table></body></html>';
-        const blob = new Blob(['﻿' + h], { type: 'application/vnd.ms-excel' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = sigturSlug(titulo) + '.xls';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        // El archivo lo escribe el SERVIDOR, no el navegador.
+        //
+        // Antes se armaba aquí un HTML con extensión .xls. Excel lo abría, pero
+        // **no dibuja imágenes en `data:` URI**: el membrete salía con dos
+        // recuadros rotos donde van los logos, y las celdas que los contenían
+        // estrechaban la primera y la última columna (la cédula se partía en dos
+        // líneas). Mandando las filas a `ExportarController::tabla()` se obtiene
+        // un .xlsx de verdad, con los logos anclados como imagen, el mismo que
+        // generan los reportes de Análisis.
+        //
+        // Se envía lo que el usuario TIENE EN PANTALLA (ya filtrado por el
+        // buscador, todas las páginas), así el servidor no tiene que rehacer la
+        // consulta de cada módulo. Va por POST: una tabla completa no cabe en
+        // una URL, y el listado no queda en el historial del navegador.
+        const f = document.createElement('form');
+        f.method = 'POST';
+        f.action = (window.SIGTUR_URL_ROOT || '') + '/exportar/tabla';
+        f.style.display = 'none';
+        // `data-no-token`: el token de un solo uso es para evitar que un alta se
+        // grabe dos veces; aquí no se escribe nada y bloquearía exportar dos
+        // veces seguidas sin recargar.
+        f.setAttribute('data-no-token', '');
+        const campo = (n, v) => {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = n; i.value = v;
+            f.appendChild(i);
+        };
+        campo('titulo', titulo);
+        campo('headers', JSON.stringify(headers));
+        campo('rows', JSON.stringify(rows));
+        document.body.appendChild(f);
+        f.submit();
+        setTimeout(() => f.remove(), 2000);
         return;
     }
 
