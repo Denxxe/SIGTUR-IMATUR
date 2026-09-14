@@ -41,7 +41,7 @@
                         <td><span class="cell-id"><?php echo $cargo->id; ?></span></td>
                         <td><span class="sig-badge <?php echo $nivelBadge[$cargo->nivel_jerarquico] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($cargo->nivel_jerarquico ?? '—'); ?></span></td>
                         <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
-                            <?php echo ($pad > 0 ? '<span style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
+                            <?php echo ($pad > 0 ? '<span data-no-export style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
                         </td>
                         <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($cargo->descripcion ?? ''); ?></td>
                         <td class="col-actions">

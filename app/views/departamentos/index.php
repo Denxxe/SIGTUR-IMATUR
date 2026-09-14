@@ -43,7 +43,7 @@ $tipoBadge = function ($t) {
                 <tr>
                     <td><?php echo $tipoBadge($dpto->tipo_unidad); ?></td>
                     <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
-                        <?php echo ($pad > 0 ? '<span style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($dpto->nombre); ?>
+                        <?php echo ($pad > 0 ? '<span data-no-export style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($dpto->nombre); ?>
                     </td>
                     <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($dpto->padre ?? '—'); ?></td>
                     <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($dpto->descripcion ?? ''); ?></td>

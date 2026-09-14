@@ -179,9 +179,22 @@ function sigturTablaMatriz(table, trs) {
         if (th.classList.contains('col-actions') || th.dataset.noExport !== undefined) { skip.add(i); return; }
         headers.push(th.textContent.replace(/\s+/g, ' ').trim());
     });
+    // `data-no-export` sirve también DENTRO de una celda, no solo por columna:
+    // los listados jerárquicos (departamentos, cargos) anteponen un "└ " al
+    // nombre para dibujar el árbol en pantalla, y ese adorno no debe viajar al
+    // Excel ni al PDF. Se clona la celda y se le quitan esos nodos antes de
+    // leer el texto, en vez de recortar caracteres a ciegas.
+    const textoCelda = c => {
+        if (!c.querySelector('[data-no-export]')) {
+            return (c.innerText || c.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+        const copia = c.cloneNode(true);
+        copia.querySelectorAll('[data-no-export]').forEach(n => n.remove());
+        return (copia.textContent || '').replace(/\s+/g, ' ').trim();
+    };
     const rows = trs.map(tr => Array.from(tr.cells)
         .filter((c, i) => !skip.has(i))
-        .map(c => (c.innerText || c.textContent || '').replace(/\s+/g, ' ').trim()));
+        .map(textoCelda));
     return { headers, rows };
 }
 // Convierte una imagen (misma URL de origen) a data-URI base64, cacheado en
@@ -290,17 +303,23 @@ async function sigturExportarTabla(table, modo, trs) {
         + 'h1{font-size:15px;text-align:center;margin:0 0 3px;letter-spacing:.01em}'
         + '.mt{text-align:center;font-size:10.5px;color:#555;margin:0}'
         + '.mt b{color:#222}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:14px}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10.5px}'
         + 'th,td{border:1px solid #999;padding:5px 7px;text-align:left}'
         + 'th{background:#1b5e20;color:#fff;text-align:center}'
         + 'tbody tr:nth-child(even) td{background:#f3f6f3}'
-        // El membrete se repite en cada hoja: un listado largo no puede tener
-        // páginas sueltas sin identificación institucional.
+        // Los encabezados de columna se repiten en cada hoja.
         + 'thead{display:table-header-group}'
+        + 'tfoot{display:table-footer-group}'
+        // MÁRGENES DE LAS HOJAS 2 EN ADELANTE.
+        // El `padding` del body solo vale para la PRIMERA hoja: en las
+        // siguientes la tabla arrancaba pegada al borde del papel y encima
+        // chocaba con el sello de la esquina. Estas dos filas vacías van en
+        // `thead`/`tfoot`, que Chrome **repite en todas las hojas**, así que
+        // hacen de margen superior e inferior en cada una.
+        + 'tr.sp td{border:none;height:11mm;padding:0;background:#fff}'
         // `margin:0` en @page es lo que quita el encabezado y el pie que Chrome
         // dibuja por su cuenta (fecha · título · URL · nº de página): sin margen
-        // de página no tiene dónde ponerlos. El aire del documento lo da el
-        // padding del body, no el margen de página.
+        // de página no tiene dónde ponerlos.
         + '@page{size:landscape;margin:0}</style></head><body>';
     // Fecha y hora cortas en la esquina (la marca de emisión que el navegador
     // ponía antes). Va antes del membrete para que quede en la capa de arriba.
@@ -312,7 +331,11 @@ async function sigturExportarTabla(table, modo, trs) {
     h += '<h1>' + esc(titulo) + '</h1>';
     h += '<div class="mt">' + esc(emitido) + '</div>';
     h += '<div class="mt"><b>' + esc(conteo) + '</b></div>';
-    h += '<table><thead><tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>';
+    const sp = '<tr class="sp"><td colspan="' + Math.max(1, headers.length) + '"></td></tr>';
+    h += '<table>'
+       + '<thead>' + sp + '<tr>' + headers.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead>'
+       + '<tfoot>' + sp + '</tfoot>'
+       + '<tbody>';
     rows.forEach(r => { h += '<tr>' + r.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>'; });
     h += '</tbody></table></body></html>';
     const ifr = document.createElement('iframe');
