@@ -1,34 +1,215 @@
 <?php
+/**
+ * RutasController — Turismo.
+ *
+ * Desde la mig. 078 (fase T-A) el módulo tiene DOS pantallas, porque tiene dos
+ * entidades:
+ *
+ *   /rutas/index    → EL CATÁLOGO. Los recorridos que se ofrecen, con sus
+ *                     puntos. No tienen fecha.
+ *   /rutas/salidas  → LAS SALIDAS. Cada vez que se ejecuta una ruta, con su
+ *                     fecha, su grupo, sus guías y su estado.
+ *
+ * Todo lo que antes colgaba de una ruta —participantes, asistencia, informe,
+ * oficio— cuelga ahora de la SALIDA: son distintos cada vez que se sale.
+ */
 class RutasController extends Controller {
 
+    /** Catálogo de rutas. */
     public function index() {
         $porPagina = 12;
         $pagina    = max(1, (int)($_GET['p'] ?? 1));
         $filtros   = [
+            'buscar' => trim($_GET['buscar'] ?? ''),
+            'estado' => trim($_GET['estado'] ?? ''),
+            'tipo'   => trim($_GET['tipo']   ?? ''),
+        ];
+        $res          = Ruta::paginate($pagina, $porPagina, $filtros);
+        $totalPaginas = max(1, (int)ceil($res['total'] / $porPagina));
+        if ($pagina > $totalPaginas) $pagina = $totalPaginas;
+
+        $this->view('rutas/index', [
+            'titulo'        => 'Catálogo de Rutas Turísticas',
+            'rutas'         => $res['items'],
+            'departamentos' => Departamento::all(),
+            'pagina'        => $pagina,
+            'total_paginas' => $totalPaginas,
+            'total'         => $res['total'],
+            'por_pagina'    => $porPagina,
+            'filtros'       => $filtros,
+        ]);
+    }
+
+    // =====================================================================
+    //  SALIDAS (ruta_ejecuciones) — fase T-A
+    // =====================================================================
+
+    /** Listado de salidas, con sus filtros de fecha, estado y período. */
+    public function salidas() {
+        $porPagina = 15;
+        $pagina    = max(1, (int)($_GET['p'] ?? 1));
+        $filtros   = [
             'buscar'      => trim($_GET['buscar']      ?? ''),
             'estado'      => trim($_GET['estado']      ?? ''),
-            'tipo'        => trim($_GET['tipo']        ?? ''),
+            'origen'      => trim($_GET['origen']      ?? ''),
+            'ruta'        => trim($_GET['ruta']        ?? ''),
             'periodo'     => trim($_GET['periodo']     ?? ''),
             'fecha_desde' => trim($_GET['fecha_desde'] ?? ''),
             'fecha_hasta' => trim($_GET['fecha_hasta'] ?? ''),
         ];
-        $res          = Ruta::paginate($pagina, $porPagina, $filtros);
-        $totalReg     = $res['total'];
-        $totalPaginas = max(1, (int)ceil($totalReg / $porPagina));
+        $res          = RutaEjecucion::paginate($pagina, $porPagina, $filtros);
+        $totalPaginas = max(1, (int)ceil($res['total'] / $porPagina));
         if ($pagina > $totalPaginas) $pagina = $totalPaginas;
 
-        $data = [
-            'titulo'        => 'Gestión de Rutas Turísticas',
-            'rutas'         => $res['items'],
-            'empleados'     => Empleado::all(),
-            'departamentos' => Departamento::all(),
+        $this->view('rutas/salidas', [
+            'titulo'        => 'Salidas programadas',
+            'salidas'       => $res['items'],
+            'catalogo'      => Ruta::activas(),
+            'resumen'       => RutaEjecucion::resumenPorEstado(),
             'pagina'        => $pagina,
             'total_paginas' => $totalPaginas,
-            'total'         => $totalReg,
+            'total'         => $res['total'],
             'por_pagina'    => $porPagina,
             'filtros'       => $filtros,
-        ];
-        $this->view('rutas/index', $data);
+        ]);
+    }
+
+    /** Programa una salida nueva o edita una que sigue programada. */
+    public function storeSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+
+        try {
+            $hora = trim($_POST['hora'] ?? '');
+            if ($hora !== '' && !preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $hora)) {
+                throw new Exception('La hora no tiene un formato válido (HH:MM).');
+            }
+            $d = [
+                'id_ruta'            => (int)($_POST['id_ruta'] ?? 0),
+                'fecha'              => trim($_POST['fecha'] ?? ''),
+                'hora'               => $hora,
+                'cupo_maximo'        => trim($_POST['cupo_maximo'] ?? ''),
+                'origen'             => $_POST['origen'] ?? 'Particular',
+                'institucion_nombre' => trim($_POST['institucion_nombre'] ?? ''),
+                'observaciones'      => trim($_POST['observaciones'] ?? ''),
+            ];
+
+            if ($id > 0) {
+                RutaEjecucion::actualizar($id, $d, $this->getUserId());
+                flash('global_msg', 'Salida actualizada.');
+            } else {
+                // Una salida nueva no puede programarse en el pasado.
+                if ($d['fecha'] !== '' && $d['fecha'] < date('Y-m-d')) {
+                    throw new Exception('La fecha de la salida no puede ser anterior a hoy.');
+                }
+                $id = RutaEjecucion::crear($d, $this->getUserId());
+                flash('global_msg', 'Salida programada. Ahora puedes asignarle los guías y registrar el grupo.');
+                header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+                return;
+            }
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/salidas');
+    }
+
+    /** R-14: marcar la salida como Ejecutada o No ejecutada (con motivo). */
+    public function cambiarEstadoSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            RutaEjecucion::cambiarEstado($id, $_POST['estado'] ?? '', $_POST['motivo'] ?? null, $this->getUserId());
+            flash('global_msg', 'Salida marcada como «' . $_POST['estado'] . '».');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-16: reprogramar una salida que no se pudo ejecutar. */
+    public function reprogramar() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            $nueva = RutaEjecucion::reprogramar($id, trim($_POST['fecha'] ?? ''), trim($_POST['hora'] ?? '') ?: null, $this->getUserId());
+            flash('global_msg', 'Salida reprogramada. La original queda en el histórico como no ejecutada.');
+            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $nueva);
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-13: la Presidencia aprueba la salida. */
+    public function aprobarSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            RutaEjecucion::aprobar($id, $this->getUserId());
+            flash('global_msg', 'Salida aprobada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-31/R-33: guías y acompañantes de la salida. */
+    public function agregarEmpleadoSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id_ejecucion'] ?? 0);
+        try {
+            RutaEjecucion::agregarEmpleado($id, (int)($_POST['id_empleado'] ?? 0),
+                !empty($_POST['es_encargado']), $this->getUserId());
+            flash('global_msg', 'Empleado asignado a la salida.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    public function quitarEmpleadoSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id_ejecucion'] ?? 0);
+        try {
+            RutaEjecucion::quitarEmpleado((int)($_POST['id'] ?? 0), $this->getUserId());
+            flash('global_msg', 'Empleado retirado de la salida.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-45: incidencias de la salida. */
+    public function guardarIncidencias() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            RutaEjecucion::guardarIncidencias($id, trim($_POST['incidencias'] ?? ''), $this->getUserId());
+            flash('global_msg', 'Incidencias guardadas.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    public function eliminarSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            RutaEjecucion::delete((int)($_POST['id'] ?? 0), $this->getUserId());
+            flash('global_msg', 'Salida eliminada.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/salidas');
     }
 
     public function store() {
@@ -38,31 +219,14 @@ class RutasController extends Controller {
         $userId    = $this->getUserId();
         $esEdicion = !empty($_POST['id']);
 
-        $estado  = in_array($_POST['estado'] ?? '', Ruta::ESTADOS) ? $_POST['estado'] : Ruta::ESTADOS[0];
+        $estado   = in_array($_POST['estado'] ?? '', Ruta::ESTADOS) ? $_POST['estado'] : Ruta::ESTADOS[0];
         $tipoRuta = in_array($_POST['tipo_ruta'] ?? '', Ruta::$TIPOS_RUTA) ? $_POST['tipo_ruta'] : 'General';
 
-        // Máquina de estados: una ruta Finalizada es TERMINAL, no admite edición ni cambio
-        if ($esEdicion) {
-            $rutaActual = Ruta::find((int)$_POST['id']);
-            if ($rutaActual && $rutaActual->estado === Ruta::ESTADO_TERMINAL) {
-                flash('global_msg', 'La ruta está Finalizada (estado definitivo) y no puede modificarse. Cada ejecución es un registro independiente.', 'danger');
-                header('Location: ' . URL_ROOT . '/rutas/index');
-                exit;
-            }
-            // Validación al FINALIZAR: requiere al menos 1 participante inscrito
-            if ($estado === Ruta::ESTADO_TERMINAL && $rutaActual && $rutaActual->estado !== Ruta::ESTADO_TERMINAL) {
-                if (Ruta::countParticipantes((int)$_POST['id']) === 0) {
-                    flash('global_msg', 'No se puede finalizar una ruta sin participantes inscritos. Registre los participantes de la visita antes de finalizarla.', 'danger');
-                    header('Location: ' . URL_ROOT . '/rutas/index');
-                    exit;
-                }
-            }
-        } elseif ($estado === Ruta::ESTADO_TERMINAL) {
-            // No se puede crear una ruta directamente como Finalizada (no tendría participantes)
-            $estado = 'Activa';
-        }
+        // La máquina de estados «Finalizada» desapareció en la mig. 078: describía
+        // una salida, no un recorrido del catálogo. Una ruta se ofrece (Activa),
+        // se deja de ofrecer (Inactiva) o está temporalmente cerrada
+        // (En Mantenimiento) — y eso se puede cambiar siempre.
 
-        // Validaciones generales de la ruta
         $nombre = trim($_POST['nombre'] ?? '');
         if (mb_strlen($nombre) < 3) {
             flash('global_msg', 'El nombre de la ruta debe tener al menos 3 caracteres.', 'danger');
@@ -70,25 +234,9 @@ class RutasController extends Controller {
             exit;
         }
 
-        $fechaVisita = $_POST['fecha_visita'] ?: null;
-        // Solo se valida fecha futura al crear o si la ruta aún no está Finalizada
-        if (!empty($fechaVisita) && $fechaVisita < date('Y-m-d') && $estado !== Ruta::ESTADO_TERMINAL) {
-            flash('global_msg', 'La fecha de visita no puede ser anterior a hoy.', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/index');
-            exit;
-        }
-
         $duracion = trim($_POST['duracion_estimada'] ?? '');
         if (!empty($duracion) && !preg_match('/^\d{1,2}:\d{2}$/', $duracion)) {
-            flash('global_msg', 'La duración debe estar en formato H:MM (ej: 2:30 para 2 horas y media).', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/index');
-            exit;
-        }
-
-        // Validar formato de hora_visita en servidor (HH:MM o HH:MM:SS)
-        $horaVisita = trim($_POST['hora_visita'] ?? '');
-        if (!empty($horaVisita) && !preg_match('/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', $horaVisita)) {
-            flash('global_msg', 'La hora de visita no tiene un formato válido (HH:MM).', 'danger');
+            flash('global_msg', 'La duración debe estar en formato H:MM (ej: 1:30 — el cliente indica que lo normal es hora y media y el máximo 3 horas).', 'danger');
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;
         }
@@ -103,15 +251,11 @@ class RutasController extends Controller {
 
         $data = [
             'id'                    => $esEdicion ? (int)$_POST['id'] : null,
-            'nombre'                => trim($_POST['nombre']),
+            'nombre'                => $nombre,
             'descripcion'           => trim($_POST['descripcion'] ?? ''),
-            'duracion_estimada'     => trim($_POST['duracion_estimada'] ?? ''),
+            'duracion_estimada'     => $duracion,
             'estado'                => $estado,
-            'fecha_visita'          => $_POST['fecha_visita'] ?: null,
-            'hora_visita'           => $_POST['hora_visita'] ?: null,
-            'id_departamento'       => (int)$_POST['id_departamento'] ?: null,
-            'id_facilitador'        => (int)$_POST['id_facilitador'] ?: null,
-            'cupo_maximo'           => min(200, max(1, (int)($_POST['cupo_maximo'] ?? 20))),
+            'id_departamento'       => (int)($_POST['id_departamento'] ?? 0) ?: null,
             'requiere_formacion'    => !empty($_POST['requiere_formacion']),
             'tipo_ruta'             => $tipoRuta,
             'motivo_mantenimiento'  => $estado === 'En Mantenimiento' ? $motivoMant : null,
@@ -131,36 +275,65 @@ class RutasController extends Controller {
         header('Location: ' . URL_ROOT . '/rutas/index');
     }
 
+    /**
+     * Detalle de una SALIDA. `$id` es de `ruta_ejecuciones`, no de `rutas`
+     * (cambió en la mig. 078): el grupo, la asistencia y el informe son de la
+     * salida, y los puntos se muestran desde el catálogo de su ruta.
+     */
     public function detalle($id) {
-        $ruta = Ruta::find($id);
-        if (!$ruta) {
-            header('Location: ' . URL_ROOT . '/rutas/index');
+        $id  = (int)$id;
+        $ej  = RutaEjecucion::find($id);
+        if (!$ej) {
+            flash('global_msg', 'La salida solicitada no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/salidas');
             exit;
         }
-        $puntos               = Ruta::getPuntos($id);
-        $participantes        = Ruta::getParticipantes($id);
+        $ruta = Ruta::find((int)$ej->id_ruta);
 
         require_once '../app/models/Parroquia.php';
-        $parroquias = Parroquia::all();
 
-        // Historial de oficios emitidos para esta ruta
         $db = new Database();
         $db->query("SELECT numero, fecha, destinatario_nombre, destinatario_cargo, asunto, created_at
-                    FROM oficios_emitidos
-                    WHERE id_ruta = :id AND is_active = TRUE
-                    ORDER BY created_at DESC");
+                      FROM oficios_emitidos
+                     WHERE id_ejecucion = :id AND is_active = TRUE
+                     ORDER BY created_at DESC");
         $db->bind(':id', $id);
         $oficiosEmitidos = $db->resultSet();
 
-        $data = [
-            'titulo'               => 'Ruta: ' . $ruta->nombre,
-            'ruta'                 => $ruta,
-            'puntos'               => $puntos,
-            'participantes'        => $participantes,
-            'parroquias'           => $parroquias,
-            'oficiosEmitidos'      => $oficiosEmitidos,
-        ];
-        $this->view('rutas/detalle', $data);
+        $participantes = RutaEjecucion::participantes($id);
+
+        $this->view('rutas/detalle', [
+            'titulo'          => 'Salida: ' . $ej->ruta_nombre . ' — ' . date('d/m/Y', strtotime($ej->fecha)),
+            'ejecucion'       => $ej,
+            'ruta'            => $ruta,
+            'puntos'          => Ruta::getPuntos((int)$ej->id_ruta),
+            'participantes'   => $participantes,
+            'empleadosSalida' => RutaEjecucion::empleados($id),
+            'empleados'       => Empleado::all(),
+            'parroquias'      => Parroquia::all(),
+            'oficiosEmitidos' => $oficiosEmitidos,
+            // R-33: 7-8 personas por guía. Es una sugerencia, no un límite.
+            'guias_sugeridos' => RutaEjecucion::guiasSugeridos(count($participantes)),
+            // R-28: el cupo del cliente es por DÍA, no por salida.
+            'personas_del_dia'=> RutaEjecucion::personasEnFecha($ej->fecha),
+        ]);
+    }
+
+    /** Ficha del recorrido en el catálogo: sus puntos y sus salidas. */
+    public function ruta($id) {
+        $id   = (int)$id;
+        $ruta = Ruta::find($id);
+        if (!$ruta) {
+            flash('global_msg', 'La ruta solicitada no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+        $this->view('rutas/ruta_detalle', [
+            'titulo'  => 'Ruta: ' . $ruta->nombre,
+            'ruta'    => $ruta,
+            'puntos'  => Ruta::getPuntos($id),
+            'salidas' => RutaEjecucion::porRuta($id),
+        ]);
     }
 
     public function buscarPersona() {
@@ -201,7 +374,7 @@ class RutasController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') return;
 
         $_POST  = $this->sanitizePost();
-        $id_ruta = (int)$_POST['id_ruta'];
+        $id_ruta = (int)($_POST['id_ejecucion'] ?? $_POST['id_ruta'] ?? 0); // id de la SALIDA (mig. 078)
         $userId  = $this->getUserId();
         $esLibre = !empty($_POST['tipo_participante_libre']);
 
@@ -248,11 +421,11 @@ class RutasController extends Controller {
                 }
 
                 // Anti-duplicado en la MISMA ruta (mismo niño/a sin cédula)
-                if (Ruta::estaInscritoLibre($id_ruta, $nombre, $apellidoLibre, $fechaNacLibreRaw, $cedulaLibre)) {
+                if (RutaEjecucion::estaInscritoLibre($id_ruta, $nombre, $apellidoLibre, $fechaNacLibreRaw, $cedulaLibre)) {
                     throw new Exception('Ya hay un participante con ese nombre y fecha de nacimiento inscrito en esta ruta.');
                 }
 
-                Ruta::inscribirLibre($id_ruta, [
+                RutaEjecucion::inscribirLibre($id_ruta, [
                     'nombre_libre'   => $nombre,
                     'apellido_libre' => $apellidoLibre,
                     'cedula_libre'   => $cedulaLibre,
@@ -324,7 +497,8 @@ class RutasController extends Controller {
                 }
 
                 // RN-F12: verificar prerequisito de formación si la ruta lo requiere
-                $ruta   = Ruta::find($id_ruta);
+                $ejecFor = RutaEjecucion::find($id_ruta);
+                $ruta    = $ejecFor ? Ruta::find((int)$ejecFor->id_ruta) : null;
                 $forzar = !empty($_POST['forzar_inscripcion']);
                 if ($ruta && !empty($ruta->requiere_formacion)) {
                     if (!Taller::personaRecibioFormacion($idPersona) && !$forzar) {
@@ -335,14 +509,14 @@ class RutasController extends Controller {
                     }
                 }
 
-                Ruta::inscribir($id_ruta, $idPersona, $userId, $observaciones);
+                RutaEjecucion::inscribir($id_ruta, $idPersona, $userId, $observaciones);
             }
 
             // Advertencia no bloqueante de cupo (mismo criterio que talleres):
             // cupo_maximo es estimación de planificación, no límite rígido.
-            $rutaCupo  = Ruta::find($id_ruta);
-            $cupoMax   = (int)($rutaCupo->cupo_maximo ?? 0);
-            $inscritos = Ruta::countParticipantes($id_ruta);
+            $ejec      = RutaEjecucion::find($id_ruta);
+            $cupoMax   = (int)($ejec->cupo_maximo ?? 0);
+            $inscritos = RutaEjecucion::countParticipantes($id_ruta);
             if ($cupoMax > 0 && $inscritos >= $cupoMax) {
                 flash('global_msg', 'Participante registrado. Aviso: el cupo estimado de ' . $cupoMax . ' personas ha sido alcanzado o superado.', 'warning');
             } else {
@@ -358,12 +532,12 @@ class RutasController extends Controller {
         $id_ruta = 0;
         try {
             $db = new Database();
-            $db->query("SELECT id_ruta FROM participantes_ruta WHERE id = :id");
+            $db->query("SELECT id_ejecucion FROM participantes_ruta WHERE id = :id");
             $db->bind(':id', $id_participante);
             $row     = $db->single();
-            $id_ruta = $row ? $row->id_ruta : 0;
+            $id_ruta = $row ? (int)$row->id_ejecucion : 0;
 
-            Ruta::desinscribir((int)$id_participante, $this->getUserId());
+            RutaEjecucion::desinscribir((int)$id_participante, $this->getUserId());
             flash('global_msg', 'Participante removido.', 'warning');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
@@ -380,7 +554,7 @@ class RutasController extends Controller {
         $asistio = !empty($_POST['asistio']) && $_POST['asistio'] !== '0';
         $userId  = $this->getUserId();
         try {
-            Ruta::marcarAsistencia($id, $asistio, $userId);
+            RutaEjecucion::marcarAsistencia($id, $asistio, $userId);
             echo json_encode(['ok' => true, 'asistio' => $asistio]);
         } catch (Exception $e) {
             echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
@@ -391,10 +565,10 @@ class RutasController extends Controller {
     public function marcarAsistenciaMasiva() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { echo json_encode(['ok'=>false]); exit; }
-        $idRuta = (int)($_POST['id_ruta'] ?? 0);
+        $idRuta = (int)($_POST['id_ejecucion'] ?? $_POST['id_ruta'] ?? 0);
         $userId = $this->getUserId();
         try {
-            Ruta::marcarAsistenciaMasiva($idRuta, $userId);
+            RutaEjecucion::marcarAsistenciaMasiva($idRuta, $userId);
             echo json_encode(['ok' => true]);
         } catch (Exception $e) {
             echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
@@ -405,7 +579,8 @@ class RutasController extends Controller {
     // ── Informe post-visita ───────────────────────────────────────────────────
 
     public function informe($id) {
-        $ruta = Ruta::find($id);
+        $ejec = RutaEjecucion::find((int)$id);   // $id es de la SALIDA (mig. 078)
+        $ruta = $ejec ? Ruta::find((int)$ejec->id_ruta) : null;
         if (!$ruta) { header('Location: ' . URL_ROOT . '/rutas/index'); exit; }
 
         // Sugerencia demográfica desde participantes activos
@@ -431,7 +606,7 @@ class RutasController extends Controller {
             }
         }
 
-        $informe = Ruta::getInforme((int)$id);
+        $informe = RutaEjecucion::getInforme((int)$id);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mujeres = max(0, (int)$_POST['mujeres']);
@@ -445,7 +620,7 @@ class RutasController extends Controller {
                 if (empty(trim($_POST['resumen_visita'] ?? ''))) {
                     throw new Exception('El resumen de la visita es obligatorio.');
                 }
-                Ruta::saveInforme([
+                RutaEjecucion::saveInforme([
                     'id_ruta'       => $id,
                     'lugar_exacto'  => trim($_POST['lugar_exacto']  ?? ''),
                     'mujeres'       => $mujeres,
@@ -466,6 +641,7 @@ class RutasController extends Controller {
         $this->view('rutas/informe', [
             'titulo'        => 'Informe de Visita',
             'ruta'          => $ruta,
+            'ejecucion'     => $ejec,
             'informe'       => $informe,
             'sugeridos'     => $sugeridos,
             'totalSugeridos'=> $totalSug,
@@ -473,10 +649,11 @@ class RutasController extends Controller {
     }
 
     public function exportarInformeCsv($id) {
-        $ruta = Ruta::find($id);
+        $ejec = RutaEjecucion::find((int)$id);   // $id es de la SALIDA (mig. 078)
+        $ruta = $ejec ? Ruta::find((int)$ejec->id_ruta) : null;
         if (!$ruta) { header('Location: ' . URL_ROOT . '/rutas/index'); exit; }
-        $informe       = Ruta::getInforme((int)$id);
-        $participantes = Ruta::getParticipantes((int)$id);
+        $informe       = RutaEjecucion::getInforme((int)$id);
+        $participantes = RutaEjecucion::participantes((int)$id);
 
         $nombre = 'Informe_Ruta_' . preg_replace('/[^A-Za-z0-9_]/', '_', $ruta->nombre ?? 'ruta');
         header('Content-Type: text/csv; charset=UTF-8');
@@ -530,14 +707,15 @@ class RutasController extends Controller {
     // ── Oficio ───────────────────────────────────────────────────────────────
 
     public function oficio($id) {
-        $ruta = Ruta::find($id);
+        $ejec = RutaEjecucion::find((int)$id);   // $id es de la SALIDA (mig. 078)
+        $ruta = $ejec ? Ruta::find((int)$ejec->id_ruta) : null;
         if (!$ruta) {
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;
         }
         $puntos = Ruta::getPuntos($id);
         $config = ConfigSistema::getAll();
-        $total  = Ruta::countParticipantes($id);
+        $total  = RutaEjecucion::countParticipantes($id);
 
         $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
@@ -556,7 +734,7 @@ class RutasController extends Controller {
                 exit;
             }
 
-            $numero = Ruta::crearOficioEmitido($id, [
+            $numero = RutaEjecucion::crearOficioEmitido($id, [
                 'destinatario_nombre' => $destNombre,
                 'destinatario_cargo'  => $destCargo,
                 'asunto'              => 'Visita: ' . $ruta->nombre,
@@ -571,6 +749,7 @@ class RutasController extends Controller {
 
             $data = [
                 'ruta'               => $ruta,
+                'ejecucion'          => $ejec,
                 'config'             => $config,
                 'numero'             => $numero,
                 'destinatario_nombre'=> $destNombre,
@@ -603,6 +782,7 @@ class RutasController extends Controller {
         $data = [
             'titulo'              => 'Generar Oficio: ' . $ruta->nombre,
             'ruta'                => $ruta,
+            'ejecucion'           => $ejec,
             'puntos'              => $puntos,
             'config'              => $config,
             'fecha_hoy'           => date('j') . ' de ' . $meses[(int)date('n') - 1] . ' de ' . date('Y'),

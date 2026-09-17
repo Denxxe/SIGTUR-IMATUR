@@ -2,6 +2,7 @@
 $cfg = $data['config'] ?? [];
 $v = fn(string $k) => htmlspecialchars($cfg[$k]['valor'] ?? '');
 $ruta = $data['ruta'];
+$ejecucion = $data['ejecucion'] ?? null;   // la SALIDA (mig. 078)
 ?>
 
 <div class="page__head anim-slide-up">
@@ -23,7 +24,7 @@ $ruta = $data['ruta'];
 
 <?php
 $faltaConfig   = empty($cfg['director_nombre']['valor']) || empty($cfg['resolucion_numero']['valor']);
-$faltaRuta     = empty($ruta->fecha_visita);
+$faltaRuta     = empty($ejecucion->fecha);
 $oficiosPrevios = $data['oficiosPrevios'] ?? [];
 
 if (!empty($oficiosPrevios)):
@@ -90,7 +91,7 @@ if (!empty($oficiosPrevios)):
                     <div>
                         <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Fecha de visita</span>
                         <div style="font-weight:600; color:var(--text-primary);">
-                            <?php echo $ruta->fecha_visita ? date('d/m/Y', strtotime($ruta->fecha_visita)) : '<span style="color:var(--danger-500);">No registrada</span>'; ?>
+                            <?php echo $ejecucion->fecha ? date('d/m/Y', strtotime($ejecucion->fecha)) : '<span style="color:var(--danger-500);">No registrada</span>'; ?>
                         </div>
                     </div>
                     <div>

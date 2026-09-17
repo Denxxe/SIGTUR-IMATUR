@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-09-17 · **Migraciones aplicadas:** hasta **077** · **Rama:** `development_stage`
+**Última actualización:** 2026-09-17 · **Migraciones aplicadas:** hasta **078** · **Rama:** `development_stage`
 
 > ⚠️ **2026-09-02 — Bienes: la Alcaldía cambió el procedimiento de codificación.** IMATUR pasa a
 > asignar el código de sus propios bienes y el acta de baja pasa a ser **Acta de Desincorporación**

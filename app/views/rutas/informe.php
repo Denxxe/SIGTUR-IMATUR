@@ -43,7 +43,7 @@
                 <div class="col-md-4">
                     <div class="sig-field">
                         <label class="sig-field__label">Fecha de Visita</label>
-                        <input type="text" class="sig-input" value="<?php echo $data['ruta']->fecha_visita ? date('d/m/Y', strtotime($data['ruta']->fecha_visita)) : 'N/A'; ?>" readonly style="background:var(--bg-muted-subtle);cursor:not-allowed;">
+                        <input type="text" class="sig-input" value="<?php echo $data['ejecucion']->fecha ? date('d/m/Y', strtotime($data['ejecucion']->fecha)) : 'N/A'; ?>" readonly style="background:var(--bg-muted-subtle);cursor:not-allowed;">
                     </div>
                 </div>
                 <div class="col-md-4">

@@ -41,16 +41,17 @@
         </div>
         <h1 class="page__title"><?php echo htmlspecialchars($data['ruta']->nombre ?? ''); ?></h1>
         <div style="display:flex; gap:var(--sp-4); margin-top:var(--sp-2); font-size:13px; color:var(--text-secondary); flex-wrap:wrap;">
-            <?php if ($data['ruta']->fecha_visita): ?>
-            <span><strong>Visita:</strong> <?php echo date('d/m/Y', strtotime($data['ruta']->fecha_visita)); ?>
-                <?php if ($data['ruta']->hora_visita): ?> a las <?php echo substr($data['ruta']->hora_visita, 0, 5); ?><?php endif; ?>
+            <?php if ($data['ejecucion']->fecha): ?>
+            <span><strong>Salida:</strong> <?php echo date('d/m/Y', strtotime($data['ejecucion']->fecha)); ?>
+                <?php if ($data['ejecucion']->hora): ?> a las <?php echo substr($data['ejecucion']->hora, 0, 5); ?><?php endif; ?>
             </span>
             <?php endif; ?>
             <?php if ($data['ruta']->departamento_nombre): ?>
             <span><strong>Depto:</strong> <?php echo htmlspecialchars($data['ruta']->departamento_nombre); ?></span>
             <?php endif; ?>
-            <?php if ($data['ruta']->facilitador_nombre): ?>
-            <span><strong>Guía:</strong> <?php echo htmlspecialchars($data['ruta']->facilitador_nombre . ' ' . ($data['ruta']->facilitador_apellido ?? '')); ?></span>
+            <?php $__enc = null; foreach (($data['empleadosSalida'] ?? []) as $__e) { if (!empty($__e->es_encargado)) { $__enc = $__e; break; } } ?>
+            <?php if ($__enc): ?>
+            <span><strong>Encargado:</strong> <?php echo htmlspecialchars($__enc->nombre); ?></span>
             <?php endif; ?>
             <?php if (!empty($data['ruta']->tipo_ruta) && $data['ruta']->tipo_ruta !== 'General'): ?>
             <span><strong>Tipo:</strong>
@@ -124,7 +125,7 @@
         </div>
         <?php
         $inscritos  = count($data['participantes'] ?? []);
-        $cupo       = $data['ruta']->cupo_maximo ?? 0;
+        $cupo       = $data['ejecucion']->cupo_maximo ?? 0;
         $porcentaje = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
         ?>
         <div class="text-end">
@@ -345,7 +346,7 @@ sort($duplicados, SORT_NUMERIC);
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="display:flex; flex-direction:column; gap:var(--sp-4);">
-                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id; ?>">
+                <input type="hidden" name="id_ejecucion" value="<?php echo $data['ejecucion']->id; ?>">
 
                 <!-- Selector tipo de participante -->
                 <div>
@@ -547,7 +548,7 @@ sort($duplicados, SORT_NUMERIC);
             </div>
             <div class="modal-body">
                 <input type="hidden" name="punto_id" id="pt_id">
-                <input type="hidden" name="id_ruta" value="<?php echo $data['ruta']->id ?? ''; ?>">
+                <input type="hidden" name="id_ejecucion" value="<?php echo $data['ejecucion']->id ?? ''; ?>">
                 <div class="sig-field mb-4">
                     <label class="sig-field__label" for="pt_nombre">Nombre del Punto <span class="req">*</span></label>
                     <input type="text" name="punto_nombre" id="pt_nombre" class="sig-input" required placeholder="Ej: Mirador de la Cruz">
@@ -846,7 +847,7 @@ if (btnMasivaRuta) {
     btnMasivaRuta.addEventListener('click', function() {
         if (!confirm('¿Marcar como "Asistió" a todos los participantes pendientes?')) return;
         var self = this;
-        var fd   = new FormData(); fd.append('id_ruta', this.dataset.ruta);
+        var fd   = new FormData(); fd.append('id_ejecucion', this.dataset.ruta);
         self.disabled = true;
         fetch('<?php echo URL_ROOT; ?>/rutas/marcarAsistenciaMasiva', { method: 'POST', body: fd })
             .then(function(r) { return r.json(); })

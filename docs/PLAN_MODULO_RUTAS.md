@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · construcción **no iniciada**
-**Migraciones vigentes al escribir:** hasta **077**
+**Estado:** análisis cerrado · **T-A construida (mig. 078)**, resto pendiente
+**Migraciones vigentes:** hasta **078**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -333,7 +333,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 
 | Fase | Contenido | ¿Bloqueada? |
 |------|-----------|-------------|
-| **T-A** | **Separar catálogo y ejecución.** Nueva `ruta_ejecuciones`, mudar columnas, repuntar `participantes_ruta` / `ruta_informes` / `oficios_emitidos`, migrar las 2 filas, partir modelo y controlador, rehacer las vistas | 🟢 **NO — se puede empezar hoy.** Es la fase grande y no depende de ninguna respuesta faltante |
+| ✅ ~~T-A~~ | ~~Separar catálogo y ejecución~~ | **HECHA (2026-09-17, mig. 078).** `ruta_ejecuciones` + `ruta_ejecucion_empleados`, modelo `RutaEjecucion`, dos pantallas (`/rutas/index` catálogo · `/rutas/salidas`). Incluye los tres estados de R-14 y la reprogramación enlazada de R-16 (parte de T-D) |
 | **T-B** | **Edad por catálogo** (`edad_min`/`edad_max`), retirar el 5–11 del código y de los rótulos del informe | 🟢 **NO — se puede hoy.** Corrige un choque real (§2) |
 | **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
 | **T-D** | **No ejecutado y reprogramación**, con motivo obligatorio y enlace a la salida original | 🟢 **DESBLOQUEADA (2026-09-17).** R-14 dio los tres estados: `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |

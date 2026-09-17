@@ -19,6 +19,9 @@ function rutaUrl(array $f, int $p): string {
         <p class="page__subtitle">Planificación y control de rutas turísticas y puntos de interés del municipio.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/rutas/salidas" class="btn-sig btn-sig--primary">
+            <i class="bi bi-calendar-event"></i> Salidas programadas
+        </a>
         <a href="<?php echo URL_ROOT; ?>/reportes/rutas" class="btn-sig btn-sig--success" title="Exportar listado completo (Excel/PDF)">
             <i class="bi bi-file-earmark-spreadsheet"></i> Exportar
         </a>
@@ -58,24 +61,9 @@ function rutaUrl(array $f, int $p): string {
                 <?php endforeach; ?>
             </select>
         </div>
-        <div>
-            <label class="sig-field__label" style="font-size:11px;" for="periodo">Período</label>
-            <?php $perActual = $flt['periodo'] ?? '';
-                  $periodos = ['' => 'Todos', 'proximos' => 'Próximas', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasadas']; ?>
-            <select id="periodo" name="periodo" class="sig-input" style="min-width:130px;">
-                <?php foreach ($periodos as $val => $lbl): ?>
-                    <option value="<?php echo $val; ?>" <?php echo $perActual === $val ? 'selected' : ''; ?>><?php echo $lbl; ?></option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div>
-            <label class="sig-field__label" style="font-size:11px;" for="fecha_desde">Desde</label>
-            <input id="fecha_desde" type="date" name="fecha_desde" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_desde'] ?? ''); ?>">
-        </div>
-        <div>
-            <label class="sig-field__label" style="font-size:11px;" for="fecha_hasta">Hasta</label>
-            <input id="fecha_hasta" type="date" name="fecha_hasta" class="sig-input" style="max-width:148px;" value="<?php echo htmlspecialchars($flt['fecha_hasta'] ?? ''); ?>">
-        </div>
+        <?php /* Los filtros de período y fecha se fueron a /rutas/salidas (mig. 078):
+                 el catálogo no tiene fecha — preguntarle a un recorrido «¿fue esta
+                 semana?» no significa nada. Eso se le pregunta a una salida. */ ?>
         <div style="display:flex; gap:var(--sp-2);">
             <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
             <?php if ($hayFiltro): ?>
@@ -97,7 +85,6 @@ function rutaUrl(array $f, int $p): string {
 $estadoColores = [
     'Activa'           => '#059669', // verde
     'En Mantenimiento' => '#F59E0B', // ámbar
-    'Finalizada'       => '#2563EB', // azul
     'Inactiva'         => '#DC2626', // rojo
 ];
 ?>
@@ -105,7 +92,6 @@ $estadoColores = [
 <div class="anim-slide-up" style="display:flex; gap:var(--sp-3); flex-wrap:wrap; justify-content:flex-end; margin-bottom:var(--sp-3); font-size:11px; color:var(--text-secondary);">
     <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#059669;"></span> Activa</span>
     <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#F59E0B;"></span> En Mantenimiento</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#2563EB;"></span> Finalizada</span>
     <span style="display:flex;align-items:center;gap:5px;"><span style="width:9px;height:9px;border-radius:50%;background:#DC2626;"></span> Inactiva</span>
 </div>
 
@@ -118,13 +104,9 @@ $estadoColores = [
     <?php else: ?>
         <?php foreach ($data['rutas'] ?? [] as $r): ?>
             <?php
-                $color = $estadoColores[$r->estado ?? ''] ?? '#64748B';
-                $rutaFinalizada = ($r->estado === Ruta::ESTADO_TERMINAL);
-                $enMant = ($r->estado === 'En Mantenimiento');
-                $cupo   = (int)($r->cupo_maximo ?? 0);
-                $insc   = (int)($r->total_participantes ?? 0);
-                $pct    = $cupo > 0 ? min(100, ($insc / $cupo) * 100) : 0;
-                $occCls = $cupo > 0 && $insc >= $cupo ? 'is-full' : ($pct >= 80 ? 'is-high' : '');
+                $color   = $estadoColores[$r->estado ?? ''] ?? '#64748B';
+                $enMant  = ($r->estado === 'En Mantenimiento');
+                $salidas = (int)($r->total_salidas ?? 0);
             ?>
             <div class="sig-card act-card h-100" style="border-left-color:<?php echo $color; ?>;">
                 <div class="act-card__head">
@@ -150,41 +132,46 @@ $estadoColores = [
                         <span class="act-chip"><i class="bi bi-pin-map"></i> <?php echo (int)$r->total_puntos; ?> paradas</span>
                     </div>
                     <div class="act-meta-list">
-                        <?php if ($r->fecha_visita): ?>
-                        <div class="act-meta"><i class="bi bi-calendar-event"></i><span><?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?><?php if ($r->hora_visita): ?> — <?php echo substr($r->hora_visita, 0, 5); ?><?php endif; ?></span></div>
-                        <?php endif; ?>
                         <?php if ($r->departamento_nombre): ?>
                         <div class="act-meta"><i class="bi bi-geo-alt"></i><span><?php echo htmlspecialchars($r->departamento_nombre); ?></span></div>
                         <?php endif; ?>
                         <div class="act-meta"><i class="bi bi-clock"></i><span><?php echo htmlspecialchars($r->duracion_estimada ?: 'Duración no definida'); ?></span></div>
-                        <?php if (!empty($r->facilitador_nombre)): ?>
-                        <div class="act-meta"><i class="bi bi-person-badge"></i><span><?php echo htmlspecialchars(trim($r->facilitador_nombre . ' ' . ($r->facilitador_apellido ?? ''))); ?></span></div>
-                        <?php endif; ?>
-                        <div style="margin-top:var(--sp-1);">
-                            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:5px; color:var(--text-secondary);">
-                                <span>Participantes</span>
-                                <span style="color:var(--text-primary);"><?php echo $insc; ?> / <?php echo $cupo; ?></span>
-                            </div>
-                            <div class="act-occ-bar <?php echo $occCls; ?>"><span style="width:<?php echo $pct; ?>%;"></span></div>
+                        <div class="act-meta">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>
+                                <?php if ($salidas > 0): ?>
+                                    <strong><?php echo $salidas; ?></strong> salida<?php echo $salidas === 1 ? '' : 's'; ?>
+                                    <?php if (!empty($r->ultima_salida)): ?>
+                                        · última <?php echo date('d/m/Y', strtotime($r->ultima_salida)); ?>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    Sin salidas todavía
+                                <?php endif; ?>
+                            </span>
                         </div>
                     </div>
                 </div>
                 <div class="act-card__foot">
-                    <a href="<?php echo URL_ROOT; ?>/rutas/detalle/<?php echo $r->id; ?>"
+                    <a href="<?php echo URL_ROOT; ?>/rutas/ruta/<?php echo $r->id; ?>"
                        class="btn-sig btn-sig--ghost btn-sig--sm" style="flex:1; justify-content:center; color:var(--teal-600); border-color:var(--teal-200);">
-                        <i class="bi bi-geo"></i> Ver Ruta
+                        <i class="bi bi-geo"></i> Ver recorrido
                     </a>
                     <div style="display:flex; gap:var(--sp-1);">
-                        <?php if (!$rutaFinalizada): ?>
                         <button class="row-action row-action--edit" title="Editar"
                                 onclick='editarRuta(<?php echo htmlspecialchars(json_encode($r), ENT_QUOTES, "UTF-8"); ?>)'>
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <?php endif; ?>
+                        <?php if ($salidas === 0): ?>
                         <a href="<?php echo URL_ROOT; ?>/rutas/delete/<?php echo $r->id; ?>"
                            class="row-action row-action--del delete-btn" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </a>
+                        <?php else: ?>
+                        <span class="row-action" style="opacity:.45;cursor:not-allowed;"
+                              title="Esta ruta ya tiene salidas: no se elimina. Márcala como «Inactiva» si dejó de ofrecerse.">
+                            <i class="bi bi-trash"></i>
+                        </span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -249,12 +236,7 @@ $estadoColores = [
                             <div class="invalid-feedback" id="msg_duracion">Formato requerido: H:MM (ej: 2:30)</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <div class="sig-field">
-                            <label class="sig-field__label" for="rut_cupo">Cupo Máx.</label>
-                            <input type="number" name="cupo_maximo" id="rut_cupo" class="sig-input" value="20" min="1" max="200">
-                        </div>
-                    </div>
+
 
                     <!-- Descripción -->
                     <div class="col-12">
@@ -282,11 +264,11 @@ $estadoColores = [
                             <label class="sig-field__label" for="rut_estado">Estado</label>
                             <select name="estado" id="rut_estado" class="sig-select">
                                 <?php foreach (Ruta::ESTADOS as $est): ?>
-                                <option value="<?php echo $est; ?>"><?php echo $est === Ruta::ESTADO_TERMINAL ? $est . ' (ejecutada)' : $est; ?></option>
+                                <option value="<?php echo $est; ?>"><?php echo $est; ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <span class="sig-field__hint" id="rut_estado_hint" style="display:none; color:var(--danger-600);">
-                                <i class="bi bi-exclamation-triangle"></i> Finalizada es definitiva: la ruta no podrá editarse después.
+                            <span class="sig-field__hint" style="font-size:11px;">
+                                Si la ruta deja de ofrecerse, «Inactiva»: el histórico de sus salidas se conserva.
                             </span>
                         </div>
                     </div>
@@ -302,34 +284,18 @@ $estadoColores = [
                         </div>
                     </div>
 
-                    <!-- Facilitador -->
-                    <div class="col-md-6">
-                        <div class="sig-field">
-                            <label class="sig-field__label" for="rut_facilitador">Facilitador / Guía responsable</label>
-                            <select name="id_facilitador" id="rut_facilitador" class="sig-select js-search">
-                                <option value="">Sin asignar</option>
-                                <?php foreach ($data['empleados'] ?? [] as $e): ?>
-                                    <option value="<?php echo $e->id; ?>">
-                                        <?php echo htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Fecha y hora de visita -->
-                    <div class="col-md-3">
-                        <div class="sig-field">
-                            <label class="sig-field__label" for="rut_fecha">Fecha de Visita</label>
-                            <input type="date" name="fecha_visita" id="rut_fecha" class="sig-input"
-                                   min="<?php echo date('Y-m-d'); ?>">
-                            <div class="invalid-feedback" id="msg_fecha_ruta">La fecha no puede ser anterior a hoy.</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="sig-field">
-                            <label class="sig-field__label" for="rut_hora">Hora de Visita</label>
-                            <input type="time" name="hora_visita" id="rut_hora" class="sig-input">
+                    <?php /* Guía, fecha, hora y cupo NO están aquí: son de la SALIDA, no del
+                             recorrido (mig. 078). Una ruta se ejecuta muchas veces, cada una con
+                             su fecha y sus guías — R-09: hasta dos salidas de la misma ruta en
+                             una misma mañana. Se programan desde «Salidas programadas». */ ?>
+                    <div class="col-12">
+                        <div class="sig-alert sig-alert--info" style="margin:0;">
+                            <i class="bi bi-info-circle"></i>
+                            <div>
+                                Aquí se define <strong>el recorrido</strong>. La fecha, los guías y el
+                                grupo de cada visita se registran en
+                                <a href="<?php echo URL_ROOT; ?>/rutas/salidas">Salidas programadas</a>.
+                            </div>
                         </div>
                     </div>
 
@@ -384,7 +350,6 @@ function nuevaRuta() {
     document.getElementById('modalRutaLabel').innerText = 'Nueva Ruta Turística';
     document.getElementById('rut_id').value = '';
     document.querySelector('#modalRuta form').reset();
-    document.getElementById('rut_cupo').value = '20';
     toggleMotivoMant('Activa');
 }
 
@@ -395,11 +360,7 @@ function editarRuta(r) {
     document.getElementById('rut_descripcion').value      = r.descripcion;
     document.getElementById('rut_duracion').value         = r.duracion_estimada;
     document.getElementById('rut_estado').value           = r.estado;
-    document.getElementById('rut_cupo').value             = r.cupo_maximo || 20;
     document.getElementById('rut_depto').value            = r.id_departamento || '';
-    document.getElementById('rut_facilitador').value      = r.id_facilitador || '';
-    document.getElementById('rut_fecha').value            = r.fecha_visita || '';
-    document.getElementById('rut_hora').value             = r.hora_visita ? r.hora_visita.substring(0,5) : '';
     document.getElementById('rut_req_form').checked       = r.requiere_formacion == true || r.requiere_formacion === 't' || r.requiere_formacion === '1';
     document.getElementById('rut_tipo').value             = r.tipo_ruta || 'General';
     // Pre-rellenar motivo de mantenimiento
@@ -411,8 +372,6 @@ function editarRuta(r) {
 // Mostrar/ocultar motivo al cambiar estado en el selector
 document.getElementById('rut_estado').addEventListener('change', function() {
     toggleMotivoMant(this.value);
-    var hint = document.getElementById('rut_estado_hint');
-    if (hint) hint.style.display = (this.value === 'Finalizada') ? 'block' : 'none';
 });
 
 // Validación de duración en formato H:MM
@@ -424,27 +383,15 @@ document.getElementById('rut_duracion').addEventListener('input', function() {
     if (msgEl) msgEl.style.display = ok ? 'none' : 'block';
 });
 
-// Validación de fecha de visita >= hoy
-document.getElementById('rut_fecha').addEventListener('change', function() {
-    var val   = this.value;
-    var hoy   = '<?php echo date('Y-m-d'); ?>';
-    var msgEl = document.getElementById('msg_fecha_ruta');
-    var ok    = !val || val >= hoy;
-    this.classList.toggle('is-invalid', !ok);
-    if (msgEl) msgEl.style.display = ok ? 'none' : 'block';
-});
+// La validación de fecha se fue con el campo: la fecha es de la salida (mig. 078).
 
-// Submit: bloquear si hay campos inválidos
+// Submit: bloquear si la duración tiene mal formato
 document.querySelector('#modalRuta form').addEventListener('submit', function(e) {
-    var durVal  = document.getElementById('rut_duracion').value.trim();
-    var fechaVal = document.getElementById('rut_fecha').value;
-    var hoy     = '<?php echo date('Y-m-d'); ?>';
-    var errDur  = durVal && !/^\d{1,2}:\d{2}$/.test(durVal);
-    var errFecha = fechaVal && fechaVal < hoy;
-    if (errDur || errFecha) {
+    var durVal = document.getElementById('rut_duracion').value.trim();
+    if (durVal && !/^\d{1,2}:\d{2}$/.test(durVal)) {
         e.preventDefault();
-        if (errDur)   { document.getElementById('rut_duracion').classList.add('is-invalid'); document.getElementById('msg_duracion').style.display='block'; }
-        if (errFecha) { document.getElementById('rut_fecha').classList.add('is-invalid');    document.getElementById('msg_fecha_ruta').style.display='block'; }
+        document.getElementById('rut_duracion').classList.add('is-invalid');
+        document.getElementById('msg_duracion').style.display = 'block';
     }
 });
 </script>
