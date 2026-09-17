@@ -396,7 +396,7 @@ trait ReportesFormacionTrait {
             ],
             [
                 'titulo'  => 'Resumen Demográfico',
-                'headers' => ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)', 'Total Atendidos'],
+                'headers' => ['Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'],
                 'rows'    => [[
                     $inf->mujeres         ?? 0,
                     $inf->hombres         ?? 0,

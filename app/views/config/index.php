@@ -375,6 +375,43 @@
         </div>
     </div>
 
+    <!-- Rutas Turísticas (mig. 079 — T-I) -->
+    <div class="col-md-6">
+        <div class="sig-card h-100" style="border-top:3px solid #0D9488;">
+            <div class="sig-card__head" style="background:rgba(13,148,136,.04); border-bottom:1px solid var(--border-subtle);">
+                <div class="sig-card__title">
+                    <i class="bi bi-signpost-split-fill" style="color:#0D9488;"></i> Rutas Turísticas
+                </div>
+                <span style="font-size:11px;color:var(--text-tertiary);">Cupo de atención</span>
+            </div>
+            <div class="sig-card__body" style="padding:var(--sp-4);">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4); padding:var(--sp-3) var(--sp-4); background:var(--bg-muted-subtle); border-radius:8px; border:1px solid var(--border-subtle);">
+                    <div>
+                        <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:2px;">
+                            <i class="bi bi-people-fill" style="color:#0D9488;"></i> Personas por día
+                        </div>
+                        <div style="font-size:11px;color:var(--text-tertiary);">
+                            Máximo de participantes atendidos en una misma fecha, sumando todas las salidas.
+                            Es una <strong>advertencia</strong>, no un bloqueo. 0 = sin tope.
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                        <input type="number" name="rutas_cupo_diario" class="sig-input"
+                               style="width:72px;text-align:center;font-weight:700;font-size:15px;padding:var(--sp-1) var(--sp-2);"
+                               min="0" max="1000"
+                               value="<?php echo (int)($cfg['rutas_cupo_diario']['valor'] ?? 60); ?>">
+                        <span style="font-size:12px;color:var(--text-secondary);">pers.</span>
+                    </div>
+                </div>
+                <div style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-3);">
+                    Las restricciones de edad y las condiciones de cada recorrido
+                    (Exploradores 4–16, Río Brito desde 12…) se configuran
+                    <a href="<?php echo URL_ROOT; ?>/rutas/index">en cada ruta del catálogo</a>, no aquí.
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <?php /* La sección NÓMINA vivía aquí. Sus parámetros se mudaron a

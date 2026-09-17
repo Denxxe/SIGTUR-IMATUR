@@ -38,6 +38,32 @@ $fmt    = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
 </div>
 <?php endif; ?>
 
+<?php
+// T-B (mig. 079): las condiciones de acceso son del RECORRIDO, no del sistema.
+$tieneRestr = $r->edad_min !== null || $r->edad_max !== null
+    || !empty($r->restricciones) || !empty($r->requiere_formacion);
+?>
+<?php if ($tieneRestr): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:3px solid var(--warning);">
+    <div class="sig-card__body" style="padding:var(--sp-4);">
+        <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--sp-2);">
+            <i class="bi bi-shield-exclamation"></i> Condiciones para participar
+        </div>
+        <ul style="margin:0;padding-left:var(--sp-5);font-size:13px;">
+            <?php if ($r->edad_min !== null || $r->edad_max !== null): ?>
+            <li><strong><?php echo htmlspecialchars(Ruta::textoEdades($r)); ?></strong></li>
+            <?php endif; ?>
+            <?php if (!empty($r->restricciones)): ?>
+            <li><?php echo htmlspecialchars($r->restricciones); ?></li>
+            <?php endif; ?>
+            <?php if (!empty($r->requiere_formacion)): ?>
+            <li>Requiere <strong>formación previa</strong> para inscribirse.</li>
+            <?php endif; ?>
+        </ul>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row g-4 anim-slide-up">
     <!-- Puntos del recorrido -->
     <div class="col-lg-7">

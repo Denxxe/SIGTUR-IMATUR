@@ -160,6 +160,23 @@ class RutaEjecucion extends Model {
      * implementado un cupo de 60 personas por día — esto es nuevo"*. Con dos
      * salidas la misma mañana (R-09), el tope se reparte entre ellas.
      */
+    /** Tope de personas por día (0 = sin tope). Configurable desde /config. */
+    public static function cupoDiario(): int {
+        return (int)ConfigSistema::get('rutas_cupo_diario');
+    }
+
+    /**
+     * ¿Cuántas personas caben todavía ese día? NULL si no hay tope.
+     * Es una **advertencia**, no un bloqueo: el cliente dijo que el cupo de 60
+     * «es nuevo», y en Talleres el cupo ya se trata como estimación de
+     * planificación, no como límite rígido. Mismo criterio aquí.
+     */
+    public static function cupoRestanteDelDia(string $fecha, ?int $excluir = null): ?int {
+        $tope = self::cupoDiario();
+        if ($tope <= 0) return null;
+        return $tope - self::personasEnFecha($fecha, $excluir);
+    }
+
     public static function personasEnFecha(string $fecha, ?int $excluirEjecucion = null): int {
         $db = new Database();
         $sql = "SELECT COUNT(*) AS n

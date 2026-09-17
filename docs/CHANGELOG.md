@@ -18,6 +18,47 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-17 — Rutas: el catálogo se separa de las salidas, y la edad deja de estar cableada (mig. 078-079)
+
+**1. Catálogo ≠ salida (T-A, mig. 078).** El módulo estaba construido sobre una premisa falsa: cada
+fila de `rutas` era *una salida*, con su fecha y su guía. R-07/R-08 desmintieron eso — **el catálogo
+es reutilizable** y la misma ruta se ejecuta muchas veces, incluso dos veces el mismo día. Nace
+`ruta_ejecuciones` (con los tres estados que dio R-14: `Programado` / `Ejecutado` / `No ejecutado`,
+motivo obligatorio y reprogramación enlazada, R-16) y `ruta_ejecucion_empleados`. Participantes,
+asistencia, informe y oficios cuelgan ahora de `id_ejecucion`. Dos pantallas: `/rutas/index` es el
+catálogo, `/rutas/salidas` la agenda.
+
+**2. La edad salió del código (T-B, mig. 079) — H-17 cerrado.** `RutasController` exigía **5 años
+mínimo y menos de 12**, con los rótulos «Niño/a 5–11» repartidos por la vista, el informe y el
+export. Ese rango se fijó en la mig. 017 **sin levantamiento**: ningún dato del cliente lo
+respaldaba, y chocaba de frente con lo que sí dijeron —
+
+> R-66: *«Exploradores lleva el tope de 4 hasta 16 años»* → **hoy un niño de 4 no se podía inscribir.**
+> R-57: *«Río Brito tiene restricción: de 12 años en adelante. Personas con dificultad visual, excluidos.»*
+
+De R-57 se desprende lo importante: la restricción **no es solo la edad** y **no es global** — es un
+atributo **de cada recorrido**. Por eso `rutas.edad_min` / `rutas.edad_max` (NULL = sin tope) y
+`rutas.restricciones` en texto para lo que no es edad. La única regla es
+`Ruta::motivoEdadNoValida()`, y se aplica en **los dos** flujos de inscripción (con cédula y sin
+ella) y también en el formulario, que ya no deshabilita el botón por un rango inventado sino por el
+de esa ruta. Los rótulos del informe quedaron en «Niñas»/«Niños»: el desglose es por sexo, no por un
+tramo que nadie pidió.
+
+**3. El cupo es por día, no por salida (T-I, mig. 079).** R-28: *«se ha implementado un cupo de 60
+personas por día — esto es nuevo»*. Con dos salidas la misma mañana el tope se **reparte**, así que
+no puede vivir en `ruta_ejecuciones`: es el escalar `rutas_cupo_diario` en Configuración (0 = sin
+tope, para desactivarlo sin tocar código). `RutaEjecucion::personasEnFecha()` suma todas las salidas
+de esa fecha —descontando las no ejecutadas— y el detalle de la salida muestra *«N de 60 personas
+ese día»*. **Advierte, no bloquea**, igual que el cupo de Talleres: es planificación, no un límite
+rígido.
+
+> ⚠️ **Corrección del mismo día:** al recibir los formatos se interpretó que la *lista de asistencia
+> nominal* (con cédula y firma) probaba que IMATUR registra participantes uno a uno. El cliente
+> aclaró que **esa lista es del personal de IMATUR** que sale a la ruta — guías y ayudantes. De modo
+> que R-23/R-24/R-29 eran correctas: del grupo visitante se lleva **solo el conteo**, y la lista
+> nominal es el imprimible de `ruta_ejecucion_empleados`. El registro individual sobrevive para el
+> **particular de pago** (R-22/R-62).
+
 ### 2026-09-17 — Bienes: los formatos que llegaron, H-16, el renombrado del estatus y el acta por lote (mig. 075-077)
 
 Cuatro cosas del mismo módulo en un día, encadenadas.

@@ -249,6 +249,24 @@ class RutasController extends Controller {
             exit;
         }
 
+        // T-B: restricciones de edad del recorrido (mig. 079). Vacío = sin tope.
+        // Es la regla que el cliente dio en R-14/R-30: Exploradores 4–16,
+        // Río Brito desde 12. Antes el rango 5–11 estaba cableado en el código.
+        $edadMin = ($_POST['edad_min'] ?? '') === '' ? null : (int)$_POST['edad_min'];
+        $edadMax = ($_POST['edad_max'] ?? '') === '' ? null : (int)$_POST['edad_max'];
+        foreach ([$edadMin, $edadMax] as $e) {
+            if ($e !== null && ($e < 0 || $e > 120)) {
+                flash('global_msg', 'Las edades deben estar entre 0 y 120 años.', 'danger');
+                header('Location: ' . URL_ROOT . '/rutas/index');
+                exit;
+            }
+        }
+        if ($edadMin !== null && $edadMax !== null && $edadMin > $edadMax) {
+            flash('global_msg', 'La edad mínima no puede ser mayor que la máxima.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
         $data = [
             'id'                    => $esEdicion ? (int)$_POST['id'] : null,
             'nombre'                => $nombre,
@@ -257,6 +275,9 @@ class RutasController extends Controller {
             'estado'                => $estado,
             'id_departamento'       => (int)($_POST['id_departamento'] ?? 0) ?: null,
             'requiere_formacion'    => !empty($_POST['requiere_formacion']),
+            'edad_min'              => $edadMin,
+            'edad_max'              => $edadMax,
+            'restricciones'         => trim($_POST['restricciones'] ?? '') ?: null,
             'tipo_ruta'             => $tipoRuta,
             'motivo_mantenimiento'  => $estado === 'En Mantenimiento' ? $motivoMant : null,
         ];
@@ -383,7 +404,7 @@ class RutasController extends Controller {
         require_once '../app/models/Taller.php';
 
         try {
-            // ── Flujo libre: participante sin cédula (menor 5-11 años) ──────────
+            // ── Flujo libre: participante sin cédula (menor) ────────────────────
             if ($esLibre) {
                 $nombre = trim($_POST['nombre_libre'] ?? '');
                 if (empty($nombre)) throw new Exception('El nombre del participante es requerido.');
@@ -398,9 +419,16 @@ class RutasController extends Controller {
                 $fnacDt    = new \DateTime($fechaNacLibreRaw);
                 $hoyDt     = new \DateTime();
                 if ($fnacDt >= $hoyDt) throw new Exception('La fecha de nacimiento no puede ser una fecha futura.');
+                // H-17 / T-B: el rango 5–11 estaba CABLEADO aquí y se fijó en la
+                // mig. 017 sin levantamiento. Ahora la restricción es del
+                // RECORRIDO (mig. 079): Exploradores va de 4 a 16 (R-66) y Río
+                // Brito de 12 en adelante (R-57). Sin rango definido, no restringe.
                 $edadAnios = (int)Util::edad($fechaNacLibreRaw);
-                if ($edadAnios < 5)  throw new Exception('El participante debe tener al menos 5 años.');
-                if ($edadAnios >= 12) throw new Exception('Los participantes de 12 años o más deben registrarse con su cédula.');
+                $ejecLibre = RutaEjecucion::find($id_ruta);
+                $rutaLibre = $ejecLibre ? Ruta::find((int)$ejecLibre->id_ruta) : null;
+                if ($rutaLibre && ($errEdad = Ruta::motivoEdadNoValida($rutaLibre, $edadAnios)) !== null) {
+                    throw new Exception($errEdad);
+                }
 
                 // cedula_libre (ID escolar) es opcional, pero si se proporciona valida formato alfanumérico
                 $cedulaLibre = trim($_POST['cedula_libre'] ?? '') ?: null;
@@ -496,9 +524,17 @@ class RutasController extends Controller {
                     ], $userId);
                 }
 
-                // RN-F12: verificar prerequisito de formación si la ruta lo requiere
                 $ejecFor = RutaEjecucion::find($id_ruta);
                 $ruta    = $ejecFor ? Ruta::find((int)$ejecFor->id_ruta) : null;
+
+                // T-B: misma restricción de edad que en el flujo sin cédula, si
+                // la persona tiene fecha de nacimiento registrada.
+                if ($ruta && $fechaNac
+                    && ($errEdad = Ruta::motivoEdadNoValida($ruta, (int)Util::edad($fechaNac))) !== null) {
+                    throw new Exception($errEdad);
+                }
+
+                // RN-F12: verificar prerequisito de formación si la ruta lo requiere
                 $forzar = !empty($_POST['forzar_inscripcion']);
                 if ($ruta && !empty($ruta->requiere_formacion)) {
                     if (!Taller::personaRecibioFormacion($idPersona) && !$forzar) {
@@ -512,13 +548,27 @@ class RutasController extends Controller {
                 RutaEjecucion::inscribir($id_ruta, $idPersona, $userId, $observaciones);
             }
 
-            // Advertencia no bloqueante de cupo (mismo criterio que talleres):
-            // cupo_maximo es estimación de planificación, no límite rígido.
+            // Avisos de cupo — NO bloqueantes, mismo criterio que talleres: es
+            // una estimación de planificación, no un límite rígido. Y el cupo
+            // diario «es nuevo» según el propio cliente (R-28).
             $ejec      = RutaEjecucion::find($id_ruta);
             $cupoMax   = (int)($ejec->cupo_maximo ?? 0);
             $inscritos = RutaEjecucion::countParticipantes($id_ruta);
+            $avisos    = [];
+
             if ($cupoMax > 0 && $inscritos >= $cupoMax) {
-                flash('global_msg', 'Participante registrado. Aviso: el cupo estimado de ' . $cupoMax . ' personas ha sido alcanzado o superado.', 'warning');
+                $avisos[] = 'el cupo estimado de ' . $cupoMax . ' personas de esta salida ya se alcanzó';
+            }
+            // T-I (R-28): el tope de 60 es por DÍA, sumando todas las salidas.
+            $restante = RutaEjecucion::cupoRestanteDelDia($ejec->fecha);
+            if ($restante !== null && $restante <= 0) {
+                $avisos[] = 'el cupo diario de ' . RutaEjecucion::cupoDiario()
+                          . ' personas para el ' . date('d/m/Y', strtotime($ejec->fecha))
+                          . ' ya se alcanzó (cuenta todas las salidas del día)';
+            }
+
+            if ($avisos) {
+                flash('global_msg', 'Participante registrado. Aviso: ' . implode(' y ', $avisos) . '.', 'warning');
             } else {
                 flash('global_msg', 'Participante registrado correctamente.');
             }
@@ -678,8 +728,8 @@ class RutasController extends Controller {
             fputcsv($out, ['Lugar',    $informe->lugar_exacto ?? ''], ';');
             fputcsv($out, ['Mujeres',  $informe->mujeres  ?? 0], ';');
             fputcsv($out, ['Hombres',  $informe->hombres  ?? 0], ';');
-            fputcsv($out, ['Niñas (5-11)', $informe->ninas ?? 0], ';');
-            fputcsv($out, ['Niños (5-11)', $informe->ninos ?? 0], ';');
+            fputcsv($out, ['Niñas', $informe->ninas ?? 0], ';');
+            fputcsv($out, ['Niños', $informe->ninos ?? 0], ';');
             fputcsv($out, ['Total',    $informe->total_atendidos ?? 0], ';');
             fputcsv($out, ['Resumen',  $informe->resumen_visita ?? ''], ';');
             fputcsv($out, [''], ';');

@@ -308,19 +308,26 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 | R-29 | ○ | ¿Se registra si el participante **asistió realmente**, o solo que se inscribió? | **No hay lista detallada que cotejar**: lo que se registra el día de la ruta es **el conteo demográfico**. |
 | R-30 | 💡 | ¿Necesitan saber si una persona **ya hizo** esa ruta antes, para no repetirla o para dar prioridad? | **No, no es necesario y no se toma en cuenta.** ✅ *El anti-duplicado de participantes entre salidas no aplica aquí.* |
 
-> ### ⚠️ Los formatos matizan R-23/R-24/R-29: hay **dos** registros, no uno
+> ### ✅ R-23/R-24/R-29 son correctas: IMATUR **no** registra participantes uno a uno
 >
-> Leyendo solo las respuestas parecía que IMATUR **no** registra personas. Los documentos entregados
-> el 2026-09-17 muestran que **sí, cuando tienen cédula**:
+> ⚠️ **Corregido el 2026-09-17 (2).** Al recibir los formatos se interpretó que la *lista de
+> asistencia nominal* era de los **participantes**, y que por tanto convivían dos registros. **El
+> cliente lo aclaró: esa lista es la asistencia del PERSONAL DE IMATUR** que sale a la ruta — el o
+> los guías y los ayudantes. No tiene nada que ver con el grupo visitante.
 >
-> | Documento | Qué registra | Cuándo |
+> | Documento | De quién | Qué registra |
 > |---|---|---|
-> | **Lista de asistencia nominal** (membrete IMATUR) `rutas_lista_asistencia_nominal_IMATUR.jpeg` | **N° · Nombre y apellido · Cédula · Firma**, 39 renglones. Ejemplo real: *Cumaná Histórica — Comuna Alianza 2 y 3, Brigada Turística de la PNB*, 28-06-2026 | Grupos de **adultos** (comunas, cuerpos, particulares): sí firman uno por uno |
-> | **Ficha Institucional** (membrete IMATUR) `rutas_ficha_institucional_IMATUR.jpeg` | **Conteo agregado** — ver abajo | **Siempre**, y es lo único cuando son **niños** (no tienen cédula) |
+> | **Lista de asistencia** `rutas_lista_asistencia_nominal_IMATUR.jpeg` | **Trabajadores de IMATUR** que van a la salida | N° · Nombre y apellido · **Cédula** · **Firma** |
+> | **Ficha Institucional** `rutas_ficha_institucional_IMATUR.jpeg` | **El grupo visitante** | **Conteo agregado** — ver abajo |
 >
-> **La contradicción se disuelve así:** *"no llevamos lista"* se refiere a los **escolares**. Con
-> adultos con cédula sí hay lista firmada. El sistema debe soportar **los dos modos en la misma
-> salida** — que es, en el fondo, lo que ya hace hoy con participantes con cédula + modo libre.
+> **Consecuencia de diseño:** la lista nominal es el imprimible de la tabla de **empleados por
+> salida** (`ruta_ejecucion_empleados`, mig. 078), no de participantes. Y el registro del grupo es
+> **solo el conteo**: nada de inscribir niño por niño.
+>
+> 🟡 **Matiz que sigue en pie (R-22/R-62):** participan *"ambos"*, individuales y grupos, y de los
+> **particulares de pago** sí se toma algún dato (*"si se pregunta, se lleva el registro de qué
+> localidad son"*). Así que el registro individual **no desaparece**: queda para el particular que
+> paga, no para el grupo escolar.
 >
 > ### 📄 Ficha Institucional — el formato del conteo (R-25, R-43, R-48)
 >

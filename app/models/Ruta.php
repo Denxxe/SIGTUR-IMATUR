@@ -25,6 +25,10 @@ class Ruta extends Model {
     private bool    $requiere_formacion;
     private string  $tipo_ruta;
     private ?string $motivo_mantenimiento;
+    // Restricciones del recorrido (mig. 079 — fase T-B)
+    private ?int    $edad_min;
+    private ?int    $edad_max;
+    private ?string $restricciones;
 
     // ── Fuente única de verdad para enums de este módulo ─────────────────────
     // «Finalizada» se retiró en la mig. 078: describía una SALIDA, no una ruta
@@ -53,7 +57,48 @@ class Ruta extends Model {
             $this->tipo_ruta           = in_array($data['tipo_ruta'] ?? '', self::$TIPOS_RUTA)
                                          ? $data['tipo_ruta'] : 'General';
             $this->motivo_mantenimiento = $data['motivo_mantenimiento'] ?? null;
+
+            $this->edad_min      = ($data['edad_min'] ?? '') !== '' ? (int)$data['edad_min'] : null;
+            $this->edad_max      = ($data['edad_max'] ?? '') !== '' ? (int)$data['edad_max'] : null;
+            $this->restricciones = trim((string)($data['restricciones'] ?? '')) ?: null;
         }
+    }
+
+    // ── Restricciones del recorrido (mig. 079, fase T-B — cierra H-17) ───────
+    //
+    // El rango 5–11 estaba CABLEADO en el controlador y se fijó en la mig. 017
+    // sin levantamiento. Choca con lo que el cliente sí dijo: Exploradores va de
+    // 4 a 16 (R-66) y Río Brito de 12 en adelante (R-57). Y R-57 añade que la
+    // restricción no es solo de edad: hay condiciones físicas que el sistema
+    // «debería saber». Por eso vive en el catálogo, por recorrido.
+
+    /**
+     * ¿La edad encaja en el recorrido? Devuelve el motivo del rechazo, o null
+     * si es válida. Sin rango definido, **no restringe**: la mayoría de las
+     * rutas no tiene tope y poner uno por defecto es volver a inventar reglas.
+     */
+    public static function motivoEdadNoValida($ruta, ?int $edad): ?string {
+        if ($edad === null) return null;
+        $min = isset($ruta->edad_min) && $ruta->edad_min !== null ? (int)$ruta->edad_min : null;
+        $max = isset($ruta->edad_max) && $ruta->edad_max !== null ? (int)$ruta->edad_max : null;
+
+        if ($min !== null && $edad < $min) {
+            return "«{$ruta->nombre}» admite participantes desde {$min} años; esta persona tiene {$edad}.";
+        }
+        if ($max !== null && $edad > $max) {
+            return "«{$ruta->nombre}» admite participantes hasta {$max} años; esta persona tiene {$edad}.";
+        }
+        return null;
+    }
+
+    /** Texto corto del rango, para mostrarlo en la ficha y en el formulario. */
+    public static function textoEdades($ruta): string {
+        $min = $ruta->edad_min ?? null;
+        $max = $ruta->edad_max ?? null;
+        if ($min === null && $max === null) return 'Sin restricción de edad';
+        if ($min !== null && $max !== null) return "De {$min} a {$max} años";
+        if ($min !== null)                  return "Desde {$min} años";
+        return "Hasta {$max} años";
     }
 
     /**
@@ -163,6 +208,8 @@ class Ruta extends Model {
                                   requiere_formacion=:requiere_formacion,
                                   tipo_ruta=:tipo_ruta,
                                   motivo_mantenimiento=:motivo_mant,
+                                  edad_min=:edad_min, edad_max=:edad_max,
+                                  restricciones=:restricciones,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -170,11 +217,14 @@ class Ruta extends Model {
             $this->db->query("INSERT INTO rutas
                               (nombre, descripcion, duracion_estimada, estado,
                                id_departamento, requiere_formacion, tipo_ruta,
-                               motivo_mantenimiento, created_by)
+                               motivo_mantenimiento, edad_min, edad_max, restricciones, created_by)
                               VALUES (:nombre, :descripcion, :duracion_estimada, :estado,
                                       :id_departamento, :requiere_formacion, :tipo_ruta,
-                                      :motivo_mant, :user_id)");
+                                      :motivo_mant, :edad_min, :edad_max, :restricciones, :user_id)");
         }
+        $this->db->bind(':edad_min',      $this->edad_min);
+        $this->db->bind(':edad_max',      $this->edad_max);
+        $this->db->bind(':restricciones', $this->restricciones);
         $this->db->bind(':nombre',             $this->nombre);
         $this->db->bind(':descripcion',        $this->descripcion);
         $this->db->bind(':duracion_estimada',  $this->duracion_estimada);

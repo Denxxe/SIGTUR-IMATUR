@@ -92,13 +92,13 @@
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label" for="inf_ninas">Niñas <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(5–11)</span></label>
+                        <label class="sig-field__label" for="inf_ninas">Niñas</label>
                         <input type="number" id="inf_ninas" name="ninas" class="sig-input" style="text-align:center;" min="0" value="<?php echo $inf->ninas ?? 0; ?>" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="sig-field">
-                        <label class="sig-field__label" for="inf_ninos">Niños <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(5–11)</span></label>
+                        <label class="sig-field__label" for="inf_ninos">Niños</label>
                         <input type="number" id="inf_ninos" name="ninos" class="sig-input" style="text-align:center;" min="0" value="<?php echo $inf->ninos ?? 0; ?>" required>
                     </div>
                 </div>

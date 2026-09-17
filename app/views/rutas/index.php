@@ -130,6 +130,16 @@ $estadoColores = [
                     <div class="act-chips">
                         <span class="act-chip"><span class="act-chip__dot"></span><?php echo htmlspecialchars($r->tipo_ruta ?: 'General'); ?></span>
                         <span class="act-chip"><i class="bi bi-pin-map"></i> <?php echo (int)$r->total_puntos; ?> paradas</span>
+                        <?php if (($r->edad_min ?? null) !== null || ($r->edad_max ?? null) !== null): ?>
+                        <span class="act-chip" title="Restricción de edad del recorrido">
+                            <i class="bi bi-person-check"></i> <?php echo htmlspecialchars(Ruta::textoEdades($r)); ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if (!empty($r->restricciones)): ?>
+                        <span class="act-chip" title="<?php echo htmlspecialchars($r->restricciones); ?>">
+                            <i class="bi bi-shield-exclamation"></i> Con condiciones
+                        </span>
+                        <?php endif; ?>
                     </div>
                     <div class="act-meta-list">
                         <?php if ($r->departamento_nombre): ?>
@@ -299,6 +309,43 @@ $estadoColores = [
                         </div>
                     </div>
 
+                    <!-- Restricciones del recorrido (mig. 079 — T-B/T-I, cierra H-17) -->
+                    <div class="col-12">
+                        <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;">
+                            <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--sp-2);">
+                                <i class="bi bi-shield-exclamation"></i> Restricciones de este recorrido
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_edad_min">Edad mínima</label>
+                                        <input type="number" name="edad_min" id="rut_edad_min" class="sig-input"
+                                               min="0" max="120" placeholder="sin mínimo">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_edad_max">Edad máxima</label>
+                                        <input type="number" name="edad_max" id="rut_edad_max" class="sig-input"
+                                               min="0" max="120" placeholder="sin tope">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_restricciones">Condiciones a advertir</label>
+                                        <input type="text" name="restricciones" id="rut_restricciones" class="sig-input"
+                                               placeholder="Ej: excluye dificultad visual; advertir condición articular">
+                                    </div>
+                                </div>
+                            </div>
+                            <small style="color:var(--text-tertiary);font-size:11px;display:block;margin-top:var(--sp-2);">
+                                Déjalo vacío si la ruta no tiene tope.
+                                Referencias del cliente: <strong>Exploradores de Cumaná 4–16</strong> ·
+                                <strong>Río Brito desde 12</strong>, sin dificultad visual.
+                            </small>
+                        </div>
+                    </div>
+
                     <!-- Prerequisito de formación (RN-F12) -->
                     <div class="col-12">
                         <div style="padding:var(--sp-3); background:var(--bg-muted-subtle); border-radius:8px;">
@@ -363,6 +410,9 @@ function editarRuta(r) {
     document.getElementById('rut_depto').value            = r.id_departamento || '';
     document.getElementById('rut_req_form').checked       = r.requiere_formacion == true || r.requiere_formacion === 't' || r.requiere_formacion === '1';
     document.getElementById('rut_tipo').value             = r.tipo_ruta || 'General';
+    document.getElementById('rut_edad_min').value         = (r.edad_min === null || r.edad_min === undefined) ? '' : r.edad_min;
+    document.getElementById('rut_edad_max').value         = (r.edad_max === null || r.edad_max === undefined) ? '' : r.edad_max;
+    document.getElementById('rut_restricciones').value    = r.restricciones || '';
     // Pre-rellenar motivo de mantenimiento
     document.getElementById('rut_motivo_mant').value      = r.motivo_mantenimiento || '';
     toggleMotivoMant(r.estado);

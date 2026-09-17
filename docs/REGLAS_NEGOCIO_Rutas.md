@@ -90,10 +90,14 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   D-RT05**: las instituciones públicas **solicitan la ruta por oficio**, y de que el solicitante sea
   una institución pública **depende la gratuidad** (R-03). Hay que **reconstruirlo** — esta vez con
   el flujo que lo usa, no solo la columna.
-- 🔴 **Rango de edad del modo libre**: el código exige **5-11 años**
-  (`RutasController.php:229`, más los rótulos de la vista y del informe). **Exploradores de Cumaná
-  es para niños de 4 a 8** (R-02) → **hoy un niño de 4 años no se puede inscribir**. El rango debe
-  salir del código y pasar al catálogo (`edad_min`/`edad_max`). Ver plan §2.
+- ✅ **Rango de edad: es del recorrido, no del sistema** (mig. 079, 2026-09-17). `rutas.edad_min` y
+  `rutas.edad_max` — NULL = sin tope — más `rutas.restricciones` en texto para lo que no es edad
+  (R-57: *«dificultad visual, excluidos»*; *«condición en articulaciones: sí debería saberlo»*). La
+  única regla es `Ruta::motivoEdadNoValida()`, aplicada en los **dos** flujos de inscripción y en el
+  formulario. El 5–11 cableado —que dejaba fuera a los niños de 4 de Exploradores— **ya no existe**.
+  Las condiciones se muestran en la ficha del recorrido y **al inscribir**.
+- ✅ **Cupo: 60 personas por día** (R-28), no por salida — `rutas_cupo_diario` en Configuración,
+  0 = sin tope. **Advierte, no bloquea**, igual que en Talleres: es planificación.
 
 ---
 
@@ -198,7 +202,7 @@ Reglas que salen de R-11 a R-16 y que **el sistema hoy no implementa**:
 | BRT-04 | Registro de institución solicitante | 🔴 **Reabierto por R-11.** `instituciones_externas` se eliminó en la mig. 060, pero las instituciones **solicitan por oficio** y de eso depende la gratuidad. **D-RT05 desmentida** |
 | BRT-05 | Catálogo de rutas vs. salidas | 🔴 **Abierto por R-07/R-08.** Lo que se daba por resuelto (cada ruta *es* una ejecución) es justamente lo que el cliente desmiente. **Es el rediseño**: `docs/PLAN_MODULO_RUTAS.md` §3 |
 | BRT-06 | Adultos acompañantes y prerequisito de formación | 🟢 **Resuelto por R-22…R-25 + los formatos (2026-09-17).** Los acompañantes **sí se cuentan**, y con desglose propio: la *Ficha Institucional* separa **Docentes** y **Representantes** por sexo, aparte de los niños. No hay prerequisito de formación |
-| BRT-07 | **Rango de edad 5–11 cableado en el código** | 🔴 **Precisado por R-57 (2026-09-17).** Ya no es solo la edad: **Río Brito admite de 12 años en adelante, excluye a personas con dificultad visual y hay que advertir por condición articular**. La restricción pasa a ser **un atributo del catálogo** (edad + condiciones), y el sistema **debe advertirlo al inscribir** |
+| ~~BRT-07~~ | ~~Rango de edad 5–11 cableado en el código~~ | ✅ **RESUELTO (2026-09-17, mig. 079).** La restricción es ahora un atributo del recorrido —edad **y** condiciones— y se advierte al inscribir. Río Brito 12+, Exploradores 4–16 |
 | BRT-08 | **Oficio de solicitud (entrada) no se registra** | 🔴 **Precisado por R-12 (2026-09-17):** llega **en físico** y **lo redacta cada institución** — no hay formato único. El sistema debe **recibir y archivar el escaneado**, no generarlo |
 | BRT-09 | **Aprobación de la Presidencia** | 🔴 **Nuevo (R-13).** No existe en el modelo |
 | BRT-10 | **Cancelación con motivo y reprogramación** | 🔴 **Nuevo (R-15/R-16).** No existen ni el estado ni el histórico de fecha. **R-15 (2026-09-17) lo endurece: el motivo es OBLIGATORIO** — *"si se cancela, el motivo siempre tiene que saberse"* |

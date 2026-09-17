@@ -136,6 +136,21 @@
             <div style="height:4px; width:100px; background:var(--bg-muted); border-radius:2px; margin-top:4px; overflow:hidden;">
                 <div style="height:100%; width:<?php echo min($porcentaje,100); ?>%; background:var(--teal-500);"></div>
             </div>
+            <?php
+            // T-I (mig. 079): el cupo que el cliente maneja es por DÍA (R-28),
+            // no por salida: pueden coincidir dos grupos en la misma fecha.
+            $topeDia = RutaEjecucion::cupoDiario();
+            if ($topeDia > 0):
+                $delDia  = (int)($data['personas_del_dia'] ?? 0);
+                $excedeD = $delDia > $topeDia;
+            ?>
+            <div style="font-size:11px;margin-top:4px;color:<?php echo $excedeD ? 'var(--danger)' : 'var(--text-tertiary)'; ?>;"
+                 title="Cupo diario configurable en Configuración del sistema">
+                <i class="bi bi-calendar-check"></i>
+                <?php echo $delDia; ?> de <?php echo $topeDia; ?> personas ese día
+                <?php if ($excedeD): ?>· <strong>por encima del cupo</strong><?php endif; ?>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
     <div class="sig-table-wrap ruta-participantes" data-tabla-buscable data-por-pagina="50" data-buscar-placeholder="Buscar participante ya inscrito por nombre o cédula…">
@@ -348,6 +363,26 @@ sort($duplicados, SORT_NUMERIC);
             <div class="modal-body" style="display:flex; flex-direction:column; gap:var(--sp-4);">
                 <input type="hidden" name="id_ejecucion" value="<?php echo $data['ejecucion']->id; ?>">
 
+                <?php
+                // T-B (mig. 079): las condiciones son del RECORRIDO. Se muestran aquí
+                // porque es el momento en que alguien decide si esta persona entra.
+                $rt = $data['ruta'];
+                $hayCond = ($rt->edad_min ?? null) !== null || ($rt->edad_max ?? null) !== null
+                    || !empty($rt->restricciones);
+                ?>
+                <?php if ($hayCond): ?>
+                <div style="padding:var(--sp-3);border-radius:8px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.30);font-size:12.5px;">
+                    <i class="bi bi-shield-exclamation" style="color:var(--warning);"></i>
+                    <strong>Condiciones de «<?php echo htmlspecialchars($rt->nombre); ?>»:</strong>
+                    <?php if (($rt->edad_min ?? null) !== null || ($rt->edad_max ?? null) !== null): ?>
+                        <?php echo htmlspecialchars(Ruta::textoEdades($rt)); ?>.
+                    <?php endif; ?>
+                    <?php if (!empty($rt->restricciones)): ?>
+                        <?php echo htmlspecialchars($rt->restricciones); ?>.
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <!-- Selector tipo de participante -->
                 <div>
                     <label class="sig-field__label" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
@@ -356,7 +391,7 @@ sort($duplicados, SORT_NUMERIC);
                             <i class="bi bi-person-vcard"></i> Adulto (con cédula)
                         </button>
                         <button type="button" class="seg-tipo" data-libre="1" style="flex:1; min-width:170px; padding:12px; border-radius:8px; border:2px solid var(--border-subtle); background:var(--bg-muted); color:var(--text-secondary); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            <i class="bi bi-person-hearts"></i> Niño/a 5–11 (sin cédula)
+                            <i class="bi bi-person-hearts"></i> Sin cédula (menor)
                         </button>
                     </div>
                     <input type="checkbox" id="part_es_libre" name="tipo_participante_libre" value="1" style="display:none;">
@@ -692,13 +727,29 @@ sort($duplicados, SORT_NUMERIC);
         document.getElementById('bloque_datos_part').style.display='block';
     }
 
+    // Rango de edad DEL RECORRIDO (mig. 079). null = sin tope. El servidor
+    // vuelve a validarlo en RutasController con Ruta::motivoEdadNoValida().
+    var RUTA_EDAD_MIN = <?php echo ($data['ruta']->edad_min ?? null) === null ? 'null' : (int)$data['ruta']->edad_min; ?>;
+    var RUTA_EDAD_MAX = <?php echo ($data['ruta']->edad_max ?? null) === null ? 'null' : (int)$data['ruta']->edad_max; ?>;
+    var RUTA_NOMBRE   = <?php echo json_encode($data['ruta']->nombre ?? '', JSON_UNESCAPED_UNICODE); ?>;
+
+    /** Devuelve el motivo por el que esa edad no entra, o null si entra. */
+    function motivoEdadNoValida(edad) {
+        if (edad === null) return null;
+        if (RUTA_EDAD_MIN !== null && edad < RUTA_EDAD_MIN)
+            return '«' + RUTA_NOMBRE + '» admite desde ' + RUTA_EDAD_MIN + ' años.';
+        if (RUTA_EDAD_MAX !== null && edad > RUTA_EDAD_MAX)
+            return '«' + RUTA_NOMBRE + '» admite hasta ' + RUTA_EDAD_MAX + ' años.';
+        return null;
+    }
+
     // ── Validación submit ─────────────────────────────────────────────────────
     function checkValid() {
         if (elToggle.checked) {
             var nom  = (document.getElementById('part_nombre_libre').value||'').trim();
             var fnac = (document.getElementById('libre_fecha_nac').value||'').trim();
             var edad = fnac ? calcEdad(fnac) : null;
-            elSubmit.disabled = !(nom && fnac && edad!==null && edad>=5 && edad<12);
+            elSubmit.disabled = !(nom && fnac && edad!==null && motivoEdadNoValida(edad)===null);
         } else {
             var nom  = (document.getElementById('part_nombre').value||'').trim();
             var ape  = (document.getElementById('part_apellido').value||'').trim();
@@ -798,9 +849,11 @@ sort($duplicados, SORT_NUMERIC);
         var errEl=document.getElementById('libre_edad_error');
         errEl.style.display='none';
         if(edad===null){lbl.textContent='';}
-        else if(edad<5){lbl.textContent='· '+edad+' años'; errEl.textContent='El participante debe tener al menos 5 años.'; errEl.style.display='block';}
-        else if(edad>=12){lbl.textContent='· '+edad+' años'; errEl.textContent='De 12 años en adelante debe registrarse con cédula.'; errEl.style.display='block';}
-        else{lbl.textContent='· '+edad+' años (Niño/a)';}
+        else {
+            lbl.textContent='· '+edad+' años';
+            var motivo = motivoEdadNoValida(edad);
+            if (motivo) { errEl.textContent = motivo; errEl.style.display='block'; }
+        }
         checkValid();
     });
     ['part_nombre','part_apellido'].forEach(function(id){document.getElementById(id).addEventListener('input',checkValid);});

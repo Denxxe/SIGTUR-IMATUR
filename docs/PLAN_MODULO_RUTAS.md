@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **T-A construida (mig. 078)**, resto pendiente
-**Migraciones vigentes:** hasta **078**
+**Estado:** análisis cerrado · **T-A, T-B y T-I construidas (mig. 078 y 079)**, resto pendiente
+**Migraciones vigentes:** hasta **079**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -114,13 +114,21 @@ Directora de Promoción Turística, y su contenido es **el conteo demográfico**
 Y **se genera automáticamente** al cerrar (R-50). Esto define la tabla del cierre y **elimina** de
 una vez las suposiciones sobre qué lleva el informe.
 
-**③ Dos formas de registrar personas, no una** 🟡
+**③ La lista nominal es del PERSONAL, no de los participantes** 🟢
 
-R-23/R-24/R-29 dicen *"solo el registro general"*, pero el formato
-`rutas_lista_asistencia_nominal_IMATUR.jpeg` es una **lista con nombre, cédula y firma**. No se
-contradicen: **los escolares van por conteo** (no tienen cédula) y **los adultos firman**. El
-sistema debe soportar **los dos modos en la misma salida** — que es, en el fondo, lo que hoy hace
-con participantes con cédula + modo libre.
+> ⚠️ **Corregido el 2026-09-17 (2).** Primero se leyó `rutas_lista_asistencia_nominal_IMATUR.jpeg`
+> —nombre, cédula y firma— como una lista de participantes, y se concluyó que convivían dos formas
+> de registrar gente. **El cliente aclaró que es la asistencia de los trabajadores de IMATUR que
+> salen a la ruta**: el o los guías y los ayudantes.
+
+Eso **confirma R-23/R-24/R-29 tal cual**: del grupo visitante IMATUR lleva **solo el conteo**. Y da
+al formato su sitio exacto: es el **imprimible de `ruta_ejecucion_empleados`** (la tabla que creó
+T-A), no de `participantes_ruta`.
+
+**Lo que sí queda del registro individual:** R-22 dice que participan *"ambos"* y R-62 que del
+**particular de pago** se toma la localidad. Así que `participantes_ruta` no sobra — cambia de
+público: **deja de ser para el grupo escolar y pasa a ser para el particular que paga** (y enlaza
+con T-C, el cobro).
 
 ### 1-bis.2 Decisiones que REDUCEN el alcance
 
@@ -173,7 +181,11 @@ itinerario de Cumaná Histórica**. Confirma R-02: es **el mismo recorrido con o
 
 ---
 
-## 2. 🔴 Choque en producción detectado al leer R-02
+## 2. ✅ ~~Choque en producción detectado al leer R-02~~ — **CORREGIDO (mig. 079)**
+
+> ✅ **Cerrado el 2026-09-17 (fase T-B).** Lo que sigue es el análisis original, que se conserva
+> porque explica **por qué** el rango no podía quedarse en el código. Hoy vive en
+> `rutas.edad_min`/`edad_max`/`restricciones` y la única regla es `Ruta::motivoEdadNoValida()`.
 
 **El sistema hoy no permite inscribir a un niño de 4 años, y Exploradores de Cumaná es para niños
 de 4 a 8.**
@@ -334,14 +346,14 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 | Fase | Contenido | ¿Bloqueada? |
 |------|-----------|-------------|
 | ✅ ~~T-A~~ | ~~Separar catálogo y ejecución~~ | **HECHA (2026-09-17, mig. 078).** `ruta_ejecuciones` + `ruta_ejecucion_empleados`, modelo `RutaEjecucion`, dos pantallas (`/rutas/index` catálogo · `/rutas/salidas`). Incluye los tres estados de R-14 y la reprogramación enlazada de R-16 (parte de T-D) |
-| **T-B** | **Edad por catálogo** (`edad_min`/`edad_max`), retirar el 5–11 del código y de los rótulos del informe | 🟢 **NO — se puede hoy.** Corrige un choque real (§2) |
+| ✅ ~~T-B~~ | ~~Edad por catálogo, retirar el 5–11 del código y de los rótulos~~ | **HECHA (2026-09-17, mig. 079).** `rutas.edad_min/edad_max/restricciones` + `Ruta::motivoEdadNoValida()`. **Cierra H-17.** El rango vive en el recorrido, no en el código: se valida en servidor y en el formulario, y los rótulos «(5–11)» del informe y del export son ahora solo «Niñas»/«Niños» |
 | **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
 | **T-D** | **No ejecutado y reprogramación**, con motivo obligatorio y enlace a la salida original | 🟢 **DESBLOQUEADA (2026-09-17).** R-14 dio los tres estados: `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |
 | **T-E** | **Solicitud y aprobación**: origen particular/institucional, institución solicitante, oficio **entrante** archivado, aprobación de Presidencia | 🟢 **DESBLOQUEADA.** R-12 aclara que el oficio **lo redacta la institución** → se **recibe y adjunta**, no se genera. No hay formato que esperar |
 | **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
 | **T-G** | **Ficha Institucional** — el cierre con el conteo demográfico, generada automáticamente | 🟢 **DESBLOQUEADA (2026-09-17).** El formato llegó y R-50 confirma que se genera sola |
 | **T-H** 🆕 | **Oficios de permiso a instituciones custodias** (R-20): uno por semana cubriendo varias salidas, con estado *en espera / aceptado / rechazado* y el Director de Relaciones Inter-Institucionales como responsable | 🟡 **El flujo sí, el imprimible no** — falta el formato del oficio |
-| **T-I** 🆕 | **Restricciones por ruta** (R-57) y **cupo diario de 60** (R-28), con advertencia al inscribir | 🟢 **DESBLOQUEADA.** Datos concretos en §1-bis.4 |
+| ✅ ~~T-I~~ | ~~Restricciones por ruta (R-57) y cupo diario de 60 (R-28)~~ | **HECHA (2026-09-17, mig. 079).** `rutas.restricciones` se muestra en la ficha y **al inscribir**; el cupo es `rutas_cupo_diario` en Configuración (0 = sin tope) y se cuenta **por fecha sumando todas las salidas**, sin bloquear |
 
 **Recomendación (revisada el 2026-09-17):** el orden no cambia — **T-A sigue primero**, porque es el
 prerrequisito de todo y **cada línea escrita sobre el modelo viejo hay que rehacerla**. Lo que sí
@@ -353,7 +365,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | # | Fase | Por qué ahí |
 |---|---|---|
 | 1 | **T-A** | Prerrequisito de todo. Con 2 filas en `rutas`, la migración de datos es trivial |
-| 2 | **T-B + T-I** | Van juntas: ambas son restricciones del catálogo (edad, condiciones, cupo). Y **T-B cierra un bloqueo de uso real** (H-17) |
+| ~~2~~ | ✅ ~~T-B + T-I~~ | **HECHAS (mig. 079).** H-17 cerrado |
 | 3 | **T-G** | La **Ficha Institucional** — pedido #1 del cliente (R-64: *«los reportes»*) y formato en mano |
 | 4 | **T-D** | Estados y reprogramación: barato ahora que R-14 está respondida |
 | 5 | **T-E + T-H** | Los **oficios** — pedido #2 del cliente. T-H puede construirse sin su imprimible |
@@ -363,11 +375,13 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 > ✅ **El riesgo que señalaba este plan («arrancar antes de R-14») desapareció:** R-14 está
 > respondida y el `CHECK` queda fijado con las palabras del cliente, no con las nuestras.
 
-> ### ⚠️ Antes de T-A, una advertencia sobre `participantes_ruta`
-> R-23/R-24/R-29 parecían decir que **no se registran personas**, lo que haría sobrar media tabla.
-> Los formatos lo desmienten (§1-bis.1 ③): **conviven** el conteo demográfico y la lista nominal
-> firmada. **No eliminar `participantes_ruta` en T-A** — lo que hay que añadir es el conteo, no
-> quitar lo nominal.
+> ### ℹ️ Sobre `participantes_ruta` (corregido el 2026-09-17 (2))
+> **Del grupo visitante IMATUR lleva solo el conteo** (R-23/R-24/R-29): nada de inscribir niño por
+> niño. La lista nominal firmada es del **personal de IMATUR**, no de los participantes — ver
+> §1-bis.1 ③.
+>
+> Aun así **la tabla no sobra**: R-22 y R-62 dejan sitio al **particular de pago**, del que sí se
+> toma algún dato. Cambia de público, no desaparece. El conteo del grupo es lo que construye **T-G**.
 
 ---
 
@@ -397,7 +411,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | ~~R-12~~ | ✅ | ~~Formato del oficio de solicitud~~ | **Ya no aplica:** lo redacta cada institución (R-12) |
 | ~~R-47/48~~ | ✅ | ~~Informe de ruta ejecutada~~ | **Formato recibido:** la Ficha Institucional |
 
-**Nada de esto bloquea T-A, T-B, T-G ni T-I**, que son el grueso del módulo. Ver §7.
+**Nada de esto bloquea T-G**, que son el grueso del módulo. Ver §7.
 
 ---
 
@@ -413,5 +427,6 @@ Para que el alcance no se infle más de lo que ya se infló:
   por año (H-06). Se conserva tal cual; solo cambia a qué apunta.
 - **Prerequisito de formación** (RN-RT03) — se conserva; pasa a ser atributo del catálogo, que es
   donde siempre debió estar.
-- **Demografía del informe** — la estructura sirve; hay que contrastarla contra el formato real
-  (T-G) y corregir los rótulos "5-11".
+- **Demografía del informe** — la estructura sirve; ✅ los rótulos "5-11" ya se corrigieron
+  (mig. 079: son «Niñas»/«Niños», el desglose es por sexo). Falta contrastarla contra el formato
+  real (T-G).
