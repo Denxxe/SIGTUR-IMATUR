@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-09-17 · **Migraciones aplicadas:** hasta **076** · **Rama:** `development_stage`
+**Última actualización:** 2026-09-17 · **Migraciones aplicadas:** hasta **077** · **Rama:** `development_stage`
 
 > ⚠️ **2026-09-02 — Bienes: la Alcaldía cambió el procedimiento de codificación.** IMATUR pasa a
 > asignar el código de sus propios bienes y el acta de baja pasa a ser **Acta de Desincorporación**
@@ -11,14 +11,22 @@
 > faltando el **Acta de Desincorporación** y el **acta de asignación**. ⚠️ El oficio recibido es el
 > del procedimiento **anterior** al cambio del 2026-09-02 — hay que confirmarlo. **Ver §3.4.**
 
-Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
-`REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
-`AUDITORIA_SENIOR_2026-05-31.md`, `Notas.md` y `PLAN_ENTREGA.md`.
+Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya hecho no vive aquí.
 
-- **Referencia técnica:** `CLAUDE.md` (arquitectura, BD, convenciones, migraciones).
-- **Reglas de negocio por módulo (detalle):** `REGLAS_NEGOCIO_*.md`, `MODELO_NEGOCIO_RRHH.md`, `ESTRUCTURA_ORGANIZATIVA.md`.
-- **Indicadores:** `INDICADORES_GESTION.md`.
-- **Preguntas para el cliente (imprimible):** `PREGUNTAS_CLIENTE.md` (espejo de la sección 3).
+> **Fuente única de las preguntas abiertas.** Los IDs (B-xx de Bienes, R-xx de Rutas, N-x de Nómina,
+> D-xx de decisiones, H-xx de auditoría) se definen **solo en la sección 3 y la 4 de este archivo**.
+> Los planes de módulo y los documentos de reglas los **referencian por ID**, nunca los reproducen:
+> así una respuesta del cliente se anota en un solo sitio.
+
+| Para saber… | Leer |
+|---|---|
+| Cómo funciona el sistema hoy (arquitectura, BD, convenciones) | `CLAUDE.md` |
+| Qué se hizo y por qué (historial) | `CHANGELOG.md` |
+| Reglas de negocio por módulo | `REGLAS_NEGOCIO_*.md`, `MODELO_NEGOCIO_RRHH.md` |
+| Planes de reconstrucción en curso | `PLAN_MODULO_{BIENES,RUTAS,NOMINA}.md` |
+| Indicadores y sus fórmulas | `INDICADORES_GESTION.md` |
+| **Lo que se le pide al cliente, en lenguaje llano y por módulo** | `PREGUNTAS_CLIENTE.md` |
+| Respuestas crudas del cliente (material de origen) | `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, `formatos/` |
 
 **Leyenda:** 🔴 bloquea BD/lógica · 🟡 alto impacto · 🟢 menor · ✅ hecho · 🔒 espera decisión/insumo del cliente · 🛠️ implementable ya
 
@@ -34,10 +42,10 @@ Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
 | 1 | **Verificación en navegador** de lo construido este ciclo: las 4 pantallas de Nómina, la tarjeta «Datos de nómina» del expediente, Ubicaciones con sede/depósito, y el menú lateral con cada uno de los 6 roles | Corto | Todo se probó por BD y por pruebas automatizadas, **nada se abrió en el navegador**. Es el riesgo más alto que queda |
-| 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver §2 |
-| 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver §2 |
-| 4 | ~~**Corregir H-16**~~ | — | ✅ **Hecho (2026-09-17, mig. 076).** Y eran **cuatro** consultas, no tres: el mismo error estaba en el KPI `kpiBajasAnio` del Dashboard. Junto con C-6. Ver §2 |
-| 5 | **Acta de Desincorporación a nivel de datos** (C-5): tabla del acta + lote + marcar retirados en bloque al cargarla firmada | Medio | El **flujo** no depende del formato del cliente; solo el imprimible. Adelanta la mitad del trabajo |
+| 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver `CHANGELOG.md` |
+| 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver `CHANGELOG.md` |
+| 4 | ~~**Corregir H-16**~~ | — | ✅ **Hecho (2026-09-17, mig. 076).** Y eran **cuatro** consultas, no tres: el mismo error estaba en el KPI `kpiBajasAnio` del Dashboard. Junto con C-6. Ver `CHANGELOG.md` |
+| 5 | ~~**Acta de Desincorporación a nivel de datos**~~ | — | ✅ **Hecho (2026-09-17, mig. 077).** Tabla, lote, retiro en bloque y anulación que revierte. Solo el **imprimible** sigue esperando el formato (R-2). Ver CHANGELOG |
 | 6 | 🔴 **Rutas T-B — quitar el rango 5–11 cableado**: Exploradores de Cumaná es para **niños de 4 a 8 años** (R-02) y hoy `RutasController.php:229` **rechaza a un niño de 4**. El rango pasa al catálogo (`edad_min`/`edad_max`), con sus rótulos en la vista y en el export del informe | Corto | Es un **bloqueo real de uso**, no deuda técnica. Lo destapó el levantamiento del 2026-09-03 |
 | 7 | 🔴 **Rutas T-A — separar catálogo de ejecución**: nueva `ruta_ejecuciones`, mudar `fecha_visita`/`hora_visita`/`id_facilitador`/`cupo_maximo`, repuntar participantes/informes/oficios, migrar las 2 filas, partir `Ruta` y `RutasController`, rehacer las vistas | **Grande** | **No depende de ninguna respuesta pendiente** y es el prerrequisito de todo lo demás del módulo. Cuanto más código se escriba sobre el modelo viejo, más caro sale. Ver `docs/PLAN_MODULO_RUTAS.md` §7 |
 | 8 | 🟡 **Rutas T-C (declarativa)** — tarifa por ruta en el catálogo, tarifa aplicada + exoneración por salida, y **reactivar la columna Tarifa del reporte** (retirada en H-14) | Medio | R-02 confirma los montos: la columna vuelve **con dato verdadero**. El registro de **pagos** sigue esperando R-37…R-40 |
@@ -50,8 +58,8 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
 | 🔴 1 | **B-81 — ¿el oficio de relación recibido sigue vigente?** Es el del procedimiento **anterior** (pide que la Alcaldía codifique y no tiene columna de código). Ya está construido tal cual llegó; si hay versión nueva, es agregar una columna. **Más B-73** punto de partida de la secuencia y **B-75** catálogo de clasificación | R-12: sin B-73/B-75 IMATUR no puede codificar. ~~R-1~~ ✅ **el oficio ya está construido** (mig. 075) |
-| 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (ver §2, mig. 073). Con un mes basta |
-| 🔴 3 | **Rutas: R-14** (nombres de los estados, quedó en blanco) + **R-37…R-40** (flujo de cobro) + el resto del cuestionario (R-17…R-64) | ✅ **R-01…R-16 respondidas el 2026-09-03** y **confirmaron el rediseño**: hay catálogo, sí se cobra, la Presidencia aprueba. R-14 bloquea los estados; R-40 bloquea el registro de pagos. Plan: `docs/PLAN_MODULO_RUTAS.md` |
+| 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (mig. 073; ver `CHANGELOG.md`). Con un mes basta |
+| ~~3~~ | ~~**Rutas: R-14 + R-37…R-40 + el resto del cuestionario**~~ | ✅ **CERRADO el 2026-09-17.** Llegaron **R-17…R-64**, los **siete formatos** y —dentro de `PREGUNTAS_CLIENTE.md` §4— **R-14 y todo el bloque de cobro**. **63 de 64 respondidas; el módulo ya no espera nada del cliente.** Solo falta ver **un** oficio de permiso (formato menor). Plan: `docs/PLAN_MODULO_RUTAS.md` §1-bis |
 | 🔴 4 | **N-3** — «días adicionales» de la hoja INTERESES, **con recorte de pantalla** | Fase N-E: Liquidación de Prestaciones Sociales |
 | 🟡 5 | **Acta de Desincorporación** · **acta de asignación** · **el inventario digital de la encargada** (~~oficio de donación~~ ✅ recibido y construido · ~~oficio de retiro~~: fuera del alcance) | R-2, R-3 y la carga de los ~142 bienes. **R-11 ✅ cerrado** (mig. 075) |
 | 🟡 5-bis | **B-82 — confirmar la designación vigente de la Presidenta.** Los dos documentos entregados dicen Resolución **N° 32** del 05/09/2025 y Gaceta Extraordinaria **N° 87** del 05/09/2025; el sistema tenía 025/2024 y 042/2024, de relleno, imprimiéndose en **5 documentos reales**. Ya se corrigió en la mig. 075 — falta el visto bueno | Constancias de trabajo, cartas de pasantes y los 2 oficios de rutas dejan de llevar una resolución equivocada |
@@ -87,624 +95,37 @@ inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-
 - **Nómina:** 🟢 **motor de cálculo construido (2026-08-27, mig. 072).** Fases N‑A/N‑B/N‑C hechas: las primas se derivan, los porcentajes viven en tablas, cesta ticket y tasa del dólar tienen vigencia mensual, hay quincena con snapshot/recálculo/cierre y export de 6 hojas. Las 3 preguntas abiertas **ya no bloquean** (N‑1 y N‑2 son parámetros). Fases **N‑A a N‑D hechas** (mig. 072 y 073): el bono vacacional también calcula sus primas, aunque su **total** sigue confirmándose a mano porque la fórmula no está en ninguna fuente (el sistema muestra su estimación al lado, con la diferencia). Falta solo **N‑E** (Liquidación, bloqueada por N‑3). Lo que realmente falta son **insumos**: sueldos base, grados, cuentas bancarias, cesta ticket y tasa de cada mes. Antes: replanteamiento (2026-08-07). Llegó la plantilla real de nómina quincenal y de sus fórmulas se extrajo **el cálculo completo** — porcentajes por grado académico, escala de antigüedad con tope 30 %, deducciones, aportes y alícuotas. Aparecieron 3 cambios de fondo: son **3 documentos** (se suma la nómina quincenal), **5 tipos de personal** (falta Comisión de Servicio) y las primas **se derivan, no se capturan**. Quedan **3 preguntas**; solo una (N-3) bloquea la Liquidación. Plan por fases en `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación / Recepción:** CRUD y reglas operativas completos. Quedan preguntas de impacto medio/bajo.
 - **Inventario (Bienes):** fases 1-4 construidas (mig. 062-069) sobre el levantamiento del 2026-08-04 (59 preguntas), que reveló que lo que hacía falta era un **expediente administrativo por bien**, no un CRUD. ⚠️ **2026-09-02: la Alcaldía cambió el procedimiento** — IMATUR pasa a **asignar el código** de sus bienes y el acta de baja pasa a ser **Acta de Desincorporación** por lote (sin oficio de retiro). Lo construido sirve igual, pero hay **7 cambios de código pendientes**, **B-60 reabierta** y 8 preguntas nuevas: ver §3.4 y `docs/PLAN_MODULO_BIENES.md` §2-ter.
-- **Turismo (Rutas):** 🔴 **2026-09-03 — llegó el levantamiento parcial (R-01…R-16) y confirma el rediseño.** El cliente respondió justo el bloque que define la estructura: **existe un catálogo de rutas** (R-08) y dos salidas de la misma ruta son *"la misma ruta ejecutada 2 veces"* (R-07) → `rutas` se parte en **catálogo** + **`ruta_ejecuciones`**. Además: **sí se cobra** (R-02, 5/15/25 $ — D-RT02 deja de ser incógnita), **la Presidencia aprueba** cada salida (R-13), se **cancela con motivo** y se **reprograma conservando la misma salida** (R-15/R-16), y **vuelve** la institución solicitante (R-11 desmiente D-RT05). **La mitad del rediseño se puede construir ya** (fases T-A/T-B/T-C); lo demás espera **R-14** (nombres de estado, quedó en blanco), **R-37…R-40** (cobro) y R-17…R-64. Análisis y fases en **`docs/PLAN_MODULO_RUTAS.md`**.
+- **Turismo (Rutas):** 🟢 **2026-09-17 — el módulo quedó DESBLOQUEADO.** Llegaron **R-17…R-64**, **siete formatos reales** (`docs/formatos/rutas_*`) y —dentro de `PREGUNTAS_CLIENTE.md` §4— las cinco respuestas que llevaban meses frenando el rediseño: **R-14** (los estados son **Programado / Ejecutado / No ejecutado**) y **R-37…R-40** (el cobro, y **piden contabilidad completa**, no solo constancia). **63 de 64 respondidas.** Los formatos aportan: la **Ficha Institucional** resulta ser a la vez la planilla del día y el informe de cierre; Cumaná Histórica tiene **7 puntos**, no 5; y R-20 destapa un proceso que no estaba en el plan — los **oficios de permiso a las instituciones custodias**, agrupados por semana y con estado. Aparecen **dos fases nuevas** (T-H oficios de permiso · T-I restricciones y cupo) y se **recorta** alcance: sin modo campo (R-46), sin galería (R-49), sin transporte (R-58), sin encuesta (R-59). **Sigue pendiente el rediseño T-A**, que no depende de nadie. Ver `PLAN_MODULO_RUTAS.md` §1-bis. *Antes:* 🔴 **2026-09-03 — llegó el levantamiento parcial (R-01…R-16) y confirma el rediseño.** El cliente respondió justo el bloque que define la estructura: **existe un catálogo de rutas** (R-08) y dos salidas de la misma ruta son *"la misma ruta ejecutada 2 veces"* (R-07) → `rutas` se parte en **catálogo** + **`ruta_ejecuciones`**. Además: **sí se cobra** (R-02, 5/15/25 $ — D-RT02 deja de ser incógnita), **la Presidencia aprueba** cada salida (R-13), se **cancela con motivo** y se **reprograma conservando la misma salida** (R-15/R-16), y **vuelve** la institución solicitante (R-11 desmiente D-RT05). **La mitad del rediseño se puede construir ya** (fases T-A/T-B/T-C); lo demás espera **R-14** (nombres de estado, quedó en blanco), **R-37…R-40** (cobro) y R-17…R-64. Análisis y fases en **`docs/PLAN_MODULO_RUTAS.md`**.
 - **Cuello de botella de la entrega:** ya **no es código**, son **decisiones/insumos del cliente** (sección 3).
 
 ---
 
-## 2. LO RESUELTO EN ESTE CICLO
+## 2. ÚLTIMOS CAMBIOS
 
-### 2026-09-13 — La tasa del dólar se consulta al BCV, como sugerencia (mig. 074)
+> 📓 **El historial completo vive en [`CHANGELOG.md`](CHANGELOG.md)** — 30 entradas fechadas desde
+> 2026-06-21, con el porqué de cada decisión. Aquí solo lo más reciente, para dar contexto a lo que
+> falta. **Un backlog dice qué falta, no qué se hizo.**
 
-Cargar los parámetros del mes obligaba a ir a buscar la tasa a mano. Ahora el botón **Consultar BCV**
-de `/nomina/parametros` la trae y la propone; **Talento Humano la confirma o la corrige**.
-
-**Por qué sugerencia y no automático.** No está confirmado que la tasa que IMATUR aplica sea la del BCV
-del día — la plantilla del cliente trae **36,58 y 36,23 en hojas distintas del mismo período**, lo que
-apunta a un criterio propio (pregunta **N-4**, ya en `PREGUNTAS_CLIENTE.md` §C4). Dar el dato por bueno
-automáticamente produciría nóminas mal calculadas **en silencio y con aire de autoridad**, que es peor
-que el campo manual. La consulta ocurre **solo al cargar el parámetro**: el cálculo de la quincena nunca
-sale a internet, toma la tasa ya congelada en `nomina_periodos`.
-
-**Trazabilidad (mig. 074).** `nomina_parametros_mes` gana `tasa_fuente` (BCV/Manual), `tasa_fecha_valor`
-y `tasa_consultada_at`. La procedencia la decide el controlador comparando lo sugerido con lo guardado:
-**si el usuario retoca el número, aunque sea un decimal, queda como Manual** y se limpian fecha valor y
-momento de consulta — el respaldo del BCV no puede amparar un valor que el BCV no publicó. Verificado en
-navegador: alta → `BCV` + fecha valor; edición del número → `Manual` + fecha en blanco; ambas en la
-bitácora.
-
-**El BCV no tiene API.** Se lee su portada (bloque `id="dolar"`). Se descartaron los espejos JSON tras
-comprobarlos: `ve.dolarapi.com` iba **4 días atrasado** (832,49 contra 842,21 oficial, ~1,2 %) y
-`pydolarve.org` no respondía. Para un ente público la fuente citable en auditoría es el BCV.
-
-> **Dos hallazgos técnicos que valen para el futuro:**
-> 1. **El BCV publica con fecha valor adelantada**, no «la tasa de hoy»: un domingo su portada ya muestra
->    la del martes siguiente. Guardar `CURRENT_DATE` habría guardado una fecha falsa; se lee el atributo
->    `content` en ISO de la propia página.
-> 2. **El servidor del BCV entrega la cadena de certificados equivocada** (manda un intermedio Sectigo
->    que no es el que firmó su certificado). Los navegadores lo disimulan buscando el que falta (AIA);
->    OpenSSL, que es lo que usa PHP, no — de ahí que todos los ejemplos de internet traigan
->    `CURLOPT_SSL_VERIFYPEER => false`. **Aquí no se apagó la verificación**: se versionó el intermedio
->    correcto en `storage/certs/bcv-sectigo-ca.pem` (vence 2036, con su LEEME), así que la verificación
->    queda activa y además anclada a la CA esperada. Apagarla habría dejado que un intermediario dictara
->    la tasa con la que se paga la nómina.
-
-Si el BCV cambia su página o su CA, `TasaBcv::consultar()` lanza un mensaje que dice qué pasó y la tasa
-se sigue cargando a mano: **nunca bloquea la nómina**.
-
-### 2026-08-28 (2) — Deuda técnica: ReportesController partido, a11y de formularios y utilidades CSS (sin migración)
-
-**`ReportesController`: 3.405 → 101 líneas.** Reunía **101 métodos** de siete áreas distintas en un
-solo archivo. Se repartió en 8 traits bajo `app/controllers/reportes/` (`Rrhh`, `Formacion`, `Turismo`,
-`Inventario`, `Recepcion`, `Sistema`, `Indicadores`, `Export`), dejando en el controlador solo el índice
-y los tres helpers transversales (`requireRoles`, `qsFiltros`, `renderReporte`).
-
-Se eligió **traits** y no clases colaboradoras justamente porque no cambia nada: se componen en la misma
-clase, así que `$this`, los métodos privados y las firmas siguen siendo los mismos. **Ninguna URL, ruta
-o llamada cambió.** Se incluyen con `require_once` porque el autocargador de `public/index.php` solo
-mira rutas planas y no entra en subdirectorios.
-
-La corrección no se dio por buena "a ojo", se **demostró** por tres vías:
-
-| Comprobación | Resultado |
-|---|---|
-| API por reflexión, antes vs. después (nombre + visibilidad + firma con tipos y defaults) | **101 métodos, 0 diferencias** |
-| Cuerpos de los 101 métodos, comparados uno a uno contra la versión en git | **0 distintos** — mismo hash `ace02895ad58` del conjunto |
-| Prueba de humo en runtime: un método privado de 5 traits distintos contra la BD real | Todos ejecutan (`queryAuditoria` → 141 filas, `queryRutas` → 2) |
-
-De paso, el parser destapó un método que un primer barrido no veía: `fmtMesLargo` es
-`private static`, y el patrón inicial solo contemplaba `private function`. Por eso el conteo se
-contrastó contra la reflexión antes de mover una sola línea.
-
-**Accesibilidad de formularios: de 88 a 393 `label[for]`** (de 469 etiquetas). Se automatizó, pero
-solo sobre los casos seguros, y con dos resguardos: los `id` se deduplican **contra los de
-`inc/header.php` y `inc/footer.php`**, porque el requisito es que sean únicos en la *página* y toda
-vista incluye el layout; y donde el control ya tenía `id` se **reutiliza** en vez de inventar otro
-(144 de los 305). Verificado después: **0 `id` duplicados y 0 `for=` apuntando a un `id` inexistente**
-en las 67 vistas.
-
-**Quedan 76 sin tocar, a propósito:** 59 están dentro de un `foreach` —un `id` estático se repetiría en
-cada fila, que es peor que no tenerlo— y 17 no tienen un control asociable. Esos necesitan un `id`
-generado por PHP y hay que verlos caso por caso.
-
-**Estilos inline: 2.361 → 2.199.** Aquí lo que más valía era **no** hacer el reemplazo masivo. Al
-abrirlo aparecieron tres cosas que lo desaconsejan:
-
-1. **Un `style=` inline gana a cualquier regla sin `!important`.** Cambiarlo por una clase normal no es
-   neutral: `.sig-table th { text-align: left }` se impondría donde antes mandaba el inline. La
-   sustitución solo es fiel si la utilidad lleva `!important`.
-2. **Bootstrap 5 ya está cargado en local** (`assets/libs/bootstrap.min.css`) y sus utilidades ya son
-   `!important` — `text-center`, `text-end`, `d-none`. No hacía falta CSS nuevo salvo `.u-num`
-   (cifras tabulares), que Bootstrap no trae.
-3. **Dos trampas que habrían roto cosas en silencio:**
-   - `display:none` → `.d-none` **rompería 143 sitios** que hacen `el.style.display = '…'` por JS: el
-     `!important` de la clase le gana al inline del toggle, y el elemento ya no volvería a aparecer.
-     **Familia descartada.**
-   - **19 vistas standalone** (constancia, ficha técnica, carnets, oficios, listas de asistencia,
-     login…) **no incluyen el layout y por tanto no cargan Bootstrap**. Cambiarles un inline por una
-     clase las dejaría sin estilo. **Excluidas.**
-
-Así que se migró solo lo demostrable: los `style` cuya lista de declaraciones coincide **entera** con
-`text-align:center`, `text-align:right` o `text-align:right` + `tabular-nums`, y únicamente en las 67
-vistas que sí cargan Bootstrap. No hay ninguna regla `text-align` con `!important` en el proyecto, así
-que no hay con quién competir y el valor calculado no cambia. Los `style` **mixtos** se dejaron
-intactos. Se documentó la capa de utilidades al final de `sigtur-components.css`, explicando por qué
-lleva `!important`.
-
-> **Para quien siga con esto:** el resto de los 2.199 **no es mecánico**. Cada familia necesita su
-> propio análisis de especificidad, y `color`/`padding`/`margin` sí chocan con reglas `!important` ya
-> existentes (overrides del modal de Bootstrap, tema oscuro y `@media print`).
-
-Estado tras el ciclo: **0 errores de sintaxis** en el proyecto, **81/81 pruebas** y la API de reportes
-intacta.
-
-### 2026-08-28 — Tareas programadas, generador de feriados y saneo de la documentación (sin migración)
-
-**Las dos tareas programadas existen y ejecutan.** No había **ninguna** (`schtasks /query` vacío), y
-faltaban **dos**, no una: además del respaldo —cuyo último archivo era del **26 de junio**— estaba sin
-programar `cron/actualizar_estados.php`, así que **los talleres nunca pasaban solos de *Programado* a
-*En Curso***: se quedaban en Programado aunque la fecha de inicio ya hubiera llegado. Se creó
-`cron/instalar_tareas.ps1`, que deduce solo la ruta del proyecto y de `php.exe`, es idempotente (`/F`)
-y trae `-Desinstalar`, para poder reejecutarlo tal cual en el servidor de producción. Verificado de
-punta a punta: ambas tareas lanzadas desde el Programador devuelven **resultado 0** y el respaldo
-produjo un `.sql` real de 253 KB.
-
-> Corren como el usuario actual, o sea cuando ese usuario tiene sesión iniciada. En un servidor donde
-> deban correr siempre, recrearlas con `/RU SYSTEM` desde una consola elevada.
-
-**Los feriados movibles se calculan.** La mig. 071 cargó Carnaval y Semana Santa **a mano** para
-2026-2028, con la advertencia de que había que agregar cada año nuevo o el conteo de vacaciones
-volvería a fallar en silencio. Se acababan en 2028. Ahora `Feriado::pascua()` (algoritmo Gregoriano
-anónimo, implementado a mano porque `easter_date()` vive en la extensión `calendar` **y solo llega
-hasta 2037**) y `Feriado::movibles()` son **funciones puras**, y `Feriado::generarAnio()` carga lo que
-falte desde la UI (`/vacaciones/feriados` → «Generar Carnaval y Semana Santa»).
-
-La prueba de que el generador es correcto es que **reproduce exactamente las 12 fechas que la mig. 071
-cargó a mano**, año por año, incluido el bisiesto. Se sumaron **14 casos** (suite 67 → **81**,
-todas pasan): las 3 pascuas de referencia más 2029, los dos extremos del algoritmo (25 de abril de
-2038 y 22 de marzo de 2285), el contraste con `easter_date()` en todo su rango, y una verificación de
-que **en 2026-2060 cada feriado cae en su día de semana** — que es lo que atraparía un offset
-equivocado. Probado también contra la BD: 2029 generó sus 4 feriados, repetirlo no duplicó nada, y
-`Vacacion::diasHabiles()` bajó Semana Santa 2029 de **5 a 3** días.
-
-Dos decisiones de diseño: regenerar **no resucita** un feriado eliminado a propósito (se omite la fecha
-si ya existe una fila, activa o no), y la pantalla **avisa** cuando a los próximos 3 años les faltan
-sus movibles (`Feriado::aniosSinMovibles`), porque el síntoma de este dato es que no se nota.
-
-**Documentación saneada.** Los `REGLAS_NEGOCIO_*.md` habían quedado atrás respecto del código:
-
-| Archivo | Qué decía de más o de menos |
-|---|---|
-| **Rutas** | Describía **cuatro estructuras ya eliminadas** (`instituciones_externas`, `nombre_facilitador_externo`, `ruta_inventario`, `nivel_dificultad`), daba el mapa Leaflet por pendiente estando construido, omitía el estado `Finalizada` y publicaba un formato de correlativo equivocado (`RUTA-007/2026`; el real es `007/2026`, sin prefijo) |
-| **RRHH** | Cuatro secciones como «UI pendiente» o «lógica pendiente» (permisos, vacaciones, horarios, expediente) estando hechas; BRH-02/06/07 abiertas estando cerradas; y la ruta de expedientes en `public/uploads/`, **que se eliminó** (H-15) |
-| **Visitantes** | BVIS-04 y BVIS-05 como pendientes: ambas hechas. **Módulo sin pendientes** |
-| **Formación** | Listaba `es_brigadista` y `taller_inventario`, eliminados en la mig. 050 |
-| **Inventario** | «crear las ubicaciones» como tarea pendiente: la mig. 069 sembró 25 |
-| **Pasantes** | Al día; se fechó y se dejó constancia de que sus 6 brechas están cerradas |
-
-**Dos correcciones de fondo al propio backlog:**
-
-- **D-FO05 no era una pregunta de diseño.** El indicador *planificado vs. ejecutado* **ya está
-  construido** (`meta_talleres_anio`/`meta_rutas_anio` en Configuración, leídas por
-  `ReportesController`). Lo que falta es el **número real** — hoy hay 100 de relleno. Pasa de
-  «decidir» a «pedir un dato» (§3.6).
-- **D-NEW01 es más grande de lo que parecía.** No es cablear una llamada: las claves de correlativo
-  existen desde la mig. 007 pero **nada las usa**, `oficios_emitidos` **no tiene `id_taller`**, y sobre
-  todo **no se sabe qué dice el documento ni a quién se dirige**. Queda bloqueada por el cliente, en la
-  misma categoría que los formatos de Bienes (§3.6).
-
-**Un falso positivo, para que no se vuelva a levantar:** se sospechó que
-`UbicacionesFormacionController.php` rompería en Linux por una discrepancia de mayúsculas con el
-`ucwords()` del Router. **No es cierto:** git tiene el archivo commiteado como
-`UbicacionesformacionController.php`, que es justo lo que el Router busca. La discrepancia estaba solo
-en la copia de trabajo de Windows (`core.ignorecase = true`). Se alineó el disco; no hubo cambio que
-commitear.
-
-### 2026-08-27 — Bono Vacacional al motor de cálculo (mig. 073 — fase N‑D)
-
-Las primas, el sueldo normal diario y la alícuota del bono vacacional ya las **calcula** el mismo
-motor de la nómina quincenal. Al compartirlo, los dos documentos no pueden discrepar en la misma prima
-del mismo trabajador. `BonoVacacional::TIPOS = Nomina::TIPOS` y `tipoPersonal()` delega, así que un
-trabajador cae en la misma hoja en ambos. Los días se cuentan **a la fecha de corte** del período y no
-a hoy: generar un período pasado ahora da el mismo número que dio entonces.
-
-**El total no se pudo calcular — y no se inventó.** La fórmula del monto que se paga no está en
-ninguna fuente: la plantilla documenta la *alícuota* (el devengo diario), no el total, y el mes ya
-calculado que el cliente prometió el 23/07 no llegó. Se resolvió así:
-
-- `total_calculado` = estimación del sistema bajo un supuesto **declarado**
-  (`sueldo normal diario × días correspondientes`), etiquetado como estimación en la BD, la UI y el `.xlsx`.
-- `total_bono_vacacional` sigue siendo la cifra oficial que confirma Talento Humano.
-- La UI, el cuadro resumen y el export muestran la **diferencia** entre ambos.
-
-Eso convierte la pregunta pendiente en un instrumento que se responde solo: **en cuanto llegue un mes
-real, la diferencia dice si el supuesto acierta.** Si acierta, el total pasa a calcularse; si no, la
-diferencia muestra por dónde corregir. Probado con un caso real: capturando 70.000 contra 76.467,44
-calculados, el sistema muestra −6.467,44 en la fila, en el resumen y en la hoja de Excel.
-
-Operación: `recalcular()` **preserva los totales confirmados** y el grado/escala — no pisa el trabajo
-de captura; `aceptarCalculados()` toma en bloque solo los vacíos, auditado; el período **exige el mes
-cargado** en `nomina_parametros_mes` porque la cesta ticket entra en el diario; y al cerrar se bloquean
-las tres vías de edición (recalcular, aceptar y capturar), verificado.
-
-**Con esto quedan hechas las fases N‑A a N‑D.** Falta solo **N‑E** (Liquidación de Prestaciones
-Sociales), bloqueada por la pregunta N‑3.
-
-
-### 2026-08-27 — Nómina: motor de cálculo construido (mig. 072 — fases N‑A, N‑B y N‑C)
-
-El Bono Vacacional v1 era "registro + reporte" porque no teníamos las fórmulas. La plantilla real las
-trajo, y muestran que **las primas se derivan** de cuatro entradas: sueldo base, grado de instrucción,
-años en la administración pública y nº de hijos. Ya no hay que capturarlas.
-
-**Qué se construyó**
-
-| | |
-|---|---|
-| **Motor** | `Nomina::calcular()` es una **función pura** — todas las entradas explícitas, sin tocar la BD — así que se puede probar contra los valores ya calculados de la plantilla. **45 casos** en `tests/run.php` (suite: 18 → 67, todos pasan). Los intermedios no se redondean y solo se redondea la salida, como Excel. |
-| **Porcentajes como datos** | `nomina_grados` (6 filas, BACH 0 % … DR 40 %) y `nomina_antiguedad` (23 filas, incrementos por tramo, tope 30 % desde el año 23). Fuera del patrón H‑07 a propósito: H‑07 centraliza valores de dominio del software, y estos son cifras de contratación colectiva. |
-| **Parámetros con vigencia** | `nomina_parametros_mes`: cesta ticket y tasa del dólar **por mes**. Eran escalares sin histórico, así que un mes pasado no se podía reconstruir. Una quincena **no se puede generar** si su mes no está cargado — mejor bloquear que producir un número plausible. |
-| **Entradas nuevas en la ficha** | `empleados.cuenta_nomina`/`banco_nomina`/`divisas_bono_responsabilidad`/`sueldo_dependencia_origen` y `personas.codigo_grado`, con su tarjeta "Datos de nómina" en el expediente. |
-| **Quinto tipo de personal** | *Comisión de Servicio*, derivado de `institucion_origen <> 'IMATUR'` sin captura nueva. **Tiene prioridad sobre el nivel jerárquico**: un director en comisión va a su hoja, porque ahí se calcula la diferencia contra la dependencia de origen. |
-| **Quincena** | `nomina_periodos` congela cesta ticket, tasa y semanas; `nomina_detalle` guarda las **entradas** además de los resultados, para auditar de dónde sale cada número. Recálculo en Borrador, inmutable al cerrar. Export de **6 hojas** con `XlsxMultiSheet`. |
-
-**Ninguna cifra queda en silencio.** Si el grado de instrucción no se reconoce, el empleado se
-**reporta** en vez de cobrar 0 % — es el defecto #7 de la plantilla del cliente. Cada fila lleva sus
-`advertencias` y la vista las agrupa antes de dejar cerrar. Probado contra los 3 empleados reales de la
-base: los 3 salieron con advertencias correctas, uno de ellos porque su `nivel_academico` es
-«Universitario», que es ambiguo y no se mapea a ninguno de los 6 grados.
-
-**El defecto #1 del cliente quedó fijado en una prueba.** Su hoja aplica el 30 % de antigüedad al
-sueldo mensual y paga **112,80**; sobre el quincenal corresponden **56,40**. El test lo afirma con ese
-número, así que cualquier cambio futuro que lo rompa se detecta.
-
-**Las preguntas abiertas ya no bloquean.** N‑1 (días base del bono vacacional: 75 en toda la plantilla
-vs. 85/45 en nuestra configuración) es una clave de configuración; N‑2 (semanas ×4/×5) se elige por
-período en el propio formulario, con la contradicción explicada ahí mismo. El cálculo funciona; el
-número no es definitivo hasta que el cliente confirme.
-
-De paso: se extrajo `XlsxMultiSheet::construir()` de `descargar()` para poder verificar el `.xlsx` sin
-enviarlo (comprobado: ZIP válido de 6 hojas con los datos dentro), y se **definió el CSS de
-`.sig-alert`**, que se usaba en 7 vistas del módulo de Bienes sin existir en ninguna hoja de estilos —
-esos avisos, incluido el que bloquea los movimientos de bienes, se renderizaban como texto plano.
-
-
-### 2026-08-27 — Feriados movibles de Carnaval y Semana Santa (mig. 071)
-
-`Vacacion::diasHabiles()` excluye fines de semana **y feriados**, y el modelo `Feriado` ya distinguía
-bien los fijos (`recurrente = TRUE`, año centinela 2000, comparados por mes-día) de los movibles
-(`recurrente = FALSE`, fecha puntual). El problema era de **datos**: la tabla solo tenía los 12 fijos,
-sin un solo Carnaval ni Semana Santa. El sistema contaba esos 4 días como hábiles y **le descontaba a
-cada trabajador vacaciones que no le corresponden** — sin error visible, solo días mal restados.
-
-Cargados 2026, 2027 y 2028 (12 filas). Las fechas dependen de la Pascua, así que se calcularon con el
-algoritmo Gregoriano anónimo y se **verificaron por dos vías**: contra `easter_date()` de PHP (las 3
-pascuas coinciden) y comprobando que cada día derivado cae en su día de semana (Miércoles de Ceniza en
-miércoles, Lunes de Carnaval en lunes…). Se incluye 2026 aunque ya pasó, porque los períodos se
-registran de forma retroactiva.
-
-Efecto comprobado con `Vacacion::diasHabiles()`:
-
-| Rango | Antes | Ahora |
+| Fecha | Qué se hizo | Mig. |
 |---|---|---|
-| Semana de Carnaval 2026 (lun-vie) | 5 | **3** |
-| Semana Santa 2026 (lun-vie) | 5 | **3** |
-| Semanas de control sin feriados | 5 / 10 | 5 / 10 (sin cambio) |
-
-> **⚠️ Mantenimiento anual — resuelto el 2026-08-28.** Estos feriados no se repiten en la misma fecha,
-> así que había que cargar los del año siguiente a mano o el conteo volvía a fallar en silencio. Ya
-> **se calculan**: `Feriado::generarAnio()` y el botón «Generar Carnaval y Semana Santa» de
-> `/vacaciones/feriados`. La pantalla además avisa si a los próximos 3 años les faltan. Ver la
-> entrada del 2026-08-28.
-
-### 2026-08-27 — Los tres defectos restantes de la auditoría (cierra H-13, H-14 y H-15)
-
-| # | Qué se hizo |
-|---|---|
-| **H-15** | **Las evidencias de talleres salen del web root.** Eran el último archivo de usuario en `public/uploads/`: legibles por URL sin control de rol, y con el enlace roto bajo el vhost donde `public/` es la raíz. Ahora van a `storage/uploads/talleres/` servidas por `DescargaController::taller()` (roles 1,3). El bloque de subida estaba **duplicado** en `store()` y `cambiarEstado()` y ninguna copia validaba MIME real ni tamaño: se unificó en `TalleresController::procesarEvidencias()` con extensión + MIME real + ≤5 MB, igual que expedientes y bienes. **`public/uploads/` se eliminó por completo** (quedaban dos carpetas vacías de la migración de junio) y se limpió su bloque del `.gitignore`. La tabla `taller_evidencias` estaba en 0 filas, así que no hubo archivos que mover. |
-| **H-14** | **Se retiró la columna Tarifa del reporte de rutas** (vista + export a Excel, con su fila de totales recolumnada de 15 a 14 columnas; el PDF nunca la traía). Informaba «Gratuita» para toda ruta, siempre, porque `tiene_tarifa`/`tarifa_monto` no se capturan en ningún formulario. Las columnas **se conservan** esperando D-RT02. |
-| **H-13** | **`DROP TABLE actividades_ruta`** (mig. 070). Verificado antes de soltarla: 0 filas, 0 referencias en `app/` y **0 registros en `audit_logs`** — por eso, a diferencia de `id_oficio`/`instituciones_externas`, no hizo falta conservar su etiqueta en `auditoria/index.php`. Se retiró también su `setval` de `009_fix_sequences.sql`, que habría hecho fallar esa migración en cualquier instalación ya actualizada. **56 → 55 tablas.** |
-
-De paso se corrigieron referencias muertas en `CLAUDE.md`: el módulo «ActividadesRuta» y la tabla
-`ruta_inventario` (eliminada en la mig. 019) seguían listados como vigentes, y el reporte de rutas
-figuraba con «filtros estado/dificultad» cuando `nivel_dificultad` se eliminó en la mig. 021.
-
-### 2026-08-27 — El menú lateral pasa a leer el RBAC real (cierra H-12, sin migración)
-
-El sidebar tenía los permisos cableados por número de rol en 8 bloques de `views/inc/header.php`,
-mientras el Router los resolvía desde `permisos_rol`. Ahora hay **una sola definición**:
-`RolesController::getNavegacion()` (token de permiso → url, etiqueta, ícono, grupo) y
-`getNavegacionVisible()`, que filtra con `roleHasModulo()`. Agregar un módulo al menú = agregar una
-fila. Los 8 `in_array($rol, [...])` desaparecieron.
-
-Fallaba en los dos sentidos, y los dos quedaron corregidos:
-
-| Caso | Antes | Ahora |
-|---|---|---|
-| Rol 2 (RRHH) con `PasantesController` y `UsuariosController` | Tenía el permiso, **no veía el enlace** | Los ve |
-| Rol 6 (Solo Lectura) con `VisitantesController` | Tenía el permiso, no veía el enlace | Lo ve |
-| Rol 5 (Recepción) **sin** `ReportesController` | Veía «Reportes» → *Acceso Denegado* | Ya no aparece |
-
-Lo **no delegable** queda declarado en la misma tabla con `soloAdmin`: Bitácora (exclusiva del
-Administrador por `AuditoriaController::guardAdmin`, mig. 055), Municipios y Parroquias (catálogos
-geográficos, fuera de `getModulos()`). `VisitasController` se excluye a propósito del menú: es acceso
-directo desde Visitantes. Verificado simulando los 6 roles contra `permisos_rol`.
-
-> **Efecto colateral a tener en cuenta:** ahora el menú refleja *exactamente* lo que dice
-> *Roles y Permisos*. Si RRHH no debe administrar usuarios, la corrección es quitarle
-> `UsuariosController` en esa pantalla — ya no hay un segundo criterio escondido en la vista.
-
-### 2026-08-27 — Semilla de ubicaciones: el módulo de Bienes era inalcanzable (mig. 069)
-
-`InventarioController::store()` exige `id_ubicacion > 0` y la tabla `ubicaciones` estaba **vacía**:
-era literalmente imposible registrar un bien, así que las migraciones 062-067 (cuatro fases de
-trabajo) no se podían usar. La mig. 069 siembra **una ubicación por departamento activo** —el
-departamento es la unidad de responsabilidad, y el responsable del bien se deriva de él (mig. 066)—
-más el **Depósito General** (`es_deposito`), y asigna la `sede` de cada una: la Oficina del
-Aeropuerto en *Aeropuerto de Cumaná*, el resto en *Sede Principal*. Total: 24 oficinas + 1 depósito.
-Idempotente; verificada aplicándola tres veces.
-
-Al sembrarla salió a la luz un hueco de la Fase 1: **`ubicaciones.sede` y `es_deposito` se leían en
-todo el módulo** (`Inventario::LATERAL_RESPONSABLE`, `DotacionInventario`, el reporte de suficiencia,
-los filtros de depósito) **pero no se escribían en ninguna parte** — no estaban en `Ubicacion::save()`,
-ni en el controlador, ni en el modal. Una semilla que la UI no puede mantener no sirve, así que se
-completaron: enum `Ubicacion::SEDES` (patrón H-07), columna Sede y badge *Depósito* en el listado,
-selector de sede y casilla de depósito en el modal.
-
-Los nombres de las ubicaciones arrancan iguales a los del departamento porque es el dato cierto; el
-cliente los renombra a su referencia real (planta, mezzanina, cubículo) y puede crear varias por
-departamento. **Sigue pendiente de datos, no de código:** cargar los ~142 bienes reales y asignar el
-Coordinador de *Compra de Bienes y Servicios* (mientras el puesto esté vacante el sistema bloquea los
-movimientos, por diseño B-32 — hoy el responsable derivado sale como vacante).
-
-### 2026-08-04 — Instalación desde cero reparada: `schema_consolidado.sql` autosuficiente (sin migración)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ 🔴 Despliegue | **El consolidado quedaba 36 migraciones atrás** | `database/schema_consolidado.sql` cubría hasta la **023**, el README mandaba aplicar "024 a 052" y `CLAUDE.md` decía "024 a 039" — pero existen hasta la **059**. Cualquier instalación nueva hecha siguiendo la documentación quedaba **sin las migraciones 053–059**: foto de carnet, auditoría de login, alertas vistas, tolerancia de salida temprana, recuperación de contraseña y **todo el módulo de Nómina**. Fallo silencioso: la BD se creaba sin error y el sistema reventaba al usar esos módulos. |
-| ✅ | **Regenerado desde la BD viva, autosuficiente (001–060)** | `pg_dump --no-owner --no-privileges` + `--exclude-table-data` sobre las 42 tablas operativas. Instalar = importar **un solo archivo**, sin migraciones encima. `database/migrations/` queda como historial y para actualizar instalaciones antiguas. |
-| ✅ | **Catálogos institucionales sembrados** | `roles`, `permisos_rol`, `configuracion_sistema`, `departamentos` (organigrama oficial, 23), `cargos`, `horarios`, `feriados`, `municipio`, `parroquia`. Vacías las operativas (personal, inventario, talleres, rutas, visitantes, pasantes, asistencias, constancias, nómina, bitácora) y **correlativos de oficios reiniciados a 0** (antes el dump los habría dejado en constancia=17, ruta=3). |
-| ✅ | **Usuario administrador de arranque** | Hueco anterior no detectado: el consolidado **no incluía ningún usuario**, y como `usuarios.id_empleado` es `NOT NULL`, una instalación nueva **no tenía forma de iniciar sesión**. Ahora un bloque `DO $bootstrap$` crea persona + empleado técnico + `admin`/`Sigtur2026` (idempotente). ⚠️ Contraseña pública en el repo — cambiar al primer ingreso. |
-| ✅ | **Verificado, no asumido** | Cargado en una base vacía (`ON_ERROR_STOP=1`): **49 tablas, 0 errores**, hash bcrypt validado con `password_verify`, secuencias sin colisión. Dos fallos reales encontrados y corregidos en el proceso: (1) las columnas de auditoría `*_by` de los seeds referenciaban `usuarios.id` inexistentes; las **NOT NULL** (`municipio.created_by/updated_by`, `parroquia.create_by/update_by`) obligan a que el admin exista **antes**, así que el bloque de arranque va **entre** los datos de `departamentos` y los de `municipio`; (2) el FK circular de `departamentos.id_padre` impedía usar `--data-only` (hay que usar dump completo, que pone las constraints después de los datos). |
-| ✅ Docs | **README.md + `docs/CLAUDE.md` corregidos** | Se eliminó el paso "aplicar migraciones 024–0xx" de ambos, se documentó el login de arranque y se dejó una nota de **cómo regenerar el consolidado** sin repetir los dos fallos de arriba. |
-
-### 2026-08-05 — Bienes: 4 respuestas más del cliente implementadas (mig. 067)
-
-| # | Respuesta | Qué se hizo |
-|---|-----------|-------------|
-| ✅ B-66 | *"Sí, se elimina"* | **R-10 cerrado.** Fuera `inventario.tipo_bien` y `cantidad`, más las constantes del modelo y las consultas CMI-I01/I03 que las usaban. IMATUR no lleva consumibles y el registro es individual. |
-| ✅ B-67 | *"Con una etiqueta Por retirar"* | El bien dado de baja sale del inventario activo pero sigue físicamente en IMATUR hasta que la Alcaldía lo retire. Se distingue **"Dado de baja · Por retirar"** de **"· Retirado"**, con acción y fecha para confirmar el retiro. |
-| ✅ B-65 | *"Como otro departamento, con su propio coordinador"* | **Verificado primero, como se pidió:** la sede del aeropuerto **no existía en ningún lado** — ni en `departamentos`, ni en el organigrama oficial (Manual Descriptivo de Cargos, abril 2024), ni en los documentos de RRHH; el único rastro era `ubicaciones.sede`. Se creó como **Oficina**, y el cliente confirmó que cuelga de la **Dirección de Planificación y Gestión Turística** (mig. 068), junto a Promoción Turística y las demás coordinaciones del área. Por la mig. 066, su coordinador es automáticamente el responsable de sus bienes. |
-| ✅ B-63 | *"Por los números de empleados en los departamentos"* | Nueva tabla `inventario_dotacion` (unidades por empleado y categoría) y reporte **`/inventario/suficiencia`**: compara lo que hay en cada departamento contra lo que debería haber según su personal. Excluye el depósito (lo que está ahí no está en uso) y los bienes de baja/extraviados/robados. Sembradas 3 dotaciones de partida; las categorías que no se reparten por persona no se evalúan. |
-| ✅ B-69 / B-70 / B-72 | Costo = control interno · BM-1 = evento puntual · N° de orden = jurisdicción de la Alcaldía | **Sin cambios de código**: las tres confirman el diseño actual. |
-| ✅ Docs | **`REGLAS_NEGOCIO_Inventario.md` reescrito** | La versión de 2026-05-22 describía un CRUD y daba por vigentes `ruta_inventario`, `taller_inventario` y Durable/Fungible. Ahora documenta las 13 reglas reales (RN-IN01…RN-IN13) y **lo que el sistema no hace por decisión**. |
-| ✅ | **Verificado** | 22 pruebas nuevas sobre la BD (departamento del aeropuerto y su responsable derivado, ciclo Por retirar → Retirado con sus rechazos, análisis de suficiencia con déficit real y exclusión del depósito) + regresión completa: 16 + 26 + 9 pruebas de las fases anteriores, suite 18/18. |
-
-> ~~**Queda 1 sola pregunta abierta del módulo: B-71**~~ — **superado el 2026-09-02** (§3.4): B-71 y
-> B-72 quedaron respondidas, pero el **cambio de procedimiento** abrió 8 preguntas nuevas
-> (B-73…B-80) y **reabrió B-60**.
-
-### 2026-08-05 — Bienes: responsable automático (mig. 066) — responde B-68 y B-72
-
-| # | Cambio | Detalle |
-|---|--------|---------|
-| ✅ B-68 | **El responsable ya no se elige: se deduce** | Decisión del cliente: el responsable es la jefatura del departamento donde está el bien, y si entra alguien nuevo en ese cargo pasa a serlo de todos los bienes de su departamento. Se **eliminó** `inventario.id_responsable` y se deriva en la consulta: bien → ubicación → departamento → **Director** y, en su defecto, **Coordinador**. |
-| ✅ | **Por qué derivar y no recalcular** | Una columna almacenada habría que reescribirla al cambiar un cargo, al egresar un empleado o al trasladar un bien — y basta olvidar uno de esos casos para que el inventario muestre como responsable a alguien que ya no lo es. Derivándolo, **no puede quedar desactualizado**. El histórico se conserva en `actividad_inventario`, que guarda el responsable de cada movimiento en su momento. |
-| ✅ | **Bienes en depósito** | No pertenecen a ningún departamento (B-25), así que su custodio es la jefatura de la Coordinación de Bienes — la misma que autoriza los movimientos. |
-| ✅ | **Se retira la asignación manual** | El movimiento "Asignación de responsable" sale de los tipos seleccionables: para cambiar de responsable se traslada el bien o cambia la jefatura. El campo del formulario se sustituyó por un indicador explicativo. |
-| ⚠️ Hallazgo | **Dos consultas habrían reventado** | El reporte de inventario y el indicador **CMI-I03** usaban `i.id_responsable`, columna que esta migración elimina. Recalculados sobre la derivación; CMI-I03 ahora mide cuántos bienes están en un departamento **con jefatura asignada**, que es información útil (señala departamentos acéfalos). |
-| ✅ B-72 | **N° de orden: solo se transcribe** | Respuesta del cliente: la numeración la lleva la Alcaldía con criterio propio y garantiza que no se repita; IMATUR la desconoce y solo la copia. **No hay cambio de código**: el sistema ya se limita a transcribirla. La validación de N° de orden duplicado se mantiene como red contra errores de tecleo dentro de IMATUR. |
-| ✅ | **Verificado** | 9 pruebas sobre la BD con empleados reales: sin jefatura → sin responsable; entra coordinador → lo toma; entra director → tiene prioridad; **el director egresa → vuelve al coordinador solo**; bien en depósito → Coordinación de Bienes; traslado → cambia con la ubicación. Más regresión de las fases 3 y 4 (16 y 26 pruebas). |
-
-### 2026-08-04 — Bienes, Fase 4: los 6 requisitos que no dependían de formatos (mig. 065)
-
-| # | Entregable | Detalle |
-|---|-----------|---------|
-| ✅ R-4 | **Etiquetas con código + QR** | Hoja imprimible 62×30 mm con membrete, código oficial y QR que abre la hoja de vida del bien — para inventariar escaneando (B-15). Reutiliza el `qrcode.min.js` que ya estaba vendorizado y quedó sin uso tras el carnet, así que funciona **sin internet**. Solo lista bienes ya codificados: sin N° de orden no hay qué pegar. |
-| ✅ R-5 | **Reportes para la Presidencia** | En vez de seis reportes casi idénticos, se añadieron filtros de **estatus, origen, departamento y "solo depósito"** al reporte de inventario: con ellos un mismo reporte cubre las listas de B-51 (activos, dañados, sin código, donaciones, por departamento, en almacén). Sin formato obligatorio (B-52). |
-| ✅ R-6 | **Alertas** | Tres nuevas en el Centro de Alertas: bienes esperando código hace demasiado (B-12), garantías por vencer (B-20) y mantenimiento preventivo próximo (B-56). Umbrales editables en Configuración. |
-| ✅ R-7 | **Mantenimiento preventivo programado** | `inventario_mantenimiento_plan` con frecuencia y próxima fecha. Al **retornar** de un mantenimiento el calendario avanza solo, así no se queda atrás. Un solo plan activo por bien. |
-| ✅ R-8 | **Conteo por cambio de gestión** — el **dolor #2** | Al abrirlo se **congela** lo que el sistema cree tener de cada bien; luego se registra lo hallado y se comparan (B-50: estatus, lugar, condición). Un solo conteo abierto a la vez; no se puede cerrar con bienes sin verificar. **Acta imprimible** con resumen y detalle de diferencias. **No corrige los bienes automáticamente**: las diferencias se resuelven con movimientos normales, que es lo que deja rastro auditable. |
-| ✅ R-9 | **Lectura/escritura por rol** (B-58) | La Coordinación de Bienes (rol 4) y el Administrador **editan**; cualquier otro rol con acceso al módulo queda en **solo lectura**. El RBAC del sistema es por controlador, no por acción, así que la distinción se resolvió acotada en los dos controladores del módulo en vez de tocar el mecanismo compartido (que afectaría a todos los módulos). 15 acciones de escritura protegidas. |
-| ⏸ R-10 | **NO se hizo** | Eliminar `tipo_bien`/`cantidad` espera la confirmación del cliente (**B-66**). |
-| ✅ | **Verificado** | 26 pruebas sobre la BD: plan preventivo (creación, idempotencia, rango, avance del calendario tras el retorno), conteo completo (congelado, doble apertura bloqueada, cierre con pendientes bloqueado, detección de diferencias, cierre, no-modificación de bienes), guardia de escritura para los 4 roles y las 3 alertas nuevas. |
-
-### 2026-08-04 — Bienes, Fase 3 (parte 1): expediente documental y recepción del BM-1 (mig. 064)
-
-Se construyó **todo lo que no depende de recibir formatos físicos**. La generación de documentos queda bloqueada hasta tenerlos.
-
-| # | Entregable | Detalle |
-|---|-----------|---------|
-| ✅ | **Documentos de respaldo por bien** | `inventario_documentos` con catálogo cerrado de tipos (factura, informe de la Alcaldía, oficio de donación, acta de asignación, acta de baja, denuncia, garantía, otro). Binario **fuera del web root** (`storage/uploads/bienes/`), servido por id con control de rol vía `DescargaController` — mismo patrón ya probado en RRHH. Valida extensión **y MIME real**, máx. 5 MB. Cierra B-19. |
-| ✅ | **Foto del bien** | B-21. Subida y visualización en la hoja de vida, con la misma protección. |
-| ✅ | **Recepción del BM-1** | `inventario_consolidados_bm1` + pantalla `/inventario/consolidados`. Registra cada formulario que devuelve la Alcaldía, permite adjuntar el escaneado (opcional: a veces llega en papel) y **codificar los bienes desde ahí**. `inventario.id_consolidado_bm1` deja la trazabilidad de en qué formulario vino el código de cada bien — justo lo que hace falta en la auditoría por cambio de gestión. |
-| ✅ | **Hoja de vida del bien** (B-36) | `/inventario/detalle/{id}`: ficha completa, foto, código oficial con su BM-1 de procedencia, documentos, mantenimientos y movimientos en una sola pantalla. Era un pedido explícito del cliente. |
-| ⏳ | **Generación de documentos: pendiente** | Informe de bienes nuevos (dolor #1), acta de baja y acta de asignación. **Bloqueados por los formatos reales** — si los inventamos, habría que rehacerlos. |
-| ✅ | **Verificado** | 16 pruebas sobre la BD: recepción, codificación trazable, conteo de bienes por BM-1, adjuntos con catálogo cerrado, borrado lógico y hoja de vida completa. |
-
-> **Qué falta exactamente para cerrar el módulo (requisitos + preguntas salientes): `docs/PLAN_MODULO_BIENES.md` §12.**
-> Resumen: 3 documentos bloqueados por formatos · 7 requisitos implementables ya (etiquetas QR, reportes de Presidencia, alertas, mantenimiento preventivo, conteo por cambio de gestión, RBAC del módulo, limpieza de `tipo_bien`) · 9 preguntas abiertas (B-63, B-65…B-72).
-
-### 2026-08-04 — Bienes, Fase 2: movimientos, autorización y mantenimiento (mig. 063)
-
-| # | Entregable | Detalle |
-|---|-----------|---------|
-| ✅ | **Movimientos con origen y destino** | `actividad_inventario` no registraba **de dónde a dónde** iba el bien, que es justo lo que describe B-31. Ahora sí. Los tres traslados del cliente (depósito→departamento, departamento→depósito, departamento→departamento) se modelan con **un solo** tipo `Traslado` + origen/destino: el caso concreto se deduce de las ubicaciones y los reportes no dependen de cómo se nombró el traslado. |
-| ✅ | **Autorización por cargo + departamento** (B-32, B-64) | La Coordinadora de Bienes **no se elige en el formulario**: la resuelve el sistema con `ActividadInventario::autorizador()` a partir de `bienes_cargo_autoriza` + `bienes_depto_autoriza` (config, no nombres fijos en el código). Si el puesto está vacante, el módulo **bloquea el registro** y lo explica, en vez de dejar pasar movimientos sin autorizar. |
-| ✅ | **Mantenimiento como proceso, no como apunte** (B-33) | Nueva tabla `inventario_mantenimientos`: encargado de Servicios Generales *o* taller externo, falla reportada, trabajo realizado, costo y resultado (Reparado / Sin reparación / Irrecuperable). Índice único parcial que impide dos mantenimientos abiertos del mismo bien. Panel de "mantenimientos en curso" en el listado. |
-| ✅ | **Todo transaccional** | Un movimiento **cambia el estado del bien**, así que registro y efecto ocurren juntos o no ocurren: traslado→ubicación, asignación→responsable, salida→estatus En mantenimiento, retorno→Activo. Si el retorno es *Irrecuperable*, el bien vuelve a Activo con condición Dañado, a la espera del acto de baja (Fase 3). |
-| ✅ | **Reglas de negocio validadas** | No se mueve un bien dado de baja (B-38); no se traslada al mismo sitio; no hay doble salida a mantenimiento ni retorno sin mantenimiento abierto; un bien sin codificar solo admite asignación de responsable. |
-| ⚠️ Hallazgo | **CMI-I03 estaba a punto de quedar en 0** | El indicador "asignación de responsables" derivaba del último movimiento con tipo `'Asignacion'`, valor que la mig. 063 renombró. Se recalculó **directo sobre `inventario.id_responsable`** (columna de la Fase 1): más exacto y ya no depende del nombre del movimiento. |
-| ✅ | **Verificado con 18 pruebas sobre la BD** | Ciclo completo: autorización obligatoria, traslado con origen/destino, asignación, salida y retorno de mantenimiento, rechazos esperados, y **atomicidad** (una FK inválida revierte el movimiento sin dejar registro huérfano). |
-
-### 2026-08-04 — Bienes, Fase 1 construida (mig. 062) — **cierra H-04**
-
-Primera fase del plan (`docs/PLAN_MODULO_BIENES.md` §10). El módulo deja de ser un CRUD de bienes.
-
-| # | Entregable | Detalle |
-|---|-----------|---------|
-| ✅ 🔴 **H-04 CERRADO** | **`estatus` separado de `condicion`** | Era el origen del bug: ambos ejes vivían en la misma columna. Ahora `estatus` = situación administrativa (En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · Dado de baja) y `condicion` = estado físico (Nuevo/Bueno/Regular/Dañado). Con el criterio del cliente: **en mantenimiento el bien NO desaparece** (B-34) y **dado de baja SÍ sale** del inventario activo conservando su registro (B-38). |
-| ✅ | **Flujo de codificación contra el BM-1** | El bien nace **sin código**, en estatus "En espera de codificación". `Inventario::codificar()` transcribe grupo/subgrupo/sección + N° de orden cuando la Alcaldía devuelve el BM-1, y lo pasa a Activo. `componerCodigo()` arma `2-01-108-084`; valida partes completas y N° de orden único. Pestaña "Sin codificar" con contador en el listado. |
-| ✅ | **Dos ejes de clasificación** | Código oficial (Alcaldía) **y** categoría interna (reportes de Presidencia). Se sembraron **11 categorías** y se retiraron las 2 de prueba ("Inmobiliario", "Inmuebles"). El BM-1 demostró que el código no clasifica: sillas, mesas, aire acondicionado y router comparten `2-01-108`. |
-| ✅ | **Adquisición y responsable** | `origen` (Compra/Donación, con donante obligatorio si es donación), `costo_adquisicion`, `fecha_adquisicion`, `proveedor`, `tiene_garantia`+`garantia_vence`, `id_responsable` (FK empleados, **único** — B-26/27) y `foto_url`. Cierra D-IN06 y D-IN09. |
-| ✅ | **Sedes y depósito** | `ubicaciones` +`sede` (Sede Principal y Oficina del Aeropuerto — B-24) +`es_deposito` (área común de los bienes sin asignar — B-23/25). |
-| ✅ | **Reportes y alertas alineados** | Se corrigieron **8 consultas** en `DashboardController`, `ReportesController` y `CentroAlertas` que seguían filtrando por la condición `'En Reparación'` (ya inexistente) y que **contaban los dados de baja como activos**. El reporte de inventario suma columnas Estatus y Responsable. |
-| ✅ | **Verificado con pruebas reales** | 19 comprobaciones sobre la BD ejercitando el ciclo completo: alta sin código → pendiente → codificación → duplicado rechazado → código incompleto rechazado → mantenimiento (sigue visible) → baja (desaparece del activo, se conserva). Se detectaron y corrigieron 5 warnings de PHP (`?:` sobre claves inexistentes) que habrían llenado el log en producción. Consolidado regenerado y reinstalado en BD vacía. |
-
-> **Pendiente de la Fase 1:** `tipo_bien`/`cantidad` (mig. 044) quedaron sin uso pero **no se eliminaron** — esperan la confirmación del cliente (**B-66**). Siguen con DEFAULT, así que nada se rompe.
-
-### 2026-08-04 — Levantamiento del módulo de Bienes + cuestionario de descubrimiento (sin migración)
-
-| # | Entregable | Detalle |
-|---|-----------|---------|
-| ✅ Docs | **`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`** — 123 preguntas (59 Bienes + 64 Rutas) | Redactadas **desde cero, como si el sistema no existiera**, para que el cliente describa su realidad sin quedar anclado a lo ya construido. Cuatro niveles de prioridad (⭐ define BD · ▲ afecta pantallas · ○ complementaria · 💡 propuesta nuestra), lista de 15 formatos físicos a pedir, y un anexo interno de contraste contra lo implementado. |
-| ✅ Cliente | **Parte 1 (Bienes) respondida completa** | Las 59 respuestas quedaron en el propio documento. |
-| ✅ Análisis | **`docs/PLAN_MODULO_BIENES.md`** — plan de reconstrucción por fases | Lo construido es un **CRUD genérico**; lo que el instituto necesita es un **expediente administrativo por bien**. Cinco diferencias de fondo: el bien nace **sin** código (lo asigna la Alcaldía tras una inspección solicitada por oficio), el código es **estructurado** (`grupo-subgrupo-sección-cantidad-N° de orden`), la baja es un **acto administrativo** firmado por Coordinadora de Bienes + Presidencia, cada bien acumula **documentos** (factura, informe, oficios), y **todo movimiento lo autoriza** la Coordinadora de Bienes. |
-| ✅ Diseño | **`estatus` (administrativo) separado de `condicion` (físico)** | Origen del bug H-04: hoy se mezclan. Nuevos estatus: En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · Dado de baja. **Criterio del cliente ya definido:** en mantenimiento **no desaparece** (B-34); dado de baja **sí sale** del inventario activo (B-38). H-04 se corrige en la Fase 2. |
-| ⚠️ Hallazgo | **La migración 044 quedó contradicha** | `tipo_bien` (Durable/Fungible) y `cantidad` se implementaron respondiendo a D-IN05. Ahora B-07 dice que **no llevan consumibles** y B-09 que el registro es **individual** aunque se compre en lote. Ambas columnas sobran → confirmar con **B-66** antes de eliminarlas. |
-| ⚠️ Hallazgo | **D-IN11 (stock mínimo) estaba mal planteada** | No es stock de papelería: no llevan consumibles. Lo que piden es un umbral de **suficiencia de mobiliario** (sillas por empleado, mesas por departamento). Replanteada como **B-63**. |
-| ⚠️ Hallazgo | **Dos sedes, no una** | Además de la Sede Principal, la **Oficina de Información Turística del Aeropuerto de Cumaná** tiene bienes que también se controlan (B-24). `ubicaciones` no contempla sedes. |
-| ✅ Docs | **9 preguntas nuevas (B-60…B-68)** | Las dos bloqueantes: el **catálogo oficial de grupos/subgrupos/secciones** de la Alcaldía y **3 ejemplos reales de código BN**. Más el **oficio de codificación**, que es el formato más urgente (automatizarlo ataca el dolor #1 declarado por el cliente). |
-| ⏳ Pendiente | **Parte 2 (Rutas) sin responder** | Prioridad: **R-07/R-08** — si el cliente espera un catálogo de rutas reutilizable en vez de una fila por ejecución, el módulo necesita **rediseño**, no ajustes. |
-
-### 2026-08-04 — Carnet institucional rediseñado según el modelo físico (mig. 061)
-
-El cliente entregó el **carnet físico vigente**. Se rehízo `app/views/inc/carnet_card.php` para reproducirlo.
-
-| # | Cambio | Detalle |
-|---|--------|---------|
-| ✅ 🔴 Datos | **Teléfono y correo del sistema estaban equivocados** | El carnet real trae `0293-4310178` y `Sucreimatur@gmail.com`; el sistema tenía `(0293) 431-4073` e `imatur.cumana@gmail.com`. **No eran variantes de formato, eran datos distintos.** Corregidos en `configuracion_sistema` (mig. 061). ⚠️ **El correo institucional es el remitente de la recuperación de contraseña** y aparece en constancias/oficios — las credenciales SMTP que falten (BACKLOG §3.0) deben ser de **esa** cuenta. |
-| ✅ | **Dirección y lema ahora configurables** | Claves nuevas `direccion_institucion` y `lema_institucion` ("Historia y Porvenir"), editables en `/config` → Contacto Institucional. No quedaron fijas en el código. |
-| ✅ | **Diseño alineado al carnet real** | Logo de la Alcaldía arriba-izquierda; "IMATUR" grande con perfilado blanco y RIF debajo; **unidad de adscripción en vertical** sobre el margen izquierdo (tamaño de fuente automático según largo); foto **circular con aro dorado**; apellidos y nombres en líneas separadas alineados a la derecha; cédula con separadores de miles; contacto con iconos circulares al pie; lema sobre la franja inferior. |
-| ✅ | **Tipo de credencial conservado** (decisión del cliente) | El modelo físico no los trae, pero se mantienen: insignia **TRABAJADOR/PASANTE** + **FIJO/CONTRATADO**, integradas al bloque de identidad en vez de centradas como antes. |
-| ✅ | **Pasantes: institución en vertical** | Donde el trabajador lleva su departamento, el pasante lleva su **institución educativa** (decisión del cliente). Antes mostraba Carrera + Institución como líneas de datos. |
-| ⏳ | **Falta el arte del fondo** | El degradado, la marca de agua y la foto de Cumaná al pie **todavía no los tenemos**. Se aproximan con CSS. Está preparado para incorporarlo sin tocar código: basta dejar el archivo en `public/assets/images/carnet_fondo.png` y la vista lo detecta (`is_file`) y sustituye el degradado. |
-| ✅ | **Verificado** | Renderizado real contra la BD (empleado y pasante), no solo `php -l`. Se corrigió un fallo detectado al probar: la cédula se formateaba con `number_format((int)…)`, que **descartaba los ceros a la izquierda** (`00123456` → `123.456`); ahora se agrupa sobre la cadena. Probado con 7 casos incluidos cédula vacía y ya formateada. |
-
-### 2026-08-04 — Limpieza de columnas y tablas inertes (mig. 060) — cierra H-09 y H-10
-
-Auditoría: estas estructuras existían en la BD pero **ninguna parte del sistema las escribía**. Eran peso muerto y, en un caso, hacían que un reporte mostrara datos falsos. Decisión del cliente: eliminarlas.
-
-| # | Eliminado | Por qué |
-|---|-----------|---------|
-| ✅ | `rutas.nombre_facilitador_externo` | Solo se **leía** en el reporte de Rutas (`ReportesController::rutas`), nunca se capturaba en ninguna pantalla → siempre NULL. Cierra **D-RT04**. |
-| ✅ | `participantes_ruta.id_institucion` + tabla `instituciones_externas` | `RutasController` insertaba **siempre `null`**; la tabla quedó en 0 filas y sin UI desde que se retiró el módulo de instituciones externas (2026-05-31). Cierra **D-RT05** (el indicador CMI de "instituciones participantes" queda descartado). |
-| ✅ | `talleres.id_oficio` + tabla `oficios` | Cero referencias en `TalleresController`, modelo `Taller` y vistas. `oficios` (oficios **recibidos**, externos → IMATUR) nunca tuvo CRUD; sus 2 únicas filas eran basura de prueba (asuntos `"klkkl"`, `"kjhgfd"`). Cierra **D-FO06**. |
-| ⏸️ | `rutas.tiene_tarifa` / `tarifa_monto` | **NO se eliminó**: sigue pendiente de decisión del cliente (D-RT02). *Actualización 2026-08-27:* ya **no se lee en ninguna parte** — se retiró del reporte porque informaba "Gratuita" siempre (H-14). Las columnas quedan inertes de verdad, esperando D-RT02. |
-
-- **No confundir:** `oficios_emitidos` (oficios **salientes** generados desde rutas) sí está en uso y no se tocó.
-- **Código ajustado:** `Ruta::inscribir()` pierde el parámetro `$id_institucion` (firma nueva: `(id_ruta, id_persona, user_id, observaciones)`), `Ruta::inscribirLibre()` y `RutasController` dejan de enviarlo, y el `COALESCE` del facilitador en `ReportesController` se simplifica.
-- **Se conservaron a propósito** las etiquetas `'id_oficio'` (`auditoria/index.php`) e `'instituciones_externas'` (`dashboard/index.php`): son diccionarios de visualización de la **bitácora histórica**, no referencias vivas. Hay 18 registros de `audit_logs` cuyo JSON las menciona; sin la etiqueta se mostrarían con el nombre crudo de la columna. Ambas quedaron comentadas explicando esto.
-- **Verificado:** migración aplicada (51 → 49 tablas), `php -l` en los 5 archivos tocados, los dos flujos de inscripción a ruta (con cédula y libre) probados con `INSERT` real + `ROLLBACK`, la consulta del reporte de Rutas ejecutada contra la BD migrada, y suite `php tests/run.php` 18/18 ✓. Consolidado **regenerado** y reinstalado desde cero en una BD vacía (49 tablas, 0 errores).
-- **Limpieza extra:** se eliminaron `database/schema.sql` y `database/schema_completo.sql` (obsoletos: cubrían hasta la 011 y el base original; generaban dudas sobre cuál importar). Recuperables desde el historial de git.
-
-### 2026-07-13 — UX: botón "Siguiente" del asistente de empleados sin feedback de error (sin migración)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Fix UX | **Wizard de empleados**: "Siguiente" quedaba `disabled` sin explicar qué campo fallaba | `wzUpdateNav()` (`empleados/form.php`) ya no deshabilita `#wzNext`; se deja siempre clickeable para que `wzValidateStep()` pueda ejecutar `reportValidity()` sobre el primer campo inválido al hacer clic (globo nativo del navegador señalando el campo exacto). Antes, al estar `disabled`, el `onclick` nunca se disparaba y el usuario no tenía ninguna pista. |
-| ✅ Fix UX | **RIF**: sin feedback visible mientras se escribía un valor mal formado | `initRifInput()` (`sigtur-validations.js`, se auto-adjunta a cualquier input con token `rif` en name/id) ahora inserta un `<small class="sig-rif-msg">` bajo el campo que muestra en rojo "RIF no válido. Formato: J-12345678-9." en vivo mientras se escribe, igual patrón que "Cédula disponible". Aplica automáticamente a los dos campos RIF del sistema (empleados y RIF institucional en `/config`). |
-
-### 2026-07-11/12 — Bitácora inmutable, notificaciones, auditoría de reportes, recuperación de contraseña (mig. 054–058)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Bitácora inmutable | **Asistencias y visitas ya NO son eliminables** | Se quitó el botón "Eliminar" (y el endpoint completo, no solo la UI) de `asistencias/index.php` y `visitantes/index.php`; reemplazado por "Ver detalles" (modal). Son bitácora/auditoría, no un CRUD editable. |
-| ✅ Asistencia | **Motivo obligatorio si el empleado marca salida antes de su horario** (mig. 056) | Tolerancia configurable (`minutos_tolerancia_salida_temprana`, default 10 min), independiente de la tolerancia de puntualidad de entrada. Editable en `/config`. |
-| ✅ Notificaciones | **Campana "tipo Facebook"**: alertas ya vistas no reaparecen (mig. 057) | `alertas_vistas` (fingerprint por usuario+clave de alerta). Reaparecen SOLO si cambia el conjunto de registros que las componen (ej. sube el número de contratos por vencer), nunca por simple paso del tiempo. |
-| ✅ Empleados | **Listado principal**: badge de tipo de contrato (Fijo/Contratado/Suplente/Comisión), columna Contacto, filtro por Cargo, badge Grupo A/B (rotación) | `empleados/index.php` |
-| ✅ Reportes/listados | **Auditoría completa (~18 hallazgos) cerrada**: Directorio de Personal (tel/correo/vencimiento), Amonestaciones (cédula/cargo/última fecha), Egresos (departamento/tiempo servicio), Constancias (cargo/depto/filtro tipo), Rutas (departamento/tarifa/guía externo/filtros), Visitantes (hora salida/atendido por), Pasantes (contacto/nota, + fechas en el listado), Bajas de Inventario (motivo), Inventario (filtros server-side) + bloque transversal (buscador/paginación en 6 reportes que no lo tenían + botón exportar en listados de tarjetas de Talleres/Rutas) | Ver detalle en `ReportesController.php` |
-| ✅ Seguridad | **Recuperación de contraseña por correo** (autoservicio, mig. 058) | Token de un solo uso (30 min, hash sha256), PHPMailer vendoreado sin Composer (`app/libs/PHPMailer`). Remitente = correo institucional (`configuracion_sistema.correo_institucion`). **Pendiente:** credenciales SMTP reales (proveedor sin definir aún) — hoy el envío falla de forma controlada. |
-| ✅ Seguridad | **Login acepta usuario o correo** | Resuelve "olvidé mi usuario" sin flujo aparte — si recuerda su correo, no necesita el username. |
-| ✅ Seguridad | **Egreso desactiva automáticamente el acceso del empleado; reingreso lo reactiva** | Antes el usuario de acceso quedaba huérfano y activo indefinidamente tras un despido/renuncia — brecha confirmada y cerrada. `Empleado::procesarEgreso()`/`reingresar()`. |
-| ✅ Fix | **Cédula sin normalizar en Visitantes/Pasantes/Búsqueda global** (mismo bug que rompió Talleres/Rutas días atrás) | `Visitante::buscarPorCedula/crear/store`, `Pasante::findPersonaByCedula/createPersona/updatePersona`, `BuscarController` ahora normalizan a solo-dígitos antes de buscar/guardar (mig. 037). Verificado con auditoría completa del sistema: patrón de JS que causó el bug original (script abortado por `getElementById` sin guarda) confirmado como caso aislado, no sistémico; RBAC/`permisos_rol` sin discrepancias. |
-| ✅ Fix | **`CargaFamiliar`**: cédula normalizada + anti-duplicado **por empleado** (no global) | La misma cédula de familiar SÍ puede repetirse legítimamente entre empleados distintos (hermanos que declaran al mismo padre, cónyuges que ambos trabajan en la institución). Solo se bloquea el doble registro accidental del mismo familiar para el mismo empleado. |
-| ✅ Migraciones | **054/055 aplicadas** (estaban pendientes desde hacía semanas) | 054: `audit_logs.operacion` acepta `LOGIN`/`LOGIN_FALLIDO` (antes fallaba en silencio, `/reportes/accesos` siempre vacío). 055: bitácora general exclusiva de Admin (0 filas afectadas, ya sin concesiones previas). |
-
-### 2026-06-28/29 — Carnetización + UX (mig. 053)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Carnetización | **Carnets CR80 imprimibles** (empleados y pasantes) | Formato credencial 54×85.6mm una cara, colores institucionales, `window.print()`. Foto por persona (`personas.foto_url`, mig.053) en `storage/uploads/fotos/`, servida por `DescargaController::foto`; subida con `Controller::guardarFotoPersona()` (MIME real). Partial compartido `inc/carnet_card.php`. Sin RIF/vigencia/QR por decisión del cliente (QR vendorizado queda disponible). |
-| ✅ Dashboard | **Tarjeta "Pasantes (Visitas)"** (Recepción) + **KPI "Ausencias del mes"** (RRHH, tabla `faltas`, distinto de Impuntualidad) | `DashboardController` |
-| ✅ UX | **Breadcrumb dinámico** en el header (Inicio / Grupo / Sección / Página) | `$___bcMap` en `header.php` |
-| ✅ Docs | **`docs/PREGUNTAS_CLIENTE.md`** — lista consolidada de preguntas para el cliente (espejo de §3) | — |
-
-### 2026-06-25 — Análisis profundo: Lote 5 (integridad) + Lote 6 (UX/a11y/README)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Seguridad | **Anti-IDOR en borrados** | `eliminarFamiliar/Curso/Experiencia` validan pertenencia a la persona del empleado; `eliminarDocumento` valida `id_empleado`. |
-| ✅ Verificación | **Transacciones** | Revisado: ya están aplicadas donde se requieren (`Empleado::save/egreso/reingreso/traslado`, Pasantes, Roles, ConfigSistema). Los demás guardados son de una sola sentencia (atómicos); `guardarCargaFamiliarInicial` es best-effort por diseño. **Sin cambios necesarios.** |
-| ✅ UX | **Header móvil** | El buscador inline se oculta en <576px (queda campana/tema/perfil). |
-| ✅ a11y | **Labels/aria** | `login` con `label[for]`+`autocomplete`; `aria-label` en campana y botón de tema. |
-| ✅ Docs | **README.md** | Instalación, config (`config.example.php`), migraciones, crons (`schtasks`), restauración de respaldos, pruebas, estructura. |
-
-### 2026-06-25 — Análisis profundo: Lote 2 (proteger uploads) + Lote 4 (cache de alertas)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Confidencialidad | **Documentos privados fuera del web root** | Recaudos y docs de pasantes movidos a `storage/uploads/` (no accesibles por URL). Nuevo `DescargaController` sirve por **id de registro** con verificación de rol + `is_active` + `basename()` (sin path traversal). Vistas enlazan a `/descarga/...`. Archivos existentes migrados; valores antiguos siguen resolviéndose. |
-| ✅ Seguridad | **Validación MIME en subida** | `EmpleadosController`/`PasantesController` validan extensión **y** `mime_content_type`. |
-| ✅ Rendimiento | **Cache de alertas en sesión** | `CentroAlertas::resumenCacheado` (TTL 120s) usado por la campana del header; se invalida al abrir `reportes/alertas`. Evita recomputar roster/faltantes/config en cada página. |
-
-> Residual: dos documentos de pasante quedaron en el **historial de git** (commiteados antes del `.gitignore`); se quitaron del tracking ahora. Si se requiere borrarlos del historial, hace falta reescritura (BFG/`git filter-repo`) — repo interno, prioridad baja.
-
-### 2026-06-25 — Análisis profundo: Lote 1 (seguridad rápida) + Lote 3 (índices, mig. 052)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Seguridad | **Errores de producción** | `public/index.php` con `display_errors` según `APP_DEBUG`, `log_errors` y `set_exception_handler` (página 500 limpia). `Database` ya no filtra el detalle del error de conexión. |
-| ✅ Seguridad | **Cookie de sesión endurecida** | `httponly` + `samesite=Lax` (+ `secure` con HTTPS) antes de `session_start()`. |
-| ✅ Seguridad | **Secretos fuera del repo** | `config/config.php` deja de versionarse (`.gitignore`); plantilla `config/config.example.php`. **Acción operativa:** cambiar la contraseña real de PostgreSQL. |
-| ✅ Rendimiento | **Índices (mig. 052)** | 5 índices nuevos en tablas que crecen (participantes_ruta, actividad_inventario, personas/parroquia, audit_logs); verificado que no duplican los existentes. |
-
-> Correcciones del análisis: el "SQL injection crítico en `Taller::actualizarPersona`" era **falso positivo** (claves de columna fijas en el controlador, no input). El "upload de PHP" está mitigado por whitelist de extensión (el riesgo real es de *fuga*, ver §5.2).
-
-### 2026-06-25 — Respaldos automáticos de BD (sin migración)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Continuidad | **Respaldo automático de la base de datos** (`cron/respaldo_bd.php`) | `pg_dump` (SQL plano) a `storage/backups/` con nombre fechado + **rotación** (conserva `BACKUP_RETENTION`=14). Carpeta fuera de `public/` y con `.gitignore`. `PG_DUMP_PATH`/`BACKUP_RETENTION` en config. Programable en el Programador de tareas de Windows; restaurar con `psql -f`. Probado: genera dump válido (92 CREATE/COPY). |
-
-### 2026-06-25 — Calidad: pruebas, normalización de fin de línea y manual (sin migración)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Pruebas | **Suite mínima sin dependencias** (`tests/run.php`, `php tests/run.php`) | 18 checks de lógica pura sin BD: política de contraseñas, vacaciones (derecho/antigüedad/acumulado), `Util::edad`, `Empleado::tiempoServicio`. |
-| ✅ Repo | **`.gitattributes`** | Normaliza fin de línea a LF y marca binarios — elimina el ruido "LF will be replaced by CRLF". |
-| ✅ Docs | **Manual de usuario por rol** (`docs/MANUAL_USUARIO.md`) | Guía práctica: acceso/seguridad, interfaz, roles, módulos, reportes, campana, búsqueda, perfil y FAQ. |
-
-### 2026-06-25 — UX/seguridad: campana, búsqueda global, accesos, filtro de año (sin migración)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Vista de accesos | **Reporte de accesos al sistema** (`reportes/accesos`, rol 1) | Inicios de sesión e intentos fallidos desde `audit_logs` (AuthController ahora registra `LOGIN`/`LOGIN_FALLIDO`); filtros usuario/tipo/fecha + export. |
-| ✅ Centro de notificaciones | **Campana en el header** | `CentroAlertas::resumen($rol)` (fuente única, reusada por `reportes/alertas`); dropdown role-aware con badge de conteo accionable. |
-| ✅ Filtro de período | **Selector de año en Indicadores** | `?anio=` gobierna los indicadores anuales del panel; métricas "del mes" y tendencias siguen relativas a hoy. |
-| ✅ Búsqueda global | **Buscador en el header** (`BuscarController`) | Empleados / inventario / talleres / rutas / visitantes, **gated por rol**; acceso permitido a todo usuario autenticado en el Router. |
-
-### 2026-06-25 — Bloque CMI de indicadores (sin migración)
-
-Alineación del panel `reportes/indicadores` con el *Cuadro de Mando Integral* del documento del proyecto. 8 indicadores nuevos (prefijo `CMI-*` en `INDICADORES_GESTION.md`), solo lectura sobre datos existentes:
-
-| # | Indicador | Fórmula |
-|---|-----------|---------|
-| ✅ CMI-RH01 | Cumplimiento de jornada | horas reales / programadas (mes, días con marcaje completo + horario) |
-| ✅ CMI-RH02 | Precisión de asistencia | registros con salida / total (mes) |
-| ✅ CMI-RH03 | Documentación del personal | empleados con recaudos obligatorios completos / total |
-| ✅ CMI-I01 | Precisión del registro (inventario) | durables con código BN (+fungibles) / total |
-| ✅ CMI-I02 | Movimientos de bienes | conteo por `tipo_movimiento` (año) |
-| ✅ CMI-I03 | Asignación de responsables | durables con último movimiento = Asignación / total durables |
-| ✅ CMI-F01 | Cobertura por parroquia | parroquias con actividad / total (año) |
-| ✅ CMI-T01 | Frecuencia de rutas | rutas finalizadas por mes (6 meses) |
-
-> Archivos: `ReportesController::indicadores()` + `views/reportes/indicadores.php`. Pendientes del documento que **no** se implementaron (ver 3.4 y 3.5): stock mínimo, instituciones participantes en rutas, tiempo de generación de reportes.
-
-### 2026-06-25 — Endurecimiento de login + optimización N+1 (mig. 051)
-
-| # | Mejora | Detalle |
-|---|--------|---------|
-| ✅ Seguridad | **Endurecer el login** | Bloqueo tras 5 intentos fallidos por 15 min (`usuarios.failed_attempts`/`locked_until`), política de contraseñas (mín. 8 + letra y número), mensaje genérico anti-enumeración, `session_regenerate_id`, expiración de sesión por inactividad (`SESSION_TIMEOUT`=30 min en el Router). |
-| ✅ Rendimiento | **Optimizar N+1 de documentación** | `ExpedienteDocumento::faltantesObligatorios()` + `entregadosPorEmpleado()` (consultas agregadas) reemplazan el bucle `recaudosEstado()` por empleado en `indicadores()`, `alertas()` y `expedientesIncompletos()`. |
-
-> Migración **051** (`usuarios_seguridad_login`): `+failed_attempts/locked_until/last_login`. Idempotente.
-
-### 2026-06-25 — Bloque B (reportes implementables, sin migración)
-
-| # | Reporte | Ruta · Roles |
-|---|---------|--------------|
-| ✅ BRH-07 | **Saldo de vacaciones** por empleado (años servicio, derecho, acumulado, ajuste, disfrutado, saldo) | `reportes/vacacionesSaldo` · 1,2 |
-| ✅ D-RE01/02 | **Informe trimestral de Formación** (actividades/finalizadas/canceladas/inscritos/atendidos + género por trimestre, filtro por año) | `reportes/formacionTrimestral` · 1,3 |
-| ✅ BRT-05 | **Ejecuciones de ruta** (rutas Finalizadas por fecha, participantes y atendidos; filtros año/tipo) | `reportes/ejecucionesRuta` · 1,3 |
-| ✅ BVIS-05 | **Estadísticas de visitas** (afluencia por mes, visitantes únicos, situación del día) | `reportes/estadisticasVisitas` · 1,2 |
-| ✅ BVIS-04 | **Visitas activas del día** en el Dashboard (`kpiVisitasActivas` = entradas de hoy sin salida) | Dashboard · 1,2,5 |
-
-> Quedan del Bloque B: **formato físico imprimible de asistencia** (necesita el formato real del cliente, ver 5) y **`taller_facilitadores`** / **importación de históricos** (condicionados a decisión).
-
-### 2026-06-21 (mig. 043–050)
-
-| # | Entregable | Migración |
-|---|-----------|-----------|
-| ✅ | **Export Excel/PDF transversal** en todo listado `data-tabla-buscable` (`sigturExportarTabla`, opt-out `data-no-export`) | — |
-| ✅ | **RIF institucional centralizado** en `ConfigSistema::rif()` + `window.SIGTUR_RIF` (oficial G-20008498-7) | 043 |
-| ✅ | **Inventario Durable/Fungible** (`tipo_bien`+`cantidad`, validación por tipo) — cierra D-IN05 | 044 |
-| ✅ | **Vacaciones (días)**: 15 hábiles +1/año tope 30, antigüedad total, feriados, saldo acumulado + ajuste inicial (`/vacaciones`) — cierra D-RH04/05 (parte de días) | 045/046 |
-| ✅ | **3C** badge "Elegible a fijo" (señal visual, no promueve) | — |
-| ✅ | **3D** Traslado de departamento = reasignación con historial (`empleado_traslados`) | 047 |
-| ✅ | **3E** Faltas con `tipo` (injustificada/incumplimiento) + escalado falta→amonestación (`id_falta_origen`) | 048 |
-| ✅ | **U4** Alertas de vencimiento: talleres vencidos (Dashboard + Centro de Alertas role-aware con contratos/pasantes) | — |
-| ✅ | **O4** Filtro por departamento en lista de empleados · **O5** horario Estándar 8am-4pm→8am-2pm | 049 |
-| ✅ | **3F** Limpieza: eliminados `taller_inventario` (D-FO07) y `es_brigadista` (D-FO08) | 050 |
-| ✅ | **Fix UI:** `js-search` inflaba la altura dentro de `.sig-field` (flex-column) — corregido en CSS | — |
-
-> Bloques 1 (revisión profesor) y 2 (UX) **cerrados**; la mayoría ya estaba hecho al verificar. Único pendiente real del Bloque 1: **B13** (ver 3).
+| 2026-09-17 (b) | **H-16 cerrado**: el reporte de bajas medía la papelera, no las desincorporaciones · «Dado de baja» → **«Desincorporado»** (C-6) | 076 |
+| 2026-09-17 | **Bienes: llegaron 2 de los 4 formatos** y quedaron construidos — oficio de relación a la Alcaldía y documento de donación. Corregidas la resolución y la gaceta que se imprimían en 5 documentos reales | 075 |
+| 2026-09-13 | La **tasa del dólar** se consulta al BCV como *sugerencia*, nunca automática (la nómina no sale a internet: usa la tasa congelada del período) | 074 |
+| 2026-08-28 | Deuda técnica: `ReportesController` partido en 8 traits (3.405 → 101 líneas) · a11y de formularios (88 → 393 `label[for]`) · utilidades CSS | — |
+| 2026-08-28 | **Tareas programadas** instalables con un comando · generador de feriados movibles por año | — |
+| 2026-08-27 | **Nómina: motor de cálculo** (fases N‑A…N‑D) — primas derivadas, porcentajes en tablas, quincena con cierre, export de 6 hojas, bono vacacional migrado al motor | 072 · 073 |
+| 2026-08-04/05 | **Módulo de Bienes reconstruido**, fases 1-4: expediente administrativo por bien, `estatus` vs `condicion`, movimientos, mantenimiento, conteo por cambio de gestión | 062 – 069 |
 
 ---
 
 ## 3. DECISIONES / INSUMOS PENDIENTES DEL CLIENTE 🔒
 
-Bloquean desarrollo. Cada una incluye **qué preguntar**.
+Bloquean desarrollo. **Esta sección es la fuente única**: cada ID (B-xx, R-xx, N-x, D-xx) se enuncia
+aquí y los demás documentos lo referencian.
+
+> 🖨️ **Para enviarle al cliente:** `PREGUNTAS_CLIENTE.md` — lo mismo, en lenguaje llano y
+> **organizado por módulo**, con qué funciona ya y qué le falta a cada uno. Al responder el cliente,
+> actualizar **los dos** (son las únicas dos copias, a propósito: distinta audiencia).
 
 ### 3.0 🔴 Proveedor SMTP para recuperación de contraseña (2026-07-12)
 - **Falta:** credenciales reales de un servidor de correo saliente (host/puerto/usuario/clave) para que la recuperación de contraseña por correo (ya implementada, mig. 058) pueda enviar correos de verdad.
@@ -870,38 +291,67 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 
 ### 3.5 Turismo (Rutas)
 
-> **Actualizado 2026-09-03 — llegaron R-01…R-16.** Análisis, modelo propuesto y fases:
-> **`docs/PLAN_MODULO_RUTAS.md`**. Respuestas en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` Parte 2.
+> **Actualizado 2026-09-17 — llegaron R-17…R-64 y SIETE formatos reales** (`docs/formatos/rutas_*`).
+> **57 de 64 preguntas respondidas.** Análisis, modelo y fases: **`docs/PLAN_MODULO_RUTAS.md`**
+> (leer **§1-bis**). Respuestas en `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md` Parte 2.
+>
+> **Lo que destraba:** de siete fases bloqueadas quedan **una y media**. **T-F** (itinerario y varios
+> empleados por salida) y **T-G** (la Ficha Institucional, que es el informe de cierre) quedaron
+> **desbloqueadas**, y aparecen **dos fases nuevas**: **T-H** (oficios de permiso a las
+> instituciones custodias, R-20) y **T-I** (restricciones por ruta y cupo diario, R-57/R-28).
+>
+> **Lo que recorta:** R-46 confirma que el registro se hace **en la oficina** → sin modo campo, app
+> móvil ni offline. R-49/R-63 → sin galería de fotos. R-27 → sin autorización de representante.
+> R-58 → sin transporte. R-59 → sin encuesta. R-61 → sin temporadas.
 
-**Bloqueantes (impiden cerrar el rediseño):**
+> ## 🔓 2026-09-17 — **El módulo quedó DESBLOQUEADO**
+> Las cinco preguntas que llevaban meses frenando el rediseño están contestadas. **Ya no hay nada
+> que esperar del cliente para construir.** Ojo: **R-14 y el bloque de cobro se respondieron dentro
+> de `PREGUNTAS_CLIENTE.md` §4**, no en el cuestionario.
+
+**Respuestas que destraban (antes bloqueantes):**
+
+| ID | Respuesta |
+|----|----------|
+| ✅ R-14 ⭐ | **Los estados son TRES, no cinco:** `Programado` → `Ejecutado` \| **`No ejecutado`**. **Cancelar no es un estado**: lleva a *No ejecutado* con su motivo, y de ahí sale la **reprogramación**. Textual: *"Programado, Ejecutado, o No ejecutado… a veces los solicitantes cancelan (IMATUR puede cancelar por razones ajenas: agua, clima, terremotos). En estos casos se haría una reprogramación"* |
+| ✅ R-37 ⭐ | **Cobra IMATUR**, en una **cuenta exclusiva** para rutas |
+| ✅ R-38 ⭐ | **Pago ANTICIPADO con fecha tope**: *"se les tiene una fecha para cancelar y poder planificar la salida"* → la salida lleva **fecha límite de pago**, y el pago condiciona la planificación |
+| ✅ R-39 ⭐ | Transferencia → **captura/voucher adjunto**. Efectivo → **acta de pago** que levanta IMATUR. ⚠️ *"El formato nace del momento, **pueden darnos una idea**"* → **el cliente nos pide proponer ese formato** |
+| ✅ R-40 ⭐ | **SÍ lleva la contabilidad:** *"sí debe llevar el cobro… y lo cancelado"*. No es declarativo |
+| ✅ R-42 | Las **exoneraciones las autoriza la Presidenta**. Y un matiz de R-03: las instituciones públicas **no pagan pero igual traen el oficio**, y eso aplica **solo a Cumaná Histórica** |
+
+**Lo único que queda pendiente:**
 
 | ID | Pregunta |
 |----|----------|
-| 🔴 R-14 ⭐ | **¿Qué estados atraviesa una salida, con las palabras que usan ustedes?** **Quedó en blanco.** De R-13/R-15/R-16 se infiere *Solicitada → Aprobada → Programada → Ejecutada* + *Cancelada*, pero **no se fija el `CHECK` con nombres inventados**. Bloquea la fase T-D |
-| 🔴 R-40 ⭐ | ¿El sistema debe **llevar la contabilidad** de los cobros o solo dejar constancia de que la salida tenía tarifa? Bloquea el registro de pagos |
-| 🔴 R-37/38/39 ⭐ | ¿Quién recibe el dinero (IMATUR/Alcaldía), cómo se paga (efectivo/transferencia/punto) y qué comprobante se emite? |
-| 🔴 Formatos | **Oficio de solicitud** (R-12 — el cliente quedó en enviarlo) e **informe de una ruta ejecutada** (R-47/R-48, el documento más importante del módulo) |
+| 🟡 Formato | **Oficio de permiso a las instituciones custodias** (R-20) — el proceso apareció el 2026-09-17 y es **la mitad del pedido explícito del cliente** (R-64: *«los reportes y los oficios»*). El flujo se puede construir sin él; el imprimible no |
+| 🟢 Formato | **Acta de pago en efectivo** (R-39) — **el cliente pidió que la propongamos nosotros**, así que no bloquea: se diseña y se somete a su visto bueno |
+| ⚪ R-32 | ¿Se le paga al guía externo? Sin responder, pero **ya no importa**: R-31 aclara que lo pone el punto visitado |
 
-**Nuevas — surgen de las propias respuestas:**
+**Nuevas — surgen de la segunda tanda de respuestas:**
 
 | ID | Pregunta |
 |----|----------|
-| 🟡 R-65 ⭐ | ¿**Exploradores de Cumaná** es una ruta aparte o **el mismo recorrido** de Cumaná Histórica con otro público? (R-02: *"es lo mismo, solo se diferencian por el público objetivo"*). Define si el catálogo tiene 6 filas o 5 con modalidades |
-| 🟡 R-66 ▲ | **Edades**: Exploradores es 4-8 y en Cumaná Histórica los menores de 8 no pagan. ¿Hay tope de edad? ¿Edad mínima en las rutas de playa? *(Hoy el código exige 5-11 y **un niño de 4 no se puede inscribir** — BRT-07)* |
-| 🟡 R-67 ▲ | **Altos de Cumaná**: ¿tiene tarifa? ¿La cobra IMATUR o la posada? ¿Hace falta un **directorio de posadas aliadas**? |
-| 🟡 R-68 ▲ | **¿Cómo se registra hoy una ruta?** R-03 quedó *"en espera de respuesta"*: no sabemos si usan Excel, papel o nada. Define cuántos históricos hay que cargar |
-| 🟡 R-69 ▲ | R-09 menciona **"guías rotativos"**: ¿cuántos guías por salida y se registra quiénes fueron? |
-| 🟢 R-70 ○ | ¿Registrar el **ente custodio** de cada punto y el estado de la gestión de acceso? (R-06: coordinar con fundaciones externas es uno de los 3 dolores) |
+| 🟡 R-71 🆕 | El **cuadro de visitantes del punto** (`rutas_cuadro_visitantes_FundacionCastilloSanAntonio.jpeg`) lo exige **el custodio**, no IMATUR, y **sus casillas no coinciden** con las de la Ficha Institucional (*Niño/Niña/Adolescente/Mujer/Hombre/Adulto mayor* + *Local/Nacional/Extranjero*, frente a *Niños F-M/Docentes/Representantes/Apoyo*). ¿El sistema debe **imprimirlo también**, o lo llenan a mano allá? Si debe imprimirlo, hay que capturar el desglose en **dos cortes distintos** |
+| 🟡 R-72 🆕 | **¿Cuántas rutas tiene el catálogo y cuál es el nombre oficial de cada una?** Los folletos traen **Playa Manare** (que no estaba en R-02) y **«Altos de Sucre»**, no «Altos de Cumaná». **Cargar el catálogo con la lista equivocada es peor que no cargarlo** |
+| ~~R-67~~ ✅ | ~~Altos de Sucre~~ — **RESPONDIDA:** *"no es una tarifa fija, depende de lo que el cliente solicite"*, y **la cobra IMATUR**. **Directorio de posadas: NO lo quieren** |
+| ~~R-68~~ ✅ | ~~¿Cómo se registra hoy?~~ — **RESPONDIDA:** planificación **en papel**; la estadística se acumula en un **Excel semestral**; cortes **mensuales** que alimentan el **informe de gestión trimestral**. *(Define el histórico a cargar y confirma que el reporte debe poder cortarse por mes y por trimestre.)* |
+| ~~R-65~~ ✅ | ~~¿Exploradores es ruta aparte?~~ — **RESPONDIDA, y con una sorpresa: son TRES modalidades del mismo recorrido.** *Cumaná Histórica* = la comercial · *Exploradores de Cumaná* = **solo instituciones educativas** · **«Cumaná Histórica – Huellas del Ayer» = solo adultos mayores**. Una ruta en el catálogo, **tres modalidades por público** |
+| ~~R-66~~ ✅ | ~~Edades~~ — **RESPONDIDA dos veces:** Exploradores va de **4 a 16 años** (*"por ser para instituciones educativas"*), **no 4-8** como decía R-02; y R-57 da el caso de **Río Brito: 12+**, sin dificultad visual, advertir condición articular |
+| ~~R-69~~ ✅ | ~~¿Cuántos guías por salida?~~ — **RESPONDIDA con un ratio usable: 7-8 niños por guía** (*"una salida de 35 personas irían 3 guías"*), ajustable según disponibilidad. **Y sí quieren registrar quiénes fueron.** El guía externo lo pone **el punto**, no IMATUR (R-31) |
+| ~~R-70~~ ✅ | ~~¿Ente custodio del punto?~~ — **RESPONDIDA por R-20**, y con mucho más: todo el proceso de permisos (fase T-H) |
+| ~~R-32~~ ⚪ | ~~¿Se le paga al guía externo?~~ — sin responder, pero **pierde sentido**: R-31 aclara que lo pone el punto visitado |
 
 **Estado de las decisiones previas:**
 
 | ID | Estado |
 |----|--------|
-| 🟠 D-RT02 | **Respondida a medias por R-02: SÍ SE COBRA** (5 $ Cumaná Histórica · 15 $ Río Brito · 25 $ Las Maritas y Playa Colorada · Exploradores gratuita), con exoneración a **menores de 8 años** e **instituciones públicas**. → Las columnas `tiene_tarifa`/`tarifa_monto` **no se eliminan: se capturan**, y la columna del reporte (retirada en H-14) vuelve con dato verdadero. **Falta el flujo** (R-37…R-40) |
-| 🟡 D-RT03 | Al **Finalizar** una ruta, ¿generar informe/oficio automáticamente? *(sigue abierta)* |
+| 🟠 D-RT02 | **Respondida a medias por R-02: SÍ SE COBRA** (5 $ Cumaná Histórica · 15 $ Río Brito · 25 $ Las Maritas y Playa Colorada · Exploradores gratuita), con exoneración a **menores de 8 años** e **instituciones públicas**. **R-36 añade el cómo: la tarifa se pacta en USD y se cobra en bolívares a la tasa del día** → el catálogo guarda **USD** y la salida congela la **tasa aplicada** (el sistema ya consulta el BCV desde la mig. 074). Las columnas `tiene_tarifa`/`tarifa_monto` **no se eliminan: se capturan**, y la columna del reporte (retirada en H-14) vuelve con dato verdadero. **Falta el flujo** (R-37…R-40) |
+| ✅ D-RT03 | ~~Al **Finalizar** una ruta, ¿generar informe/oficio automáticamente?~~ — **RESPONDIDA (R-50): SÍ, automáticamente.** Y R-47/R-48 dicen cuál: la **Ficha Institucional**, dirigida a la Directora de Promoción Turística. Formato en `docs/formatos/rutas_ficha_institucional_IMATUR.jpeg` |
 | 🔴 D-RT01 | ~~Cada registro es una ejecución independiente~~ — **DESMENTIDA por R-07/R-08.** Es la base sobre la que se construyó el módulo. **Provoca el rediseño** |
 | 🔴 D-RT05 | ~~Instituciones participantes eliminadas (mig. 060)~~ — **DESMENTIDA por R-11:** solicitan por oficio y de eso depende la gratuidad. **Hay que reconstruirlo** |
-| ✅ D-RT04 | ~~Facilitador externo: ¿lista o texto libre?~~ — la columna se eliminó (mig. 060), pero **R-09 reabre el fondo**: hacen falta **varios guías por salida**, como tabla, no como columna de texto |
+| ✅ D-RT04 | ~~Facilitador externo: ¿lista o texto libre?~~ — la columna se eliminó (mig. 060), y **R-31/R-33 cierran el fondo**: la salida la **encabeza siempre un empleado de IMATUR**, acompañado por **un número variable de empleados** según el tamaño del grupo → **tabla de empleados por salida**. El **guía externo lo pone el punto visitado** (museo, casa natal), así que **no se modela como facilitador de la salida** sino, si acaso, como dato del punto |
+| ✅ D-OF03 | ~~Libro de correspondencia unificado~~ — **CONFIRMADO como requisito por R-53/R-54:** los oficios de ruta llevan **numeración correlativa** y **sí se lleva un libro**. Deja de ser «mejora opcional» |
 
 ### 3.6 Formación
 | ID | Pregunta |
@@ -950,7 +400,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | Módulo | Tarea | Origen |
 |--------|-------|--------|
 | ~~Bienes~~ | ✅ ~~Corregir H-16~~ — **hecho (2026-09-17, mig. 076)**, y eran cuatro consultas: el KPI del Dashboard tenía el mismo error | §4 H-16 |
-| **Bienes** | **Acta de Desincorporación a nivel de datos** (R-13/C-5): tabla cabecera+renglones, armado del lote, y al cargar el acta sellada marcar retirados todos sus bienes. **Solo el imprimible depende del formato**; el flujo no | §3.4 · plan §2-ter |
+| ~~Bienes~~ | ✅ ~~Acta de Desincorporación a nivel de datos (R-13/C-5)~~ — **hecho (2026-09-17, mig. 077)**. Emisión por lote, retiro en bloque al registrarla firmada, y anulación que revierte el retiro. El imprimible es provisional hasta que llegue el formato | §3.4 · plan §2-ter |
 | ~~Bienes~~ | ✅ ~~Renombrar «Dado de baja» → «Desincorporación»~~ — **hecho (2026-09-17, mig. 076)**. Se renombró el **valor**, no solo el rótulo: `inventario` estaba en 0 filas, así que era el momento más barato. Obligó a desclavar el literal de 14 consultas | §3.4 · plan §2-ter |
 | **Bienes** | **Codificación interna con secuencia propia** (R-12/C-1…C-4, C-7) — 🔒 espera **B-73** (punto de partida) y **B-75** (catálogo de clasificación). El motor se puede construir antes si el punto de partida queda como clave de configuración | §3.4 · plan §2-ter |
 | **Rutas** | 🔴 **T-A — separar catálogo de ejecución** (H-18): `ruta_ejecuciones` nueva, mudar fecha/hora/facilitador/cupo, repuntar participantes/informes/oficios, migrar las 2 filas, partir modelo y controlador. **No espera al cliente** y es prerrequisito del resto | §3.5 · plan §7 |
@@ -972,8 +422,8 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 |-----------|--------|-------------------------|
 | ⚠️ **a11y en formularios restantes** | **2026-08-28: de 88 a 393 `label[for]`** (de 469). Automatizado con verificación de unicidad. **Quedan 76**, deliberadamente: 59 dentro de bucles `foreach` (un `id` estático se repetiría en cada iteración) y 17 sin control asociable. Requieren `id` generado por PHP, caso por caso. |
 | 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
-| ✅ ~~**Dividir `ReportesController`**~~ | **Hecho (2026-08-28): 3.405 → 101 líneas.** Repartido en 8 traits bajo `app/controllers/reportes/`. API y cuerpos **byte-idénticos** (verificado por reflexión y por hash). Ver §2. |
-| ⚠️ **Migrar estilos inline a clases** | **2026-08-28: 2.361 → 2.199** (162 sustituidos por utilidades de Bootstrap ya cargadas). Solo se migró la parte **demostrablemente fiel**; el resto **no es mecánico** y hay dos trampas documentadas en §2 que conviene leer antes de continuar. |
+| ✅ ~~**Dividir `ReportesController`**~~ | **Hecho (2026-08-28): 3.405 → 101 líneas.** Repartido en 8 traits bajo `app/controllers/reportes/`. API y cuerpos **byte-idénticos** (verificado por reflexión y por hash). Ver `CHANGELOG.md`. |
+| ⚠️ **Migrar estilos inline a clases** | **2026-08-28: 2.361 → 2.199** (162 sustituidos por utilidades de Bootstrap ya cargadas). Solo se migró la parte **demostrablemente fiel**; el resto **no es mecánico** y hay dos trampas documentadas en `CLAUDE.md` (Design System) que conviene leer antes de continuar. |
 | ✅ ~~**Programar la tarea de respaldo en el servidor**~~ | **Hecho (2026-08-28)** con `cron/instalar_tareas.ps1`, que crea las **dos** tareas y es idempotente. Reejecutar en el servidor de producción. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
 | 🟢 **Ampliar la suite de pruebas** | **81 pruebas al 2026-08-28** (67 → 81 con las de `Feriado`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
@@ -1011,7 +461,7 @@ automatizadas pero NO abierto en el navegador. Es el riesgo más alto que queda:
 - **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). **nómina quincenal calculada (mig. 072)**: motor puro con 45 pruebas, porcentajes en tablas, parámetros mensuales con vigencia, 5 tipos de personal, advertencias por empleado, recálculo y cierre, export de 6 hojas. 🔒 Falta: migrar el **Bono Vacacional** al motor (N‑D) y la **Liquidación de Prestaciones Sociales** (N‑E, bloqueada por N‑3) — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md`.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ puntos + mapa Leaflet offline, participantes (con modo libre y representante), oficios con correlativo, demografía e informe. 🔴 **Pero el modelo de datos no coincide con cómo trabaja IMATUR** (H-18, confirmado por R-07/R-08 el 2026-09-03): falta separar el **catálogo** de rutas de las **salidas** (`ruta_ejecuciones`), la **aprobación de la Presidencia**, la **cancelación con motivo**, la **reprogramación**, la **institución solicitante**, **varios guías por salida** y la **tarifa** (que sí existe: R-02). Además **un niño de 4 años no se puede inscribir** pese a que Exploradores de Cumaná es para 4-8 (H-17). Fases y bloqueos en `docs/PLAN_MODULO_RUTAS.md`.
-- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **4 documentos imprimibles** bloqueados por los formatos del cliente (relación de bienes nuevos, **Acta de Desincorporación**, acta de asignación, oficio de donación) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. ⚠️ **Y adaptar el módulo al procedimiento nuevo del 2026-09-02** (IMATUR codifica: C-1…C-7 en §2-ter; bloqueado por B-73 y B-75). *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
+- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **2 documentos imprimibles** bloqueados por sus formatos (**Acta de Desincorporación** y acta de asignación; la relación de bienes nuevos y el oficio de donación ✅ **construidos**, mig. 075) y **cargar los ~142 bienes reales** — ver `docs/PLAN_MODULO_BIENES.md` §12. ⚠️ **Y adaptar el módulo al procedimiento nuevo del 2026-09-02** (IMATUR codifica: C-1…C-7 en §2-ter; bloqueado por B-73 y B-75). *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
 - **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.
 

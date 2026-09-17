@@ -7,7 +7,7 @@
 > y la ruta de subida de expedientes apuntaba a `public/uploads/`, que **se eliminó**. Corregido
 > contra el código. Estado por módulo al día: `docs/BACKLOG.md` §7.
 >
-> **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente) y a su hoja de ruta (sección 12 del modelo). Preguntas abiertas/decisiones (backlog único): `docs/BACKLOG.md`.
+> **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente). Preguntas abiertas: `docs/BACKLOG.md` §3 — **no se reproducen aquí**.
 
 ## Contexto institucional
 
@@ -216,7 +216,7 @@ Un empleado puede o no tener usuario en el sistema. La tabla `usuarios` tiene FK
 
 ## Estado de brechas
 
-Mapa hacia la hoja de ruta de `MODELO_NEGOCIO_RRHH.md` sección 12 (R-1…R-11).
+Mapa hacia la hoja de ruta R-1…R-12 (`MODELO_NEGOCIO_RRHH.md` §10, cerrada).
 
 | ID | Descripción | Estado | Roadmap |
 |----|-------------|--------|---------|

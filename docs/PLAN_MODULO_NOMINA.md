@@ -177,14 +177,18 @@ justificación del módulo.
 
 ### 6.1 Confirmaciones pendientes (3)
 
-| # | Pregunta | Por qué bloquea |
-|---|---|---|
-| N-1 | **Días base del bono vacacional: ¿75 para todos, o 75/75/85/45 por tipo?** La plantilla de nómina usa **75 en todas las hojas** (incluidas obreros y contratados); nuestra configuración tiene 85 y 45 | Se contradicen. Define `bono_vac_dias_*` y la alícuota |
-| N-2 | **Criterio de las semanas (×4 / ×5)**: ¿depende del mes, del tipo de personal, o es un error? | Cambia toda la línea de deducciones y aportes |
-| N-3 | **"Días adicionales" de la hoja INTERESES** de la Liquidación (79→82 / 120→150 sobre 360) | Único insumo que falta para diseñar la Liquidación. En el audio no entendió la pregunta: **reformular con un recorte de pantalla** |
+> 📋 **Enunciados en `BACKLOG.md` §3.1**; en lenguaje llano para el cliente, en
+> `PREGUNTAS_CLIENTE.md` → *Nómina*. Aquí, solo qué bloquea cada una.
 
-Menores: de dónde sale la **cantidad de divisas** de cada trabajador, y si el **bono de responsabilidad**
-aplica solo a Alto Nivel y Comisión.
+| # | Tema | Por qué importa |
+|---|---|---|
+| **N-1** | Días base del bono vacacional (75 para todos vs. 75/75/85/45) | La plantilla y nuestra configuración **se contradicen**. Define `bono_vac_dias_*` y la alícuota. **No bloquea**: son parámetros editables |
+| **N-2** | Criterio de las semanas (×4 / ×5) | Cambia toda la línea de deducciones y aportes. **No bloquea**: parámetro |
+| **N-3** | «Días adicionales» de la hoja INTERESES | 🔒 **Único insumo que falta para diseñar la Liquidación (fase N-E).** En el audio no se entendió la pregunta: **reformular con un recorte de pantalla** |
+| **N-4** | ¿Cuál tasa del dólar aplican exactamente? | La plantilla trae 36,58 y 36,23 en hojas del mismo período. Por eso la consulta al BCV es **sugerencia**, no automática (mig. 074) |
+
+Menores: de dónde sale la **cantidad de divisas** de cada trabajador, y si el **bono de
+responsabilidad** aplica solo a Alto Nivel y Comisión.
 
 ### 6.2 Insumos operativos
 

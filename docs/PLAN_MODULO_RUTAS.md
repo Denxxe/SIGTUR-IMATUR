@@ -1,9 +1,17 @@
 # Plan de reconstrucción — Módulo de Rutas Turísticas
 
-**Fecha:** 2026-09-03 · **Origen:** respuestas del cliente a **R-01 … R-16**
-(`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2)
+**Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
+**R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
+(`docs/formatos/rutas_*`)
 **Estado:** análisis cerrado · construcción **no iniciada**
-**Migraciones vigentes al escribir:** hasta **073**
+**Migraciones vigentes al escribir:** hasta **077**
+
+> ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
+>
+> El plan de septiembre se escribió con 16 de 64 respuestas. Ahora hay **57**, más los documentos
+> reales. **Nada de lo decidido se cae** —la separación catálogo/ejecución se confirma—, pero
+> aparecen **tres piezas que no estaban en el plan** y varias decisiones de alcance que lo
+> **reducen**. Ver **§1-bis**.
 
 ---
 
@@ -25,7 +33,8 @@ ciclos de vida distintos — el síntoma clásico de dos tablas metidas en una.
 **Lo bueno:** `rutas` tiene **2 filas** en la base de datos. La migración de datos es trivial. El
 costo está en el código (modelo, controlador, 5 vistas, reportes), no en los datos.
 
-**¿Se puede empezar a desarrollar?** **Sí, la mitad.** Ver §7.
+**¿Se puede empezar a desarrollar?** **Sí — desde el 2026-09-17, TODO.** Con R-17…R-64 respondidas
+y los siete formatos en mano, **no queda ninguna fase esperando al cliente**. Ver §1-bis y §7.
 
 ---
 
@@ -65,6 +74,102 @@ Inés · Callejones de Santa Inés y El Alacrán · Casa Natal de Antonio José 
 R-06 añade que **el acceso a esos puntos se coordina con fundaciones externas** y que esa
 coordinación es uno de los tres dolores principales — junto con la logística y la puntualidad del
 turista. Sugiere registrar el **ente custodio** de cada punto, pero conviene esperar a R-20.
+
+---
+
+## 1-bis. Lo que aportan R-17…R-64 y los formatos (2026-09-17)
+
+### 1-bis.1 Tres piezas que NO estaban en el plan
+
+**① Los oficios de permiso a las instituciones custodias (R-20)** 🔴
+
+La pregunta era *"¿hay puntos con costo de entrada?"* y la respuesta describió otra cosa: **un
+proceso administrativo completo** que el módulo no modela.
+
+> IMATUR **envía un oficio a cada institución custodia** (museos, castillos, fundaciones) para poder
+> visitarla. **Todas las rutas de la semana planificada van en un solo oficio**, para agilizar el
+> trámite. Se lleva **control del estado de cada uno** —si llegó, si se dio el pase, si se
+> rechazó— y lo notifica el **Director de Relaciones Inter-Institucionales**, que además corrobora
+> que las instituciones estén disponibles. Estados: **aceptado / en espera**.
+
+Esto es **la mitad del único pedido explícito del cliente** (R-64: *«los reportes y **los
+oficios**»*). Y tiene consecuencias de modelo: el permiso **no** cuelga de una salida —cubre varias
+a la vez—, así que es una entidad propia con sus renglones, igual que el Acta de Desincorporación de
+Bienes. También responde **R-70** (ente custodio del punto) y parte de **R-52**.
+
+**② La Ficha Institucional es el corazón del cierre (R-43 = R-47 = R-48)** 🔴
+
+Se pedían dos documentos —*planilla del día* e *informe de cierre*— y resultaron **el mismo**:
+`docs/formatos/rutas_ficha_institucional_IMATUR.jpeg`. Va dirigida a **una sola persona**, la
+Directora de Promoción Turística, y su contenido es **el conteo demográfico**:
+
+| Bloque | Desglose |
+|---|---|
+| Encabezado | Recorrido · Fecha · **Encargado** · Colegio o institución · Responsable |
+| **Niños** | F / M · rango de edades · total |
+| **Acompañantes** | Docentes (F/M) · Representantes (F/M) |
+| **Instituciones de apoyo** | nombre · F / M · total — *aquí va Protección Civil (R-55/R-56)* |
+| | **Total general** |
+
+Y **se genera automáticamente** al cerrar (R-50). Esto define la tabla del cierre y **elimina** de
+una vez las suposiciones sobre qué lleva el informe.
+
+**③ Dos formas de registrar personas, no una** 🟡
+
+R-23/R-24/R-29 dicen *"solo el registro general"*, pero el formato
+`rutas_lista_asistencia_nominal_IMATUR.jpeg` es una **lista con nombre, cédula y firma**. No se
+contradicen: **los escolares van por conteo** (no tienen cédula) y **los adultos firman**. El
+sistema debe soportar **los dos modos en la misma salida** — que es, en el fondo, lo que hoy hace
+con participantes con cédula + modo libre.
+
+### 1-bis.2 Decisiones que REDUCEN el alcance
+
+Cinco respuestas cierran puertas, y eso vale tanto como las que abren:
+
+| | Respuesta | Qué deja de construirse |
+|---|---|---|
+| **R-46** | *"Se hace al volver a la oficina"* | **Sin modo campo, sin app móvil, sin offline.** Era el riesgo más caro del módulo |
+| **R-49 / R-63** | Las fotos son para prensa, no para el informe | **Sin galería ni evidencias** por salida |
+| **R-27** | La institución educativa responde por los permisos | **Sin formato de autorización** de representante |
+| **R-58** | El transporte va en el presupuesto, no se registra | **Sin unidad ni conductor** |
+| **R-59** | El testimonio lo toma prensa, sin encuesta formal | **Sin indicador de satisfacción** |
+| **R-61** | Solo la temporada escolar mueve la demanda | **Sin temporadas ni tarifas estacionales** |
+| **R-12** | El oficio de solicitud lo redacta cada institución | El sistema **recibe y archiva**; no lo genera |
+| **R-30** | No interesa si alguien repitió ruta | **Sin histórico por persona** |
+| **R-34** | Guían estén certificados o no | **Sin control de vencimiento** de certificaciones |
+
+### 1-bis.3 Correcciones al catálogo del §1.2
+
+Los folletos entregados **no coinciden** con lo que dijo R-02:
+
+| | R-02 (2026-09-03) | Los folletos (2026-09-17) |
+|---|---|---|
+| Nombre | «Altos de Cumaná» | **«Altos de Sucre»** — *«pueblo de montañas, peldaño a las nubes, balcón hacia el mar»* |
+| Rutas | seis programas | aparece **Playa Manare**, que no estaba en la lista. Es **FULL DAY**: salida 8:00 a. m., retorno 5:00 p. m. |
+| Cumaná Histórica | 5 puntos *(inferidos de R-06)* | **7 puntos** numerados, con inicio y retorno |
+
+🟡 **R-72 (nueva):** ¿cuántas rutas tiene el catálogo realmente, y cuál es el nombre oficial de cada
+una? **Cargar el catálogo con la lista equivocada es peor que no cargarlo.**
+
+**R-65 queda respondida por el tríptico:** el folleto de *Exploradores de Cumaná* contiene **el
+itinerario de Cumaná Histórica**. Confirma R-02: es **el mismo recorrido con otro público**, o sea
+**una ruta con dos modalidades**, no dos filas del catálogo.
+
+### 1-bis.4 Datos concretos que ya se pueden usar
+
+| Dato | Valor | De |
+|---|---|---|
+| Duración típica / máxima | **1 h 30 min** / **3 h** | R-19 |
+| Se registra duración **por punto** y total | sí | R-19 |
+| Orden de los puntos | **sugerido**, el guía lo varía | R-18 / R-10 |
+| Cupo | **60 personas por DÍA** *(no por salida — es nuevo)* | R-28 |
+| Restricción real | **Río Brito: 12 años o más; excluye dificultad visual; advertir condición articular** | R-57 |
+| Tarifa | **en USD**, cobrada en Bs **a la tasa del día** | R-36 |
+| Guía | **siempre** un empleado de IMATUR; el guía externo lo pone **el punto** | R-31 |
+| Personal por salida | **variable según el tamaño del grupo** | R-33 |
+| Motivo de cancelación | **obligatorio** | R-15 |
+| Meta anual | **100 rutas** — el valor de relleno queda confirmado | R-51 |
+| Mapa de puntos | **sí lo quieren** | R-21 |
 
 ---
 
@@ -146,41 +251,67 @@ ruta_ejecuciones           ← SALIDA (una fecha, un grupo). Hoy: lo que la tabl
 
 ---
 
-## 4. Estados — el bloqueo principal ⛔
+## 4. Estados — ✅ **RESPONDIDO el 2026-09-17**
 
-**R-14 quedó en blanco** y es una pregunta ⭐. De R-13, R-15 y R-16 se **infiere** este ciclo:
+**R-14 ya no está en blanco.** El cliente los nombró, y son **tres**, no los cinco que habíamos
+inferido:
+
+> *"**Programado, Ejecutado, o No ejecutado** (muchas veces llegan los oficios, se planifica la
+> ruta), pero a veces llega el momento donde los solicitantes cancelan (IMATUR puede cancelar por
+> razones ajenas: agua, clima, terremotos…). En estos casos se haría una **reprogramación** de la
+> salida que no se pudo ejecutar."*
 
 ```
-Solicitada ──► Aprobada ──► Programada ──► Ejecutada        (terminal)
-     │             │             │
-     └─────────────┴─────────────┴──► Cancelada (+ motivo)  (terminal)
-                                 │
-                                 └──► reprogramación: MISMA fila, cambia la fecha,
-                                      se guarda la original y el motivo (R-16)
+Programado ──► Ejecutado        (terminal)
+     │
+     └───────► No ejecutado (+ motivo)
+                     │
+                     └──► reprogramación: NUEVA salida programada,
+                          enlazada a la que no se pudo ejecutar
 ```
 
-**No fijar el `CHECK` con estos nombres inventados.** Hay que pedirle a IMATUR **las palabras que
-usan ellos** — es exactamente lo que R-14 preguntaba. Mientras tanto, la construcción puede avanzar
-en todo lo que no toca la columna `estado`.
+**Tres correcciones sobre lo que habíamos inferido:**
 
-El único punto firme: **la reprogramación NO es un estado**. Es un cambio de fecha sobre la misma
-ejecución, con histórico (R-16 lo dice literalmente).
+| Lo que asumimos | Lo que dijeron |
+|---|---|
+| *Solicitada* y *Aprobada* como estados | **No existen como estados.** La solicitud y la aprobación de la Presidenta (R-13) son **hitos previos** a que la salida se programe — atributos, no estados del ciclo |
+| *Cancelada* como estado terminal | **Cancelar no es un estado**: desemboca en **`No ejecutado`** con su motivo. Da igual quién cancele (el solicitante o IMATUR por clima, agua, etc.): el resultado es el mismo |
+| La reprogramación cambia la fecha de la misma fila | R-16 decía *"se considera la misma salida"*, pero R-14 lo precisa: la que no se ejecutó **queda registrada como `No ejecutado`** y la reprogramación es **otra salida enlazada a ella**. Así el histórico no se pierde y el conteo de ejecutadas no se infla |
+
+**El `CHECK` queda:** `('Programado', 'Ejecutado', 'No ejecutado')`. El motivo es **obligatorio**
+cuando el estado es *No ejecutado* (R-15: *"si se cancela, el motivo siempre tiene que saberse"*).
+
+> ⚠️ **Y hay un producto que no conocíamos:** al cerrar se levantan **actas de ejecutado y de no
+> ejecutado**, y **se archivan en la OAC** (R-47). Son dos documentos, no uno.
 
 ---
 
-## 5. Cobro (R-02 responde parte de D-RT02)
+## 5. Cobro — ✅ **RESPONDIDO POR COMPLETO el 2026-09-17**
 
-**Lo que ya se sabe:** se cobra, en dólares, monto por persona fijado por ruta, con dos
-exoneraciones conocidas — **menores de 8 años** en Cumaná Histórica, y **escuelas/instituciones
-públicas** (R-03).
+**D-RT02 queda cerrada.** El bloque entero (R-36…R-42) está contestado, y la respuesta es la más
+exigente de las dos posibles: **el sistema lleva la contabilidad**, no solo deja constancia.
 
-**Lo que falta y bloquea:** R-37 (quién recibe el dinero: ¿IMATUR, la Alcaldía?), R-38 (efectivo /
-transferencia / punto de venta), R-39 (¿qué comprobante?), R-40 (**¿el sistema lleva la
-contabilidad o solo deja constancia?**) y R-42 (quién autoriza exoneraciones).
+| | Respuesta | Qué implica en el modelo |
+|---|---|---|
+| **R-36** | Tarifa **pactada en USD**, cobrada en Bs **a la tasa del día** | El catálogo guarda **USD**; la salida **congela la tasa aplicada**. El sistema ya consulta el BCV (mig. 074, Nómina): **se reutiliza `TasaBcv`** |
+| **R-37** | Cobra **IMATUR**, en una **cuenta exclusiva** para rutas | Un dato de configuración, no una tabla |
+| **R-38** | **Pago ANTICIPADO con fecha tope** — *"se les tiene una fecha para cancelar y poder planificar"* | La salida lleva **fecha límite de pago**, y **el pago condiciona la planificación**. Es una regla de negocio, no un adorno |
+| **R-39** | Transferencia → **captura/voucher adjunto**. Efectivo → **acta de pago** que levanta IMATUR | Adjunto por pago (patrón ya probado) + **un documento imprimible nuevo** |
+| **R-40** | **Sí lleva el cobro y lo cancelado** | **Tabla de pagos**, con monto, fecha, forma, comprobante y estado. No es declarativo |
+| **R-41** | Fijo por ruta y persona, **salvo Altos de Sucre** (*"depende de lo que el cliente solicite"*) | La tarifa del catálogo debe admitir **«a convenir»** |
+| **R-42** | Exoneraciones **las autoriza la Presidenta** | Campo de autorización en la exoneración |
 
-**Se puede construir ya** la parte declarativa: tarifa en el catálogo, tarifa aplicada y exoneración
-en la ejecución, y **reactivar la columna Tarifa del reporte** que se retiró en H-14 — porque ahora
-sí tendrá un dato verdadero detrás. **No construir** registro de pagos ni comprobantes hasta R-40.
+**Matiz importante de R-03/R-42:** las instituciones públicas **no pagan, pero igual deben traer el
+oficio previo**, y **eso aplica únicamente a Cumaná Histórica**. La gratuidad no es automática por
+ser institución: es por **ruta + tipo de solicitante**.
+
+> ⚠️ **Nos pidieron proponer un formato.** Sobre el acta de pago en efectivo el cliente dijo:
+> *"el formato nace del momento, **pueden darnos una idea**, pero funciona como respaldo de que el
+> servicio fue pagado"*. Es el único documento del módulo que **diseñamos nosotros** y sometemos a
+> su visto bueno — no hay que esperar nada.
+
+**Ya se puede construir todo T-C**, incluido el registro de pagos, y **reactivar la columna Tarifa
+del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 
 ---
 
@@ -204,46 +335,69 @@ sí tendrá un dato verdadero detrás. **No construir** registro de pagos ni com
 |------|-----------|-------------|
 | **T-A** | **Separar catálogo y ejecución.** Nueva `ruta_ejecuciones`, mudar columnas, repuntar `participantes_ruta` / `ruta_informes` / `oficios_emitidos`, migrar las 2 filas, partir modelo y controlador, rehacer las vistas | 🟢 **NO — se puede empezar hoy.** Es la fase grande y no depende de ninguna respuesta faltante |
 | **T-B** | **Edad por catálogo** (`edad_min`/`edad_max`), retirar el 5–11 del código y de los rótulos del informe | 🟢 **NO — se puede hoy.** Corrige un choque real (§2) |
-| **T-C** | **Tarifa declarativa**: monto por ruta, tarifa aplicada + exoneración por salida, reactivar la columna en el reporte | 🟢 **NO** para lo declarativo · 🔒 el **registro de pagos** espera R-37…R-40 |
-| **T-D** | **Cancelación y reprogramación** con motivo e histórico de fecha | 🟡 **Parcial** — la lógica es clara (R-15/R-16); solo los **nombres de estado** esperan R-14 |
-| **T-E** | **Solicitud y aprobación**: origen particular/institucional, institución solicitante, oficio, aprobación de Presidencia | 🟡 **Parcial** — el flujo es claro (R-11/R-13); el **imprimible** espera el formato de oficio (R-12) |
-| **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios guías** por salida (R-09) | 🔒 **Sí** — R-17…R-21 (paradas, duración, costo de entrada) y R-31…R-34 (guías) |
-| **T-G** | **Informe de cierre** contrastado contra el formato real | 🔒 **Sí** — R-47/R-48 + el documento físico |
+| **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
+| **T-D** | **No ejecutado y reprogramación**, con motivo obligatorio y enlace a la salida original | 🟢 **DESBLOQUEADA (2026-09-17).** R-14 dio los tres estados: `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |
+| **T-E** | **Solicitud y aprobación**: origen particular/institucional, institución solicitante, oficio **entrante** archivado, aprobación de Presidencia | 🟢 **DESBLOQUEADA.** R-12 aclara que el oficio **lo redacta la institución** → se **recibe y adjunta**, no se genera. No hay formato que esperar |
+| **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
+| **T-G** | **Ficha Institucional** — el cierre con el conteo demográfico, generada automáticamente | 🟢 **DESBLOQUEADA (2026-09-17).** El formato llegó y R-50 confirma que se genera sola |
+| **T-H** 🆕 | **Oficios de permiso a instituciones custodias** (R-20): uno por semana cubriendo varias salidas, con estado *en espera / aceptado / rechazado* y el Director de Relaciones Inter-Institucionales como responsable | 🟡 **El flujo sí, el imprimible no** — falta el formato del oficio |
+| **T-I** 🆕 | **Restricciones por ruta** (R-57) y **cupo diario de 60** (R-28), con advertencia al inscribir | 🟢 **DESBLOQUEADA.** Datos concretos en §1-bis.4 |
 
-**Recomendación:** arrancar por **T-A + T-B + T-C(declarativa)**. Son la mitad del módulo, no
-dependen de ninguna respuesta pendiente, y **T-A es el prerrequisito de todo lo demás** — cuanto más
-código se escriba sobre el modelo viejo, más caro sale.
+**Recomendación (revisada el 2026-09-17):** el orden no cambia — **T-A sigue primero**, porque es el
+prerrequisito de todo y **cada línea escrita sobre el modelo viejo hay que rehacerla**. Lo que sí
+cambió es el panorama: **ya NO queda ninguna fase bloqueada por el cliente.** De las siete
+originales, las siete están desbloqueadas, más las dos nuevas.
 
-**Riesgo de arrancar antes de R-14:** bajo y acotado. Si los nombres de estado llegan distintos,
-cambia un `CHECK`, una constante y unas etiquetas. **No** cambia la estructura.
+**Orden sugerido:**
+
+| # | Fase | Por qué ahí |
+|---|---|---|
+| 1 | **T-A** | Prerrequisito de todo. Con 2 filas en `rutas`, la migración de datos es trivial |
+| 2 | **T-B + T-I** | Van juntas: ambas son restricciones del catálogo (edad, condiciones, cupo). Y **T-B cierra un bloqueo de uso real** (H-17) |
+| 3 | **T-G** | La **Ficha Institucional** — pedido #1 del cliente (R-64: *«los reportes»*) y formato en mano |
+| 4 | **T-D** | Estados y reprogramación: barato ahora que R-14 está respondida |
+| 5 | **T-E + T-H** | Los **oficios** — pedido #2 del cliente. T-H puede construirse sin su imprimible |
+| 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
+| 7 | **T-F** | Itinerario por grupo y varios empleados por salida |
+
+> ✅ **El riesgo que señalaba este plan («arrancar antes de R-14») desapareció:** R-14 está
+> respondida y el `CHECK` queda fijado con las palabras del cliente, no con las nuestras.
+
+> ### ⚠️ Antes de T-A, una advertencia sobre `participantes_ruta`
+> R-23/R-24/R-29 parecían decir que **no se registran personas**, lo que haría sobrar media tabla.
+> Los formatos lo desmienten (§1-bis.1 ③): **conviven** el conteo demográfico y la lista nominal
+> firmada. **No eliminar `participantes_ruta` en T-A** — lo que hay que añadir es el conteo, no
+> quitar lo nominal.
 
 ---
 
-## 8. Preguntas al cliente
+## 8. Preguntas al cliente — **qué fase bloquea cada una**
 
-### 8.1 Bloqueantes — impiden cerrar el rediseño
+> 📋 **El enunciado de cada pregunta vive en `BACKLOG.md` §3.5**, y en lenguaje llano para el cliente
+> en `PREGUNTAS_CLIENTE.md` → *Turismo (Rutas)*. Aquí solo el mapeo a fases, que es lo propio de este
+> plan.
 
-| # | Pregunta | Bloquea |
-|---|---|---|
-| **R-14** ⭐ | **¿Qué estados atraviesa una salida, con las palabras que ustedes usan?** *(Quedó en blanco. De sus otras respuestas se infiere Solicitada → Aprobada → Programada → Ejecutada, más Cancelada; hace falta confirmarlo.)* | T-D, y el `CHECK` de `ruta_ejecuciones.estado` |
-| **R-40** ⭐ | ¿El sistema debe **llevar la contabilidad** de los cobros, o solo dejar constancia de que la salida tenía tarifa? | T-C (registro de pagos) |
-| **R-37/R-38/R-39** ⭐ | ¿Quién recibe el dinero, cómo se paga y qué comprobante se emite? | T-C |
+> **Actualizado el 2026-09-17: no queda ninguna pregunta bloqueante.** Las cinco que frenaban el
+> rediseño (R-14 y el bloque de cobro) se respondieron **dentro de `PREGUNTAS_CLIENTE.md` §4**.
 
-### 8.2 Nuevas — surgen de las propias respuestas
+| # | | Bloquea | Estado |
+|---|---|---|---|
+| ~~R-14~~ | ✅ | ~~T-D y el `CHECK` de estados~~ | **RESPONDIDA:** `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |
+| ~~R-37/38/39/40~~ | ✅ | ~~T-C, registro de pagos~~ | **RESPONDIDAS, y piden contabilidad completa.** Ver §5 |
+| **R-32** | 🟢 | Nada — pierde sentido con R-31: el guía externo lo pone el punto | ⛔ Sin responder, **ya no importa** |
+| **R-71** 🆕 | 🟡 | ¿El sistema imprime también el **cuadro del punto** (Fundación Castillo), cuyas casillas **no coinciden** con las de la Ficha? | 🆕 Nueva |
+| **R-72** 🆕 | 🟡 | **Cuántas rutas tiene el catálogo y su nombre oficial.** Los folletos traen *Playa Manare* y *Altos de **Sucre*** — R-02 decía otra cosa | 🆕 Nueva |
+| **Formato** | 🟡 | **T-H** — el **oficio de permiso** a las instituciones custodias (R-20) | 🆕 Nuevo |
+| ~~R-65~~ | ✅ | ~~Forma del catálogo~~ | **Respondida por el tríptico:** Exploradores = el mismo recorrido, **una ruta con dos modalidades** |
+| ~~R-66~~ | ✅ | ~~Edades~~ | **Respondida por R-57**, con un caso concreto (Río Brito 12+) |
+| ~~R-67~~ | 🟡 | ~~Tarifa de Altos de Sucre + directorio de posadas~~ | **Parcial:** R-60 confirma que **todas** las rutas tienen aliados prestadores de servicio. Falta solo la tarifa |
+| ~~R-68~~ | 🟡 | ~~Cómo se registra hoy~~ | **Parcial:** sigue sin decirse si usan Excel o papel, pero R-43/R-46 dejan claro que **el registro es en oficina y sobre la Ficha** |
+| ~~R-69~~ | ✅ | ~~Varios guías por salida~~ | **Respondida por R-33:** el número depende del tamaño del grupo → tabla, no columna |
+| ~~R-70~~ | ✅ | ~~Ente custodio del punto~~ | **Respondida por R-20**, y con mucho más: todo el proceso de permisos (T-H) |
+| ~~R-12~~ | ✅ | ~~Formato del oficio de solicitud~~ | **Ya no aplica:** lo redacta cada institución (R-12) |
+| ~~R-47/48~~ | ✅ | ~~Informe de ruta ejecutada~~ | **Formato recibido:** la Ficha Institucional |
 
-| # | Pregunta | Por qué |
-|---|---|---|
-| **R-65** ⭐ | **¿Exploradores de Cumaná es una ruta aparte o el mismo recorrido de Cumaná Histórica con otro público?** R-02 dice *"es lo mismo, solo que se diferencian por el público objetivo"*. → ¿Dos filas del catálogo, o **una ruta con dos modalidades**? | Define si el catálogo tiene 6 filas o 5 con variantes |
-| **R-66** ▲ | **Las edades**: Exploradores es 4-8 y en Cumaná Histórica los menores de 8 no pagan. ¿Hay **tope de edad** en Exploradores, o un niño de 9 entra igual? ¿Y edad mínima para las rutas de playa? | §2 — el rango sale del código y pasa al catálogo |
-| **R-67** ▲ | **Altos de Cumaná** dice *"se cuadra… enlace con personas en posadas"*. ¿Tiene tarifa? ¿La cobra IMATUR o la posada? ¿Hay que llevar un **directorio de posadas aliadas**? | Tarifa de esa ruta + adelanta R-60 |
-| **R-68** ▲ | **¿Cómo se registra hoy una ruta?** R-03 quedó *"en espera de respuesta"* — no sabemos si hoy usan Excel, papel o nada | Define cuántos datos históricos hay que cargar |
-| **R-69** ▲ | R-09 menciona **"guías rotativos"**: ¿cuántos guías van por salida y **se registra quiénes fueron**? | T-F, y el `id_facilitador` único de hoy |
-| **R-70** ○ | R-06 dice que se **coordina con fundaciones externas** el acceso a los puntos. ¿Hay que registrar el **ente custodio** de cada punto y el estado de esa gestión? | T-F, junto con R-20 |
-
-### 8.3 Formatos a pedir
-
-Los ⭐ son los que más aceleran: **oficio de solicitud** (R-12, el cliente quedó en enviarlo) e
-**informe de una ruta ejecutada** (R-47/R-48). Lista completa en el cuestionario, Parte 3.
+**Nada de esto bloquea T-A, T-B, T-G ni T-I**, que son el grueso del módulo. Ver §7.
 
 ---
 

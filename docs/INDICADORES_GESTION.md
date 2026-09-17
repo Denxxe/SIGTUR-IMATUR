@@ -1,10 +1,14 @@
 # Indicadores de Gestión — SIGTUR-IMATUR
 
-**Última actualización:** 2026-06-25
+**Última actualización:** 2026-09-17 (rutas de código al día tras el reparto en traits)
 **Fuentes de verdad en código:**
-- `app/controllers/ReportesController.php::indicadores()` — página *Indicadores de Gestión* (RF30)
+- `app/controllers/reportes/ReportesIndicadoresTrait.php::indicadores()` — página *Indicadores de Gestión* (RF30)
 - `app/controllers/DashboardController.php::index()` — Panel Principal (role-aware)
-- `app/controllers/ReportesController.php::stats*()` — KPIs de cabecera de cada reporte
+- `app/controllers/reportes/Reportes*Trait.php::stats*()` — KPIs de cabecera de cada reporte
+
+> ⚠️ **`ReportesController` se repartió en 8 traits el 2026-08-28** (`app/controllers/reportes/`).
+> Los métodos y sus firmas no cambiaron; sí la ruta del archivo. Si un método no aparece donde dice
+> este documento, buscarlo en el trait de su área.
 
 > Todos los indicadores se calculan **en vivo** sobre la base de datos en cada carga (no hay tablas de agregación ni caché). Todas las consultas filtran `is_active = TRUE` salvo las que miden bajas/eliminaciones. El "año actual" se obtiene de `date('Y')` del servidor.
 

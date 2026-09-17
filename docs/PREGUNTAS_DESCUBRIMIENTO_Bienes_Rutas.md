@@ -195,18 +195,44 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 
 # PARTE 2 — RUTAS TURÍSTICAS
 
-> ## 🟡 RESPONDIDO PARCIALMENTE — 2026-09-03
-> El cliente contestó **R-01 … R-16** (secciones A, B y C), es decir el bloque que **define la
-> estructura de datos**. **R-14 quedó en blanco** y las secciones **D a L (R-17 … R-64) siguen
-> pendientes**.
+> ## ✅ RESPONDIDO — 2026-09-17
+> **63 de las 64 preguntas están respondidas.** El 2026-09-03 llegaron R-01…R-16; el **2026-09-17**
+> llegó **todo lo demás**, repartido en **dos sitios**: las secciones D a L de este cuestionario y
+> **las respuestas escritas dentro de `PREGUNTAS_CLIENTE.md` §4**, que es donde aparecieron **R-14 y
+> todo el bloque de cobro**. Más **siete formatos reales** en `docs/formatos/rutas_*`.
 >
-> El análisis y el plan de reconstrucción derivado están en **`docs/PLAN_MODULO_RUTAS.md`**.
+> **Solo queda sin responder R-32** (si se le paga al guía externo), y **ya no importa**: R-31 aclara
+> que ese guía lo pone el punto visitado, no IMATUR.
 >
-> **Lo que estas 15 respuestas cambian:** R-07/R-08/R-09 confirman que **sí existe un catálogo
-> reutilizable** y que una salida es una **ejecución** de ese catálogo → el modelo actual (una fila
-> de `rutas` por salida) **necesita rediseño**, no ajustes. R-02 confirma que **sí se cobra** y da
-> los montos → **D-RT02 deja de ser una incógnita** (falta el flujo de cobro, R-36…R-42). R-11
-> **reabre** el registro de la institución solicitante, eliminado en la mig. 060.
+> ### 🔓 El módulo queda DESBLOQUEADO
+> Las cinco preguntas que llevaban meses frenando el rediseño —**R-14** (estados) y **R-37…R-40**
+> (cobro)— están contestadas. **Ya no hay nada que esperar para construir.**
+>
+> El análisis y el plan de reconstrucción están en **`docs/PLAN_MODULO_RUTAS.md`**.
+>
+> ### Lo que cambia con esta segunda tanda
+>
+> | | Hallazgo | Consecuencia |
+> |---|---|---|
+> | 📄 | **Llegó la Ficha Institucional** (R-43/R-47/R-48) | La planilla del día y el informe de cierre **son el mismo documento**. Se conoce su estructura exacta |
+> | 📄 | **Llegó el itinerario** de Cumaná Histórica (R-17) | **7 puntos** numerados con reseña, no los 5 que se infirieron de R-06 |
+> | 🔴 | **R-20 descubre un proceso entero**: los **oficios de permiso a las instituciones custodias**, agrupados por semana, con su estado (llegó / pase / rechazado) | **No estaba en el plan.** Es el segundo de los dos pedidos explícitos del cliente (R-64: *«los reportes y los oficios»*) |
+> | 🟢 | **R-46: el registro se hace al volver a la oficina** | **Cierra el alcance:** no hace falta modo campo, app móvil ni funcionamiento sin conexión |
+> | 🟢 | **R-57 da la restricción concreta** (Río Brito 12+, sin dificultad visual) | **Es la respuesta que faltaba para H-17**: la restricción es del catálogo, no un rango global |
+> | 🟡 | **R-23/R-24 vs. los formatos** | Dicen *«solo registro general»*, pero existe una **lista nominal firmada**. Conviven: nominal para adultos con cédula, conteo para escolares |
+> | 🟢 | **El catálogo real no coincide con R-02** | Los folletos traen **Playa Manare** (que no estaba) y **«Altos de Sucre»**, no «Altos de Cumaná» |
+> | ✅ | **R-51 confirma la meta de 100 rutas** | Cierra la parte de Rutas de D-FO05 |
+> | ✅ | **R-54 confirma el libro de correspondencia** | **D-OF03** pasa de «mejora opcional» a **requisito** |
+> | ✅ | **R-12: el oficio de solicitud lo redacta cada institución** | **Ya no hay que pedir ese formato**: el sistema lo **recibe y archiva**, no lo genera. Campos en común que sí se piden: **cantidad de niños, ruta o atractivo específico, cantidad de representantes/maestros** |
+> | 🔴 | **R-65 destapa una TERCERA modalidad** | *Cumaná Histórica* es **la comercial**; *Exploradores de Cumaná* es **solo para instituciones educativas**; y existe **«Cumaná Histórica – Huellas del Ayer»**, **solo para adultos mayores**. Un recorrido, **tres modalidades por público** |
+> | 🔴 | **R-47/48 añaden actas que no conocíamos** | Al cerrar se levantan **actas de ejecutado y de no ejecutado**, y **se archivan en la OAC** |
+> | 🟢 | **R-33 da un ratio calculable** | **7-8 niños por guía** → el sistema puede **sugerir** cuántos guías hacen falta según el grupo |
+> | 🟢 | **R-68: hoy es papel + Excel** | Planificación en papel; estadística acumulada en Excel **semestral**; cortes **mensuales** para el **informe de gestión trimestral** |
+>
+> **De la primera tanda:** R-07/R-08/R-09 confirman que **sí existe un catálogo reutilizable** y que
+> una salida es una **ejecución** de ese catálogo → el modelo actual (una fila de `rutas` por salida)
+> **necesita rediseño**, no ajustes. R-02 confirma que **sí se cobra**. R-11 **reabre** el registro
+> de la institución solicitante, eliminado en la mig. 060.
 
 ## A. Panorama general
 
@@ -225,116 +251,174 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 
 | # | | Pregunta | Respuesta del cliente (2026-09-03) |
 |---|---|----------|------------------------------------|
-| R-07 | ⭐ | Si "Cumaná Histórica" se hace el 10 de marzo y otra vez el 20 de abril, ¿eso son **dos rutas distintas** o **la misma ruta ejecutada dos veces**? | **"En los registros saldría la misma ruta ejecutada 2 veces, pero en diferente tiempo."** ⚠️ *Contradice D-RT01, la decisión sobre la que está construido el módulo.* |
-| R-08 | ⭐ | ¿Existe un **catálogo** de rutas (el recorrido, los puntos, la duración) que se reutiliza cada vez que se programa una salida? ¿O cada salida se arma desde cero? | **"Existe un catálogo"** de todos estos puntos: cuándo comienza y cuándo termina, los puntos de la ruta, el recorrido — **todo lleva un catálogo.** |
+| R-07 | ⭐ | Si "Cumaná Histórica" se hace el 10 de marzo y otra vez el 20 de abril, ¿eso son **dos rutas distintas** o **la misma ruta ejecutada dos veces**? | **2026-09-03:** *"En los registros saldría la misma ruta ejecutada 2 veces, pero en diferente tiempo."*<br>**2026-09-17:** *"son 2 rutas diferentes…"*<br>⚠️ **Las dos respuestas parecen opuestas, pero describen lo mismo desde distinto ángulo** — ver la nota bajo esta tabla. |
+| R-08 | ⭐ | ¿Existe un **catálogo** de rutas (el recorrido, los puntos, la duración) que se reutiliza cada vez que se programa una salida? ¿O cada salida se arma desde cero? | **"Existe un catálogo"** de todos estos puntos: cuándo comienza y cuándo termina, los puntos de la ruta, el recorrido — **todo lleva un catálogo.** **2026-09-17:** *"sí tienen un catálogo, tengo fotos de esto"* 📎 *formato pendiente de enviar.* |
 | R-09 | ⭐ | ¿Una misma ruta puede tener **varios grupos el mismo día** (mañana y tarde)? | **Sí.** Puede tener **diferentes grupos con guías rotativos**, según la planificación. Incluso **en una misma mañana** se han hecho **dos salidas de la misma ruta** (dos Cumaná Histórica) y también **dos rutas distintas a la vez** (Cumaná Histórica y Río Brito). Depende de la planificación. |
 | R-10 | ▲ | ¿Las rutas cambian de recorrido según el grupo, o el itinerario es siempre el mismo? | **Puede cambiar en algún punto.** Si hay varios grupos en la misma ruta al mismo tiempo, **se cambia un poco el itinerario y el orden de los puntos** (para no coincidir). |
+
+> ### ⚠️ R-07 — las dos respuestas no se contradicen: describen dos capas
+>
+> El 2026-09-03 dijeron *"la misma ruta ejecutada 2 veces"* y el 2026-09-17 *"son 2 rutas
+> diferentes"*. Puestas junto a R-08 y R-09, **encajan**:
+>
+> | Capa | Qué dice el cliente |
+> |---|---|
+> | **El recorrido** | **Es uno solo y está catalogado** (R-08: *"todo lleva un catálogo"*; y el folleto de Cumaná Histórica trae los 7 puntos impresos). Los 10 de marzo y 20 de abril recorren **lo mismo**. |
+> | **La salida** | **Cada una es un registro aparte**, con su fecha, su grupo, su guía y **su propia ficha institucional** (R-09: dos salidas de la misma ruta en una mañana). De ahí *"son 2 rutas diferentes"*: para quien lleva los papeles, son **dos expedientes**. |
+>
+> **Un catálogo reutilizable + una salida por evento satisface las dos respuestas**, y es lo único
+> que permite representar R-09 (dos grupos simultáneos del mismo recorrido). El modelo actual —una
+> fila de `rutas` por salida, con los puntos duplicados cada vez— **no** puede.
+>
+> 🟡 Conviene confirmarlo con una frase, pero **no bloquea**: ninguna lectura razonable de R-08/R-09
+> permite el modelo actual.
 
 ## C. Programación de una salida
 
 | # | | Pregunta | Respuesta del cliente (2026-09-03) |
 |---|---|----------|------------------------------------|
-| R-11 | ⭐ | ¿Cómo nace una ruta? ¿Un colegio la solicita, IMATUR la programa, ambas? | **Dos orígenes:** el **turista particular** la solicita, y las **instituciones públicas** la solicitan **mediante un oficio que queda archivado en IMATUR**. ⚠️ *Reabre el registro de la institución solicitante (eliminado en la mig. 060, D-RT05).* |
-| R-12 | ▲ | Si un colegio la solicita, ¿cómo lo hace? ¿Mandan un oficio? *(pedir un ejemplo real)* | **Lo reciben en físico**, y **también puede recibirse en digital**. 📎 *El cliente quedó en enviar el formato.* |
+| R-11 | ⭐ | ¿Cómo nace una ruta? ¿Un colegio la solicita, IMATUR la programa, ambas? | **Dos orígenes:** el **turista particular** la solicita, y las **instituciones públicas** la solicitan **mediante un oficio que queda archivado en IMATUR**. **2026-09-17:** *"el oficio es institucional; no es uno fijo, sino que las diferentes van a traer el oficio"* → **no hay un formato único: cada institución trae el suyo.** El sistema **recibe y archiva**, no genera. ⚠️ *Reabre el registro de la institución solicitante (eliminado en la mig. 060, D-RT05).* |
+| R-12 | ▲ | Si un colegio la solicita, ¿cómo lo hace? ¿Mandan un oficio? *(pedir un ejemplo real)* | **2026-09-17: en físico.** ✅ *Ya no hace falta pedir «el formato del oficio de solicitud»: lo redacta cada institución, no IMATUR. Lo que el sistema necesita es poder **adjuntar el escaneado** y registrar de quién viene.* |
 | R-13 | ▲ | ¿Hay que **aprobar** la salida antes de ejecutarla? ¿Quién aprueba? | **Sí. La decisión final la tiene la Presidenta** (actualmente **María Maza**), **tanto para solicitudes particulares como institucionales**. |
-| R-14 | ⭐ | ¿Qué estados atraviesa una ruta desde que se planifica hasta que termina? Nómbrelos con las palabras que usan ustedes. | ⛔ **SIN RESPONDER.** *(Se infiere de R-13/R-15/R-16 una secuencia Solicitada → Aprobada → Programada → Ejecutada, más Cancelada y Reprogramada, pero hacen falta **los nombres exactos que usa IMATUR**.)* |
-| R-15 | ▲ | ¿Puede **cancelarse**? ¿Por qué motivos? ¿Se registra el motivo? | **Sí se puede.** Motivos: **falta de gasolina**, **clima/tiempo**, o **que el grupo cancele**. **Sí se le coloca motivo de cancelación.** |
-| R-16 | ▲ | ¿Se reprograma por lluvia u otra causa? ¿Se considera la misma salida o una nueva? | **Se reprograma y se considera la misma salida**, solo que con el cambio de fecha. |
+| R-14 | ⭐ | ¿Qué estados atraviesa una ruta desde que se planifica hasta que termina? Nómbrelos con las palabras que usan ustedes. | ✅ **RESPONDIDA (2026-09-17, en `PREGUNTAS_CLIENTE.md` §4):** *"**Programado, Ejecutado, o No ejecutado** (muchas veces llegan los oficios, se planifica la ruta), pero a veces llega el momento donde los solicitantes cancelan (IMATUR puede cancelar por razones ajenas: agua, clima, terremotos…). En estos casos se haría una **reprogramación** de la salida que no se pudo ejecutar."*<br>→ **Tres estados, no cinco:** `Programado` → `Ejecutado` \| `No ejecutado`. **Cancelar no es un estado: lleva a *No ejecutado*** con su motivo, y de ahí sale la **reprogramación**. |
+| R-15 | ▲ | ¿Puede **cancelarse**? ¿Por qué motivos? ¿Se registra el motivo? | **Sí se puede.** Motivos: **falta de gasolina**, **clima/tiempo**, o **que el grupo cancele**. **2026-09-17:** *"si se cancela, el motivo siempre tiene que saberse"* → **el motivo es OBLIGATORIO**, no opcional. |
+| R-16 | ▲ | ¿Se reprograma por lluvia u otra causa? ¿Se considera la misma salida o una nueva? | **Se reprograma y se considera la misma salida**, solo con cambio de fecha. Confirmado el 2026-09-17. |
 
 ## D. Recorrido y puntos
 
-| # | | Pregunta |
-|---|---|----------|
-| R-17 | ▲ | ¿Cuáles son los **puntos o paradas** de cada ruta? *(pedir el itinerario de al menos una)* |
-| R-18 | ▲ | ¿El orden de las paradas es fijo o el guía lo adapta según el día? |
-| R-19 | ○ | ¿Registran **cuánto dura** cada parada, o solo la duración total? |
-| R-20 | ○ | ¿Hay puntos con **costo de entrada** (museos, castillos) o restricciones de horario? |
-| R-21 | 💡 | ¿Les sería útil ver las paradas en un **mapa** dentro del sistema, y poder imprimir el itinerario con el mapa para entregárselo al grupo? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-17 | ▲ | ¿Cuáles son los **puntos o paradas** de cada ruta? *(pedir el itinerario de al menos una)* | ✅ **Entregado en el folleto** `docs/formatos/rutas_itinerario_CumanaHistorica_7puntos.jpeg`. **Cumaná Histórica tiene 7 puntos numerados, con inicio y retorno:** 1 Castillo San Antonio de la Eminencia *(inicio)* · 2 Casa Museo Antonio José de Sucre · 3 Basílica Menor Santa Inés · 4 Fortaleza Santa María de la Cabeza · 5 Callejón Santa Inés · 6 Callejón El Alacrán · 7 Callejón El Ahorcado *(retorno)*. **Cada punto lleva su reseña** («¿Sabías qué…?»), que es lo que el guía narra (R-01). |
+| R-18 | ▲ | ¿El orden de las paradas es fijo o el guía lo adapta según el día? | **Se puede variar según convenga.** El orden del catálogo es el **sugerido**, no una imposición — coherente con R-10 (se altera para que dos grupos no coincidan). |
+| R-19 | ○ | ¿Registran **cuánto dura** cada parada, o solo la duración total? | **Ambas.** Se lleva el cálculo **punto a punto** y además un **tiempo estimado total**. **Una ruta completa ha durado 3 horas como máximo; lo normal es 1 h 30 min.** |
+| R-20 | ○ | ¿Hay puntos con **costo de entrada** (museos, castillos) o restricciones de horario? | ⚠️ **La respuesta descubre un proceso entero que no estaba en el plan.** No habla de costo sino de **permisos de acceso**: IMATUR **envía un oficio a cada institución custodia** (museos, castillos, fundaciones) para poder visitarla. **Estrategia:** todas las rutas de la semana planificada van **en un solo oficio**, para agilizar el trámite. Se lleva **control del estado de cada oficio** — si llegó, si se dio el pase, si se rechazó — y quien lo notifica es el **Director de Relaciones Inter-Institucionales**, que además corrobora que las instituciones estén disponibles. Estados: **aceptado / en espera**. |
+| R-21 | 💡 | ¿Les sería útil ver las paradas en un **mapa** dentro del sistema, y poder imprimir el itinerario con el mapa para entregárselo al grupo? | **Sí.** |
 
 ## E. Participantes
 
-| # | | Pregunta |
-|---|---|----------|
-| R-22 | ⭐ | ¿Quiénes participan? ¿Personas individuales, grupos escolares completos, ambos? |
-| R-23 | ⭐ | Cuando viene un **colegio**, ¿registran a cada niño uno por uno, o basta con el colegio, el docente y la cantidad? |
-| R-24 | ⭐ | Los niños **no tienen cédula**. ¿Cómo los identifican hoy? ¿Piden datos del representante? |
-| R-25 | ▲ | ¿Registran datos demográficos (edad, sexo) de los participantes? ¿Para qué reporte los necesitan? |
-| R-26 | ▲ | ¿Hace falta registrar la **institución** de la que viene el grupo (colegio, liceo, consejo comunal)? ¿Se lleva un directorio de esas instituciones? |
-| R-27 | ▲ | ¿Se pide **autorización del representante** para menores? ¿En papel? *(pedir el formato)* |
-| R-28 | ▲ | ¿Hay **cupo máximo**? ¿Qué pasa si se llena — lista de espera? |
-| R-29 | ○ | ¿Se registra si el participante **asistió realmente**, o solo que se inscribió? |
-| R-30 | 💡 | ¿Necesitan saber si una persona **ya hizo** esa ruta antes, para no repetirla o para dar prioridad a quien no ha ido? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-22 | ⭐ | ¿Quiénes participan? ¿Personas individuales, grupos escolares completos, ambos? | **Ambos.** |
+| R-23 | ⭐ | Cuando viene un **colegio**, ¿registran a cada niño uno por uno, o basta con el colegio, el docente y la cantidad? | **La institución trae su propio listado nominal de los niños; IMATUR solo hace el registro general.** |
+| R-24 | ⭐ | Los niños **no tienen cédula**. ¿Cómo los identifican hoy? ¿Piden datos del representante? | **No se identifican uno a uno.** IMATUR lleva **solo el conteo general**. |
+| R-25 | ▲ | ¿Registran datos demográficos (edad, sexo) de los participantes? ¿Para qué reporte los necesitan? | **Sí, pero agregados**, no por persona: *"de 9 a 10 años son 4, 8 años 3, 10 niños, 13 niñas"*. ✅ **El formato exacto llegó** — ver la *Ficha Institucional* bajo esta tabla. |
+| R-26 | ▲ | ¿Hace falta registrar la **institución** de la que viene el grupo (colegio, liceo, consejo comunal)? ¿Se lleva un directorio de esas instituciones? | **Sí, se lleva registro.** ⚠️ *Confirma la reapertura de D-RT05: la institución solicitante se eliminó en la mig. 060 y hay que reconstruirla.* |
+| R-27 | ▲ | ¿Se pide **autorización del representante** para menores? ¿En papel? *(pedir el formato)* | **La institución educativa es la responsable de eso.** Para IMATUR **se da por sentado** que los permisos de los padres ya existen. ✅ *No hay formato que construir: queda fuera del alcance.* |
+| R-28 | ▲ | ¿Hay **cupo máximo**? ¿Qué pasa si se llena — lista de espera? | **No había cupo máximo**, pero *"se ha implementado un cupo de **60 personas por día** — esto es nuevo"*. ⚠️ **Es por DÍA, no por salida**: con dos salidas el mismo día, el tope se reparte. |
+| R-29 | ○ | ¿Se registra si el participante **asistió realmente**, o solo que se inscribió? | **No hay lista detallada que cotejar**: lo que se registra el día de la ruta es **el conteo demográfico**. |
+| R-30 | 💡 | ¿Necesitan saber si una persona **ya hizo** esa ruta antes, para no repetirla o para dar prioridad? | **No, no es necesario y no se toma en cuenta.** ✅ *El anti-duplicado de participantes entre salidas no aplica aquí.* |
+
+> ### ⚠️ Los formatos matizan R-23/R-24/R-29: hay **dos** registros, no uno
+>
+> Leyendo solo las respuestas parecía que IMATUR **no** registra personas. Los documentos entregados
+> el 2026-09-17 muestran que **sí, cuando tienen cédula**:
+>
+> | Documento | Qué registra | Cuándo |
+> |---|---|---|
+> | **Lista de asistencia nominal** (membrete IMATUR) `rutas_lista_asistencia_nominal_IMATUR.jpeg` | **N° · Nombre y apellido · Cédula · Firma**, 39 renglones. Ejemplo real: *Cumaná Histórica — Comuna Alianza 2 y 3, Brigada Turística de la PNB*, 28-06-2026 | Grupos de **adultos** (comunas, cuerpos, particulares): sí firman uno por uno |
+> | **Ficha Institucional** (membrete IMATUR) `rutas_ficha_institucional_IMATUR.jpeg` | **Conteo agregado** — ver abajo | **Siempre**, y es lo único cuando son **niños** (no tienen cédula) |
+>
+> **La contradicción se disuelve así:** *"no llevamos lista"* se refiere a los **escolares**. Con
+> adultos con cédula sí hay lista firmada. El sistema debe soportar **los dos modos en la misma
+> salida** — que es, en el fondo, lo que ya hace hoy con participantes con cédula + modo libre.
+>
+> ### 📄 Ficha Institucional — el formato del conteo (R-25, R-43, R-48)
+>
+> Encabezado: **RECORRIDO · FECHA · ENCARGADO · COLEGIO O INSTITUCIÓN · RESPONSABLE**.
+>
+> | Bloque | Desglose | Ejemplo real (28-08-2026) |
+> |---|---|---|
+> | **Niños** | F / M · **rango de edades** · total | 12 F · 10 M · «1 a 10 años» · **22** |
+> | **Acompañantes — Docentes** | F / M · total | 7 F · 2 M · **9** |
+> | **Acompañantes — Representantes** | F / M · total | *(vacío)* |
+> | **Instituciones de apoyo** | nombre · F / M · total | Protección Civil · 1 F · 1 M · **2** |
+> | | | **TOTAL 33** |
+>
+> El bloque *Instituciones de apoyo* confirma R-55/R-56: **Protección Civil va en la ficha**, no es
+> un apunte suelto.
+>
+> ### 📄 Cuadro de visitantes del punto (no es de IMATUR)
+>
+> `rutas_cuadro_visitantes_FundacionCastilloSanAntonio.jpeg` lleva membrete de la **Fundación
+> Castillo San Antonio de la Eminencia**: lo exige **el custodio del punto**, no IMATUR. Sus
+> casillas son otras —**Niño · Niña · Adolescente · Mujer · Hombre · Adulto mayor** y
+> **Procedencia: Local / Nacional / Extranjero**, más *Motivo: Escolar / Evento / Turismo*— y su
+> total (31) **no cuadra** con el de la Ficha Institucional (33) porque no cuenta a Protección Civil.
+>
+> 🟡 **Pregunta nueva (R-71):** ¿el sistema debe **también** imprimir este cuadro para entregarlo en
+> cada punto, o lo llenan a mano allá? Las categorías no coinciden con las de la Ficha, así que
+> requeriría capturar el desglose en los dos cortes.
 
 ## F. Guías y personal
 
-| # | | Pregunta |
-|---|---|----------|
-| R-31 | ⭐ | ¿Quién conduce la ruta? ¿Un empleado de IMATUR, un guía externo, ambos? |
-| R-32 | ▲ | Si es externo: ¿se le paga? ¿Se lleva registro de sus datos, o es ocasional? |
-| R-33 | ▲ | ¿Cuánto personal de IMATUR acompaña una salida? ¿Se registra quiénes fueron? |
-| R-34 | ○ | ¿Los guías necesitan **certificación** vigente? ¿Habría que controlar su vencimiento? |
-| R-35 | 💡 | El personal que sale a una ruta no está en la oficina. ¿Debería el sistema **justificar automáticamente** su asistencia ese día? *(hoy ya lo hace — confirmar que es lo correcto)* |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-31 | ⭐ | ¿Quién conduce la ruta? ¿Un empleado de IMATUR, un guía externo, ambos? | **Siempre encabeza un empleado de IMATUR.** En algunos puntos que tienen el suyo (museo, casa natal…) **se suma un guía externo**, pero la salida **siempre va encabezada por un trabajador de IMATUR**. ✅ *El guía externo es del **punto**, no de la salida: se modela en el punto del catálogo, no como facilitador.* |
+| R-32 | ▲ | Si es externo: ¿se le paga? ¿Se lleva registro de sus datos, o es ocasional? | ⛔ **Sin responder.** *Pierde urgencia con R-31: si el guía externo lo pone el punto, IMATUR probablemente no le paga ni lo registra.* |
+| R-33 | ▲ | ¿Cuánto personal de IMATUR acompaña una salida? ¿Se registra quiénes fueron? | ✅ **Hay una regla concreta: 7-8 niños por guía.** *"Una salida de 35 personas irían 3 guías y acompañantes"*, aunque *"depende de la cantidad de guías disponibles y se pueden hacer estrategias"*. **Y sí: quieren que quede registrado quiénes fueron.** ⚠️ *Confirma que hacen falta **varios empleados por salida**, no el `id_facilitador` único de hoy — y que el sistema puede **sugerir** cuántos guías se necesitan.* |
+| R-34 | ○ | ¿Los guías necesitan **certificación** vigente? ¿Habría que controlar su vencimiento? | **Hay 3 guías certificados**; el resto **se está formando**. Normalmente son los del **departamento de Promoción Turística**, con experiencia, **estén certificados o no**. ✅ *La certificación **no** es requisito para guiar → no hace falta bloquear ni alertar por vencimiento; a lo sumo, marcarla como dato.* |
+| R-35 | 💡 | El personal que sale a una ruta no está en la oficina. ¿Debería el sistema **justificar automáticamente** su asistencia ese día? *(hoy ya lo hace — confirmar que es lo correcto)* | **Sí.** ✅ *Confirma el comportamiento actual; no hay nada que cambiar.* |
 
 ## G. Tarifas y pagos
 
 > **Zona de mayor incertidumbre.** Hay campos de tarifa en la base de datos que hoy no se usan.
 
-| # | | Pregunta |
-|---|---|----------|
-| R-36 | ⭐ | ¿Alguna ruta **se cobra**? ¿Cuál y cuánto? |
-| R-37 | ⭐ | Si se cobra: ¿**quién** recibe el dinero? ¿IMATUR, la Alcaldía, un tercero? |
-| R-38 | ⭐ | ¿Cómo se paga? (efectivo el mismo día, transferencia previa, punto de venta) |
-| R-39 | ⭐ | ¿Se emite algún **comprobante**? ¿Factura, recibo, planilla de depósito? |
-| R-40 | ⭐ | ¿Debe el sistema **llevar la contabilidad** de esos cobros, o solo dejar constancia de que la ruta tenía tarifa? |
-| R-41 | ▲ | ¿El monto es fijo o varía? (por persona, por grupo, por temporada, descuento a estudiantes) |
-| R-42 | ▲ | ¿Hay exoneraciones? ¿Quién las autoriza? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-36 | ⭐ | ¿Alguna ruta **se cobra**? ¿Cuál y cuánto? | **Sí** (montos en R-02), *"al precio acordado anteriormente **en dólar del día**"*. ⚠️ **La tarifa se pacta en USD y se cobra en bolívares a la tasa del día** → el catálogo guarda el monto en **USD**, y la salida congela la **tasa aplicada**. El sistema ya sabe consultar la tasa del BCV (mig. 074, Nómina): se reutiliza. |
+| R-37 | ⭐ | Si se cobra: ¿**quién** recibe el dinero? ¿IMATUR, la Alcaldía, un tercero? | ✅ **IMATUR.** *"Se dispone una cuenta personal exclusiva para el cobro de las rutas en IMATUR."* |
+| R-38 | ⭐ | ¿Cómo se paga? (efectivo el mismo día, transferencia previa, punto de venta) | ✅ **Pago ANTICIPADO con fecha tope.** *"Cuando son las salidas no gratuitas, se les tiene una fecha para cancelar y poder planificar la salida, pero pueden cancelar dentro de la fecha tope."* → la salida lleva una **fecha límite de pago**, y el pago **condiciona la planificación**. |
+| R-39 | ⭐ | ¿Se emite algún **comprobante**? ¿Factura, recibo, planilla de depósito? | ✅ **Dos vías:** transferencia → el cliente **manda la captura o el voucher** (se adjunta); efectivo → **IMATUR levanta un acta de pago**. ⚠️ *"El formato nace del momento, **pueden darnos una idea**, pero funciona como respaldo de que el servicio fue pagado"* → **el cliente nos pide proponer el formato del acta de pago.** |
+| R-40 | ⭐ | ¿Debe el sistema **llevar la contabilidad** de esos cobros, o solo dejar constancia de que la ruta tenía tarifa? | ✅ **SÍ, lleva la cuenta.** *"Sí debe llevar el cobro… y lo cancelado."* → no es declarativo: **hay registro de pagos**. |
+| R-41 | ▲ | ¿El monto es fijo o varía? | **Fijo por ruta y por persona, en USD** (R-02/R-36), **salvo Altos de Sucre**, que *"no es una tarifa fija: depende de lo que el cliente solicite"* (R-67). Sin variación por temporada (R-61). |
+| R-42 | ▲ | ¿Hay exoneraciones? ¿Quién las autoriza? | ✅ **La Presidenta** (María Maza). Casos ya fijos: **menores de 8 años** en Cumaná Histórica e **instituciones públicas**; ⚠️ *matiz de R-03:* las instituciones públicas **no pagan pero igual deben traer el oficio previo**, y eso aplica **únicamente a Cumaná Histórica**. |
 
 ## H. Día de la ejecución
 
-| # | | Pregunta |
-|---|---|----------|
-| R-43 | ▲ | ¿Qué se registra **el día** de la ruta? ¿Hay una planilla que se llena en campo? *(pedir el formato)* |
-| R-44 | ▲ | ¿Se pasa lista? ¿Antes de salir, durante, al terminar? |
-| R-45 | ○ | ¿Se registra alguna incidencia (alguien se enfermó, se perdió, la ruta se acortó)? |
-| R-46 | 💡 | La persona en campo, ¿tendría **teléfono con internet**? Esto define si el registro se hace en el sitio o al volver a la oficina. |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-43 | ▲ | ¿Qué se registra **el día** de la ruta? ¿Hay una planilla que se llena en campo? *(pedir el formato)* | **Sí: la planilla de estadística** de niños/personas. ✅ **Formato entregado** → es la **Ficha Institucional** (`rutas_ficha_institucional_IMATUR.jpeg`), detallada en la sección E. |
+| R-44 | ▲ | ¿Se pasa lista? ¿Antes de salir, durante, al terminar? | **No se pasa lista** (no hay listado nominal que cotejar con escolares). ⚠️ *Matizado por el formato de lista nominal firmada que sí existe para adultos — ver la nota de la sección E.* |
+| R-45 | ○ | ¿Se registra alguna incidencia (alguien se enfermó, se perdió, la ruta se acortó)? | **Sí, se lleva y se reporta la incidencia.** ✅ *Campo nuevo en la salida.* |
+| R-46 | 💡 | La persona en campo, ¿tendría **teléfono con internet**? Esto define si el registro se hace en el sitio o al volver a la oficina. | **Se hace al volver a la oficina.** ✅ **Decisión de alcance: NO hace falta modo campo, ni app móvil, ni funcionamiento sin conexión.** |
 
 ## I. Cierre e informe
 
-| # | | Pregunta |
-|---|---|----------|
-| R-47 | ⭐ | Al terminar una ruta, ¿hay que entregar un **informe**? ¿A quién? *(pedir un ejemplo real — es el documento más importante del módulo)* |
-| R-48 | ⭐ | ¿Qué debe contener ese informe? |
-| R-49 | ▲ | ¿Lleva **fotos** como evidencia? ¿Cuántas? |
-| R-50 | ▲ | ¿Debería el sistema **generarlo automáticamente** al cerrar la ruta, o prefieren llenarlo a mano? |
-| R-51 | ▲ | ¿Se lleva la cuenta de cuántas personas se atendieron al mes/año? ¿Existe una **meta** que cumplir? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-47 | ⭐ | Al terminar una ruta, ¿hay que entregar un **informe**? ¿A quién? *(pedir un ejemplo real — es el documento más importante del módulo)* | **Sí: a la Directora de Promoción Turística** (actualmente **María Acosta**). Es **un solo destinatario**, interno. |
+| R-48 | ⭐ | ¿Qué debe contener ese informe? | **Los datos demográficos de la ruta.** ✅ **El ejemplo llegó**: es la **Ficha Institucional** (sección E). **El informe de cierre y la planilla del día son el MISMO documento.** |
+| R-49 | ▲ | ¿Lleva **fotos** como evidencia? ¿Cuántas? | **No.** Las fotos de las rutas son para el **informe general de la institución** y para prensa, no para este documento. ✅ *No hace falta adjuntar evidencias fotográficas a la salida.* |
+| R-50 | ▲ | ¿Debería el sistema **generarlo automáticamente** al cerrar la ruta, o prefieren llenarlo a mano? | **Sí, automáticamente.** |
+| R-51 | ▲ | ¿Se lleva la cuenta de cuántas personas se atendieron al mes/año? ¿Existe una **meta** que cumplir? | **Sí se lleva la cuenta. No hay meta oficial**; dejan la de **100 rutas** ya cargada en Configuración. ✅ *Cierra la parte de Rutas de **D-FO05**: el valor de relleno queda **confirmado como bueno**.* |
 
 ## J. Oficios y documentos
 
-| # | | Pregunta |
-|---|---|----------|
-| R-52 | ▲ | ¿Qué documentos se emiten alrededor de una ruta? (invitación, agradecimiento, permiso, convocatoria) |
-| R-53 | ▲ | ¿Llevan **numeración correlativa**? ¿Cómo se reinicia cada año? |
-| R-54 | ○ | ¿Se lleva un libro de correspondencia de esos oficios? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-52 | ▲ | ¿Qué documentos se emiten alrededor de una ruta? (invitación, agradecimiento, permiso, convocatoria) | **Tres:** los **permisos** y las **actas de los lugares a visitar** (ver R-20) y el **informe demográfico** (la Ficha Institucional). *No hay invitaciones ni agradecimientos que generar.* |
+| R-53 | ▲ | ¿Llevan **numeración correlativa**? ¿Cómo se reinicia cada año? | **Sí, numeración correlativa y número de oficio.** ✅ *El mecanismo por módulo ya existe (`ConfigSistema::generarNumeroOficio`).* |
+| R-54 | ○ | ¿Se lleva un libro de correspondencia de esos oficios? | **Sí se lleva.** ✅ *Responde **D-OF03**, que estaba como «mejora opcional»: pasa a **requisito confirmado**.* |
 
 ## K. Seguridad y contingencia
 
-| # | | Pregunta |
-|---|---|----------|
-| R-55 | 💡 | ¿Existe un **protocolo de seguridad**? ¿Se registran contactos de emergencia de los participantes? |
-| R-56 | 💡 | ¿Se coordina con Protección Civil, bomberos o policía turística? ¿Habría que dejar constancia? |
-| R-57 | 💡 | ¿Hay rutas con **restricciones** (edad mínima, condición física, no aptas para personas con discapacidad)? ¿Debería el sistema advertirlo al inscribir? |
-| R-58 | 💡 | ¿Se contrata **transporte**? ¿Habría que registrar la unidad y el conductor? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-55 | 💡 | ¿Existe un **protocolo de seguridad**? ¿Se registran contactos de emergencia de los participantes? | **Siempre se cuenta con Protección Civil.** Y se pide a las instituciones que **notifiquen a IMATUR si traen niños con alguna discapacidad o condición de cuidado**, para ir prevenidos. ✅ *No se piden contactos de emergencia individuales; lo que se registra es la **condición especial del grupo**.* |
+| R-56 | 💡 | ¿Se coordina con Protección Civil, bomberos o policía turística? ¿Habría que dejar constancia? | **Sí.** ✅ *Y la constancia ya tiene sitio: el bloque **Instituciones de apoyo** de la Ficha Institucional.* |
+| R-57 | 💡 | ¿Hay rutas con **restricciones**? ¿Debería el sistema advertirlo al inscribir? | **Sí, y dieron el caso concreto:** **Río Brito es de 12 años en adelante**, **excluye a personas con dificultad visual** y hay que advertir a quien tenga **alguna condición en las articulaciones**. **"Sí debería saberlo"** el sistema. ⚠️ *Esto convierte a la restricción en un **atributo del catálogo**, no un rango global — y es la respuesta que faltaba para **H-17**.* |
+| R-58 | 💡 | ¿Se contrata **transporte**? ¿Habría que registrar la unidad y el conductor? | **No se registra**, pero **sí va dentro del presupuesto** de la planificación donde aplica. ✅ *Fuera del alcance del módulo.* |
 
 ## L. Exploratorias — Rutas
 
-| # | | Pregunta |
-|---|---|----------|
-| R-59 | 💡 | ¿Recogen la **opinión de los participantes** al final? Una encuesta breve daría un indicador de satisfacción, que suele pesar en la rendición de cuentas. |
-| R-60 | 💡 | ¿Trabajan con **aliados** (posadas, restaurantes, artesanos, transportistas)? ¿Haría falta un directorio? |
-| R-61 | 💡 | ¿Hay **temporadas** marcadas (vacaciones escolares, Semana Santa, Carnaval)? ¿Ayudaría un calendario anual de rutas planificadas? |
-| R-62 | 💡 | ¿Necesitan mostrar **de qué parroquias** vienen los participantes, para demostrar cobertura territorial? |
-| R-63 | 💡 | ¿Se reutilizan las **fotos** de las rutas para redes sociales o memoria institucional? ¿Debería el sistema guardarlas organizadas por ruta? |
-| R-64 | 💡 | Si pudiera pedir **una sola cosa** para el módulo de rutas, ¿cuál sería? |
+| # | | Pregunta | Respuesta del cliente (2026-09-17) |
+|---|---|----------|------------------------------------|
+| R-59 | 💡 | ¿Recogen la **opinión de los participantes** al final? Una encuesta breve daría un indicador de satisfacción. | **No hay encuesta formal.** El **equipo de prensa** toma un **testimonio**, y el guía le pregunta al encargado del grupo — *"en ocasiones se responde y otras no"*. ✅ *No hay indicador de satisfacción que construir: el dato no es sistemático.* |
+| R-60 | 💡 | ¿Trabajan con **aliados** (posadas, restaurantes, artesanos, transportistas)? ¿Haría falta un directorio? | **Sí: todas las rutas trabajan con aliados prestadores de servicios de la zona.** 🟡 *Un directorio sería útil (adelanta R-67), pero no lo pidieron explícitamente.* |
+| R-61 | 💡 | ¿Hay **temporadas** marcadas? ¿Ayudaría un calendario anual de rutas planificadas? | **Solo la temporada escolar**, que aumenta las solicitudes de las instituciones. **La temporada alta turística se mantiene normal.** ✅ *No hace falta modelar temporadas ni tarifas estacionales.* |
+| R-62 | 💡 | ¿Necesitan mostrar **de qué parroquias** vienen los participantes, para demostrar cobertura territorial? | **Sí, se lleva el registro de la localidad:** por la **institución** cuando el grupo viene de una, y **preguntándole a la persona** cuando es un particular de pago. ✅ *Encaja con el campo *Procedencia* del cuadro del punto (Local / Nacional / Extranjero).* |
+| R-63 | 💡 | ¿Se reutilizan las **fotos** para redes sociales o memoria institucional? ¿Debería el sistema guardarlas por ruta? | **No es necesario guardarlas en el sistema**, aunque sí las usan para prensa y redes. ✅ *Coherente con R-49. Sin galería que construir.* |
+| R-64 | 💡 | Si pudiera pedir **una sola cosa** para el módulo de rutas, ¿cuál sería? | ⭐ **"En los reportes emitidos sería en lo que más énfasis quisieran que se resolviera… y en los oficios."** → **Las dos prioridades del módulo, dichas por el cliente: los REPORTES y los OFICIOS.** |
 
 ---
 ---
@@ -364,55 +448,59 @@ Esto es lo que más acelera el trabajo. **Un formato real evita semanas de supos
 
 ### Rutas
 
-> **Estado al 2026-09-03.** Con R-01…R-16 respondidas, el orden de urgencia cambió: lo que ahora
-> bloquea el rediseño no es un formato, sino **R-14** (los nombres de los estados) y el bloque de
-> **cobro** (R-36…R-42).
+> **Estado al 2026-09-17: llegaron 7 formatos.** Lo que queda pendiente ya **no es documental**, sino
+> **R-14** (los nombres de los estados) y el bloque de **cobro** (R-37…R-40).
 
-- [ ] ⭐ **Formato del oficio de solicitud** de un colegio/institución — *el cliente quedó en enviarlo* (R-12)
-- [ ] ⭐ **Informe de una ruta ya ejecutada** ← *el documento más importante del módulo* (R-47/R-48)
-- [ ] **Itinerario detallado** de al menos una ruta *(de Cumaná Histórica ya se conocen los 5 puntos por R-06; faltan las otras cinco)*
-- [ ] Oficio de respuesta/invitación que emite IMATUR
-- [ ] Planilla de registro de participantes usada en campo
-- [ ] Autorización del representante para menores
-- [ ] Reporte mensual o anual de rutas que entregan a la Presidencia
-- [ ] **Comprobante de cobro** (recibo/factura/planilla de depósito) de una ruta pagada — nuevo, se
-      desprende de R-02: **sí se cobra** (5 $ / 15 $ / 25 $ por persona)
+**Recibidos el 2026-09-17** — en `docs/formatos/`:
+
+- [x] ⭐ ~~Informe de una ruta ya ejecutada~~ → **`rutas_ficha_institucional_IMATUR.jpeg`**. Resulta
+      ser **el mismo documento** que la planilla del día (R-43 = R-47/R-48)
+- [x] ~~Itinerario detallado~~ → **`rutas_itinerario_CumanaHistorica_7puntos.jpeg`** (7 puntos con
+      reseña). Faltan los de las otras rutas, pero el **formato** ya se conoce
+- [x] ~~Planilla de registro de participantes usada en campo~~ → **`rutas_lista_asistencia_nominal_IMATUR.jpeg`**
+      (N° · nombre · cédula · firma)
+- [x] ~~Formato del oficio de solicitud~~ — **ya no aplica:** R-12 aclara que **lo redacta cada
+      institución**, no IMATUR. El sistema lo **recibe y archiva**
+- [x] ~~Autorización del representante para menores~~ — **fuera del alcance** (R-27: la responsable
+      es la institución educativa)
+- [x] **Catálogo comercial** → `rutas_catalogo_flyers_*` y `rutas_triptico_ExploradoresDeCumana_*`
+- [x] **Cuadro de visitantes del punto** → `rutas_cuadro_visitantes_FundacionCastilloSanAntonio.jpeg`
+      *(no es de IMATUR: lo exige el custodio del punto)*
+
+**Todavía pendientes:**
+
+- [ ] 🔴 **Formato del oficio de permiso** que IMATUR envía a las instituciones custodias (R-20) —
+      *el proceso apareció recién el 2026-09-17 y es la mitad del pedido de R-64*
+- [ ] **Itinerarios** de las otras rutas (Río Brito, Playa Las Maritas, Playa Colorada, Altos de
+      Sucre, Playa Manare)
+- [ ] **Comprobante de cobro** — solo si R-39/R-40 confirman que el sistema lleva la contabilidad
+- [ ] Reporte mensual o anual de rutas que entregan a la Presidencia *(si existe uno distinto de la
+      Ficha Institucional)*
 
 ---
 ---
 
 # PARTE 4 — Uso interno (no imprimir para el cliente)
 
+> 📋 Este documento es **material de origen**: el cuestionario tal como se envió y las respuestas
+> tal como llegaron. El análisis vive en los `PLAN_MODULO_*.md` y lo pendiente en `BACKLOG.md` §3 —
+> si algo de aquí contradice a esos, **mandan ellos**.
+
 ## Puntos donde lo construido podría no coincidir
 
 Estas son las respuestas que **más impacto tendrían** si difieren de lo que asumimos.
 
-### Bienes
+### Bienes — ✅ superado
 
-> ### ✅ Esta tabla es **historia**: describe el estado anterior a las mig. 062-069
-> Todas sus filas se resolvieron con el levantamiento y la reconstrucción del módulo (H-04 cerrado,
-> responsable derivado, costo/proveedor/garantía, 11 categorías, ubicaciones sembradas, estatus vs
-> condición). **Se conserva para saber de dónde venía cada decisión**, no como estado actual — para eso,
-> `docs/PLAN_MODULO_BIENES.md` §12.
->
-> **El riesgo vivo es otro, y es del 2026-09-02:**
->
-> | Cambio | Lo que el sistema hace hoy | Qué implica |
-> |---|---|---|
-> | **IMATUR codifica** (ya no la Alcaldía) | `Inventario::codificar()` **transcribe** el código de un BM-1 recibido y marca `verificado_alcaldia = TRUE` | Secuencia propia con punto de partida configurable, separar «codificado» de «verificado por la Alcaldía», y **catálogo de clasificación** (reabre B-60). C-1…C-4 del plan |
-> | **Acta de Desincorporación por lote** | `marcarRetirado()` confirma el retiro **bien por bien**; no existe la entidad acta | Tabla cabecera+renglones; al cargar el acta sellada se marcan retirados todos sus bienes. C-5/C-6 |
-> | **La relación declara el monto** | El costo se captura pero se documentaba como control interno (B-69) | Solo cambia el documento; el dato ya está |
+La tabla de riesgos de Bienes se retiró el 2026-09-17: **todas sus filas quedaron resueltas** por el
+levantamiento del 2026-08-04 y la reconstrucción del módulo (mig. 062-069) — H-04 cerrado, responsable
+derivado del departamento, costo/proveedor/garantía capturados, 11 categorías, ubicaciones sembradas,
+`estatus` separado de `condicion`. Conservarla como «riesgo» inducía a error.
 
-| Pregunta | Lo que el sistema asumía (pre-062) | Riesgo que tenía |
-|---|---|---|
-| **B-38** (baja desaparece o no) | 🔴 **Bug conocido (H-04):** registrar un movimiento de "Baja" **no** cambia la condición del bien ni lo saca del listado activo. Sigue contándose en KPIs e indicadores CMI-I01/I03 | **El inventario reporta números incorrectos hoy.** Se arregla en cualquier escenario; la respuesta solo define si se marca "Dado de baja" o se excluye |
-| **B-26/B-27** (responsable) | No existe responsable en la ficha del bien; solo se registra un empleado en cada *movimiento* | Si el responsable debe ser nominal y permanente → columna nueva o tabla de asignación (**cambio de esquema**) |
-| **B-17** (costo, fecha, proveedor) | No se registran | Si la Contraloría los exige → 3 columnas nuevas y afecta todos los reportes |
-| **B-45** (stock mínimo) | No existe. Es un indicador del documento del proyecto que quedó sin implementar | Requiere columna + alerta + indicador |
-| **B-22** (categorías) | Solo 2 en la BD, y parecen de prueba: "Inmobiliario", "Inmuebles" | Muy probablemente hay que rehacer el catálogo completo |
-| **B-06/B-07** (qué entra) | Durable/Fungible ya implementado | Si además distinguen bienes en comodato → campo de propiedad |
-| **B-34** (mantenimiento) | El bien sigue apareciendo disponible | Mismo problema de fondo que H-04 |
-| **B-04** (volumen) | Hoy la tabla `inventario` tiene **0 filas** | Si son miles de bienes, la paginación cliente no basta — habría que pasar a paginación de servidor |
+- **De dónde venía cada decisión:** `CHANGELOG.md` (entradas de 2026-08-04/05).
+- **Estado actual y lo que falta:** `PLAN_MODULO_BIENES.md` §12 y `BACKLOG.md` §3.4.
+- **El riesgo vivo es otro**, del 2026-09-02 (IMATUR codifica sus propios bienes · Acta de
+  Desincorporación por lote): consecuencias C-1…C-7 en `PLAN_MODULO_BIENES.md` §2-ter.
 
 ### Rutas
 

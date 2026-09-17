@@ -1,10 +1,10 @@
 # Modelo de Negocio — RRHH (Talento Humano)
 
 **Creado:** 2026-06-02  
-**Última actualización:** 2026-06-04  
-**Estado:** En construcción — relevamiento activo con fuentes documentales  
-**Complementa:** `REGLAS_NEGOCIO_RRHH.md` (reglas técnicas) · `ESTRUCTURA_ORGANIZATIVA.md` (organigrama)  
-**Cierra preguntas de:** `BACKLOG.md` (backlog único de preguntas/decisiones)
+**Última actualización:** 2026-09-17 (saneo: §10-12 colapsadas, hoja de ruta cumplida)  
+**Estado:** Relevamiento **cerrado**. Secciones 1-9 vigentes como fuente de reglas de RRHH  
+**Complementa:** `REGLAS_NEGOCIO_RRHH.md` (reglas técnicas). El organigrama vigente está en la **sección 7.1** de este mismo documento y sembrado en la migración 027  
+**Preguntas abiertas:** `BACKLOG.md` §3 — **no se reproducen aquí**
 
 **Leyenda de estado:**
 - ✅ **Confirmado** — listo para implementar
@@ -467,78 +467,35 @@ El sistema debe **generar y/o registrar** los siguientes documentos, guardando *
 
 ---
 
-## 10. Preguntas Abiertas / Provisionales (Sesión 2026-06-02 → 2026-06-04)
+## 10. Hoja de ruta R-1…R-12 — **cerrada**
 
-| ID | Sección | Estado | Pregunta / Decisión |
-|----|---------|--------|---------------------|
-| D-RH16 | Horarios | 🟢 Provisional | Por ahora NO hay calendario de feriados; cálculo A/B intercalado simple. Revisión futura. |
-| D-RH17 | Asistencia | ✅ Cerrada | El sistema detecta ruta/formación externa del día → "no asistencia presencial". Apoyo opcional a otros empleados. |
-| D-RH18 | Asistencia | 📋 Recibido | Formato físico recibido (imágenes); pendiente diseñar versión mejorada. | generada segun lo sacado en la imagen
-| D-RH19 | Contrato | ✅ Cerrada | No hay suplentes; eliminar/deprecar `'Suplente'`. |
-| D-RH20 | Contrato | ✅ Cerrada | Paso a Fijo NO automático; indicación a RRHH/Directora; el sistema solo alerta elegibilidad. |
-| D-RH21 | Carga familiar | ✅ Cerrada | Sí importa: info + bono escolaridad + beneficios + justificación médica. Tabla dedicada. |
-| D-RH22 | Expediente | ✅ Cerrada | Híbrido: subir archivos (nombre `Tipo_Empleado_ID`) + checklist con detección de faltantes + generar ficha técnica. |
-| D-RH23 | Expediente | ✅ Cerrada | Datos laborales anteriores = bloque Experiencia Laboral de la ficha. |
-| D-RH24 | Permisos | ✅ Cerrada | Tipos: médico-familiar, diligencia, duelo, maternidad/paternidad, personal, estudios (+ reposo, vacaciones, sin justificar). |
-| ~~D-RH25~~ | Datos empleado | ✅ Resuelta | Campos Ficha + extras (mig.026) + tallas de uniforme y datos comunitarios (mig.030). **Asistente multi-paso implementado** (`empleados/form.php`, 5 pasos con `localStorage` + resumen final). R-2b completo. |
-| ~~D-RH26~~ | Datos empleado | ✅ Resuelta | **Clasificación Empleado/Obrero** = campo separado (`empleados.clasificacion`), **implementado mig.026**. Sus implicaciones en prestaciones/uniforme se definirán con D-RH35 y vacaciones. |
-| ~~D-RH27~~ | Contrato | ✅ Resuelta (afinada 2026-06-06) | `tipo_contrato` (Fijo/Contratado) + `institucion_origen` (Alcaldía/Gobernación/IMATUR). **`es_comision_servicio` se deriva del origen** (= origen ≠ IMATUR), no es campo manual. Migración 025. |
-| ~~D-RH28~~ | Amonestaciones | ✅ Resuelta | El sistema **registra y cuenta amonestaciones** por empleado. Referencia: 3 faltas injustificadas ≈ 1 amonestación, pero el sistema **solo notifica las faltas**; las **amonestaciones las crea RRHH manualmente** según corresponda. **3 amonestaciones = despido** (Contratado). |
-| ~~D-RH29~~ | Carga familiar | ✅ Resuelta | El sistema **solo almacena los datos** de carga familiar para reportes; **no calcula** beneficios (bono escolaridad, etc.). |
-| ~~D-RH30~~ | Organigrama | ✅ Recibido (Manual Descriptivo de Cargos, abril 2024) | Jerarquía oficial: **Presidencia → 3 Direcciones** (Planificación y Gestión Turística · Administración · Talento Humano) **→ Coordinaciones**; + unidades de staff bajo Presidencia (Dirección General, OAC, Secretaría, Consultoría Jurídica, Auditoría Interna, Relaciones Inter-Institucionales). Listo para modelar jerarquía (R-1). |
-| ~~D-RH31~~ | Datos empleado | ✅ Resuelta | Institución = Nómina: un solo campo `institucion_origen` (Alcaldía/Gobernación/IMATUR). De él se deriva la comisión de servicio (≠ IMATUR) y el tope de edad (65 IMATUR / 70 comisión). |
-| ~~D-RH32~~ | Permisos | ✅ Resuelta (implementado mig.032) | Reposo y Permiso diferenciados por `categoria` (select) en `permisos_laborales`; taxonomía en `tipo_permiso`. Módulo `PermisosController`. |
-| ~~D-RH33~~ | Asistencia | ✅ Resuelta | Horas trabajadas se calculan **por día y por semana** (según el caso, solo para reporte/indicadores). **Puntualidad:** se compara la hora de marcaje de entrada contra el horario asignado + **15 min de tolerancia** (por defecto); pasado ese margen se marca **impuntualidad**. La tolerancia es **configurable** en Configuración (p. ej. 5/15/30 min). |
-| **D-RH34** | Nómina | ❓ Abierta | ¿El sistema debe generar la nómina para Alcaldía/Gobernación? ¿Formato? (alto impacto, futuro) |
-| ~~D-RH35~~ | Uniforme | ✅ Resuelta | Las tallas de uniforme (camisa/pantalón/zapato) **solo se registran**; no se controla dotación/entrega. |
-| ~~D-RH36~~ | Horario | ✅ Resuelta | El **horario ajustado** se modela como un horario más, creado por Administrador/RRHH y **asociado al/los empleado(s)** que corresponda (no es un caso especial separado: el catálogo de `horarios` admite horarios personalizados asignables). |
+> Las secciones 1 a 9 de arriba son el **relevamiento con la institución** y siguen vigentes: son la
+> fuente de las reglas de horarios, tipos de empleado, expediente, permisos, vacaciones y organigrama.
+> Lo que sigue era el seguimiento de su implementación, y ya se completó.
 
----
+**Todo R-1…R-12 está construido**, salvo la última pieza de R-11:
 
-## 11. Preguntas Cerradas (decisiones RRHH) — ver `BACKLOG.md` para las abiertas
+| # | Subtarea | Estado |
+|---|---|---|
+| R-1 | Organigrama / cargos / departamentos jerárquicos | ✅ mig. 027 · 035 |
+| R-2 · R-2b | Campos de empleado · Ficha Técnica · asistente multi-paso | ✅ mig. 026 · 030 |
+| R-3 | Tipo de contrato + origen + comisión de servicio derivada | ✅ mig. 025 |
+| R-4 | Carga familiar | ✅ mig. 026 |
+| R-5 | Expediente y recaudos | ✅ mig. 033 |
+| R-6 | Horarios y grupos A/B | ✅ mig. 028 |
+| R-7 | Asistencia, puntualidad y ausentismo | ✅ mig. 029 |
+| R-8 | Permisos y reposos · **vacaciones (días)** | ✅ mig. 032 · 045/046 |
+| R-9 | Faltas y amonestaciones, con escalado | ✅ mig. 031 · 048 |
+| R-10 | Constancias multi-tipo con correlativo | ✅ mig. 034 |
+| R-11 | **Nómina** | ⚠️ **Parcial.** Motor de cálculo, quincena y bono vacacional ✅ (mig. 072/073). 🔒 Falta la **Liquidación de Prestaciones Sociales** |
+| R-12 | Egreso / desincorporación y reingreso con histórico | ✅ mig. 036 |
 
-| ID original | Estado | Respuesta resumida |
-|-------------|--------|--------------------|
-| D-RH01 | ✅ Cerrada | Modalidades: Estándar 8–2; ServGen A/B rotación diaria; OAC sub-grupos 7–12 / 10–2 |
-| D-RH02 | ✅ Cerrada | Taxonomía de permisos confirmada (ver 4.2) |
-| D-RH03 | ✅ Cerrada | TH aprueba ordinarios; Directora General los especiales; firma TH o Directora |
-| D-RH04 | ⚠️ Avanzada | Descanso = fin de semana; vacaciones acumulables. Falta fórmula por años de servicio |
-| D-RH05 | ⚠️ Avanzada | Hay acumulación automática; falta confirmar si el cálculo es del sistema o manual |
-| D-RH06 | ✅ Cerrada | Vacaciones no disfrutadas se acumulan, nunca se pierden |
-| D-RH08 | ✅ Cerrada | Horarios distintos por tipo/departamento |
-| D-RH09 | ⚠️ Actualizada | Sí se calculan horas, pero solo para reporte/indicadores (no para pago) |
-| D-RH12 | ✅ Cerrada | No se manejan horas extras |
-| D-RH13 | ✅ Cerrada | Justificadas/injustificadas por separado; injustificadas → amonestaciones |
-| D-RH16–D-RH24 | Ver sección 10 | — |
-| D-NEW04 | ✅ Cerrada | Tipos = estándar venezolanos confirmados (ver 4.2) |
-| D-NEW05 | ⚠️ Abierta | Fórmula LOTTT de vacaciones pendiente de confirmar para IMATUR |
+**Decisiones RRHH:** las 36 preguntas D-RH01…D-RH36 de las sesiones del 2026-06-02/04 quedaron
+**todas cerradas** y sus respuestas están incorporadas en las secciones 1-9 de este documento y en
+`REGLAS_NEGOCIO_RRHH.md`. Las únicas que siguen abiertas se rastrean en **`BACKLOG.md` §3.1**
+(N-1, N-2, N-3 de Nómina) — no se duplican aquí.
 
 ---
 
-## 12. Hoja de Ruta de Implementación (subtareas por sección)
-
-Cambios al sistema derivados de este modelo, agrupados por sección. El orden sugiere dependencias (fundaciones primero). Cada subtarea indica si está **bloqueada** por preguntas abiertas.
-
-| # | Subtarea | Alcance principal | Bloqueado por |
-|---|----------|-------------------|---------------|
-| R-1 | **Organigrama / Cargos / Departamentos** ✅ **HECHO (mig.027)** | `departamentos` jerárquico (id_padre+tipo_unidad); organigrama oficial sembrado; cargos +Presidenta/Coordinador; liderazgo derivado del cargo | ✅ Resuelto (D-RH30) |
-| R-2 | **Campos de empleado / Ficha Técnica** ✅ **HECHO (mig.026)** | `personas` +RIF/estado civil/discapacidad/formación académica; `empleados` +clasificación; tablas hijas carga_familiar/cursos/experiencia con UI en expediente; generador de Ficha Técnica imprimible | ✅ Resuelto |
-| R-2b | **Asistente multi-paso + uniforme/comunitarios** ✅ **HECHO (mig.030)** | Wizard de página completa (`empleados/form.php`) crear/editar con localStorage + resumen; `personas` +centro_votacion/consejo_comunal/comuna; `empleados` +uniforme/tallas | ✅ Resuelto (D-RH25/D-RH35) |
-| R-3 | **Tipo de contrato (fix base)** ✅ **HECHO (mig.025)** | DEFAULT → 'Contratado'; 'Suplente'/'Comisión de Servicio' deprecados; +`institucion_origen` +`es_comision_servicio` | ✅ Resuelto (D-RH27) |
-| R-4 | **Carga Familiar** ✅ **HECHO (mig.026)** | Tabla + UI en expediente; solo almacena datos (D-RH29 ✅). Sub-recaudos (documentos) = parte de R-5 | ✅ Resuelto |
-| R-5 | **Expediente / Documentos** ✅ **HECHO (mig.033)** | Tabla `expediente_documentos`; subida PDF/imagen con convención `Tipo_Empleado_ID`; checklist de recaudos con detección de faltantes obligatorios; descarga/eliminar en el expediente | ✅ Resuelto |
-| R-6 | **Horarios y Grupos** ✅ **HECHO (mig.028)** | Catálogo `horarios` con CRUD + seed de modalidades; `empleados.grupo_rotacion` (A/B); horarios personalizados asignables (D-RH36 ✅); config de tolerancia preparada | ✅ Resuelto |
-| R-7 | **Asistencia** ✅ **HECHO (mig.029)** | Puntualidad (`minutos_tarde` vs horario + tolerancia configurable), resumen del día (presentes/impuntuales/ausentes/en actividad), horas trabajadas (derivadas), detección En Ruta/Formación externa, vista renovada | ✅ Resuelto |
-| R-8 | **Permisos / Reposos** ✅ **HECHO (mig.032)** / Vacaciones ⏳ | Permisos y reposos implementados (`PermisosController`): categoría Reposo/Permiso (D-RH32 ✅), taxonomía, duración, estatus En curso/Concluido derivado, flujo aprobar/rechazar/anular. **Vacaciones pendiente** (fórmula D-RH04/05, D-NEW05) | ⚠️ Permisos/reposos ✅; vacaciones bloqueado |
-| R-9 | **Amonestaciones** ✅ **HECHO (mig.031)** | Tablas `faltas` y `amonestaciones` (registro manual RRHH); roster con conteos + semáforo; detalle por empleado; alerta "causa de despido" a las 3 amonestaciones | ✅ Resuelto (D-RH28) |
-| R-10 | **Documentos generados / Constancias** ✅ **HECHO (mig.034)** | Constancia de trabajo imprimible con correlativo `CONST-NNN/AAAA` + historial por empleado en el expediente | ✅ Resuelto |
-| R-11 | **Nómina (futuro)** | Generación de nómina para Alcaldía/Gobernación | D-RH34 |
-| R-12 | **Egreso / desincorporación** ✅ **HECHO (mig.036)** | Baja por renuncia/despido/jubilación/fin de contrato/fallecimiento/otro: marca `fecha_egreso`+`motivo_egreso` (no borra), histórico consultable (pestaña Egresados), tiempo de servicio en expediente/constancia, reingreso con historial (`empleados_egresos`) | ✅ Resuelto |
-
-> **Estado (2026-06-04):** Hechos R-2, R-3, R-4. Desbloqueados R-1, R-5, R-6, R-7, R-9 y la parte de permisos/reposos de R-8. Bloqueados: vacaciones (R-8: D-RH04/05/NEW05) y nómina (R-11: D-RH34).
->
-> **Recomendación de continuación:** **R-6 (Horarios y Grupos)** → **R-7 (Asistencia)** es el siguiente bloque de mayor valor (núcleo operativo: puntualidad/ausentismo), ya totalmente especificado (D-RH33/D-RH36). Conviene agregar los campos de empleado restantes (grupo A/B, uniforme, comunitarios) **antes** de rehacer el formulario como asistente multi-paso (R-2b), para wizardizar una sola vez con el set de campos completo. Luego R-9 (amonestaciones, se nutre de asistencia) y R-8 permisos/reposos. R-1 (organigrama) puede hacerse en paralelo cuando se quiera reestructurar `departamentos`.
-
----
-
-*Documento vivo — actualizar a medida que se reciba más información de la institución.*
+*Documento de relevamiento. Las secciones 1-9 se actualizan si la institución aporta información
+nueva; el seguimiento de lo pendiente vive en `BACKLOG.md`.*

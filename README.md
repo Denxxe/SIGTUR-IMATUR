@@ -7,7 +7,10 @@ Aplicación web **on-premise** (sin acceso a internet). MVC en PHP puro, sin fra
 - **Stack:** PHP 8+ · PostgreSQL 17 · Bootstrap 5.3 (local) · ApexCharts (local)
 - **Módulos:** RRHH, Formación, Turismo (Rutas), Inventario, Recepción (Visitas), Reportes/Indicadores, Sistema (usuarios, roles, auditoría).
 
-> Documentación detallada en `docs/`: `CLAUDE.md` (técnica), `BACKLOG.md` (pendientes), `MANUAL_USUARIO.md` (uso por rol), `INDICADORES_GESTION.md`, `REGLAS_NEGOCIO_*.md`.
+> Documentación en `docs/`: **`BACKLOG.md`** (qué falta) · **`CLAUDE.md`** (cómo funciona) ·
+> **`CHANGELOG.md`** (qué se hizo) · **`PREGUNTAS_CLIENTE.md`** (lo que se le pide al cliente, por
+> módulo) · `MANUAL_USUARIO.md` (uso por rol) · `INDICADORES_GESTION.md` · `REGLAS_NEGOCIO_*.md` ·
+> `PLAN_MODULO_*.md` (reconstrucciones en curso).
 
 ---
 
@@ -30,7 +33,7 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 ```
 
 **No hay paso 3.** `database/schema_consolidado.sql` incluye el esquema base y
-**todas** las migraciones 001–073. No hay que aplicar nada de
+**todas** las migraciones 001–076. No hay que aplicar nada de
 `database/migrations/`: esa carpeta se conserva como historial y para
 actualizar instalaciones antiguas, no para instalar desde cero.
 
@@ -149,7 +152,10 @@ php tests/run.php
 - En producción mantener `APP_DEBUG=false`.
 - Servir el sitio desde `public/`; el resto del proyecto (`app/`, `config/`, `storage/`, `cron/`) **no** debe ser accesible por web.
 - Los documentos subidos (recaudos, pasantes) se guardan en `storage/uploads/` y se sirven con control de acceso vía `DescargaController` (no por URL directa).
-- Carpetas no versionadas: `config/config.php`, `storage/`, `public/uploads/`, `*.log`.
+- Carpetas no versionadas: `config/config.php`, `storage/`, `*.log`.
+- **`public/uploads/` no existe y no debe reintroducirse**: todo archivo subido por usuarios va a
+  `storage/uploads/` y se sirve por `DescargaController`, que valida rol. Dentro de `public/` sería
+  legible por URL sin control de acceso.
 
 ---
 

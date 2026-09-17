@@ -186,15 +186,24 @@ Reglas que salen de R-11 a R-16 y que **el sistema hoy no implementa**:
 
 ## Estado de brechas
 
+> Registro de brechas **de este módulo**. El plan de reconstrucción y sus fases T-A…T-G están en
+> `PLAN_MODULO_RUTAS.md`; las **preguntas al cliente** (R-xx), en `BACKLOG.md` §3.5 — aquí solo se
+> referencian por ID.
+
 | ID | Descripción | Estado |
 |----|-------------|--------|
 | BRT-01 | Registro de pagos | 🟠 **Desbloqueado a medias (R-02).** Se confirma que **sí se cobra** y se conocen los montos → la **tarifa declarativa se puede construir ya**. El **registro de pagos** sigue 🔒 por R-37…R-40 |
-| BRT-02 | Guías: hoy uno solo por ruta | 🔴 **Reabierto por R-09** (*"guías rotativos"*). Vuelve como **tabla de guías por ejecución**, no como columna de texto |
+| BRT-02 | Guías: hoy uno solo por ruta | 🔴 **Reabierto por R-09**, **precisado por R-31/R-33 (2026-09-17)**: la salida la **encabeza siempre un empleado de IMATUR** y lo acompaña un **número variable** según el tamaño del grupo → **tabla de empleados por ejecución**. El **guía externo lo pone el punto visitado**, no IMATUR: no va como facilitador de la salida |
 | BRT-03 | Mapa visual de puntos de ruta | ✅ Resuelto — Leaflet + OSM vendorizados en local, en `rutas/detalle.php` |
 | BRT-04 | Registro de institución solicitante | 🔴 **Reabierto por R-11.** `instituciones_externas` se eliminó en la mig. 060, pero las instituciones **solicitan por oficio** y de eso depende la gratuidad. **D-RT05 desmentida** |
 | BRT-05 | Catálogo de rutas vs. salidas | 🔴 **Abierto por R-07/R-08.** Lo que se daba por resuelto (cada ruta *es* una ejecución) es justamente lo que el cliente desmiente. **Es el rediseño**: `docs/PLAN_MODULO_RUTAS.md` §3 |
-| BRT-06 | Adultos acompañantes y prerequisito de formación | 🔒 Pendiente — R-22/R-23 sin responder |
-| BRT-07 | **Rango de edad 5–11 cableado en el código** | 🔴 **Nuevo (R-02).** Exploradores es para **4 a 8 años**: hoy un niño de 4 **no se puede inscribir**. El rango pasa al catálogo |
-| BRT-08 | **Oficio de solicitud (entrada) no se registra** | 🔴 **Nuevo (R-11/R-12).** El sistema solo emite oficios de salida |
+| BRT-06 | Adultos acompañantes y prerequisito de formación | 🟢 **Resuelto por R-22…R-25 + los formatos (2026-09-17).** Los acompañantes **sí se cuentan**, y con desglose propio: la *Ficha Institucional* separa **Docentes** y **Representantes** por sexo, aparte de los niños. No hay prerequisito de formación |
+| BRT-07 | **Rango de edad 5–11 cableado en el código** | 🔴 **Precisado por R-57 (2026-09-17).** Ya no es solo la edad: **Río Brito admite de 12 años en adelante, excluye a personas con dificultad visual y hay que advertir por condición articular**. La restricción pasa a ser **un atributo del catálogo** (edad + condiciones), y el sistema **debe advertirlo al inscribir** |
+| BRT-08 | **Oficio de solicitud (entrada) no se registra** | 🔴 **Precisado por R-12 (2026-09-17):** llega **en físico** y **lo redacta cada institución** — no hay formato único. El sistema debe **recibir y archivar el escaneado**, no generarlo |
 | BRT-09 | **Aprobación de la Presidencia** | 🔴 **Nuevo (R-13).** No existe en el modelo |
-| BRT-10 | **Cancelación con motivo y reprogramación** | 🔴 **Nuevo (R-15/R-16).** No existen ni el estado ni el histórico de fecha |
+| BRT-10 | **Cancelación con motivo y reprogramación** | 🔴 **Nuevo (R-15/R-16).** No existen ni el estado ni el histórico de fecha. **R-15 (2026-09-17) lo endurece: el motivo es OBLIGATORIO** — *"si se cancela, el motivo siempre tiene que saberse"* |
+| BRT-11 🆕 | **Ficha Institucional: el conteo demográfico del cierre** | 🔴 **Nuevo (R-43/R-47/R-48/R-50).** La planilla del día y el informe de cierre **son el mismo documento**, va a la Directora de Promoción Turística y **se genera automáticamente**. Formato real en `docs/formatos/rutas_ficha_institucional_IMATUR.jpeg`. Hoy no existe nada de esto |
+| BRT-12 🆕 | **Oficios de permiso a las instituciones custodias** | 🔴 **Nuevo (R-20).** IMATUR pide permiso por oficio a cada museo/castillo/fundación, **agrupando la semana en uno solo**, y controla su estado (*llegó · pase · rechazado*) a través del **Director de Relaciones Inter-Institucionales**. Es la mitad del pedido explícito de R-64. No existe en el modelo |
+| BRT-13 🆕 | **Cupo diario de 60 personas** | 🟡 **Nuevo (R-28).** No hay cupo por salida, pero sí un tope **por DÍA** — con dos salidas el mismo día, se reparte. Es una regla reciente del cliente |
+| BRT-14 🆕 | **Incidencias de la salida** | 🟡 **Nuevo (R-45).** *"Sí se lleva y se reporta la incidencia"*. No hay dónde registrarla |
+| BRT-15 🆕 | **Duración por punto y total** | 🟢 **Nuevo (R-19).** Se calcula **punto a punto** y en total. Referencias reales: **1 h 30 min** lo normal, **3 h** el máximo |
