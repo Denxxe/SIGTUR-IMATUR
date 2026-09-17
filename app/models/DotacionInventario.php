@@ -93,6 +93,7 @@ class DotacionInventario extends Model {
      */
     public static function analisis(): array {
         $db = new Database();
+        $estBaja = Inventario::sqlEstBaja();   // mig. 076: el texto no se cablea
         $db->query("
             WITH personal AS (
                 SELECT e.id_departamento AS id_depto, COUNT(*) AS empleados
@@ -106,7 +107,7 @@ class DotacionInventario extends Model {
                   FROM inventario i
                   INNER JOIN ubicaciones u ON u.id = i.id_ubicacion
                  WHERE i.is_active = TRUE
-                   AND i.estatus NOT IN ('Dado de baja','Extraviado','Robado')
+                   AND i.estatus NOT IN ({$estBaja},'Extraviado','Robado')
                    AND u.es_deposito = FALSE
                  GROUP BY u.\"departamento _d\", i.id_categoria
             )

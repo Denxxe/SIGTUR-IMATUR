@@ -208,6 +208,7 @@ trait ReportesInventarioTrait {
 
     private function queryInventario() {
         $db        = new Database();
+        $estBaja   = Inventario::sqlEstBaja();   // mig. 076: el texto no se cablea
         $condicion = trim($_GET['condicion'] ?? '');
         $categoria = trim($_GET['categoria'] ?? '');
         $ubicacion = trim($_GET['ubicacion'] ?? '');
@@ -221,7 +222,7 @@ trait ReportesInventarioTrait {
 
         // Inventario ACTIVO: los dados de baja salen del listado (B-38, mig. 062)
         // y se consultan en el reporte de desincorporados.
-        $where = "i.is_active = TRUE AND i.estatus <> 'Dado de baja'";
+        $where = "i.is_active = TRUE AND i.estatus <> {$estBaja}";
         if ($estatus     !== '') $where .= " AND i.estatus = :estatus";
         if ($origen      !== '') $where .= " AND i.origen = :origen";
         if ($departa     !== '') $where .= " AND d.nombre ILIKE :departa";
@@ -268,6 +269,7 @@ trait ReportesInventarioTrait {
 
     private function statsInventario() {
         $db = new Database();
+        $estBaja = Inventario::sqlEstBaja();   // mig. 076: el texto no se cablea
         $db->query("SELECT
                         COUNT(*) AS total,
                         COUNT(CASE WHEN condicion = 'Nuevo'         THEN 1 END) AS nuevos,
@@ -275,64 +277,120 @@ trait ReportesInventarioTrait {
                         COUNT(CASE WHEN condicion = 'Regular'       THEN 1 END) AS regulares,
                         COUNT(CASE WHEN condicion = 'Dañado'        THEN 1 END) AS danados,
                         COUNT(CASE WHEN estatus = 'En mantenimiento' THEN 1 END) AS reparacion
-                    FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                    FROM inventario WHERE is_active = TRUE AND estatus <> {$estBaja}");
         return $db->single();
     }
 
     // =========================================================================
-    // Reporte de Bienes Dados de Baja
+    // Reporte de Bienes Dados de Baja (desincorporaciones)
+    //
+    // ⚠️ H-16 — este reporte medía la PAPELERA, no las desincorporaciones.
+    // Desde la mig. 062 una baja es `estatus = 'Desincorporado'` (antes 'Dado de baja', mig. 076) CONSERVANDO
+    // `is_active = TRUE`: el bien sale del inventario activo pero su registro se
+    // preserva (B-38). `is_active = FALSE` es otra cosa: la papelera de registros
+    // creados por error. Las tres consultas filtraban por la papelera, así que
+    // una desincorporación real nunca aparecía y un registro borrado por
+    // equivocación sí, contado como baja.
+    //
+    // Además la fecha salía de `deleted_at` (cuándo se borró el registro) en vez
+    // de la fecha del movimiento de Baja, y "dado de baja por" de `deleted_by`.
+    //
+    // Las tres copias casi idénticas de la consulta son la razón por la que el
+    // error sobrevivió a la reconstrucción del módulo: ahora hay UN solo origen
+    // (`bajasQuery()`), que los tres consumen.
     // =========================================================================
+
+    /** Filtros comunes del reporte, leídos de la query string. */
+    private function bajasFiltros(): array {
+        return [
+            'fi'        => trim($_GET['fecha_inicio'] ?? ''),
+            'ff'        => trim($_GET['fecha_fin']    ?? ''),
+            'categoria' => trim($_GET['categoria']    ?? ''),
+        ];
+    }
+
+    /**
+     * Bienes desincorporados, con la fecha y el autor del ACTO de baja.
+     * Fuente única del listado y de las dos exportaciones.
+     */
+    private function bajasQuery(array $f): array {
+        $db = new Database();
+
+        // La fecha del reporte es la del movimiento de Baja; si por alguna razón
+        // ese movimiento no existe, se cae a updated_at para no ocultar la fila.
+        $where = "i.is_active = TRUE AND i.estatus = :baja";
+        if ($f['fi'])        $where .= " AND COALESCE(ai_baja.fecha, i.updated_at::date) >= :fi::date";
+        if ($f['ff'])        $where .= " AND COALESCE(ai_baja.fecha, i.updated_at::date) <= :ff::date";
+        if ($f['categoria']) $where .= " AND c.nombre ILIKE :categoria";
+
+        $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
+                           c.nombre AS categoria,
+                           u.nombre AS ubicacion,
+                           COALESCE(ai_baja.fecha, i.updated_at::date) AS fecha_baja,
+                           ai_baja.usuario   AS dado_baja_por,
+                           ai_baja.descripcion AS motivo_baja,
+                           i.retirado_alcaldia, i.fecha_retiro
+                    FROM inventario i
+                    LEFT JOIN categorias  c ON i.id_categoria = c.id
+                    LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
+                    LEFT JOIN LATERAL (
+                        SELECT ai.fecha, ai.descripcion, us.username AS usuario
+                          FROM actividad_inventario ai
+                          LEFT JOIN usuarios us ON ai.created_by = us.id
+                         WHERE ai.id_inventario = i.id
+                           AND ai.tipo_movimiento = 'Baja'
+                           AND ai.is_active = TRUE
+                         ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
+                    ) ai_baja ON TRUE
+                    WHERE {$where}
+                    ORDER BY fecha_baja DESC NULLS LAST, i.nombre ASC");
+        $db->bind(':baja', Inventario::EST_BAJA);
+        if ($f['fi'])        $db->bind(':fi', $f['fi']);
+        if ($f['ff'])        $db->bind(':ff', $f['ff']);
+        if ($f['categoria']) $db->bind(':categoria', '%' . $f['categoria'] . '%');
+        return $db->resultSet();
+    }
+
+    /** Totales del reporte: histórico completo y desincorporaciones del año. */
+    private function bajasTotales(): array {
+        $db = new Database();
+        $db->query("SELECT
+                        COUNT(*) AS total,
+                        COUNT(CASE WHEN EXTRACT(YEAR FROM COALESCE(ai.fecha, i.updated_at::date))
+                                        = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1 END) AS este_anio,
+                        COUNT(CASE WHEN i.retirado_alcaldia THEN 1 END) AS retirados
+                    FROM inventario i
+                    LEFT JOIN LATERAL (
+                        SELECT fecha FROM actividad_inventario
+                         WHERE id_inventario = i.id AND tipo_movimiento = 'Baja' AND is_active = TRUE
+                         ORDER BY fecha DESC, id DESC LIMIT 1
+                    ) ai ON TRUE
+                    WHERE i.is_active = TRUE AND i.estatus = :baja");
+        $db->bind(':baja', Inventario::EST_BAJA);
+        $r = $db->single();
+        return [
+            'total'     => (int)($r->total     ?? 0),
+            'este_anio' => (int)($r->este_anio ?? 0),
+            'retirados' => (int)($r->retirados ?? 0),
+        ];
+    }
+
     public function bajasInventario() {
         $this->requireRoles([1, 4]);
         try {
-            $fi        = trim($_GET['fecha_inicio'] ?? '');
-            $ff        = trim($_GET['fecha_fin']    ?? '');
-            $categoria = trim($_GET['categoria']    ?? '');
-
-            $db    = new Database();
-            $where = "i.is_active = FALSE AND i.deleted_at IS NOT NULL";
-            if ($fi)        $where .= " AND i.deleted_at >= :fi";
-            if ($ff)        $where .= " AND i.deleted_at < :ff::date + INTERVAL '1 day'";
-            if ($categoria) $where .= " AND c.nombre ILIKE :categoria";
-
-            $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
-                               c.nombre AS categoria,
-                               u.nombre AS ubicacion,
-                               i.deleted_at,
-                               pu.username AS eliminado_por,
-                               ai_baja.descripcion AS motivo_baja
-                        FROM inventario i
-                        LEFT JOIN categorias c  ON i.id_categoria = c.id
-                        LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
-                        LEFT JOIN usuarios pu   ON i.deleted_by   = pu.id
-                        LEFT JOIN LATERAL (
-                            SELECT descripcion FROM actividad_inventario ai
-                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
-                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
-                        ) ai_baja ON TRUE
-                        WHERE {$where}
-                        ORDER BY i.deleted_at DESC");
-            if ($fi)        $db->bind(':fi', $fi);
-            if ($ff)        $db->bind(':ff', $ff);
-            if ($categoria) $db->bind(':categoria', '%' . $categoria . '%');
-            $bajas = $db->resultSet();
-
-            $db->query("SELECT COUNT(*) as total FROM inventario WHERE is_active = FALSE AND deleted_at IS NOT NULL");
-            $totalHist = $db->single();
-
-            $db->query("SELECT COUNT(*) as este_anio FROM inventario
-                        WHERE is_active = FALSE AND deleted_at IS NOT NULL
-                          AND EXTRACT(YEAR FROM deleted_at) = EXTRACT(YEAR FROM CURRENT_DATE)");
-            $bajasAnio = $db->single();
+            $f       = $this->bajasFiltros();
+            $bajas   = $this->bajasQuery($f);
+            $totales = $this->bajasTotales();
 
             $data = [
-                'titulo'       => 'Bienes Dados de Baja',
+                'titulo'       => 'Bienes Desincorporados',
                 'bajas'        => $bajas,
-                'total_hist'   => (int)($totalHist->total    ?? 0),
-                'bajas_anio'   => (int)($bajasAnio->este_anio ?? 0),
-                'fecha_inicio' => $fi,
-                'fecha_fin'    => $ff,
-                'filtro_cat'   => $categoria,
+                'total_hist'   => $totales['total'],
+                'bajas_anio'   => $totales['este_anio'],
+                'retirados'    => $totales['retirados'],
+                'fecha_inicio' => $f['fi'],
+                'fecha_fin'    => $f['ff'],
+                'filtro_cat'   => $f['categoria'],
             ];
             $this->view('reportes/bajas_inventario', $data);
         } catch (Exception $e) {
@@ -344,53 +402,30 @@ trait ReportesInventarioTrait {
     public function exportarBajasInventarioCsv() {
         $this->requireRoles([1, 4]);
         try {
-            $fi        = trim($_GET['fecha_inicio'] ?? '');
-            $ff        = trim($_GET['fecha_fin']    ?? '');
-            $categoria = trim($_GET['categoria']    ?? '');
+            $bajas = $this->bajasQuery($this->bajasFiltros());
 
-            $db    = new Database();
-            $where = "i.is_active = FALSE AND i.deleted_at IS NOT NULL";
-            if ($fi)        $where .= " AND i.deleted_at >= :fi";
-            if ($ff)        $where .= " AND i.deleted_at < :ff::date + INTERVAL '1 day'";
-            if ($categoria) $where .= " AND c.nombre ILIKE :categoria";
-
-            $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo, i.serial,
-                               c.nombre AS categoria, u.nombre AS ubicacion,
-                               i.deleted_at, pu.username AS eliminado_por,
-                               ai_baja.descripcion AS motivo_baja
-                        FROM inventario i
-                        LEFT JOIN categorias c ON i.id_categoria = c.id
-                        LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
-                        LEFT JOIN usuarios pu  ON i.deleted_by   = pu.id
-                        LEFT JOIN LATERAL (
-                            SELECT descripcion FROM actividad_inventario ai
-                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
-                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
-                        ) ai_baja ON TRUE
-                        WHERE {$where} ORDER BY i.deleted_at DESC");
-            if ($fi)        $db->bind(':fi', $fi);
-            if ($ff)        $db->bind(':ff', $ff);
-            if ($categoria) $db->bind(':categoria', '%' . $categoria . '%');
-            $bajas   = $db->resultSet();
-
-            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial', 'Fecha Baja', 'Dado de baja por', 'Motivo'];
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial',
+                        'Fecha de baja', 'Desincorporado por', 'Motivo', 'Retiro de la Alcaldía'];
             $rows    = [];
             foreach ($bajas as $b) {
                 $rows[] = [
-                    $b->codigo_bn    ?? 'S/N',
+                    $b->codigo_bn     ?? 'S/N',
                     $b->nombre,
-                    $b->categoria    ?? '-',
-                    $b->ubicacion    ?? '-',
+                    $b->categoria     ?? '-',
+                    $b->ubicacion     ?? '-',
                     $b->condicion,
-                    $b->marca        ?? '-',
-                    $b->modelo       ?? '-',
-                    $b->serial       ?? '-',
-                    $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '-',
-                    $b->eliminado_por ?? '-',
-                    $b->motivo_baja  ?? '-',
+                    $b->marca         ?? '-',
+                    $b->modelo        ?? '-',
+                    $b->serial        ?? '-',
+                    $b->fecha_baja ? date('d/m/Y', strtotime($b->fecha_baja)) : '-',
+                    $b->dado_baja_por ?? '-',
+                    $b->motivo_baja   ?? '-',
+                    $b->retirado_alcaldia
+                        ? ('Retirado' . ($b->fecha_retiro ? ' ' . date('d/m/Y', strtotime($b->fecha_retiro)) : ''))
+                        : 'Por retirar',
                 ];
             }
-            $this->exportCsv('bajas_inventario', $headers, $rows);
+            $this->exportCsv('bienes_desincorporados', $headers, $rows);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
             header('Location: ' . URL_ROOT . '/reportes/index');
@@ -400,58 +435,34 @@ trait ReportesInventarioTrait {
     public function exportarBajasInventarioPdf() {
         $this->requireRoles([1, 4]);
         try {
-            $fi        = trim($_GET['fecha_inicio'] ?? '');
-            $ff        = trim($_GET['fecha_fin']    ?? '');
-            $categoria = trim($_GET['categoria']    ?? '');
+            $f       = $this->bajasFiltros();
+            $bajas   = $this->bajasQuery($f);
+            $totales = $this->bajasTotales();
 
-            $db    = new Database();
-            $where = "i.is_active = FALSE AND i.deleted_at IS NOT NULL";
-            if ($fi)        $where .= " AND i.deleted_at >= :fi";
-            if ($ff)        $where .= " AND i.deleted_at < :ff::date + INTERVAL '1 day'";
-            if ($categoria) $where .= " AND c.nombre ILIKE :categoria";
-
-            $db->query("SELECT i.codigo_bn, i.nombre, i.condicion, i.marca, i.modelo,
-                               c.nombre AS categoria, u.nombre AS ubicacion,
-                               i.deleted_at, pu.username AS eliminado_por,
-                               ai_baja.descripcion AS motivo_baja
-                        FROM inventario i
-                        LEFT JOIN categorias c ON i.id_categoria = c.id
-                        LEFT JOIN ubicaciones u ON i.id_ubicacion = u.id
-                        LEFT JOIN usuarios pu  ON i.deleted_by   = pu.id
-                        LEFT JOIN LATERAL (
-                            SELECT descripcion FROM actividad_inventario ai
-                            WHERE ai.id_inventario = i.id AND ai.tipo_movimiento = 'Baja'
-                            ORDER BY ai.fecha DESC, ai.id DESC LIMIT 1
-                        ) ai_baja ON TRUE
-                        WHERE {$where} ORDER BY i.deleted_at DESC");
-            if ($fi)        $db->bind(':fi', $fi);
-            if ($ff)        $db->bind(':ff', $ff);
-            if ($categoria) $db->bind(':categoria', '%' . $categoria . '%');
-            $bajas = $db->resultSet();
-
-            $db->query("SELECT COUNT(*) as total FROM inventario WHERE is_active = FALSE AND deleted_at IS NOT NULL");
-            $totalHist = $db->single();
-
-            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Fecha Baja', 'Dado de baja por', 'Motivo'];
+            $headers = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición',
+                        'Fecha de baja', 'Desincorporado por', 'Motivo', 'Retiro'];
             $rows    = [];
             foreach ($bajas as $b) {
                 $rows[] = [
-                    $b->codigo_bn    ?? 'S/N',
+                    $b->codigo_bn     ?? 'S/N',
                     $b->nombre,
-                    $b->categoria    ?? '-',
-                    $b->ubicacion    ?? '-',
+                    $b->categoria     ?? '-',
+                    $b->ubicacion     ?? '-',
                     $b->condicion,
-                    $b->deleted_at ? date('d/m/Y', strtotime($b->deleted_at)) : '-',
-                    $b->eliminado_por ?? '-',
-                    $b->motivo_baja  ?? '-',
+                    $b->fecha_baja ? date('d/m/Y', strtotime($b->fecha_baja)) : '-',
+                    $b->dado_baja_por ?? '-',
+                    $b->motivo_baja   ?? '-',
+                    $b->retirado_alcaldia ? 'Retirado' : 'Por retirar',
                 ];
             }
             $kpis = [
-                'Total Histórico' => (int)($totalHist->total ?? 0),
+                'Total histórico' => $totales['total'],
+                'Este año'        => $totales['este_anio'],
+                'Ya retirados'    => $totales['retirados'],
                 'Filtrados'       => count($bajas),
-                'Período'         => ($fi && $ff) ? "$fi a $ff" : 'Todo el historial',
+                'Período'         => ($f['fi'] && $f['ff']) ? "{$f['fi']} a {$f['ff']}" : 'Todo el historial',
             ];
-            $this->exportPdf("Bienes Dados de Baja", "IMATUR — Control Patrimonial — Desincorporaciones", $headers, $rows, $kpis);
+            $this->exportPdf("Bienes Desincorporados", "IMATUR — Control Patrimonial — Desincorporaciones", $headers, $rows, $kpis);
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar PDF: ' . $e->getMessage(), 'danger');
             header('Location: ' . URL_ROOT . '/reportes/index');

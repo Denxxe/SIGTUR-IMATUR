@@ -377,25 +377,11 @@
 
 </div>
 
-<!-- ════════════════════════════════════════════════════════════
-     SECCIÓN 4 — NÓMINA (movida a /nomina/parametros el 2026-09-14)
-═══════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:0 0 var(--sp-4);" class="anim-slide-up">
-    <div style="width:4px;height:20px;border-radius:2px;background:#16A34A;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Nómina</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
-</div>
-
-<div class="sig-alert sig-alert--info mb-6 anim-slide-up">
-    <i class="bi bi-arrow-right-circle"></i>
-    <div>
-        <strong>Los parámetros de nómina se administran en su propia pantalla.</strong>
-        Los días base del bono vacacional se editan junto al resto de lo que interviene en el cálculo
-        —porcentajes de las primas, deducciones, aportes, cesta ticket y tasa del dólar— en
-        <a href="<?php echo URL_ROOT; ?>/nomina/parametros">Nómina → Parámetros</a>, para no tenerlos
-        repartidos entre dos sitios.
-    </div>
-</div>
+<?php /* La sección NÓMINA vivía aquí. Sus parámetros se mudaron a
+         /nomina/parametros el 2026-09-14 y desde entonces este bloque solo
+         contenía un cartel que apuntaba allá: ruido en una pantalla de
+         configuración. El enlace vive en el menú lateral (Nómina → Parámetros),
+         que es donde el usuario lo busca. */ ?>
 
 <!-- Guardar -->
 <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-2);border-top:1px solid var(--border-subtle);" class="anim-slide-up">

@@ -25,7 +25,11 @@ class Inventario extends Model {
     const EST_MANTENIMIENTO = 'En mantenimiento';
     const EST_EXTRAVIADO    = 'Extraviado';
     const EST_ROBADO        = 'Robado';
-    const EST_BAJA          = 'Dado de baja';
+    // Renombrado en la mig. 076 (C-6): el cliente exige que el acto y su
+    // documento se llamen «desincorporación». Todo lo demás —el array ESTATUS,
+    // los badges, las listas de disponibilidad y las consultas— deriva de esta
+    // constante, así que este es el único sitio donde vive el texto.
+    const EST_BAJA          = 'Desincorporado';
 
     const ESTATUS = [
         self::EST_SIN_CODIFICAR,
@@ -220,7 +224,21 @@ class Inventario extends Model {
         return $ok;
     }
 
-    /** ¿El bien está fuera del inventario activo? (dado de baja) */
+    /**
+     * El estatus «Desincorporado» ya entrecomillado, para incrustarlo en SQL que
+     * se arma como texto y no admite parámetros (las alertas, por ejemplo).
+     *
+     * Existe porque catorce consultas tenían el texto CABLEADO: al renombrar el
+     * valor en la mig. 076 todas habrían dejado de filtrar **en silencio**, y los
+     * bienes desincorporados volverían a contarse como inventario activo. Donde
+     * la consulta admita parámetros, úsese `:baja` con `EST_BAJA`; este helper es
+     * para el resto.
+     */
+    public static function sqlEstBaja(): string {
+        return "'" . str_replace("'", "''", self::EST_BAJA) . "'";
+    }
+
+    /** ¿El bien está fuera del inventario activo? (desincorporado) */
     public static function fueraDeInventario(?string $estatus): bool {
         return in_array((string)$estatus, self::ESTATUS_FUERA_DE_INVENTARIO, true);
     }
@@ -491,7 +509,7 @@ class Inventario extends Model {
 
     /**
      * Marca que la Alcaldía ya retiró físicamente un bien dado de baja (B-67).
-     * Mientras no ocurra, el bien aparece como "Dado de baja · Por retirar":
+     * Mientras no ocurra, el bien aparece como "Desincorporado · Por retirar":
      * ya salió del inventario activo (B-38) pero sigue ocupando espacio en
      * IMATUR, y eso hay que poder verlo.
      */

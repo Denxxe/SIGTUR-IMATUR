@@ -549,7 +549,7 @@ class InventarioController extends Controller {
 
     /**
      * Marca que la Alcaldía ya vino a llevarse el bien. Hasta entonces
-     * figura como "Dado de baja · Por retirar": fuera del inventario
+     * figura como "Desincorporado · Por retirar": fuera del inventario
      * activo, pero todavía ocupando espacio en IMATUR.
      */
     public function marcarRetirado() {

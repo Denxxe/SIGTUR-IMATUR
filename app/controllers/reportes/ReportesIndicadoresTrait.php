@@ -14,6 +14,10 @@ trait ReportesIndicadoresTrait {
     public function indicadores() {
         try {
             $db = new Database();
+            // Estatus «Desincorporado» listo para incrustar en SQL (mig. 076). El
+            // texto ya no se cablea en ninguna consulta: sale de la constante del
+            // modelo, así un renombrado futuro no deja consultas filtrando de menos.
+            $estBaja = Inventario::sqlEstBaja();
 
             // Año del panel: configurable por ?anio (default = año del servidor).
             // Gobierna todos los indicadores anuales; las métricas "del mes" y las
@@ -46,11 +50,11 @@ trait ReportesIndicadoresTrait {
             $kpiPasantesEnCurso = $db->single();
 
             $db->query("SELECT COUNT(*) as total FROM inventario
-                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                        WHERE is_active = TRUE AND estatus <> {$estBaja}");
             $kpiBienesActivos = $db->single();
 
             $db->query("SELECT COUNT(*) as total FROM inventario
-                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                        WHERE is_active = TRUE AND estatus <> {$estBaja}
                           AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
             $kpiBienesAlerta = $db->single();
 
@@ -107,7 +111,7 @@ trait ReportesIndicadoresTrait {
             $invPorCat = $db->resultSet();
 
             $db->query("SELECT condicion, COUNT(*) as total FROM inventario
-                        WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                        WHERE is_active = TRUE AND estatus <> {$estBaja}
                         GROUP BY condicion ORDER BY total DESC");
             $invPorCondicion = $db->resultSet();
 
@@ -279,7 +283,7 @@ trait ReportesIndicadoresTrait {
             $db->query("SELECT
                             COUNT(*) AS total,
                             COUNT(CASE WHEN condicion = 'Dañado' OR estatus = 'En mantenimiento' THEN 1 END) AS deteriorados
-                        FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                        FROM inventario WHERE is_active = TRUE AND estatus <> {$estBaja}");
             $kpiDepreciacion = $db->single();
 
             // ── PROP-P01: Distribución por tipo de contrato ───────────────────────────
@@ -363,7 +367,7 @@ trait ReportesIndicadoresTrait {
             $db->query("SELECT COUNT(*) AS total,
                                COUNT(CASE WHEN codigo_bn IS NOT NULL AND TRIM(codigo_bn) <> ''
                                           THEN 1 END) AS completos
-                        FROM inventario WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                        FROM inventario WHERE is_active = TRUE AND estatus <> {$estBaja}");
             $precisionInv = $db->single();
 
             // INVENTARIO: Movimientos por tipo (entradas/salidas/asignaciones) — año actual.
@@ -396,7 +400,7 @@ trait ReportesIndicadoresTrait {
                                  AND cr.nivel_jerarquico IN ('Dirección','Coordinación')
                                LIMIT 1
                           ) resp ON TRUE
-                         WHERE i.is_active = TRUE AND i.estatus <> 'Dado de baja'");
+                         WHERE i.is_active = TRUE AND i.estatus <> {$estBaja}");
             $asignacionInv = $db->single();
 
             // FORMACIÓN: Cobertura territorial por parroquia (año actual).

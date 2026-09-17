@@ -14,7 +14,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
         <div class="page__eyebrow">
             <a href="<?php echo URL_ROOT; ?>/reportes/index" style="color:inherit;text-decoration:none;">Reportes</a> · Inventario
         </div>
-        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Bienes Dados de Baja'; ?></h1>
+        <h1 class="page__title"><?php echo $data['titulo'] ?? 'Bienes Desincorporados'; ?></h1>
         <p class="page__subtitle">Historial completo de bienes desincorporados del inventario activo.</p>
     </div>
     <div class="page__actions">
@@ -35,7 +35,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
     <div class="col-md-4 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--danger-500);">
             <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total Histórico de Bajas</div>
+                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total histórico</div>
                 <div style="font-size:28px;font-weight:900;color:var(--danger-600);"><?php echo number_format($data['total_hist'] ?? 0); ?></div>
                 <div style="font-size:11px;color:var(--text-tertiary);">desde el inicio del sistema</div>
             </div>
@@ -44,7 +44,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
     <div class="col-md-4 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--warning-500);">
             <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Bajas <?php echo date('Y'); ?></div>
+                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Desincorporados <?php echo date('Y'); ?></div>
                 <div style="font-size:28px;font-weight:900;color:var(--warning-600);"><?php echo number_format($data['bajas_anio'] ?? 0); ?></div>
                 <div style="font-size:11px;color:var(--text-tertiary);">en el año en curso</div>
             </div>
@@ -111,14 +111,15 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                 <th>Marca / Modelo</th>
                 <th>Serial</th>
                 <th class="text-center">Condición</th>
-                <th>Fecha de Baja</th>
-                <th>Dado de baja por</th>
+                <th>Fecha de baja</th>
+                <th>Desincorporado por</th>
+                <th class="text-center">Retiro</th>
                 <th>Motivo</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['bajas'])): ?>
-                <tr><td colspan="10" class="sig-table-empty">No hay bienes dados de baja con los filtros seleccionados.</td></tr>
+                <tr><td colspan="11" class="sig-table-empty">No hay bienes desincorporados con los filtros seleccionados.</td></tr>
             <?php else: ?>
                 <?php foreach ($data['bajas'] as $b):
                     $condCls = 'sig-badge--neutral';
@@ -138,8 +139,17 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                     </td>
                     <td style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);"><?php echo htmlspecialchars($b->serial ?? '—'); ?></td>
                     <td class="text-center"><span class="sig-badge <?php echo $condCls; ?>"><?php echo htmlspecialchars($b->condicion ?? '—'); ?></span></td>
-                    <td style="font-size:12px;white-space:nowrap;"><?php echo $b->deleted_at ? date('d/m/Y H:i', strtotime($b->deleted_at)) : '—'; ?></td>
-                    <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->eliminado_por ?? '—'); ?></td>
+                    <td style="font-size:12px;white-space:nowrap;"><?php echo $b->fecha_baja ? date('d/m/Y', strtotime($b->fecha_baja)) : '—'; ?></td>
+                    <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->dado_baja_por ?? '—'); ?></td>
+                    <td class="text-center">
+                        <?php if (!empty($b->retirado_alcaldia)): ?>
+                            <span class="sig-badge sig-badge--success" title="La Alcaldía ya se llevó el bien">
+                                Retirado<?php echo $b->fecha_retiro ? ' · ' . date('d/m/Y', strtotime($b->fecha_retiro)) : ''; ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="sig-badge sig-badge--warning" title="Desincorporado, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
+                        <?php endif; ?>
+                    </td>
                     <td style="font-size:12px;color:var(--text-secondary);max-width:220px;white-space:normal;"><?php echo htmlspecialchars($b->motivo_baja ?? '—'); ?></td>
                 </tr>
                 <?php endforeach; ?>

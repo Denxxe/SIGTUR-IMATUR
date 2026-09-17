@@ -189,7 +189,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <span class="sig-badge <?php echo $ecls; ?>"><?php echo htmlspecialchars($est); ?></span>
                             <?php if ($est === Inventario::EST_BAJA): ?>
                                 <?php if (empty($item->retirado_alcaldia)): ?>
-                                    <br><span class="sig-badge sig-badge--warning" title="Dado de baja, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
+                                    <br><span class="sig-badge sig-badge--warning" title="Desincorporado, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
                                 <?php else: ?>
                                     <br><small style="color:var(--text-tertiary)">Retirado <?php echo htmlspecialchars($item->fecha_retiro ?: ''); ?></small>
                                 <?php endif; ?>

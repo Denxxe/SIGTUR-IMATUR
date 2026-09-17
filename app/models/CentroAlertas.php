@@ -100,6 +100,7 @@ class CentroAlertas extends Model {
     /** Lista de alertas aplicables al rol (incluye las de conteo 0). */
     public static function resumen(int $rol): array {
         $db = new Database();
+        $estBaja = Inventario::sqlEstBaja();   // mig. 076: el texto no se cablea
         $esRRHH = in_array($rol, [1, 2], true);
         $esForm = in_array($rol, [1, 3], true);
         $esInv  = in_array($rol, [1, 4], true);
@@ -164,7 +165,7 @@ class CentroAlertas extends Model {
 
         if ($esInv) {
             $idsBienes = $ids("SELECT id FROM inventario
-                              WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                              WHERE is_active = TRUE AND estatus <> {$estBaja}
                                 AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
             $alertas[] = ['clave' => 'bienes_en_alerta', 'titulo' => 'Bienes en alerta', 'desc' => 'Patrimonio dañado o en reparación.', 'n' => count($idsBienes), 'icono' => 'bi-box-seam', 'url' => URL_ROOT . '/inventario/index', 'sev' => 'warning', 'ids' => $idsBienes];
 
@@ -181,7 +182,7 @@ class CentroAlertas extends Model {
 
             // B-20: garantías por vencer (o ya vencidas sin haberse atendido).
             $idsGar = $ids("SELECT id FROM inventario
-                           WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                           WHERE is_active = TRUE AND estatus <> {$estBaja}
                              AND tiene_garantia = TRUE AND garantia_vence IS NOT NULL
                              AND garantia_vence <= (CURRENT_DATE + ($diasGar || ' days')::INTERVAL)");
             $alertas[] = ['clave' => 'bienes_garantia', 'titulo' => 'Garantías por vencer', 'desc' => "Bienes cuya garantía vence en los próximos {$diasGar} días.", 'n' => count($idsGar), 'icono' => 'bi-patch-exclamation', 'url' => URL_ROOT . '/inventario/index', 'sev' => 'info', 'ids' => $idsGar];
@@ -190,7 +191,7 @@ class CentroAlertas extends Model {
             $idsMant = $ids("SELECT p.id FROM inventario_mantenimiento_plan p
                              INNER JOIN inventario i ON p.id_inventario = i.id
                              WHERE p.is_active = TRUE AND i.is_active = TRUE
-                               AND i.estatus <> 'Dado de baja'
+                               AND i.estatus <> {$estBaja}
                                AND p.proxima_fecha <= (CURRENT_DATE + ($diasMant || ' days')::INTERVAL)");
             $alertas[] = ['clave' => 'mantenimiento_preventivo', 'titulo' => 'Mantenimiento preventivo', 'desc' => "Equipos a los que toca mantenimiento en los próximos {$diasMant} días.", 'n' => count($idsMant), 'icono' => 'bi-tools', 'url' => URL_ROOT . '/inventario/planMantenimiento', 'sev' => 'info', 'ids' => $idsMant];
         }

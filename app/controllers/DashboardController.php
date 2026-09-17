@@ -269,20 +269,33 @@ class DashboardController extends Controller {
             // INVENTARIO — roles 1 y 4 (Inventario)
             // ══════════════════════════════════════════════════════════════
             if (in_array($rol, [1, 4])) {
-                // Inventario ACTIVO: excluye los dados de baja (B-38, mig. 062).
+                // Inventario ACTIVO: excluye los desincorporados (B-38, mig. 062).
                 $db->query("SELECT COUNT(*) AS total FROM inventario
-                            WHERE is_active = TRUE AND estatus <> 'Dado de baja'");
+                            WHERE is_active = TRUE AND estatus <> :baja");
+                $db->bind(':baja', Inventario::EST_BAJA);
                 $data['kpiBienes'] = (int)($db->single()->total ?? 0);
 
                 // Alerta = dañado (condición física) o fuera de servicio (estatus).
                 $db->query("SELECT COUNT(*) AS total FROM inventario
-                            WHERE is_active = TRUE AND estatus <> 'Dado de baja'
+                            WHERE is_active = TRUE AND estatus <> :baja
                               AND (condicion = 'Dañado' OR estatus = 'En mantenimiento')");
+                $db->bind(':baja', Inventario::EST_BAJA);
                 $data['kpiBienesAlerta'] = (int)($db->single()->total ?? 0);
 
-                $db->query("SELECT COUNT(*) AS total FROM inventario
-                            WHERE is_active = FALSE AND deleted_at IS NOT NULL
-                              AND EXTRACT(YEAR FROM deleted_at) = :anio");
+                // Desincorporaciones del año. Mismo error que H-16: esto contaba la
+                // PAPELERA (registros borrados por equivocación) en vez de las bajas
+                // reales, que conservan is_active = TRUE. La fecha sale del
+                // movimiento de Baja, no de cuándo se borró el registro.
+                $db->query("SELECT COUNT(*) AS total
+                              FROM inventario i
+                              LEFT JOIN LATERAL (
+                                  SELECT fecha FROM actividad_inventario
+                                   WHERE id_inventario = i.id AND tipo_movimiento = 'Baja' AND is_active = TRUE
+                                   ORDER BY fecha DESC, id DESC LIMIT 1
+                              ) ai ON TRUE
+                             WHERE i.is_active = TRUE AND i.estatus = :baja
+                               AND EXTRACT(YEAR FROM COALESCE(ai.fecha, i.updated_at::date)) = :anio");
+                $db->bind(':baja', Inventario::EST_BAJA);
                 $db->bind(':anio', $anio);
                 $data['kpiBajasAnio'] = (int)($db->single()->total ?? 0);
 
