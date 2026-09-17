@@ -30,6 +30,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados" class="btn-sig btn-sig--ghost">
             <i class="bi bi-inbox"></i> BM-1 recibidos
         </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/actas" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-file-earmark-check"></i> Actas de desincorporación
+        </a>
         <a href="<?php echo URL_ROOT; ?>/inventario/conteos" class="btn-sig btn-sig--ghost">
             <i class="bi bi-clipboard-check"></i> Conteos
         </a>

@@ -544,6 +544,109 @@ class InventarioController extends Controller {
     }
 
     // =====================================================================
+    //  Acta de Desincorporación por lote (C-5, mig. 077)
+    //
+    //  El acta lista los bienes que la Alcaldía se va a llevar. Cuando vuelve
+    //  firmada y sellada, ese sello ES el aval del retiro: se registra y TODOS
+    //  sus bienes pasan a «Retirado» de una vez.
+    // =====================================================================
+
+    /** Actas emitidas + bienes desincorporados que todavía no están en ninguna. */
+    public function actas() {
+        $this->view('inventario/actas', [
+            'titulo'     => 'Actas de Desincorporación',
+            'actas'      => ActaDesincorporacion::all(),
+            'candidatos' => ActaDesincorporacion::candidatos(),
+        ]);
+    }
+
+    /** Arma el acta con el lote seleccionado y abre el imprimible. */
+    public function emitirActa() {
+        if (!$this->requireEscritura('/inventario/actas')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $ids   = (array)($_POST['bienes'] ?? []);
+            $_POST = $this->sanitizePost();
+
+            $fecha = trim($_POST['fecha'] ?? '') ?: date('Y-m-d');
+            if ($fecha > date('Y-m-d')) throw new Exception('La fecha del acta no puede ser futura.');
+
+            $a = ActaDesincorporacion::emitir($ids, [
+                'fecha'       => $fecha,
+                'motivo'      => trim($_POST['motivo'] ?? ''),
+                'observacion' => trim($_POST['observacion'] ?? ''),
+            ], $this->getUserId());
+
+            flash('global_msg', 'Acta N° ' . $a['numero'] . ' emitida con ' . count($ids) . ' bien(es). Imprímela y llévala a la Alcaldía para que la firmen.');
+            header('Location: ' . URL_ROOT . '/inventario/acta/' . $a['id']);
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/actas');
+    }
+
+    /** Vista imprimible del acta. */
+    public function acta($id = 0) {
+        $acta = ActaDesincorporacion::find((int)$id);
+        if (!$acta) {
+            flash('global_msg', 'El acta solicitada no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/actas');
+            return;
+        }
+        $this->view('inventario/acta_imprimible', [
+            'acta'   => $acta,
+            'items'  => ActaDesincorporacion::items((int)$id),
+            'config' => ConfigSistema::getAll(),
+        ]);
+    }
+
+    /**
+     * Registra el acta ya firmada y sellada: marca retirados TODOS sus bienes.
+     * El escaneado es opcional — a veces vuelve en papel y se digitaliza después,
+     * igual que con el BM-1.
+     */
+    public function registrarActaFirmada() {
+        if (!$this->requireEscritura('/inventario/actas')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $idActa = (int)($_POST['id'] ?? 0);
+
+            $archivo = ['nombre' => null, 'original' => null];
+            if (!empty($_FILES['documento']['name'])) {
+                $archivo = $this->guardarArchivoBien('documento', 'Acta_Desinc_' . $idActa . '_' . date('Ymd_His'));
+            }
+
+            $_POST = $this->sanitizePost();
+            $n = ActaDesincorporacion::registrarFirmada($idActa, [
+                'fecha_firma'     => trim($_POST['fecha_firma'] ?? ''),
+                'recibido_por'    => trim($_POST['recibido_por'] ?? ''),
+                'archivo_url'     => $archivo['nombre'],
+                'nombre_original' => $archivo['original'],
+            ], $this->getUserId());
+
+            flash('global_msg', "Acta registrada. {$n} bien(es) quedaron marcados como retirados por la Alcaldía.");
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/actas');
+    }
+
+    /** Anula un acta: sus bienes vuelven a quedar «Por retirar». */
+    public function anularActa() {
+        if (!$this->requireEscritura('/inventario/actas')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            ActaDesincorporacion::anular((int)($_POST['id'] ?? 0), $_POST['motivo'] ?? '', $this->getUserId());
+            flash('global_msg', 'Acta anulada. Sus bienes volvieron a quedar por retirar.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/actas');
+    }
+
+    // =====================================================================
     //  Retiro por la Alcaldía de un bien dado de baja (B-67)
     // =====================================================================
 

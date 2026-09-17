@@ -97,6 +97,23 @@ class DescargaController extends Controller {
         $this->stream('bienes', $row->archivo_url, $row->nombre_original ?? null);
     }
 
+    /**
+     * Acta de Desincorporación sellada por la Alcaldía — Inventario / Admin.
+     * Endpoint propio: el id es de `inventario_actas_desincorporacion`, no de
+     * `inventario_documentos`, así que `bien()` no sirve — devolvería el
+     * archivo equivocado o un 404 según el id que coincidiera.
+     */
+    public function acta($idActa = 0) {
+        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT archivo_url, nombre_original FROM inventario_actas_desincorporacion
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idActa);
+        $row = $db->single();
+        if (!$row || empty($row->archivo_url)) $this->abort(404, 'Documento no disponible.');
+        $this->stream('bienes', $row->archivo_url, $row->nombre_original ?? null);
+    }
+
     /** Foto de un bien — Inventario / Admin. */
     public function fotoBien($idBien = 0) {
         if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
