@@ -415,7 +415,11 @@ class EmpleadosController extends Controller {
                     $idPersona = $empleado->getIdPersona();
                     $this->guardarCargaFamiliarInicial($idPersona);
                     flash('global_msg', "Empleado registrado. Complete cursos y experiencia en el expediente si aplica.");
-                    header('Location: ' . URL_ROOT . '/empleados/detalle/' . (int)$empleado->getId());
+                    // `registro_ok` le dice al navegador que el alta quedó consumada y
+                    // que ya puede descartar el borrador del asistente. Se marca AQUÍ y
+                    // no al enviar el formulario: si el servidor rechaza (cédula
+                    // duplicada, correo repetido…), lo escrito tiene que sobrevivir.
+                    header('Location: ' . URL_ROOT . '/empleados/detalle/' . (int)$empleado->getId() . '?registro_ok=empleado');
                 } else {
                     flash('global_msg', "Datos de empleado actualizados correctamente.");
                     header('Location: ' . URL_ROOT . '/empleados/index');

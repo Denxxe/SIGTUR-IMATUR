@@ -65,6 +65,21 @@
             window.SIGTUR_LOGO_ALCALDIA = <?php echo json_encode(ConfigSistema::urlLogoAlcaldia()); ?>;
             window.SIGTUR_LOGO_IMATUR = <?php echo json_encode(ConfigSistema::urlLogoImatur()); ?>;
 
+            // ==================== BORRADORES DE ASISTENTES ====================
+            // El asistente de alta de empleados guarda lo escrito en localStorage para
+            // que un cierre de navegador no cueste cinco pasos de tecleo. El borrador
+            // se descarta AQUÍ —en la página a la que redirige el alta exitosa— y no al
+            // enviar el formulario: el servidor puede rechazar el envío (cédula
+            // duplicada, correo repetido, contrato corto…) y devolver al formulario, y
+            // en ese caso lo escrito debe seguir ahí.
+            (function () {
+                if (new URLSearchParams(location.search).get('registro_ok') !== 'empleado') return;
+                try {
+                    localStorage.removeItem('sigtur_emp_wizard');   // clave anterior
+                    localStorage.removeItem('sigtur_emp_wizard_<?php echo (int)($_SESSION['user_id'] ?? 0); ?>');
+                } catch (e) {}
+            })();
+
             // Inyecta el token en todos los formularios POST (salvo data-no-token).
             function sigturInjectTokens() {
                 document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function(form) {

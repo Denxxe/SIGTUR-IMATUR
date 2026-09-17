@@ -17,6 +17,28 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
     </div>
 </div>
 
+<?php if (!$isEdit): ?>
+<!-- Aviso de borrador recuperado. El asistente guarda lo escrito en localStorage
+     para que no se pierda si el navegador se cierra; hasta ahora lo restauraba en
+     silencio y parecía que el formulario "venía con datos de otro". -->
+<div id="wzAvisoBorrador" class="sig-card anim-slide-up"
+     style="display:none;margin-bottom:var(--sp-4);border-left:3px solid var(--warning-500,#f59e0b);">
+    <div class="sig-card__body"
+         style="padding:var(--sp-3) var(--sp-4);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <i class="bi bi-file-earmark-text" style="font-size:1.4rem;color:var(--warning-600,#d97706);"></i>
+        <div style="flex:1;min-width:240px;">
+            <strong>Recuperamos un registro sin terminar</strong><br>
+            <span style="font-size:13px;color:var(--text-secondary);">
+                Quedó a medias <span id="wzBorradorFecha"></span> &middot; puedes continuarlo o empezar de cero.
+            </span>
+        </div>
+        <button type="button" id="wzDescartarBorrador" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-x-circle"></i> Descartar y empezar de cero
+        </button>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Stepper -->
 <div class="wz-stepper anim-slide-up" id="wzStepper" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:var(--sp-5)">
     <?php foreach ($pasos as $i => $p): ?>
@@ -245,7 +267,12 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
 <script>
 const wzForm = document.getElementById('wzForm');
 const isEdit = wzForm.dataset.edit === '1';
-const LS_KEY = 'sigtur_emp_wizard';
+// Borrador del asistente. La clave lleva el id del usuario: en una máquina
+// compartida, el borrador a medias de un compañero no debe aparecerle a otro.
+const LS_KEY = 'sigtur_emp_wizard_<?php echo (int)($_SESSION['user_id'] ?? 0); ?>';
+const LS_KEY_LEGACY = 'sigtur_emp_wizard';   // clave anterior, sin usuario
+// Un borrador viejo ya no sirve de nada y solo confunde.
+const LS_VIGENCIA_DIAS = 7;
 let wzCur = 0;
 const wzSteps = Array.from(document.querySelectorAll('.wz-step'));
 const totalSteps = wzSteps.length;
@@ -450,24 +477,74 @@ function wzBuildResumen() {
     cont.innerHTML = items.map(([k, v]) => `<div class="col-md-4"><div style="font-size:11px;color:var(--text-tertiary);text-transform:uppercase">${k}</div><div style="font-weight:600">${(v && v.trim()) ? v : '—'}</div></div>`).join('');
 }
 
-// localStorage (solo alta)
+// ── Borrador en localStorage (solo alta) ─────────────────────────────────────
+// Se guarda en cada tecla para que un cierre de navegador no cueste 5 pasos de
+// tecleo. Ojo con DÓNDE se borra: NO al enviar el formulario, porque el servidor
+// puede rechazarlo (cédula duplicada, correo repetido, contrato corto…) y
+// devolver al formulario vacío — el usuario perdería todo lo escrito. Se borra
+// cuando el alta quedó consumada, que es lo que marca ?registro_ok=empleado en
+// la redirección de éxito (ver footer.php).
+function wzBorrar() { try { localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_KEY_LEGACY); } catch (e) {} }
+
 function wzSave() {
     if (isEdit) return;
-    const data = {};
+    const data = { _guardado: Date.now() };
     wzForm.querySelectorAll('input, select, textarea').forEach(el => {
         if (!el.name || el.name.endsWith('[]') || el.name === '_token') return;
         data[el.name] = el.type === 'checkbox' ? el.checked : el.value;
     });
     try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
 }
+
 function wzRestore() {
     if (isEdit) return;
+    // Arrastra un borrador guardado con la clave vieja (sin usuario), una sola vez.
+    try {
+        const viejo = localStorage.getItem(LS_KEY_LEGACY);
+        if (viejo && !localStorage.getItem(LS_KEY)) localStorage.setItem(LS_KEY, viejo);
+        localStorage.removeItem(LS_KEY_LEGACY);
+    } catch (e) {}
+
     let data; try { data = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { return; }
-    Object.keys(data).forEach(n => {
+    const claves = Object.keys(data).filter(k => k !== '_guardado');
+    if (!claves.length) return;
+
+    // Caducidad: pasado el plazo el borrador se descarta solo.
+    const ts = Number(data._guardado) || 0;
+    if (ts && (Date.now() - ts) > LS_VIGENCIA_DIAS * 24 * 60 * 60 * 1000) { wzBorrar(); return; }
+
+    // ¿Tiene algo escrito de verdad, o son solo los valores por defecto de los selects?
+    const conDatos = claves.some(n => {
+        const el = wzForm.querySelector(`[name="${n}"]`);
+        if (!el || el.type === 'checkbox') return false;
+        return String(data[n] ?? '').trim() !== '' && String(data[n]) !== el.value;
+    });
+
+    claves.forEach(n => {
         const el = wzForm.querySelector(`[name="${n}"]`);
         if (!el) return;
         if (el.type === 'checkbox') el.checked = !!data[n]; else el.value = data[n];
     });
+
+    if (conDatos) wzMostrarAvisoBorrador(ts);
+}
+
+/** Barra "recuperamos un registro sin terminar", con su fecha y el botón de descartar. */
+function wzMostrarAvisoBorrador(ts) {
+    const caja = document.getElementById('wzAvisoBorrador');
+    if (!caja) return;
+    const et = document.getElementById('wzBorradorFecha');
+    if (et && ts) {
+        const d = new Date(ts);
+        const hoy = new Date().toDateString() === d.toDateString();
+        et.textContent = hoy
+            ? 'hoy a las ' + d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
+            : 'el ' + d.toLocaleDateString('es-VE') + ' a las ' +
+              d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+    }
+    caja.style.display = '';
+    const btn = document.getElementById('wzDescartarBorrador');
+    if (btn) btn.addEventListener('click', () => { wzBorrar(); location.reload(); });
 }
 
 // Keep-alive de sesión: el wizard no toca el servidor entre pasos (todo vive en
@@ -494,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wzForm.addEventListener('change', wzUpdateNav);
     wzForm.addEventListener('input', wzKeepAlive);
     wzForm.addEventListener('change', wzKeepAlive);
-    wzForm.addEventListener('submit', () => { try { localStorage.removeItem(LS_KEY); } catch (e) {} });
+    // NO se borra el borrador aquí: ver el comentario de wzBorrar().
 });
 </script>
 
