@@ -204,7 +204,8 @@ trait ReportesIndicadoresTrait {
                                    COUNT(DISTINCT r.id) as rutas,
                                    COUNT(pr.id) as participantes
                             FROM rutas r
-                            LEFT JOIN participantes_ruta pr ON pr.id_ruta = r.id AND pr.is_active = TRUE
+                            LEFT JOIN ruta_ejecuciones ej   ON ej.id_ruta = r.id AND ej.is_active = TRUE
+                            LEFT JOIN participantes_ruta pr ON pr.id_ejecucion = ej.id AND pr.is_active = TRUE
                             WHERE r.is_active = TRUE
                             GROUP BY r.tipo_ruta ORDER BY participantes DESC");
                 $rutasPorTipo = $db->resultSet();
@@ -213,10 +214,12 @@ trait ReportesIndicadoresTrait {
                 $db->query("SELECT valor FROM configuracion_sistema WHERE clave = 'meta_rutas_anio' LIMIT 1");
                 $metaRutas = $db->single();
 
-                // Meta = rutas EJECUTADAS (Finalizadas) en el año, por fecha de visita
-                $db->query("SELECT COUNT(*) as total FROM rutas
-                            WHERE is_active = TRUE AND estado = 'Finalizada'
-                              AND EXTRACT(YEAR FROM COALESCE(fecha_visita, created_at)) = :anio");
+                // Meta = SALIDAS ejecutadas en el año (mig. 078). Antes contaba
+                // rutas con estado 'Finalizada', un estado que ya no existe: el
+                // indicador daba 0 siempre.
+                $db->query("SELECT COUNT(*) as total FROM ruta_ejecuciones
+                            WHERE is_active = TRUE AND estado = 'Ejecutado'
+                              AND EXTRACT(YEAR FROM fecha) = :anio");
                 $db->bind(':anio', $anioActual);
                 $rutasAnio = $db->single();
 
@@ -241,9 +244,9 @@ trait ReportesIndicadoresTrait {
                             LEFT JOIN personas p ON pr.id_persona = p.id
                             WHERE pr.is_active = TRUE
                               AND EXISTS (
-                                  SELECT 1 FROM rutas r
-                                  WHERE r.id = pr.id_ruta AND r.is_active = TRUE
-                                    AND EXTRACT(YEAR FROM COALESCE(r.fecha_visita, r.created_at)) = :anio
+                                  SELECT 1 FROM ruta_ejecuciones ej
+                                  WHERE ej.id = pr.id_ejecucion AND ej.is_active = TRUE
+                                    AND EXTRACT(YEAR FROM ej.fecha) = :anio
                               )");
                 $db->bind(':anio', $anioActual);
                 $demografiaRutas = $db->single();
@@ -413,11 +416,11 @@ trait ReportesIndicadoresTrait {
             $db->bind(':anio', $anioActual);
             $coberturaParroquia = $db->single();
 
-            // TURISMO: Frecuencia de rutas ejecutadas (Finalizadas) por mes — últimos 6 meses.
-            $db->query("SELECT TO_CHAR(COALESCE(fecha_visita, created_at), 'YYYY-MM') AS mes, COUNT(*) AS total
-                        FROM rutas
-                        WHERE is_active = TRUE AND estado = 'Finalizada'
-                          AND COALESCE(fecha_visita, created_at) >= (date_trunc('month', CURRENT_DATE) - INTERVAL '5 months')
+            // TURISMO: frecuencia de SALIDAS ejecutadas por mes — últimos 6 meses (mig. 078).
+            $db->query("SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes, COUNT(*) AS total
+                        FROM ruta_ejecuciones
+                        WHERE is_active = TRUE AND estado = 'Ejecutado'
+                          AND fecha >= (date_trunc('month', CURRENT_DATE) - INTERVAL '5 months')
                         GROUP BY mes ORDER BY mes ASC");
             $rutasPorMes = $db->resultSet();
 

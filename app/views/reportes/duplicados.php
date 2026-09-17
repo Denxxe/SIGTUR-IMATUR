@@ -20,7 +20,7 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 <div class="sig-card anim-slide-up" style="margin-bottom:20px;border-left:4px solid var(--brand-500,#2563eb);">
     <div class="sig-card__body" style="font-size:13px;color:var(--text-secondary);">
         <strong>Cómo leer este reporte.</strong> El identificador único de una persona es la <strong>cédula</strong>.
-        Los participantes <strong>sin cédula</strong> (niños/as de 5–11 años) no tienen una clave única, por lo que el
+        Los participantes <strong>sin cédula</strong> (menores) no tienen una clave única, por lo que el
         sistema <em>no puede</em> decidir con certeza si dos registros son la misma persona: solo señala
         <strong>coincidencias</strong> (mismo nombre, apellido y fecha de nacimiento) para que un humano las revise.
         Para distinguir homónimos reales conviene apoyarse en datos adicionales (representante/docente, parroquia, género).

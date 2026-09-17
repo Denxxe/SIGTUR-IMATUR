@@ -229,8 +229,10 @@ trait ReportesSistemaTrait {
                         SELECT trim(pr.nombre_libre), trim(COALESCE(pr.apellido_libre,'')),
                                pr.fecha_nac_libre,
                                regexp_replace(COALESCE(pr.cedula_representante,''),'\\D','','g'),
-                               'Ruta: ' || r.nombre, r.fecha_visita
-                        FROM participantes_ruta pr JOIN rutas r ON pr.id_ruta = r.id
+                               'Ruta: ' || r.nombre, ej.fecha
+                        FROM participantes_ruta pr
+                        JOIN ruta_ejecuciones ej ON pr.id_ejecucion = ej.id
+                        JOIN rutas r             ON ej.id_ruta = r.id
                         WHERE pr.is_active = TRUE AND pr.id_persona IS NULL AND r.is_active = TRUE
                           AND pr.nombre_libre IS NOT NULL
                     )

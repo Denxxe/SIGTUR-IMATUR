@@ -646,7 +646,7 @@ class RutasController extends Controller {
                         COUNT(*) AS total
                     FROM participantes_ruta pr
                     LEFT JOIN personas p ON pr.id_persona = p.id
-                    WHERE pr.id_ruta = :id AND pr.is_active = TRUE
+                    WHERE pr.id_ejecucion = :id AND pr.is_active = TRUE
                     GROUP BY categoria");
         $db->bind(':id', $id);
         foreach ($db->resultSet() as $row) {
@@ -671,7 +671,7 @@ class RutasController extends Controller {
                     throw new Exception('El resumen de la visita es obligatorio.');
                 }
                 RutaEjecucion::saveInforme([
-                    'id_ruta'       => $id,
+                    'id_ejecucion'  => $id,
                     'lugar_exacto'  => trim($_POST['lugar_exacto']  ?? ''),
                     'mujeres'       => $mujeres,
                     'hombres'       => $hombres,
@@ -719,8 +719,8 @@ class RutasController extends Controller {
         fputcsv($out, ['INFORME DE VISITA TURÍSTICA'], ';');
         fputcsv($out, ['Ruta',     $ruta->nombre], ';');
         fputcsv($out, ['Tipo',     $ruta->tipo_ruta ?? ''], ';');
-        fputcsv($out, ['Fecha',    $ruta->fecha_visita ?? ''], ';');
-        fputcsv($out, ['Estado',   $ruta->estado], ';');
+        fputcsv($out, ['Fecha',    $ejec && $ejec->fecha ? date('d/m/Y', strtotime($ejec->fecha)) : ''], ';');
+        fputcsv($out, ['Estado',   $ejec->estado ?? $ruta->estado], ';');
         fputcsv($out, [''], ';');
 
         if ($informe) {
@@ -791,8 +791,8 @@ class RutasController extends Controller {
             ], $this->getUserId());
 
             $fechaRuta = null;
-            if ($ruta->fecha_visita) {
-                $ts  = strtotime($ruta->fecha_visita);
+            if ($ejec && $ejec->fecha) {
+                $ts  = strtotime($ejec->fecha);
                 $dia = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][date('w', $ts)];
                 $fechaRuta = $dia . ' ' . date('j', $ts) . ' de ' . $meses[(int)date('n', $ts) - 1];
             }
@@ -816,8 +816,8 @@ class RutasController extends Controller {
 
         // GET — formulario
         $fechaRuta = null;
-        if ($ruta->fecha_visita) {
-            $ts  = strtotime($ruta->fecha_visita);
+        if ($ejec && $ejec->fecha) {
+            $ts  = strtotime($ejec->fecha);
             $dia = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][date('w', $ts)];
             $fechaRuta = $dia . ' ' . date('j', $ts) . ' de ' . $meses[(int)date('n', $ts) - 1];
         }
@@ -825,7 +825,7 @@ class RutasController extends Controller {
         // Oficios ya emitidos para esta ruta (para mostrar aviso)
         $dbO = new Database();
         $dbO->query("SELECT numero, fecha, destinatario_nombre FROM oficios_emitidos
-                     WHERE id_ruta = :id AND is_active = TRUE ORDER BY created_at DESC LIMIT 5");
+                     WHERE id_ejecucion = :id AND is_active = TRUE ORDER BY created_at DESC LIMIT 5");
         $dbO->bind(':id', $id);
         $oficiosPrevios = $dbO->resultSet();
 

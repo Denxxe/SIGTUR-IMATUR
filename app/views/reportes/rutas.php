@@ -52,8 +52,8 @@
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--brand-500);">
             <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Finalizadas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--brand-600);"><?php echo $data['stats']->finalizadas ?? 0; ?></span>
+                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Salidas ejecutadas</span>
+                <span style="font-size:28px; font-weight:800; color:var(--brand-600);"><?php echo $data['stats']->salidas_ejecutadas ?? 0; ?></span>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
                     <label class="sig-field__label" for="estado">Estado</label>
                     <select id="estado" name="estado" class="sig-select">
                         <option value="">Todos los estados</option>
-                        <?php foreach (['Activa','Inactiva','En Mantenimiento','Finalizada'] as $opt): ?>
+                        <?php foreach (Ruta::ESTADOS as $opt): ?>
                             <option value="<?php echo $opt; ?>" <?php if (($data['filtro_estado'] ?? '') === $opt) echo 'selected'; ?>>
                                 <?php echo $opt; ?>
                             </option>
@@ -103,7 +103,7 @@
                     </select>
                 </div>
                 <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label" for="fecha_desde">Fecha visita desde</label>
+                    <label class="sig-field__label" for="fecha_desde">Con salidas desde</label>
                     <input id="fecha_desde" type="date" name="fecha_desde" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_desde'] ?? ''); ?>">
                 </div>
                 <div class="sig-field" style="margin:0;">
@@ -155,15 +155,15 @@
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:3px solid #D97706;">
     <div class="sig-card__head">
         <div class="sig-card__title"><i class="bi bi-diagram-3-fill" style="color:#D97706;"></i> Demografía Consolidada por Tipo de Ruta</div>
-        <span style="font-size:11px; color:var(--text-tertiary);">Suma de informes de visita registrados</span>
+        <span style="font-size:11px; color:var(--text-tertiary);">Suma de las fichas de las salidas de cada recorrido</span>
     </div>
     <div class="sig-table-wrap">
         <table class="sig-table">
             <thead>
                 <tr>
                     <th>Tipo de Ruta</th>
-                    <th class="text-center">Rutas</th>
-                    <th class="text-center">Finalizadas</th>
+                    <th class="text-center">Recorridos</th>
+                    <th class="text-center">Salidas ejecutadas</th>
                     <th class="text-center">Mujeres</th>
                     <th class="text-center">Hombres</th>
                     <th class="text-center">Niñas</th>
@@ -177,12 +177,12 @@
                 foreach ($data['statsPorTipo'] as $st):
                     $gM+=(int)$st->mujeres; $gH+=(int)$st->hombres; $gNa+=(int)$st->ninas;
                     $gNo+=(int)$st->ninos; $gT+=(int)$st->total_atendidos;
-                    $gR+=(int)$st->rutas; $gF+=(int)$st->finalizadas;
+                    $gR+=(int)$st->rutas; $gF+=(int)$st->ejecutadas;
                 ?>
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($st->tipo_ruta); ?></td>
                     <td class="text-center"><?php echo (int)$st->rutas; ?></td>
-                    <td style="text-align:center; color:#7C3AED; font-weight:700;"><?php echo (int)$st->finalizadas; ?></td>
+                    <td style="text-align:center; color:#7C3AED; font-weight:700;"><?php echo (int)$st->ejecutadas; ?></td>
                     <td class="text-center"><?php echo (int)$st->mujeres; ?></td>
                     <td class="text-center"><?php echo (int)$st->hombres; ?></td>
                     <td class="text-center"><?php echo (int)$st->ninas; ?></td>
@@ -211,17 +211,18 @@
     <table class="sig-table">
         <thead>
             <tr>
-                <th>Nombre de la Ruta</th>
+                <th>Recorrido</th>
                 <th>Tipo</th>
-                <th>Fecha Visita</th>
                 <th>Departamento</th>
-                <th>Guía</th>
                 <th>Estado</th>
+                <th>Restricciones</th>
                 <?php /* Columna "Tarifa" retirada (H-14): rutas.tiene_tarifa/tarifa_monto no se
                         capturan en ningún formulario, así que el reporte informaba "Gratuita"
                         para toda ruta, siempre — incluso si se cobró. Se reactiva cuando el
                         cliente defina el flujo de cobro (D-RT02). */ ?>
                 <th class="text-center">Paradas</th>
+                <th class="text-center">Salidas</th>
+                <th>Última salida</th>
                 <th class="text-center">Particip.</th>
                 <th class="text-center">Atendidos</th>
             </tr>
@@ -229,34 +230,36 @@
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="9" class="sig-table-empty">No hay rutas registradas para generar el reporte.</td>
+                    <td colspan="10" class="sig-table-empty">No hay recorridos registrados para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($r->nombre); ?></td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->tipo_ruta ?? 'General'); ?></td>
-                        <td style="font-size:12px; color:var(--text-secondary);">
-                            <?php if ($r->fecha_visita): ?>
-                                <?php echo date('d/m/Y', strtotime($r->fecha_visita)); ?>
-                                <?php if ($r->hora_visita): ?><br><span style="color:var(--text-tertiary);"><?php echo substr($r->hora_visita, 0, 5); ?></span><?php endif; ?>
-                            <?php else: ?>
-                                <span style="color:var(--text-tertiary);">—</span>
-                            <?php endif; ?>
-                        </td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
-                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->facilitador_nombre ?? '—'); ?></td>
                         <td>
+                            <span class="sig-badge sig-badge--sm <?php echo Ruta::ESTADO_BADGES[$r->estado] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estado); ?></span>
+                        </td>
+                        <td style="font-size:12px; color:var(--text-secondary);">
                             <?php
-                            $statusBadge = 'sig-badge--neutral';
-                            if ($r->estado == 'Activa') $statusBadge = 'sig-badge--success';
-                            elseif ($r->estado == 'Inactiva') $statusBadge = 'sig-badge--danger';
-                            elseif ($r->estado == 'En Mantenimiento') $statusBadge = 'sig-badge--warning';
-                            elseif ($r->estado == 'Finalizada') $statusBadge = 'sig-badge--brand';
+                            // mig. 079 — la restricción es del recorrido (edad + condiciones)
+                            $restr = [];
+                            if (($r->edad_min ?? null) !== null || ($r->edad_max ?? null) !== null) $restr[] = Ruta::textoEdades($r);
+                            if (!empty($r->restricciones)) $restr[] = $r->restricciones;
+                            echo $restr ? htmlspecialchars(implode(' · ', $restr)) : '<span style="color:var(--text-tertiary);">—</span>';
                             ?>
-                            <span class="sig-badge sig-badge--sm <?php echo $statusBadge; ?>"><?php echo $r->estado; ?></span>
                         </td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
+                        <td style="text-align:center; font-weight:700; color:var(--text-primary);">
+                            <?php echo (int)$r->total_salidas; ?>
+                            <?php if ((int)$r->salidas_ejecutadas > 0): ?>
+                                <br><span style="font-size:10px; font-weight:600; color:var(--success-600);"><?php echo (int)$r->salidas_ejecutadas; ?> ejec.</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="font-size:12px; color:var(--text-secondary);">
+                            <?php echo $r->ultima_salida ? date('d/m/Y', strtotime($r->ultima_salida)) : '<span style="color:var(--text-tertiary);">—</span>'; ?>
+                        </td>
                         <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
                         <td style="text-align:center; font-weight:700; color:var(--success-600);"><?php echo (int)($r->total_atendidos ?? 0); ?></td>
                     </tr>

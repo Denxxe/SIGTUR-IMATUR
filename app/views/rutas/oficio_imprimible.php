@@ -160,6 +160,7 @@
 $cfg = $data['config'] ?? [];
 $v = fn(string $k) => htmlspecialchars($cfg[$k]['valor'] ?? '');
 $ruta = $data['ruta'];
+$ejec = $data['ejecucion'] ?? null;   // la SALIDA (mig. 078): fecha y hora salen de aquí
 ?>
 
 <!-- Control bar (hidden on print) -->
@@ -206,7 +207,7 @@ $ruta = $data['ruta'];
                 <strong><?php echo htmlspecialchars($ruta->nombre ?? ''); ?></strong>,
                 el día <strong><?php echo htmlspecialchars($data['fecha_ruta_esp'] ?? ''); ?></strong>
                 del presente año, a las
-                <strong><?php echo $ruta->hora_visita ? substr($ruta->hora_visita, 0, 5) : ''; ?></strong>,
+                <strong><?php echo !empty($ejec->hora) ? substr($ejec->hora, 0, 5) : ''; ?></strong>,
                 se estará visitando
                 <strong><?php echo htmlspecialchars($data['espacio']); ?></strong>
                 con un grupo aproximado de

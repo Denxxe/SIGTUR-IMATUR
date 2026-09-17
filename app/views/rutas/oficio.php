@@ -97,7 +97,7 @@ if (!empty($oficiosPrevios)):
                     <div>
                         <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Hora</span>
                         <div style="font-weight:600; color:var(--text-primary);">
-                            <?php echo $ruta->hora_visita ? substr($ruta->hora_visita, 0, 5) : '—'; ?>
+                            <?php echo !empty($ejecucion->hora) ? substr($ejecucion->hora, 0, 5) : '—'; ?>
                         </div>
                     </div>
                     <div>
@@ -215,7 +215,7 @@ if (!empty($oficiosPrevios)):
                     desarrollo de la <strong><?php echo htmlspecialchars($ruta->nombre ?? ''); ?></strong>,
                     el día <strong><?php echo $data['fecha_ruta_esp'] ?? '<span style="color:#9ca3af; font-style:italic;">fecha de visita</span>'; ?></strong>
                     del presente año, a las
-                    <strong><?php echo $ruta->hora_visita ? substr($ruta->hora_visita, 0, 5) : '<span style="color:#9ca3af; font-style:italic;">hora</span>'; ?></strong>,
+                    <strong><?php echo !empty($ejecucion->hora) ? substr($ejecucion->hora, 0, 5) : '<span style="color:#9ca3af; font-style:italic;">hora</span>'; ?></strong>,
                     se estará visitando
                     <strong><span id="prev_espacio"><?php echo htmlspecialchars($ruta->nombre ?? ''); ?></span></strong>
                     con un grupo aproximado de

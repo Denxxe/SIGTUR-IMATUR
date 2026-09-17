@@ -67,9 +67,9 @@ class Asistencia extends Model {
                     FROM empleados e
                     WHERE e.is_active = TRUE AND (
                         EXISTS (SELECT 1 FROM participantes_ruta pr
-                                INNER JOIN rutas r ON pr.id_ruta = r.id
+                                INNER JOIN ruta_ejecuciones r ON pr.id_ejecucion = r.id
                                 WHERE pr.id_persona = e.id_persona AND pr.is_active = TRUE
-                                  AND r.fecha_visita = :f1)
+                                  AND r.fecha = :f1)
                         OR EXISTS (SELECT 1 FROM participantes_taller pt
                                 INNER JOIN talleres t ON pt.id_taller = t.id
                                 WHERE pt.id_persona = e.id_persona AND pt.is_active = TRUE
