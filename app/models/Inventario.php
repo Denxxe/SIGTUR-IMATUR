@@ -160,6 +160,66 @@ class Inventario extends Model {
         return trim($g) . '-' . trim($sg) . '-' . trim($sec) . '-' . trim($orden);
     }
 
+    /**
+     * Descripción del bien en una sola línea, como la escriben los documentos
+     * oficiales: `NOMBRE, MARCA X, MODELO Y, SERIAL Z`.
+     *
+     * Ni el BM-1 ni el oficio de relación tienen columnas para marca, modelo o
+     * serial: van dentro del texto de la descripción ("G/EPON ONU, MARCA V.SOL,
+     * MODELO V2801S-V, COLOR BLANCO Y NARANJA, SERIAL LP20241017800"). El
+     * sistema los sigue capturando por separado —para poder buscar y filtrar—
+     * y los compone aquí al imprimir, que es lo que propuso el plan (§2-bis).
+     */
+    public static function descripcionOficial($bien): string {
+        $partes = [trim((string)($bien->nombre ?? ''))];
+        $extra  = trim((string)($bien->descripcion ?? ''));
+        if ($extra !== '') $partes[] = $extra;
+        if (!empty($bien->marca))  $partes[] = 'MARCA '  . trim($bien->marca);
+        if (!empty($bien->modelo)) $partes[] = 'MODELO ' . trim($bien->modelo);
+        if (!empty($bien->serial)) $partes[] = 'SERIAL ' . trim($bien->serial);
+        return mb_strtoupper(implode(', ', array_filter($partes)), 'UTF-8');
+    }
+
+    /**
+     * Datos del donante y de la donación (documento de donación, mig. 075).
+     * Solo aplica a bienes con origen «Donación»: el documento es el título
+     * que sustituye a la factura, así que en una compra no tiene sentido.
+     */
+    public static function guardarDonacion(int $id, array $d, $user_id = null): bool {
+        $previos = self::find($id);
+        if (!$previos) throw new Exception('El bien no existe.');
+        if (($previos->origen ?? '') !== 'Donación') {
+            throw new Exception('Solo los bienes con origen «Donación» llevan documento de donación.');
+        }
+        if (trim((string)($d['donante'] ?? '')) === '') {
+            throw new Exception('El nombre del donante es obligatorio.');
+        }
+
+        $db = new Database();
+        $db->query("UPDATE inventario
+                       SET donante = :don, donante_cedula = :ced, donante_estado_civil = :ec,
+                           donante_domicilio = :dom, donacion_procedencia = :proc,
+                           costo_adquisicion = :bs, donacion_valor_usd = :usd,
+                           donacion_fecha = :fecha,
+                           updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':don',   trim($d['donante']));
+        $db->bind(':ced',   ($d['donante_cedula']       ?? '') !== '' ? trim($d['donante_cedula'])       : null);
+        $db->bind(':ec',    ($d['donante_estado_civil'] ?? '') !== '' ? trim($d['donante_estado_civil']) : null);
+        $db->bind(':dom',   ($d['donante_domicilio']    ?? '') !== '' ? trim($d['donante_domicilio'])    : null);
+        $db->bind(':proc',  ($d['donacion_procedencia'] ?? '') !== '' ? trim($d['donacion_procedencia']) : null);
+        $db->bind(':bs',    ($d['valor_bs']  ?? '') !== '' ? (float)$d['valor_bs']  : null);
+        $db->bind(':usd',   ($d['valor_usd'] ?? '') !== '' ? (float)$d['valor_usd'] : null);
+        $db->bind(':fecha', ($d['donacion_fecha'] ?? '') !== '' ? $d['donacion_fecha'] : null);
+        $db->bind(':u',     $user_id);
+        $db->bind(':id',    $id);
+        $ok = $db->execute();
+
+        self::auditStatic('inventario', 'UPDATE', $id, $previos,
+            ['accion' => 'DATOS_DONACION', 'donante' => trim($d['donante'])], $user_id);
+        return $ok;
+    }
+
     /** ¿El bien está fuera del inventario activo? (dado de baja) */
     public static function fueraDeInventario(?string $estatus): bool {
         return in_array((string)$estatus, self::ESTATUS_FUERA_DE_INVENTARIO, true);

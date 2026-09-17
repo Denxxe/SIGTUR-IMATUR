@@ -117,6 +117,96 @@ $fmt  = fn($v) => $v !== null && $v !== '' ? htmlspecialchars((string)$v) : '<sp
     </div>
 </div>
 
+<?php if (($b->origen ?? '') === 'Donación'): ?>
+<!-- ── Donación: datos del acto y su documento (mig. 075) ────────── -->
+<?php
+// El documento de donación es el título del bien cuando no hay factura: sin
+// donante identificado no puede redactarse, así que los datos se capturan aquí.
+$puedeEscribir = InventarioController::puedeEscribir();
+$listoDonacion = !empty($b->donante) && !empty($b->donante_cedula);
+?>
+<div class="sig-card anim-slide-up" style="margin-top:var(--sp-4);border-left:3px solid var(--brand-500,#3b82f6);">
+    <div class="sig-card__head" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="sig-card__title"><i class="bi bi-gift"></i> Donación — datos del acto</div>
+        <?php if ($listoDonacion): ?>
+            <a href="<?php echo URL_ROOT; ?>/inventario/donacion/<?php echo (int)$b->id; ?>"
+               target="_blank" class="btn-sig btn-sig--primary">
+                <i class="bi bi-printer"></i> Documento de donación
+            </a>
+        <?php else: ?>
+            <span class="sig-badge sig-badge--warning">Faltan nombre y cédula del donante</span>
+        <?php endif; ?>
+    </div>
+    <div class="sig-card__body" style="padding:var(--sp-4);">
+        <form action="<?php echo URL_ROOT; ?>/inventario/guardarDonacion" method="POST">
+            <input type="hidden" name="id_inventario" value="<?php echo (int)$b->id; ?>">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-3);">
+                <div class="sig-field">
+                    <label class="sig-field__label">Donante <span class="req">*</span></label>
+                    <input type="text" name="donante" class="sig-input" required
+                           value="<?php echo htmlspecialchars((string)$b->donante); ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Cédula</label>
+                    <input type="text" name="donante_cedula" class="sig-input" placeholder="V-00000000"
+                           value="<?php echo htmlspecialchars((string)$b->donante_cedula); ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Estado civil</label>
+                    <input type="text" name="donante_estado_civil" class="sig-input" placeholder="soltero, casado…"
+                           value="<?php echo htmlspecialchars((string)$b->donante_estado_civil); ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Domicilio</label>
+                    <input type="text" name="donante_domicilio" class="sig-input"
+                           value="<?php echo htmlspecialchars((string)$b->donante_domicilio); ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Valor estimado (Bs)</label>
+                    <input type="number" step="0.01" min="0" name="valor_bs" class="sig-input"
+                           value="<?php echo $b->costo_adquisicion !== null ? htmlspecialchars((string)$b->costo_adquisicion) : ''; ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Equivalente (USD)</label>
+                    <input type="number" step="0.01" min="0" name="valor_usd" class="sig-input"
+                           value="<?php echo $b->donacion_valor_usd !== null ? htmlspecialchars((string)$b->donacion_valor_usd) : ''; ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label">Fecha del acto</label>
+                    <input type="date" name="donacion_fecha" class="sig-input" max="<?php echo date('Y-m-d'); ?>"
+                           value="<?php echo htmlspecialchars((string)$b->donacion_fecha); ?>"
+                           <?php echo $puedeEscribir ? '' : 'disabled'; ?>>
+                </div>
+            </div>
+            <div class="sig-field" style="margin-top:var(--sp-3);">
+                <label class="sig-field__label">
+                    Procedencia del bien
+                    <small style="color:var(--text-tertiary);font-weight:400;">
+                        — cómo lo obtuvo el donante y por qué no hay factura. Va literal en el documento.
+                    </small>
+                </label>
+                <textarea name="donacion_procedencia" class="sig-input" rows="2"
+                          placeholder="Ej.: Dicho bien me pertenece por haberlo obtenido como premio de un Bingo en el que participé, motivo por el cual no poseo factura de compra."
+                          <?php echo $puedeEscribir ? '' : 'disabled'; ?>><?php echo htmlspecialchars((string)$b->donacion_procedencia); ?></textarea>
+            </div>
+            <?php if ($puedeEscribir): ?>
+            <div style="margin-top:var(--sp-3);">
+                <button type="submit" class="btn-sig btn-sig--primary">
+                    <i class="bi bi-check-lg"></i> Guardar datos de la donación
+                </button>
+            </div>
+            <?php endif; ?>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- ── Documentos de respaldo ────────────────────────────────────── -->
 <div class="sig-card anim-slide-up" style="margin-top:var(--sp-4);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-paperclip"></i> Documentos de respaldo</div></div>

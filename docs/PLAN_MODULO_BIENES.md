@@ -185,6 +185,65 @@ patrimonial de la Alcaldía. **La base es la misma; cambia quién ejecuta la cod
 
 ---
 
+## 2-quater. LLEGARON DOS FORMATOS (2026-09-17) — y quedaron construidos (mig. 075)
+
+La Directora de Bienes entregó tres documentos por WhatsApp. Archivados en `docs/formatos/`:
+`oficio_relacion_bienes_nuevos_alcaldia_2026-06-10.jpg`, `documento_donacion_bien_2026-02-18.jpg`
+y el escaneado completo `oficios_bienes_originales_2026-09-15.pdf`.
+
+### 2-quater.1 Qué llegó
+
+| Documento | Contenido | Qué se hizo |
+|---|---|---|
+| **Oficio N° 179/2026** (10/06/2026) | Al Lcdo. Antonio Guevara, *Coordinador de Bienes y Materias* de la Alcaldía. Cuerpo fijo + tabla `CANTIDAD │ DESCRIPCIÓN DEL BIEN │ MONTO EN Bs`. Firma la Presidenta con su resolución y gaceta | **R-1 construido**: `/inventario/relaciones` |
+| **Documento de donación** (18/02/2026) | Declaración del donante (nombre, cédula, estado civil, domicilio), descripción del bien, **procedencia** y por qué no hay factura, valor en Bs *en letras y números* + equivalente en USD, aceptación de la Presidenta, fecha en letras, firmas con huellas y visado de abogada | **R-11 construido**: hoja de vida del bien → «Documento de donación» |
+| **Formulario BM-1** | El **mismo** formato ya recibido el 2026-08-04, esta copia en blanco | Nada: no aporta información nueva |
+
+### 2-quater.2 ⚠️ B-81 — el oficio contradice el cambio del 2026-09-02
+
+El oficio es de **junio**, anterior a la notificación del procedimiento nuevo, y dice justo lo
+contrario de lo que se levantó en §2-ter:
+
+> *«…motivo por el cual se le solicita a la Coordinación que dirige, les sean asignados los
+> respectivos códigos, para su inclusión en el Formulario BM-1…»*
+
+Es decir: **le pide a la Alcaldía que codifique**. Y su tabla **no tiene columna de código**, que
+era exactamente el dato que el formato nuevo debía traer. La Directora además lo describió como
+*«el que se le pasa a la Alcaldía para que venga hacer la codificación»*, o sea que sigue narrando
+el procedimiento viejo.
+
+**Decisión tomada:** construirlo **fiel a lo entregado**, que es lo único verificable. El modelo
+guarda el código de cada bien, así que si el cliente confirma el formato nuevo el cambio se reduce
+a agregar una columna en `relacion_imprimible.php`. **Nada del modelo de datos hay que rehacer.**
+
+### 2-quater.3 B-82 — la resolución y la gaceta que el sistema venía imprimiendo
+
+Los dos documentos, firmados y sellados, declaran la designación vigente de la Presidenta:
+**Resolución N° 32 del 05/09/2025**, **Gaceta Municipal Extraordinaria N° 87 del 05/09/2025**.
+
+El sistema tenía cargado `resolucion_numero = 025` (15/03/2024) y `gaceta_numero = 042`
+(20/01/2024) —datos de relleno— y el cargo como *«Director General»*. Esos valores se imprimen en
+**cinco documentos reales**: constancia de trabajo, carta de aceptación y de culminación de
+pasantes, y los dos oficios de rutas. Corregidos en la mig. 075, junto con el cargo
+(**Presidenta**), la cédula y el nombre completo que exige el documento de donación.
+
+### 2-quater.4 Lo que se construyó
+
+| Pieza | Detalle |
+|---|---|
+| `inventario_relaciones` + `inventario.id_relacion` | Cabecera del oficio y vínculo desde cada bien, mismo patrón que `inventario_consolidados_bm1`. Permite saber **qué bienes ya se reportaron** y **reimprimir el oficio tal como se envió** |
+| `RelacionBienes` | `candidatos()` (bienes sin reportar) · `emitir()` transaccional con número del correlativo `bienes` · `anular()` que libera los bienes **sin reciclar el número** |
+| `Inventario::descripcionOficial()` | Compone `NOMBRE, MARCA X, MODELO Y, SERIAL Z` al imprimir — resuelve el hallazgo 2 de §2-bis (los formatos no tienen columnas para marca/modelo/serial) |
+| Campos del donante | `donante_cedula`, `donante_estado_civil`, `donante_domicilio`, `donacion_procedencia`, `donacion_valor_usd`, `donacion_fecha` |
+| `Util::numeroALetras()` / `montoALetras()` / `fechaEnLetras()` | El documento jurídico escribe las cantidades y la fecha en letras. Verificado contra el papel: *DIECINUEVE MIL VEINTICINCO BOLÍVARES CON VEINTIOCHO CÉNTIMOS* y *a los Dieciocho (18) días del mes de Febrero de Dos Mil Veintiséis* salen **literalmente iguales** |
+
+**Nota de modelado:** en el oficio original los banderines figuran con cantidad **2** en una sola
+fila. El sistema registra cada bien individualmente (B-09/B-62: la cantidad del código siempre vale
+1), así que dos banderines salen como **dos renglones de 1**. Es intencional: es lo que permite que
+cada uno tenga su propio N° de orden y su propia hoja de vida.
+
+---
+
 ## 3. Cambios al modelo de datos
 
 ### 3.1 `inventario` — columnas nuevas
@@ -462,10 +521,10 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 
 | # | Qué | Por qué está bloqueado |
 |---|---|---|
-| R-1 | **Relación / informe de bienes nuevos** para enviar a la Alcaldía | Es el **dolor #1 declarado** (B-05). Sin el formato real, cualquier cosa que generemos habría que rehacerla. **Cambió de naturaleza (§2-ter):** ahora lleva el código que asigna IMATUR y el monto, y es informativa — no pide inspección. |
-| R-2 | **Acta de Desincorporación** (firma Coordinadora + Presidencia; la Alcaldía firma y sella como aval) | B-39. **Reducida y renombrada (§2-ter):** un solo documento **por lote**, ~~sin oficio de retiro~~. El nombre «Acta de Desincorporación» es exigencia del cliente. |
-| R-3 | **Acta de asignación** de bien a responsable, que firma el empleado ("acta de encargado") | B-29. Sigue vigente. Ídem: hace falta el formato. |
-| R-11 | **Oficio de donación** | Sigue vigente. Ídem. |
+| ✅ R-1 | ~~**Relación / informe de bienes nuevos**~~ **HECHO (2026-09-17, mig. 075)** | Llegó el formato (Oficio N° 179/2026) y se construyó: `/inventario/relaciones`. ⚠️ Es el del procedimiento **anterior** (pide codificación, sin columna de código) → **B-81**. Ver §2-quater. |
+| R-2 | **Acta de Desincorporación** (firma Coordinadora + Presidencia; la Alcaldía firma y sella como aval) | B-39. **Reducida y renombrada (§2-ter):** un solo documento **por lote**, ~~sin oficio de retiro~~. El nombre «Acta de Desincorporación» es exigencia del cliente. **El formato NO llegó el 2026-09-17.** |
+| R-3 | **Acta de asignación** de bien a responsable, que firma el empleado ("acta de encargado") | B-29. Sigue vigente. **El formato NO llegó el 2026-09-17.** |
+| ✅ R-11 | ~~**Oficio de donación**~~ **HECHO (2026-09-17, mig. 075)** | Llegó el formato y se construyó: hoja de vida del bien → «Documento de donación». Ver §2-quater. |
 | R-12 | **Codificación interna con secuencia propia** (C-1…C-4, C-7) | 🔒 No es formato: espera el **punto de partida** (B-73) y el **catálogo de grupos/subgrupos/secciones** (B-75, reabre B-60). El resto es programable en cuanto lleguen esos dos datos. |
 | R-13 | **Acta de Desincorporación por lote a nivel de datos** (C-5, C-6) | La tabla y el flujo (registrar el acta sellada → marcar retirados todos sus bienes) **se pueden construir sin el formato**; solo el imprimible depende de él. |
 
@@ -488,11 +547,12 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 **Bloquean R-1, R-2, R-3 y R-11 — pedir los formatos** (el cliente los enviará *cuando tenga los
 nuevos*, 2026-09-02; **pedirlos en digital**, que sí existen):
 
-- [ ] Relación/informe de bienes nuevos, **con código y monto** ← **el más urgente**
-- [ ] **Acta de Desincorporación** (por lote)
+- [x] ~~Relación/informe de bienes nuevos~~ — **RECIBIDO 2026-09-17 y construido** (mig. 075).
+      ⚠️ Pero es el formato **anterior** al cambio del 2026-09-02 → confirmar con **B-81**
+- [ ] **Acta de Desincorporación** (por lote) ← **ahora el más urgente**
 - [x] ~~Oficio de retiro tras la baja~~ — **ELIMINADO del alcance** (§2-ter): el acta sellada es el aval
 - [ ] Acta de asignación de un bien a un empleado ("acta de encargado")
-- [ ] Oficio de donación
+- [x] ~~Oficio de donación~~ — **RECIBIDO 2026-09-17 y construido** (mig. 075)
 - [ ] **El inventario interno que la encargada lleva aparte** (archivo digital) — no es un formato,
       es el insumo que desbloquea la carga de los ~142 bienes, el catálogo de códigos y el punto de
       partida de la secuencia
@@ -514,6 +574,9 @@ grupos/subgrupos/secciones). Las 8 preguntas nuevas están en **§2-ter**.
 | ~~B-71~~ | ✅ | **Respondida (2026-09-02): SÍ hay digital** de todos los documentos y del **inventario interno de la encargada**. Pedir los archivos. |
 | ~~B-72~~ | ✅ | **Reinterpretada (2026-09-02): los saltos NO son bajas** — el listado va por departamento, no por código. Se confirma al ordenar el digital por código. |
 | **B-73…B-80** | 🔒 | **Nuevas (2026-09-02)** — punto de partida de la secuencia · alcance y longitud de la numeración · catálogo de clasificación · reutilización de códigos · contenido y frecuencia de la relación · si la Alcaldía devuelve acuse · firmas/correlativo del acta de desincorporación · notificación por escrito del procedimiento. **Enunciadas en §2-ter.** |
+| **B-81** | 🔴 | **Nueva (2026-09-17)** — El oficio de relación entregado es el del procedimiento **anterior**: pide que la Alcaldía asigne los códigos y su tabla no tiene columna de código. ¿Sigue vigente así, o viene una versión nueva? **Ver §2-quater.** |
+| **B-82** | 🟡 | **Nueva (2026-09-17)** — Confirmar la designación vigente de la Presidenta: **Resolución N° 32 del 05/09/2025**, **Gaceta Extraordinaria N° 87 del 05/09/2025**, según los dos documentos entregados. Corregido en la mig. 075 (el sistema traía 025/2024 y 042/2024, de relleno, imprimiéndose en 5 documentos reales). |
+| **B-83** | 🟢 | **Nueva (2026-09-17)** — ¿Quién es el **abogado que visa** el documento de donación (nombre + IPSA)? El bloque está construido y se imprime solo si está configurado en `/config`. |
 
 ### 12.4 Antes de usarlo en producción
 

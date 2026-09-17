@@ -1,10 +1,15 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-09-03 · **Migraciones aplicadas:** hasta **073** · **Rama:** `development_stage`
+**Última actualización:** 2026-09-17 · **Migraciones aplicadas:** hasta **075** · **Rama:** `development_stage`
 
 > ⚠️ **2026-09-02 — Bienes: la Alcaldía cambió el procedimiento de codificación.** IMATUR pasa a
 > asignar el código de sus propios bienes y el acta de baja pasa a ser **Acta de Desincorporación**
 > por lote (sin oficio de retiro). **Ver §3.4** y `docs/PLAN_MODULO_BIENES.md` §2-ter.
+>
+> ✅ **2026-09-17 — Llegaron 2 de los 4 formatos de Bienes** (Directora de Bienes, vía WhatsApp).
+> **Oficio de relación** y **documento de donación** quedaron **construidos** (mig. 075). Siguen
+> faltando el **Acta de Desincorporación** y el **acta de asignación**. ⚠️ El oficio recibido es el
+> del procedimiento **anterior** al cambio del 2026-09-02 — hay que confirmarlo. **Ver §3.4.**
 
 Documento **único** de seguimiento: qué falta por hacer y decidir. Consolida y reemplaza a
 `REGISTRO_NEGOCIO.md`, `DECISIONES_PENDIENTES.md`, `preguntas_modelo_negocio.md`,
@@ -44,11 +49,12 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
-| 🔴 1 | **Relación/informe de bienes nuevos** (formato **nuevo**, ver §3.4) + **B-73** punto de partida de la secuencia + **B-75** catálogo de clasificación | R-1 y R-12: el dolor #1 del cliente, ahora con IMATUR codificando |
+| 🔴 1 | **B-81 — ¿el oficio de relación recibido sigue vigente?** Es el del procedimiento **anterior** (pide que la Alcaldía codifique y no tiene columna de código). Ya está construido tal cual llegó; si hay versión nueva, es agregar una columna. **Más B-73** punto de partida de la secuencia y **B-75** catálogo de clasificación | R-12: sin B-73/B-75 IMATUR no puede codificar. ~~R-1~~ ✅ **el oficio ya está construido** (mig. 075) |
 | 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (ver §2, mig. 073). Con un mes basta |
 | 🔴 3 | **Rutas: R-14** (nombres de los estados, quedó en blanco) + **R-37…R-40** (flujo de cobro) + el resto del cuestionario (R-17…R-64) | ✅ **R-01…R-16 respondidas el 2026-09-03** y **confirmaron el rediseño**: hay catálogo, sí se cobra, la Presidencia aprueba. R-14 bloquea los estados; R-40 bloquea el registro de pagos. Plan: `docs/PLAN_MODULO_RUTAS.md` |
 | 🔴 4 | **N-3** — «días adicionales» de la hoja INTERESES, **con recorte de pantalla** | Fase N-E: Liquidación de Prestaciones Sociales |
-| 🟡 5 | **Acta de Desincorporación** · acta de asignación · oficio de donación · **el inventario digital de la encargada** (~~oficio de retiro~~: fuera del alcance) | R-2, R-3, R-11 y la carga de los ~142 bienes |
+| 🟡 5 | **Acta de Desincorporación** · **acta de asignación** · **el inventario digital de la encargada** (~~oficio de donación~~ ✅ recibido y construido · ~~oficio de retiro~~: fuera del alcance) | R-2, R-3 y la carga de los ~142 bienes. **R-11 ✅ cerrado** (mig. 075) |
+| 🟡 5-bis | **B-82 — confirmar la designación vigente de la Presidenta.** Los dos documentos entregados dicen Resolución **N° 32** del 05/09/2025 y Gaceta Extraordinaria **N° 87** del 05/09/2025; el sistema tenía 025/2024 y 042/2024, de relleno, imprimiéndose en **5 documentos reales**. Ya se corrigió en la mig. 075 — falta el visto bueno | Constancias de trabajo, cartas de pasantes y los 2 oficios de rutas dejan de llevar una resolución equivocada |
 | 🟡 6 | **N-1** (días base 75 vs 85/45) y **N-2** (semanas ×4/×5) | No bloquean: son parámetros. Vuelven **definitivos** los montos |
 | 🟡 7 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
 | 🟢 8 | Planilla física de asistencia · D-RT02 tarifa · D-RT03 informe automático · D-FO05 metas · D-FO08-bis facilitadores · D-OF03 libro de correspondencia · D-TX03 históricos | Mejoras y reportes puntuales |
@@ -63,7 +69,7 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 | Catálogo de cargos | **5** cargos |
 | Los ~142 bienes | **0** — ya se puede cargar (ubicaciones sembradas en la mig. 069). **2026-09-02: pedir el inventario digital que lleva la encargada** — permite carga masiva en vez de tecleo, y de paso trae el catálogo de códigos en uso y el punto de partida de la secuencia (B-73/B-75) |
 | Coordinador de *Compra de Bienes y Servicios* | **Vacante** → los movimientos de bienes están bloqueados por diseño (B-32) |
-| Datos institucionales de configuración | Revisar: firmante «Director General» vs cargo «Presidenta»; directora «Maria Maza» |
+| Datos institucionales de configuración | ✅ **Corregido en la mig. 075** con los datos de los dos documentos firmados: cargo **Presidenta**, Resolución **32**/05-09-2025, Gaceta **87**/05-09-2025, cédula y nombre completo de la Presidenta. Falta el visto bueno del cliente (**B-82**) y llenar el abogado visador del documento de donación |
 | Configuración de producción | `URL_ROOT`, credenciales de BD (hoy `postgres/1234`), clave del admin, SMTP |
 
 ### 0.4 Lo que ya NO falta
@@ -770,6 +776,39 @@ Bloquean desarrollo. Cada una incluye **qué preguntar**.
 
 ### 3.4 ⚠️ Inventario — levantamiento completo (2026-08-04), **pero el procedimiento cambió (2026-09-02)**
 
+> ### ✅ 2026-09-17 — Llegaron 2 de los 4 formatos, y quedaron construidos (mig. 075)
+>
+> La Directora de Bienes entregó tres documentos. Archivados en `docs/formatos/`.
+>
+> | Recibido | Qué es | Estado |
+> |---|---|---|
+> | **Oficio N° 179/2026** (10/06/2026) `oficio_relacion_bienes_nuevos_alcaldia_2026-06-10.jpg` | Relación de bienes nuevos al Coordinador de Bienes de la Alcaldía. Tabla `CANTIDAD │ DESCRIPCIÓN DEL BIEN │ MONTO EN Bs` | ✅ **Construido** — `/inventario/relaciones` |
+> | **Documento de donación** (18/02/2026) `documento_donacion_bien_2026-02-18.jpg` | Declaración del donante + aceptación de la Presidenta, con visado de abogada, firmas y huellas | ✅ **Construido** — hoja de vida del bien → «Documento de donación» |
+> | **Formulario BM-1** | **Repetido.** Es el mismo formato recibido el 2026-08-04, esta copia en blanco | ➖ No aporta |
+>
+> **⚠️ B-81 — el oficio contradice el cambio del 2026-09-02.** Es de **junio**, anterior a la
+> notificación, y dice lo contrario de lo levantado: *«se le solicita a la Coordinación que dirige,
+> les sean asignados los respectivos códigos»*. Su tabla **no tiene columna de código**, que era
+> justo el dato que el formato nuevo debía traer. La Directora además lo describió como *«el que se
+> le pasa a la Alcaldía para que venga hacer la codificación»* — sigue narrando el procedimiento
+> viejo. **Se construyó fiel a lo entregado**; si el cliente confirma el formato nuevo, el cambio es
+> agregar la columna en la vista imprimible (el modelo ya guarda el código de cada bien).
+>
+> **B-82 — resolución y gaceta.** Los dos documentos, firmados y sellados, declaran
+> **Resolución N° 32 del 05/09/2025** y **Gaceta Municipal Extraordinaria N° 87 del 05/09/2025**.
+> El sistema tenía 025 (15/03/2024) y 042 (20/01/2024) — datos de relleno que se imprimían en
+> **cinco documentos reales**: constancias de trabajo, carta de aceptación y de culminación de
+> pasantes, y los dos oficios de rutas. Corregido en la mig. 075; falta el visto bueno.
+>
+> **Siguen faltando:** **Acta de Desincorporación** (por lote, C-5) y **acta de asignación**
+> («acta de encargado»). Sin sus formatos no se construyen: es la misma razón por la que estos dos
+> esperaron desde agosto.
+>
+> **Nota de modelado:** en el oficio original los banderines figuran con cantidad 2 en una sola
+> fila. El sistema registra **cada bien individualmente** (B-09/B-62: la cantidad del código siempre
+> vale 1), así que dos banderines salen como **dos renglones de 1**. Es intencional — es lo que
+> permite que cada uno tenga su propio N° de orden y su propia hoja de vida.
+
 > ### 🔴 2026-09-02 — La Alcaldía notificó un procedimiento nuevo: **IMATUR codifica sus propios bienes**
 >
 > Detalle completo, consecuencias en el código (C-1…C-7) y las 8 preguntas nuevas (B-73…B-80) en
@@ -827,7 +866,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | 🔴 Hallazgo | **El código oficial no clasifica.** Sillas, mesas, pizarra, aire acondicionado y router comparten `2-01-108`. El catálogo de la Alcaldía **no distingue** equipo tecnológico de mobiliario → el sistema necesita **dos ejes**: código oficial (para la Alcaldía) + categoría interna (para los reportes de la Presidencia). |
 | 🟡 B-69…B-72 | Nuevas: valores en "S/P" pese a que sí registran costo · cada cuánto llega el BM-1 · si existe versión digital (permitiría carga automática de códigos) · si los saltos en el N° de orden son bajas. |
 | 🟡 B-63…B-68 | Umbral de mobiliario · cómo identificar a la Coordinadora de Bienes · sede del aeropuerto · confirmar eliminación de `tipo_bien`/`cantidad` (mig. 044) · destino del bien dado de baja · responsable derivado o manual. Ver §9 del plan. |
-| 🔴 Formatos | **Actualizado 2026-09-02:** **relación de bienes nuevos** (el más urgente — ahora con código y monto), **Acta de Desincorporación** (por lote), **acta de asignación** y **oficio de donación**. ~~Oficio de retiro~~ **eliminado del alcance**. El cliente los enviará **cuando tenga los formatos nuevos**; pedirlos **en digital**. El formato de inventario de la Alcaldía (BM-1) **ya se recibió**. |
+| 🟡 Formatos | **Actualizado 2026-09-17.** ✅ **Relación de bienes nuevos** y ✅ **oficio de donación**: recibidos y **construidos** (mig. 075). 🔴 Faltan **Acta de Desincorporación** (por lote) y **acta de asignación**. ~~Oficio de retiro~~ **eliminado del alcance**. El BM-1 se recibió en agosto. ⚠️ Ver **B-81**: el oficio entregado es el del procedimiento anterior. |
 
 ### 3.5 Turismo (Rutas)
 

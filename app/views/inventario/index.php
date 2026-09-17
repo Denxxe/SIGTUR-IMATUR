@@ -24,6 +24,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <p class="page__subtitle">Registro y control de los bienes de la institución. El código oficial lo asigna la Alcaldía.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/inventario/relaciones" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-file-earmark-text"></i> Oficios a la Alcaldía
+        </a>
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados" class="btn-sig btn-sig--ghost">
             <i class="bi bi-inbox"></i> BM-1 recibidos
         </a>

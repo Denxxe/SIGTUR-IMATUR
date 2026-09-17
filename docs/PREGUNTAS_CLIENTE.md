@@ -1,6 +1,10 @@
 # Lo que necesitamos de IMATUR para cerrar el sistema
 
-**Para:** IMATUR · **Actualizado:** 2026-09-13
+**Para:** IMATUR · **Actualizado:** 2026-09-17
+
+> ✅ **Gracias por los documentos del 15/09.** Con ellos ya quedaron **construidos** el **oficio de
+> relación de bienes nuevos** y el **documento de donación** — el sistema ya los genera. Quedan
+> abiertos los puntos **A1-bis**, **A2**, **A3** y **A8** de más abajo.
 
 El sistema está construido y funcionando. Lo que falta para dejarlo al 100 % **ya casi no es
 programación**: son documentos, datos y tres confirmaciones que dependen de criterios de la institución.
@@ -14,15 +18,15 @@ cada punto.
 
 | | Cuántos | Qué desbloquea |
 |---|---|---|
-| **A. Formatos y respuestas que bloquean programación** | 9 | Los 4 documentos que el sistema no puede generar todavía, la **nueva codificación de bienes** y el módulo de Liquidación |
+| **A. Formatos y respuestas que bloquean programación** | 10 | Los **2 documentos** que faltan de Bienes (de los 4, ya entregaron 2), la **nueva codificación de bienes** y el módulo de Liquidación |
 | **B. Datos para poner en marcha** | 8 | Que el sistema deje de estar vacío. Sin esto está correcto pero no sirve |
 | **C. Confirmaciones que afinan números ya calculados** | 4 | El cálculo ya funciona; estas respuestas lo vuelven definitivo |
 | **D. Decisiones opcionales** | 6 | Mejoras que solo construimos si las quieren |
 
-**Los cuatro puntos más urgentes:** la **relación de bienes nuevos** con el formato nuevo (A1), el
-**archivo digital del inventario de la encargada** (A7), el **mes de bono vacacional ya calculado**
-(A5) y, de Rutas, **los nombres de los estados y cómo funciona el cobro** (A6 — el resto de ese
-cuestionario ya lo respondieron y con eso arrancamos).
+**Los cuatro puntos más urgentes:** confirmar si el **oficio de bienes** que nos pasaron sigue
+vigente tal cual (A1-bis), el **archivo digital del inventario de la encargada** (A7), el **mes de
+bono vacacional ya calculado** (A5) y, de Rutas, **los nombres de los estados y cómo funciona el
+cobro** (A6 — el resto de ese cuestionario ya lo respondieron y con eso arrancamos).
 
 ---
 
@@ -39,16 +43,31 @@ Sin estos no podemos construir. Todo lo demás del sistema ya está hecho.
 > sirve igual**; ajustamos quién ejecuta la codificación. Los puntos A1, A2 y A7 recogen lo que
 > necesitamos para eso.
 
-### A1 ⭐ Relación / informe de bienes nuevos — **el más urgente**
+### A1 ✅ Relación / informe de bienes nuevos — **RECIBIDO Y CONSTRUIDO**
 
-El documento que IMATUR le envía a la Alcaldía con los bienes que entran nuevos. **Con el
-procedimiento nuevo ya no pide inspección**: es la relación de los bienes **ya codificados por
-IMATUR**, con su código y su monto.
+Recibimos el **Oficio N° 179/2026** y el sistema ya lo genera: se eligen los bienes nuevos, el
+sistema le pone el número correlativo, arma la tabla y queda listo para imprimir y firmar. Los
+bienes ya reportados dejan de aparecer, así que no se manda uno dos veces, y cualquier oficio
+anterior se puede volver a imprimir tal como se envió.
 
-**Necesitamos el formato nuevo** (en digital, si lo tienen) para que el sistema lo genere; si lo
-inventamos, habría que rehacerlo.
+### A1-bis ⭐ Una duda sobre ese mismo oficio — **el punto más urgente de Bienes**
 
-### A2 Acta de Desincorporación
+El oficio que nos pasaron es de **junio** y dice: *«se le solicita a la Coordinación que dirige, les
+sean asignados los respectivos códigos»*. Es decir, **le pide a la Alcaldía que codifique**, y su
+tabla **no trae columna de código**.
+
+Pero en septiembre nos informaron que el procedimiento cambió: que ahora **IMATUR asigna sus propios
+códigos** y la relación pasa a ser informativa, con el código y el monto de cada bien.
+
+**Son dos cosas distintas.** Lo construimos igual al papel que nos dieron, que es lo seguro. Solo
+necesitamos que nos confirmen:
+
+- ¿El oficio se sigue usando **así como está**?
+- ¿O viene un formato nuevo con columna de código?
+
+Si es lo segundo, **no hay que rehacer nada**: es agregarle una columna.
+
+### A2 Acta de Desincorporación — **ahora el más urgente de Bienes**
 
 El acta que firman la Coordinadora de Bienes y la Presidencia, que **lista todos los bienes que se van
 a retirar** y que la Alcaldía **firma y sella** como aval de que ya fueron desincorporados.
@@ -64,10 +83,18 @@ retiro** — un solo documento en lugar de dos.
 El documento que firma el trabajador cuando recibe un bien bajo su responsabilidad. Confirmado que
 **sigue vigente**.
 
-### A4 Oficio de donación
+### A4 ✅ Oficio de donación — **RECIBIDO Y CONSTRUIDO**
 
-Confirmado que **sigue vigente**. El sistema ya registra el origen «Donación» con su oficio adjunto;
-falta el formato para generarlo.
+Recibimos el documento de la cafetera donada y el sistema ya lo genera. En la ficha del bien se
+cargan los datos del donante (nombre, cédula, estado civil, domicilio), cómo obtuvo el bien y por
+qué no hay factura, y el valor en bolívares y en dólares. El sistema redacta el texto completo,
+**escribe los montos y la fecha en letras** y lo deja listo para firmar.
+
+Nos faltan dos datos menores para que salga completo:
+
+- **A4-a** — ¿Quién es el **abogado que visa** el documento? Nombre y número de IPSA. *(El bloque ya
+  está hecho; si no lo llenan, simplemente no se imprime.)*
+- **A4-b** — Ver **A8**: la resolución y la gaceta de la Presidenta.
 
 ### A5 ⭐ Un mes de bono vacacional **ya calculado**, con números reales
 
@@ -152,7 +179,21 @@ Sobre los saltos en el N° de orden: entendido que **no son bajas**, sino que el
 **por departamento y no por código**. Cuando tengamos el digital lo ordenamos por código y lo
 confirmamos.
 
-### A8 Cinco preguntas cortas sobre la codificación propia
+### A8 ⚠️ La resolución y la gaceta de la Presidenta — **están mal en el sistema**
+
+Los dos documentos que nos pasaron, ambos firmados y sellados, dicen:
+
+> Resolución **N° 32** del **05/09/2025**, publicada en Gaceta Municipal Extraordinaria **N° 87**
+> del **05/09/2025**
+
+El sistema tenía cargada la Resolución **025** del 15/03/2024 y la Gaceta **042** del 20/01/2024 —
+datos de relleno que nunca se corrigieron. Y eso **se venía imprimiendo en cinco documentos reales**:
+constancias de trabajo, carta de aceptación y de culminación de pasantes, y los dos oficios de rutas.
+
+Ya lo corregimos con los datos de sus documentos, y de paso el cargo, que ahora dice **Presidenta**
+(antes decía «Director General»). **Solo necesitamos que nos confirmen que 32 y 87 es lo vigente.**
+
+### A9 Cinco preguntas cortas sobre la codificación propia
 
 Sin estas no podemos programar la asignación de códigos:
 
@@ -171,7 +212,7 @@ Sin estas no podemos programar la asignación de códigos:
 nos ayudaría tenerla. Cambia quién responde por la codificación, y conviene que quede en el expediente
 y no solo de palabra.
 
-### A9 Dos detalles del Acta de Desincorporación
+### A10 Dos detalles del Acta de Desincorporación
 
 ¿**Quién firma** por IMATUR además de la Coordinadora de Bienes y la Presidencia? ¿Lleva **número
 correlativo**? ¿Y el acta ya firmada y sellada **se carga al sistema** para que quede como aval y marque

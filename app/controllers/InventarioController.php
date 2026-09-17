@@ -409,6 +409,141 @@ class InventarioController extends Controller {
     }
 
     // =====================================================================
+    //  Oficio de relación de bienes nuevos a la Alcaldía (mig. 075)
+    //  Formato: docs/formatos/oficio_relacion_bienes_nuevos_alcaldia_2026-06-10.jpg
+    //  Es el dolor #1 declarado por el cliente (B-05).
+    // =====================================================================
+
+    /** Oficios emitidos + los bienes que todavía no se han reportado. */
+    public function relaciones() {
+        $cfg = ConfigSistema::getAll();
+        $this->view('inventario/relaciones', [
+            'titulo'     => 'Oficios de relación de bienes a la Alcaldía',
+            'relaciones' => RelacionBienes::all(),
+            'candidatos' => RelacionBienes::candidatos(),
+            'config'     => $cfg,
+        ]);
+    }
+
+    /** Emite el oficio con el lote seleccionado y abre el imprimible. */
+    public function emitirRelacion() {
+        if (!$this->requireEscritura('/inventario/relaciones')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $ids  = (array)($_POST['bienes'] ?? []);
+            $_POST = $this->sanitizePost();
+
+            $fecha = trim($_POST['fecha'] ?? '') ?: date('Y-m-d');
+            if ($fecha > date('Y-m-d')) throw new Exception('La fecha del oficio no puede ser futura.');
+
+            $r = RelacionBienes::emitir($ids, [
+                'fecha'               => $fecha,
+                'destinatario_nombre' => trim($_POST['destinatario_nombre'] ?? ''),
+                'destinatario_cargo'  => trim($_POST['destinatario_cargo'] ?? ''),
+                'destinatario_ente'   => trim($_POST['destinatario_ente'] ?? ''),
+                'observacion'         => trim($_POST['observacion'] ?? ''),
+            ], $this->getUserId());
+
+            flash('global_msg', 'Oficio N° ' . $r['numero'] . ' emitido con ' . count($ids) . ' bien(es).');
+            header('Location: ' . URL_ROOT . '/inventario/relacion/' . $r['id']);
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/relaciones');
+    }
+
+    /** Vista imprimible del oficio, tal como se envió. */
+    public function relacion($id = 0) {
+        $rel = RelacionBienes::find((int)$id);
+        if (!$rel) {
+            flash('global_msg', 'El oficio solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/relaciones');
+            return;
+        }
+        $this->view('inventario/relacion_imprimible', [
+            'relacion' => $rel,
+            'items'    => RelacionBienes::items((int)$id),
+            'config'   => ConfigSistema::getAll(),
+        ]);
+    }
+
+    /** Anula un oficio emitido; sus bienes vuelven a quedar sin reportar. */
+    public function anularRelacion() {
+        if (!$this->requireEscritura('/inventario/relaciones')) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+            RelacionBienes::anular((int)($_POST['id'] ?? 0), $_POST['motivo'] ?? '', $this->getUserId());
+            flash('global_msg', 'Oficio anulado. Sus bienes quedaron disponibles para un oficio nuevo.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/relaciones');
+    }
+
+    // =====================================================================
+    //  Documento de donación (mig. 075)
+    //  Formato: docs/formatos/documento_donacion_bien_2026-02-18.jpg
+    //  Es el título que sustituye a la factura cuando el bien fue donado.
+    // =====================================================================
+
+    /** Guarda los datos del donante desde la hoja de vida del bien. */
+    public function guardarDonacion() {
+        $idBien = (int)($_POST['id_inventario'] ?? 0);
+        if (!$this->requireEscritura('/inventario/detalle/' . $idBien)) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+
+            $fecha = trim($_POST['donacion_fecha'] ?? '');
+            if ($fecha !== '' && $fecha > date('Y-m-d')) {
+                throw new Exception('La fecha de la donación no puede ser futura.');
+            }
+
+            Inventario::guardarDonacion($idBien, [
+                'donante'              => $_POST['donante'] ?? '',
+                'donante_cedula'       => $_POST['donante_cedula'] ?? '',
+                'donante_estado_civil' => $_POST['donante_estado_civil'] ?? '',
+                'donante_domicilio'    => $_POST['donante_domicilio'] ?? '',
+                'donacion_procedencia' => $_POST['donacion_procedencia'] ?? '',
+                'valor_bs'             => $_POST['valor_bs'] ?? '',
+                'valor_usd'            => $_POST['valor_usd'] ?? '',
+                'donacion_fecha'       => $fecha,
+            ], $this->getUserId());
+
+            flash('global_msg', 'Datos de la donación guardados. Ya puedes generar el documento.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/detalle/' . $idBien);
+    }
+
+    /** Vista imprimible del documento de donación de un bien. */
+    public function donacion($id = 0) {
+        $bien = Inventario::find((int)$id);
+        if (!$bien) {
+            flash('global_msg', 'El bien solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/index');
+            return;
+        }
+        if (($bien->origen ?? '') !== 'Donación') {
+            flash('global_msg', 'Solo los bienes con origen «Donación» llevan documento de donación.', 'danger');
+            header('Location: ' . URL_ROOT . '/inventario/detalle/' . (int)$id);
+            return;
+        }
+        if (empty($bien->donante) || empty($bien->donante_cedula)) {
+            flash('global_msg', 'Faltan los datos del donante (al menos nombre y cédula) para redactar el documento.', 'warning');
+            header('Location: ' . URL_ROOT . '/inventario/detalle/' . (int)$id);
+            return;
+        }
+        $this->view('inventario/donacion_imprimible', [
+            'bien'   => $bien,
+            'config' => ConfigSistema::getAll(),
+        ]);
+    }
+
+    // =====================================================================
     //  Retiro por la Alcaldía de un bien dado de baja (B-67)
     // =====================================================================
 
