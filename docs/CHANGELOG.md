@@ -18,6 +18,41 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-17 (b) — Rutas: la Ficha Institucional, y los reportes que la mig. 078 dejó en cero (mig. 080)
+
+**1. Los reportes de Turismo estaban rotos y no se notaba.** Al preparar T-G apareció que la
+separación catálogo/salida había dejado media docena de consultas mirando `rutas` como si cada fila
+fuera una salida. Ninguna daba error: devolvían **cero**. «Ejecuciones de Ruta» filtraba por
+`estado = 'Finalizada'`, un estado que la 078 eliminó; los participantes se contaban por
+`participantes_ruta.id_ruta`, que hoy es NULL en todo registro nuevo; y el **informe de una salida
+no se guardaba** porque el controlador mandaba `id_ruta` donde el modelo lee `id_ejecucion`. También
+volvía a contar como ausente al empleado que salía a una ruta. Todo repuntado a `ruta_ejecuciones`.
+
+**2. La Ficha Institucional (T-G, mig. 080).** Es el pedido #1 del cliente y el único documento de
+Rutas con formato en mano. Se pedían dos —«planilla del día» (R-43) e «informe de cierre» (R-47/48)—
+y **resultaron la misma hoja**, así que la ficha no es una tabla nueva: es lo que `ruta_informes` ya
+quería ser. Se extendió esa tabla y los renglones viven en `ruta_ficha_grupos`; los reportes que
+suman `total_atendidos` siguieron funcionando sin tocarse.
+
+Lo que cambia de fondo es **qué se captura**: antes eran cuatro cifras sueltas
+(mujeres/hombres/niñas/niños) que nadie había pedido; ahora es el desglose real —un renglón por
+institución con su rango de edades, los acompañantes separados en docentes y representantes, y las
+**instituciones de apoyo** (Protección Civil, R-55/R-56)—. Esas cuatro columnas quedan **derivadas**
+y se recalculan solas. El total cuadra contra el papel del cliente: 22 niños + 9 docentes + 2 de
+Protección Civil = **33**.
+
+Y **se genera sola** al marcar la salida como Ejecutada, que es lo que dice R-50: al volver a la
+oficina (R-46) la hoja ya está, con recorrido, fecha, encargado e institución puestos desde lo que
+el sistema registró. Solo faltan los conteos. Dos estados: Borrador mientras se captura, Cerrada
+cuando se imprime — y reabrir no borra nada, solo permite corregir.
+
+**3. De paso: una salida no se podía cerrar desde la interfaz.** `cambiarEstadoSalida` existía desde
+T-A pero ningún botón lo llamaba, y el detalle de la salida mostraba el estado del **recorrido**
+(«Activa»), que no dice nada de si esa salida ocurrió. Sin eso la ficha no podía nacer nunca. Ahora
+el badge es el de la salida y a su lado están «Marcar ejecutada» y «No se ejecutó» —con motivo
+obligatorio (R-14)—. Cinco enlaces de esa pantalla (informe, los tres de oficios y la asistencia
+masiva) seguían pasando el id del recorrido en vez del de la salida.
+
 ### 2026-09-17 — Rutas: el catálogo se separa de las salidas, y la edad deja de estar cableada (mig. 078-079)
 
 **1. Catálogo ≠ salida (T-A, mig. 078).** El módulo estaba construido sobre una premisa falsa: cada

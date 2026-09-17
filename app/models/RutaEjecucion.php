@@ -321,6 +321,21 @@ class RutaEjecucion extends Model {
 
         self::auditStatic('ruta_ejecuciones', 'UPDATE', $id, $previo,
             ['estado' => $estado, 'motivo' => $motivo], $user_id);
+
+        // R-50: la Ficha Institucional «se genera automáticamente» al cerrar la
+        // salida. Aquí es donde se cierra, así que aquí nace la ficha — en
+        // Borrador y con lo que el sistema ya sabe (recorrido, fecha, encargado,
+        // institución). Turismo solo completa los conteos al volver a la oficina
+        // (R-46: el informe se hace en la oficina, no en campo).
+        if ($ok && $estado === self::EST_EJECUTADO) {
+            try {
+                RutaFicha::generarDesdeEjecucion($id, $user_id);
+            } catch (Throwable $e) {
+                // Que falle la ficha no puede deshacer el cambio de estado: la
+                // salida SÍ se ejecutó. Se puede generar luego desde la pantalla.
+                error_log('No se pudo generar la Ficha Institucional de la salida ' . $id . ': ' . $e->getMessage());
+            }
+        }
         return $ok;
     }
 

@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **T-A, T-B y T-I construidas (mig. 078 y 079)**, resto pendiente
-**Migraciones vigentes:** hasta **079**
+**Estado:** análisis cerrado · **T-A, T-B, T-I y T-G construidas (mig. 078-080)**, resto pendiente
+**Migraciones vigentes:** hasta **080**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -351,7 +351,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 | **T-D** | **No ejecutado y reprogramación**, con motivo obligatorio y enlace a la salida original | 🟢 **DESBLOQUEADA (2026-09-17).** R-14 dio los tres estados: `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |
 | **T-E** | **Solicitud y aprobación**: origen particular/institucional, institución solicitante, oficio **entrante** archivado, aprobación de Presidencia | 🟢 **DESBLOQUEADA.** R-12 aclara que el oficio **lo redacta la institución** → se **recibe y adjunta**, no se genera. No hay formato que esperar |
 | **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
-| **T-G** | **Ficha Institucional** — el cierre con el conteo demográfico, generada automáticamente | 🟢 **DESBLOQUEADA (2026-09-17).** El formato llegó y R-50 confirma que se genera sola |
+| ✅ ~~T-G~~ | ~~Ficha Institucional — el cierre con el conteo demográfico~~ | **HECHA (2026-09-17, mig. 080).** Vive sobre `ruta_informes` (la ficha **es** el informe: R-43 = R-47 = R-48) + `ruta_ficha_grupos` para los renglones. **Nace sola al marcar la salida como Ejecutada** (R-50), con recorrido, fecha, encargado e institución ya puestos. Imprimible fiel al formato, con sus renglones en blanco. Verificado contra el ejemplo real del cliente: 22 + 9 + 2 = **33** |
 | **T-H** 🆕 | **Oficios de permiso a instituciones custodias** (R-20): uno por semana cubriendo varias salidas, con estado *en espera / aceptado / rechazado* y el Director de Relaciones Inter-Institucionales como responsable | 🟡 **El flujo sí, el imprimible no** — falta el formato del oficio |
 | ✅ ~~T-I~~ | ~~Restricciones por ruta (R-57) y cupo diario de 60 (R-28)~~ | **HECHA (2026-09-17, mig. 079).** `rutas.restricciones` se muestra en la ficha y **al inscribir**; el cupo es `rutas_cupo_diario` en Configuración (0 = sin tope) y se cuenta **por fecha sumando todas las salidas**, sin bloquear |
 
@@ -366,7 +366,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 |---|---|---|
 | 1 | **T-A** | Prerrequisito de todo. Con 2 filas en `rutas`, la migración de datos es trivial |
 | ~~2~~ | ✅ ~~T-B + T-I~~ | **HECHAS (mig. 079).** H-17 cerrado |
-| 3 | **T-G** | La **Ficha Institucional** — pedido #1 del cliente (R-64: *«los reportes»*) y formato en mano |
+| ~~3~~ | ✅ ~~T-G~~ | **HECHA (mig. 080).** Y de paso apareció el control para cerrar una salida, que T-A había dejado sin interfaz |
 | 4 | **T-D** | Estados y reprogramación: barato ahora que R-14 está respondida |
 | 5 | **T-E + T-H** | Los **oficios** — pedido #2 del cliente. T-H puede construirse sin su imprimible |
 | 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
@@ -411,7 +411,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | ~~R-12~~ | ✅ | ~~Formato del oficio de solicitud~~ | **Ya no aplica:** lo redacta cada institución (R-12) |
 | ~~R-47/48~~ | ✅ | ~~Informe de ruta ejecutada~~ | **Formato recibido:** la Ficha Institucional |
 
-**Nada de esto bloquea T-G**, que son el grueso del módulo. Ver §7.
+**Nada de esto bloqueaba T-G**, que son el grueso del módulo. Ver §7.
 
 ---
 

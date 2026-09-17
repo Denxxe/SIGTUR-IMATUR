@@ -98,6 +98,14 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   Las condiciones se muestran en la ficha del recorrido y **al inscribir**.
 - ✅ **Cupo: 60 personas por día** (R-28), no por salida — `rutas_cupo_diario` en Configuración,
   0 = sin tope. **Advierte, no bloquea**, igual que en Talleres: es planificación.
+- ✅ **El cierre de una salida es la Ficha Institucional** (mig. 080). R-43, R-47 y R-48 pedían
+  «planilla del día» e «informe de cierre», y resultaron el **mismo** documento. Se genera sola al
+  marcar la salida como Ejecutada (R-50) y lleva **conteos, no nombres**: del grupo visitante IMATUR
+  no registra persona por persona (R-23/R-24/R-29). Lleva un renglón por institución (con su rango
+  de edades), los acompañantes —docentes y representantes— y las **instituciones de apoyo**
+  (Protección Civil, R-55/R-56). El TOTAL es la suma de los tres bloques.
+- ✅ **Una salida se cierra con «Marcar ejecutada» o «No se ejecutó»** (R-14), y en el segundo caso
+  el motivo es obligatorio. Los estados terminales no vuelven atrás.
 
 ---
 

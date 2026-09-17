@@ -59,10 +59,29 @@
             </span>
             <?php endif; ?>
             <span><strong>Estado:</strong>
-                <?php
-                $sc = Ruta::ESTADO_BADGES[$data['ruta']->estado ?? ''] ?? 'sig-badge--neutral';
-                ?>
-                <span class="sig-badge sig-badge--sm <?php echo $sc; ?>"><?php echo $data['ruta']->estado ?? ''; ?></span>
+                <?php $se = $data['ejecucion']->estado ?? ''; ?>
+                <span class="sig-badge sig-badge--sm <?php echo RutaEjecucion::ESTADO_BADGES[$se] ?? 'sig-badge--neutral'; ?>">
+                    <?php echo htmlspecialchars($se); ?>
+                </span>
+                <?php if ($se === RutaEjecucion::EST_NO_EJECUTADO && !empty($data['ejecucion']->motivo_no_ejecucion)): ?>
+                    <span style="font-size:12px;color:var(--text-tertiary);">
+                        — <?php echo htmlspecialchars($data['ejecucion']->motivo_no_ejecucion); ?>
+                    </span>
+                <?php endif; ?>
+                <?php if (($data['ejecucion']->estado ?? '') === RutaEjecucion::EST_PROGRAMADO): ?>
+                    <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/cambiarEstadoSalida"
+                          style="display:inline;margin:0 0 0 6px;">
+                        <input type="hidden" name="id" value="<?php echo (int)$data['ejecucion']->id; ?>">
+                        <input type="hidden" name="estado" value="<?php echo RutaEjecucion::EST_EJECUTADO; ?>">
+                        <button type="submit" class="btn-sig btn-sig--sm" style="background:var(--success-600);color:#fff;">
+                            <i class="bi bi-check2-circle"></i> Marcar ejecutada
+                        </button>
+                    </form>
+                    <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm"
+                            data-bs-toggle="modal" data-bs-target="#modalNoEjecutada">
+                        <i class="bi bi-x-circle"></i> No se ejecutó
+                    </button>
+                <?php endif; ?>
             </span>
         </div>
     </div>
@@ -70,10 +89,15 @@
         <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
-        <a href="<?php echo URL_ROOT; ?>/rutas/informe/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost">
-            <i class="bi bi-file-earmark-text"></i> Informe de Visita
+        <a href="<?php echo URL_ROOT; ?>/rutas/informe/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-file-earmark-text"></i> Ficha Institucional
+            <?php if (($data['ficha']->estado ?? '') === RutaFicha::EST_BORRADOR): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--warning" style="margin-left:4px;">Borrador</span>
+            <?php elseif (!empty($data['ficha'])): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--success" style="margin-left:4px;">Cerrada</span>
+            <?php endif; ?>
         </a>
-        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost">
+        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-envelope-paper"></i> Generar Oficio
         </a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalParticipante">
@@ -118,7 +142,7 @@
             </div>
             <?php if (!empty($data['participantes'])): ?>
             <button type="button" id="btn_asistencia_masiva_ruta" class="btn-sig btn-sig--ghost btn-sig--sm"
-                    data-ruta="<?php echo $data['ruta']->id; ?>">
+                    data-ruta="<?php echo $data['ejecucion']->id; ?>">
                 <i class="bi bi-check2-all"></i> Marcar todos asistieron
             </button>
             <?php endif; ?>
@@ -218,7 +242,7 @@
         <div class="sig-card__title">
             <i class="bi bi-envelope-paper-fill" style="color:#6366F1;"></i> Oficios Emitidos
         </div>
-        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+        <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
             <i class="bi bi-plus-lg"></i> Nuevo oficio
         </a>
     </div>
@@ -257,7 +281,7 @@
         <i class="bi bi-envelope-paper" style="color:#6366F1;"></i>
         No se ha generado ningún oficio para esta ruta.
     </div>
-    <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ruta']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
+    <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost btn-sig--sm">
         <i class="bi bi-envelope-paper"></i> Generar oficio
     </a>
 </div>
@@ -350,6 +374,38 @@ sort($duplicados, SORT_NUMERIC);
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
+</div>
+
+<!-- ── Modal: la salida no se ejecutó (R-14: el motivo es obligatorio) ── -->
+<div class="modal fade" id="modalNoEjecutada" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/cambiarEstadoSalida" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-x-circle"></i> La salida no se ejecutó</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="<?php echo (int)$data['ejecucion']->id; ?>">
+                <input type="hidden" name="estado" value="<?php echo RutaEjecucion::EST_NO_EJECUTADO; ?>">
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label" for="motivo_no_ejec">
+                        ¿Por qué no se ejecutó? <span class="req">*</span>
+                    </label>
+                    <textarea name="motivo" id="motivo_no_ejec" class="sig-input" rows="3" required
+                              placeholder="Ej: lluvia, la institución canceló, no llegó el transporte…"></textarea>
+                    <small style="color:var(--text-tertiary);font-size:11px;">
+                        Queda en el histórico. Después puede reprogramarse: la salida nueva queda enlazada a esta.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary" style="background:var(--danger-600);">
+                    Registrar
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- ── Modal: Añadir Participante ── -->

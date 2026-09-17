@@ -333,6 +333,7 @@ class RutasController extends Controller {
             'empleados'       => Empleado::all(),
             'parroquias'      => Parroquia::all(),
             'oficiosEmitidos' => $oficiosEmitidos,
+            'ficha'           => RutaFicha::porEjecucion($id),
             // R-33: 7-8 personas por guía. Es una sugerencia, no un límite.
             'guias_sugeridos' => RutaEjecucion::guiasSugeridos(count($participantes)),
             // R-28: el cupo del cliente es por DÍA, no por salida.
@@ -628,59 +629,58 @@ class RutasController extends Controller {
 
     // ── Informe post-visita ───────────────────────────────────────────────────
 
+    /**
+     * Ficha Institucional de una salida (T-G, mig. 080). `$id` es de la SALIDA.
+     *
+     * Sustituye al viejo «informe de visita», que pedía a mano cuatro cifras
+     * (mujeres/hombres/niñas/niños) sin ningún formato detrás. La ficha es el
+     * documento real que IMATUR entrega, y su desglose es por institución.
+     */
     public function informe($id) {
-        $ejec = RutaEjecucion::find((int)$id);   // $id es de la SALIDA (mig. 078)
+        $id   = (int)$id;
+        $ejec = RutaEjecucion::find($id);
         $ruta = $ejec ? Ruta::find((int)$ejec->id_ruta) : null;
-        if (!$ruta) { header('Location: ' . URL_ROOT . '/rutas/index'); exit; }
-
-        // Sugerencia demográfica desde participantes activos
-        $sugeridos = ['mujeres'=>0,'hombres'=>0,'ninas'=>0,'ninos'=>0];
-        $totalSug  = 0;
-        $db = new Database();
-        $db->query("SELECT
-                        CASE WHEN pr.id_persona IS NOT NULL AND p.genero = 'F' THEN 'mujeres'
-                             WHEN pr.id_persona IS NOT NULL AND p.genero = 'M' THEN 'hombres'
-                             WHEN pr.id_persona IS NULL AND pr.genero_libre = 'F' THEN 'ninas'
-                             WHEN pr.id_persona IS NULL AND pr.genero_libre = 'M' THEN 'ninos'
-                             ELSE 'hombres' END AS categoria,
-                        COUNT(*) AS total
-                    FROM participantes_ruta pr
-                    LEFT JOIN personas p ON pr.id_persona = p.id
-                    WHERE pr.id_ejecucion = :id AND pr.is_active = TRUE
-                    GROUP BY categoria");
-        $db->bind(':id', $id);
-        foreach ($db->resultSet() as $row) {
-            if (isset($sugeridos[$row->categoria])) {
-                $sugeridos[$row->categoria] = (int)$row->total;
-                $totalSug += (int)$row->total;
-            }
+        if (!$ruta) {
+            flash('global_msg', 'La salida solicitada no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/salidas');
+            exit;
         }
 
-        $informe = RutaEjecucion::getInforme((int)$id);
+        $ficha = RutaFicha::porEjecucion($id);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $mujeres = max(0, (int)$_POST['mujeres']);
-            $hombres = max(0, (int)$_POST['hombres']);
-            $ninas   = max(0, (int)$_POST['ninas']);
-            $ninos   = max(0, (int)$_POST['ninos']);
             try {
-                if (($mujeres + $hombres + $ninas + $ninos) === 0) {
-                    throw new Exception('Debe registrar al menos un participante en el informe.');
+                // La ficha nace sola al ejecutar la salida (R-50). Si se abre
+                // antes de eso —o si esa generación falló—, se crea aquí.
+                if (!$ficha) {
+                    $idFicha = RutaFicha::generarDesdeEjecucion($id, $this->getUserId());
+                } else {
+                    $idFicha = (int)$ficha->id;
                 }
-                if (empty(trim($_POST['resumen_visita'] ?? ''))) {
-                    throw new Exception('El resumen de la visita es obligatorio.');
+
+                $accion = $_POST['accion'] ?? 'guardar';
+                if ($accion === 'reabrir') {
+                    RutaFicha::reabrir($idFicha, $this->getUserId());
+                    flash('global_msg', 'Ficha reabierta. Puede corregir los conteos.');
+                } else {
+                    RutaFicha::guardar($idFicha, [
+                        'responsable_nombre' => trim($_POST['responsable_nombre'] ?? ''),
+                        'lugar_exacto'       => trim($_POST['lugar_exacto'] ?? ''),
+                        'docentes_f'         => $_POST['docentes_f']       ?? 0,
+                        'docentes_m'         => $_POST['docentes_m']       ?? 0,
+                        'representantes_f'   => $_POST['representantes_f'] ?? 0,
+                        'representantes_m'   => $_POST['representantes_m'] ?? 0,
+                        'observaciones'      => trim($_POST['observaciones']  ?? ''),
+                        'resumen_visita'     => trim($_POST['resumen_visita'] ?? ''),
+                    ], $this->gruposDelPost(), $this->getUserId());
+
+                    if ($accion === 'cerrar') {
+                        RutaFicha::cerrar($idFicha, $this->getUserId());
+                        flash('global_msg', 'Ficha cerrada. Ya puede imprimirla y entregarla.');
+                    } else {
+                        flash('global_msg', 'Ficha guardada correctamente.');
+                    }
                 }
-                RutaEjecucion::saveInforme([
-                    'id_ejecucion'  => $id,
-                    'lugar_exacto'  => trim($_POST['lugar_exacto']  ?? ''),
-                    'mujeres'       => $mujeres,
-                    'hombres'       => $hombres,
-                    'ninas'         => $ninas,
-                    'ninos'         => $ninos,
-                    'observaciones' => trim($_POST['observaciones']  ?? '') ?: null,
-                    'resumen_visita'=> trim($_POST['resumen_visita'] ?? ''),
-                ]);
-                flash('global_msg', 'Informe guardado correctamente.');
             } catch (Exception $e) {
                 flash('global_msg', $e->getMessage(), 'danger');
             }
@@ -688,13 +688,64 @@ class RutasController extends Controller {
             exit;
         }
 
+        $grupos = $ficha ? RutaFicha::grupos((int)$ficha->id) : [];
+
         $this->view('rutas/informe', [
-            'titulo'        => 'Informe de Visita',
-            'ruta'          => $ruta,
-            'ejecucion'     => $ejec,
-            'informe'       => $informe,
-            'sugeridos'     => $sugeridos,
-            'totalSugeridos'=> $totalSug,
+            'titulo'      => 'Ficha Institucional',
+            'ruta'        => $ruta,
+            'ejecucion'   => $ejec,
+            'ficha'       => $ficha,
+            'grupos'      => $grupos,
+            'encargado'   => RutaFicha::encargado($id),
+            'sugerencia'  => RutaFicha::sugerenciaDesdeParticipantes($id),
+            'totales'     => $ficha ? RutaFicha::totales($ficha, $grupos) : null,
+        ]);
+    }
+
+    /**
+     * Recoge los renglones de la tabla del formulario. Llegan como arreglos
+     * paralelos (`grp_tipo[]`, `grp_nombre[]`, …) porque el usuario agrega y
+     * quita filas en pantalla y no hay ids estables que mandar.
+     */
+    private function gruposDelPost(): array {
+        $tipos = $_POST['grp_tipo'] ?? [];
+        if (!is_array($tipos)) return [];
+        $out = [];
+        foreach ($tipos as $i => $tipo) {
+            $out[] = [
+                'tipo'      => $tipo,
+                'nombre'    => $_POST['grp_nombre'][$i]    ?? '',
+                'femenino'  => $_POST['grp_femenino'][$i]  ?? 0,
+                'masculino' => $_POST['grp_masculino'][$i] ?? 0,
+                'edad_min'  => $_POST['grp_edad_min'][$i]  ?? '',
+                'edad_max'  => $_POST['grp_edad_max'][$i]  ?? '',
+            ];
+        }
+        return $out;
+    }
+
+    /** La ficha en el formato oficial, lista para imprimir. `$id` es de la SALIDA. */
+    public function ficha($id) {
+        $id   = (int)$id;
+        $ejec = RutaEjecucion::find($id);
+        $ruta = $ejec ? Ruta::find((int)$ejec->id_ruta) : null;
+        $ficha = $ruta ? RutaFicha::porEjecucion($id) : null;
+        if (!$ficha) {
+            flash('global_msg', 'Esta salida todavía no tiene Ficha Institucional.', 'warning');
+            header('Location: ' . URL_ROOT . '/rutas/informe/' . $id);
+            exit;
+        }
+        $grupos = RutaFicha::grupos((int)$ficha->id);
+
+        $this->view('rutas/ficha_imprimible', [
+            'titulo'    => 'Ficha Institucional',
+            'ruta'      => $ruta,
+            'ejecucion' => $ejec,
+            'ficha'     => $ficha,
+            'grupos'    => $grupos,
+            'encargado' => RutaFicha::encargado($id),
+            'totales'   => RutaFicha::totales($ficha, $grupos),
+            'config'    => ConfigSistema::getAll(),
         ]);
     }
 
@@ -716,7 +767,7 @@ class RutasController extends Controller {
         fputcsv($out, ['Instituto Municipal Autónomo de Turismo (IMATUR-SUCRE) — RIF. ' . ConfigSistema::rif()], ';');
         fputcsv($out, ['Generado por: ' . ($_SESSION['user_username'] ?? 'Sistema') . '  Fecha: ' . date('d/m/Y H:i')], ';');
         fputcsv($out, [''], ';');
-        fputcsv($out, ['INFORME DE VISITA TURÍSTICA'], ';');
+        fputcsv($out, ['FICHA INSTITUCIONAL'], ';');
         fputcsv($out, ['Ruta',     $ruta->nombre], ';');
         fputcsv($out, ['Tipo',     $ruta->tipo_ruta ?? ''], ';');
         fputcsv($out, ['Fecha',    $ejec && $ejec->fecha ? date('d/m/Y', strtotime($ejec->fecha)) : ''], ';');
@@ -724,14 +775,40 @@ class RutasController extends Controller {
         fputcsv($out, [''], ';');
 
         if ($informe) {
-            fputcsv($out, ['RESUMEN DEMOGRÁFICO'], ';');
-            fputcsv($out, ['Lugar',    $informe->lugar_exacto ?? ''], ';');
-            fputcsv($out, ['Mujeres',  $informe->mujeres  ?? 0], ';');
-            fputcsv($out, ['Hombres',  $informe->hombres  ?? 0], ';');
-            fputcsv($out, ['Niñas', $informe->ninas ?? 0], ';');
-            fputcsv($out, ['Niños', $informe->ninos ?? 0], ';');
-            fputcsv($out, ['Total',    $informe->total_atendidos ?? 0], ';');
-            fputcsv($out, ['Resumen',  $informe->resumen_visita ?? ''], ';');
+            $grupos = RutaFicha::grupos((int)$informe->id);
+            $t      = RutaFicha::totales($informe, $grupos);
+
+            fputcsv($out, ['Encargado',   RutaFicha::encargado($id) ?? ''], ';');
+            fputcsv($out, ['Institución', $ejec->institucion_nombre ?? ''], ';');
+            fputcsv($out, ['Responsable', $informe->responsable_nombre ?? ''], ';');
+            fputcsv($out, ['Lugar',       $informe->lugar_exacto ?? ''], ';');
+            fputcsv($out, [''], ';');
+
+            fputcsv($out, ['INSTITUCIÓN', 'NIÑOS F', 'NIÑOS M', 'EDADES', 'TOTAL'], ';');
+            foreach ($grupos as $g) {
+                if ($g->tipo !== RutaFicha::TIPO_INSTITUCION) continue;
+                $ed = '';
+                if ($g->edad_min !== null && $g->edad_max !== null)  $ed = "{$g->edad_min} a {$g->edad_max} años";
+                elseif ($g->edad_min !== null)                       $ed = "desde {$g->edad_min} años";
+                elseif ($g->edad_max !== null)                       $ed = "hasta {$g->edad_max} años";
+                fputcsv($out, [$g->nombre, (int)$g->femenino, (int)$g->masculino, $ed,
+                               (int)$g->femenino + (int)$g->masculino], ';');
+            }
+            fputcsv($out, [''], ';');
+
+            fputcsv($out, ['ACOMPAÑANTES', 'F', 'M', 'TOTAL'], ';');
+            fputcsv($out, ['Docentes', (int)$informe->docentes_f, (int)$informe->docentes_m,
+                           (int)$informe->docentes_f + (int)$informe->docentes_m], ';');
+            fputcsv($out, ['Representantes', (int)$informe->representantes_f, (int)$informe->representantes_m,
+                           (int)$informe->representantes_f + (int)$informe->representantes_m], ';');
+            foreach ($grupos as $g) {
+                if ($g->tipo !== RutaFicha::TIPO_APOYO) continue;
+                fputcsv($out, [$g->nombre . ' (apoyo)', (int)$g->femenino, (int)$g->masculino,
+                               (int)$g->femenino + (int)$g->masculino], ';');
+            }
+            fputcsv($out, ['TOTAL GENERAL', '', '', $t['total']], ';');
+            fputcsv($out, [''], ';');
+            fputcsv($out, ['Reseña', $informe->resumen_visita ?? ''], ';');
             fputcsv($out, [''], ';');
         }
 
