@@ -34,6 +34,19 @@ class Controller {
         return $_SESSION['user_id'] ?? null;
     }
 
+    /**
+     * Empleado al que pertenece la cuenta en sesión (null si no aplica).
+     * Sirve para impedir acciones sobre uno mismo (egreso, papelera). Se
+     * resuelve una vez por sesión y se cachea.
+     */
+    protected function getEmpleadoId(): ?int {
+        if (!isset($_SESSION['user_id'])) return null;
+        if (!array_key_exists('user_empleado_id', $_SESSION)) {
+            $_SESSION['user_empleado_id'] = Usuario::empleadoDeUsuario((int)$_SESSION['user_id']);
+        }
+        return $_SESSION['user_empleado_id'] !== null ? (int)$_SESSION['user_empleado_id'] : null;
+    }
+
     // Valida un correo electrónico: debe ser un email válido (filter_var) y NO
     // contener símbolos especiales fuera del set seguro (rechaza espacios y
     // caracteres raros). Mismo criterio que la validación front (sigtur-validations.js).

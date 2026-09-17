@@ -483,6 +483,10 @@ class Empleado extends Model
      */
     public static function delete($id, $user_id = null)
     {
+        // Mismo criterio que el egreso: nadie manda su propio expediente a la papelera.
+        if ($user_id !== null && Usuario::empleadoDeUsuario((int)$user_id) === (int)$id) {
+            throw new Exception("No puedes eliminar tu propio registro de empleado.");
+        }
         $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE empleados SET is_active=FALSE, deleted_at=CURRENT_TIMESTAMP, deleted_by=:user_id WHERE id=:id");
@@ -510,6 +514,19 @@ class Empleado extends Model
         if (!empty($previos->fecha_egreso)) throw new Exception("El empleado ya se encuentra egresado.");
         if (!empty($previos->fecha_ingreso) && $fecha < $previos->fecha_ingreso) {
             throw new Exception("La fecha de egreso no puede ser anterior a la fecha de ingreso.");
+        }
+
+        // Nadie puede egresarse a sí mismo: el egreso desactiva su cuenta de
+        // acceso y quedaría fuera del sistema sin poder revertirlo.
+        if ($user_id !== null && Usuario::empleadoDeUsuario((int)$user_id) === (int)$id) {
+            throw new Exception("No puedes procesar tu propio egreso. Debe registrarlo otro usuario con permisos sobre personal.");
+        }
+
+        // Si la cuenta que se desactivaría es el último Administrador activo,
+        // el sistema quedaría sin administración: se bloquea el egreso.
+        $cuenta = Usuario::activoPorEmpleado((int)$id);
+        if ($cuenta && Usuario::esUltimoAdminActivo((int)$cuenta->id)) {
+            throw new Exception(Usuario::MSG_ULTIMO_ADMIN);
         }
 
         $db = new Database();

@@ -26,6 +26,9 @@ class UsuariosController extends Controller {
             'usuarios'             => $usuarios,
             'roles'                => $roles,
             'empleados_sin_cuenta' => $empleados_sin_cuenta,
+            // Continuidad administrativa: con un solo admin activo, esa cuenta
+            // no se puede suspender ni cambiar de rol.
+            'admins_activos'       => Usuario::contarAdminsActivos(),
         ];
 
         $this->view('usuarios/index', $data);

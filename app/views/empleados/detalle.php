@@ -47,6 +47,11 @@ if ($egresado) {
             <button type="button" class="btn-sig btn-sig--success" data-bs-toggle="modal" data-bs-target="#modalReingreso">
                 <i class="bi bi-arrow-counterclockwise"></i> Reingreso
             </button>
+        <?php elseif ((int)($data['mi_empleado'] ?? 0) === (int)$eid): ?>
+            <button type="button" class="btn-sig btn-sig--danger" disabled
+                    title="No puedes procesar tu propio egreso. Debe registrarlo otro usuario con permisos sobre personal.">
+                <i class="bi bi-box-arrow-right"></i> Procesar egreso
+            </button>
         <?php else: ?>
             <button type="button" class="btn-sig btn-sig--danger" data-bs-toggle="modal" data-bs-target="#modalEgreso">
                 <i class="bi bi-box-arrow-right"></i> Procesar egreso

@@ -194,12 +194,19 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
                                 <a href="<?php echo URL_ROOT; ?>/empleados/editar/<?php echo $emp->id; ?>" class="row-action row-action--edit">
                                     <i class="bi bi-pencil"></i> Editar
                                 </a>
-                                <button type="button" class="row-action row-action--del js-egreso"
-                                        data-id="<?php echo $emp->id; ?>"
-                                        data-nombre="<?php echo htmlspecialchars($emp->nombre . ' ' . $emp->apellido); ?>"
-                                        data-ingreso="<?php echo htmlspecialchars($emp->fecha_ingreso ?? ''); ?>">
-                                    <i class="bi bi-box-arrow-right"></i> Egresar
-                                </button>
+                                <?php if ((int)($data['mi_empleado'] ?? 0) === (int)$emp->id): ?>
+                                    <span class="row-action" style="opacity:.5;cursor:not-allowed;"
+                                          title="No puedes procesar tu propio egreso. Debe registrarlo otro usuario con permisos sobre personal.">
+                                        <i class="bi bi-person-fill-check"></i> Tu registro
+                                    </span>
+                                <?php else: ?>
+                                    <button type="button" class="row-action row-action--del js-egreso"
+                                            data-id="<?php echo $emp->id; ?>"
+                                            data-nombre="<?php echo htmlspecialchars($emp->nombre . ' ' . $emp->apellido); ?>"
+                                            data-ingreso="<?php echo htmlspecialchars($emp->fecha_ingreso ?? ''); ?>">
+                                        <i class="bi bi-box-arrow-right"></i> Egresar
+                                    </button>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </td>
                     </tr>

@@ -54,14 +54,24 @@
                         <span class="sig-badge <?php echo $rolClase; ?>"><?php echo htmlspecialchars($user->rol ?? 'Sin rol'); ?></span>
                     </td>
                     <td style="font-size:12px; color:var(--text-secondary);">
-                        <?php echo $user->ultimo_login ? date('d/m/Y H:i', strtotime($user->ultimo_login)) : '—'; ?>
+                        <?php echo !empty($user->last_login) ? date('d/m/Y H:i', strtotime($user->last_login)) : '—'; ?>
                     </td>
                     <td class="col-actions">
+                        <?php
+                        // Última cuenta de Administrador activa: no se suspende ni cambia de rol.
+                        $esUnicoAdmin = ((int)($user->id_rol ?? 0) === 1)
+                            && ((int)($data['admins_activos'] ?? 0) <= 1);
+                        ?>
                         <button class="row-action row-action--edit"
-                                onclick='editarUsuario(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, "UTF-8"); ?>)'>
+                                onclick='editarUsuario(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, "UTF-8"); ?>, <?php echo $esUnicoAdmin ? 'true' : 'false'; ?>)'>
                             <i class="bi bi-key"></i> Credenciales
                         </button>
-                        <?php if ((int)$user->id !== (int)($_SESSION['user_id'] ?? 0)): ?>
+                        <?php if ($esUnicoAdmin): ?>
+                        <span class="row-action" style="opacity:.5;cursor:not-allowed;"
+                              title="<?php echo htmlspecialchars(Usuario::MSG_ULTIMO_ADMIN); ?>">
+                            <i class="bi bi-shield-lock"></i> Único admin
+                        </span>
+                        <?php elseif ((int)$user->id !== (int)($_SESSION['user_id'] ?? 0)): ?>
                         <a href="<?php echo URL_ROOT; ?>/usuarios/delete/<?php echo $user->id; ?>"
                            class="row-action row-action--del delete-btn">
                             <i class="bi bi-slash-circle"></i> Suspender
@@ -116,6 +126,9 @@
                             <option value="<?php echo $r->id; ?>"><?php echo htmlspecialchars($r->nombre); ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <small id="rol_bloqueado" style="display:none;color:var(--warning-600,#d97706);font-size:11px;">
+                        <i class="bi bi-shield-lock"></i> Es la única cuenta de Administrador activa: el rol no puede cambiarse.
+                    </small>
                 </div>
 
                 <div class="sig-field mb-3">
@@ -165,6 +178,8 @@ function nuevoUsuario() {
     document.getElementById('pass_req_star').style.display = 'inline';
     document.getElementById('pass_notice').style.display = 'none';
     document.getElementById('pass_default_hint').style.display = 'none';
+    Array.from(document.getElementById('user_id_rol').options).forEach(o => { o.disabled = false; });
+    document.getElementById('rol_bloqueado').style.display = 'none';
     document.querySelector('#formUsuario').reset();
 }
 
@@ -186,13 +201,20 @@ document.getElementById('user_id_empleado').addEventListener('change', function 
     }
 });
 
-function editarUsuario(user) {
+function editarUsuario(user, esUnicoAdmin) {
     document.getElementById('modalUsuarioLabel').innerText = 'Actualizar: ' + user.username;
     document.getElementById('user_id').value          = user.id;
     document.getElementById('div_empleado').style.display  = 'none';
     document.getElementById('div_confirmar').style.display = 'none';
     document.getElementById('user_id_empleado').required   = false;
     document.getElementById('user_id_rol').value      = user.id_rol;
+
+    // Última cuenta de Administrador activa: el rol queda fijo (el servidor
+    // también lo rechaza; esto solo evita el intento).
+    const selRol = document.getElementById('user_id_rol');
+    Array.from(selRol.options).forEach(o => { o.disabled = !!esUnicoAdmin && o.value !== '1'; });
+    document.getElementById('rol_bloqueado').style.display = esUnicoAdmin ? 'block' : 'none';
+
     document.getElementById('user_username').value    = user.username;
     document.getElementById('user_password').value    = '';
     document.getElementById('user_password').required = false;

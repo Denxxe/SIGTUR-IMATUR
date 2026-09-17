@@ -8,6 +8,14 @@ class Usuario extends Model {
     const BLOQUEO_MINUTOS  = 15;   // duración del bloqueo temporal
     const PASSWORD_MIN     = 8;    // longitud mínima de contraseña
 
+    // ── Continuidad administrativa ───────────────────────────────────────────
+    // El sistema NO puede quedarse sin ninguna cuenta de Administrador activa:
+    // nadie podría volver a crear usuarios, asignar roles ni reactivar cuentas.
+    const ROL_ADMIN = 1;
+    const MSG_ULTIMO_ADMIN = 'Esta es la única cuenta de Administrador activa del sistema. '
+        . 'Asigne el rol de Administrador a otra cuenta activa antes de suspender esta, '
+        . 'cambiarle el rol o egresar a su titular.';
+
     private ?int $id;
     private ?int $id_empleado;
     private ?int $id_rol;
@@ -47,9 +55,66 @@ class Usuario extends Model {
 
     public static function find($id) {
         $db = new Database();
-        $db->query("SELECT u.id, u.id_empleado, u.id_rol, u.username, u.is_active FROM usuarios u WHERE u.id = :id");
+        $db->query("SELECT u.id, u.id_empleado, u.id_rol, u.username, u.is_active,
+                           (u.is_active)::int AS activo
+                    FROM usuarios u WHERE u.id = :id");
         $db->bind(':id', $id);
         return $db->single();
+    }
+
+    /** Cuenta de acceso ACTIVA de un empleado (o null si no tiene). */
+    public static function activoPorEmpleado(int $idEmpleado) {
+        $db = new Database();
+        $db->query("SELECT id, id_rol, username FROM usuarios
+                    WHERE id_empleado = :id AND is_active = TRUE LIMIT 1");
+        $db->bind(':id', $idEmpleado);
+        return $db->single() ?: null;
+    }
+
+    /** Empleado al que pertenece una cuenta (para detectar acciones sobre uno mismo). */
+    public static function empleadoDeUsuario(int $idUsuario): ?int {
+        $db = new Database();
+        $db->query("SELECT id_empleado FROM usuarios WHERE id = :id");
+        $db->bind(':id', $idUsuario);
+        $row = $db->single();
+        return $row && $row->id_empleado !== null ? (int)$row->id_empleado : null;
+    }
+
+    /**
+     * Estado VIGENTE de la cuenta, para revalidar la sesión en cada request:
+     * si el Administrador la suspende, le cambia el rol o egresa a su titular,
+     * debe surtir efecto en el siguiente clic y no cuando expire la sesión.
+     * Devuelve null si la cuenta ya no existe. Es una lectura por clave
+     * primaria (índice único), de coste despreciable.
+     */
+    public static function estadoSesion(int $id) {
+        $db = Database::compartida();
+        $db->query("SELECT (is_active)::int AS activo, id_rol FROM usuarios WHERE id = :id");
+        $db->bind(':id', $id);
+        return $db->single() ?: null;
+    }
+
+    /** Cuentas de Administrador activas, excluyendo opcionalmente una. */
+    public static function contarAdminsActivos(?int $excluirId = null): int {
+        $db = new Database();
+        $sql = "SELECT COUNT(*) AS total FROM usuarios WHERE is_active = TRUE AND id_rol = :rol";
+        if ($excluirId !== null) $sql .= " AND id <> :excluir";
+        $db->query($sql);
+        $db->bind(':rol', self::ROL_ADMIN);
+        if ($excluirId !== null) $db->bind(':excluir', $excluirId);
+        $row = $db->single();
+        return (int)($row->total ?? 0);
+    }
+
+    /**
+     * ¿Esta cuenta es el ÚLTIMO Administrador activo? Si lo es, no puede
+     * suspenderse, cambiar de rol ni desactivarse por egreso de su titular.
+     */
+    public static function esUltimoAdminActivo(int $id): bool {
+        $u = self::find($id);
+        if (!$u || !(int)($u->activo ?? 0)) return false;
+        if ((int)$u->id_rol !== self::ROL_ADMIN) return false;
+        return self::contarAdminsActivos($id) === 0;
     }
 
     /**
@@ -69,12 +134,34 @@ class Usuario extends Model {
      * — nunca revela cuál de los dos casos ocurrió (anti-enumeración).
      */
     public static function findByUsernameOrEmail(string $identificador) {
+        return self::buscarPorIdentificador($identificador, true);
+    }
+
+    /**
+     * Igual que findByUsernameOrEmail(), pero si no hay cuenta ACTIVA que
+     * coincida busca también entre las inactivas. El login necesita distinguir
+     * «no existe» de «existe pero está desactivada» para poder avisarlo; la
+     * cuenta inactiva nunca inicia sesión, solo recibe el mensaje de estado.
+     * La fila trae `activo` (1/0) para que el llamador decida.
+     */
+    public static function findParaLogin(string $identificador) {
+        return self::buscarPorIdentificador($identificador, true)
+            ?? self::buscarPorIdentificador($identificador, false);
+    }
+
+    /**
+     * Busca la cuenta por username o por el correo de su persona, entre las
+     * activas ($activas = true) o entre las inactivas. Devuelve null si no hay
+     * coincidencia única (anti-enumeración: nunca revela cuál de los dos casos).
+     */
+    private static function buscarPorIdentificador(string $identificador, bool $activas) {
         $db = new Database();
-        $db->query("SELECT u.*, p.correo
+        $db->query("SELECT u.*, p.correo, (u.is_active)::int AS activo
                     FROM usuarios u
                     INNER JOIN empleados e ON u.id_empleado = e.id
                     INNER JOIN personas p  ON e.id_persona  = p.id
-                    WHERE u.is_active = TRUE AND (u.username = :id OR p.correo = :id)
+                    WHERE u.is_active = " . ($activas ? 'TRUE' : 'FALSE') . "
+                      AND (u.username = :id OR p.correo = :id)
                     LIMIT 2");
         $db->bind(':id', trim($identificador));
         $rows = $db->resultSet();
@@ -88,6 +175,13 @@ class Usuario extends Model {
         $previos = null;
         if ($this->id) {
             $previos = self::find($this->id);
+            // Quitarle el rol de Administrador al último admin activo dejaría
+            // al sistema sin nadie capaz de administrarlo.
+            if ($previos && (int)$previos->id_rol === self::ROL_ADMIN
+                && (int)$this->id_rol !== self::ROL_ADMIN
+                && self::esUltimoAdminActivo((int)$this->id)) {
+                throw new Exception(self::MSG_ULTIMO_ADMIN);
+            }
             $sql = "UPDATE usuarios SET id_rol = :id_rol, username = :username";
             if (!empty($this->password)) {
                 $sql .= ", password = :password";
@@ -200,6 +294,13 @@ class Usuario extends Model {
      * Borrado lógico
      */
     public static function delete($id, $user_id = null) {
+        $id = (int)$id;
+        if ((int)$user_id === $id) {
+            throw new Exception('No puedes suspender tu propia cuenta de usuario.');
+        }
+        if (self::esUltimoAdminActivo($id)) {
+            throw new Exception(self::MSG_ULTIMO_ADMIN);
+        }
         $previos = self::find($id);
         $db = new Database();
         $db->query("UPDATE usuarios SET is_active = FALSE, deleted_at = CURRENT_TIMESTAMP, deleted_by = :user_id WHERE id = :id");

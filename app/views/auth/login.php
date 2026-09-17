@@ -21,9 +21,20 @@
             <p>Sistema Integral de Gestión Turística</p>
         </div>
 
-        <?php if (!empty($data['login_err'])): ?>
+        <?php if (!empty($data['login_warn'])): ?>
+            <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #ffecb5;background:#fff3cd;color:#664d03;border-radius:.4rem;text-align:left;">
+                <strong>Cuenta inactiva</strong><br>
+                <?php echo htmlspecialchars($data['login_warn']); ?>
+            </div>
+        <?php elseif (!empty($data['login_err'])): ?>
             <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #f5c2c7;background:#f8d7da;color:#842029;border-radius:.4rem;text-align:center;">
                 <?php echo htmlspecialchars($data['login_err']); ?>
+            </div>
+        <?php elseif (isset($_GET['inactiva'])): ?>
+            <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #ffecb5;background:#fff3cd;color:#664d03;border-radius:.4rem;text-align:left;">
+                <strong>Cuenta inactiva</strong><br>
+                Tu usuario fue desactivado mientras tenías la sesión abierta, por lo que se cerró.
+                Comunícate con el Administrador del sistema para reactivarla.
             </div>
         <?php elseif (isset($_GET['expired'])): ?>
             <div class="error-msg" role="alert" style="margin-bottom:1rem;padding:.6rem .8rem;border:1px solid #ffecb5;background:#fff3cd;color:#664d03;border-radius:.4rem;text-align:center;">

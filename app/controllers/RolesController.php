@@ -12,7 +12,7 @@ class RolesController extends Controller {
     public static function getMapaRbac(): array {
         if (self::$cacheRbac !== null) return self::$cacheRbac;
         try {
-            $db = new Database();
+            $db = Database::compartida();
             $db->query("SELECT id_rol, modulo FROM permisos_rol ORDER BY id_rol, modulo");
             $rows = $db->resultSet();
             $mapa = [];

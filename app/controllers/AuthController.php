@@ -21,6 +21,7 @@ class AuthController extends Controller {
             'username_err' => '',
             'password_err' => '',
             'login_err'  => '',
+            'login_warn' => '',
         ];
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -38,7 +39,10 @@ class AuthController extends Controller {
 
             if (empty($data['username_err']) && empty($data['password_err'])) {
                 try {
-                    $loggedInUser = Usuario::findByUsernameOrEmail($data['username']);
+                    // Incluye cuentas desactivadas: si las credenciales son
+                    // correctas hay que avisar del estado, no decir «usuario o
+                    // contraseña incorrectos» (eso dejaba al usuario a ciegas).
+                    $loggedInUser = Usuario::findParaLogin($data['username']);
                 } catch (Exception $e) {
                     $data['login_err'] = 'Error de conexión con el sistema. Intente más tarde.';
                     $this->view('auth/login', $data);
@@ -54,6 +58,22 @@ class AuthController extends Controller {
                 }
 
                 if ($loggedInUser && password_verify($data['password'], $loggedInUser->password)) {
+                    // Credenciales correctas pero cuenta desactivada (suspendida
+                    // por el administrador o por egreso de su titular): no entra,
+                    // pero sí se le dice por qué.
+                    if (!(int)($loggedInUser->activo ?? 1)) {
+                        try {
+                            AuditLog::log('usuarios', 'LOGIN_INACTIVO', (int)$loggedInUser->id, null,
+                                ['username' => $loggedInUser->username], (int)$loggedInUser->id);
+                        } catch (Exception $e) {
+                            error_log('AuditLog LOGIN_INACTIVO falló para usuario ' . $loggedInUser->username . ': ' . $e->getMessage());
+                        }
+                        $data['login_warn'] = 'Tu usuario está INACTIVO. La cuenta fue suspendida o su titular '
+                            . 'figura como egresado, por lo que no puede iniciar sesión. '
+                            . 'Comunícate con el Administrador del sistema para reactivarla.';
+                        $this->view('auth/login', $data);
+                        return;
+                    }
                     Usuario::registrarLoginExitoso((int)$loggedInUser->id);
                     try {
                         AuditLog::log('usuarios', 'LOGIN', (int)$loggedInUser->id, null,
@@ -101,6 +121,7 @@ class AuthController extends Controller {
         $_SESSION['user_id'] = $user->id;
         $_SESSION['user_username'] = $user->username;
         $_SESSION['user_rol'] = $user->id_rol;
+        $_SESSION['user_empleado_id'] = isset($user->id_empleado) ? (int)$user->id_empleado : null;
         $_SESSION['last_activity'] = time();
         header('Location: ' . URL_ROOT . '/dashboard/index');
     }
@@ -109,6 +130,7 @@ class AuthController extends Controller {
         unset($_SESSION['user_id']);
         unset($_SESSION['user_username']);
         unset($_SESSION['user_rol']);
+        unset($_SESSION['user_empleado_id']);
         session_destroy();
         header('Location: ' . URL_ROOT . '/auth/login');
     }

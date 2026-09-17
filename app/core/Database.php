@@ -53,6 +53,23 @@ class Database {
         return $this->dbh;
     }
 
+    /**
+     * Conexión compartida DENTRO del mismo request (se descarta al terminar;
+     * no es una conexión persistente de PDO). Abrir una conexión cuesta ~45 ms,
+     * la consulta menos de 1 ms: el middleware del Router hace dos lecturas
+     * sueltas por request (estado de la cuenta y mapa RBAC) y no tiene sentido
+     * pagar dos conexiones por ellas.
+     *
+     * Úsese SOLO para lecturas sueltas sin transacción. Todo lo que abra una
+     * transacción debe seguir usando `new Database()`, para no compartir estado
+     * transaccional entre partes del código que no se conocen entre sí.
+     */
+    private static ?Database $compartida = null;
+    public static function compartida(): Database {
+        if (self::$compartida === null) self::$compartida = new Database();
+        return self::$compartida;
+    }
+
     // Preparar la consulta
     public function query($sql) {
         $this->stmt = $this->dbh->prepare($sql);

@@ -33,6 +33,7 @@ class EmpleadosController extends Controller {
             'cargo'         => $cargo,
             'cargos'        => Cargo::all(),
             'motivos'       => Empleado::MOTIVOS_EGRESO,
+            'mi_empleado'   => $this->getEmpleadoId(),
         ];
 
         $this->view('empleados/index', $data);
@@ -98,6 +99,7 @@ class EmpleadosController extends Controller {
             'recaudos'     => ExpedienteDocumento::recaudosEstado($id),
             'constancias'  => Constancia::porEmpleado($id),
             'motivos'      => Empleado::MOTIVOS_EGRESO,
+            'mi_empleado'       => $this->getEmpleadoId(),
             'historial_egresos' => Empleado::historialEgresos($id),
             'historial_traslados' => Empleado::historialTraslados($id),
             'tiempo_servicio'   => Empleado::tiempoServicio($empleado->fecha_ingreso, $empleado->fecha_egreso),
@@ -463,6 +465,14 @@ class EmpleadosController extends Controller {
         $fecha  = $_POST['fecha_egreso'] ?? '';
         $motivo = $_POST['motivo_egreso'] ?? '';
         $obs    = $_POST['observacion_egreso'] ?? null;
+
+        // Autoegreso: se corta aquí con un mensaje propio (el modelo lo vuelve
+        // a validar, por si la petición llega por otra vía).
+        if ($id > 0 && $id === $this->getEmpleadoId()) {
+            flash('global_msg', 'No puedes procesar tu propio egreso. Debe registrarlo otro usuario con permisos sobre personal.', 'danger');
+            $this->backToDetalle($id);
+            return;
+        }
 
         try {
             if ($fecha > date('Y-m-d')) throw new Exception("La fecha de egreso no puede ser futura.");

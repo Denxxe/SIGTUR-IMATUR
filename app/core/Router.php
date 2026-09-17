@@ -41,6 +41,24 @@ class Router {
             $_SESSION['last_activity'] = $ahora;
         }
 
+        // --- Estado de la cuenta (revalidación por request) ---
+        // La sesión no es prueba de que la cuenta siga habilitada: entre un clic
+        // y otro el Administrador pudo suspenderla, egresar a su titular o
+        // cambiarle el rol. Se consulta el estado vigente en cada request (una
+        // lectura por clave primaria): si quedó inactiva o desapareció, la
+        // sesión se cierra en el acto; si cambió de rol, el RBAC de abajo usa
+        // el nuevo sin esperar a que el usuario vuelva a entrar.
+        if (isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
+            $estado = Usuario::estadoSesion((int)$_SESSION['user_id']);
+            if (!$estado || !(int)$estado->activo) {
+                $_SESSION = [];
+                session_destroy();
+                header('Location: ' . URL_ROOT . '/auth/login?inactiva=1');
+                exit;
+            }
+            $_SESSION['user_rol'] = (int)$estado->id_rol;
+        }
+
         // --- RBAC Middleware (Control de Acceso por Rol) ---
         if (isset($_SESSION['user_id']) && $this->currentController != 'AuthController') {
             $rolId = $_SESSION['user_rol'] ?? 0;
