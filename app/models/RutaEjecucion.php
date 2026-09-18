@@ -340,6 +340,17 @@ class RutaEjecucion extends Model {
     }
 
     /**
+     * La salida que reemplazó a esta, si se reprogramó. El enlace inverso de
+     * `id_reprogramada_de`: la original conserva su registro y apunta a la nueva.
+     */
+    public static function reprogramadaComo(int $id): ?object {
+        $db = new Database();
+        $db->query(self::SELECT_BASE . " WHERE e.id_reprogramada_de = :id AND e.is_active = TRUE LIMIT 1");
+        $db->bind(':id', $id);
+        return $db->single() ?: null;
+    }
+
+    /**
      * R-16: reprogramar una salida que no se pudo ejecutar. Crea una salida
      * NUEVA enlazada a la original, conservando grupo, origen y cupo.
      * La original **no se toca**: sigue siendo el registro de lo que no ocurrió.

@@ -82,6 +82,14 @@
                         <i class="bi bi-x-circle"></i> No se ejecutó
                     </button>
                 <?php endif; ?>
+                <?php if (($data['ejecucion']->estado ?? '') === RutaEjecucion::EST_NO_EJECUTADO
+                          && empty($data['reprogramada'])): ?>
+                    <button type="button" class="btn-sig btn-sig--sm"
+                            style="background:var(--brand-600);color:#fff;margin-left:6px;"
+                            data-bs-toggle="modal" data-bs-target="#modalReprogramar">
+                        <i class="bi bi-arrow-repeat"></i> Reprogramar
+                    </button>
+                <?php endif; ?>
             </span>
         </div>
     </div>
@@ -89,6 +97,7 @@
         <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
+        <?php if (($data['ejecucion']->estado ?? '') !== RutaEjecucion::EST_NO_EJECUTADO): ?>
         <a href="<?php echo URL_ROOT; ?>/rutas/informe/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-file-earmark-text"></i> Ficha Institucional
             <?php if (($data['ficha']->estado ?? '') === RutaFicha::EST_BORRADOR): ?>
@@ -97,6 +106,7 @@
                 <span class="sig-badge sig-badge--sm sig-badge--success" style="margin-left:4px;">Cerrada</span>
             <?php endif; ?>
         </a>
+        <?php endif; ?>
         <a href="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $data['ejecucion']->id; ?>" class="btn-sig btn-sig--ghost">
             <i class="bi bi-envelope-paper"></i> Generar Oficio
         </a>
@@ -109,6 +119,56 @@
         </button>
     </div>
 </div>
+
+<?php
+// R-16: la salida original NO se toca — sigue siendo el registro de lo que no
+// ocurrió. Aquí se ve el hilo en los dos sentidos: qué la reemplazó, o de cuál
+// viene ésta.
+$ejx  = $data['ejecucion'];
+$nueva = $data['reprogramada'] ?? null;
+$vieneDe = !empty($ejx->id_reprogramada_de);
+?>
+<?php if ($ejx->estado === RutaEjecucion::EST_NO_EJECUTADO || $nueva || $vieneDe): ?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:3px solid var(--warning);">
+    <div class="sig-card__body" style="padding:var(--sp-4);display:flex;gap:var(--sp-4);align-items:center;flex-wrap:wrap;">
+        <div style="flex:1;min-width:280px;font-size:13px;">
+            <?php if ($ejx->estado === RutaEjecucion::EST_NO_EJECUTADO): ?>
+                <strong><i class="bi bi-x-circle" style="color:var(--danger-600);"></i> Esta salida no se ejecutó.</strong>
+                <?php if (!empty($ejx->motivo_no_ejecucion)): ?>
+                    <?php echo htmlspecialchars($ejx->motivo_no_ejecucion); ?>
+                <?php endif; ?>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+                    El registro se conserva tal cual: es la constancia de lo que no ocurrió.
+                </div>
+            <?php elseif ($vieneDe): ?>
+                <strong><i class="bi bi-arrow-repeat" style="color:var(--brand-600);"></i> Salida reprogramada.</strong>
+                Reemplaza a una anterior que no se pudo ejecutar
+                <?php if (!empty($ejx->fecha_original)): ?>
+                    (del <?php echo date('d/m/Y', strtotime($ejx->fecha_original)); ?>)
+                <?php endif; ?>.
+            <?php endif; ?>
+
+            <?php if ($nueva): ?>
+                <div style="margin-top:var(--sp-2);">
+                    <i class="bi bi-arrow-right-short"></i>
+                    Se reprogramó para el <strong><?php echo date('d/m/Y', strtotime($nueva->fecha)); ?></strong>.
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php if ($nueva): ?>
+            <a href="<?php echo URL_ROOT; ?>/rutas/detalle/<?php echo (int)$nueva->id; ?>"
+               class="btn-sig btn-sig--ghost btn-sig--sm">
+                <i class="bi bi-box-arrow-up-right"></i> Ver la salida nueva
+            </a>
+        <?php elseif ($vieneDe): ?>
+            <a href="<?php echo URL_ROOT; ?>/rutas/detalle/<?php echo (int)$ejx->id_reprogramada_de; ?>"
+               class="btn-sig btn-sig--ghost btn-sig--sm">
+                <i class="bi bi-box-arrow-up-right"></i> Ver la salida original
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php if ($data['ruta']->descripcion ?? ''): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);">
@@ -374,6 +434,46 @@ sort($duplicados, SORT_NUMERIC);
         <?php endforeach; ?>
     </div>
     <?php endif; ?>
+</div>
+
+<!-- ── Modal: reprogramar (R-16) ── -->
+<div class="modal fade" id="modalReprogramar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/reprogramar" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Reprogramar la salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="<?php echo (int)$data['ejecucion']->id; ?>">
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;
+                            font-size:12.5px;margin-bottom:var(--sp-4);">
+                    Se crea una <strong>salida nueva</strong> con el mismo grupo, origen y cupo, enlazada a
+                    ésta. La original <strong>no se modifica</strong>: queda en el histórico como no ejecutada.
+                </div>
+                <div class="row g-3">
+                    <div class="col-7">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="repro_fecha">Fecha nueva <span class="req">*</span></label>
+                            <input type="date" name="fecha" id="repro_fecha" class="sig-input" required
+                                   min="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="repro_hora">Hora</label>
+                            <input type="time" name="hora" id="repro_hora" class="sig-input"
+                                   value="<?php echo !empty($data['ejecucion']->hora) ? substr($data['ejecucion']->hora, 0, 5) : ''; ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary">Reprogramar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- ── Modal: la salida no se ejecutó (R-14: el motivo es obligatorio) ── -->

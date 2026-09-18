@@ -18,6 +18,22 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-18 — Rutas: cerrar y reprogramar una salida (T-D, sin migración)
+
+El modelo y el controlador estaban desde T-A; **lo que no existía era la interfaz**. `cambiarEstado()`
+y `reprogramar()` no los llamaba ningún botón, y el detalle de una salida mostraba el estado del
+**recorrido** («Activa»), que no dice nada de si esa salida ocurrió. Es lo mismo que pasó con la
+Ficha: código correcto sin puerta de entrada.
+
+Ahora el badge es el de la salida y a su lado están **«Marcar ejecutada»** y **«No se ejecutó»**, éste
+con motivo obligatorio (R-14). Cuando una salida queda sin ejecutar aparece **«Reprogramar»**, que
+crea una salida **nueva** con el mismo grupo, origen y cupo, enlazada a la original (R-16). La
+original **no se modifica**: es la constancia de lo que no ocurrió, y así lo dice la pantalla.
+
+El hilo se ve en los dos sentidos —desde la original, «Se reprogramó para el …»; desde la nueva,
+«Reemplaza a una anterior (del …)»—, con enlace de ida y vuelta. Y una salida no ejecutada **no**
+ofrece Ficha Institucional ni la genera: no hubo grupo atendido que registrar.
+
 ### 2026-09-17 (b) — Rutas: la Ficha Institucional, y los reportes que la mig. 078 dejó en cero (mig. 080)
 
 **1. Los reportes de Turismo estaban rotos y no se notaba.** Al preparar T-G apareció que la

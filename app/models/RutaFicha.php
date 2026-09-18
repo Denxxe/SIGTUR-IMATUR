@@ -137,6 +137,9 @@ class RutaFicha extends Model {
 
         $ejec = RutaEjecucion::find($idEjecucion);
         if (!$ejec) throw new Exception('La salida no existe.');
+        if ($ejec->estado === RutaEjecucion::EST_NO_EJECUTADO) {
+            throw new Exception('Esta salida no se ejecutó: no hay grupo atendido que registrar.');
+        }
 
         $db = new Database();
         $db->beginTransaction();

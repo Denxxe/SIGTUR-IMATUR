@@ -334,6 +334,7 @@ class RutasController extends Controller {
             'parroquias'      => Parroquia::all(),
             'oficiosEmitidos' => $oficiosEmitidos,
             'ficha'           => RutaFicha::porEjecucion($id),
+            'reprogramada'    => RutaEjecucion::reprogramadaComo($id),
             // R-33: 7-8 personas por guía. Es una sugerencia, no un límite.
             'guias_sugeridos' => RutaEjecucion::guiasSugeridos(count($participantes)),
             // R-28: el cupo del cliente es por DÍA, no por salida.

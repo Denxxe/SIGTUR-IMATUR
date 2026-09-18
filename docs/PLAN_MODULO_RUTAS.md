@@ -3,7 +3,7 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **T-A, T-B, T-I y T-G construidas (mig. 078-080)**, resto pendiente
+**Estado:** análisis cerrado · **T-A, T-B, T-I, T-G y T-D construidas (mig. 078-080)**, resto pendiente
 **Migraciones vigentes:** hasta **080**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
@@ -348,7 +348,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 | ✅ ~~T-A~~ | ~~Separar catálogo y ejecución~~ | **HECHA (2026-09-17, mig. 078).** `ruta_ejecuciones` + `ruta_ejecucion_empleados`, modelo `RutaEjecucion`, dos pantallas (`/rutas/index` catálogo · `/rutas/salidas`). Incluye los tres estados de R-14 y la reprogramación enlazada de R-16 (parte de T-D) |
 | ✅ ~~T-B~~ | ~~Edad por catálogo, retirar el 5–11 del código y de los rótulos~~ | **HECHA (2026-09-17, mig. 079).** `rutas.edad_min/edad_max/restricciones` + `Ruta::motivoEdadNoValida()`. **Cierra H-17.** El rango vive en el recorrido, no en el código: se valida en servidor y en el formulario, y los rótulos «(5–11)» del informe y del export son ahora solo «Niñas»/«Niños» |
 | **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
-| **T-D** | **No ejecutado y reprogramación**, con motivo obligatorio y enlace a la salida original | 🟢 **DESBLOQUEADA (2026-09-17).** R-14 dio los tres estados: `Programado` / `Ejecutado` / `No ejecutado`. Ver §4 |
+| ✅ ~~T-D~~ | ~~No ejecutado y reprogramación, con motivo obligatorio y enlace a la salida original~~ | **HECHA (2026-09-18).** Sin migración: las columnas ya estaban desde la 078; **lo que faltaba era la interfaz** — el modelo y el controlador existían pero ningún botón los llamaba. Ahora la salida muestra **su** estado (antes mostraba el del recorrido), se cierra con «Marcar ejecutada» / «No se ejecutó» —motivo obligatorio, R-14— y se reprograma con un modal. El hilo se ve en los dos sentidos y la original nunca se toca (R-16) |
 | **T-E** | **Solicitud y aprobación**: origen particular/institucional, institución solicitante, oficio **entrante** archivado, aprobación de Presidencia | 🟢 **DESBLOQUEADA.** R-12 aclara que el oficio **lo redacta la institución** → se **recibe y adjunta**, no se genera. No hay formato que esperar |
 | **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
 | ✅ ~~T-G~~ | ~~Ficha Institucional — el cierre con el conteo demográfico~~ | **HECHA (2026-09-17, mig. 080).** Vive sobre `ruta_informes` (la ficha **es** el informe: R-43 = R-47 = R-48) + `ruta_ficha_grupos` para los renglones. **Nace sola al marcar la salida como Ejecutada** (R-50), con recorrido, fecha, encargado e institución ya puestos. Imprimible fiel al formato, con sus renglones en blanco. Verificado contra el ejemplo real del cliente: 22 + 9 + 2 = **33** |
@@ -367,7 +367,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | 1 | **T-A** | Prerrequisito de todo. Con 2 filas en `rutas`, la migración de datos es trivial |
 | ~~2~~ | ✅ ~~T-B + T-I~~ | **HECHAS (mig. 079).** H-17 cerrado |
 | ~~3~~ | ✅ ~~T-G~~ | **HECHA (mig. 080).** Y de paso apareció el control para cerrar una salida, que T-A había dejado sin interfaz |
-| 4 | **T-D** | Estados y reprogramación: barato ahora que R-14 está respondida |
+| ~~4~~ | ✅ ~~T-D~~ | **HECHA.** Salió casi entera con T-G: sin poder cerrar una salida, la ficha no nacía |
 | 5 | **T-E + T-H** | Los **oficios** — pedido #2 del cliente. T-H puede construirse sin su imprimible |
 | 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
 | 7 | **T-F** | Itinerario por grupo y varios empleados por salida |

@@ -106,6 +106,10 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   (Protección Civil, R-55/R-56). El TOTAL es la suma de los tres bloques.
 - ✅ **Una salida se cierra con «Marcar ejecutada» o «No se ejecutó»** (R-14), y en el segundo caso
   el motivo es obligatorio. Los estados terminales no vuelven atrás.
+- ✅ **Reprogramar (R-16) no edita la salida: crea otra.** Solo desde «No ejecutado», una sola vez, y
+  con fecha no pasada. La nueva hereda grupo, origen, cupo y oficio, y queda enlazada por
+  `id_reprogramada_de`. **La original se conserva intacta**: es la constancia de lo que no ocurrió.
+- ✅ **Una salida no ejecutada no tiene Ficha Institucional** ni admite inscripciones: no hubo grupo.
 
 ---
 
