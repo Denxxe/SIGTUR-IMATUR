@@ -29,6 +29,11 @@ class Ruta extends Model {
     private ?int    $edad_min;
     private ?int    $edad_max;
     private ?string $restricciones;
+    // Tarifa (mig. 083 — fase T-C, cierra H-14). En USD: R-36.
+    private string  $tarifa_modo;
+    private ?float  $tarifa_monto;
+    private ?int    $exonera_menores_de;
+    private bool    $exonera_instituciones;
 
     // ── Fuente única de verdad para enums de este módulo ─────────────────────
     // «Finalizada» se retiró en la mig. 078: describía una SALIDA, no una ruta
@@ -61,6 +66,14 @@ class Ruta extends Model {
             $this->edad_min      = ($data['edad_min'] ?? '') !== '' ? (int)$data['edad_min'] : null;
             $this->edad_max      = ($data['edad_max'] ?? '') !== '' ? (int)$data['edad_max'] : null;
             $this->restricciones = trim((string)($data['restricciones'] ?? '')) ?: null;
+
+            $this->tarifa_modo  = in_array($data['tarifa_modo'] ?? '', PagoRuta::TARIFA_MODOS, true)
+                                  ? $data['tarifa_modo'] : PagoRuta::TARIFA_GRATUITA;
+            $this->tarifa_monto = ($data['tarifa_monto'] ?? '') !== '' ? round((float)$data['tarifa_monto'], 2) : null;
+            // Una tarifa fija sin monto no es una tarifa; el CHECK de la BD lo rechaza.
+            if ($this->tarifa_modo !== PagoRuta::TARIFA_FIJA) $this->tarifa_monto = null;
+            $this->exonera_menores_de    = ($data['exonera_menores_de'] ?? '') !== '' ? (int)$data['exonera_menores_de'] : null;
+            $this->exonera_instituciones = !empty($data['exonera_instituciones']);
         }
     }
 
@@ -89,6 +102,19 @@ class Ruta extends Model {
             return "«{$ruta->nombre}» admite participantes hasta {$max} años; esta persona tiene {$edad}.";
         }
         return null;
+    }
+
+    /**
+     * Cómo se cobra este recorrido, en una línea. R-36: la tarifa se pacta en
+     * **dólares** y se cobra en bolívares a la tasa del día.
+     */
+    public static function textoTarifa($ruta): string {
+        $modo = $ruta->tarifa_modo ?? PagoRuta::TARIFA_GRATUITA;
+        if ($modo === PagoRuta::TARIFA_A_CONVENIR) return 'A convenir';
+        if ($modo === PagoRuta::TARIFA_FIJA && (float)($ruta->tarifa_monto ?? 0) > 0) {
+            return '$ ' . number_format((float)$ruta->tarifa_monto, 2) . ' por persona';
+        }
+        return 'Gratuita';
     }
 
     /** Texto corto del rango, para mostrarlo en la ficha y en el formulario. */
@@ -210,6 +236,9 @@ class Ruta extends Model {
                                   motivo_mantenimiento=:motivo_mant,
                                   edad_min=:edad_min, edad_max=:edad_max,
                                   restricciones=:restricciones,
+                                  tarifa_modo=:tmodo, tarifa_monto=:tmonto,
+                                  tiene_tarifa=:ttiene,
+                                  exonera_menores_de=:exmen, exonera_instituciones=:exinst,
                                   updated_at=CURRENT_TIMESTAMP, updated_by=:user_id
                               WHERE id=:id");
             $this->db->bind(':id', $this->id);
@@ -217,14 +246,24 @@ class Ruta extends Model {
             $this->db->query("INSERT INTO rutas
                               (nombre, descripcion, duracion_estimada, estado,
                                id_departamento, requiere_formacion, tipo_ruta,
-                               motivo_mantenimiento, edad_min, edad_max, restricciones, created_by)
+                               motivo_mantenimiento, edad_min, edad_max, restricciones,
+                               tarifa_modo, tarifa_monto, tiene_tarifa,
+                               exonera_menores_de, exonera_instituciones, created_by)
                               VALUES (:nombre, :descripcion, :duracion_estimada, :estado,
                                       :id_departamento, :requiere_formacion, :tipo_ruta,
-                                      :motivo_mant, :edad_min, :edad_max, :restricciones, :user_id)");
+                                      :motivo_mant, :edad_min, :edad_max, :restricciones,
+                                      :tmodo, :tmonto, :ttiene, :exmen, :exinst, :user_id)");
         }
         $this->db->bind(':edad_min',      $this->edad_min);
         $this->db->bind(':edad_max',      $this->edad_max);
         $this->db->bind(':restricciones', $this->restricciones);
+        $this->db->bind(':tmodo',  $this->tarifa_modo);
+        $this->db->bind(':tmonto', $this->tarifa_monto);
+        // `tiene_tarifa` se mantiene AL DÍA pero derivado: existe desde la mig. 007
+        // y aún la leen consultas viejas. La fuente real es `tarifa_modo`.
+        $this->db->bind(':ttiene', $this->tarifa_modo !== PagoRuta::TARIFA_GRATUITA, PDO::PARAM_BOOL);
+        $this->db->bind(':exmen',  $this->exonera_menores_de);
+        $this->db->bind(':exinst', $this->exonera_instituciones, PDO::PARAM_BOOL);
         $this->db->bind(':nombre',             $this->nombre);
         $this->db->bind(':descripcion',        $this->descripcion);
         $this->db->bind(':duracion_estimada',  $this->duracion_estimada);

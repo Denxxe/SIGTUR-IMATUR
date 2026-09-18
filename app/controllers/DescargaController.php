@@ -139,6 +139,18 @@ class DescargaController extends Controller {
         $this->stream('rutas', $row->respuesta_archivo, $row->respuesta_original ?? null);
     }
 
+    /** Captura o voucher de un pago de ruta (R-39) — Turismo / Admin. */
+    public function comprobantePago($idPago = 0) {
+        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT comprobante_archivo, comprobante_original FROM ruta_pagos
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idPago);
+        $row = $db->single();
+        if (!$row || empty($row->comprobante_archivo)) $this->abort(404, 'Documento no disponible.');
+        $this->stream('rutas', $row->comprobante_archivo, $row->comprobante_original ?? null);
+    }
+
     public function fotoBien($idBien = 0) {
         if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
         $db = new Database();

@@ -139,6 +139,24 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   No se reintroduce un «facilitador externo» en la ruta: esa columna se eliminó en la mig. 060.
 - ✅ **La certificación no es requisito para guiar** (R-34): hay 3 certificados y el resto se está
   formando. No se bloquea ni se alerta por vencimiento.
+- ✅ **La tarifa se pacta en DÓLARES y se cobra en bolívares a la tasa del día** (R-36). El catálogo
+  guarda el monto en USD; **cada salida congela** su tarifa y su tasa, así que cambiar el precio o
+  que suba el dólar **no mueve** lo ya cobrado. La tasa se sugiere desde el BCV, pero un fallo de red
+  nunca bloquea: se carga a mano.
+- ✅ **Tres modos de tarifa** (R-41): *Gratuita* (Exploradores), *Fija* (Cumaná Histórica 5 $, Río
+  Brito 15 $, Playa Colorada y Las Maritas 25 $) y *A convenir* (Altos de Cumaná, «depende de lo que
+  el cliente solicite»).
+- ✅ **La gratuidad NO es automática por ser institución pública** (R-03/R-42): es **por ruta**. Las
+  instituciones no pagan Cumaná Histórica, pero sí Playa Colorada — y **igual deben traer el oficio**.
+- ✅ **El pago es ANTICIPADO, con fecha tope** (R-38): «se les tiene una fecha para cancelar y poder
+  planificar la salida». Pasado el tope y con saldo, la salida queda marcada como vencida.
+- ✅ **El sistema lleva la cuenta, no solo constancia** (R-40): hay abonos, varias transferencias del
+  mismo grupo y pagos de representantes distintos. **Anular un pago no lo borra** —es dinero—: queda
+  con su motivo y deja de sumar.
+- ✅ **Transferencia → comprobante adjunto · Efectivo → acta de pago numerada** (R-39). El acta solo
+  se numera para el efectivo: la transferencia ya trae su propio respaldo.
+- ✅ **Las exoneraciones las autoriza la Presidencia** (R-42). El sistema no decide: exige el motivo
+  y registra quién lo asentó y cuándo.
 
 ---
 

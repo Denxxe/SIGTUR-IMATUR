@@ -360,6 +360,145 @@ class RutasController extends Controller {
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // T-C — Cobro de la salida (R-36…R-42)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /** Congela tarifa, tasa y fecha tope en la salida. */
+    public function fijarCobro() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            PagoRuta::fijarCondiciones($id, [
+                'tarifa_usd'      => $_POST['tarifa_usd']      ?? '',
+                'tasa_cambio'     => $_POST['tasa_cambio']     ?? '',
+                'tasa_fecha'      => $_POST['tasa_fecha']      ?? '',
+                'fecha_tope_pago' => $_POST['fecha_tope_pago'] ?? '',
+            ], $this->getUserId());
+            flash('global_msg', 'Condiciones de cobro guardadas.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-42: la exonera la Presidenta; el sistema deja constancia de quién y por qué. */
+    public function exonerarSalida() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            if (($_POST['accion'] ?? '') === 'quitar') {
+                PagoRuta::quitarExoneracion($id, $this->getUserId());
+                flash('global_msg', 'Exoneración retirada: la salida vuelve a cobrarse.', 'warning');
+            } else {
+                PagoRuta::exonerar($id, $_POST['motivo'] ?? '', $this->getUserId());
+                flash('global_msg', 'Exoneración registrada.');
+            }
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-40: el registro de lo cobrado. */
+    public function registrarPago() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id_ejecucion'] ?? 0);
+        try {
+            $r = PagoRuta::registrar($id, [
+                'fecha'          => $_POST['fecha']          ?? '',
+                'forma'          => $_POST['forma']          ?? '',
+                'monto_bs'       => $_POST['monto_bs']       ?? 0,
+                'tasa_aplicada'  => $_POST['tasa_aplicada']  ?? '',
+                'personas'       => $_POST['personas']       ?? '',
+                'pagador_nombre' => $_POST['pagador_nombre'] ?? '',
+                'pagador_cedula' => $_POST['pagador_cedula'] ?? '',
+                'referencia'     => $_POST['referencia']     ?? '',
+                'observaciones'  => $_POST['observaciones']  ?? '',
+            ], $this->getUserId());
+            flash('global_msg', $r['acta']
+                ? 'Pago registrado. Acta de pago ' . $r['acta'] . ' — ya puede imprimirla.'
+                : 'Pago registrado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    public function anularPago() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id_ejecucion'] ?? 0);
+        try {
+            PagoRuta::anular((int)($_POST['id'] ?? 0), $_POST['motivo'] ?? '', $this->getUserId());
+            flash('global_msg', 'Pago anulado. Queda registrado con su motivo y deja de sumar.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /** R-39: la captura o el voucher de una transferencia. */
+    public function subirComprobante() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $id     = (int)($_POST['id'] ?? 0);
+        $idEjec = (int)($_POST['id_ejecucion'] ?? 0);
+        try {
+            $arch = $this->guardarOficioRuta('comprobante', 'Pago_' . $id);
+            PagoRuta::guardarComprobante($id, $arch['nombre'], $arch['original'], $this->getUserId());
+            flash('global_msg', 'Comprobante archivado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $idEjec);
+    }
+
+    /**
+     * El acta de pago en efectivo (R-39). ⚠️ El formato es **propuesta nuestra**:
+     * el cliente dijo «pueden darnos una idea». Si pide cambios se ajusta solo
+     * la vista; el correlativo y el registro del pago no se tocan.
+     */
+    public function actaPago($id) {
+        $pg = PagoRuta::find((int)$id);
+        if (!$pg || empty($pg->acta_numero)) {
+            flash('global_msg', 'Ese pago no tiene acta: solo se levanta acta de los pagos en efectivo.', 'warning');
+            header('Location: ' . URL_ROOT . '/rutas/salidas');
+            exit;
+        }
+        $ej   = RutaEjecucion::find((int)$pg->id_ejecucion);
+        $ruta = $ej ? Ruta::find((int)$ej->id_ruta) : null;
+        if (!$ruta) {
+            flash('global_msg', 'La salida de ese pago ya no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/salidas');
+            exit;
+        }
+        $this->view('rutas/acta_pago', [
+            'titulo'    => 'Acta de pago ' . $pg->acta_numero,
+            'pago'      => $pg,
+            'ejecucion' => $ej,
+            'ruta'      => $ruta,
+            'config'    => ConfigSistema::getAll(),
+        ]);
+    }
+
+    /**
+     * La tasa del BCV, para sugerirla al fijar el cobro. Reutiliza el mismo
+     * `TasaBcv` de la nómina (mig. 074): un fallo **nunca** bloquea — se carga
+     * a mano, igual que allá.
+     */
+    public function tasaBcv() {
+        header('Content-Type: application/json');
+        try {
+            echo json_encode(['ok' => true] + TasaBcv::consultar());
+        } catch (Throwable $e) {
+            echo json_encode(['ok' => false, 'msg' => $e->getMessage()]);
+        }
+        exit;
+    }
+
     /**
      * T-F (R-10/R-18): el orden de las paradas de ESTA salida. El del catálogo
      * es el sugerido; si dos grupos coinciden el mismo día se altera aquí, sin
@@ -513,6 +652,22 @@ class RutasController extends Controller {
             exit;
         }
 
+        // La tarifa se pacta en USD (R-36) y solo el modo «Fija» lleva monto.
+        $tarifaModo = in_array($_POST['tarifa_modo'] ?? '', PagoRuta::TARIFA_MODOS, true)
+                      ? $_POST['tarifa_modo'] : PagoRuta::TARIFA_GRATUITA;
+        $tarifaMonto = ($_POST['tarifa_monto'] ?? '') === '' ? null : round((float)$_POST['tarifa_monto'], 2);
+        if ($tarifaModo === PagoRuta::TARIFA_FIJA && ($tarifaMonto === null || $tarifaMonto <= 0)) {
+            flash('global_msg', 'Indique la tarifa en dólares, o marque el recorrido como gratuito o a convenir.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+        $exoneraMenores = ($_POST['exonera_menores_de'] ?? '') === '' ? null : (int)$_POST['exonera_menores_de'];
+        if ($exoneraMenores !== null && ($exoneraMenores < 0 || $exoneraMenores > 120)) {
+            flash('global_msg', 'La edad de exoneración debe estar entre 0 y 120 años.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/index');
+            exit;
+        }
+
         $data = [
             'id'                    => $esEdicion ? (int)$_POST['id'] : null,
             'nombre'                => $nombre,
@@ -524,6 +679,12 @@ class RutasController extends Controller {
             'edad_min'              => $edadMin,
             'edad_max'              => $edadMax,
             'restricciones'         => trim($_POST['restricciones'] ?? '') ?: null,
+            // T-C (mig. 083): la tarifa por fin se captura. Existía desde la
+            // mig. 007 y ningún formulario la pedía — fue el bug H-14.
+            'tarifa_modo'           => $tarifaModo,
+            'tarifa_monto'          => $tarifaMonto,
+            'exonera_menores_de'    => $exoneraMenores,
+            'exonera_instituciones' => !empty($_POST['exonera_instituciones']),
             'tipo_ruta'             => $tipoRuta,
             'motivo_mantenimiento'  => $estado === 'En Mantenimiento' ? $motivoMant : null,
         ];
@@ -584,6 +745,9 @@ class RutasController extends Controller {
             'ficha'           => RutaFicha::porEjecucion($id),
             'reprogramada'    => RutaEjecucion::reprogramadaComo($id),
             'aprobada_por'    => RutaEjecucion::aprobadaPor($id),
+            'pagos'           => PagoRuta::porEjecucion($id),
+            'cuenta'          => PagoRuta::estadoDeCuenta($id),
+            'sug_tarifa'      => PagoRuta::sugerenciaTarifa($ej, $ruta),
             // R-33: 7-8 personas por guía. Es una sugerencia, no un límite.
             'guias_sugeridos' => RutaEjecucion::guiasSugeridos(count($participantes)),
             // R-28: el cupo del cliente es por DÍA, no por salida.

@@ -18,6 +18,44 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-18 (e) — Rutas: el cobro, y con él las nueve fases del módulo (T-C, mig. 083)
+
+**Cierra H-14.** Las columnas `rutas.tiene_tarifa` y `tarifa_monto` existían desde la mig. 007 y
+**nunca se capturaron en ningún formulario**: el reporte informaba «Gratuita» para toda ruta,
+siempre, incluso si se había cobrado. La columna se había retirado del reporte en agosto a la espera
+de D-RT02. Con R-02 y R-36…R-42 respondidas, ahora se capturan de verdad y la columna vuelve.
+
+R-40 preguntaba si el sistema debe **llevar la contabilidad** de los cobros o solo dejar constancia
+de que la ruta tenía tarifa. La respuesta fue la más exigente: *«Sí debe llevar el cobro… y lo
+cancelado»*. Así que es un registro de pagos, no un «pagó sí/no».
+
+**La tarifa se pacta en dólares y se cobra en bolívares a la tasa del día** (R-36). El catálogo
+guarda USD, con tres modos —Gratuita, Fija y **A convenir**, que hacía falta para Altos de Cumaná
+(R-41: «depende de lo que el cliente solicite»)—, y **cada salida congela** su tarifa y su tasa. Si
+mañana sube el dólar o el cliente cambia el precio, lo cobrado la semana pasada no se mueve: es el
+mismo criterio de la mig. 074 con la nómina. La tasa se sugiere desde el BCV **reutilizando
+`TasaBcv`**, y un fallo de red nunca bloquea — se carga a mano.
+
+**La gratuidad no es automática por ser institución pública.** R-03 lo matiza: las instituciones no
+pagan **Cumaná Histórica**, pero sí Playa Colorada, y aun exoneradas **igual deben traer el oficio**.
+Por eso `exonera_instituciones` y `exonera_menores_de` son **por ruta**, no reglas generales.
+
+**Los pagos son una tabla, no un campo**: hay abonos, varias transferencias del mismo grupo y pagos
+de representantes distintos. Transferencia → comprobante adjunto; efectivo → **acta numerada**
+(`ACTP-`), que solo se emite para efectivo porque la transferencia ya trae su propio respaldo.
+**Anular un pago no lo borra** —es dinero—: queda con su motivo y deja de sumar. Y R-38, el pago
+anticipado con fecha tope, se traduce en una salida marcada como vencida cuando pasó la fecha y
+sigue habiendo saldo.
+
+> ⚠️ **El acta de pago es una PROPUESTA nuestra.** Sobre ella el cliente dijo: *«el formato nace del
+> momento, pueden darnos una idea, pero funciona como respaldo de que el servicio fue pagado»*
+> (R-39). Es el único documento del módulo que diseñamos en vez de replicar. Lleva lo mínimo que
+> hace de un papel un respaldo válido —quién recibió, de quién, cuánto **en cifras y en letras**,
+> por qué concepto y cuándo, con las dos firmas— y se somete a su visto bueno.
+
+**Con esto quedan construidas las nueve fases del módulo de Rutas** (mig. 078-083). Lo único
+pendiente es del cliente: el formato del oficio de permiso (T-H) y su visto bueno al acta de pago.
+
 ### 2026-09-18 (d) — Rutas: el itinerario es de la salida, no del recorrido (T-F, mig. 082)
 
 R-10: *«Puede cambiar en algún punto. Si hay varios grupos en la misma ruta al mismo tiempo, se

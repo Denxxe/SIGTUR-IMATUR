@@ -213,13 +213,10 @@
             <tr>
                 <th>Recorrido</th>
                 <th>Tipo</th>
+                <th>Tarifa</th>
                 <th>Departamento</th>
                 <th>Estado</th>
                 <th>Restricciones</th>
-                <?php /* Columna "Tarifa" retirada (H-14): rutas.tiene_tarifa/tarifa_monto no se
-                        capturan en ningún formulario, así que el reporte informaba "Gratuita"
-                        para toda ruta, siempre — incluso si se cobró. Se reactiva cuando el
-                        cliente defina el flujo de cobro (D-RT02). */ ?>
                 <th class="text-center">Paradas</th>
                 <th class="text-center">Salidas</th>
                 <th>Última salida</th>
@@ -230,13 +227,14 @@
         <tbody>
             <?php if (empty($data['rutas'])): ?>
                 <tr>
-                    <td colspan="10" class="sig-table-empty">No hay recorridos registrados para generar el reporte.</td>
+                    <td colspan="11" class="sig-table-empty">No hay recorridos registrados para generar el reporte.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($r->nombre); ?></td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->tipo_ruta ?? 'General'); ?></td>
+                        <td style="font-size:12px; font-weight:600;"><?php echo htmlspecialchars(Ruta::textoTarifa($r)); ?></td>
                         <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
                         <td>
                             <span class="sig-badge sig-badge--sm <?php echo Ruta::ESTADO_BADGES[$r->estado] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estado); ?></span>

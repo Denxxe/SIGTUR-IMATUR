@@ -130,6 +130,9 @@ $estadoColores = [
                     <div class="act-chips">
                         <span class="act-chip"><span class="act-chip__dot"></span><?php echo htmlspecialchars($r->tipo_ruta ?: 'General'); ?></span>
                         <span class="act-chip"><i class="bi bi-pin-map"></i> <?php echo (int)$r->total_puntos; ?> paradas</span>
+                        <span class="act-chip" title="Tarifa por persona, en dólares (R-36)">
+                            <i class="bi bi-cash-coin"></i> <?php echo htmlspecialchars(Ruta::textoTarifa($r)); ?>
+                        </span>
                         <?php if (($r->edad_min ?? null) !== null || ($r->edad_max ?? null) !== null): ?>
                         <span class="act-chip" title="Restricción de edad del recorrido">
                             <i class="bi bi-person-check"></i> <?php echo htmlspecialchars(Ruta::textoEdades($r)); ?>
@@ -309,6 +312,57 @@ $estadoColores = [
                         </div>
                     </div>
 
+                    <!-- Tarifa (mig. 083 — T-C, cierra H-14) -->
+                    <div class="col-12">
+                        <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;">
+                            <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--sp-2);">
+                                <i class="bi bi-cash-coin"></i> Cobro de este recorrido
+                            </div>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_tarifa_modo">¿Se cobra?</label>
+                                        <select name="tarifa_modo" id="rut_tarifa_modo" class="sig-select">
+                                            <?php foreach (PagoRuta::TARIFA_MODOS as $tm): ?>
+                                                <option value="<?php echo $tm; ?>"><?php echo $tm; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4" id="rut_box_monto">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_tarifa_monto">Tarifa por persona (USD)</label>
+                                        <input type="number" name="tarifa_monto" id="rut_tarifa_monto" class="sig-input"
+                                               min="0" step="0.01" placeholder="Ej: 5.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="sig-field" style="margin:0;">
+                                        <label class="sig-field__label" for="rut_exon_menores">No se cobra a menores de</label>
+                                        <input type="number" name="exonera_menores_de" id="rut_exon_menores" class="sig-input"
+                                               min="0" max="120" placeholder="sin exoneración">
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="rut_exon_inst" name="exonera_instituciones" value="1">
+                                        <label class="form-check-label" for="rut_exon_inst" style="font-size:13px;cursor:pointer;user-select:none;">
+                                            <i class="bi bi-building"></i> Las <strong>instituciones públicas</strong> no pagan este recorrido
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <small style="color:var(--text-tertiary);font-size:11px;display:block;margin-top:var(--sp-2);">
+                                La tarifa se pacta <strong>en dólares</strong> y se cobra en bolívares a la tasa del día,
+                                que se congela en cada salida (R-36).
+                                Referencias del cliente: <strong>Cumaná Histórica 5 $</strong> (menores de 8 gratis;
+                                instituciones públicas exoneradas) · <strong>Río Brito 15 $</strong> ·
+                                <strong>Playa Colorada y Las Maritas 25 $</strong> ·
+                                <strong>Exploradores</strong> gratuita · <strong>Altos de Cumaná</strong> a convenir.
+                            </small>
+                        </div>
+                    </div>
+
                     <!-- Restricciones del recorrido (mig. 079 — T-B/T-I, cierra H-17) -->
                     <div class="col-12">
                         <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;">
@@ -398,6 +452,7 @@ function nuevaRuta() {
     document.getElementById('rut_id').value = '';
     document.querySelector('#modalRuta form').reset();
     toggleMotivoMant('Activa');
+    toggleTarifaMonto();
 }
 
 function editarRuta(r) {
@@ -413,11 +468,28 @@ function editarRuta(r) {
     document.getElementById('rut_edad_min').value         = (r.edad_min === null || r.edad_min === undefined) ? '' : r.edad_min;
     document.getElementById('rut_edad_max').value         = (r.edad_max === null || r.edad_max === undefined) ? '' : r.edad_max;
     document.getElementById('rut_restricciones').value    = r.restricciones || '';
+    document.getElementById('rut_tarifa_modo').value      = r.tarifa_modo || 'Gratuita';
+    document.getElementById('rut_tarifa_monto').value     = r.tarifa_monto || '';
+    document.getElementById('rut_exon_menores').value     = (r.exonera_menores_de === null || r.exonera_menores_de === undefined) ? '' : r.exonera_menores_de;
+    document.getElementById('rut_exon_inst').checked      = r.exonera_instituciones == true || r.exonera_instituciones === 't' || r.exonera_instituciones === '1';
+    toggleTarifaMonto();
     // Pre-rellenar motivo de mantenimiento
     document.getElementById('rut_motivo_mant').value      = r.motivo_mantenimiento || '';
     toggleMotivoMant(r.estado);
     new bootstrap.Modal(document.getElementById('modalRuta')).show();
 }
+
+// El monto solo tiene sentido con tarifa fija: «a convenir» se pacta en cada
+// salida (R-41) y «gratuita» no cobra nada.
+function toggleTarifaMonto() {
+    var modo = document.getElementById('rut_tarifa_modo').value;
+    var box  = document.getElementById('rut_box_monto');
+    var esFija = (modo === 'Fija');
+    box.style.display = esFija ? 'block' : 'none';
+    if (!esFija) document.getElementById('rut_tarifa_monto').value = '';
+}
+document.getElementById('rut_tarifa_modo').addEventListener('change', toggleTarifaMonto);
+toggleTarifaMonto();
 
 // Mostrar/ocultar motivo al cambiar estado en el selector
 document.getElementById('rut_estado').addEventListener('change', function() {

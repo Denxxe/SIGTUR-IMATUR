@@ -458,6 +458,467 @@ $conOficio = !empty($ej->oficio_archivo);
 </div>
 <?php endif; ?>
 
+<!-- ── Cobro de la salida (T-C, R-36…R-42) ───────────────────────────────── -->
+<?php
+// R-40: «sí debe llevar el cobro y lo cancelado». La tarifa y la tasa están
+// CONGELADAS en la salida (R-36): si mañana sube el dólar, lo de esta semana no
+// se mueve. Lo de abajo solo lee ese estado de cuenta.
+$ct   = $data['cuenta'];
+$sug  = $data['sug_tarifa'] ?? ['tarifa' => null, 'motivo' => null];
+$ejc  = $data['ejecucion'];
+$abrt = ($ejc->estado ?? '') === RutaEjecucion::EST_PROGRAMADO;
+$bs   = fn($n) => number_format((float)$n, 2, ',', '.');
+?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:4px solid #16A34A;">
+    <div class="sig-card__head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);">
+        <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;">
+            <div class="sig-card__title"><i class="bi bi-cash-coin" style="color:#16A34A;"></i> Cobro</div>
+            <?php if ($ct['exonerada']): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--info"><i class="bi bi-patch-check"></i> Exonerada</span>
+            <?php elseif ($ct['solvente']): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--success"><i class="bi bi-check2-circle"></i> Solvente</span>
+            <?php elseif ($ct['vencido']): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--danger"><i class="bi bi-exclamation-triangle"></i> Pago vencido</span>
+            <?php elseif (($ct['esperado_bs'] ?? 0) > 0): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--warning"><i class="bi bi-hourglass"></i> Por cobrar</span>
+            <?php endif; ?>
+        </div>
+        <?php if ($abrt): ?>
+        <div style="display:flex;gap:var(--sp-2);">
+            <?php if (!$ct['exonerada']): ?>
+                <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm"
+                        data-bs-toggle="modal" data-bs-target="#modalCondiciones">
+                    <i class="bi bi-sliders"></i> Condiciones
+                </button>
+                <button type="button" class="btn-sig btn-sig--primary btn-sig--sm" style="background:#16A34A;"
+                        data-bs-toggle="modal" data-bs-target="#modalPago">
+                    <i class="bi bi-plus-lg"></i> Registrar pago
+                </button>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="sig-card__body" style="padding:var(--sp-4);">
+        <?php if ($ct['exonerada']): ?>
+            <div style="font-size:13px;">
+                <strong><i class="bi bi-patch-check" style="color:var(--brand-600);"></i> Esta salida no se cobra.</strong>
+                <?php echo htmlspecialchars($ejc->motivo_exoneracion ?? ''); ?>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+                    Registrada el <?php echo $ejc->fecha_exoneracion ? date('d/m/Y', strtotime($ejc->fecha_exoneracion)) : '—'; ?>.
+                    Quien autoriza es la <strong>Presidencia</strong> (R-42).
+                </div>
+                <?php if ($abrt): ?>
+                <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/exonerarSalida" style="margin-top:var(--sp-3);">
+                    <input type="hidden" name="id" value="<?php echo (int)$ejc->id; ?>">
+                    <input type="hidden" name="accion" value="quitar">
+                    <button type="submit" class="btn-sig btn-sig--ghost btn-sig--sm">
+                        <i class="bi bi-x-lg"></i> Quitar la exoneración
+                    </button>
+                </form>
+                <?php endif; ?>
+            </div>
+
+        <?php else: ?>
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div style="display:flex;gap:var(--sp-5);flex-wrap:wrap;">
+                        <div>
+                            <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Tarifa</span>
+                            <div style="font-size:18px;font-weight:800;">
+                                <?php echo $ct['tarifa_usd'] !== null ? '$ ' . number_format($ct['tarifa_usd'], 2) : '—'; ?>
+                                <span style="font-size:11px;font-weight:500;color:var(--text-tertiary);">/persona</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Tasa congelada</span>
+                            <div style="font-size:18px;font-weight:800;">
+                                <?php echo $ct['tasa'] !== null ? $bs($ct['tasa']) : '—'; ?>
+                                <span style="font-size:11px;font-weight:500;color:var(--text-tertiary);">Bs/$</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Esperado</span>
+                            <div style="font-size:18px;font-weight:800;">
+                                <?php echo $ct['esperado_bs'] !== null ? 'Bs ' . $bs($ct['esperado_bs']) : '—'; ?>
+                            </div>
+                            <?php if ($ct['esperado_bs'] !== null): ?>
+                            <span style="font-size:10.5px;color:var(--text-tertiary);">
+                                <?php echo $ct['personas']; ?> participante(s)
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="border-left:2px solid var(--border-subtle);padding-left:var(--sp-5);">
+                            <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Cobrado</span>
+                            <div style="font-size:20px;font-weight:800;color:var(--success-600);">Bs <?php echo $bs($ct['cobrado_bs']); ?></div>
+                            <?php if ($ct['saldo_bs'] !== null && $ct['saldo_bs'] > 0.005): ?>
+                            <span style="font-size:10.5px;color:var(--danger-600);font-weight:700;">
+                                Falta Bs <?php echo $bs($ct['saldo_bs']); ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" style="font-size:12px;color:var(--text-secondary);">
+                    <?php if (!empty($ejc->fecha_tope_pago)): ?>
+                        <div>
+                            <i class="bi bi-calendar-x" style="color:<?php echo $ct['vencido'] ? 'var(--danger-600)' : 'var(--text-tertiary)'; ?>;"></i>
+                            Fecha tope de pago: <strong><?php echo date('d/m/Y', strtotime($ejc->fecha_tope_pago)); ?></strong>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($sug['motivo'])): ?>
+                        <div style="margin-top:4px;color:var(--text-tertiary);font-size:11.5px;">
+                            <i class="bi bi-info-circle"></i> <?php echo htmlspecialchars($sug['motivo']); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($abrt && $ct['tarifa_usd'] === null): ?>
+                        <div style="margin-top:6px;color:var(--warning-600);font-size:11.5px;">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            Todavía no se fijó la tarifa de esta salida.
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($abrt): ?>
+                    <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" style="margin-top:var(--sp-2);"
+                            data-bs-toggle="modal" data-bs-target="#modalExonerar">
+                        <i class="bi bi-patch-check"></i> Exonerar
+                    </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Los pagos -->
+            <?php if (!empty($data['pagos'])): ?>
+            <div class="sig-table-wrap" data-no-export style="margin-top:var(--sp-4);">
+                <table class="sig-table">
+                    <thead>
+                        <tr><th>Fecha</th><th>Forma</th><th class="text-end">Monto</th>
+                            <th>Referencia / Acta</th><th>Pagador</th><th class="col-actions"></th></tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($data['pagos'] as $pg): $anu = !empty($pg->anulado); ?>
+                        <tr style="<?php echo $anu ? 'opacity:.5;' : ''; ?>">
+                            <td style="font-size:12px;"><?php echo date('d/m/Y', strtotime($pg->fecha)); ?></td>
+                            <td style="font-size:12px;"><?php echo htmlspecialchars($pg->forma); ?></td>
+                            <td class="text-end" style="font-weight:700;<?php echo $anu ? 'text-decoration:line-through;' : ''; ?>">
+                                Bs <?php echo $bs($pg->monto_bs); ?>
+                                <?php if ($pg->monto_usd !== null): ?>
+                                    <br><span style="font-size:10.5px;font-weight:500;color:var(--text-tertiary);">
+                                        $ <?php echo number_format((float)$pg->monto_usd, 2); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-size:12px;">
+                                <?php if (!empty($pg->acta_numero)): ?>
+                                    <a href="<?php echo URL_ROOT; ?>/rutas/actaPago/<?php echo (int)$pg->id; ?>" target="_blank"
+                                       style="font-family:var(--font-mono);font-weight:700;">
+                                        <?php echo htmlspecialchars($pg->acta_numero); ?>
+                                    </a>
+                                <?php elseif (!empty($pg->referencia)): ?>
+                                    <span style="font-family:var(--font-mono);"><?php echo htmlspecialchars($pg->referencia); ?></span>
+                                <?php else: ?>—<?php endif; ?>
+                                <?php if (!empty($pg->comprobante_archivo)): ?>
+                                    <br><a href="<?php echo URL_ROOT; ?>/descarga/comprobantePago/<?php echo (int)$pg->id; ?>"
+                                           target="_blank" style="font-size:11px;">
+                                        <i class="bi bi-paperclip"></i> comprobante
+                                    </a>
+                                <?php elseif ($abrt && !$anu): ?>
+                                    <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/subirComprobante"
+                                          enctype="multipart/form-data" style="margin:2px 0 0;display:flex;gap:4px;align-items:center;">
+                                        <input type="hidden" name="id" value="<?php echo (int)$pg->id; ?>">
+                                        <input type="hidden" name="id_ejecucion" value="<?php echo (int)$ejc->id; ?>">
+                                        <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png" required
+                                               style="font-size:10px;max-width:140px;">
+                                        <button type="submit" class="row-action" title="Adjuntar comprobante">
+                                            <i class="bi bi-upload"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-size:12px;color:var(--text-secondary);">
+                                <?php echo htmlspecialchars($pg->pagador_nombre ?: '—'); ?>
+                                <?php if ($anu): ?>
+                                    <br><span style="font-size:11px;color:var(--danger-600);">
+                                        Anulado: <?php echo htmlspecialchars($pg->motivo_anulacion); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="col-actions">
+                                <?php if (!$anu && $abrt): ?>
+                                <button type="button" class="row-action row-action--del js-anular-pago"
+                                        data-id="<?php echo (int)$pg->id; ?>" title="Anular el pago">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+                <p style="font-size:12.5px;color:var(--text-tertiary);margin:var(--sp-4) 0 0;">
+                    Todavía no hay pagos registrados.
+                    <?php if (($ct['esperado_bs'] ?? 0) > 0): ?>
+                        El pago es <strong>anticipado</strong> (R-38).
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php if ($abrt): ?>
+<!-- Modal: condiciones de cobro -->
+<div class="modal fade" id="modalCondiciones" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/fijarCobro" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-sliders"></i> Condiciones de cobro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="<?php echo (int)$ejc->id; ?>">
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;font-size:12.5px;margin-bottom:var(--sp-4);">
+                    La tarifa y la tasa quedan <strong>congeladas en esta salida</strong>: si después cambia
+                    el precio del catálogo o sube el dólar, lo cobrado aquí no se mueve.
+                </div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="co_tarifa">Tarifa por persona (USD)</label>
+                            <input type="number" name="tarifa_usd" id="co_tarifa" class="sig-input" min="0" step="0.01"
+                                   value="<?php echo $ejc->tarifa_usd !== null ? (float)$ejc->tarifa_usd : ($sug['tarifa'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="co_tasa">Tasa (Bs por $)</label>
+                            <div style="display:flex;gap:4px;">
+                                <input type="number" name="tasa_cambio" id="co_tasa" class="sig-input" min="0" step="0.0001"
+                                       value="<?php echo $ejc->tasa_cambio !== null ? (float)$ejc->tasa_cambio : ''; ?>">
+                                <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" id="btnTasaBcv"
+                                        title="Consultar la tasa del BCV">
+                                    <i class="bi bi-cloud-download"></i>
+                                </button>
+                            </div>
+                            <small id="co_tasa_msg" style="font-size:11px;color:var(--text-tertiary);"></small>
+                        </div>
+                    </div>
+                    <input type="hidden" name="tasa_fecha" id="co_tasa_fecha"
+                           value="<?php echo $ejc->tasa_fecha ?? ''; ?>">
+                    <div class="col-12">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="co_tope">Fecha tope de pago</label>
+                            <input type="date" name="fecha_tope_pago" id="co_tope" class="sig-input"
+                                   max="<?php echo htmlspecialchars($ejc->fecha); ?>"
+                                   value="<?php echo $ejc->fecha_tope_pago ?? ''; ?>">
+                            <small style="color:var(--text-tertiary);font-size:11px;">
+                                R-38: el pago es anticipado — «se les tiene una fecha para cancelar y poder
+                                planificar la salida».
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: registrar pago -->
+<div class="modal fade" id="modalPago" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form action="<?php echo URL_ROOT; ?>/rutas/registrarPago" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-cash-coin"></i> Registrar pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_ejecucion" value="<?php echo (int)$ejc->id; ?>">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_forma">Forma de pago <span class="req">*</span></label>
+                            <select name="forma" id="pg_forma" class="sig-select" required>
+                                <?php foreach (PagoRuta::FORMAS as $f): ?>
+                                    <option value="<?php echo $f; ?>"><?php echo $f; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_monto">Monto en bolívares <span class="req">*</span></label>
+                            <input type="number" name="monto_bs" id="pg_monto" class="sig-input" min="0.01" step="0.01" required
+                                   value="<?php echo $ct['saldo_bs'] !== null && $ct['saldo_bs'] > 0 ? $ct['saldo_bs'] : ''; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_fecha">Fecha</label>
+                            <input type="date" name="fecha" id="pg_fecha" class="sig-input"
+                                   value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4" id="pg_box_ref">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_ref">N° de referencia</label>
+                            <input type="text" name="referencia" id="pg_ref" class="sig-input" placeholder="De la transferencia">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_tasa">Tasa aplicada (Bs por $)</label>
+                            <input type="number" name="tasa_aplicada" id="pg_tasa" class="sig-input" min="0" step="0.0001"
+                                   value="<?php echo $ejc->tasa_cambio !== null ? (float)$ejc->tasa_cambio : ''; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_personas">Personas que cubre</label>
+                            <input type="number" name="personas" id="pg_personas" class="sig-input" min="1">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_pagador">Quién paga</label>
+                            <input type="text" name="pagador_nombre" id="pg_pagador" class="sig-input" data-nombre-libre
+                                   placeholder="Nombre del representante o la institución">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_cedula">Cédula / RIF</label>
+                            <input type="text" name="pagador_cedula" id="pg_cedula" class="sig-input">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="pg_obs">Observaciones</label>
+                            <input type="text" name="observaciones" id="pg_obs" class="sig-input">
+                        </div>
+                    </div>
+                </div>
+                <div id="pg_aviso_acta" style="margin-top:var(--sp-3);padding:var(--sp-3);background:rgba(22,163,74,.08);border-radius:8px;font-size:12px;display:none;">
+                    <i class="bi bi-file-earmark-text"></i>
+                    Al ser en efectivo, el sistema numera un <strong>acta de pago</strong> que podrá
+                    imprimir como respaldo (R-39).
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary" style="background:#16A34A;">Registrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: exonerar -->
+<div class="modal fade" id="modalExonerar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/exonerarSalida" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-patch-check"></i> Exonerar del pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" value="<?php echo (int)$ejc->id; ?>">
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;font-size:12.5px;margin-bottom:var(--sp-4);">
+                    Quien autoriza una exoneración es la <strong>Presidencia</strong> (R-42). El sistema
+                    no decide: deja constancia de <strong>por qué</strong> y de quién lo asentó.
+                </div>
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label" for="ex_motivo">Motivo y autorización <span class="req">*</span></label>
+                    <textarea name="motivo" id="ex_motivo" class="sig-input" rows="3" required
+                              placeholder="Ej: institución pública, autorizado por la Presidenta el 12/09"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary">Registrar exoneración</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: anular un pago -->
+<div class="modal fade" id="modalAnularPago" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/anularPago" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-x-octagon"></i> Anular el pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="ap_id">
+                <input type="hidden" name="id_ejecucion" value="<?php echo (int)$ejc->id; ?>">
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;font-size:12.5px;margin-bottom:var(--sp-4);">
+                    El pago <strong>no se borra</strong>: es dinero. Queda con su motivo y deja de sumar
+                    al total cobrado.
+                </div>
+                <div class="sig-field" style="margin:0;">
+                    <label class="sig-field__label" for="ap_motivo">¿Por qué se anula? <span class="req">*</span></label>
+                    <textarea name="motivo" id="ap_motivo" class="sig-input" rows="3" required
+                              placeholder="Ej: la transferencia fue rechazada; se registró dos veces"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary" style="background:var(--danger-600);">Anular</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    // La referencia solo aplica a transferencia; el acta, solo a efectivo (R-39).
+    var forma = document.getElementById('pg_forma');
+    function pintarForma() {
+        var v = forma.value;
+        document.getElementById('pg_box_ref').style.display = (v === 'Transferencia') ? 'block' : 'none';
+        document.getElementById('pg_ref').required = (v === 'Transferencia');
+        document.getElementById('pg_aviso_acta').style.display = (v === 'Efectivo') ? 'block' : 'none';
+    }
+    if (forma) { forma.addEventListener('change', pintarForma); pintarForma(); }
+
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('.js-anular-pago');
+        if (!b) return;
+        document.getElementById('ap_id').value = b.dataset.id;
+        new bootstrap.Modal(document.getElementById('modalAnularPago')).show();
+    });
+
+    // La tasa del BCV es una SUGERENCIA: si falla, se carga a mano y no se
+    // bloquea nada (mismo criterio que en la nómina, mig. 074).
+    var btn = document.getElementById('btnTasaBcv');
+    if (btn) btn.addEventListener('click', function () {
+        var msg = document.getElementById('co_tasa_msg');
+        btn.disabled = true; msg.textContent = 'Consultando al BCV…';
+        fetch('<?php echo URL_ROOT; ?>/rutas/tasaBcv')
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                btn.disabled = false;
+                if (res.ok) {
+                    document.getElementById('co_tasa').value = res.tasa;
+                    document.getElementById('co_tasa_fecha').value = res.fecha_valor || '';
+                    msg.textContent = 'BCV: ' + res.tasa + (res.fecha_valor ? ' (valor ' + res.fecha_valor + ')' : '');
+                } else {
+                    msg.textContent = 'No se pudo consultar. Cárguela a mano.';
+                }
+            })
+            .catch(function () {
+                btn.disabled = false;
+                msg.textContent = 'No se pudo consultar. Cárguela a mano.';
+            });
+    });
+})();
+</script>
+<?php endif; ?>
+
 <!-- ── Personal de IMATUR en la salida (R-31/R-33) ───────────────────────── -->
 <?php
 // R-31: «siempre encabeza un empleado de IMATUR» — por eso el encargado es uno

@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **ocho de las nueve fases construidas (mig. 078-082)** — queda solo **T-C** (el cobro)
-**Migraciones vigentes:** hasta **082**
+**Estado:** ✅ **LAS NUEVE FASES CONSTRUIDAS (mig. 078-083).** Queda pendiente del cliente el **formato del oficio de permiso** (T-H) y su visto bueno al **acta de pago** que propusimos (T-C)
+**Migraciones vigentes:** hasta **083**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -347,7 +347,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 |------|-----------|-------------|
 | ✅ ~~T-A~~ | ~~Separar catálogo y ejecución~~ | **HECHA (2026-09-17, mig. 078).** `ruta_ejecuciones` + `ruta_ejecucion_empleados`, modelo `RutaEjecucion`, dos pantallas (`/rutas/index` catálogo · `/rutas/salidas`). Incluye los tres estados de R-14 y la reprogramación enlazada de R-16 (parte de T-D) |
 | ✅ ~~T-B~~ | ~~Edad por catálogo, retirar el 5–11 del código y de los rótulos~~ | **HECHA (2026-09-17, mig. 079).** `rutas.edad_min/edad_max/restricciones` + `Ruta::motivoEdadNoValida()`. **Cierra H-17.** El rango vive en el recorrido, no en el código: se valida en servidor y en el formulario, y los rótulos «(5–11)» del informe y del export son ahora solo «Niñas»/«Niños» |
-| **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
+| ✅ ~~T-C~~ | ~~Cobro completo~~ | **HECHA (2026-09-18, mig. 083).** **Cierra H-14.** Tarifa en USD en el catálogo con tres modos (Gratuita / Fija / A convenir, R-41) y exoneraciones **por ruta** (menores de N, instituciones públicas — R-03: no es automático). La salida **congela** tarifa y tasa; la tasa se sugiere desde el BCV reutilizando `TasaBcv` (mig. 074). `ruta_pagos` lleva la cuenta (R-40) con abonos, comprobante adjunto y acta numerada para el efectivo. Exoneración con motivo obligatorio (R-42) |
 | ✅ ~~T-D~~ | ~~No ejecutado y reprogramación, con motivo obligatorio y enlace a la salida original~~ | **HECHA (2026-09-18).** Sin migración: las columnas ya estaban desde la 078; **lo que faltaba era la interfaz** — el modelo y el controlador existían pero ningún botón los llamaba. Ahora la salida muestra **su** estado (antes mostraba el del recorrido), se cierra con «Marcar ejecutada» / «No se ejecutó» —motivo obligatorio, R-14— y se reprograma con un modal. El hilo se ve en los dos sentidos y la original nunca se toca (R-16) |
 | ✅ ~~T-E~~ | ~~Solicitud y aprobación~~ | **HECHA (2026-09-18).** Sin migración: las columnas están desde la 078. El oficio de solicitud **se archiva** (R-12), no se genera: subida validada por extensión y MIME real, guardada fuera del web root y servida por `DescargaController::oficioRuta()` con rol 1/3. La aprobación de la Presidencia (R-13) queda con fecha y con quién la registró |
 | ✅ ~~T-F~~ | ~~Itinerario por grupo y varios empleados por salida~~ | **HECHA (2026-09-18, mig. 082).** `ruta_ejecucion_itinerario`: sin filas manda el catálogo —el caso normal—, con filas manda la salida. Reordenable con ↑/↓ y con paradas **omitibles** (enlaza con un permiso rechazado, R-20). El personal por salida ya tenía modelo desde T-A pero **ninguna pantalla**: ahora se asigna, se marca el encargado —uno solo, R-31— y se ve la sugerencia de 7-8 por guía (R-33). El guía externo se marca **en el punto**, no en la salida |
@@ -369,7 +369,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | ~~3~~ | ✅ ~~T-G~~ | **HECHA (mig. 080).** Y de paso apareció el control para cerrar una salida, que T-A había dejado sin interfaz |
 | ~~4~~ | ✅ ~~T-D~~ | **HECHA.** Salió casi entera con T-G: sin poder cerrar una salida, la ficha no nacía |
 | ~~5~~ | ✅ ~~T-E + T-H~~ | **HECHAS.** El pedido #2 del cliente («los oficios») queda cubierto, salvo el formato del oficio de permiso |
-| 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
+| ~~6~~ | ✅ ~~T-C~~ | **HECHA (mig. 083).** El acta de pago es **propuesta nuestra**, a validar con el cliente |
 | ~~7~~ | ✅ ~~T-F~~ | **HECHA (mig. 082).** |
 
 > ✅ **El riesgo que señalaba este plan («arrancar antes de R-14») desapareció:** R-14 está

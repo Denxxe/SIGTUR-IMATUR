@@ -140,10 +140,10 @@ trait ReportesTurismoTrait {
             $fechaDesde = trim($_GET['fecha_desde'] ?? '');
             $fechaHasta = trim($_GET['fecha_hasta'] ?? '');
             $rutas      = $this->queryRutas($estado, $tipo, $fechaDesde, $fechaHasta);
-            // Sin columna "Tarifa" (H-14): `rutas.tiene_tarifa`/`tarifa_monto` no se capturan en
-            // ningún formulario, así que exportaba "Gratuita" para toda ruta, siempre. Se reactiva
-            // cuando el cliente defina el flujo de cobro (fase T-C).
-            $headers = ['Recorrido', 'Tipo', 'Departamento', 'Estado', 'Restricciones', 'Paradas',
+            // La columna «Tarifa» VUELVE (H-14 cerrado, mig. 083): se retiró porque
+            // `tiene_tarifa`/`tarifa_monto` no se capturaban en ningún formulario y el
+            // reporte informaba «Gratuita» para toda ruta, siempre. Desde T-C se capturan.
+            $headers = ['Recorrido', 'Tipo', 'Tarifa', 'Departamento', 'Estado', 'Restricciones', 'Paradas',
                         'Salidas', 'Ejecutadas', 'Última salida', 'Participantes',
                         'Mujeres', 'Hombres', 'Niñas', 'Niños', 'Total Atendidos'];
             $rows    = [];
@@ -154,6 +154,7 @@ trait ReportesTurismoTrait {
                 $rows[] = [
                     $r->nombre,
                     $r->tipo_ruta ?? 'General',
+                    Ruta::textoTarifa($r),
                     $r->departamento_nombre ?? '-',
                     $r->estado,
                     $this->textoRestricciones($r),
@@ -169,8 +170,8 @@ trait ReportesTurismoTrait {
                     (int)($r->total_atendidos ?? 0),
                 ];
             }
-            // Fila de totales — 15 columnas: Participantes en la 10.ª, Total Atendidos en la última
-            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
+            // Fila de totales — 16 columnas: Participantes en la 11.ª, Total Atendidos en la última
+            $rows[] = ['TOTALES', '', '', '', '', '', '', '', '', '', $tpInsc, '', '', '', '', $tpAt];
             $this->exportCsv('reporte_rutas', $headers, $rows, 'Catálogo de Rutas Turísticas');
         } catch (Exception $e) {
             flash('global_msg', 'Error al exportar: ' . $e->getMessage(), 'danger');
@@ -188,12 +189,13 @@ trait ReportesTurismoTrait {
             $rutas  = $this->queryRutas($estado, $tipo, $fechaDesde, $fechaHasta);
             $stats  = $this->statsRutas();
 
-            $headers = ['Recorrido', 'Tipo', 'Departamento', 'Estado', 'Paradas', 'Salidas', 'Última salida', 'Particip.', 'Atendidos'];
+            $headers = ['Recorrido', 'Tipo', 'Tarifa', 'Departamento', 'Estado', 'Paradas', 'Salidas', 'Última salida', 'Particip.', 'Atendidos'];
             $rows    = [];
             foreach ($rutas as $r) {
                 $rows[] = [
                     $r->nombre,
                     $r->tipo_ruta ?? 'General',
+                    Ruta::textoTarifa($r),
                     $r->departamento_nombre ?? '-',
                     $r->estado,
                     (int)$r->total_puntos,
