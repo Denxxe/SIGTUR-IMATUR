@@ -125,6 +125,20 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   semana: sin eso, coordinar el acceso depende de que alguien lo recuerde — que es justo uno de los
   tres dolores que señaló el cliente. Una plaza pública no tiene custodio y no genera trámite.
 - ✅ **Anular un permiso no borra nada y no recicla el número**: el oficio ya salió de la institución.
+- ✅ **El orden de las paradas es del CATÁLOGO, pero cada salida puede alterarlo** (R-10/R-18). Si dos
+  grupos coinciden el mismo día se cambia el itinerario de uno para que no se crucen — y eso **no
+  toca el recorrido** ni las demás salidas. Mientras nadie lo altere, la salida sigue el del catálogo,
+  que es el «sugerido». «Restablecer» vuelve a él.
+- ✅ **Una parada se puede marcar «no se hizo»** con su nota, típicamente porque la institución
+  custodia rechazó el permiso (R-20). La parada sigue en el recorrido: lo que cambia es ese día.
+- ✅ **Van varios trabajadores de IMATUR por salida** (R-33: 7-8 participantes por guía) y **uno solo
+  es el encargado** (R-31: «siempre encabeza un empleado de IMATUR»). La sugerencia de cuántos guías
+  hacen falta **no bloquea**: el propio cliente dijo que depende de los disponibles.
+- ✅ **El guía externo es del PUNTO, no de la salida** (R-31): museos y casas natales ponen el suyo.
+  Solo se registra **que lo hay** — R-32 (si se le paga o se guardan sus datos) sigue sin responder.
+  No se reintroduce un «facilitador externo» en la ruta: esa columna se eliminó en la mig. 060.
+- ✅ **La certificación no es requisito para guiar** (R-34): hay 3 certificados y el resto se está
+  formando. No se bloquea ni se alerta por vencimiento.
 
 ---
 

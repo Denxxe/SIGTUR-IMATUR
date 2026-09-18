@@ -12,6 +12,8 @@ class PuntoRuta extends Model {
     private ?float $longitud;
     /** R-06/R-20: la institucion a la que hay que pedir permiso de acceso. */
     private ?string $ente_custodio;
+    /** R-31: el punto aporta su propio guia, que se suma al de IMATUR. */
+    private bool $tiene_guia_externo;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -24,6 +26,7 @@ class PuntoRuta extends Model {
             $this->latitud = $data['latitud'] ?? null;
             $this->longitud = $data['longitud'] ?? null;
             $this->ente_custodio = ($data['ente_custodio'] ?? '') !== '' ? $data['ente_custodio'] : null;
+            $this->tiene_guia_externo = !empty($data['tiene_guia_externo']);
         }
     }
 
@@ -47,11 +50,12 @@ class PuntoRuta extends Model {
             $previos = self::find($this->id);
             $this->db->query("UPDATE puntos_ruta SET nombre=:nombre, descripcion=:descripcion, orden=:orden,
                               latitud=:latitud, longitud=:longitud, ente_custodio=:custodio,
+                              tiene_guia_externo=:guiaext,
                               updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, ente_custodio, created_by)
-                              VALUES (:id_ruta, :nombre, :descripcion, :orden, :latitud, :longitud, :custodio, :user_id)");
+            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, ente_custodio, tiene_guia_externo, created_by)
+                              VALUES (:id_ruta, :nombre, :descripcion, :orden, :latitud, :longitud, :custodio, :guiaext, :user_id)");
             $this->db->bind(':id_ruta', $this->id_ruta);
         }
         $this->db->bind(':nombre', $this->nombre);
@@ -60,6 +64,7 @@ class PuntoRuta extends Model {
         $this->db->bind(':latitud', $this->latitud);
         $this->db->bind(':longitud', $this->longitud);
         $this->db->bind(':custodio', $this->ente_custodio);
+        $this->db->bind(':guiaext',  $this->tiene_guia_externo, PDO::PARAM_BOOL);
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->execute();
         $this->audit('puntos_ruta', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'id_ruta' => $this->id_ruta, 'orden' => $this->orden], $user_id);

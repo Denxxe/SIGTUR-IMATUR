@@ -18,6 +18,37 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-18 (d) — Rutas: el itinerario es de la salida, no del recorrido (T-F, mig. 082)
+
+R-10: *«Puede cambiar en algún punto. Si hay varios grupos en la misma ruta al mismo tiempo, se
+cambia un poco el itinerario y el orden de los puntos (para no coincidir)»*. R-18 lo dice desde el
+otro lado: el orden del catálogo es el **sugerido**.
+
+**El problema era dónde vivía el orden.** `puntos_ruta.orden` es del recorrido: cambiarlo para que
+dos grupos no se crucen un martes se lo cambiaba **a todas las salidas**, pasadas y futuras. Ahora
+`ruta_ejecucion_itinerario` guarda el orden **de esa salida**: sin filas manda el catálogo —el caso
+normal, que no cuesta nada— y en cuanto se reordena mandan ellas. «Restablecer» las borra.
+
+Se reordena con ↑/↓ y sin librerías (el sistema es offline): el JS intercambia los nodos y renumera,
+y el servidor vuelve a exigir que estén **todas** las paradas y que no haya dos en la misma posición.
+
+**Una parada se puede marcar «no se hizo»**, con su nota. Salió de un caso que apareció con T-H: si
+la institución custodia rechaza el permiso (R-20), ese día el grupo no pasa por ahí — pero la parada
+sigue existiendo en el recorrido. Queda la constancia sin tocar el catálogo.
+
+**El personal de la salida** (R-33: 7-8 participantes por guía, «y sí: quieren que quede registrado
+quiénes fueron») tenía tabla y métodos desde T-A pero **ninguna pantalla** — la cuarta vez en este
+módulo. Ahora se asigna, se quita y se marca el encargado, que es **uno solo** (R-31: «siempre
+encabeza un empleado de IMATUR»); es el que sale en la Ficha Institucional. La sugerencia de cuántos
+guías hacen falta se muestra pero **no bloquea**: el cliente dijo que depende de los disponibles.
+
+**El guía externo es del punto, no de la salida** (R-31): lo pone el museo o la casa natal. Se marca
+en `puntos_ruta` y se registra **solo que lo hay** — R-32, si se le paga o se guardan sus datos,
+sigue sin responder, y no vale inventar un registro de personas que nadie pidió. No se reintroduce
+un «facilitador externo» en la ruta: esa columna se eliminó en la mig. 060 por no usarse.
+
+Con esto quedan **ocho de las nueve fases** del módulo. Falta solo **T-C, el cobro**.
+
 ### 2026-09-18 (c) — Rutas: los permisos de acceso a las instituciones custodias (T-H, mig. 081)
 
 Cierra el **pedido #2 del cliente** (R-64: *«los reportes y los oficios»*) y, con él, el grueso del

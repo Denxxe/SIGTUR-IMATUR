@@ -458,61 +458,240 @@ $conOficio = !empty($ej->oficio_archivo);
 </div>
 <?php endif; ?>
 
+<!-- ── Personal de IMATUR en la salida (R-31/R-33) ───────────────────────── -->
+<?php
+// R-31: «siempre encabeza un empleado de IMATUR» — por eso el encargado es uno
+// solo. R-33: «7-8 niños por guía», y quieren que quede registrado quiénes
+// fueron. El sistema sugiere cuántos hacen falta; no lo impone, porque el propio
+// cliente dijo que «depende de la cantidad de guías disponibles».
+$eqp      = $data['empleadosSalida'] ?? [];
+$sugeridos = (int)($data['guias_sugeridos'] ?? 0);
+$abierta  = ($data['ejecucion']->estado ?? '') === RutaEjecucion::EST_PROGRAMADO;
+?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:4px solid #6366F1;">
+    <div class="sig-card__head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);">
+        <div class="sig-card__title">
+            <i class="bi bi-person-badge" style="color:#6366F1;"></i>
+            Personal de IMATUR (<?php echo count($eqp); ?>)
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <?php if ($sugeridos > 0): ?>
+                <span style="font-size:11.5px;color:<?php echo count($eqp) < $sugeridos ? 'var(--warning-600)' : 'var(--text-tertiary)'; ?>;"
+                      title="R-33: 7-8 participantes por guía. Es una sugerencia, no un límite.">
+                    <i class="bi bi-people"></i>
+                    Sugerido para este grupo: <strong><?php echo $sugeridos; ?></strong>
+                </span>
+            <?php endif; ?>
+            <?php if ($abierta): ?>
+            <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm"
+                    data-bs-toggle="modal" data-bs-target="#modalEquipo">
+                <i class="bi bi-person-plus"></i> Asignar
+            </button>
+            <?php endif; ?>
+        </div>
+    </div>
+    <div class="sig-table-wrap" data-no-export>
+        <table class="sig-table">
+            <thead><tr><th>Trabajador</th><th>Cargo</th><th>Rol en la salida</th><th class="col-actions"></th></tr></thead>
+            <tbody>
+            <?php if (empty($eqp)): ?>
+                <tr><td colspan="4" class="sig-table-empty">
+                    Todavía no hay personal asignado. La salida siempre va encabezada por un
+                    trabajador de IMATUR (R-31), y sin encargado la Ficha Institucional sale con esa
+                    casilla en blanco.
+                </td></tr>
+            <?php else: foreach ($eqp as $em): ?>
+                <tr>
+                    <td class="cell-strong"><?php echo htmlspecialchars($em->nombre); ?></td>
+                    <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($em->cargo ?: '—'); ?></td>
+                    <td>
+                        <?php if (!empty($em->es_encargado)): ?>
+                            <span class="sig-badge sig-badge--sm sig-badge--brand"><i class="bi bi-star-fill"></i> Encargado</span>
+                        <?php else: ?>
+                            <span style="font-size:12px;color:var(--text-secondary);">Acompañante</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="col-actions">
+                        <?php if ($abierta): ?>
+                        <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/quitarEmpleadoSalida" style="display:inline;margin:0;">
+                            <input type="hidden" name="id_ejecucion" value="<?php echo (int)$data['ejecucion']->id; ?>">
+                            <input type="hidden" name="id" value="<?php echo (int)$em->id; ?>">
+                            <button type="submit" class="row-action row-action--del" title="Quitar de la salida">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: asignar personal -->
+<div class="modal fade" id="modalEquipo" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/rutas/agregarEmpleadoSalida" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-person-plus"></i> Asignar personal a la salida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_ejecucion" value="<?php echo (int)$data['ejecucion']->id; ?>">
+                <div class="sig-field mb-4">
+                    <label class="sig-field__label" for="eq_empleado">Trabajador <span class="req">*</span></label>
+                    <select name="id_empleado" id="eq_empleado" class="sig-select js-search" required>
+                        <option value="">— Seleccione —</option>
+                        <?php foreach (($data['empleados'] ?? []) as $e): ?>
+                            <option value="<?php echo (int)$e->id; ?>">
+                                <?php echo htmlspecialchars(trim(($e->nombre ?? '') . ' ' . ($e->apellido ?? ''))); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small style="color:var(--text-tertiary);font-size:11px;">
+                        R-34: normalmente son los de Promoción Turística, <strong>estén certificados o no</strong>.
+                    </small>
+                </div>
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="eq_encargado" name="es_encargado" value="1">
+                        <label class="form-check-label" for="eq_encargado" style="font-size:13px;cursor:pointer;user-select:none;">
+                            <i class="bi bi-star"></i> Es el <strong>encargado</strong> de la salida
+                        </label>
+                    </div>
+                    <small style="color:var(--text-tertiary);font-size:11px;">
+                        Hay uno solo (R-31). Si marca a otro, el anterior pasa a acompañante.
+                        Es quien sale en la casilla «Encargado» de la Ficha Institucional.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary">Asignar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ── Paradas ── -->
 <?php
-// Detectar órdenes duplicados: contar ocurrencias y quedarse con los que aparecen >1 vez
+// T-F (R-10/R-18): el orden es el de ESTA salida. `RutaEjecucion::itinerario()`
+// devuelve el del catálogo mientras nadie lo altere, y el propio en cuanto se
+// reordena. Dos paradas no pueden compartir posición.
 $ordenesPuntos = array_column((array)($data['puntos'] ?? []), 'orden');
 $conteoOrden   = array_count_values(array_map('strval', $ordenesPuntos));
 $duplicados    = array_keys(array_filter($conteoOrden, fn($c) => $c > 1));
 sort($duplicados, SORT_NUMERIC);
+$itinPropio = !empty($data['itin_propio']);
+$salidaAbierta = ($data['ejecucion']->estado ?? '') === RutaEjecucion::EST_PROGRAMADO;
+$idEjec = (int)$data['ejecucion']->id;
 ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__head">
-        <div class="sig-card__title">
-            <i class="bi bi-signpost-split" style="color:var(--teal-500);"></i>
-            Itinerario de Paradas
+    <div class="sig-card__head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-3);">
+        <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap;">
+            <div class="sig-card__title">
+                <i class="bi bi-signpost-split" style="color:var(--teal-500);"></i>
+                Itinerario de Paradas
+            </div>
+            <?php if ($itinPropio): ?>
+                <span class="sig-badge sig-badge--sm sig-badge--info" title="Esta salida alteró el orden del catálogo">
+                    <i class="bi bi-shuffle"></i> Orden propio de esta salida
+                </span>
+            <?php endif; ?>
         </div>
-        <span style="font-size:11px;color:var(--text-tertiary);"><?php echo count($data['puntos'] ?? []); ?> parada(s) · orden de recorrido</span>
+        <div style="display:flex;align-items:center;gap:var(--sp-3);">
+            <span style="font-size:11px;color:var(--text-tertiary);">
+                <?php echo count($data['puntos'] ?? []); ?> parada(s)
+            </span>
+            <?php if ($itinPropio && $salidaAbierta): ?>
+            <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/restablecerItinerario" style="margin:0;">
+                <input type="hidden" name="id" value="<?php echo $idEjec; ?>">
+                <button type="submit" class="btn-sig btn-sig--ghost btn-sig--sm" title="Volver al orden del catálogo">
+                    <i class="bi bi-arrow-counterclockwise"></i> Restablecer
+                </button>
+            </form>
+            <?php endif; ?>
+        </div>
     </div>
+
     <?php if (!empty($duplicados)): ?>
     <div style="padding:var(--sp-2) var(--sp-4); background:rgba(239,68,68,.07); border-bottom:1px solid rgba(239,68,68,.15); font-size:12px; color:var(--danger-700);">
         <i class="bi bi-exclamation-triangle-fill"></i>
-        Existen paradas con órdenes duplicados (<?php echo implode(', ', $duplicados); ?>). Edite las paradas para corregirlo.
+        Existen paradas con órdenes duplicados (<?php echo implode(', ', $duplicados); ?>). Corríjalo antes de guardar.
     </div>
     <?php endif; ?>
+
     <?php if (empty($data['puntos'])): ?>
     <div style="padding:var(--sp-8); text-align:center; color:var(--text-tertiary);">
         <i class="bi bi-signpost" style="font-size:2rem; display:block; margin-bottom:var(--sp-3);"></i>
         <p style="font-size:13px; margin:0;">Esta ruta aún no tiene paradas definidas. Use "Agregar Parada" para crear el itinerario.</p>
     </div>
     <?php else: ?>
-    <div style="padding:var(--sp-4) var(--sp-5);">
+
+    <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/guardarItinerario" id="formItinerario">
+    <input type="hidden" name="id" value="<?php echo $idEjec; ?>">
+    <div style="padding:var(--sp-4) var(--sp-5);" id="listaParadas">
         <?php foreach ($data['puntos'] as $i => $p):
             $esUltimo = ($i === count($data['puntos']) - 1);
             $tieneCoordenadas = $p->latitud && $p->longitud;
+            $omitido = !empty($p->omitido);
         ?>
-        <div style="display:flex; gap:var(--sp-4); <?php echo !$esUltimo ? 'padding-bottom:var(--sp-4);' : ''; ?>">
-            <!-- Indicador de orden (timeline) -->
+        <div class="parada-itin" data-punto="<?php echo (int)$p->id; ?>"
+             style="display:flex; gap:var(--sp-4); <?php echo !$esUltimo ? 'padding-bottom:var(--sp-4);' : ''; ?> <?php echo $omitido ? 'opacity:.55;' : ''; ?>">
+            <!-- Orden (timeline) -->
             <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
-                <div style="width:36px; height:36px; border-radius:50%; background:var(--teal-500); color:white; display:grid; place-items:center; font-weight:800; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,150,136,.25);">
-                    <?php echo $p->orden ?? $i+1; ?>
+                <div class="itin-bola" style="width:36px; height:36px; border-radius:50%; background:<?php echo $omitido ? 'var(--text-tertiary)' : 'var(--teal-500)'; ?>; color:white; display:grid; place-items:center; font-weight:800; font-size:14px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,150,136,.25);">
+                    <?php echo (int)($p->orden ?? $i + 1); ?>
                 </div>
+                <input type="hidden" name="it_orden[<?php echo (int)$p->id; ?>]" class="itin-orden" value="<?php echo (int)($p->orden ?? $i + 1); ?>">
+                <?php if ($salidaAbierta): ?>
+                <div style="display:flex;flex-direction:column;gap:2px;margin-top:6px;">
+                    <button type="button" class="row-action itin-subir" title="Subir" style="width:26px;height:22px;">
+                        <i class="bi bi-chevron-up"></i>
+                    </button>
+                    <button type="button" class="row-action itin-bajar" title="Bajar" style="width:26px;height:22px;">
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                </div>
+                <?php endif; ?>
                 <?php if (!$esUltimo): ?>
                 <div style="width:2px; flex:1; background:linear-gradient(to bottom, var(--teal-300), var(--border-subtle)); margin:4px 0;"></div>
                 <?php endif; ?>
             </div>
+
             <!-- Contenido -->
             <div style="flex:1; min-width:0; padding-bottom:<?php echo !$esUltimo?'var(--sp-2)':'0'; ?>;">
                 <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3);">
                     <div style="min-width:0;">
                         <div style="font-weight:700; font-size:14px; color:var(--text-primary); margin-bottom:2px;">
                             <?php echo htmlspecialchars($p->nombre ?? ''); ?>
+                            <?php if ($omitido): ?>
+                                <span class="sig-badge sig-badge--sm sig-badge--neutral">No se hizo</span>
+                            <?php endif; ?>
                         </div>
                         <?php if (!empty($p->descripcion)): ?>
                         <div style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;">
                             <?php echo htmlspecialchars($p->descripcion); ?>
                         </div>
                         <?php endif; ?>
+
+                        <!-- Quién custodia y quién guía (R-06/R-20/R-31) -->
+                        <?php if (!empty($p->ente_custodio) || !empty($p->tiene_guia_externo)): ?>
+                        <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:4px;">
+                            <?php if (!empty($p->ente_custodio)): ?>
+                                <span class="act-chip" style="font-size:11px;" title="Hay que pedirle permiso de acceso (R-20)">
+                                    <i class="bi bi-shield-lock"></i> <?php echo htmlspecialchars($p->ente_custodio); ?>
+                                </span>
+                            <?php endif; ?>
+                            <?php if (!empty($p->tiene_guia_externo)): ?>
+                                <span class="act-chip" style="font-size:11px;" title="El punto pone su propio guía (R-31)">
+                                    <i class="bi bi-person-badge"></i> Guía del punto
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
+
                         <?php if ($tieneCoordenadas): ?>
                         <div style="font-size:11px; color:var(--text-secondary); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                             <span style="font-family:var(--font-mono);">
@@ -529,12 +708,29 @@ sort($duplicados, SORT_NUMERIC);
                             <i class="bi bi-geo"></i> Sin coordenadas registradas
                         </div>
                         <?php endif; ?>
+
+                        <?php if ($salidaAbierta): ?>
+                        <div style="display:flex;gap:var(--sp-3);align-items:center;flex-wrap:wrap;margin-top:6px;">
+                            <label style="font-size:11.5px;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                <input type="checkbox" name="it_omitido[<?php echo (int)$p->id; ?>]" value="1" <?php echo $omitido ? 'checked' : ''; ?>>
+                                No hacer esta parada
+                            </label>
+                            <input type="text" name="it_nota[<?php echo (int)$p->id; ?>]" class="sig-input"
+                                   value="<?php echo htmlspecialchars($p->nota ?? ''); ?>"
+                                   placeholder="Nota (ej: no dieron el permiso)"
+                                   style="font-size:11.5px;padding:3px 8px;max-width:340px;">
+                        </div>
+                        <?php elseif (!empty($p->nota)): ?>
+                        <div style="font-size:11.5px;color:var(--text-tertiary);margin-top:4px;">
+                            <i class="bi bi-sticky"></i> <?php echo htmlspecialchars($p->nota); ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <div style="display:flex; gap:4px; flex-shrink:0;">
-                        <button class="row-action row-action--edit" onclick='editarPunto(<?php echo htmlspecialchars(json_encode($p), ENT_QUOTES); ?>)' title="Editar parada">
+                        <button type="button" class="row-action row-action--edit" onclick='editarPunto(<?php echo htmlspecialchars(json_encode($p), ENT_QUOTES); ?>)' title="Editar parada">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <a href="<?php echo URL_ROOT; ?>/rutas/deletePunto/<?php echo $p->id; ?>/<?php echo $data['ruta']->id; ?>"
+                        <a href="<?php echo URL_ROOT; ?>/rutas/deletePunto/<?php echo (int)$p->id; ?>/<?php echo (int)$data['ruta']->id; ?>?volver=<?php echo $idEjec; ?>"
                            class="row-action row-action--del delete-btn" title="Eliminar parada">
                             <i class="bi bi-trash"></i>
                         </a>
@@ -544,8 +740,51 @@ sort($duplicados, SORT_NUMERIC);
         </div>
         <?php endforeach; ?>
     </div>
+
+    <?php if ($salidaAbierta): ?>
+    <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-5);display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);flex-wrap:wrap;border-top:1px solid var(--border-subtle);">
+        <span style="font-size:11.5px;color:var(--text-tertiary);">
+            El orden del catálogo es el <strong>sugerido</strong> (R-18). Si dos grupos coinciden el
+            mismo día, cámbielo aquí: solo afecta a <strong>esta salida</strong>.
+        </span>
+        <button type="submit" class="btn-sig btn-sig--primary btn-sig--sm" style="background:var(--teal-600);">
+            <i class="bi bi-save"></i> Guardar itinerario
+        </button>
+    </div>
+    <?php endif; ?>
+    </form>
+
     <?php endif; ?>
 </div>
+
+<script>
+// Reordenar sin librerías: los botones intercambian el número de orden con el
+// vecino y mueven el nodo. El servidor vuelve a validar que no haya repetidos.
+(function () {
+    var lista = document.getElementById('listaParadas');
+    if (!lista) return;
+
+    function renumerar() {
+        lista.querySelectorAll('.parada-itin').forEach(function (fila, i) {
+            fila.querySelector('.itin-orden').value = i + 1;
+            fila.querySelector('.itin-bola').textContent = i + 1;
+        });
+    }
+
+    lista.addEventListener('click', function (e) {
+        var sube = e.target.closest('.itin-subir');
+        var baja = e.target.closest('.itin-bajar');
+        if (!sube && !baja) return;
+        var fila = (sube || baja).closest('.parada-itin');
+        if (sube && fila.previousElementSibling) {
+            lista.insertBefore(fila, fila.previousElementSibling);
+        } else if (baja && fila.nextElementSibling) {
+            lista.insertBefore(fila.nextElementSibling, fila);
+        }
+        renumerar();
+    });
+})();
+</script>
 
 <!-- ── Modal: reprogramar (R-16) ── -->
 <div class="modal fade" id="modalReprogramar" tabindex="-1">
@@ -869,6 +1108,18 @@ sort($duplicados, SORT_NUMERIC);
                     <small style="color:var(--text-tertiary);font-size:11px;">
                         Déjalo vacío si es un espacio público sin custodio. De aquí sale a qué
                         instituciones hay que pedirles el <strong>oficio de permiso</strong> cada semana (R-20).
+                    </small>
+                </div>
+                <div style="padding:var(--sp-3);background:var(--bg-muted-subtle);border-radius:8px;margin-bottom:var(--sp-4);">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="pt_guia_ext" name="tiene_guia_externo" value="1">
+                        <label class="form-check-label" for="pt_guia_ext" style="font-size:13px;cursor:pointer;user-select:none;">
+                            <i class="bi bi-person-badge"></i> El punto pone su propio guía
+                        </label>
+                    </div>
+                    <small style="color:var(--text-tertiary);font-size:11px;">
+                        Museos y casas natales suelen tener el suyo, que se suma al de IMATUR (R-31).
+                        La salida <strong>siempre</strong> va encabezada por un trabajador del instituto.
                     </small>
                 </div>
                 <div class="row g-3">
@@ -1254,6 +1505,7 @@ function nuevoPunto() {
     document.getElementById('pt_nombre').value      = '';
     document.getElementById('pt_descripcion').value = '';
     document.getElementById('pt_custodio').value    = '';
+    document.getElementById('pt_guia_ext').checked  = false;
     document.getElementById('pt_orden').value       = <?php echo count($data['puntos'] ?? []) + 1; ?>;
     document.getElementById('pt_lat').value         = '';
     document.getElementById('pt_lng').value         = '';
@@ -1267,6 +1519,7 @@ function editarPunto(p) {
     document.getElementById('pt_nombre').value              = p.nombre;
     document.getElementById('pt_descripcion').value         = p.descripcion;
     document.getElementById('pt_custodio').value            = p.ente_custodio || '';
+    document.getElementById('pt_guia_ext').checked           = p.tiene_guia_externo == true || p.tiene_guia_externo === 't' || p.tiene_guia_externo === '1';
     document.getElementById('pt_orden').value               = p.orden;
     document.getElementById('pt_lat').value                 = p.latitud || '';
     document.getElementById('pt_lng').value                 = p.longitud || '';

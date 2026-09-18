@@ -494,6 +494,130 @@ class RutaEjecucion extends Model {
      * Suma un empleado a la salida. El **encargado** es único: R-31 dice que la
      * salida "siempre va encabezada por un trabajador de IMATUR", en singular.
      */
+    // ── Itinerario propio de la salida (T-F, mig. 082) ───────────────────────
+
+    /**
+     * Las paradas de la salida, en **su** orden. R-18: el del catálogo es el
+     * sugerido; R-10: si hay dos grupos a la vez se altera para que no coincidan.
+     *
+     * Si la salida no tiene itinerario propio —el caso normal— devuelve el del
+     * recorrido tal cual. Si lo tiene, ése manda.
+     */
+    public static function itinerario(int $id) {
+        $db = new Database();
+        $db->query("SELECT p.id, p.nombre, p.descripcion, p.latitud, p.longitud,
+                           p.ente_custodio, p.tiene_guia_externo,
+                           p.orden                       AS orden_catalogo,
+                           COALESCE(it.orden, p.orden)   AS orden,
+                           COALESCE(it.omitido, FALSE)   AS omitido,
+                           it.nota,
+                           (it.id IS NOT NULL)           AS personalizado
+                      FROM puntos_ruta p
+                      INNER JOIN ruta_ejecuciones e ON e.id_ruta = p.id_ruta
+                      LEFT  JOIN ruta_ejecucion_itinerario it
+                             ON it.id_ejecucion = e.id AND it.id_punto = p.id
+                     WHERE e.id = :id AND p.is_active = TRUE
+                     ORDER BY COALESCE(it.orden, p.orden) ASC, p.id ASC");
+        $db->bind(':id', $id);
+        return $db->resultSet();
+    }
+
+    /** ¿Esta salida alteró el recorrido, o sigue el del catálogo? */
+    public static function itinerarioPersonalizado(int $id): bool {
+        $db = new Database();
+        $db->query("SELECT 1 FROM ruta_ejecucion_itinerario WHERE id_ejecucion = :id LIMIT 1");
+        $db->bind(':id', $id);
+        return (bool)$db->single();
+    }
+
+    /**
+     * Guarda el itinerario de ESTA salida. Se reemplaza en bloque —igual que los
+     * renglones de la Ficha— porque el formulario es la lista entera y son pocas
+     * filas; conciliar por id no aportaba nada y añadía casos de borde.
+     *
+     * `$paradas` es [id_punto => ['orden' => n, 'omitido' => bool, 'nota' => str]].
+     */
+    public static function guardarItinerario(int $id, array $paradas, $user_id = null): bool {
+        $ej = self::find($id);
+        if (!$ej) throw new Exception('La salida no existe.');
+        if (in_array($ej->estado, self::ESTADOS_TERMINALES, true)) {
+            throw new Exception('Esta salida ya está «' . $ej->estado . '»: su recorrido no se cambia.');
+        }
+
+        // Los puntos tienen que ser del recorrido de esta salida — si no, se
+        // estaría metiendo una parada de otra ruta en el itinerario.
+        $validos = [];
+        $db = new Database();
+        $db->query("SELECT p.id FROM puntos_ruta p
+                     WHERE p.id_ruta = :r AND p.is_active = TRUE");
+        $db->bind(':r', (int)$ej->id_ruta);
+        foreach ($db->resultSet() as $row) $validos[(int)$row->id] = true;
+
+        $limpias = [];
+        foreach ($paradas as $idPunto => $d) {
+            $idPunto = (int)$idPunto;
+            if (!isset($validos[$idPunto])) continue;
+            $limpias[$idPunto] = [
+                'orden'   => max(1, (int)($d['orden'] ?? 1)),
+                'omitido' => !empty($d['omitido']),
+                'nota'    => trim((string)($d['nota'] ?? '')) ?: null,
+            ];
+        }
+        if (empty($limpias)) throw new Exception('No hay paradas que guardar.');
+        if (count($limpias) !== count($validos)) {
+            throw new Exception('El itinerario debe incluir todas las paradas del recorrido. Actualice la página.');
+        }
+        // Una salida no puede tener dos paradas en la misma posición.
+        $ordenes = array_column($limpias, 'orden');
+        if (count(array_unique($ordenes)) !== count($ordenes)) {
+            throw new Exception('Hay dos paradas con el mismo número de orden.');
+        }
+
+        $db->beginTransaction();
+        try {
+            $db->query("DELETE FROM ruta_ejecucion_itinerario WHERE id_ejecucion = :e");
+            $db->bind(':e', $id);
+            $db->execute();
+
+            foreach ($limpias as $idPunto => $d) {
+                $db->query("INSERT INTO ruta_ejecucion_itinerario
+                                (id_ejecucion, id_punto, orden, omitido, nota, created_by)
+                            VALUES (:e, :p, :o, :om, :n, :u)");
+                $db->bind(':e',  $id);
+                $db->bind(':p',  $idPunto);
+                $db->bind(':o',  $d['orden']);
+                $db->bind(':om', $d['omitido'], PDO::PARAM_BOOL);
+                $db->bind(':n',  $d['nota']);
+                $db->bind(':u',  $user_id);
+                $db->execute();
+            }
+            $db->endTransaction();
+        } catch (Exception $e) {
+            $db->cancelTransaction();
+            throw $e;
+        }
+
+        self::auditStatic('ruta_ejecucion_itinerario', 'UPDATE', $id, null,
+            ['paradas' => count($limpias)], $user_id);
+        return true;
+    }
+
+    /** Vuelve al orden del catálogo: se borra la personalización de esta salida. */
+    public static function restablecerItinerario(int $id, $user_id = null): bool {
+        if (!self::itinerarioPersonalizado($id)) {
+            throw new Exception('Esta salida ya sigue el recorrido del catálogo.');
+        }
+        $db = new Database();
+        $db->query("DELETE FROM ruta_ejecucion_itinerario WHERE id_ejecucion = :e");
+        $db->bind(':e', $id);
+        $ok = $db->execute();
+        self::auditStatic('ruta_ejecucion_itinerario', 'DELETE', $id, null,
+            ['accion' => 'RESTABLECER'], $user_id);
+        return $ok;
+    }
+
+    // ── Personal de la salida ────────────────────────────────────────────────
+
     public static function agregarEmpleado(int $id, int $idEmpleado, bool $esEncargado, $user_id = null): bool {
         if (!self::find($id))        throw new Exception('La salida no existe.');
         if ($idEmpleado <= 0)        throw new Exception('Seleccione un empleado.');

@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **T-A, T-B, T-I, T-G, T-D, T-E y T-H construidas (mig. 078-081)** — quedan **T-C** (cobro) y **T-F** (itinerario por grupo)
-**Migraciones vigentes:** hasta **081**
+**Estado:** análisis cerrado · **ocho de las nueve fases construidas (mig. 078-082)** — queda solo **T-C** (el cobro)
+**Migraciones vigentes:** hasta **082**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -350,7 +350,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 | **T-C** | **Cobro completo**: tarifa USD en el catálogo, tasa congelada por salida, **registro de pagos**, fecha tope, exoneración autorizada por la Presidencia, comprobante adjunto y **acta de pago en efectivo** | 🟢 **DESBLOQUEADA (2026-09-17).** R-36…R-42 respondidas — y piden **contabilidad**, no solo constancia. Ver §5 |
 | ✅ ~~T-D~~ | ~~No ejecutado y reprogramación, con motivo obligatorio y enlace a la salida original~~ | **HECHA (2026-09-18).** Sin migración: las columnas ya estaban desde la 078; **lo que faltaba era la interfaz** — el modelo y el controlador existían pero ningún botón los llamaba. Ahora la salida muestra **su** estado (antes mostraba el del recorrido), se cierra con «Marcar ejecutada» / «No se ejecutó» —motivo obligatorio, R-14— y se reprograma con un modal. El hilo se ve en los dos sentidos y la original nunca se toca (R-16) |
 | ✅ ~~T-E~~ | ~~Solicitud y aprobación~~ | **HECHA (2026-09-18).** Sin migración: las columnas están desde la 078. El oficio de solicitud **se archiva** (R-12), no se genera: subida validada por extensión y MIME real, guardada fuera del web root y servida por `DescargaController::oficioRuta()` con rol 1/3. La aprobación de la Presidencia (R-13) queda con fecha y con quién la registró |
-| **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
+| ✅ ~~T-F~~ | ~~Itinerario por grupo y varios empleados por salida~~ | **HECHA (2026-09-18, mig. 082).** `ruta_ejecucion_itinerario`: sin filas manda el catálogo —el caso normal—, con filas manda la salida. Reordenable con ↑/↓ y con paradas **omitibles** (enlaza con un permiso rechazado, R-20). El personal por salida ya tenía modelo desde T-A pero **ninguna pantalla**: ahora se asigna, se marca el encargado —uno solo, R-31— y se ve la sugerencia de 7-8 por guía (R-33). El guía externo se marca **en el punto**, no en la salida |
 | ✅ ~~T-G~~ | ~~Ficha Institucional — el cierre con el conteo demográfico~~ | **HECHA (2026-09-17, mig. 080).** Vive sobre `ruta_informes` (la ficha **es** el informe: R-43 = R-47 = R-48) + `ruta_ficha_grupos` para los renglones. **Nace sola al marcar la salida como Ejecutada** (R-50), con recorrido, fecha, encargado e institución ya puestos. Imprimible fiel al formato, con sus renglones en blanco. Verificado contra el ejemplo real del cliente: 22 + 9 + 2 = **33** |
 | ✅ ~~T-H~~ | ~~Oficios de permiso a instituciones custodias (R-20)~~ | **HECHA (2026-09-18, mig. 081).** `ruta_permisos` + `ruta_permiso_salidas` (N:M: un permiso cubre varias salidas y una salida puede necesitar varios), correlativo propio `PERM-NNN/AAAA` que **no se recicla**, estados *En espera / Aceptado / Rechazado / Anulado* y el pase recibido adjuntable. `puntos_ruta.ente_custodio` (R-06) permite que el sistema **diga a quién hay que pedirle permiso** cada semana. ⚠️ **El imprimible es provisional**: falta el formato |
 | ✅ ~~T-I~~ | ~~Restricciones por ruta (R-57) y cupo diario de 60 (R-28)~~ | **HECHA (2026-09-17, mig. 079).** `rutas.restricciones` se muestra en la ficha y **al inscribir**; el cupo es `rutas_cupo_diario` en Configuración (0 = sin tope) y se cuenta **por fecha sumando todas las salidas**, sin bloquear |
@@ -370,7 +370,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | ~~4~~ | ✅ ~~T-D~~ | **HECHA.** Salió casi entera con T-G: sin poder cerrar una salida, la ficha no nacía |
 | ~~5~~ | ✅ ~~T-E + T-H~~ | **HECHAS.** El pedido #2 del cliente («los oficios») queda cubierto, salvo el formato del oficio de permiso |
 | 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
-| 7 | **T-F** | Itinerario por grupo y varios empleados por salida |
+| ~~7~~ | ✅ ~~T-F~~ | **HECHA (mig. 082).** |
 
 > ✅ **El riesgo que señalaba este plan («arrancar antes de R-14») desapareció:** R-14 está
 > respondida y el `CHECK` queda fijado con las palabras del cliente, no con las nuestras.

@@ -360,6 +360,50 @@ class RutasController extends Controller {
         ]);
     }
 
+    /**
+     * T-F (R-10/R-18): el orden de las paradas de ESTA salida. El del catálogo
+     * es el sugerido; si dos grupos coinciden el mismo día se altera aquí, sin
+     * tocar el recorrido para todas las demás salidas.
+     */
+    public function guardarItinerario() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        // Los arreglos se leen antes del saneo, que espera escalares.
+        $ordenes  = $_POST['it_orden']   ?? [];
+        $omitidos = $_POST['it_omitido'] ?? [];
+        $notas    = $_POST['it_nota']    ?? [];
+        $_POST    = $this->sanitizePost();
+        $id       = (int)($_POST['id'] ?? 0);
+
+        try {
+            $paradas = [];
+            foreach ((array)$ordenes as $idPunto => $orden) {
+                $paradas[(int)$idPunto] = [
+                    'orden'   => (int)$orden,
+                    'omitido' => !empty($omitidos[$idPunto]),
+                    'nota'    => $notas[$idPunto] ?? '',
+                ];
+            }
+            RutaEjecucion::guardarItinerario($id, $paradas, $this->getUserId());
+            flash('global_msg', 'Itinerario de esta salida guardado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    public function restablecerItinerario() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            RutaEjecucion::restablecerItinerario($id, $this->getUserId());
+            flash('global_msg', 'La salida vuelve a seguir el recorrido del catálogo.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
     /** R-31/R-33: guías y acompañantes de la salida. */
     public function agregarEmpleadoSalida() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
@@ -529,7 +573,9 @@ class RutasController extends Controller {
             'titulo'          => 'Salida: ' . $ej->ruta_nombre . ' — ' . date('d/m/Y', strtotime($ej->fecha)),
             'ejecucion'       => $ej,
             'ruta'            => $ruta,
-            'puntos'          => Ruta::getPuntos((int)$ej->id_ruta),
+            // T-F: el orden es el de ESTA salida si lo altero; si no, el del catalogo
+            'puntos'          => RutaEjecucion::itinerario($id),
+            'itin_propio'     => RutaEjecucion::itinerarioPersonalizado($id),
             'participantes'   => $participantes,
             'empleadosSalida' => RutaEjecucion::empleados($id),
             'empleados'       => Empleado::all(),
@@ -1189,6 +1235,8 @@ class RutasController extends Controller {
             'longitud'    => $pLng,
             // R-06/R-20: de esto sale a quién pedirle permiso cada semana
             'ente_custodio' => trim($_POST['ente_custodio'] ?? ''),
+            // R-31: el guía externo lo pone EL PUNTO, no la salida
+            'tiene_guia_externo' => !empty($_POST['tiene_guia_externo']),
         ];
         $punto = new PuntoRuta($data);
         try {
