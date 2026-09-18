@@ -859,6 +859,18 @@ sort($duplicados, SORT_NUMERIC);
                     <label class="sig-field__label" for="pt_descripcion">Descripción</label>
                     <textarea name="punto_descripcion" id="pt_descripcion" class="sig-textarea" rows="2"></textarea>
                 </div>
+                <div class="sig-field mb-4">
+                    <label class="sig-field__label" for="pt_custodio">
+                        Institución custodia
+                        <span style="font-size:10px;font-weight:400;color:var(--text-tertiary);">(a quién se le pide permiso)</span>
+                    </label>
+                    <input type="text" name="ente_custodio" id="pt_custodio" class="sig-input" data-nombre-libre
+                           placeholder="Ej: Fundación Castillo San Antonio de la Eminencia">
+                    <small style="color:var(--text-tertiary);font-size:11px;">
+                        Déjalo vacío si es un espacio público sin custodio. De aquí sale a qué
+                        instituciones hay que pedirles el <strong>oficio de permiso</strong> cada semana (R-20).
+                    </small>
+                </div>
                 <div class="row g-3">
                     <div class="col-md-4">
                         <div class="sig-field">
@@ -1241,6 +1253,7 @@ function nuevoPunto() {
     document.getElementById('pt_id').value          = '';
     document.getElementById('pt_nombre').value      = '';
     document.getElementById('pt_descripcion').value = '';
+    document.getElementById('pt_custodio').value    = '';
     document.getElementById('pt_orden').value       = <?php echo count($data['puntos'] ?? []) + 1; ?>;
     document.getElementById('pt_lat').value         = '';
     document.getElementById('pt_lng').value         = '';
@@ -1253,6 +1266,7 @@ function editarPunto(p) {
     document.getElementById('pt_id').value                  = p.id;
     document.getElementById('pt_nombre').value              = p.nombre;
     document.getElementById('pt_descripcion').value         = p.descripcion;
+    document.getElementById('pt_custodio').value            = p.ente_custodio || '';
     document.getElementById('pt_orden').value               = p.orden;
     document.getElementById('pt_lat').value                 = p.latitud || '';
     document.getElementById('pt_lng').value                 = p.longitud || '';

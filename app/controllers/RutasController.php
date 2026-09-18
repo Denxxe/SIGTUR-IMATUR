@@ -223,6 +223,143 @@ class RutasController extends Controller {
         return ['nombre' => $nombre, 'original' => $original];
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // T-H — Oficios de permiso a las instituciones custodias (R-20)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * La pantalla del trámite: qué permisos hay, en qué estado, y —lo que el
+     * cliente no tiene hoy— a qué instituciones falta pedirles permiso para las
+     * salidas de la semana que se elija.
+     */
+    public function permisos() {
+        // Por defecto, la semana que viene: es cuando se planifica (R-20).
+        $desde = trim($_GET['desde'] ?? '') ?: date('Y-m-d', strtotime('monday next week'));
+        $hasta = trim($_GET['hasta'] ?? '') ?: date('Y-m-d', strtotime('sunday next week'));
+        if ($hasta < $desde) $hasta = $desde;
+
+        $this->view('rutas/permisos', [
+            'titulo'      => 'Permisos de acceso',
+            'permisos'    => PermisoRuta::all([
+                                'estado' => trim($_GET['estado'] ?? ''),
+                                'q'      => trim($_GET['q'] ?? ''),
+                             ]),
+            'resumen'     => PermisoRuta::resumenPorEstado(),
+            'desde'       => $desde,
+            'hasta'       => $hasta,
+            'custodios'   => PermisoRuta::custodiosDeLaSemana($desde, $hasta),
+            'salidas'     => PermisoRuta::salidasDeLaSemana($desde, $hasta),
+            'empleados'   => Empleado::all(),
+            'responsable' => PermisoRuta::responsableSugerido(),
+            'filtro_estado' => trim($_GET['estado'] ?? ''),
+            'filtro_q'      => trim($_GET['q'] ?? ''),
+        ]);
+    }
+
+    /** Emite el oficio: una institución, una semana, las salidas que cubre. */
+    public function emitirPermiso() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/permisos'); return; }
+        $salidas = $_POST['salidas'] ?? [];      // se lee antes del saneo: es un arreglo de ids
+        $_POST   = $this->sanitizePost();
+        try {
+            $r = PermisoRuta::emitir([
+                'institucion'         => $_POST['institucion']         ?? '',
+                'destinatario_nombre' => $_POST['destinatario_nombre'] ?? '',
+                'destinatario_cargo'  => $_POST['destinatario_cargo']  ?? '',
+                'fecha'               => $_POST['fecha']               ?? '',
+                'semana_desde'        => $_POST['semana_desde']        ?? '',
+                'semana_hasta'        => $_POST['semana_hasta']        ?? '',
+                'observaciones'       => $_POST['observaciones']       ?? '',
+                'id_responsable'      => $_POST['id_responsable']      ?? 0,
+            ], is_array($salidas) ? $salidas : [], $this->getUserId());
+            flash('global_msg', 'Oficio de permiso ' . $r['numero'] . ' emitido.');
+            header('Location: ' . URL_ROOT . '/rutas/permiso/' . $r['id']);
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/permisos');
+    }
+
+    /** Ficha de un permiso: qué cubre y en qué quedó. */
+    public function permiso($id) {
+        $id = (int)$id;
+        $p  = PermisoRuta::find($id);
+        if (!$p) {
+            flash('global_msg', 'El permiso solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/permisos');
+            exit;
+        }
+        $this->view('rutas/permiso_detalle', [
+            'titulo'  => 'Permiso ' . $p->numero,
+            'permiso' => $p,
+            'salidas' => PermisoRuta::salidas($id),
+        ]);
+    }
+
+    /** R-20: «si llegó, si se dio el pase, si se rechazó». */
+    public function responderPermiso() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/permisos'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            PermisoRuta::responder($id, $_POST['estado'] ?? '', $_POST['fecha_respuesta'] ?? null,
+                                   $_POST['observaciones'] ?? null, $this->getUserId());
+            flash('global_msg', 'Respuesta registrada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/permiso/' . $id);
+    }
+
+    public function anularPermiso() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/permisos'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            PermisoRuta::anular($id, $_POST['motivo'] ?? '', $this->getUserId());
+            flash('global_msg', 'Permiso anulado. El número no se reutiliza.', 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/permiso/' . $id);
+    }
+
+    /** El pase devuelto por la institución, escaneado. */
+    public function subirRespuestaPermiso() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/permisos'); return; }
+        $id = (int)($_POST['id'] ?? 0);
+        try {
+            $arch = $this->guardarOficioRuta('respuesta', 'Permiso_' . $id);
+            PermisoRuta::guardarRespuestaArchivo($id, $arch['nombre'], $arch['original'], $this->getUserId());
+            flash('global_msg', 'Respuesta archivada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/permiso/' . $id);
+    }
+
+    /**
+     * El oficio imprimible. ⚠️ PROVISIONAL: el formato oficial no ha llegado
+     * (igual que con el Acta de Desincorporación de Bienes). Cuando llegue se
+     * sustituye solo esta vista; la tabla y el flujo no se tocan.
+     */
+    public function permisoImprimible($id) {
+        $id = (int)$id;
+        $p  = PermisoRuta::find($id);
+        if (!$p) {
+            flash('global_msg', 'El permiso solicitado no existe.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/permisos');
+            exit;
+        }
+        $this->view('rutas/permiso_imprimible', [
+            'titulo'  => 'Permiso ' . $p->numero,
+            'permiso' => $p,
+            'salidas' => PermisoRuta::salidas($id),
+            'config'  => ConfigSistema::getAll(),
+        ]);
+    }
+
     /** R-31/R-33: guías y acompañantes de la salida. */
     public function agregarEmpleadoSalida() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
@@ -995,31 +1132,39 @@ class RutasController extends Controller {
 
         $pNombre  = trim($_POST['punto_nombre'] ?? '');
         $pOrden   = (int)$_POST['orden'];
-        $pIdRuta  = (int)$_POST['id_ruta'];
+        // El formulario vive en la pantalla de una SALIDA (mig. 078) y manda su id;
+        // el punto, en cambio, es del RECORRIDO. Se resuelve uno desde el otro.
+        $pIdEjec  = (int)($_POST['id_ejecucion'] ?? 0);
+        $pIdRuta  = (int)($_POST['id_ruta'] ?? 0);
+        if ($pIdRuta <= 0 && $pIdEjec > 0) {
+            $ejPunto = RutaEjecucion::find($pIdEjec);
+            $pIdRuta = (int)($ejPunto->id_ruta ?? 0);
+        }
+        if ($pIdRuta <= 0) {
+            flash('global_msg', 'No se pudo determinar a qué recorrido pertenece la parada.', 'danger');
+            header('Location: ' . URL_ROOT . '/rutas/salidas');
+            exit;
+        }
         $pId      = isset($_POST['punto_id']) ? (int)$_POST['punto_id'] : null;
         $pLat     = trim($_POST['latitud']  ?? '') ?: null;
         $pLng     = trim($_POST['longitud'] ?? '') ?: null;
 
         if (empty($pNombre)) {
             flash('global_msg', 'El nombre de la parada es requerido.', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
-            exit;
+            $this->volverDelPunto($pIdRuta); exit;
         }
         if ($pOrden < 1) {
             flash('global_msg', 'El orden de la parada debe ser un número positivo.', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
-            exit;
+            $this->volverDelPunto($pIdRuta); exit;
         }
         // Validar rango de coordenadas
         if ($pLat !== null && ((float)$pLat < -90 || (float)$pLat > 90)) {
             flash('global_msg', 'La latitud debe estar entre -90 y 90.', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
-            exit;
+            $this->volverDelPunto($pIdRuta); exit;
         }
         if ($pLng !== null && ((float)$pLng < -180 || (float)$pLng > 180)) {
             flash('global_msg', 'La longitud debe estar entre -180 y 180.', 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
-            exit;
+            $this->volverDelPunto($pIdRuta); exit;
         }
         // RT-07: verificar unicidad de orden dentro de la ruta (excluyendo el registro actual)
         $dbCheck = new Database();
@@ -1031,8 +1176,7 @@ class RutasController extends Controller {
         $dbCheck->bind(':eid', $pId ?? 0);
         if ($dbCheck->single()) {
             flash('global_msg', "Ya existe una parada con el orden {$pOrden} en esta ruta. Elija un número diferente.", 'danger');
-            header('Location: ' . URL_ROOT . '/rutas/detalle/' . $pIdRuta);
-            exit;
+            $this->volverDelPunto($pIdRuta); exit;
         }
 
         $data = [
@@ -1043,6 +1187,8 @@ class RutasController extends Controller {
             'orden'       => $pOrden,
             'latitud'     => $pLat,
             'longitud'    => $pLng,
+            // R-06/R-20: de esto sale a quién pedirle permiso cada semana
+            'ente_custodio' => trim($_POST['ente_custodio'] ?? ''),
         ];
         $punto = new PuntoRuta($data);
         try {
@@ -1051,7 +1197,7 @@ class RutasController extends Controller {
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
-        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $data['id_ruta']);
+        $this->volverDelPunto($pIdRuta);
     }
 
     public function deletePunto($id, $id_ruta) {
@@ -1061,7 +1207,18 @@ class RutasController extends Controller {
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
-        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id_ruta);
+        $this->volverDelPunto((int)$id_ruta);
+    }
+
+    /**
+     * Los puntos son del RECORRIDO, pero se editan desde dos pantallas: la ficha
+     * del catálogo y el detalle de una salida. `/rutas/detalle/{id}` espera el id
+     * de una **salida** desde la mig. 078, así que devolver ahí el id de la ruta
+     * llevaba a la salida equivocada. Se vuelve a donde se estaba.
+     */
+    private function volverDelPunto(int $idRuta): void {
+        $ejec = (int)($_POST['id_ejecucion'] ?? $_GET['volver'] ?? 0);
+        header('Location: ' . URL_ROOT . ($ejec > 0 ? '/rutas/detalle/' . $ejec : '/rutas/ruta/' . $idRuta));
     }
 
     public function delete($id) {

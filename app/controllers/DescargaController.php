@@ -127,6 +127,18 @@ class DescargaController extends Controller {
         $this->stream('rutas', $row->oficio_archivo, $row->oficio_original ?? null);
     }
 
+    /** Respuesta escaneada de una institucion custodia a un permiso (R-20) — Turismo / Admin. */
+    public function permisoRuta($idPermiso = 0) {
+        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT respuesta_archivo, respuesta_original FROM ruta_permisos
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idPermiso);
+        $row = $db->single();
+        if (!$row || empty($row->respuesta_archivo)) $this->abort(404, 'Documento no disponible.');
+        $this->stream('rutas', $row->respuesta_archivo, $row->respuesta_original ?? null);
+    }
+
     public function fotoBien($idBien = 0) {
         if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
         $db = new Database();

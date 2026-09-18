@@ -18,6 +18,43 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-18 (c) — Rutas: los permisos de acceso a las instituciones custodias (T-H, mig. 081)
+
+Cierra el **pedido #2 del cliente** (R-64: *«los reportes y los oficios»*) y, con él, el grueso del
+módulo. Salió de una pregunta que iba por otro lado: **R-20 preguntaba por el costo de entrada** a
+museos y castillos, y la respuesta describió un trámite entero que el sistema no modelaba.
+
+> IMATUR envía un oficio a cada institución custodia para poder visitarla. **Todas las rutas de la
+> semana planificada van en un solo oficio**, para agilizar el trámite. Se lleva control del estado
+> de cada uno —si llegó, si se dio el pase, si se rechazó— y lo notifica el Director de Relaciones
+> Inter-Institucionales.
+
+**Por qué es una entidad propia.** Un permiso cubre **varias salidas** —las de toda la semana— y una
+salida puede necesitar **varios permisos**: una ruta que pasa por el Castillo y por la Basílica tiene
+dos custodios distintos. Es N:M, así que no cabía como columna de `ruta_ejecuciones`. Cabecera +
+renglones, igual que el Acta de Desincorporación de Bienes.
+
+**Lo que el cliente no tiene hoy.** R-06 decía que coordinar el acceso con las fundaciones es **uno
+de los tres dolores principales** del módulo, y sugería registrar el ente custodio de cada punto; el
+plan decidió esperar a R-20 para saber para qué serviría. Ahora se sabe: `puntos_ruta.ente_custodio`
+es lo que permite que la pantalla diga **a qué instituciones falta pedirles permiso** para las
+salidas de una semana, en vez de que alguien lo recuerde de memoria.
+
+Correlativo propio `PERM-NNN/AAAA`, que **no se recicla** al anular —el oficio ya salió— y que se
+pide **después** de validar todo, para que un intento fallido no queme un número. El pase que
+devuelve la institución se adjunta y se sirve por `DescargaController::permisoRuta()`, con el mismo
+tratamiento de documento privado que el resto.
+
+> ⚠️ **El imprimible es provisional.** El cliente describió el trámite pero no entregó el formato del
+> oficio. Se construyó una carta institucional con el membrete estándar y el cuerpo que se desprende
+> de lo que contó; cuando llegue el papel se reemplaza **solo esa vista**. Mismo criterio que con el
+> Acta de Desincorporación (mig. 077).
+
+**De paso, dos cosas rotas desde T-A.** El formulario de la parada mandaba `id_ejecucion` y
+`storePunto()` leía `id_ruta`: **agregar una parada no funcionaba** (quedaba en 0). Y tanto guardar
+como eliminar una parada redirigían a `/rutas/detalle/{id_ruta}`, que desde la mig. 078 espera el id
+de una **salida** — llevaban a la salida equivocada o a ninguna.
+
 ### 2026-09-18 (b) — Rutas: quién pide la salida y quién la aprueba (T-E, sin migración)
 
 Tercera vez en el módulo que el modelo estaba y la pantalla no: `ruta_ejecuciones` tenía

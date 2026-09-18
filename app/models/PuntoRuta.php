@@ -10,6 +10,8 @@ class PuntoRuta extends Model {
     private int $orden;
     private ?float $latitud;
     private ?float $longitud;
+    /** R-06/R-20: la institucion a la que hay que pedir permiso de acceso. */
+    private ?string $ente_custodio;
 
     public function __construct(array $data = []) {
         parent::__construct();
@@ -21,6 +23,7 @@ class PuntoRuta extends Model {
             $this->orden = $data['orden'] ?? 1;
             $this->latitud = $data['latitud'] ?? null;
             $this->longitud = $data['longitud'] ?? null;
+            $this->ente_custodio = ($data['ente_custodio'] ?? '') !== '' ? $data['ente_custodio'] : null;
         }
     }
 
@@ -43,11 +46,12 @@ class PuntoRuta extends Model {
         if ($this->id) {
             $previos = self::find($this->id);
             $this->db->query("UPDATE puntos_ruta SET nombre=:nombre, descripcion=:descripcion, orden=:orden,
-                              latitud=:latitud, longitud=:longitud, updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
+                              latitud=:latitud, longitud=:longitud, ente_custodio=:custodio,
+                              updated_at=CURRENT_TIMESTAMP, updated_by=:user_id WHERE id=:id");
             $this->db->bind(':id', $this->id);
         } else {
-            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, created_by)
-                              VALUES (:id_ruta, :nombre, :descripcion, :orden, :latitud, :longitud, :user_id)");
+            $this->db->query("INSERT INTO puntos_ruta (id_ruta, nombre, descripcion, orden, latitud, longitud, ente_custodio, created_by)
+                              VALUES (:id_ruta, :nombre, :descripcion, :orden, :latitud, :longitud, :custodio, :user_id)");
             $this->db->bind(':id_ruta', $this->id_ruta);
         }
         $this->db->bind(':nombre', $this->nombre);
@@ -55,6 +59,7 @@ class PuntoRuta extends Model {
         $this->db->bind(':orden', $this->orden);
         $this->db->bind(':latitud', $this->latitud);
         $this->db->bind(':longitud', $this->longitud);
+        $this->db->bind(':custodio', $this->ente_custodio);
         $this->db->bind(':user_id', $user_id);
         $result = $this->db->execute();
         $this->audit('puntos_ruta', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, ['nombre' => $this->nombre, 'id_ruta' => $this->id_ruta, 'orden' => $this->orden], $user_id);

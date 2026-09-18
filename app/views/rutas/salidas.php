@@ -29,6 +29,9 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
         <p class="page__subtitle">Cada vez que se ejecuta una ruta: su fecha, su grupo, sus guías y su cierre.</p>
     </div>
     <div class="page__actions">
+        <a href="<?php echo URL_ROOT; ?>/rutas/permisos" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-envelope-paper"></i> Permisos de acceso
+        </a>
         <a href="<?php echo URL_ROOT; ?>/rutas/index" class="btn-sig btn-sig--ghost">
             <i class="bi bi-map"></i> Catálogo de rutas
         </a>

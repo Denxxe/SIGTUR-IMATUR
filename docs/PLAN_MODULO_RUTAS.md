@@ -3,8 +3,8 @@
 **Fecha:** 2026-09-03 · **Ampliado:** 2026-09-17 · **Origen:** respuestas del cliente a
 **R-01 … R-64** (`docs/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2) + **7 formatos reales**
 (`docs/formatos/rutas_*`)
-**Estado:** análisis cerrado · **T-A, T-B, T-I, T-G, T-D y T-E construidas (mig. 078-080)**, resto pendiente
-**Migraciones vigentes:** hasta **080**
+**Estado:** análisis cerrado · **T-A, T-B, T-I, T-G, T-D, T-E y T-H construidas (mig. 078-081)** — quedan **T-C** (cobro) y **T-F** (itinerario por grupo)
+**Migraciones vigentes:** hasta **081**
 
 > ## ⚠️ 2026-09-17 — Llegaron R-17…R-64 y los formatos: **leer §1-bis antes que nada**
 >
@@ -352,7 +352,7 @@ del reporte** retirada en H-14 — ahora sí con dato verdadero detrás.
 | ✅ ~~T-E~~ | ~~Solicitud y aprobación~~ | **HECHA (2026-09-18).** Sin migración: las columnas están desde la 078. El oficio de solicitud **se archiva** (R-12), no se genera: subida validada por extensión y MIME real, guardada fuera del web root y servida por `DescargaController::oficioRuta()` con rol 1/3. La aprobación de la Presidencia (R-13) queda con fecha y con quién la registró |
 | **T-F** | **Itinerario por grupo** (reordenable, R-10) y **varios empleados** por salida (R-33) | 🟢 **DESBLOQUEADA (2026-09-17).** R-17…R-21 y R-31…R-34 respondidas. El guía externo **no** se modela como facilitador: lo pone el punto (R-31) |
 | ✅ ~~T-G~~ | ~~Ficha Institucional — el cierre con el conteo demográfico~~ | **HECHA (2026-09-17, mig. 080).** Vive sobre `ruta_informes` (la ficha **es** el informe: R-43 = R-47 = R-48) + `ruta_ficha_grupos` para los renglones. **Nace sola al marcar la salida como Ejecutada** (R-50), con recorrido, fecha, encargado e institución ya puestos. Imprimible fiel al formato, con sus renglones en blanco. Verificado contra el ejemplo real del cliente: 22 + 9 + 2 = **33** |
-| **T-H** 🆕 | **Oficios de permiso a instituciones custodias** (R-20): uno por semana cubriendo varias salidas, con estado *en espera / aceptado / rechazado* y el Director de Relaciones Inter-Institucionales como responsable | 🟡 **El flujo sí, el imprimible no** — falta el formato del oficio |
+| ✅ ~~T-H~~ | ~~Oficios de permiso a instituciones custodias (R-20)~~ | **HECHA (2026-09-18, mig. 081).** `ruta_permisos` + `ruta_permiso_salidas` (N:M: un permiso cubre varias salidas y una salida puede necesitar varios), correlativo propio `PERM-NNN/AAAA` que **no se recicla**, estados *En espera / Aceptado / Rechazado / Anulado* y el pase recibido adjuntable. `puntos_ruta.ente_custodio` (R-06) permite que el sistema **diga a quién hay que pedirle permiso** cada semana. ⚠️ **El imprimible es provisional**: falta el formato |
 | ✅ ~~T-I~~ | ~~Restricciones por ruta (R-57) y cupo diario de 60 (R-28)~~ | **HECHA (2026-09-17, mig. 079).** `rutas.restricciones` se muestra en la ficha y **al inscribir**; el cupo es `rutas_cupo_diario` en Configuración (0 = sin tope) y se cuenta **por fecha sumando todas las salidas**, sin bloquear |
 
 **Recomendación (revisada el 2026-09-17):** el orden no cambia — **T-A sigue primero**, porque es el
@@ -368,7 +368,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | ~~2~~ | ✅ ~~T-B + T-I~~ | **HECHAS (mig. 079).** H-17 cerrado |
 | ~~3~~ | ✅ ~~T-G~~ | **HECHA (mig. 080).** Y de paso apareció el control para cerrar una salida, que T-A había dejado sin interfaz |
 | ~~4~~ | ✅ ~~T-D~~ | **HECHA.** Salió casi entera con T-G: sin poder cerrar una salida, la ficha no nacía |
-| ~~5~~ | ✅ ~~T-E~~ · 🔜 **T-H** | **T-E hecha.** Queda **T-H**: los oficios de permiso a las instituciones custodias (R-20), que son otra entidad — uno por semana cubre varias salidas |
+| ~~5~~ | ✅ ~~T-E + T-H~~ | **HECHAS.** El pedido #2 del cliente («los oficios») queda cubierto, salvo el formato del oficio de permiso |
 | 6 | **T-C** | El cobro completo. El más grande de los que quedan, y el único con un documento que **diseñamos nosotros** |
 | 7 | **T-F** | Itinerario por grupo y varios empleados por salida |
 
@@ -401,7 +401,7 @@ originales, las siete están desbloqueadas, más las dos nuevas.
 | **R-32** | 🟢 | Nada — pierde sentido con R-31: el guía externo lo pone el punto | ⛔ Sin responder, **ya no importa** |
 | **R-71** 🆕 | 🟡 | ¿El sistema imprime también el **cuadro del punto** (Fundación Castillo), cuyas casillas **no coinciden** con las de la Ficha? | 🆕 Nueva |
 | **R-72** 🆕 | 🟡 | **Cuántas rutas tiene el catálogo y su nombre oficial.** Los folletos traen *Playa Manare* y *Altos de **Sucre*** — R-02 decía otra cosa | 🆕 Nueva |
-| **Formato** | 🟡 | **T-H** — el **oficio de permiso** a las instituciones custodias (R-20) | 🆕 Nuevo |
+| **Formato** | 🟡 | **T-H** — el **oficio de permiso** a las instituciones custodias (R-20). El flujo ya está construido (mig. 081); falta solo el papel: cuando llegue se reemplaza `permiso_imprimible.php` y nada más | ⏳ **Pendiente del cliente** |
 | ~~R-65~~ | ✅ | ~~Forma del catálogo~~ | **Respondida por el tríptico:** Exploradores = el mismo recorrido, **una ruta con dos modalidades** |
 | ~~R-66~~ | ✅ | ~~Edades~~ | **Respondida por R-57**, con un caso concreto (Río Brito 12+) |
 | ~~R-67~~ | 🟡 | ~~Tarifa de Altos de Sucre + directorio de posadas~~ | **Parcial:** R-60 confirma que **todas** las rutas tienen aliados prestadores de servicio. Falta solo la tarifa |

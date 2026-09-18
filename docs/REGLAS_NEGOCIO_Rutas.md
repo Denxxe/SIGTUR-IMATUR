@@ -116,6 +116,15 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
 - ✅ **Una salida de origen institucional debe decir quién la pide** (R-11); una particular, no.
 - ✅ **La aprueba la Presidencia** (R-13). El sistema registra el visto bueno con fecha y con quién
   lo asentó; no se aprueba dos veces.
+- ✅ **Para entrar a un museo, castillo o fundación hace falta un oficio de permiso** (R-20). **Uno
+  cubre todas las salidas de la semana** hacia esa institución, para agilizar el trámite — por eso
+  no cuelga de una salida: un permiso cubre varias, y una salida puede necesitar varios (una ruta
+  con dos custodios distintos). Estados: *En espera · Aceptado · Rechazado*; el rechazo exige motivo.
+  Lo tramita el **Director de Relaciones Inter-Institucionales**.
+- ✅ **Cada parada declara su institución custodia** (R-06). De ahí sale a quién pedirle permiso cada
+  semana: sin eso, coordinar el acceso depende de que alguien lo recuerde — que es justo uno de los
+  tres dolores que señaló el cliente. Una plaza pública no tiene custodio y no genera trámite.
+- ✅ **Anular un permiso no borra nada y no recicla el número**: el oficio ya salió de la institución.
 
 ---
 
