@@ -193,6 +193,117 @@ $vieneDe = !empty($ejx->id_reprogramada_de);
 </div>
 <?php endif; ?>
 
+<!-- ── Solicitud y aprobación (T-E) ──────────────────────────────────────── -->
+<?php
+// R-12: el oficio de solicitud lo redacta la INSTITUCIÓN; IMATUR lo recibe y lo
+// archiva. Por eso aquí se sube un archivo, no se genera un correlativo.
+// R-13: la salida la aprueba la Presidencia — el sistema registra ese visto bueno.
+$ej        = $data['ejecucion'];
+$esInst    = ($ej->origen ?? '') === 'Institucional';
+$aprobada  = !empty($ej->fecha_aprobacion);
+$conOficio = !empty($ej->oficio_archivo);
+?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:4px solid #6366F1;">
+    <div class="sig-card__head">
+        <div class="sig-card__title">
+            <i class="bi bi-clipboard-check" style="color:#6366F1;"></i> Solicitud y aprobación
+        </div>
+        <span style="font-size:11px;color:var(--text-tertiary);">
+            El oficio lo redacta quien solicita; aquí se archiva
+        </span>
+    </div>
+    <div class="sig-card__body" style="padding:var(--sp-4);">
+        <div class="row g-4">
+
+            <!-- Quién la pidió -->
+            <div class="col-md-4">
+                <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:4px;">
+                    Origen
+                </div>
+                <div style="font-size:14px;font-weight:700;">
+                    <?php echo htmlspecialchars($ej->origen ?? 'Particular'); ?>
+                </div>
+                <?php if ($esInst): ?>
+                    <div style="font-size:13px;color:var(--text-secondary);margin-top:2px;">
+                        <?php echo htmlspecialchars($ej->institucion_nombre ?: '—'); ?>
+                    </div>
+                <?php else: ?>
+                    <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">
+                        Público general: no hay institución solicitante.
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- El oficio recibido -->
+            <div class="col-md-4" style="border-left:1px solid var(--border-subtle);padding-left:var(--sp-4);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:6px;">
+                    Oficio de solicitud
+                </div>
+                <?php if ($conOficio): ?>
+                    <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
+                        <a href="<?php echo URL_ROOT; ?>/descarga/oficioRuta/<?php echo (int)$ej->id; ?>"
+                           target="_blank" class="btn-sig btn-sig--ghost btn-sig--sm">
+                            <i class="bi bi-file-earmark-text"></i> Ver el oficio
+                        </a>
+                        <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/quitarOficioSolicitud"
+                              style="display:inline;margin:0;">
+                            <input type="hidden" name="id" value="<?php echo (int)$ej->id; ?>">
+                            <button type="submit" class="row-action row-action--del" title="Quitar el oficio">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;word-break:break-all;">
+                        <?php echo htmlspecialchars($ej->oficio_original ?: ''); ?>
+                    </div>
+                <?php else: ?>
+                    <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/subirOficioSolicitud"
+                          enctype="multipart/form-data" style="margin:0;">
+                        <input type="hidden" name="id" value="<?php echo (int)$ej->id; ?>">
+                        <input type="file" name="oficio" class="sig-input" accept=".pdf,.jpg,.jpeg,.png" required
+                               style="font-size:12px;padding:4px;">
+                        <button type="submit" class="btn-sig btn-sig--ghost btn-sig--sm" style="margin-top:var(--sp-2);">
+                            <i class="bi bi-upload"></i> Archivar oficio
+                        </button>
+                        <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">
+                            PDF, JPG o PNG · máx. 5 MB
+                        </div>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <!-- El visto bueno -->
+            <div class="col-md-4" style="border-left:1px solid var(--border-subtle);padding-left:var(--sp-4);">
+                <div style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;margin-bottom:6px;">
+                    Aprobación
+                </div>
+                <?php if ($aprobada): ?>
+                    <div style="font-size:14px;font-weight:700;color:var(--success-600);">
+                        <i class="bi bi-check2-circle"></i> Aprobada
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+                        <?php echo date('d/m/Y', strtotime($ej->fecha_aprobacion)); ?>
+                        <?php if (!empty($data['aprobada_por'])): ?>
+                            · <?php echo htmlspecialchars($data['aprobada_por']); ?>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <form method="POST" action="<?php echo URL_ROOT; ?>/rutas/aprobarSalida" style="margin:0;">
+                        <input type="hidden" name="id" value="<?php echo (int)$ej->id; ?>">
+                        <button type="submit" class="btn-sig btn-sig--ghost btn-sig--sm">
+                            <i class="bi bi-patch-check"></i> Registrar aprobación
+                        </button>
+                    </form>
+                    <div style="font-size:11px;color:var(--text-tertiary);margin-top:4px;">
+                        La salida la aprueba la <strong>Presidencia</strong> (R-13). Queda con fecha
+                        y con quién la registró.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ── Participantes ── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:4px solid var(--teal-500);">
     <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3);">

@@ -340,6 +340,67 @@ class RutaEjecucion extends Model {
     }
 
     /**
+     * R-12: el oficio de solicitud **lo redacta la institución**, no IMATUR. El
+     * sistema no lo genera — lo **recibe y lo archiva**. Por eso esto guarda un
+     * archivo, no un correlativo.
+     *
+     * No confundir con `crearOficioEmitido()`, que sí emite: ese es el oficio
+     * SALIENTE de IMATUR hacia el punto que se va a visitar.
+     */
+    public static function guardarOficioSolicitud(int $id, string $archivo, ?string $original, $user_id = null): bool {
+        if (!self::find($id)) throw new Exception('La salida no existe.');
+        $db = new Database();
+        $db->query("UPDATE ruta_ejecuciones
+                       SET oficio_archivo = :a, oficio_original = :o,
+                           updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                     WHERE id = :id");
+        $db->bind(':a',  $archivo);
+        $db->bind(':o',  $original);
+        $db->bind(':u',  $user_id);
+        $db->bind(':id', $id);
+        $ok = $db->execute();
+        self::auditStatic('ruta_ejecuciones', 'UPDATE', $id, null,
+            ['oficio_original' => $original], $user_id);
+        return $ok;
+    }
+
+    /**
+     * Desvincula el oficio. **El archivo en disco no se borra**: si se subió el
+     * equivocado se sube otro, y si hubo un error se puede recuperar. Borrarlo
+     * aquí dejaría sin respaldo un documento que autoriza una salida.
+     */
+    public static function quitarOficioSolicitud(int $id, $user_id = null): bool {
+        $ej = self::find($id);
+        if (!$ej) throw new Exception('La salida no existe.');
+        if (empty($ej->oficio_archivo)) throw new Exception('Esta salida no tiene oficio adjunto.');
+
+        $db = new Database();
+        $db->query("UPDATE ruta_ejecuciones
+                       SET oficio_archivo = NULL, oficio_original = NULL,
+                           updated_at = CURRENT_TIMESTAMP, updated_by = :u
+                     WHERE id = :id");
+        $db->bind(':u',  $user_id);
+        $db->bind(':id', $id);
+        $ok = $db->execute();
+        self::auditStatic('ruta_ejecuciones', 'UPDATE', $id, $ej, ['accion' => 'QUITAR_OFICIO'], $user_id);
+        return $ok;
+    }
+
+    /** Quién aprobó la salida (R-13: la Presidencia), para mostrarlo. */
+    public static function aprobadaPor(int $id): ?string {
+        $db = new Database();
+        $db->query("SELECT COALESCE(TRIM(p.nombre || ' ' || p.apellido), u.username) AS nombre
+                      FROM ruta_ejecuciones e
+                      INNER JOIN usuarios u  ON e.aprobada_por = u.id
+                      LEFT  JOIN empleados em ON u.id_empleado = em.id
+                      LEFT  JOIN personas  p  ON em.id_persona = p.id
+                     WHERE e.id = :id");
+        $db->bind(':id', $id);
+        $row = $db->single();
+        return $row->nombre ?? null;
+    }
+
+    /**
      * La salida que reemplazó a esta, si se reprogramó. El enlace inverso de
      * `id_reprogramada_de`: la original conserva su registro y apunta a la nueva.
      */

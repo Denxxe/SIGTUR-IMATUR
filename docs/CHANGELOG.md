@@ -18,6 +18,26 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-09-18 (b) — Rutas: quién pide la salida y quién la aprueba (T-E, sin migración)
+
+Tercera vez en el módulo que el modelo estaba y la pantalla no: `ruta_ejecuciones` tenía
+`origen`, `institucion_nombre`, `oficio_archivo`, `aprobada_por` y `fecha_aprobacion` desde la 078,
+y `RutaEjecucion::aprobar()` también — pero nada de eso se veía ni se podía usar.
+
+**El oficio de solicitud es ENTRANTE.** R-12 lo deja claro: lo redacta la institución que pide la
+visita, no IMATUR. Así que el sistema **no lo genera** — lo recibe y lo archiva. Se sube en PDF, JPG
+o PNG, se valida extensión **y MIME real** (nunca `$_FILES['type']`, que lo manda el cliente), se
+guarda fuera del web root en `storage/uploads/rutas/` y se sirve por
+`DescargaController::oficioRuta()` con rol 1/3, como todo documento privado del sistema. Quitarlo lo
+desvincula **sin borrar el archivo**: es el respaldo de una salida autorizada.
+
+No confundirlo con `oficios_emitidos`, que sí es saliente y lleva correlativo: ese va de IMATUR al
+punto que se va a visitar.
+
+**La aprobación** (R-13) es de la Presidencia y queda con fecha y con quién la asentó. Todo esto vive
+en una tarjeta «Solicitud y aprobación» en el detalle de la salida, con las tres cosas juntas: quién
+la pidió, con qué oficio y con qué visto bueno.
+
 ### 2026-09-18 — Rutas: cerrar y reprogramar una salida (T-D, sin migración)
 
 El modelo y el controlador estaban desde T-A; **lo que no existía era la interfaz**. `cambiarEstado()`

@@ -110,6 +110,12 @@ Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen q
   con fecha no pasada. La nueva hereda grupo, origen, cupo y oficio, y queda enlazada por
   `id_reprogramada_de`. **La original se conserva intacta**: es la constancia de lo que no ocurrió.
 - ✅ **Una salida no ejecutada no tiene Ficha Institucional** ni admite inscripciones: no hubo grupo.
+- ✅ **El oficio de solicitud es ENTRANTE** (R-12): lo redacta la institución y IMATUR lo **archiva**
+  como respaldo de que la salida se pidió formalmente. No confundir con el oficio **saliente** de
+  IMATUR hacia el punto a visitar, que sí lleva correlativo (`oficios_emitidos`).
+- ✅ **Una salida de origen institucional debe decir quién la pide** (R-11); una particular, no.
+- ✅ **La aprueba la Presidencia** (R-13). El sistema registra el visto bueno con fecha y con quién
+  lo asentó; no se aprueba dos veces.
 
 ---
 

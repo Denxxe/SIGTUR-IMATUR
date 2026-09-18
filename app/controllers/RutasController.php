@@ -158,6 +158,71 @@ class RutasController extends Controller {
         header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
     }
 
+    /**
+     * R-12: archivar el oficio de solicitud que envió la institución. IMATUR
+     * **no lo redacta** — lo recibe en papel o PDF y lo guarda como respaldo de
+     * que la salida fue pedida formalmente.
+     */
+    public function subirOficioSolicitud() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $id = (int)($_POST['id'] ?? 0);
+        try {
+            $arch = $this->guardarOficioRuta('oficio', 'Oficio_Salida_' . $id);
+            RutaEjecucion::guardarOficioSolicitud($id, $arch['nombre'], $arch['original'], $this->getUserId());
+            flash('global_msg', 'Oficio de solicitud archivado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    public function quitarOficioSolicitud() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
+        $_POST = $this->sanitizePost();
+        $id    = (int)($_POST['id'] ?? 0);
+        try {
+            RutaEjecucion::quitarOficioSolicitud($id, $this->getUserId());
+            flash('global_msg', 'Oficio desvinculado de la salida.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/rutas/detalle/' . $id);
+    }
+
+    /**
+     * Mismo criterio que el resto del sistema: fuera del web root, extensión y
+     * MIME real validados (no `$_FILES['type']`, que lo manda el cliente), 5 MB.
+     */
+    private function guardarOficioRuta(string $campo, string $prefijo): array {
+        if (empty($_FILES[$campo]['name']) || ($_FILES[$campo]['error'] ?? 1) !== UPLOAD_ERR_OK) {
+            throw new Exception('Seleccione el archivo del oficio.');
+        }
+        if ($_FILES[$campo]['size'] > 5 * 1024 * 1024) {
+            throw new Exception('El archivo no puede superar los 5 MB.');
+        }
+        $original = $_FILES[$campo]['name'];
+        $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+        $mimesOk  = ['pdf' => ['application/pdf'], 'jpg' => ['image/jpeg'],
+                     'jpeg' => ['image/jpeg'], 'png' => ['image/png']];
+        if (!isset($mimesOk[$ext])) {
+            throw new Exception('Formato no permitido. Se admite PDF, JPG o PNG.');
+        }
+        $mimeReal = function_exists('mime_content_type') ? @mime_content_type($_FILES[$campo]['tmp_name']) : null;
+        if ($mimeReal && !in_array($mimeReal, $mimesOk[$ext], true)) {
+            throw new Exception('El contenido del archivo no coincide con su extensión.');
+        }
+
+        $dir = dirname(dirname(__DIR__)) . '/storage/uploads/rutas/';
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new Exception('No se pudo preparar la carpeta de archivos.');
+        }
+        $nombre = preg_replace('/[^A-Za-z0-9_\-]/', '', $prefijo) . '_' . time() . '.' . $ext;
+        if (!move_uploaded_file($_FILES[$campo]['tmp_name'], $dir . $nombre)) {
+            throw new Exception('No se pudo guardar el archivo.');
+        }
+        return ['nombre' => $nombre, 'original' => $original];
+    }
+
     /** R-31/R-33: guías y acompañantes de la salida. */
     public function agregarEmpleadoSalida() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/rutas/salidas'); return; }
@@ -335,6 +400,7 @@ class RutasController extends Controller {
             'oficiosEmitidos' => $oficiosEmitidos,
             'ficha'           => RutaFicha::porEjecucion($id),
             'reprogramada'    => RutaEjecucion::reprogramadaComo($id),
+            'aprobada_por'    => RutaEjecucion::aprobadaPor($id),
             // R-33: 7-8 personas por guía. Es una sugerencia, no un límite.
             'guias_sugeridos' => RutaEjecucion::guiasSugeridos(count($participantes)),
             // R-28: el cupo del cliente es por DÍA, no por salida.

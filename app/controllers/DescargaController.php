@@ -115,6 +115,18 @@ class DescargaController extends Controller {
     }
 
     /** Foto de un bien — Inventario / Admin. */
+    /** Oficio de solicitud recibido de una institución (R-12) — Turismo / Admin. */
+    public function oficioRuta($idEjecucion = 0) {
+        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $db = new Database();
+        $db->query("SELECT oficio_archivo, oficio_original FROM ruta_ejecuciones
+                     WHERE id = :id AND is_active = TRUE");
+        $db->bind(':id', (int)$idEjecucion);
+        $row = $db->single();
+        if (!$row || empty($row->oficio_archivo)) $this->abort(404, 'Documento no disponible.');
+        $this->stream('rutas', $row->oficio_archivo, $row->oficio_original ?? null);
+    }
+
     public function fotoBien($idBien = 0) {
         if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
         $db = new Database();
