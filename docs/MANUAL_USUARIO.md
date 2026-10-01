@@ -1,9 +1,9 @@
 # Manual de Usuario — SIGTUR-IMATUR
 
 **Sistema Integral de Gestión Turística y Administrativa — IMATUR (Cumaná, Sucre)**
-Aplicación web de uso interno. Última actualización: 2026-09-13.
+Aplicación web de uso interno. Última actualización: 2026-09-19.
 
-> Guía práctica para el personal. Para detalle técnico ver `CLAUDE.md`; para reglas de negocio, los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`.
+> Guía práctica para el personal. Para detalle técnico ver `CLAUDE.md`; para reglas de negocio, los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`. Para el modelo de datos y los diagramas: `MODELO_DATOS_ER.md`, `ESPECIFICACION_REQUERIMIENTOS.md`, `CASOS_DE_USO.md`, `DIAGRAMA_CLASES.md`, `DIAGRAMA_COMPONENTES.md`, `DIAGRAMAS_SECUENCIA.md`.
 
 ---
 
@@ -38,9 +38,10 @@ Aplicación web de uso interno. Última actualización: 2026-09-13.
 |-----|------------------|
 | **Administrador** | Todo el sistema, incluida la configuración, usuarios, roles, auditoría y accesos. |
 | **RRHH** | Empleados, cargos, departamentos, horarios, asistencia, permisos/reposos, amonestaciones, vacaciones, **nómina**, visitantes, reportes y configuración. |
-| **Turismo** | Talleres, sedes de formación, pasantes, rutas, visitantes y reportes. |
+| **Turismo** | Talleres, sedes de formación, pasantes, rutas y salidas, visitantes y reportes. |
 | **Inventario** | Bienes, categorías, ubicaciones, movimientos y reportes. |
 | **Recepción** | Registro de visitas y asistencia. |
+| **Solo Lectura** | Consulta de reportes y visitantes, sin modificar nada. |
 
 > Si intentas entrar a algo fuera de tu rol, el sistema te redirige con un aviso. Los cambios de permisos los hace el Administrador en *Sistema → Roles y Permisos*.
 
@@ -95,17 +96,66 @@ Aplicación web de uso interno. Última actualización: 2026-09-13.
 
 ### 4.3 Formación
 
-- **Talleres / Charlas / Inducciones** con participantes (adultos con cédula o niños "libres" con representante), **lista de asistencia imprimible**, marcaje individual o masivo, informe demográfico, evidencias y estados que avanzan solos según la fecha.
+- **Talleres / Charlas / Inducciones** con participantes (adultos con cédula o niños "libres" con representante), **lista de asistencia imprimible**, marcaje individual o masivo, informe demográfico y evidencias. Una actividad *Programada* pasa **sola** a *En Curso* cuando llega su fecha y hora de inicio, siempre que tenga al menos un participante inscrito; **finalizarla o cancelarla sigue siendo manual**.
 - El sistema **avisa de participantes repetidos** al inscribir, y hay un reporte de *Posibles duplicados* para depurar.
 - **Pasantes:** control de practicantes, tutores y documentos, con **carta de postulación** y **carta de aceptación** imprimibles, **carnet** propio (formato PASANTE) y foto.
 - **Sedes de Formación:** lugares donde se dictan las actividades.
 
 ### 4.4 Turismo (Rutas)
 
-- **Rutas** con puntos en el mapa, participantes, cupo y estados; al **Finalizar** una ruta cuenta como ejecución.
-- **Oficio de la ruta:** documento imprimible con los puntos y el total de participantes.
+**Lo primero que hay que entender: el recorrido y la salida son cosas distintas.**
 
-> **Nota:** el módulo de Rutas está en **rediseño**. El levantamiento con IMATUR (2026-09) confirmó que existe un **catálogo de rutas reutilizable** distinto de cada **salida ejecutada**, y que las rutas **sí se cobran**. Lo que este manual describe es lo que el sistema hace **hoy**; ver `PLAN_MODULO_RUTAS.md`.
+- El **recorrido** (o *ruta del catálogo*) es lo que IMATUR ofrece: Cumaná Histórica, Exploradores de Cumaná, Playa Colorada… Tiene sus paradas, su tarifa y sus restricciones. **No tiene fecha.**
+- La **salida** es cada vez que ese recorrido se hace: tiene fecha, grupo, guías, cobro e informe. Dos salidas de Cumaná Histórica son *la misma ruta ejecutada dos veces*.
+
+Por eso el módulo tiene **dos pantallas**: *Rutas* (el catálogo) y *Salidas* (lo que ocurre).
+
+#### El catálogo de recorridos
+
+Cada recorrido se registra una vez y se reutiliza. Lleva:
+
+- **Paradas** con su orden, descripción y ubicación en el **mapa** (funciona sin internet). Cada parada indica su **institución custodia** —el museo, castillo o fundación al que hay que pedirle permiso— y si el punto **pone su propio guía**.
+- **Restricciones de edad:** edad mínima y máxima, las dos opcionales. Es una propiedad **del recorrido**: Río Brito admite de 12 años en adelante y Exploradores de 4 a 16. Más un campo de texto para lo que no es edad (movilidad, visión…). Estas condiciones se muestran en la ficha del recorrido **y al inscribir**.
+- **Tarifa**, en **dólares**, con tres modos: *Gratuita*, *Fija* (un monto) o *A convenir*. Se indica aparte si exonera a los menores de cierta edad y si exonera a instituciones. **La gratuidad es por ruta**: las instituciones públicas no pagan Cumaná Histórica, pero sí Playa Colorada.
+- **Estado:** Activa, Inactiva o En Mantenimiento — es decir, si se ofrece o no.
+
+#### Una salida, paso a paso
+
+1. **Registrarla.** Se elige el recorrido, la fecha y la hora, y se indica el **origen**: *Particular* (la pide un turista) o *Institucional* (la pide una escuela o un ente público). Si es institucional, se anota **quién la pide** y se **adjunta el oficio que envió la institución** — ese oficio lo redacta ella, IMATUR solo lo archiva como respaldo.
+2. **Aprobación de la Presidencia.** Toda salida la aprueba la Presidencia, tanto la particular como la institucional. El sistema registra **quién asentó el visto bueno y cuándo**, y no deja aprobar dos veces.
+3. **Personal.** Se agregan los trabajadores de IMATUR que van, y **uno se marca como encargado**. El sistema sugiere cuántos guías harían falta según el tamaño del grupo, pero **no bloquea**: depende de quién esté disponible.
+4. **Itinerario.** Por defecto la salida sigue el orden del catálogo. Si ese día hay dos grupos y conviene que no se crucen, se **cambia el orden solo para esa salida** — el recorrido y las demás salidas no se tocan. También se puede marcar una parada como **"no se hizo"** con su nota (típicamente porque el custodio negó el permiso). *Restablecer* vuelve al orden del catálogo.
+5. **Permisos de acceso.** Ver más abajo.
+6. **Cobro.** Ver más abajo.
+7. **Participantes.** Se inscriben con cédula o en **modo libre** (niños sin cédula), en cuyo caso se registra a su **representante**. El sistema avisa si la edad no encaja con el recorrido y **advierte** —sin bloquear— si se supera el **cupo del día** (60 personas por defecto, configurable; es un tope **diario**, no por salida). La asistencia se marca individual o masivamente.
+8. **Cierre.** La salida se cierra con **Marcar ejecutada** o **No se ejecutó**. En el segundo caso el **motivo es obligatorio** (falta de combustible, clima, el grupo canceló). Los dos estados son **finales: no se vuelve atrás**. Una salida no ejecutada no admite inscripciones ni informe.
+9. **Reprogramar.** Solo desde *No ejecutado* y una sola vez. **No edita la salida: crea otra**, que hereda grupo, origen, cupo y oficio, y queda enlazada con la original. **La original se conserva intacta**: es la constancia de lo que no ocurrió.
+10. **Incidencias.** Hay un campo para registrar lo que pasó en la salida.
+
+#### Permisos a las instituciones custodias
+
+Para entrar a un museo, castillo o fundación hace falta un **oficio de permiso**.
+
+- La pantalla **Permisos** muestra, por semana, **a qué custodios falta pedirles permiso**, deduciéndolo de las paradas de las salidas programadas. Si una parada no tiene custodio declarado, no aparece — hay que completarlo en el catálogo.
+- **Un oficio cubre toda la semana** hacia esa institución y puede amparar varias salidas; y una salida con dos custodios distintos necesita dos oficios.
+- Estados: **En espera → Aceptado / Rechazado**. El rechazo exige motivo. Se puede adjuntar el **pase recibido** escaneado.
+- **Anular un permiso no lo borra y no recicla su número**: el oficio ya salió de la institución.
+
+> El imprimible del oficio de permiso es **provisional**: se ajustará cuando llegue el formato oficial de IMATUR.
+
+#### Cobro y pagos
+
+- Primero se **fijan las condiciones** de la salida: tarifa en dólares, **tasa de cambio** y **fecha tope de pago** (el pago es anticipado, para poder planificar). La tasa se **sugiere desde el BCV**, pero si no hay internet se carga a mano — nunca bloquea.
+- Tarifa y tasa quedan **congeladas en la salida**: si después cambia el precio del recorrido o sube el dólar, **lo ya cobrado no se mueve**.
+- Se registran **abonos**: varias transferencias, de pagadores distintos, hasta completar. El sistema lleva el **estado de cuenta** (esperado, abonado, saldo) y señala las salidas **vencidas con saldo**.
+- **Transferencia y punto de venta** → se adjunta el comprobante. **Efectivo** → el sistema genera un **acta de pago numerada** imprimible.
+- **Anular un pago no lo borra** — es dinero: queda con su motivo y deja de sumar.
+- **Exonerar** una salida exige motivo y registra quién lo asentó. Las exoneraciones las autoriza la Presidencia; el sistema no decide por su cuenta.
+
+#### Cierre documental
+
+- **Ficha Institucional.** Al marcar la salida como ejecutada, el sistema **la crea solo**, en borrador y precargada con lo que ya sabe. Turismo la completa al volver a la oficina: un **renglón por institución** con su conteo por sexo y rango de edades, los **docentes** y **representantes** acompañantes, y las **instituciones de apoyo** (Protección Civil, etc.). **Los totales los calcula el sistema** a partir de los renglones — no se escriben a mano. Hay **una sola ficha por salida** y se puede **cerrar** (y reabrir). Se imprime en el formato oficial.
+- **Oficio de visita.** Documento imprimible que IMATUR emite hacia el punto a visitar, con correlativo propio. No confundirlo con el oficio **entrante** del punto 1.
 
 ### 4.5 Inventario (Bienes)
 
@@ -117,9 +167,9 @@ Aplicación web de uso interno. Última actualización: 2026-09-13.
 El listado tiene pestaña **"Sin codificar"** con su contador. El N° de orden no se puede repetir.
 
 **Dos ejes distintos, no los mezcles:**
-- **Estatus** (situación administrativa): En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · Dado de baja.
+- **Estatus** (situación administrativa): En espera de codificación · Activo · En mantenimiento · Extraviado · Robado · **Desincorporado**.
 - **Condición** (estado físico): Nuevo · Bueno · Regular · Dañado.
-- Un bien **en mantenimiento NO desaparece** del inventario; un bien **dado de baja sí sale** del inventario activo, pero **su registro se conserva** (pestaña *Desincorporados*).
+- Un bien **en mantenimiento NO desaparece** del inventario; un bien **desincorporado sí sale** del inventario activo, pero **su registro se conserva** (pestaña *Desincorporados*).
 
 **Movimientos.** Asignación de responsable, traslado, salida y retorno de mantenimiento, y baja. El sistema impide lo que no tiene sentido: mover un bien dado de baja, trasladarlo al mismo sitio, sacarlo dos veces a mantenimiento o retornarlo sin mantenimiento abierto. Un bien sin codificar solo admite asignación de responsable.
 
@@ -129,6 +179,12 @@ El listado tiene pestaña **"Sin codificar"** con su contador. El N° de orden n
 - **Etiquetas de Bienes:** hoja imprimible con el código oficial y un **QR** que abre la hoja de vida del bien. Solo lista bienes ya codificados. Funciona sin internet.
 - **Suficiencia de Bienes:** compara la dotación esperada por departamento contra lo que realmente hay.
 - Cada bien tiene **hoja de vida**: documentos, foto e historial completo de movimientos.
+
+**Documentos que se emiten desde el módulo:**
+- **Oficio de relación de bienes nuevos:** se arma con los bienes que aún no tienen código, se numera y se envía a la Alcaldía. Anularlo exige motivo y **no recicla el número**.
+- **Documento de donación:** cuando un bien entra por donación se capturan los datos del donante (cédula, estado civil, domicilio), la procedencia y el valor, y se emite el documento imprimible.
+- **Acta de Desincorporación (por lote):** se arma con los bienes ya desincorporados, se imprime y se lleva a la Alcaldía (*emitida*). Cuando vuelve sellada se registra con su escaneado (*firmada*) y **todos sus bienes pasan a "Retirado" de una vez**. Si se anula un acta firmada, el **retiro se revierte**: el aval que lo respaldaba dejó de existir.
+  > El imprimible del acta es **provisional** hasta que llegue el formato oficial. La información registrada no cambia.
 
 > **Cambio en curso (2026-09):** la Alcaldía notificó que **IMATUR pasará a codificar sus propios bienes**, continuando la secuencia desde su última revisión. Mientras eso no se active en el sistema, el circuito sigue siendo el descrito arriba.
 
@@ -177,7 +233,7 @@ Entra a **Análisis → Reportes**. Verás solo las tarjetas de tu rol. Cada rep
 - **Alertas:** Centro de Alertas (pendientes por atender).
 - **RRHH:** directorio de personal, asistencia, permisos y reposos, amonestaciones y faltas, **egresos y rotación**, comisión de servicio, constancias emitidas, expedientes incompletos, carga familiar, **saldo de vacaciones**, visitantes y estadísticas de visitas.
 - **Formación/Turismo:** talleres, **informe trimestral**, cobertura comunitaria, rutas, participación en rutas, **ejecuciones de ruta**, pasantes y posibles duplicados.
-- **Inventario:** inventario, kardex de movimientos, bienes asignados, bienes dados de baja, **conteos**, **mantenimiento preventivo**, **etiquetas** y **suficiencia de bienes**.
+- **Inventario:** inventario, kardex de movimientos, bienes asignados, **bienes desincorporados** (con la columna *Por retirar / Retirado*), **conteos**, **mantenimiento preventivo**, **etiquetas** y **suficiencia de bienes**.
 - **Seguridad (Admin):** auditoría del sistema y **accesos** (quién entró, cuándo y desde qué IP).
 - **Indicadores de Gestión:** panel con KPIs por área; arriba puedes elegir el **año** a consultar.
 
@@ -214,7 +270,11 @@ Entra desde tu nombre (arriba a la derecha) → **Mi Perfil**:
 - **La sesión se cerró sola.** Es por inactividad (30 min); vuelve a iniciar sesión.
 - **Guardé dos veces por error.** El sistema evita registros duplicados por doble envío; si dudas, revisa el listado antes de repetir.
 - **¿Se pierde algo al eliminar?** No: casi todo es borrado lógico y se puede recuperar desde *Sistema → Papelera* (según permisos).
-- **Borré un bien y no aparece en "Bienes Dados de Baja".** Son cosas distintas: **dar de baja** un bien es un movimiento (sale del inventario activo y queda en la pestaña *Desincorporados*); **eliminar** lo manda a la Papelera, que es para registros creados por error.
+- **Borré un bien y no aparece en el reporte de bienes desincorporados.** Son cosas distintas: **desincorporar** un bien es un movimiento (sale del inventario activo y queda en la pestaña *Desincorporados*); **eliminar** lo manda a la Papelera, que es para registros creados por error.
+- **No puedo marcar una salida de ruta como ejecutada.** Revisa la fecha: no se puede dar por ejecutada una salida que todavía no ha ocurrido. Y si ya está en *Ejecutado* o *No ejecutado*, esos estados son finales.
+- **Me equivoqué al cerrar una salida.** Los estados de cierre no se revierten a propósito: son constancia. Si la salida no se hizo y se repuso otro día, el camino correcto es **Reprogramar**, que crea una salida nueva enlazada.
+- **El cobro de una salida quedó con la tarifa vieja.** Es intencional: la tarifa y la tasa se **congelan** en cada salida para que cambiar el precio del recorrido o la tasa del día no altere lo ya cobrado.
+- **Registré mal un pago.** No se borra: se **anula con motivo** y deja de sumar al total abonado.
 - **Cerré una quincena y estaba mala.** Una quincena cerrada no se puede editar: hay que generar una nueva. Por eso conviene revisar las advertencias y recalcular **antes** de cerrar.
 - **El carnet sale sin foto.** Carga la foto en el expediente del trabajador (*Cargar / cambiar foto*) y vuelve a abrir el carnet.
 - **No me deja generar la nómina del mes.** Faltan los **parámetros del mes** (cesta ticket y tasa del dólar) en *Nómina → Parámetros*.
