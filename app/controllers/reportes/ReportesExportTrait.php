@@ -142,13 +142,15 @@ trait ReportesExportTrait {
     }
 
     private function descargarXlsx($filename, $sheetRows, array $merges, array $widths, int $dataStart) {
+        // Un solo cálculo de ancho para <cols> y para la posición de los logos.
+        $anchos = XlsxLogos::anchosColumnas($widths);
         $cols = '';
-        foreach ($widths as $i => $w) { $cols .= '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="' . min(60, max(10, $w + 3)) . '" customWidth="1"/>'; }
+        foreach ($anchos as $i => $w) { $cols .= '<col min="' . ($i + 1) . '" max="' . ($i + 1) . '" width="' . $w . '" customWidth="1"/>'; }
 
         $mergeXml = $merges ? '<mergeCells count="' . count($merges) . '">' . implode('', array_map(fn($m) => '<mergeCell ref="' . $m . '"/>', $merges)) . '</mergeCells>' : '';
 
         // Logos institucionales (Alcaldía + IMATUR) anclados como imagen real.
-        $piezas = XlsxLogos::piezasParaHoja(max(1, count($widths)));
+        $piezas = XlsxLogos::piezasParaHoja($anchos);
         $drawingTag = !empty($piezas['drawingXml']) ? '<drawing r:id="rIdDrawing"/>' : '';
 
         $sheet = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'

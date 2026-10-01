@@ -172,16 +172,23 @@ class XlsxMultiSheet
         $hayImagenes = false;
         foreach ($this->sheets as $i => $s) {
             $n = $i + 1;
+            // Una entrada por columna de la hoja (el membrete puede abarcar más
+            // columnas que las que llevan datos) y un solo cálculo de ancho para
+            // <cols> y para la posición de los logos.
+            $ncol = max(1, (int)($s['ncol'] ?? 1), $s['widths'] ? max(array_keys($s['widths'])) + 1 : 0);
+            $largos = [];
+            for ($ci = 0; $ci < $ncol; $ci++) $largos[] = $s['widths'][$ci] ?? 8;
+            $anchos = XlsxLogos::anchosColumnas($largos);
             $cols = '';
-            foreach ($s['widths'] as $ci => $w) {
-                $cols .= '<col min="' . ($ci + 1) . '" max="' . ($ci + 1) . '" width="' . min(60, max(10, $w + 3)) . '" customWidth="1"/>';
+            foreach ($anchos as $ci => $w) {
+                $cols .= '<col min="' . ($ci + 1) . '" max="' . ($ci + 1) . '" width="' . $w . '" customWidth="1"/>';
             }
             $mergeXml = $s['merges']
                 ? '<mergeCells count="' . count($s['merges']) . '">' . implode('', array_map(fn($m) => '<mergeCell ref="' . $m . '"/>', $s['merges'])) . '</mergeCells>'
                 : '';
 
             // Logos institucionales (Alcaldía + IMATUR) anclados como imagen real.
-            $piezas = XlsxLogos::piezasParaHoja($s['ncol'] ?? 1);
+            $piezas = XlsxLogos::piezasParaHoja($anchos);
             $drawingTag = '';
             if (!empty($piezas['drawingXml'])) {
                 $hayImagenes = true;

@@ -18,6 +18,22 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-01 (b) — Los logos de los .xlsx se descuadraban según el ancho de la tabla
+
+`XlsxLogos` anclaba el logo de IMATUR **al inicio de la última columna**, no contra el borde derecho
+de la tabla. Con una última columna ancha (p. ej. «Descripción» en Configuración → Categorías de
+Inventario, ~400 px) el logo caía a mitad de la hoja, encima del membrete centrado; con pocas
+columnas angostas pasaba lo contrario y los dos logos tapaban el texto. Las proporciones de las
+imágenes **sí** eran correctas: el problema era solo de posición.
+
+La causa de fondo: el ancho de columna se calculaba en **dos copias** de la misma fórmula
+(`ReportesExportTrait::descargarXlsx()` y `XlsxMultiSheet::construir()`) y ninguna se lo pasaba a los
+logos, que solo recibían la cantidad de columnas. Ahora `XlsxLogos::anchosColumnas()` es la única
+fórmula y `piezasParaHoja()` recibe esos anchos, convierte a píxeles y ancla el logo derecho a 6 px
+del borde real. Si la tabla mide menos de 620 px, el sobrante se reparte entre las columnas para
+que el membrete no quede bajo los logos. Cubre todos los .xlsx con membrete: listados, reportes y
+las 6 hojas de Nómina. Verificado renderizando hojas de 1, 2, 3 y 8 columnas con Excel.
+
 ### 2026-10-01 — El correo de recuperación de contraseña, con plantilla institucional
 
 Primera prueba real del SMTP (Gmail, en desarrollo): el correo llegaba, pero era texto plano con un
