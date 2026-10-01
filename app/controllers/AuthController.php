@@ -166,13 +166,27 @@ class AuthController extends Controller {
             if ($usuario && !empty($usuario->correo)) {
                 $token = PasswordReset::generar((int)$usuario->id, $_SERVER['REMOTE_ADDR'] ?? null);
                 if ($token) {
-                    $enlace = URL_ROOT . '/auth/resetPassword?token=' . $token;
-                    $cuerpo = '<p>Hola,</p>'
-                            . '<p>Solicitaste restablecer tu contraseña en SIGTUR-IMATUR. Este enlace es válido por '
-                            . PasswordReset::TTL_MINUTOS . ' minutos:</p>'
-                            . '<p><a href="' . htmlspecialchars($enlace) . '">' . htmlspecialchars($enlace) . '</a></p>'
-                            . '<p>Si no solicitaste este cambio, ignora este correo.</p>';
-                    sigtur_enviar_correo($usuario->correo, 'Recuperación de contraseña - SIGTUR-IMATUR', $cuerpo);
+                    $enlace  = URL_ROOT . '/auth/resetPassword?token=' . $token;
+                    $nombre  = trim((string)($usuario->nombre_persona ?? ''));
+                    $saludo  = $nombre !== '' ? 'Hola, ' . htmlspecialchars(ucwords(mb_strtolower($nombre))) . ':' : 'Hola:';
+                    $minutos = PasswordReset::TTL_MINUTOS;
+                    $cuerpo  = sigtur_plantilla_correo(
+                        'Restablece tu contraseña',
+                        '<p style="margin:0 0 14px;">' . $saludo . '</p>'
+                        . '<p style="margin:0 0 14px;">Recibimos una solicitud para restablecer la contraseña de tu cuenta <strong>'
+                        . htmlspecialchars($usuario->username) . '</strong> en SIGTUR-IMATUR. Pulsa el botón para elegir una nueva.</p>'
+                        . '<p style="margin:0;padding:10px 14px;background:#eef4ff;border-radius:8px;font-size:14px;color:#1c39b0;">'
+                        . 'El enlace es válido por <strong>' . $minutos . ' minutos</strong> y solo puede usarse una vez.</p>',
+                        ['texto' => 'Restablecer contraseña', 'url' => $enlace],
+                        'Enlace válido por ' . $minutos . ' minutos para restablecer tu contraseña.',
+                        '<p style="margin:0 0 12px;">¿El botón no funciona? Copia y pega este enlace en tu navegador:<br>'
+                        . '<a href="' . htmlspecialchars($enlace) . '" style="color:#2247db;word-break:break-all;">' . htmlspecialchars($enlace) . '</a></p>'
+                        . '<p style="margin:0;">Si no solicitaste este cambio, ignora este correo: tu contraseña actual sigue funcionando.</p>'
+                    );
+                    $texto = "Restablece tu contraseña de SIGTUR-IMATUR (cuenta {$usuario->username}).\n\n"
+                           . "Abre este enlace (válido por {$minutos} minutos, un solo uso):\n{$enlace}\n\n"
+                           . "Si no solicitaste este cambio, ignora este correo.";
+                    sigtur_enviar_correo($usuario->correo, 'Restablece tu contraseña · SIGTUR-IMATUR', $cuerpo, $texto);
                 }
             }
         } catch (Exception $e) {

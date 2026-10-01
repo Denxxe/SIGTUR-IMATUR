@@ -156,7 +156,7 @@ class Usuario extends Model {
      */
     private static function buscarPorIdentificador(string $identificador, bool $activas) {
         $db = new Database();
-        $db->query("SELECT u.*, p.correo, (u.is_active)::int AS activo
+        $db->query("SELECT u.*, p.correo, p.nombre AS nombre_persona, (u.is_active)::int AS activo
                     FROM usuarios u
                     INNER JOIN empleados e ON u.id_empleado = e.id
                     INNER JOIN personas p  ON e.id_persona  = p.id

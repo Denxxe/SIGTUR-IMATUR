@@ -18,6 +18,18 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-01 — El correo de recuperación de contraseña, con plantilla institucional
+
+Primera prueba real del SMTP (Gmail, en desarrollo): el correo llegaba, pero era texto plano con un
+enlace de 100 caracteres. Ahora lleva el logo de IMATUR, botón, aviso de vigencia, el enlace de
+respaldo, pie con nombre/RIF/dirección (de `configuracion_sistema`) y versión en texto plano.
+
+- El logo va **incrustado (CID)**, no por URL: el sistema es on-premise y una dirección a
+  `URL_ROOT` no se ve desde el buzón. Se usa una copia reducida (`logo_correo.png`, 38 KB) en vez del
+  original de 190 KB.
+- La plantilla es reutilizable: `sigtur_plantilla_correo()` en `mail_helper.php`.
+- `Usuario::buscarPorIdentificador()` trae también el nombre de la persona, para el saludo.
+
 ### 2026-09-18 (e) — Rutas: el cobro, y con él las nueve fases del módulo (T-C, mig. 083)
 
 **Cierra H-14.** Las columnas `rutas.tiene_tarifa` y `tarifa_monto` existían desde la mig. 007 y
