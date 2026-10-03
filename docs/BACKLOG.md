@@ -42,7 +42,7 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
-| 1 | **Verificación en navegador** de lo construido este ciclo: las 4 pantallas de Nómina, la tarjeta «Datos de nómina» del expediente, Ubicaciones con sede/depósito, y el menú lateral con cada uno de los 6 roles | Corto | Todo se probó por BD y por pruebas automatizadas, **nada se abrió en el navegador**. Es el riesgo más alto que queda |
+| ~~1~~ | ✅ ~~Verificación en navegador~~ **Hecha en lo esencial (2026-10-03)**: ~50 páginas recorridas (menú completo + Rutas, Nómina e Inventario a dos niveles), **0 errores de PHP** en el log; el menú de **los 6 roles** coincide con `permisos_rol` y Solo Lectura queda denegado en 8 módulos ajenos probados por URL. Un hallazgo menor corregido (Cobro decía a la vez «gratuito» y «falta fijar la tarifa"). **Falta:** probar los formularios (guardar, no solo abrir) — ver §6 | — | — |
 | 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver `CHANGELOG.md` |
 | 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver `CHANGELOG.md` |
 | 4 | ~~**Corregir H-16**~~ | — | ✅ **Hecho (2026-09-17, mig. 076).** Y eran **cuatro** consultas, no tres: el mismo error estaba en el KPI `kpiBajasAnio` del Dashboard. Junto con C-6. Ver `CHANGELOG.md` |
@@ -437,6 +437,11 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 ---
 
 ## 6. VERIFICACIÓN MANUAL PENDIENTE (probar en navegador)
+
+> ✅ **2026-10-03 — recorrido de lectura hecho:** todas las pantallas de abajo **abren sin error**
+> (incluidas las 9 fases de Rutas) y el menú de los 6 roles coincide con *Roles y Permisos*. Lo que
+> sigue pendiente de esta lista es lo que exige **guardar** algo: subir una evidencia, registrar
+> vacaciones/traslado/escalado, el modal de Ubicaciones, el alta de empleado de punta a punta (B1).
 
 **Pendiente 2026-08-27 — lo construido en este ciclo, probado por BD y por pruebas
 automatizadas pero NO abierto en el navegador. Es el riesgo más alto que queda:**

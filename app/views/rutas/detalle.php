@@ -571,7 +571,10 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
                             <i class="bi bi-info-circle"></i> <?php echo htmlspecialchars($sug['motivo']); ?>
                         </div>
                     <?php endif; ?>
-                    <?php if ($abrt && $ct['tarifa_usd'] === null): ?>
+                    <?php // Un recorrido gratuito (o exonerado por regla) no tiene tarifa que fijar:
+                          // sin esta condición salían a la vez «es gratuito» y «falta fijar la tarifa».
+                          $sinCobro = isset($sug['tarifa']) && (float)$sug['tarifa'] === 0.0; ?>
+                    <?php if ($abrt && $ct['tarifa_usd'] === null && !$sinCobro): ?>
                         <div style="margin-top:6px;color:var(--warning-600);font-size:11.5px;">
                             <i class="bi bi-exclamation-triangle"></i>
                             Todavía no se fijó la tarifa de esta salida.
