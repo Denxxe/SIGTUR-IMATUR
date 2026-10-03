@@ -29,6 +29,9 @@ Aplicación web **on-premise** (sin acceso a internet). MVC en PHP puro, sin fra
 
 ## Instalación
 
+> 🐳 **Con Docker** (Windows, acceso desde teléfonos y otras PCs de la red, u opcionalmente desde
+> internet): ver **`docs/DESPLIEGUE_DOCKER.md`**. Lo que sigue es la instalación sin Docker (Laragon).
+
 ```bash
 # 1. Crear la base de datos
 createdb -U postgres "SIGTUR-IMATUR"

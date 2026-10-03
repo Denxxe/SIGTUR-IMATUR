@@ -12,6 +12,8 @@
 *.html  text eol=lf
 *.txt   text eol=lf
 *.svg   text eol=lf
+*.sh    text eol=lf
+*.yml   text eol=lf
 
 # Archivos binarios — nunca modificar el fin de línea
 *.png   binary

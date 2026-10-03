@@ -1,0 +1,69 @@
+# SIGTUR-IMATUR en Docker. Guía paso a paso: docs/DESPLIEGUE_DOCKER.md
+#
+#   1. copy .env.example .env      (y cambiar las contraseñas)
+#   2. docker compose up -d --build
+#   3. abrir http://localhost:8080
+#
+# La base se crea SOLA la primera vez, desde database/schema_consolidado.sql.
+
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-SIGTUR-IMATUR}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:?Defina DB_PASS en el archivo .env}
+      TZ: ${APP_TIMEZONE:-America/Caracas}
+      PGTZ: ${APP_TIMEZONE:-America/Caracas}
+    volumes:
+      - sigtur_bd:/var/lib/postgresql/data
+      # Solo se ejecuta cuando el volumen está vacío (primera vez).
+      - ./database/schema_consolidado.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Sin `ports`: la base NO queda expuesta fuera de Docker; solo la app la ve.
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: sigtur-imatur:latest
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PUERTO:-8080}:80"
+    volumes:
+      # Documentos subidos y respaldos quedan en carpetas de Windows, visibles para
+      # copiarlos a un disco externo. Se montan SOLO estas dos: storage/certs trae
+      # el certificado del BCV versionado y debe seguir siendo el de la imagen.
+      - ./docker-data/uploads:/var/www/html/storage/uploads
+      - ./docker-data/backups:/var/www/html/storage/backups
+
+  tareas:
+    # Misma imagen que `app`; el `build` evita que Docker intente descargarla de
+    # internet si `tareas` arranca antes de que `app` la haya construido.
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: sigtur-imatur:latest
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      app:
+        condition: service_started
+    command: ["/var/www/html/docker/tareas.sh"]
+    volumes:
+      - ./docker-data/uploads:/var/www/html/storage/uploads
+      - ./docker-data/backups:/var/www/html/storage/backups
+
+volumes:
+  sigtur_bd:

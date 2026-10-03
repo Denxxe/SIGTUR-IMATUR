@@ -15,3 +15,6 @@ Thumbs.db
 .DS_Store
 .idea/
 .vscode/
+
+# Datos de Docker (documentos subidos y respaldos del contenedor)
+docker-data/

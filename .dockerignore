@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+!.env.example
+config/config.php
+storage/uploads
+storage/backups
+docker-data
+docs
+tests
+*.log
+.idea
+.vscode
