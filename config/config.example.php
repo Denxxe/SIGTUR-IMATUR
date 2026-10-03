@@ -17,6 +17,9 @@ define('SITE_NAME', 'SIGTUR-IMATUR');
 // Modo depuración: en PRODUCCIÓN debe ser false (no muestra errores al usuario).
 define('APP_DEBUG', false);
 
+// Zona horaria (opcional; por defecto America/Caracas). Se aplica a PHP y a la sesión de PostgreSQL.
+// define('APP_TIMEZONE', 'America/Caracas');
+
 // Configuración de la Base de Datos (PostgreSQL) — usar credenciales propias.
 define('DB_HOST', 'localhost');
 define('DB_PORT', '5432');

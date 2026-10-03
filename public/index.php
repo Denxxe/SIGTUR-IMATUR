@@ -6,6 +6,12 @@
 // Cargar configuración (define APP_DEBUG, credenciales, URL_ROOT, etc.)
 require_once '../config/config.php';
 
+// Hora de Venezuela para date() y para la sesión de PostgreSQL (ver Database).
+// Sin esto PHP y PostgreSQL trabajaban en UTC: 4 horas adelantados (las horas
+// de asistencia y la fecha de lo emitido después de las 8 p. m. salían mal).
+if (!defined('APP_TIMEZONE')) define('APP_TIMEZONE', 'America/Caracas');
+date_default_timezone_set(APP_TIMEZONE);
+
 // ── Manejo de errores según entorno ───────────────────────────────────────
 // En PRODUCCIÓN (APP_DEBUG=false) no se muestran errores al usuario (evita
 // filtrar rutas/SQL); siempre se registran en el log del servidor.

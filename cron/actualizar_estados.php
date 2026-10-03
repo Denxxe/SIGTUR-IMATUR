@@ -24,6 +24,12 @@ if (PHP_SAPI !== 'cli') {
 $base = dirname(__DIR__);
 require_once $base . '/config/config.php';
 
+// Hora de Venezuela para date() y para la sesión de PostgreSQL (ver Database).
+// Sin esto PHP y PostgreSQL trabajaban en UTC: 4 horas adelantados (las horas
+// de asistencia y la fecha de lo emitido después de las 8 p. m. salían mal).
+if (!defined('APP_TIMEZONE')) define('APP_TIMEZONE', 'America/Caracas');
+date_default_timezone_set(APP_TIMEZONE);
+
 spl_autoload_register(function ($class) use ($base) {
     foreach (['/app/core/', '/app/controllers/', '/app/models/'] as $p) {
         $file = $base . $p . $class . '.php';

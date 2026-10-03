@@ -18,6 +18,20 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-03 — PHP y PostgreSQL trabajaban en UTC: 4 horas adelantados
+
+Encontrado preparando el despliegue: `php.ini` no define `date.timezone` (PHP cae en UTC) y el
+servidor PostgreSQL de desarrollo está en GMT. Coincidían entre sí, así que nada se veía «roto»,
+pero a las 9:48 el sistema decía 13:48. Consecuencias en producción: horas de entrada y puntualidad
+corridas 4 horas, y todo documento emitido después de las 8 p. m. fechado al día siguiente.
+
+Se fija en código versionado (no en `config.php`, que no viaja con el repositorio):
+`date_default_timezone_set(APP_TIMEZONE)` en `public/index.php` y en las dos tareas de `cron/`, y
+`SET TIME ZONE` en cada conexión de `Database`. `APP_TIMEZONE` es opcional en `config.php`; por
+defecto `America/Caracas`. ⚠️ Los registros ya guardados en la base de desarrollo quedaron en UTC
+(columnas `timestamp` sin zona): se ven 4 horas adelantados. Son datos de prueba; una instalación
+nueva arranca correcta.
+
 ### 2026-10-01 (b) — Los logos de los .xlsx se descuadraban según el ancho de la tabla
 
 `XlsxLogos` anclaba el logo de IMATUR **al inicio de la última columna**, no contra el borde derecho

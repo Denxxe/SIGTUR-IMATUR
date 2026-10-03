@@ -32,6 +32,8 @@ class Database {
 
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
+            // Misma zona que PHP (APP_TIMEZONE): NOW()/CURRENT_DATE en hora de Venezuela, no UTC.
+            $this->dbh->exec('SET TIME ZONE ' . $this->dbh->quote(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'America/Caracas'));
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             // Registrar el detalle en el log; NO exponerlo (puede filtrar host/credenciales/versión).
