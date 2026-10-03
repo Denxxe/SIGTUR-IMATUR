@@ -228,7 +228,13 @@ Estas son las únicas migraciones que dejaron una **trampa o una convención viv
 | 080 | **La Ficha Institucional VIVE EN `ruta_informes`**, no en una tabla nueva: R-43, R-47 y R-48 eran el mismo documento. Sus renglones están en `ruta_ficha_grupos` (`tipo` = Institucion/Apoyo). **`mujeres`/`hombres`/`ninas`/`ninos`/`total_atendidos` son DERIVADAS** — las recalcula `RutaFicha::recalcular()` desde los renglones en cada guardado, como `taller_informes.total_atendidas`. **No escribirlas a mano.** Hay un índice único por `id_ejecucion`: una ficha por salida. La ficha **nace sola** al pasar la salida a «Ejecutado» (R-50), en `RutaEjecucion::cambiarEstado()`. |
 | 079 | **La edad NO se valida en el código.** El rango vive en el recorrido (`rutas.edad_min`/`edad_max`, NULL = sin tope) y la única regla es `Ruta::motivoEdadNoValida()`, que se aplica en los dos flujos de inscripción. **No reintroducir un 5–11 ni ningún rango literal** — fue el bug H-17. El cupo de 60 es por **día** (`ConfigSistema::get('rutas_cupo_diario')`, 0 = sin tope) y **advierte, no bloquea**. |
 
-> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 076):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–076** (**60 tablas**) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
+> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 083 el 2026-10-03):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–083** (**69 tablas**) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
+>
+> 🔴 **Toda migración nueva se añade TAMBIÉN al final del consolidado, en el mismo commit.** Se
+> olvidó dos veces (075–083 quedaron fuera hasta el 2026-10-03) y una instalación nueva habría
+> arrancado sin Rutas ni las actas de Bienes. Desde la 075 se pegan **tal cual**, después del
+> `SET search_path = public;` del bloque final y antes de la línea «Fin del esquema consolidado», y
+> se actualizan el rango y los conteos de la cabecera. Verificar cargándolo en una base vacía.
 >
 > ⚠️ **Al editar el consolidado a mano**, recordar que el dump abre con `SELECT pg_catalog.set_config('search_path', '', false)`: **toda** sentencia añadida debe calificar el esquema (`public.tabla`), o falla con «no existe la relación». Y si inserta filas con ids explícitos, el `setval` correspondiente del final debe quedar por delante del último id (pasó con `feriados_id_seq`, 12 → 24 en la mig. 071).
 >
@@ -623,7 +629,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 #    Login de arranque: admin / Sigtur2026  <-- CAMBIAR EN EL PRIMER INGRESO
 ```
 
-> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–076). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
+> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–083). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
 
 ---
 
@@ -684,6 +690,6 @@ correspondiente:
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-076 + catálogos + admin de arranque; no aplicar migraciones encima** |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-083 + catálogos + admin de arranque; no aplicar migraciones encima** |
 | Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Historial de migraciones | `database/migrations/` — una por archivo; **no** se aplican sobre el consolidado |

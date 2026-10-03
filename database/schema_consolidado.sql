@@ -3,8 +3,8 @@
 -- SIGTUR-IMATUR — ESQUEMA CONSOLIDADO (INSTALACIÓN DESDE CERO)
 -- =====================================================================
 --
--- Generado: 2026-08-27  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–074.
+-- Generado: 2026-08-27, ampliado el 2026-10-03  ·  PostgreSQL 17
+-- Cubre: esquema base + TODAS las migraciones 001–083.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -17,10 +17,10 @@
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 60 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 69 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
 --       - roles (6) y permisos_rol (35) ... RBAC dinámico
---       - configuracion_sistema (37) ...... datos del instituto, RIF,
+--       - configuracion_sistema (69) ...... datos del instituto, RIF,
 --                                           tolerancias, metas, nómina
 --       - departamentos (24) .............. organigrama + sede aeropuerto
 --       - cargos (5) ...................... cargos base del organigrama
@@ -5731,6 +5731,1073 @@ END $$;
 
 UPDATE public.nomina_parametros_mes SET tasa_fuente = 'Manual' WHERE tasa_fuente IS NULL;
 
+
+-- =====================================================================
+-- MIGRACIONES 075–083 (Bienes: relación/donación y Acta de
+-- Desincorporación · Rutas: catálogo vs. salidas, restricciones y cupo,
+-- Ficha Institucional, permisos a custodios, itinerario, cobro)
+-- =====================================================================
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-074).
+-- Se incluyen TAL CUAL están en database/migrations/, sin reescribir:
+-- todas son idempotentes y, sobre una base vacía, las que migran datos
+-- existentes (p. ej. la 078, que muda las salidas al catálogo) no tienen
+-- nada que mover. Como no califican el esquema, se restaura aquí el
+-- search_path que el volcado de arriba deja vacío.
+--
+-- Verificado el 2026-10-03 cargando este archivo en una base vacía y
+-- comparándola con la de desarrollo: 69 tablas, mismas columnas, tipos,
+-- restricciones, índices, funciones, triggers y claves de configuración.
+-- =====================================================================
+
+SET search_path = public;
+
+-- ---------------------------------------------------------------------
+-- >>> 075_bienes_oficio_relacion_y_donacion.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 075 — Bienes: oficio de relación a la Alcaldía + documento de donación
+--
+-- Origen: los dos formatos que la Directora de Bienes entregó el 2026-09-15
+-- (archivados en docs/formatos/):
+--   · oficio_relacion_bienes_nuevos_alcaldia_2026-06-10.jpg  (Oficio N° 179/2026)
+--   · documento_donacion_bien_2026-02-18.jpg
+--
+-- Cierra dos de los cuatro documentos que tenía pendientes el módulo. Quedan
+-- fuera el Acta de Desincorporación y el acta de asignación: sus formatos no
+-- llegaron y construirlos a ciegas obligaría a rehacerlos (misma razón por la
+-- que estos dos esperaron desde agosto).
+--
+-- Idempotente (IF NOT EXISTS / ON CONFLICT).
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. Datos que exige el documento de donación ──────────────────────────────
+-- El documento identifica al donante como parte de un acto jurídico: nombre,
+-- cédula, estado civil y domicilio. Hoy `inventario.donante` es un solo texto
+-- con el nombre, que alcanzaba para un listado pero no para redactar el acto.
+--
+-- `donacion_procedencia` es el párrafo que explica de dónde salió el bien y
+-- por qué no hay factura ("me pertenece por haberla obtenido como premio de un
+-- Bingo"): sin él el documento no se sostiene, porque la donación se acepta
+-- justamente a falta de factura.
+--
+-- El valor va en dos monedas porque el formato lo declara así: el monto en Bs
+-- (en letras y en números) y su equivalente en dólares.
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donante_cedula       VARCHAR(20);
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donante_estado_civil VARCHAR(30);
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donante_domicilio    VARCHAR(255);
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donacion_procedencia TEXT;
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donacion_valor_usd   NUMERIC(12,2);
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS donacion_fecha       DATE;
+
+COMMENT ON COLUMN inventario.donacion_procedencia IS
+  'Cómo obtuvo el donante el bien y por qué no posee factura (va literal en el documento de donación).';
+COMMENT ON COLUMN inventario.donacion_valor_usd IS
+  'Equivalente en USD del valor estimado; el monto en Bs vive en costo_adquisicion.';
+
+-- ── 2. Oficio de relación de bienes nuevos (cabecera + renglones) ────────────
+-- El oficio se le pasa a la Coordinación de Bienes de la Alcaldía con el lote
+-- de bienes nuevos. Se modela como cabecera + vínculo desde cada bien (mismo
+-- patrón que inventario_consolidados_bm1) por dos razones:
+--   · saber qué bienes ya se reportaron, para no mandarlos dos veces;
+--   · poder reimprimir el oficio tal como se envió, que es lo que pide una
+--     auditoría por cambio de gestión.
+CREATE TABLE IF NOT EXISTS inventario_relaciones (
+  id                   SERIAL PRIMARY KEY,
+  numero               VARCHAR(20)  NOT NULL,          -- "179/2026"
+  fecha                DATE         NOT NULL DEFAULT CURRENT_DATE,
+  destinatario_nombre  VARCHAR(200) NOT NULL,
+  destinatario_cargo   VARCHAR(200),
+  destinatario_ente    VARCHAR(200),
+  observacion          TEXT,
+  is_active            BOOLEAN      NOT NULL DEFAULT TRUE,
+  anulado_motivo       TEXT,
+  created_at           TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  created_by           INTEGER,
+  deleted_at           TIMESTAMP,
+  deleted_by           INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_inv_relaciones_fecha ON inventario_relaciones (fecha DESC);
+
+-- Un bien pertenece a lo sumo a un oficio de relación. Al anular el oficio el
+-- vínculo se limpia y el bien vuelve a la bolsa de "sin reportar".
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS id_relacion INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'fk_inventario_relacion'
+  ) THEN
+    ALTER TABLE inventario
+      ADD CONSTRAINT fk_inventario_relacion
+      FOREIGN KEY (id_relacion) REFERENCES inventario_relaciones(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_inventario_relacion ON inventario (id_relacion);
+
+-- ── 3. Configuración: correlativo propio y destinatario habitual ─────────────
+-- El correlativo sigue el mismo mecanismo por módulo que ya usan rutas,
+-- pasantes y constancias (ConfigSistema::generarNumeroOficio).
+INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
+  ('correlativo_oficio_bienes', '0',
+   'Último correlativo de oficio de relación de bienes emitido en el año en curso'),
+  ('ano_correlativo_bienes', EXTRACT(YEAR FROM CURRENT_DATE)::TEXT,
+   'Año del correlativo de oficios de bienes (se reinicia automáticamente)'),
+  ('bienes_destinatario_nombre', 'Lcdo. Antonio Guevara',
+   'Destinatario habitual del oficio de relación de bienes nuevos'),
+  ('bienes_destinatario_cargo', 'Coordinador de Bienes y Materias',
+   'Cargo del destinatario del oficio de relación de bienes'),
+  ('bienes_destinatario_ente', 'Alcaldía del Municipio Sucre del estado Sucre',
+   'Ente al que pertenece el destinatario del oficio de relación de bienes'),
+  ('abogado_visador_nombre', '',
+   'Abogado que visa el documento de donación (opcional)'),
+  ('abogado_visador_ipsa', '',
+   'N° de IPSA del abogado visador (opcional)'),
+  ('director_cedula', 'V-15.933.871',
+   'Cédula del firmante institucional (la exige el documento de donación)'),
+  ('director_nombre_completo', 'MARÍA DE LOS ANGELES MAZA MÁRQUEZ',
+   'Nombre completo del firmante tal como aparece en los actos jurídicos')
+ON CONFLICT (clave) DO NOTHING;
+
+-- ── 4. Corrección: la resolución y la gaceta que imprimía el sistema ─────────
+-- Los dos documentos entregados por la Directora de Bienes, ambos firmados y
+-- sellados, declaran la designación vigente de la Presidenta:
+--     Resolución N° 32 del 05/09/2025 · Gaceta Municipal Extraordinaria N° 87
+--     del 05/09/2025
+-- El sistema tenía Resolución 025 (15/03/2024) y Gaceta 042 (20/01/2024), datos
+-- de relleno que hoy se imprimen en CINCO documentos reales: constancias de
+-- trabajo, carta de aceptación y de culminación de pasantes, y los dos oficios
+-- de rutas. Se corrigen aquí; son editables desde /config si el cliente indica
+-- otra cosa.
+UPDATE configuracion_sistema SET valor = '32'         WHERE clave = 'resolucion_numero';
+UPDATE configuracion_sistema SET valor = '05/09/2025' WHERE clave = 'resolucion_fecha';
+UPDATE configuracion_sistema SET valor = '87'         WHERE clave = 'gaceta_numero';
+UPDATE configuracion_sistema SET valor = '05/09/2025' WHERE clave = 'gaceta_fecha';
+
+-- El cargo real es PRESIDENTA, no "Director"/"Director General": así firma en
+-- los dos oficios entregados.
+UPDATE configuracion_sistema SET valor = 'Presidenta' WHERE clave = 'director_cargo';
+UPDATE configuracion_sistema SET valor = 'Presidenta' WHERE clave = 'firmante_cargo';
+
+-- ---------------------------------------------------------------------
+-- >>> 076_bienes_desincorporado.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 076 — Bienes: «Dado de baja» pasa a llamarse «Desincorporado» (C-6)
+--
+-- Exigencia del cliente tras el cambio de procedimiento del 2026-09-02: el acto
+-- y su documento se llaman **desincorporación**, no «baja». El documento ya se
+-- llama «Acta de Desincorporación»; el estatus del bien tenía que acompañarlo.
+--
+-- POR QUÉ SE RENOMBRA EL VALOR Y NO SOLO EL RÓTULO
+-- Se evaluó dejar el valor 'Dado de baja' en la base y mostrar otra etiqueta en
+-- pantalla. Se descartó: la bitácora (`audit_logs`) y los reportes seguirían
+-- diciendo lo viejo, y quedaría una divergencia permanente entre lo que ve el
+-- usuario y lo que guarda el sistema. Renombrar el valor cuesta CERO ahora
+-- —`inventario` está en 0 filas y ningún `audit_logs` menciona el estatus— y
+-- mucho más después de cargar los ~142 bienes reales.
+--
+-- El UPDATE va igual, por si esta migración se aplica sobre una base que ya
+-- tenga datos.
+--
+-- ⚠️ Esta migración va acompañada de un cambio de código imprescindible: catorce
+-- consultas tenían el texto 'Dado de baja' CABLEADO en el SQL (Dashboard,
+-- indicadores, reportes, Centro de Alertas, dotación). Si se aplica el SQL sin
+-- ese cambio, esas consultas dejan de filtrar y los bienes desincorporados
+-- vuelven a contarse como inventario activo — en silencio. Ahora todas usan
+-- `Inventario::EST_BAJA` como parámetro.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- 1. El CHECK primero en su versión permisiva, para poder mover las filas.
+ALTER TABLE inventario DROP CONSTRAINT IF EXISTS inventario_estatus_check;
+
+-- 2. Filas existentes (0 hoy; la sentencia protege instalaciones con datos).
+UPDATE inventario SET estatus = 'Desincorporado' WHERE estatus = 'Dado de baja';
+
+-- 3. CHECK con el catálogo nuevo. Debe coincidir exactamente con
+--    Inventario::ESTATUS — si divergen, un alta válida en PHP falla en la BD.
+ALTER TABLE inventario ADD CONSTRAINT inventario_estatus_check
+    CHECK (estatus IN (
+        'En espera de codificación',
+        'Activo',
+        'En mantenimiento',
+        'Extraviado',
+        'Robado',
+        'Desincorporado'
+    ));
+
+-- 4. La bitácora es un registro histórico y NO se reescribe: si un movimiento
+--    se guardó en su momento como 'Dado de baja', eso fue lo que pasó y así
+--    debe quedar. Hoy son 0 filas de todos modos.
+COMMENT ON COLUMN inventario.estatus IS
+  'Estatus administrativo del bien. «Desincorporado» (antes «Dado de baja», mig. 076) lo saca del inventario activo conservando el registro (B-38); no confundir con is_active = FALSE, que es la papelera de registros creados por error.';
+
+-- ---------------------------------------------------------------------
+-- >>> 077_acta_desincorporacion.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 077 — Acta de Desincorporación por lote (C-5)
+--
+-- Procedimiento nuevo notificado por la Alcaldía el 2026-09-02
+-- (PLAN_MODULO_BIENES.md §2-ter): el acta de baja pasa a ser **Acta de
+-- Desincorporación**, es **por lote** y la Alcaldía la **firma y sella** — ese
+-- sello ES el aval del retiro. El oficio de retiro sale del alcance.
+--
+-- Hasta ahora `Inventario::marcarRetirado()` confirmaba el retiro **bien por
+-- bien** y la entidad «acta» no existía: no había forma de saber qué bienes
+-- fueron en la misma acta ni de reimprimirla.
+--
+-- EL CICLO QUE MODELA ESTA TABLA
+--   1. El bien se desincorpora    → estatus «Desincorporado» · «Por retirar»
+--                                    (sale del inventario activo, sigue en la
+--                                    sede: B-38 y B-67)
+--   2. Se arma el acta con varios → los bienes quedan enganchados al acta
+--   3. Se imprime y se lleva      → la Alcaldía firma y sella
+--   4. Se registra el acta firmada → TODOS sus bienes pasan a «Retirado»
+--      (con su escaneado adjunto)
+--
+-- ⚠️ El FORMATO oficial del acta todavía no llegó (§3.4 del BACKLOG). Esta
+-- migración construye el **flujo y los datos**, que no dependen de él; la vista
+-- imprimible es provisional y se sustituye cuando el cliente entregue el
+-- formato, sin tocar nada de lo que hay aquí.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS inventario_actas_desincorporacion (
+    id               SERIAL PRIMARY KEY,
+    numero           VARCHAR(20)  NOT NULL,          -- correlativo propio, "003/2026"
+    fecha            DATE         NOT NULL DEFAULT CURRENT_DATE,
+    motivo           TEXT,                            -- motivo general del lote
+    observacion      TEXT,
+
+    -- Firma y sello de la Alcaldía: mientras estén vacíos, el acta está emitida
+    -- pero sus bienes siguen «Por retirar». Al llenarlos, pasan a «Retirado».
+    fecha_firma      DATE,
+    recibido_por     VARCHAR(200),                    -- quién firma por la Alcaldía
+    archivo_url      VARCHAR(255),                    -- escaneado del acta sellada
+    nombre_original  VARCHAR(255),
+
+    is_active        BOOLEAN   NOT NULL DEFAULT TRUE,
+    anulado_motivo   TEXT,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP,
+    deleted_at       TIMESTAMP,
+    created_by       INTEGER,
+    updated_by       INTEGER,
+    deleted_by       INTEGER
+);
+
+CREATE INDEX IF NOT EXISTS idx_actas_desinc_fecha ON inventario_actas_desincorporacion (fecha DESC);
+
+-- Un bien pertenece a lo sumo a un acta. Al anularla el vínculo se limpia y el
+-- bien vuelve a la bolsa de «desincorporados sin acta».
+ALTER TABLE inventario ADD COLUMN IF NOT EXISTS id_acta_desincorporacion INTEGER;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_inventario_acta_desinc') THEN
+    ALTER TABLE inventario
+      ADD CONSTRAINT fk_inventario_acta_desinc
+      FOREIGN KEY (id_acta_desincorporacion)
+      REFERENCES inventario_actas_desincorporacion(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_inventario_acta_desinc ON inventario (id_acta_desincorporacion);
+
+COMMENT ON TABLE inventario_actas_desincorporacion IS
+  'Acta de Desincorporación por lote (C-5). La firma y el sello de la Alcaldía (fecha_firma + archivo_url) son el aval del retiro: al registrarlos, todos los bienes del acta pasan a retirado_alcaldia = TRUE.';
+
+-- Correlativo propio, con el mismo mecanismo por módulo que ya usan rutas,
+-- pasantes, constancias y los oficios de bienes (ConfigSistema::generarNumeroOficio).
+INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
+  ('correlativo_oficio_acta', '0',
+   'Último correlativo de Acta de Desincorporación emitida en el año en curso'),
+  ('ano_correlativo_acta', EXTRACT(YEAR FROM CURRENT_DATE)::TEXT,
+   'Año del correlativo de actas de desincorporación (se reinicia automáticamente)')
+ON CONFLICT (clave) DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- >>> 078_rutas_catalogo_y_ejecuciones.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 078 — Rutas: separar el CATÁLOGO de las SALIDAS (fase T-A)
+--
+-- El módulo se construyó sobre una premisa falsa: cada fila de `rutas` era *una
+-- salida concreta* (tenía fecha, hora, facilitador y cupo). El levantamiento la
+-- desmiente en tres respuestas independientes:
+--
+--   R-08  "Existe un catálogo… los puntos de la ruta, el recorrido: todo lleva
+--          un catálogo"
+--   R-09  Una misma ruta puede tener DOS salidas la misma mañana, con guías
+--          distintos — imposible de representar con una fila por ruta
+--   R-07  "Así sean la misma ruta, es considerada 2 salidas y en el registro
+--          son 2 rutas aplicadas"   (2026-09-17, el cierre definitivo)
+--
+-- El propio esquema lo delataba: de los cuatro estados, tres describían una
+-- ruta del catálogo (Activa / Inactiva / En Mantenimiento) y uno una salida
+-- (Finalizada). Cuatro valores en una columna para dos ciclos de vida.
+--
+--   rutas              → EL CATÁLOGO. Qué se ofrece: recorrido, duración,
+--                        tarifa, restricciones. No tiene fecha.
+--   ruta_ejecuciones   → LA SALIDA. Cada vez que se sale: fecha, hora, grupo,
+--                        estado, quién la guio.
+--
+-- ESTADOS (R-14, respondida el 2026-09-17 con las palabras del cliente):
+--   Programado → Ejecutado | No ejecutado
+-- «Cancelada» NO es un estado: desemboca en *No ejecutado* con su motivo, y de
+-- ahí sale la reprogramación — que es OTRA salida enlazada a la original, no un
+-- cambio de fecha sobre la misma. Así el conteo de ejecutadas no se infla.
+--
+-- Datos: `rutas` tiene 2 filas y `puntos_ruta` 1. La migración es trivial; el
+-- costo estaba en el código.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. La tabla de salidas ───────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ruta_ejecuciones (
+    id                  SERIAL PRIMARY KEY,
+    id_ruta             INTEGER NOT NULL REFERENCES rutas(id) ON DELETE RESTRICT,
+
+    fecha               DATE NOT NULL,
+    hora                TIME,
+    cupo_maximo         INTEGER,
+
+    -- R-14: tres estados, no cinco.
+    estado              VARCHAR(20) NOT NULL DEFAULT 'Programado',
+
+    -- R-15: "si se cancela, el motivo siempre tiene que saberse" → obligatorio
+    -- cuando el estado es «No ejecutado» (lo valida el modelo, no un CHECK,
+    -- para poder dar un mensaje claro en vez de un error de BD).
+    motivo_no_ejecucion TEXT,
+
+    -- R-16 + R-14: la salida que no se pudo ejecutar queda registrada, y la
+    -- reprogramación es una salida NUEVA que apunta a ella.
+    id_reprogramada_de  INTEGER REFERENCES ruta_ejecuciones(id) ON DELETE SET NULL,
+
+    -- R-11: dos orígenes. La institución solicita por oficio (que llega en
+    -- físico y lo redacta ella, R-12: el sistema lo archiva, no lo genera).
+    origen              VARCHAR(20) NOT NULL DEFAULT 'Particular',
+    institucion_nombre  VARCHAR(200),
+    oficio_archivo      VARCHAR(255),
+    oficio_original     VARCHAR(255),
+
+    -- R-13: la decisión final la tiene la Presidenta.
+    aprobada_por        INTEGER,
+    fecha_aprobacion    DATE,
+
+    -- R-45: "sí se lleva y se reporta la incidencia"
+    incidencias         TEXT,
+    observaciones       TEXT,
+
+    is_active   BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP,
+    deleted_at  TIMESTAMP,
+    created_by  INTEGER,
+    updated_by  INTEGER,
+    deleted_by  INTEGER,
+
+    CONSTRAINT ruta_ejec_estado_check
+        CHECK (estado IN ('Programado', 'Ejecutado', 'No ejecutado')),
+    CONSTRAINT ruta_ejec_origen_check
+        CHECK (origen IN ('Particular', 'Institucional'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_ruta_ejec_ruta   ON ruta_ejecuciones (id_ruta);
+CREATE INDEX IF NOT EXISTS idx_ruta_ejec_fecha  ON ruta_ejecuciones (fecha DESC);
+CREATE INDEX IF NOT EXISTS idx_ruta_ejec_estado ON ruta_ejecuciones (estado);
+
+COMMENT ON TABLE ruta_ejecuciones IS
+  'Una SALIDA: cada vez que se ejecuta una ruta del catálogo. R-07: «así sean la misma ruta, es considerada 2 salidas».';
+
+-- ── 2. Empleados que van en cada salida (R-33) ───────────────────────────────
+-- «Depende de la cantidad de niños o personas: 7-8 niños por guía; una salida
+-- de 35 personas irían 3 guías». Y sí quieren registrar quiénes fueron.
+-- La salida la ENCABEZA siempre un empleado de IMATUR (R-31); el guía externo
+-- lo pone el punto visitado, así que no se modela aquí.
+CREATE TABLE IF NOT EXISTS ruta_ejecucion_empleados (
+    id            SERIAL PRIMARY KEY,
+    id_ejecucion  INTEGER NOT NULL REFERENCES ruta_ejecuciones(id) ON DELETE CASCADE,
+    id_empleado   INTEGER NOT NULL REFERENCES empleados(id) ON DELETE RESTRICT,
+    es_encargado  BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active     BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by    INTEGER
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ruta_ejec_emp
+    ON ruta_ejecucion_empleados (id_ejecucion, id_empleado) WHERE is_active;
+
+-- ── 3. Migrar las filas existentes ───────────────────────────────────────────
+-- Cada `rutas` de hoy es una salida: se le crea su ejecución conservando fecha,
+-- hora, cupo y facilitador. El catálogo se queda con el resto.
+DO $$
+DECLARE r RECORD; nueva_id INTEGER;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM ruta_ejecuciones) THEN
+    FOR r IN SELECT * FROM rutas WHERE fecha_visita IS NOT NULL LOOP
+      INSERT INTO ruta_ejecuciones (id_ruta, fecha, hora, cupo_maximo, estado, created_at, created_by)
+      VALUES (r.id, r.fecha_visita, r.hora_visita, r.cupo_maximo,
+              CASE WHEN r.estado = 'Finalizada' THEN 'Ejecutado' ELSE 'Programado' END,
+              COALESCE(r.created_at, CURRENT_TIMESTAMP), r.created_by)
+      RETURNING id INTO nueva_id;
+
+      IF r.id_facilitador IS NOT NULL THEN
+        INSERT INTO ruta_ejecucion_empleados (id_ejecucion, id_empleado, es_encargado, created_by)
+        VALUES (nueva_id, r.id_facilitador, TRUE, r.created_by);
+      END IF;
+    END LOOP;
+  END IF;
+END $$;
+
+-- ── 4. Repuntar lo que colgaba de la ruta y ahora cuelga de la salida ────────
+ALTER TABLE participantes_ruta ADD COLUMN IF NOT EXISTS id_ejecucion INTEGER;
+ALTER TABLE ruta_informes      ADD COLUMN IF NOT EXISTS id_ejecucion INTEGER;
+ALTER TABLE oficios_emitidos   ADD COLUMN IF NOT EXISTS id_ejecucion INTEGER;
+
+UPDATE participantes_ruta p SET id_ejecucion = e.id
+  FROM ruta_ejecuciones e WHERE e.id_ruta = p.id_ruta AND p.id_ejecucion IS NULL;
+UPDATE ruta_informes i SET id_ejecucion = e.id
+  FROM ruta_ejecuciones e WHERE e.id_ruta = i.id_ruta AND i.id_ejecucion IS NULL;
+UPDATE oficios_emitidos o SET id_ejecucion = e.id
+  FROM ruta_ejecuciones e WHERE e.id_ruta = o.id_ruta AND o.id_ejecucion IS NULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_part_ruta_ejecucion') THEN
+    ALTER TABLE participantes_ruta ADD CONSTRAINT fk_part_ruta_ejecucion
+      FOREIGN KEY (id_ejecucion) REFERENCES ruta_ejecuciones(id) ON DELETE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_informe_ejecucion') THEN
+    ALTER TABLE ruta_informes ADD CONSTRAINT fk_informe_ejecucion
+      FOREIGN KEY (id_ejecucion) REFERENCES ruta_ejecuciones(id) ON DELETE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_oficio_ejecucion') THEN
+    ALTER TABLE oficios_emitidos ADD CONSTRAINT fk_oficio_ejecucion
+      FOREIGN KEY (id_ejecucion) REFERENCES ruta_ejecuciones(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_part_ejecucion    ON participantes_ruta (id_ejecucion);
+CREATE INDEX IF NOT EXISTS idx_informe_ejecucion ON ruta_informes (id_ejecucion);
+
+-- `id_ruta` se CONSERVA en las tres tablas a propósito: son columnas viejas con
+-- datos y quitarlas obligaría a tocar los reportes en la misma migración. Se
+-- eliminan cuando el código no las lea (limpieza aparte, como la mig. 060).
+--
+-- Pero deja de ser OBLIGATORIA: el código ya no la escribe, y con el NOT NULL
+-- puesto una inscripción nueva revienta en la BD. Conservar la columna es una
+-- cosa; seguir exigiéndola, otra.
+ALTER TABLE participantes_ruta ALTER COLUMN id_ruta DROP NOT NULL;
+ALTER TABLE ruta_informes      ALTER COLUMN id_ruta DROP NOT NULL;
+
+-- Un informe por SALIDA (antes era uno por ruta, que con varias salidas de la
+-- misma ruta habría mezclado los conteos de todas).
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ruta_informe_ejecucion
+    ON ruta_informes (id_ejecucion) WHERE id_ejecucion IS NOT NULL;
+
+-- ── 5. El catálogo se queda sin lo que era de la salida ──────────────────────
+-- Las columnas NO se borran todavía, por la misma razón que arriba: primero el
+-- código deja de leerlas. Lo que sí cambia es el CHECK de estado: «Finalizada»
+-- describía una salida y ya no tiene sentido en el catálogo.
+UPDATE rutas SET estado = 'Activa' WHERE estado = 'Finalizada';
+
+ALTER TABLE rutas DROP CONSTRAINT IF EXISTS rutas_estado_check;
+ALTER TABLE rutas ADD CONSTRAINT rutas_estado_check
+    CHECK (estado IN ('Activa', 'Inactiva', 'En Mantenimiento'));
+
+COMMENT ON TABLE rutas IS
+  'El CATÁLOGO de rutas: qué se ofrece (recorrido, duración, tarifa, restricciones). NO tiene fecha: cada salida vive en ruta_ejecuciones (mig. 078).';
+COMMENT ON COLUMN rutas.fecha_visita IS
+  'OBSOLETA desde la mig. 078 — la fecha vive en ruta_ejecuciones.fecha. Se conserva hasta la limpieza.';
+
+-- ---------------------------------------------------------------------
+-- >>> 079_rutas_restricciones_y_cupo.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 079 — Rutas: restricciones por recorrido y cupo diario (fases T-B y T-I)
+--
+-- CIERRA H-17, que era un bloqueo de uso real, no deuda técnica:
+-- `RutasController` exigía **5 años como mínimo** y **menos de 12**, cableado en
+-- el código, con los rótulos «Niño/a 5–11» repartidos por la vista y el informe.
+-- Ese rango se fijó en la mig. 017 **sin levantamiento**: ningún dato del
+-- cliente lo respaldaba. Y choca con lo que sí dijeron:
+--
+--   R-02  Exploradores de Cumaná es para **niños de 4 a 8 años**
+--         → hoy un niño de 4 NO SE PUEDE INSCRIBIR
+--   R-66  *"Exploradores lleva el tope de 4 hasta 16 años, por ser para
+--         instituciones educativas"* → ni siquiera es 4-8: es **4 a 16**
+--   R-57  *"Río Brito tiene restricción: de 12 años en adelante. Personas con
+--         dificultad visual, excluidos. Con alguna condición en articulaciones:
+--         sí debería saberlo [el sistema]"*
+--
+-- De R-57 se desprende que la restricción **no es solo la edad** y **no es
+-- global**: es un atributo DE CADA RECORRIDO. Río Brito admite de 12 en
+-- adelante y excluye por condición física; Exploradores va de 4 a 16. Un rango
+-- único en el código no puede representar eso.
+--
+-- CUPO (T-I, R-28): *"no se maneja un cupo máximo para las rutas… pero se ha
+-- implementado un cupo de **60 personas por día** — esto es nuevo"*.
+-- Ojo: es por **DÍA**, no por salida. Con dos salidas la misma mañana (R-09) el
+-- tope se reparte entre ambas, así que no puede vivir en `ruta_ejecuciones`.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. Restricciones del recorrido ───────────────────────────────────────────
+-- NULL = sin restricción. Deliberadamente: la mayoría de las rutas no tiene
+-- tope, y un valor por defecto volvería a inventar una regla que nadie pidió.
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS edad_min       SMALLINT;
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS edad_max       SMALLINT;
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS restricciones  TEXT;
+
+COMMENT ON COLUMN rutas.edad_min IS
+  'Edad mínima para participar. NULL = sin mínimo. R-57: Río Brito = 12.';
+COMMENT ON COLUMN rutas.edad_max IS
+  'Edad máxima. NULL = sin tope. R-66: Exploradores de Cumaná = 16.';
+COMMENT ON COLUMN rutas.restricciones IS
+  'Condiciones que el sistema debe ADVERTIR al inscribir (no bloquear): "excluye a personas con dificultad visual", "advertir por condición articular"… R-57.';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'rutas_edades_check') THEN
+    ALTER TABLE rutas ADD CONSTRAINT rutas_edades_check
+      CHECK (
+        (edad_min IS NULL OR (edad_min >= 0  AND edad_min <= 120)) AND
+        (edad_max IS NULL OR (edad_max >= 0  AND edad_max <= 120)) AND
+        (edad_min IS NULL OR edad_max IS NULL OR edad_min <= edad_max)
+      );
+  END IF;
+END $$;
+
+-- ── 2. Datos que el cliente YA dio ───────────────────────────────────────────
+-- Se aplican por tipo de ruta porque el catálogo real todavía no está cargado
+-- (pregunta abierta R-72: qué rutas hay y cómo se llaman exactamente).
+UPDATE rutas SET edad_min = 4, edad_max = 16
+ WHERE tipo_ruta = 'Exploradores de Cumaná' AND edad_min IS NULL AND edad_max IS NULL;
+
+-- ── 3. Cupo diario (T-I, R-28) ───────────────────────────────────────────────
+-- Escalar de configuración, no columna: el tope es de la institución y del día,
+-- no de un recorrido concreto. 0 = sin tope, para poder desactivarlo sin código.
+INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
+  ('rutas_cupo_diario', '60',
+   'Tope de personas atendidas por DÍA sumando todas las salidas (R-28). 0 = sin tope.')
+ON CONFLICT (clave) DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- >>> 080_rutas_ficha_institucional.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 080 — Rutas: Ficha Institucional (fase T-G)
+--
+-- Es el **pedido #1 del cliente** (R-64: *«los reportes y los oficios»*) y el
+-- único documento de Rutas cuyo formato ya está en mano:
+-- `docs/formatos/rutas_ficha_institucional_IMATUR.jpeg`.
+--
+-- SE PEDÍAN DOS DOCUMENTOS Y SON EL MISMO. R-43 («planilla del día»), R-47
+-- («informe de cierre») y R-48 resultaron ser esta misma hoja. Por eso la ficha
+-- **no es una tabla nueva**: es lo que `ruta_informes` ya quería ser. Se extiende
+-- esa tabla en vez de duplicarla, y así los reportes que ya suman
+-- `ruta_informes.total_atendidos` siguen funcionando sin tocarse.
+--
+-- QUÉ LLEVA EL FORMATO (leído del papel, no supuesto):
+--
+--   Cabecera   RECORRIDO · FECHA · ENCARGADO · COLEGIO Ó INSTITUCIÓN · RESPONSABLE
+--   Izquierda  INSTITUCIÓN | NIÑOS F | M | EDADES | TOTAL A.   ← 8 renglones
+--   Derecha    ACOMPAÑANTES: DOCENTES (F/M) · REPRESENTANTES (F/M)
+--              INSTITUCIONES DE APOYO: nombre (F/M)            ← ahí va Protección Civil (R-55/56)
+--   Pie        TOTAL general
+--
+-- Del ejemplo real (Cumaná Histórica, 28-08-2026): 12 F + 10 M = 22 niños,
+-- 7 + 2 = 9 docentes, Protección Civil 1 + 1 = 2 → **TOTAL 33**. La cuenta cierra,
+-- así que el total es la suma de los tres bloques y no hay ninguna casilla oculta.
+--
+-- DE DÓNDE SALE CADA DATO. Cuatro de los cinco campos de cabecera el sistema YA
+-- los tiene (recorrido, fecha, institución solicitante y encargado de la salida),
+-- así que la ficha **se genera sola** al marcar la salida como Ejecutada —que es
+-- lo que pide R-50— y sobre ella se capturan solo los conteos. Nada de volver a
+-- escribir lo que ya está registrado.
+--
+-- RELACIÓN CON `participantes_ruta`: ninguna, a propósito. R-23/R-24/R-29 dicen
+-- que del grupo visitante IMATUR lleva **solo el conteo**; la lista nominal
+-- firmada es del personal de IMATUR, no de los niños. Por eso los renglones son
+-- agregados por institución, no una fila por persona.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. Cabecera: `ruta_informes` pasa a ser la Ficha Institucional ───────────
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS responsable_nombre VARCHAR(160);
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS docentes_f         SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS docentes_m         SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS representantes_f   SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS representantes_m   SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS estado             VARCHAR(20) NOT NULL DEFAULT 'Borrador';
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS fecha_cierre       TIMESTAMP;
+ALTER TABLE ruta_informes ADD COLUMN IF NOT EXISTS updated_by         INTEGER;
+
+COMMENT ON TABLE ruta_informes IS
+  'Ficha Institucional de una salida (mig. 080). Cabecera del formato oficial; los renglones por institución y de apoyo viven en ruta_ficha_grupos. Antes se llamaba «informe de visita» y solo tenía el desglose por sexo.';
+COMMENT ON COLUMN ruta_informes.responsable_nombre IS
+  'Casilla RESPONSABLE del formato: quien responde por el grupo visitante. El ENCARGADO (de IMATUR) NO se guarda aquí — se deriva de ruta_ejecucion_empleados.es_encargado.';
+COMMENT ON COLUMN ruta_informes.estado IS
+  'Borrador = se sigue capturando · Cerrada = se imprimió y entregó; ya no se edita.';
+COMMENT ON COLUMN ruta_informes.mujeres IS
+  'DERIVADA (mig. 080): docentes_f + representantes_f + suma de los renglones de apoyo (F). No se captura.';
+COMMENT ON COLUMN ruta_informes.hombres IS
+  'DERIVADA (mig. 080): docentes_m + representantes_m + suma de los renglones de apoyo (M). No se captura.';
+COMMENT ON COLUMN ruta_informes.ninas IS
+  'DERIVADA (mig. 080): suma del bloque NIÑOS (F) de los renglones por institución.';
+COMMENT ON COLUMN ruta_informes.ninos IS
+  'DERIVADA (mig. 080): suma del bloque NIÑOS (M) de los renglones por institución.';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ruta_informes_estado_check') THEN
+    ALTER TABLE ruta_informes ADD CONSTRAINT ruta_informes_estado_check
+      CHECK (estado IN ('Borrador', 'Cerrada'));
+  END IF;
+END $$;
+
+-- Una ficha por salida. Sin esto, «guardar» dos veces crearía dos fichas de la
+-- misma salida y los reportes sumarían el doble de atendidos.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ruta_informes_ejecucion
+    ON ruta_informes (id_ejecucion) WHERE id_ejecucion IS NOT NULL;
+
+-- ── 2. Renglones de la ficha ────────────────────────────────────────────────
+-- Un solo tabla para los dos bloques del formato, distinguidos por `tipo`:
+-- comparten columnas (nombre, F, M) y solo el bloque de instituciones usa el
+-- rango de edades. Dos tablas habrían duplicado el CRUD por una columna.
+CREATE TABLE IF NOT EXISTS ruta_ficha_grupos (
+    id           SERIAL PRIMARY KEY,
+    id_informe   INTEGER     NOT NULL REFERENCES ruta_informes(id) ON DELETE CASCADE,
+    tipo         VARCHAR(20) NOT NULL,
+    nombre       VARCHAR(160) NOT NULL,
+    femenino     SMALLINT    NOT NULL DEFAULT 0,
+    masculino    SMALLINT    NOT NULL DEFAULT 0,
+    edad_min     SMALLINT,
+    edad_max     SMALLINT,
+    orden        SMALLINT    NOT NULL DEFAULT 0,
+    is_active    BOOLEAN     NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
+    created_by   INTEGER,
+    CONSTRAINT ruta_ficha_grupos_tipo_check   CHECK (tipo IN ('Institucion', 'Apoyo')),
+    CONSTRAINT ruta_ficha_grupos_conteo_check CHECK (femenino >= 0 AND masculino >= 0),
+    CONSTRAINT ruta_ficha_grupos_edades_check CHECK (
+        (edad_min IS NULL OR (edad_min >= 0 AND edad_min <= 120)) AND
+        (edad_max IS NULL OR (edad_max >= 0 AND edad_max <= 120)) AND
+        (edad_min IS NULL OR edad_max IS NULL OR edad_min <= edad_max)
+    )
+);
+
+COMMENT ON TABLE ruta_ficha_grupos IS
+  'Renglones de la Ficha Institucional. tipo=Institucion → bloque NIÑOS (con rango de edades); tipo=Apoyo → INSTITUCIONES DE APOYO (adultos: Protección Civil, PNB…, R-55/R-56).';
+COMMENT ON COLUMN ruta_ficha_grupos.edad_min IS
+  'Casilla EDADES del formato («7 a 10 años»). Solo aplica a tipo=Institucion; en los de apoyo va NULL porque son adultos.';
+
+CREATE INDEX IF NOT EXISTS idx_ruta_ficha_grupos_informe ON ruta_ficha_grupos (id_informe);
+
+-- ── 3. Las fichas que ya existían quedan cerradas ────────────────────────────
+-- Se capturaron con el formulario viejo (solo mujeres/hombres/niñas/niños) y no
+-- tienen renglones. Marcarlas Borrador invitaría a editarlas sin su desglose.
+UPDATE ruta_informes SET estado = 'Cerrada'
+ WHERE estado = 'Borrador' AND created_at < NOW() - INTERVAL '1 minute';
+
+-- ---------------------------------------------------------------------
+-- >>> 081_rutas_permisos_custodios.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 081 — Rutas: oficios de permiso a las instituciones custodias (T-H)
+--
+-- Es la otra mitad del **pedido #2 del cliente** (R-64: *«los reportes y los
+-- oficios»*), y un proceso que el módulo no modelaba en absoluto. Salió de una
+-- pregunta que iba por otro lado: R-20 preguntaba por el **costo de entrada** a
+-- museos y castillos, y la respuesta describió un trámite entero:
+--
+--   > IMATUR **envía un oficio a cada institución custodia** (museos, castillos,
+--   > fundaciones) para poder visitarla. **Todas las rutas de la semana
+--   > planificada van en un solo oficio**, para agilizar el trámite. Se lleva
+--   > control del estado de cada uno —si llegó, si se dio el pase, si se
+--   > rechazó— y lo notifica el **Director de Relaciones Inter-Institucionales**,
+--   > que además corrobora que las instituciones estén disponibles.
+--   > Estados: **aceptado / en espera**.
+--
+-- POR QUÉ ES UNA ENTIDAD PROPIA Y NO UNA COLUMNA DE `ruta_ejecuciones`:
+-- **un permiso cubre VARIAS salidas** —las de toda la semana— y una salida puede
+-- necesitar **varios permisos** (una ruta pasa por el Castillo y por la Basílica,
+-- que son custodios distintos). Es una relación N:M, igual que el Acta de
+-- Desincorporación de Bienes: cabecera + renglones.
+--
+-- R-52 lo confirma desde otro ángulo: de una ruta se emiten **tres** documentos,
+-- y uno son «los permisos de los lugares a visitar». Los otros dos ya existen
+-- (Ficha Institucional, mig. 080; oficio saliente al punto, `oficios_emitidos`).
+--
+-- ⚠️ EL IMPRIMIBLE ES PROVISIONAL: el cliente no ha entregado el formato del
+-- oficio de permiso. El flujo, los estados y lo que se registra **sí** son los
+-- que él describió, así que cuando llegue el formato se sustituye únicamente
+-- `permiso_imprimible.php`; ni la tabla ni el flujo se tocan. Mismo criterio que
+-- con el Acta de Desincorporación (mig. 077).
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. Quién custodia cada punto (R-06) ─────────────────────────────────────
+-- R-06 dice que coordinar el acceso con las fundaciones externas es **uno de los
+-- tres dolores principales** del módulo, y sugería registrar el ente custodio.
+-- Se esperó a R-20 —como decía el plan— y ahora tiene para qué servir: es lo que
+-- permite que el sistema diga a qué instituciones hay que pedirles permiso para
+-- las salidas de una semana, en vez de que alguien lo recuerde de memoria.
+ALTER TABLE puntos_ruta ADD COLUMN IF NOT EXISTS ente_custodio VARCHAR(160);
+
+COMMENT ON COLUMN puntos_ruta.ente_custodio IS
+  'Institución que custodia el punto y a la que hay que pedir permiso de acceso (R-06/R-20): Fundación Castillo San Antonio, Basílica Santa Inés… NULL = espacio público sin custodio.';
+
+-- ── 2. El oficio de permiso ─────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ruta_permisos (
+    id                  SERIAL PRIMARY KEY,
+    numero              VARCHAR(20)  NOT NULL,
+    fecha               DATE         NOT NULL DEFAULT CURRENT_DATE,
+
+    -- A quién se le pide
+    institucion         VARCHAR(160) NOT NULL,
+    destinatario_nombre VARCHAR(160),
+    destinatario_cargo  VARCHAR(120),
+
+    -- El período que cubre: la semana planificada (R-20)
+    semana_desde        DATE         NOT NULL,
+    semana_hasta        DATE         NOT NULL,
+
+    -- El trámite
+    estado              VARCHAR(20)  NOT NULL DEFAULT 'En espera',
+    fecha_respuesta     DATE,
+    observaciones       TEXT,
+    motivo_anulacion    TEXT,
+
+    -- Quien lo tramita: el Director de Relaciones Inter-Institucionales (R-20)
+    id_responsable      INTEGER REFERENCES empleados(id),
+
+    -- El pase devuelto por la institución, escaneado
+    respuesta_archivo   VARCHAR(255),
+    respuesta_original  VARCHAR(255),
+
+    is_active   BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP,
+    deleted_at  TIMESTAMP,
+    created_by  INTEGER,
+    updated_by  INTEGER,
+    deleted_by  INTEGER,
+
+    CONSTRAINT ruta_permisos_estado_check
+        CHECK (estado IN ('En espera', 'Aceptado', 'Rechazado', 'Anulado')),
+    CONSTRAINT ruta_permisos_semana_check
+        CHECK (semana_hasta >= semana_desde)
+);
+
+COMMENT ON TABLE ruta_permisos IS
+  'Oficio de permiso de acceso a una institución custodia (R-20). Uno cubre TODAS las salidas de la semana hacia esa institución — por eso los renglones viven en ruta_permiso_salidas.';
+COMMENT ON COLUMN ruta_permisos.estado IS
+  'En espera (se envió, no hay respuesta) · Aceptado (dieron el pase) · Rechazado · Anulado. R-20 nombra los dos primeros; «Rechazado» sale de «si se rechazó» en la misma respuesta.';
+COMMENT ON COLUMN ruta_permisos.id_responsable IS
+  'El Director de Relaciones Inter-Institucionales, que tramita y notifica (R-20). Se elige de empleados, no se escribe a mano.';
+
+-- El correlativo no se recicla: un número anulado se pierde, como en Bienes.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ruta_permisos_numero ON ruta_permisos (numero);
+CREATE INDEX IF NOT EXISTS idx_ruta_permisos_estado ON ruta_permisos (estado) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_ruta_permisos_semana ON ruta_permisos (semana_desde, semana_hasta);
+
+-- ── 3. Qué salidas cubre cada permiso ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ruta_permiso_salidas (
+    id           SERIAL PRIMARY KEY,
+    id_permiso   INTEGER NOT NULL REFERENCES ruta_permisos(id) ON DELETE CASCADE,
+    id_ejecucion INTEGER NOT NULL REFERENCES ruta_ejecuciones(id),
+    is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by   INTEGER,
+    CONSTRAINT uq_permiso_salida UNIQUE (id_permiso, id_ejecucion)
+);
+
+COMMENT ON TABLE ruta_permiso_salidas IS
+  'Salidas cubiertas por un permiso. N:M a propósito: un permiso cubre varias salidas (toda la semana) y una salida puede necesitar varios permisos (una ruta pasa por dos custodios distintos).';
+
+CREATE INDEX IF NOT EXISTS idx_permiso_salidas_ejecucion ON ruta_permiso_salidas (id_ejecucion);
+
+-- ── 4. Correlativo propio ───────────────────────────────────────────────────
+-- Separado del de rutas: son documentos distintos y el cliente los cuenta
+-- aparte. Mismo mecanismo que `acta`, `bienes`, `constancia`…
+INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
+  ('correlativo_oficio_permiso', '0',
+   'Último N° de oficio de permiso a institución custodia emitido (R-20). Se reinicia cada año.'),
+  ('ano_correlativo_permiso', EXTRACT(YEAR FROM CURRENT_DATE)::TEXT,
+   'Año del correlativo de los oficios de permiso.')
+ON CONFLICT (clave) DO NOTHING;
+
+-- ---------------------------------------------------------------------
+-- >>> 082_rutas_itinerario_por_salida.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 082 — Rutas: itinerario por salida y guía externo del punto (T-F)
+--
+-- R-10: *«Puede cambiar en algún punto. Si hay varios grupos en la misma ruta al
+-- mismo tiempo, **se cambia un poco el itinerario y el orden de los puntos**
+-- (para no coincidir).»*
+--
+-- R-18 lo confirma desde el otro lado: *«Se puede variar según convenga»* — el
+-- orden del catálogo es el **sugerido**, no una imposición.
+--
+-- HOY EL ORDEN VIVE EN `puntos_ruta.orden`, QUE ES DEL RECORRIDO. Cambiarlo para
+-- que dos grupos no coincidan un martes se lo cambiaría **a todas las salidas**,
+-- pasadas y futuras. Por eso el orden propio de una salida va en su propia tabla.
+--
+-- CÓMO FUNCIONA: si una salida NO tiene filas aquí, usa el orden del catálogo
+-- —que es el caso normal—. En cuanto se reordena, se guardan **todos** sus puntos
+-- y esa tabla manda para esa salida. «Restablecer» borra las filas y vuelve al
+-- catálogo. Así el caso común no cuesta nada y la excepción queda acotada.
+--
+-- `omitido` sale de un caso real que apareció con T-H: si la institución custodia
+-- **rechaza el permiso** (R-20), esa parada no se hace ese día — pero la parada
+-- sigue existiendo en el recorrido. Marcarla omitida deja constancia de por qué
+-- el grupo no pasó por ahí, sin tocar el catálogo.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- R-31: *«Siempre encabeza un empleado de IMATUR. En algunos puntos que tienen el
+-- suyo (museo, casa natal…) se suma un guía externo.»*
+--
+-- El guía externo es **del punto**, no de la salida: quien lo pone es el museo.
+-- Por eso se marca en `puntos_ruta` y NO se reintroduce un facilitador externo
+-- en la ruta (la columna `rutas.nombre_facilitador_externo` se eliminó en la
+-- mig. 060 justamente por no usarse). Se guarda **solo que lo hay**, no quién es:
+-- R-32 —si se le paga o se registran sus datos— sigue sin responder, y no vale
+-- inventar un registro de personas que nadie pidió.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. El itinerario propio de una salida ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS ruta_ejecucion_itinerario (
+    id           SERIAL PRIMARY KEY,
+    id_ejecucion INTEGER  NOT NULL REFERENCES ruta_ejecuciones(id) ON DELETE CASCADE,
+    id_punto     INTEGER  NOT NULL REFERENCES puntos_ruta(id)      ON DELETE CASCADE,
+    orden        SMALLINT NOT NULL,
+    omitido      BOOLEAN  NOT NULL DEFAULT FALSE,
+    nota         VARCHAR(255),
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by   INTEGER,
+    CONSTRAINT uq_itinerario_punto  UNIQUE (id_ejecucion, id_punto),
+    CONSTRAINT ck_itinerario_orden  CHECK (orden >= 1)
+);
+
+COMMENT ON TABLE ruta_ejecucion_itinerario IS
+  'Orden de las paradas PARA UNA SALIDA concreta (R-10/R-18). Sin filas = se usa el orden del catálogo, que es el caso normal. Con filas, éstas mandan para esa salida.';
+COMMENT ON COLUMN ruta_ejecucion_itinerario.omitido IS
+  'La parada no se hizo ese día — típicamente porque la institución custodia rechazó el permiso (R-20). Deja constancia sin tocar el recorrido del catálogo.';
+COMMENT ON COLUMN ruta_ejecucion_itinerario.nota IS
+  'Por qué se alteró o se omitió esa parada en esta salida.';
+
+CREATE INDEX IF NOT EXISTS idx_itinerario_ejecucion ON ruta_ejecucion_itinerario (id_ejecucion, orden);
+
+-- ── 2. El punto que pone su propio guía (R-31) ──────────────────────────────
+ALTER TABLE puntos_ruta ADD COLUMN IF NOT EXISTS tiene_guia_externo BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMENT ON COLUMN puntos_ruta.tiene_guia_externo IS
+  'El punto aporta su propio guía, que se suma al de IMATUR (R-31). Solo se registra QUE lo hay: R-32 —si se le paga o se guardan sus datos— sigue sin responder.';
+
+-- ---------------------------------------------------------------------
+-- >>> 083_rutas_cobro.sql
+-- ---------------------------------------------------------------------
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 083 — Rutas: tarifa, exoneración y registro de pagos (T-C)
+--
+-- La última fase del módulo, y la más exigente de las dos lecturas posibles:
+-- R-40 preguntaba si el sistema debe **llevar la contabilidad** de los cobros o
+-- solo dejar constancia de que la ruta tenía tarifa, y la respuesta fue
+-- *«Sí debe llevar el cobro… y lo cancelado»*. Es un registro de pagos, no un
+-- «pagó sí/no».
+--
+-- CIERRA H-14. Las columnas `rutas.tiene_tarifa` y `tarifa_monto` existen desde
+-- la mig. 007 y **nunca se capturaron en ningún formulario**: el reporte
+-- informaba «Gratuita» para toda ruta, siempre, incluso si se había cobrado. La
+-- columna se retiró del reporte el 2026-08-27 a la espera de D-RT02. D-RT02 está
+-- respondida (R-02/R-36…R-42), así que ahora se capturan de verdad.
+--
+-- ── LO QUE DIJO EL CLIENTE ───────────────────────────────────────────────────
+--
+-- R-02 · seis programas con su tarifa:
+--     Cumaná Histórica 5 $/adulto (menores de 8 gratis) · Exploradores gratuita ·
+--     Playa Las Maritas 25 $ · Río Brito 15 $ · Playa Colorada 25 $ ·
+--     Altos de Cumaná «se cuadra»
+-- R-36 · la tarifa se pacta **en dólares** y se cobra en bolívares **a la tasa
+--     del día**  → el catálogo guarda USD; la salida **congela** la tasa
+-- R-37 · cobra IMATUR, en una cuenta exclusiva → es configuración, no una tabla
+-- R-38 · **pago anticipado con fecha tope**: *«se les tiene una fecha para
+--     cancelar y poder planificar la salida»*
+-- R-39 · transferencia → captura/voucher adjunto · efectivo → **acta de pago**
+-- R-41 · fijo por ruta y persona, **salvo Altos de Sucre**, que depende de lo
+--     que el cliente solicite → la tarifa admite «a convenir»
+-- R-42 · las exoneraciones **las autoriza la Presidenta**
+-- R-03 · las instituciones públicas no pagan **pero igual traen el oficio**, y
+--     eso aplica **solo a Cumaná Histórica** → la gratuidad NO es automática por
+--     ser institución: es por **ruta + tipo de solicitante**
+--
+-- ── DECISIONES DE MODELO ─────────────────────────────────────────────────────
+--
+-- 1. `tarifa_modo` en vez de un booleano. Con `tiene_tarifa` no se distinguía
+--    «gratuita» de «a convenir», y R-41 exige las dos: Exploradores no cobra
+--    nunca, Altos de Cumaná se cuadra cada vez. Tres modos, no dos estados.
+--
+-- 2. **La tarifa y la tasa se CONGELAN en la salida.** Si mañana sube el dólar o
+--    el cliente cambia el precio del catálogo, lo cobrado en una salida de la
+--    semana pasada no puede moverse. Es el mismo criterio que la mig. 074 con la
+--    nómina: `generarPeriodo()` usa la tasa congelada y nunca sale a internet al
+--    recalcular.
+--
+-- 3. **Los pagos son una tabla, no un campo.** R-40 pide lo cancelado: puede
+--    haber abonos, varias transferencias de un mismo grupo, pagos de distintos
+--    representantes. Un `monto_pagado` en la salida no lo aguanta.
+--
+-- 4. **Anular un pago no lo borra.** Es dinero: queda con su motivo y deja de
+--    sumar. Mismo criterio que las amonestaciones (mig. 042) y los permisos
+--    (mig. 081).
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- ── 1. La tarifa, en el CATÁLOGO y en dólares (R-36/R-41) ───────────────────
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS tarifa_modo VARCHAR(20) NOT NULL DEFAULT 'Gratuita';
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS exonera_menores_de SMALLINT;
+ALTER TABLE rutas ADD COLUMN IF NOT EXISTS exonera_instituciones BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMENT ON COLUMN rutas.tarifa_modo IS
+  'Gratuita (Exploradores) · Fija (tarifa_monto en USD por persona) · A convenir (Altos de Cumaná, R-41: «depende de lo que el cliente solicite»).';
+COMMENT ON COLUMN rutas.tarifa_monto IS
+  'Tarifa por persona **en USD** (R-36). Se cobra en bolívares a la tasa del día, que se congela en cada salida. Solo aplica con tarifa_modo = Fija.';
+COMMENT ON COLUMN rutas.exonera_menores_de IS
+  'Edad por debajo de la cual no se cobra (R-02: Cumaná Histórica, menores de 8). NULL = no hay exoneración por edad.';
+COMMENT ON COLUMN rutas.exonera_instituciones IS
+  'Las instituciones públicas no pagan ESTA ruta (R-03/R-42). No es automático para todas: aplica solo donde el cliente lo dijo — Cumaná Histórica.';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'rutas_tarifa_modo_check') THEN
+    ALTER TABLE rutas ADD CONSTRAINT rutas_tarifa_modo_check
+      CHECK (tarifa_modo IN ('Gratuita', 'Fija', 'A convenir'));
+  END IF;
+  -- Una tarifa fija sin monto no es una tarifa.
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'rutas_tarifa_monto_check') THEN
+    ALTER TABLE rutas ADD CONSTRAINT rutas_tarifa_monto_check
+      CHECK (tarifa_modo <> 'Fija' OR (tarifa_monto IS NOT NULL AND tarifa_monto > 0));
+  END IF;
+END $$;
+
+-- Las filas viejas: `tiene_tarifa` nunca se capturó, así que todas están en
+-- FALSE. Quedan «Gratuita», que es lo que el sistema venía informando.
+UPDATE rutas SET tarifa_modo = 'Fija'
+ WHERE tiene_tarifa = TRUE AND tarifa_monto IS NOT NULL AND tarifa_monto > 0
+   AND tarifa_modo = 'Gratuita';
+
+-- ── 2. Lo que se congela en la SALIDA (R-36/R-38/R-42) ──────────────────────
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS tarifa_usd         NUMERIC(10,2);
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS tasa_cambio        NUMERIC(14,4);
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS tasa_fecha         DATE;
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS fecha_tope_pago    DATE;
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS es_exonerada       BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS motivo_exoneracion TEXT;
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS exonerada_por      INTEGER;
+ALTER TABLE ruta_ejecuciones ADD COLUMN IF NOT EXISTS fecha_exoneracion  DATE;
+
+COMMENT ON COLUMN ruta_ejecuciones.tarifa_usd IS
+  'Tarifa por persona **congelada** al programar la salida. No se relee del catálogo: si mañana cambia el precio, lo cobrado no se mueve.';
+COMMENT ON COLUMN ruta_ejecuciones.tasa_cambio IS
+  'Bs por USD **congelada** para esta salida (R-36, «a la tasa del día»). Se sugiere desde el BCV (TasaBcv, mig. 074) pero se guarda aquí: al recalcular NUNCA se sale a internet.';
+COMMENT ON COLUMN ruta_ejecuciones.fecha_tope_pago IS
+  'R-38: pago ANTICIPADO. «Se les tiene una fecha para cancelar y poder planificar la salida».';
+COMMENT ON COLUMN ruta_ejecuciones.exonerada_por IS
+  'Usuario que registró la exoneración. R-42: quien la autoriza es la Presidenta; el sistema deja constancia de quién lo asentó y cuándo.';
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ruta_ejec_exoneracion_check') THEN
+    -- Exonerar sin decir por qué deja un cobro perdonado sin explicación.
+    ALTER TABLE ruta_ejecuciones ADD CONSTRAINT ruta_ejec_exoneracion_check
+      CHECK (es_exonerada = FALSE OR motivo_exoneracion IS NOT NULL);
+  END IF;
+END $$;
+
+-- ── 3. Los pagos (R-39/R-40) ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ruta_pagos (
+    id              SERIAL PRIMARY KEY,
+    id_ejecucion    INTEGER      NOT NULL REFERENCES ruta_ejecuciones(id),
+    fecha           DATE         NOT NULL DEFAULT CURRENT_DATE,
+    forma           VARCHAR(20)  NOT NULL,
+
+    -- Se guardan las dos caras y la tasa con que se convirtió: el pacto es en
+    -- USD (R-36) pero el dinero entra en bolívares.
+    monto_bs        NUMERIC(14,2) NOT NULL,
+    monto_usd       NUMERIC(10,2),
+    tasa_aplicada   NUMERIC(14,4),
+
+    personas        SMALLINT,
+    pagador_nombre  VARCHAR(160),
+    pagador_cedula  VARCHAR(20),
+    referencia      VARCHAR(60),
+
+    -- Transferencia → captura/voucher. Efectivo → acta que levanta IMATUR.
+    comprobante_archivo  VARCHAR(255),
+    comprobante_original VARCHAR(255),
+    acta_numero          VARCHAR(20),
+
+    observaciones    TEXT,
+    anulado          BOOLEAN NOT NULL DEFAULT FALSE,
+    motivo_anulacion TEXT,
+
+    is_active   BOOLEAN   NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP,
+    created_by  INTEGER,
+    updated_by  INTEGER,
+
+    CONSTRAINT ruta_pagos_forma_check  CHECK (forma IN ('Transferencia', 'Efectivo', 'Punto de venta')),
+    CONSTRAINT ruta_pagos_monto_check  CHECK (monto_bs > 0),
+    CONSTRAINT ruta_pagos_anula_check  CHECK (anulado = FALSE OR motivo_anulacion IS NOT NULL)
+);
+
+COMMENT ON TABLE ruta_pagos IS
+  'Pagos recibidos por una salida (R-40: «sí debe llevar el cobro y lo cancelado»). Es una tabla y no un campo porque hay abonos, varias transferencias del mismo grupo y pagos de distintos representantes.';
+COMMENT ON COLUMN ruta_pagos.acta_numero IS
+  'Correlativo del acta de pago en efectivo (R-39). El formato lo propusimos nosotros: el cliente dijo «pueden darnos una idea».';
+COMMENT ON COLUMN ruta_pagos.anulado IS
+  'Anular NO borra: es dinero. La fila queda con su motivo y deja de sumar al total cobrado.';
+
+CREATE INDEX IF NOT EXISTS idx_ruta_pagos_ejecucion ON ruta_pagos (id_ejecucion) WHERE is_active = TRUE;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_ruta_pagos_acta ON ruta_pagos (acta_numero) WHERE acta_numero IS NOT NULL;
+
+-- ── 4. Configuración del cobro (R-37) ───────────────────────────────────────
+INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
+  ('rutas_cuenta_cobro', '',
+   'Cuenta exclusiva de IMATUR para el cobro de rutas (R-37). Se imprime en el acta de pago.'),
+  ('rutas_dias_tope_pago', '3',
+   'Días antes de la salida como fecha tope de pago por defecto (R-38). 0 = no se sugiere ninguna.'),
+  ('correlativo_oficio_actapago', '0',
+   'Último N° de acta de pago en efectivo emitida (R-39). Se reinicia cada año.'),
+  ('ano_correlativo_actapago', EXTRACT(YEAR FROM CURRENT_DATE)::TEXT,
+   'Año del correlativo de las actas de pago.')
+ON CONFLICT (clave) DO NOTHING;
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-083).
 --
