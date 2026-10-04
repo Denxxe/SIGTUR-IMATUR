@@ -8,7 +8,6 @@ class BuscarController extends Controller {
 
     public function index() {
         $q   = trim($_GET['q'] ?? '');
-        $rol = (int)($_SESSION['user_rol'] ?? 0);
         $grupos = [];
 
         if (mb_strlen($q) >= 2) {
@@ -20,8 +19,8 @@ class BuscarController extends Controller {
             $soloDigitos = preg_replace('/\D/', '', $q);
             $likeCedula  = $soloDigitos !== '' ? '%' . $soloDigitos . '%' : null;
 
-            // ── Empleados (RRHH / Admin) ──────────────────────────────────────
-            if (in_array($rol, [1, 2], true)) {
+            // ── Empleados ───────────────────────────────────────────────────────
+            if (sigtur_puede('EmpleadosController')) {
                 $condCedula = $likeCedula !== null ? 'OR p.cedula ILIKE :qc' : '';
                 $db->query("SELECT e.id, p.nombre, p.apellido, p.cedula, c.nombre AS cargo
                             FROM empleados e
@@ -43,8 +42,8 @@ class BuscarController extends Controller {
                 $grupos[] = ['titulo' => 'Empleados', 'icono' => 'bi-person-badge', 'items' => $items];
             }
 
-            // ── Inventario (Inventario / Admin) ───────────────────────────────
-            if (in_array($rol, [1, 4], true)) {
+            // ── Inventario ──────────────────────────────────────────────────────
+            if (sigtur_puede('InventarioController')) {
                 $db->query("SELECT id, nombre, codigo_bn, marca, modelo
                             FROM inventario
                             WHERE is_active = TRUE
@@ -62,8 +61,8 @@ class BuscarController extends Controller {
                 $grupos[] = ['titulo' => 'Inventario', 'icono' => 'bi-box-seam', 'items' => $items];
             }
 
-            // ── Formación y Turismo (Turismo / Admin) ─────────────────────────
-            if (in_array($rol, [1, 3], true)) {
+            // ── Formación ─────────────────────────────────────────────────────
+            if (sigtur_puede('TalleresController')) {
                 $db->query("SELECT id, nombre, estado FROM talleres
                             WHERE is_active = TRUE AND nombre ILIKE :q ORDER BY fecha_inicio DESC LIMIT 8");
                 $db->bind(':q', $like);
@@ -72,7 +71,10 @@ class BuscarController extends Controller {
                     $items[] = ['texto' => $r->nombre ?? '—', 'sub' => 'Estado: ' . ($r->estado ?? '—'), 'url' => URL_ROOT . '/talleres/index'];
                 }
                 $grupos[] = ['titulo' => 'Talleres / Actividades', 'icono' => 'bi-mortarboard', 'items' => $items];
+            }
 
+            // ── Turismo ───────────────────────────────────────────────────────
+            if (sigtur_puede('RutasController')) {
                 $db->query("SELECT id, nombre, estado FROM rutas
                             WHERE is_active = TRUE AND nombre ILIKE :q ORDER BY nombre ASC LIMIT 8");
                 $db->bind(':q', $like);
@@ -83,8 +85,8 @@ class BuscarController extends Controller {
                 $grupos[] = ['titulo' => 'Rutas', 'icono' => 'bi-compass', 'items' => $items];
             }
 
-            // ── Visitantes (RRHH / Recepción / Admin) ─────────────────────────
-            if (in_array($rol, [1, 2, 5], true)) {
+            // ── Visitantes ────────────────────────────────────────────────────
+            if (sigtur_puede('VisitantesController')) {
                 $condCedula = $likeCedula !== null ? 'OR COALESCE(p.cedula, vt.cedula) ILIKE :qc' : '';
                 $db->query("SELECT vt.id,
                                    COALESCE(p.nombre, vt.nombre)     AS nombre,

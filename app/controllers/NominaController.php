@@ -10,14 +10,7 @@
  */
 class NominaController extends Controller {
 
-    private function requireRoles(array $roles) {
-        $rol = (int)($_SESSION['user_rol'] ?? 0);
-        if (!in_array($rol, $roles)) {
-            flash('global_msg', 'No tienes permiso para acceder a este módulo.', 'danger');
-            header('Location: ' . URL_ROOT . '/nomina/index');
-            exit;
-        }
-    }
+    protected string $volverSinPermiso = '/nomina/index';
 
     /** Listado de períodos generados. */
     public function index() {
@@ -41,7 +34,7 @@ class NominaController extends Controller {
      * histórico para que un período cerrado se pueda reconstruir.
      */
     public function parametros() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $this->view('nomina/parametros', [
             'titulo'    => 'Nómina — Parámetros del mes',
             'meses'     => Nomina::parametrosMesTodos(),
@@ -69,7 +62,7 @@ class NominaController extends Controller {
 
     public function guardarGrado() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             Nomina::guardarGrado($_POST, $this->getUserId());
@@ -83,7 +76,7 @@ class NominaController extends Controller {
 
     public function desactivarGrado() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             Nomina::desactivarGrado($_POST['codigo'] ?? '', $this->getUserId());
@@ -106,7 +99,7 @@ class NominaController extends Controller {
      */
     public function guardarEscalares() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
 
         $permitidas = array_merge(
@@ -140,7 +133,7 @@ class NominaController extends Controller {
 
     public function guardarAntiguedad() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             Nomina::guardarTramoAntiguedad(
@@ -158,7 +151,7 @@ class NominaController extends Controller {
 
     public function eliminarAntiguedad() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             Nomina::eliminarTramoAntiguedad((int)($_POST['anios'] ?? 0), $this->getUserId());
@@ -177,7 +170,7 @@ class NominaController extends Controller {
      * responde con el motivo y el usuario sigue cargando la tasa a mano.
      */
     public function consultarTasa() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         header('Content-Type: application/json; charset=utf-8');
         try {
             echo json_encode(['ok' => true] + TasaBcv::consultar());
@@ -189,7 +182,7 @@ class NominaController extends Controller {
 
     public function guardarParametros() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             $tasa = (float)str_replace(',', '.', $_POST['tasa_dolar'] ?? '0');
@@ -227,7 +220,7 @@ class NominaController extends Controller {
 
     /** Listado de quincenas generadas. */
     public function quincenal() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $this->view('nomina/quincenal', [
             'titulo'   => 'Nómina quincenal',
             'periodos' => Nomina::periodos(),
@@ -239,7 +232,7 @@ class NominaController extends Controller {
     /** Genera una quincena: calcula el snapshot de todo el personal activo. */
     public function nuevaQuincena() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/quincenal'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         try {
             $id = Nomina::generarPeriodo(
@@ -259,7 +252,7 @@ class NominaController extends Controller {
 
     /** Detalle de una quincena: 5 secciones por tipo de personal + resumen. */
     public function verQuincena($id) {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $periodo = Nomina::find((int)$id);
         if (!$periodo) {
             flash('global_msg', 'Quincena no encontrada.', 'danger');
@@ -282,7 +275,7 @@ class NominaController extends Controller {
      */
     public function recalcularQuincena($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/quincenal'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         try {
             $n = Nomina::recalcular((int)$id, $this->getUserId());
             flash('global_msg', 'Quincena recalculada: ' . $n . ' empleado(s).');
@@ -294,7 +287,7 @@ class NominaController extends Controller {
 
     public function cerrarQuincena($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/quincenal'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         try {
             Nomina::cerrar((int)$id, $this->getUserId());
             flash('global_msg', 'Quincena cerrada. Ya no se puede recalcular ni editar.');
@@ -309,7 +302,7 @@ class NominaController extends Controller {
      * personal (5) + RESUMEN, con `XlsxMultiSheet`.
      */
     public function exportarQuincena($id) {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $periodo = Nomina::find((int)$id);
         if (!$periodo) {
             flash('global_msg', 'Quincena no encontrada.', 'danger');
@@ -439,7 +432,7 @@ class NominaController extends Controller {
     /** Genera un período nuevo (snapshot de empleados activos). */
     public function nuevoPeriodo() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
         $periodo     = trim($_POST['periodo'] ?? '');
         $fechaCorte  = trim($_POST['fecha_corte'] ?? '') ?: date('Y-m-d');
@@ -477,7 +470,7 @@ class NominaController extends Controller {
      */
     public function recalcularPeriodo($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         try {
             $n = BonoVacacional::recalcular((int)$id, $this->getUserId());
             flash('global_msg', 'Período recalculado: ' . $n . ' empleado(s). Los totales ya confirmados se conservaron.');
@@ -493,7 +486,7 @@ class NominaController extends Controller {
      */
     public function aceptarCalculados($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         try {
             $n = BonoVacacional::aceptarCalculados((int)$id, $this->getUserId());
             flash('global_msg', $n > 0
@@ -524,7 +517,7 @@ class NominaController extends Controller {
     /** Cierra el período (bloquea edición futura del detalle). */
     public function cerrarPeriodo($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/index'); return; }
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('NominaController');
         try {
             BonoVacacional::cerrar((int)$id, $this->getUserId());
             flash('global_msg', 'Período cerrado.');

@@ -15,7 +15,7 @@ trait ReportesSistemaTrait {
     // Centro de Alertas — consolida avisos accionables de RRHH
     // =========================================================================
     public function alertas() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo(...CentroAlertas::MODULOS);
         $rol = (int)($_SESSION['user_rol'] ?? 0);
         // Fuente única: CentroAlertas (compartida con la campana del header).
         // Recalcula en fresco y refresca el cache de la campana (el usuario viene a actuar).
@@ -27,7 +27,7 @@ trait ReportesSistemaTrait {
     // Transversal — Auditoría (bitácora exportable)
     // =========================================================================
     public function auditoria() {
-        $this->requireRoles([1]);
+        $this->requireAdmin();
         $regs = $this->queryAuditoria();
         $filas = [];
         foreach ($regs as $r) {
@@ -65,7 +65,7 @@ trait ReportesSistemaTrait {
     }
 
     public function exportarAuditoriaCsv() {
-        $this->requireRoles([1]);
+        $this->requireAdmin();
         $rows = [];
         foreach ($this->queryAuditoria() as $r) {
             $rows[] = [$r->fecha, $r->actor, $r->operacion, $r->tabla_afectada, $r->record_id, $r->ip_direccion];
@@ -98,7 +98,7 @@ trait ReportesSistemaTrait {
     // Seguridad — Accesos al sistema (inicios de sesión) desde audit_logs
     // =========================================================================
     public function accesos() {
-        $this->requireRoles([1]);
+        $this->requireAdmin();
         try {
             $regs = $this->queryAccesos();
             $filas = []; $ok = 0; $fail = 0;
@@ -138,7 +138,7 @@ trait ReportesSistemaTrait {
     }
 
     public function exportarAccesosCsv() {
-        $this->requireRoles([1]);
+        $this->requireAdmin();
         $rows = [];
         foreach ($this->queryAccesos() as $r) {
             $rows[] = [
@@ -184,7 +184,7 @@ trait ReportesSistemaTrait {
     // Posibles duplicados de participantes (control de registros basura)
     // =========================================================================
     public function duplicados() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController', 'RutasController');
         $db = new Database();
 
         // 1) Personas con la MISMA cédula normalizada (incluye colisiones que la

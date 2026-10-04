@@ -49,6 +49,12 @@ class UsuariosController extends Controller {
 
         $esNuevo = empty($data['id']);
 
+        if (($err = $this->errorDelegacion($data['id'], $data['id_rol'])) !== null) {
+            flash('global_msg', $err, 'danger');
+            header('Location: ' . URL_ROOT . '/usuarios/index');
+            return;
+        }
+
         if ($esNuevo && empty($data['id_empleado'])) {
             flash('global_msg', 'Debe seleccionar un empleado para crear la cuenta.', 'danger');
             header('Location: ' . URL_ROOT . '/usuarios/index');
@@ -85,6 +91,14 @@ class UsuariosController extends Controller {
             header('Location: ' . URL_ROOT . '/usuarios/index');
             return;
         }
+        if (!$this->esAdmin()) {
+            $objetivo = Usuario::find((int)$id);
+            if ($objetivo && (int)$objetivo->id_rol === Usuario::ROL_ADMIN) {
+                flash('global_msg', 'Solo un Administrador puede suspender una cuenta de Administrador.', 'danger');
+                header('Location: ' . URL_ROOT . '/usuarios/index');
+                return;
+            }
+        }
         try {
             if (Usuario::delete($id, $this->getUserId())) {
                 flash('global_msg', 'Cuenta suspendida correctamente.', 'warning');
@@ -95,5 +109,30 @@ class UsuariosController extends Controller {
             flash('global_msg', $e->getMessage(), 'danger');
         }
         header('Location: ' . URL_ROOT . '/usuarios/index');
+    }
+
+    /**
+     * Límites de quien gestiona usuarios por delegación (un rol distinto de
+     * Administrador con acceso a este módulo, p. ej. RRHH). Sin esto, ese rol
+     * podía crear una cuenta de Administrador, ascenderse a sí mismo o
+     * cambiarle la clave al admin: una sola petición y tenía acceso total.
+     * Devuelve el mensaje de error, o null si la operación está permitida.
+     */
+    private function errorDelegacion(?int $id, int $idRol): ?string {
+        if ($this->esAdmin()) return null;
+
+        if ($idRol === Usuario::ROL_ADMIN) {
+            return 'Solo un Administrador puede asignar el rol de Administrador.';
+        }
+        if ($id) {
+            $actual = Usuario::find($id);
+            if ($actual && (int)$actual->id_rol === Usuario::ROL_ADMIN) {
+                return 'Solo un Administrador puede modificar una cuenta de Administrador.';
+            }
+            if ($id === (int)$this->getUserId() && $actual && (int)$actual->id_rol !== $idRol) {
+                return 'No puedes cambiar el rol de tu propia cuenta.';
+            }
+        }
+        return null;
     }
 }

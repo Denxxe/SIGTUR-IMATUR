@@ -574,7 +574,7 @@ class TalleresController extends Controller {
     }
 
     public function exportarInformeCsv($id) {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $db = new Database();
 

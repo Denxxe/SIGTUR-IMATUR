@@ -15,7 +15,7 @@ trait ReportesRecepcionTrait {
     // Reporte de Visitantes y Visitas
     // =========================================================================
     public function visitantes() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('VisitantesController');
         try {
             $registros = $this->queryVisitantes();
             $stats     = $this->statsVisitantes();
@@ -39,7 +39,7 @@ trait ReportesRecepcionTrait {
     }
 
     public function exportarVisitantesCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('VisitantesController');
         try {
             $registros = $this->queryVisitantes();
             $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Atendido por', 'Motivo', 'Observaciones'];
@@ -69,7 +69,7 @@ trait ReportesRecepcionTrait {
     }
 
     public function exportarVisitantesPdf() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('VisitantesController');
         try {
             $registros = $this->queryVisitantes();
             $stats     = $this->statsVisitantes();
@@ -165,7 +165,7 @@ trait ReportesRecepcionTrait {
     // Recepción — Estadísticas de visitas (BVIS-05)
     // =========================================================================
     public function estadisticasVisitas() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('VisitantesController');
         try {
             $fi = $_GET['fecha_inicio'] ?? date('Y-01-01');
             $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
@@ -218,7 +218,7 @@ trait ReportesRecepcionTrait {
     }
 
     public function exportarEstadisticasVisitasCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('VisitantesController');
         $fi = $_GET['fecha_inicio'] ?? date('Y-01-01');
         $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
         $rows = [];

@@ -35,7 +35,7 @@ trait ReportesTurismoTrait {
     // jueves). Antes agregaba todo contra el catálogo y el cupo era el de la
     // columna muerta `rutas.cupo_maximo`.
     public function participacionRutas() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         $regs = $this->queryParticipacionRutas();
         $filas = []; $totalPart = 0; $sumaOcup = 0; $conCupo = 0;
         foreach ($regs as $r) {
@@ -67,7 +67,7 @@ trait ReportesTurismoTrait {
     }
 
     public function exportarParticipacionRutasCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         $rows = [];
         foreach ($this->queryParticipacionRutas() as $r) {
             $cupo = (int)$r->cupo_maximo; $part = (int)$r->participantes;
@@ -106,7 +106,7 @@ trait ReportesTurismoTrait {
     // es cuántas veces se ha ejecutado y a cuánta gente ha atendido — no una
     // fecha ni un guía, que son de la salida.
     public function rutas() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         try {
             $filtroEstado     = trim($_GET['estado'] ?? '');
             $filtroTipo       = trim($_GET['tipo_ruta'] ?? '');
@@ -133,7 +133,7 @@ trait ReportesTurismoTrait {
     }
 
     public function exportarRutasCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         try {
             $estado     = trim($_GET['estado'] ?? '');
             $tipo       = trim($_GET['tipo_ruta'] ?? '');
@@ -180,7 +180,7 @@ trait ReportesTurismoTrait {
     }
 
     public function exportarRutasPdf() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         try {
             $estado     = trim($_GET['estado'] ?? '');
             $tipo       = trim($_GET['tipo_ruta'] ?? '');
@@ -320,7 +320,7 @@ trait ReportesTurismoTrait {
     // Turismo — Salidas ejecutadas (BRT-05)
     // =========================================================================
     public function ejecucionesRuta() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         try {
             $regs = $this->queryEjecucionesRuta();
             $filas = []; $totPart = 0; $totAte = 0;
@@ -365,7 +365,7 @@ trait ReportesTurismoTrait {
     }
 
     public function exportarEjecucionesRutaCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('RutasController');
         $rows = [];
         foreach ($this->queryEjecucionesRuta() as $r) {
             $rows[] = [

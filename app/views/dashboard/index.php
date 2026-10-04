@@ -2,9 +2,11 @@
 
 <?php
 $rol  = (int)($data['rol']  ?? 0);
+$pu   = $data['puede'] ?? [];   // áreas visibles según los módulos del rol
+$ve   = fn(string $area): bool => !empty($pu[$area]);
 $anio = (int)($data['anio'] ?? date('Y'));
 
-$rolLabel = [1=>'Administrador',2=>'RRHH',3=>'Turismo',4=>'Inventario',5=>'Recepción'][$rol] ?? 'Usuario';
+$rolLabel = ($_SESSION['user_rol_name'] ?? '') !== '' ? $_SESSION['user_rol_name'] : 'Usuario';
 
 if (!function_exists('fmtMesDash')) {
     function fmtMesDash(string $ym): string {
@@ -26,7 +28,7 @@ if (!function_exists('kpiSt')) {
 $kpiSections = [];
 
 // ── ÁREA: Recursos Humanos ───────────────────────────────────────────────
-if (in_array($rol, [1, 2])) {
+if ($ve('personal')) {
     $alContr = ($data['kpiContratosVencen'] ?? 0) > 0;
     $alDesp  = ($data['kpiAmonDespido'] ?? 0) > 0;
     $alPend  = ($data['kpiPermisosPendientes'] ?? 0) > 0;
@@ -49,46 +51,46 @@ if (in_array($rol, [1, 2])) {
 }
 
 // ── ÁREA: Recepción ──────────────────────────────────────────────────────
-if (in_array($rol, [1, 2, 5])) {
+if ($ve('visitas')) {
     $recCards = [
         ['label'=>'Visitas Hoy',       'value'=>number_format($data['kpiVisitasHoy']??0),       'sub'=>'registradas en la jornada',     'icon'=>'bi-door-open-fill', 'bg'=>'#0891B2','href'=>URL_ROOT.'/visitantes/index',
             'delta'=>$data['deltaVisitasHoy']??null],
         ['label'=>'Activas Ahora',     'value'=>number_format($data['kpiVisitasActivas']??0),    'sub'=>'visitantes dentro (sin salida)','icon'=>'bi-person-walking',  'bg'=>'#D97706','href'=>URL_ROOT.'/visitas/index',
             'status'=>($data['kpiVisitasActivas']??0)>0?'warning':'neutral'],
+        ['label'=>'Visitantes Semana','value'=>number_format($data['kpiVisitasSemana']??0),'sub'=>'únicos en la semana actual','icon'=>'bi-people-fill',     'bg'=>'#7C3AED',
+            'delta'=>$data['deltaVisitasSemana']??null],
+        ['label'=>'Visitantes Mes',   'value'=>number_format($data['kpiVisitantesMes']??0), 'sub'=>'únicos en el mes actual',   'icon'=>'bi-calendar-month', 'bg'=>'#059669',
+            'status'=>($data['kpiVisitantesMes']??0)>0?'good':'neutral'],
+        ['label'=>'Pasantes (Visitas)','value'=>number_format($data['kpiVisitantesPasantes']??0),'sub'=>'motivo «Pasantías» — mes actual','icon'=>'bi-person-video3','bg'=>'#DB2777','href'=>URL_ROOT.'/visitantes/index',
+            'status'=>($data['kpiVisitantesPasantes']??0)>0?'good':'neutral'],
     ];
-    if (in_array($rol, [1, 5])) {
-        $recCards[] = ['label'=>'Visitantes Semana','value'=>number_format($data['kpiVisitasSemana']??0),'sub'=>'únicos en la semana actual','icon'=>'bi-people-fill',     'bg'=>'#7C3AED',
-            'delta'=>$data['deltaVisitasSemana']??null];
-        $recCards[] = ['label'=>'Visitantes Mes',   'value'=>number_format($data['kpiVisitantesMes']??0), 'sub'=>'únicos en el mes actual',   'icon'=>'bi-calendar-month', 'bg'=>'#059669',
-            'status'=>($data['kpiVisitantesMes']??0)>0?'good':'neutral'];
-        $recCards[] = ['label'=>'Pasantes (Visitas)','value'=>number_format($data['kpiVisitantesPasantes']??0),'sub'=>'motivo «Pasantías» — mes actual','icon'=>'bi-person-video3','bg'=>'#DB2777','href'=>URL_ROOT.'/visitantes/index',
-            'status'=>($data['kpiVisitantesPasantes']??0)>0?'good':'neutral'];
-    }
     $kpiSections[] = ['label'=>'Recepción','color'=>'#0891B2','icon'=>'bi-door-open','cards'=>$recCards];
 }
 
 // ── ÁREA: Formación y Turismo ────────────────────────────────────────────
-if (in_array($rol, [1, 3])) {
+if ($ve('talleres') || $ve('rutas') || $ve('pasantes')) {
     $colOcup = ($data['tasaOcupacion']??0)>=75?'#059669':(($data['tasaOcupacion']??0)>=50?'#D97706':'#DC2626');
     $colFin  = ($data['tasaFinaliz']??0)  >=85?'#059669':(($data['tasaFinaliz']??0)  >=70?'#D97706':'#DC2626');
-    $kpiSections[] = ['label'=>'Formación y Turismo','color'=>'#7C3AED','icon'=>'bi-mortarboard','cards'=>[
-        ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',    'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index',
-            'status'=>($data['kpiActividadesActivas']??0)>0?'good':'warning'],
-        ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),      'sub'=>'participantes inscritos en el año','icon'=>'bi-person-check-fill',  'bg'=>'#059669',
-            'delta'=>$data['deltaFormados']??null],
-        ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),             'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',        'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index',
-            'status'=>($data['kpiRutas']??0)>0?'good':'warning'],
-        ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),          'sub'=>'realizando pasantías',           'icon'=>'bi-journal-text',        'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index',
-            'status'=>($data['kpiPasantes']??0)>0?'good':'neutral'],
-        ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',                 'sub'=>($data['ocupInscritos']??0).' ins / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup,
-            'status'=>kpiSt($data['tasaOcupacion']??0,75,50)],
-        ['label'=>'Tasa Finalización',     'value'=>($data['tasaFinaliz']??0).'%',                   'sub'=>'actividades completadas '.$anio, 'icon'=>'bi-check-circle-fill',   'bg'=>$colFin,
-            'status'=>kpiSt($data['tasaFinaliz']??0,85,70)],
-    ]];
+    // Cada tarjeta aparece solo si el rol tiene el módulo que la alimenta.
+    $ftCards = array_values(array_filter([
+        $ve('talleres') ? ['label'=>'Actividades Activas',   'value'=>number_format($data['kpiActividadesActivas']??0),'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',    'bg'=>'#7C3AED','href'=>URL_ROOT.'/talleres/index',
+            'status'=>($data['kpiActividadesActivas']??0)>0?'good':'warning'] : null,
+        $ve('talleres') ? ['label'=>'Formados '.$anio,       'value'=>number_format($data['kpiFormadosAnio']??0),      'sub'=>'participantes inscritos en el año','icon'=>'bi-person-check-fill',  'bg'=>'#059669',
+            'delta'=>$data['deltaFormados']??null] : null,
+        $ve('rutas') ? ['label'=>'Rutas Operativas',      'value'=>number_format($data['kpiRutas']??0),             'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',        'bg'=>'#D97706','href'=>URL_ROOT.'/rutas/index',
+            'status'=>($data['kpiRutas']??0)>0?'good':'warning'] : null,
+        $ve('pasantes') ? ['label'=>'Pasantes en Curso',     'value'=>number_format($data['kpiPasantes']??0),          'sub'=>'realizando pasantías',           'icon'=>'bi-journal-text',        'bg'=>'#0EA5E9','href'=>URL_ROOT.'/pasantes/index',
+            'status'=>($data['kpiPasantes']??0)>0?'good':'neutral'] : null,
+        $ve('talleres') ? ['label'=>'Ocupación Actividades', 'value'=>($data['tasaOcupacion']??0).'%',                 'sub'=>($data['ocupInscritos']??0).' ins / '.($data['ocupCupos']??0).' cupos','icon'=>'bi-bar-chart-fill','bg'=>$colOcup,
+            'status'=>kpiSt($data['tasaOcupacion']??0,75,50)] : null,
+        $ve('talleres') ? ['label'=>'Tasa Finalización',     'value'=>($data['tasaFinaliz']??0).'%',                   'sub'=>'actividades completadas '.$anio, 'icon'=>'bi-check-circle-fill',   'bg'=>$colFin,
+            'status'=>kpiSt($data['tasaFinaliz']??0,85,70)] : null,
+    ]));
+    $kpiSections[] = ['label'=>'Formación y Turismo','color'=>'#7C3AED','icon'=>'bi-mortarboard','cards'=>$ftCards];
 }
 
 // ── ÁREA: Inventario y Patrimonio ────────────────────────────────────────
-if (in_array($rol, [1, 4])) {
+if ($ve('inventario')) {
     $colDep = ($data['tasaDeprec']??0)<=10?'#059669':(($data['tasaDeprec']??0)<=15?'#D97706':'#DC2626');
     $alInv  = ($data['kpiBienesAlerta']??0) > 0;
     $kpiSections[] = ['label'=>'Inventario y Patrimonio','color'=>'#64748B','icon'=>'bi-box-seam','cards'=>[
@@ -192,11 +194,11 @@ foreach ($kpiSections as $sec):
 
 <?php
 // Flags de disponibilidad por rol
-$hasActividades = in_array($rol,[1,3]) && !empty($data['talleresPorMes']);
-$hasInv         = in_array($rol,[1,4]) && !empty($data['invPorCondicion']);
-$hasAsist       = in_array($rol,[1,2]) && !empty($data['asistenciaPorMes']);
-$hasEmp         = in_array($rol,[1,2]) && !empty($data['empPorDepto']);
-$hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
+$hasActividades = $ve('talleres') && !empty($data['talleresPorMes']);
+$hasInv         = $ve('inventario') && !empty($data['invPorCondicion']);
+$hasAsist       = $ve('personal') && !empty($data['asistenciaPorMes']);
+$hasEmp         = $ve('personal') && !empty($data['empPorDepto']);
+$hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
 ?>
 
 <!-- Gráficas Fila 1: métricas de actividad principal ──────────────────────── -->
@@ -279,15 +281,15 @@ $hasVisitas     = in_array($rol,[1,5]) && !empty($data['visitasPorDia']);
                 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:var(--sp-3);">
                     <?php
                     $acciones = [];
-                    if (in_array($rol,[1,2]))    $acciones[] = ['Registrar Asistencia','bi-calendar-plus',          URL_ROOT.'/asistencias/index'];
-                    if (in_array($rol,[1,2,5]))  $acciones[] = ['Registrar Visitante', 'bi-person-plus-fill',       URL_ROOT.'/visitantes/index'];
-                    if (in_array($rol,[1,3]))    $acciones[] = ['Nueva Actividad',     'bi-calendar-event',         URL_ROOT.'/talleres/index'];
-                    if (in_array($rol,[1,3]))    $acciones[] = ['Rutas Turísticas',    'bi-geo-alt-fill',           URL_ROOT.'/rutas/index'];
-                    if (in_array($rol,[1,3]))    $acciones[] = ['Pasantes',            'bi-journal-text',           URL_ROOT.'/pasantes/index'];
-                    if (in_array($rol,[1,4]))    $acciones[] = ['Inventario',          'bi-box-seam-fill',          URL_ROOT.'/inventario/index'];
-                    if (in_array($rol,[1,2]))    $acciones[] = ['Personal',            'bi-people-fill',            URL_ROOT.'/empleados/index'];
-                    if (in_array($rol,[1,2,3,4]))$acciones[] = ['Reportes',            'bi-file-earmark-bar-graph', URL_ROOT.'/reportes/index'];
-                    if ($rol === 1)              $acciones[] = ['Configuración',       'bi-gear-fill',              URL_ROOT.'/config/index'];
+                    if ($ve('asistencias'))      $acciones[] = ['Registrar Asistencia','bi-calendar-plus',          URL_ROOT.'/asistencias/index'];
+                    if ($ve('visitas'))          $acciones[] = ['Registrar Visitante', 'bi-person-plus-fill',       URL_ROOT.'/visitantes/index'];
+                    if ($ve('talleres'))         $acciones[] = ['Nueva Actividad',     'bi-calendar-event',         URL_ROOT.'/talleres/index'];
+                    if ($ve('rutas'))            $acciones[] = ['Rutas Turísticas',    'bi-geo-alt-fill',           URL_ROOT.'/rutas/index'];
+                    if ($ve('pasantes'))         $acciones[] = ['Pasantes',            'bi-journal-text',           URL_ROOT.'/pasantes/index'];
+                    if ($ve('inventario'))       $acciones[] = ['Inventario',          'bi-box-seam-fill',          URL_ROOT.'/inventario/index'];
+                    if ($ve('personal'))         $acciones[] = ['Personal',            'bi-people-fill',            URL_ROOT.'/empleados/index'];
+                    if ($ve('reportes'))         $acciones[] = ['Reportes',            'bi-file-earmark-bar-graph', URL_ROOT.'/reportes/index'];
+                    if ($ve('config'))           $acciones[] = ['Configuración',       'bi-gear-fill',              URL_ROOT.'/config/index'];
                     foreach ($acciones as [$lbl,$ico,$href]):
                     ?>
                     <a href="<?php echo $href; ?>" style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);padding:var(--sp-4);background:var(--bg-muted-subtle);border-radius:10px;border:1px solid var(--border-subtle);text-decoration:none;color:var(--text-primary);font-size:12px;font-weight:600;text-align:center;transition:box-shadow .15s,border-color .15s;"
@@ -422,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var axLbl  = { style: { colors: tp, fontSize: '11px' } };
     var palette= ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#F97316','#64748B'];
 
-<?php if (in_array($rol,[1,3]) && !empty($lblTall)): ?>
+<?php if ($ve('talleres') && !empty($lblTall)): ?>
     // Área — tipo 'monotoneCubic' cuando hay pocos puntos para evitar spikes
     new ApexCharts(document.querySelector('#chartTalleresMes'), {
         chart: { type:'area', height:240, background:'transparent', toolbar:{show:false} },
@@ -437,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).render();
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,4]) && !empty($lblInv)): ?>
+<?php if ($ve('inventario') && !empty($lblInv)): ?>
     new ApexCharts(document.querySelector('#chartInvCondicion'), {
         chart:{ type:'radialBar', height:240, background:'transparent' },
         series:<?php echo json_encode($valInvPct); ?>,
@@ -457,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).render();
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,2]) && !empty($lblAsist)): ?>
+<?php if ($ve('personal') && !empty($lblAsist)): ?>
     new ApexCharts(document.querySelector('#chartAsistencia'), {
         chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Registros', data:<?php echo json_encode($valAsist); ?> }],
@@ -470,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).render();
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,2]) && !empty($lblEmp)): ?>
+<?php if ($ve('personal') && !empty($lblEmp)): ?>
     <?php $maxEmp = max(array_merge($valEmp,[1])); ?>
     new ApexCharts(document.querySelector('#chartEmpDepto'), {
         chart:{ type:'bar', height:220, background:'transparent', toolbar:{show:false} },
@@ -491,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).render();
 <?php endif; ?>
 
-<?php if (in_array($rol,[1,5]) && !empty($lblVis)): ?>
+<?php if ($ve('visitas') && !empty($lblVis)): ?>
     new ApexCharts(document.querySelector('#chartVisitas'), {
         chart:{ type:'bar', height:160, background:'transparent', toolbar:{show:false} },
         series:[{ name:'Visitas', data:<?php echo json_encode($valVis); ?> }],

@@ -95,3 +95,21 @@ function flash($nombre = 'global_msg', $mensaje = '', $clase = 'success') {
         }
     }
 }
+
+/**
+ * ¿El rol en sesión tiene asignado ALGUNO de estos módulos en Roles y Permisos?
+ * Es la regla única de visibilidad: menú, Router, reportes, panel principal,
+ * búsqueda, descargas y alertas preguntan por el MÓDULO, nunca por el número
+ * de rol. Así un rol creado desde la pantalla funciona sin tocar código.
+ */
+function sigtur_puede(string ...$modulos): bool {
+    foreach ($modulos as $m) {
+        if (RolesController::roleHasModulo($m)) return true;
+    }
+    return false;
+}
+
+/** Lo no delegable (auditoría, accesos, gestión de administradores). */
+function sigtur_es_admin(): bool {
+    return (int)($_SESSION['user_rol'] ?? 0) === 1;
+}

@@ -34,6 +34,7 @@
             <?php if (empty($data['usuarios'])): ?>
                 <tr><td colspan="5" class="sig-table-empty">No hay cuentas registradas.</td></tr>
             <?php else: ?>
+            <?php $sesionEsAdmin = (int)($_SESSION['user_rol'] ?? 0) === 1; ?>
             <?php foreach ($data['usuarios'] ?? [] as $user): ?>
                 <tr>
                     <td class="cell-strong" style="color:var(--brand-600)">
@@ -61,7 +62,14 @@
                         // Última cuenta de Administrador activa: no se suspende ni cambia de rol.
                         $esUnicoAdmin = ((int)($user->id_rol ?? 0) === 1)
                             && ((int)($data['admins_activos'] ?? 0) <= 1);
+                        // Las cuentas de Administrador solo las gestiona un Administrador.
+                        $soloLecturaAdmin = ((int)($user->id_rol ?? 0) === 1) && !$sesionEsAdmin;
                         ?>
+                        <?php if ($soloLecturaAdmin): ?>
+                        <span class="row-action" style="opacity:.5;cursor:not-allowed;" title="Solo un Administrador puede gestionar esta cuenta">
+                            <i class="bi bi-shield-lock"></i> Administrador
+                        </span>
+                        <?php else: ?>
                         <button class="row-action row-action--edit"
                                 onclick='editarUsuario(<?php echo htmlspecialchars(json_encode($user), ENT_QUOTES, "UTF-8"); ?>, <?php echo $esUnicoAdmin ? 'true' : 'false'; ?>)'>
                             <i class="bi bi-key"></i> Credenciales
@@ -80,6 +88,7 @@
                         <span class="row-action" style="opacity:.5;cursor:not-allowed;" title="No puedes suspender tu propia cuenta">
                             <i class="bi bi-person-fill-check"></i> Tu cuenta
                         </span>
+                        <?php endif; ?>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -123,6 +132,7 @@
                     <label class="sig-field__label" for="user_id_rol">Rol en el Sistema <span class="req">*</span></label>
                     <select name="id_rol" id="user_id_rol" class="sig-select" required>
                         <?php foreach ($data['roles'] ?? [] as $r): ?>
+                            <?php if ((int)$r->id === 1 && (int)($_SESSION['user_rol'] ?? 0) !== 1) continue; ?>
                             <option value="<?php echo $r->id; ?>"><?php echo htmlspecialchars($r->nombre); ?></option>
                         <?php endforeach; ?>
                     </select>

@@ -89,7 +89,9 @@ class Usuario extends Model {
      */
     public static function estadoSesion(int $id) {
         $db = Database::compartida();
-        $db->query("SELECT (is_active)::int AS activo, id_rol FROM usuarios WHERE id = :id");
+        $db->query("SELECT (u.is_active)::int AS activo, u.id_rol, r.nombre AS rol_nombre
+                    FROM usuarios u LEFT JOIN roles r ON r.id = u.id_rol
+                    WHERE u.id = :id");
         $db->bind(':id', $id);
         return $db->single() ?: null;
     }

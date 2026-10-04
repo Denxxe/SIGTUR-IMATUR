@@ -15,7 +15,7 @@ trait ReportesRrhhTrait {
     // RF27: Reporte de Asistencia
     // =========================================================================
     public function asistencia() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $db = new Database();
             $db->query("SELECT id, nombre FROM departamentos WHERE is_active = TRUE ORDER BY nombre ASC");
@@ -43,7 +43,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarAsistenciaCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryAsistencia();
             $tol       = Asistencia::toleranciaPuntualidad();
@@ -73,7 +73,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarAsistenciaPdf() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryAsistencia();
             $stats     = $this->statsAsistencia();
@@ -173,7 +173,7 @@ trait ReportesRrhhTrait {
     // Reporte de Permisos y Reposos (R-8)
     // =========================================================================
     public function permisos() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryPermisos();
             if (($_GET['formato'] ?? '') === 'pdf') {
@@ -211,7 +211,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarPermisosCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryPermisos();
             $headers = ['Empleado', 'Cédula', 'Departamento', 'Categoría', 'Tipo', 'Desde', 'Hasta', 'Duración', 'Período', 'Estado'];
@@ -263,7 +263,7 @@ trait ReportesRrhhTrait {
     // Personal en comisión de servicio (origen Alcaldía / Gobernación)
     // =========================================================================
     public function comisionServicio() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryComision();
             // Resumen por institución de origen
@@ -297,7 +297,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarComisionCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $registros = $this->queryComision();
             $headers = ['Empleado', 'Cédula', 'Expediente', 'Cargo', 'Departamento', 'Origen', 'F. Ingreso', 'Tiempo de servicio'];
@@ -340,7 +340,7 @@ trait ReportesRrhhTrait {
     // RRHH — Directorio de personal
     // =========================================================================
     public function directorio() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $regs = $this->queryDirectorio();
         $filas = [];
         foreach ($regs as $r) {
@@ -385,7 +385,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarDirectorioCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $regs = $this->queryDirectorio();
         $rows = [];
         foreach ($regs as $r) {
@@ -425,7 +425,7 @@ trait ReportesRrhhTrait {
     // RRHH — Amonestaciones y faltas
     // =========================================================================
     public function amonestaciones() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $roster = Amonestacion::roster();
         $limite = Amonestacion::LIMITE_DESPIDO;
         $filas = []; $despido = 0; $conObs = 0;
@@ -458,7 +458,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarAmonestacionesCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $limite = Amonestacion::LIMITE_DESPIDO;
         $rows = [];
         foreach (Amonestacion::roster() as $r) {
@@ -472,7 +472,7 @@ trait ReportesRrhhTrait {
     // RRHH — Egresos / rotación de personal
     // =========================================================================
     public function egresos() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $regs = $this->queryEgresos();
         $filas = []; $porMotivo = [];
         foreach ($regs as $r) {
@@ -510,7 +510,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarEgresosCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $rows = [];
         foreach ($this->queryEgresos() as $r) {
             $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento,
@@ -545,7 +545,7 @@ trait ReportesRrhhTrait {
     // RRHH — Constancias de trabajo emitidas
     // =========================================================================
     public function constancias() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $regs = $this->queryConstancias();
         $filas = [];
         foreach ($regs as $r) {
@@ -576,7 +576,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarConstanciasCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $rows = [];
         foreach ($this->queryConstancias() as $r) {
             $rows[] = [$r->numero, Constancia::labelTipo($r->tipo ?? ''), trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento, $r->fecha_emision];
@@ -608,7 +608,7 @@ trait ReportesRrhhTrait {
     // RRHH — Expedientes incompletos (recaudos obligatorios faltantes)
     // =========================================================================
     public function expedientesIncompletos() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         // Consultas agregadas (sin N+1): faltantes por empleado + recaudos entregados.
         $faltMap   = ExpedienteDocumento::faltantesObligatorios();
         $entregMap = ExpedienteDocumento::entregadosPorEmpleado();
@@ -644,7 +644,7 @@ trait ReportesRrhhTrait {
     // RRHH — Carga familiar del personal (detallado, con filtros configurables)
     // =========================================================================
     public function cargaFamiliar() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $regs = $this->queryCargaFamiliar();
         $filas = []; $empleados = [];
         foreach ($regs as $r) {
@@ -687,7 +687,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarCargaFamiliarCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $rows = [];
         foreach ($this->queryCargaFamiliar() as $r) {
             $vive = ($r->vive === true || $r->vive === 't' || $r->vive === null);
@@ -741,7 +741,7 @@ trait ReportesRrhhTrait {
     // RRHH — Saldo de vacaciones por empleado (BRH-07)
     // =========================================================================
     public function vacacionesSaldo() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         try {
             $regs = $this->queryVacacionesSaldo();
             $filas = []; $totSaldo = 0;
@@ -783,7 +783,7 @@ trait ReportesRrhhTrait {
     }
 
     public function exportarVacacionesSaldoCsv() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('EmpleadosController');
         $rows = [];
         foreach ($this->queryVacacionesSaldo() as $r) {
             $rows[] = [$r['empleado'], $r['cedula'], $r['cargo'], $r['departamento'],

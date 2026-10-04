@@ -1,17 +1,9 @@
 <?php
 class ConfigController extends Controller {
 
-    private function requireRoles(array $roles) {
-        $rol = (int)($_SESSION['user_rol'] ?? 0);
-        if (!in_array($rol, $roles)) {
-            flash('global_msg', 'No tienes permiso para acceder a esta sección.', 'danger');
-            header('Location: ' . URL_ROOT . '/dashboard/index');
-            exit;
-        }
-    }
 
     public function index() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('ConfigController');
         try {
             $config = ConfigSistema::getAll();
         } catch (Exception $e) {
@@ -26,7 +18,7 @@ class ConfigController extends Controller {
     }
 
     public function store() {
-        $this->requireRoles([1, 2]);
+        $this->requireModulo('ConfigController');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . URL_ROOT . '/config/index');
             exit;

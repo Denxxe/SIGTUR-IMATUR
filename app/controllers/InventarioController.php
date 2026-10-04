@@ -15,18 +15,16 @@
 class InventarioController extends Controller {
 
     /**
-     * Roles que pueden MODIFICAR bienes (B-58): la Coordinación de Bienes
-     * (rol 4) y el Administrador. Cualquier otro rol al que se le conceda
-     * acceso al módulo desde Roles y Permisos entra en **solo lectura**.
+     * ¿El rol puede MODIFICAR bienes (B-58)? Tener el módulo Inventario da
+     * acceso de **solo lectura**; escribir exige además la casilla
+     * «Bienes: registrar y modificar» (`InventarioEscritura`) en Roles y
+     * Permisos (mig. 084). La tienen el rol Inventario y el Administrador.
      *
-     * El RBAC del sistema es por controlador, no por acción, así que la
-     * distinción lectura/escritura se resuelve aquí en vez de tocar el
-     * mecanismo compartido (que afectaría a todos los módulos).
+     * El RBAC del sistema es por controlador, no por acción; esta capacidad
+     * se modela como un token aparte, igual que `AuditoriaPapelera`.
      */
-    const ROLES_ESCRITURA = [1, 4];
-
     public static function puedeEscribir(): bool {
-        return in_array((int)($_SESSION['user_rol'] ?? 0), self::ROLES_ESCRITURA, true);
+        return RolesController::roleHasModulo('InventarioEscritura');
     }
 
     /** Corta la acción si el rol actual es de solo lectura. */

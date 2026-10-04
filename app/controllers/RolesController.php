@@ -37,7 +37,11 @@ class RolesController extends Controller {
      * El Administrador (marcador '*') tiene acceso a todo.
      */
     public static function roleHasModulo(string $modulo): bool {
-        $rolId      = (int)($_SESSION['user_rol'] ?? 0);
+        return self::rolTieneModulo((int)($_SESSION['user_rol'] ?? 0), $modulo);
+    }
+
+    /** Igual que roleHasModulo(), para un rol dado (p. ej. el que recibe CentroAlertas). */
+    public static function rolTieneModulo(int $rolId, string $modulo): bool {
         $mapa       = self::getMapaRbac();
         $permitidos = $mapa[$rolId] ?? [];
         if ($permitidos === '*') return true;
@@ -71,6 +75,8 @@ class RolesController extends Controller {
             'CategoriasController'            => ['label' => 'Categorías',            'icon' => 'bi-tags',              'grupo' => 'Inventario'],
             'UbicacionesController'           => ['label' => 'Ubicaciones',           'icon' => 'bi-building',          'grupo' => 'Inventario'],
             'ActividadesinventarioController' => ['label' => 'Movimientos de Bienes', 'icon' => 'bi-arrow-left-right',  'grupo' => 'Inventario'],
+            // Capacidad, no controlador: sin ella el módulo Inventario es de solo lectura (mig. 084).
+            'InventarioEscritura'             => ['label' => 'Bienes: registrar y modificar', 'icon' => 'bi-pencil-square', 'grupo' => 'Inventario'],
             'UsuariosController'              => ['label' => 'Usuarios del Sistema',  'icon' => 'bi-shield-lock',       'grupo' => 'Sistema'],
             'RolesController'                 => ['label' => 'Roles y Permisos',      'icon' => 'bi-key',               'grupo' => 'Sistema'],
             // 'AuditoriaController' (Bitácora general) NO es asignable: es exclusiva del Administrador

@@ -6,7 +6,7 @@
  * ── Organización ────────────────────────────────────────────────────────────
  * El controlador reunía 101 métodos en 3.405 líneas. Se repartió por área en
  * traits bajo `reportes/`, dejando aquí solo lo transversal: el índice y los
- * tres helpers que todos los reportes comparten (`requireRoles`, `qsFiltros`,
+ * tres helpers que todos los reportes comparten (`requireModulo`, `qsFiltros`,
  * `renderReporte`).
  *
  * La separación es **puramente organizativa**: los traits se componen en esta
@@ -55,14 +55,7 @@ class ReportesController extends Controller {
         $this->view('reportes/index', $data);
     }
 
-    private function requireRoles(array $roles) {
-        $rol = (int)($_SESSION['user_rol'] ?? 0);
-        if (!in_array($rol, $roles)) {
-            flash('global_msg', 'No tienes permiso para acceder a este reporte.', 'danger');
-            header('Location: ' . URL_ROOT . '/reportes/index');
-            exit;
-        }
-    }
+    protected string $volverSinPermiso = '/reportes/index';
 
     /**
      * Query string con los filtros actuales para los enlaces de exportación,

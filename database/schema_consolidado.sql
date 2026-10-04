@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-27, ampliado el 2026-10-03  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–083.
+-- Cubre: esquema base + TODAS las migraciones 001–084.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -5733,9 +5733,9 @@ UPDATE public.nomina_parametros_mes SET tasa_fuente = 'Manual' WHERE tasa_fuente
 
 
 -- =====================================================================
--- MIGRACIONES 075–083 (Bienes: relación/donación y Acta de
+-- MIGRACIONES 075–084 (Bienes: relación/donación y Acta de
 -- Desincorporación · Rutas: catálogo vs. salidas, restricciones y cupo,
--- Ficha Institucional, permisos a custodios, itinerario, cobro)
+-- Ficha Institucional, permisos a custodios, itinerario, cobro · permiso de escritura de bienes)
 -- =====================================================================
 --
 -- Se incluyen TAL CUAL están en database/migrations/, sin reescribir:
@@ -6798,6 +6798,28 @@ INSERT INTO configuracion_sistema (clave, valor, descripcion) VALUES
    'Año del correlativo de las actas de pago.')
 ON CONFLICT (clave) DO NOTHING;
 
+-- >>> 084_permiso_escritura_bienes.sql
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 084 — Permiso «Bienes: registrar y modificar» (InventarioEscritura)
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-083).
+-- Hasta ahora, quién podía registrar o modificar bienes estaba cableado en el
+-- código (`InventarioController::ROLES_ESCRITURA = [1, 4]`): cualquier otro rol
+-- con acceso al módulo entraba en solo lectura, y un rol creado desde Roles y
+-- Permisos no tenía forma de recibir la escritura sin tocar código.
+--
+-- Pasa a ser una casilla más de Roles y Permisos, igual que la Papelera
+-- (`AuditoriaPapelera`): un token que no es un controlador, sino una capacidad
+-- dentro de uno. Se le asigna al rol Inventario (4), que es quien la tenía; el
+-- Administrador la tiene por su comodín '*'. Nada cambia para los roles de hoy.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+INSERT INTO permisos_rol (id_rol, modulo)
+SELECT 4, 'InventarioEscritura'
+WHERE EXISTS (SELECT 1 FROM roles WHERE id = 4)
+ON CONFLICT (id_rol, modulo) DO NOTHING;
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-084).
 --

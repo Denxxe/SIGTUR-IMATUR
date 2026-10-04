@@ -17,6 +17,19 @@ class DashboardController extends Controller {
         $data = [
             'titulo' => 'Panel Principal',
             'rol'    => $rol,
+            // Qué áreas ve este rol: se decide por los módulos que tiene
+            // asignados en Roles y Permisos, no por su número.
+            'puede'  => [
+                'personal'    => sigtur_puede('EmpleadosController'),
+                'asistencias' => sigtur_puede('AsistenciasController'),
+                'visitas'     => sigtur_puede('VisitantesController'),
+                'talleres'    => sigtur_puede('TalleresController'),
+                'rutas'       => sigtur_puede('RutasController'),
+                'pasantes'    => sigtur_puede('PasantesController'),
+                'inventario'  => sigtur_puede('InventarioController'),
+                'reportes'    => sigtur_puede('ReportesController'),
+                'config'      => sigtur_puede('ConfigController'),
+            ],
             'anio'   => $anio,
         ];
 
@@ -70,9 +83,10 @@ class DashboardController extends Controller {
             };
 
             // ══════════════════════════════════════════════════════════════
-            // PERSONAL — roles 1 (Admin) y 2 (RRHH)
+            // PERSONAL — módulo Empleados
             // ══════════════════════════════════════════════════════════════
-            if (in_array($rol, [1, 2])) {
+            $pu = $data['puede'];
+            if ($pu['personal']) {
                 $db->query("SELECT COUNT(*) AS total FROM empleados WHERE is_active = TRUE");
                 $data['kpiEmpleados'] = (int)($db->single()->total ?? 0);
 
@@ -140,9 +154,9 @@ class DashboardController extends Controller {
             }
 
             // ══════════════════════════════════════════════════════════════
-            // VISITAS — roles 1, 2 y 5 (Recepción)
+            // VISITAS — módulo Recepción (Visitantes)
             // ══════════════════════════════════════════════════════════════
-            if (in_array($rol, [1, 2, 5])) {
+            if ($pu['visitas']) {
                 $db->query("SELECT COUNT(*) AS total FROM visitas
                             WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE");
                 $data['kpiVisitasHoy'] = (int)($db->single()->total ?? 0);
@@ -190,9 +204,9 @@ class DashboardController extends Controller {
             }
 
             // ══════════════════════════════════════════════════════════════
-            // FORMACIÓN Y TURISMO — roles 1 y 3 (Turismo)
+            // FORMACIÓN Y TURISMO — Talleres, Rutas o Pasantes
             // ══════════════════════════════════════════════════════════════
-            if (in_array($rol, [1, 3])) {
+            if ($pu['talleres'] || $pu['rutas'] || $pu['pasantes']) {
                 $db->query("SELECT COUNT(*) AS total FROM talleres
                             WHERE estado IN ('En Curso','Programado') AND is_active = TRUE");
                 $data['kpiActividadesActivas'] = (int)($db->single()->total ?? 0);
@@ -266,9 +280,9 @@ class DashboardController extends Controller {
             }
 
             // ══════════════════════════════════════════════════════════════
-            // INVENTARIO — roles 1 y 4 (Inventario)
+            // INVENTARIO — módulo Bienes
             // ══════════════════════════════════════════════════════════════
-            if (in_array($rol, [1, 4])) {
+            if ($pu['inventario']) {
                 // Inventario ACTIVO: excluye los desincorporados (B-38, mig. 062).
                 $db->query("SELECT COUNT(*) AS total FROM inventario
                             WHERE is_active = TRUE AND estatus <> :baja");
@@ -328,11 +342,11 @@ class DashboardController extends Controller {
             }
 
             // ══════════════════════════════════════════════════════════════
-            // ALERTAS — según rol
+            // ALERTAS — según los módulos del rol
             // ══════════════════════════════════════════════════════════════
             $alertas = [];
 
-            if (in_array($rol, [1, 2])) {
+            if ($pu['personal']) {
                 if (($data['kpiContratosVencen'] ?? 0) > 0) {
                     $n = $data['kpiContratosVencen'];
                     $alertas[] = ['tipo' => 'warning', 'ico' => 'bi-person-badge',
@@ -349,7 +363,7 @@ class DashboardController extends Controller {
                         'msg' => "$n permiso(s)/reposo(s) pendiente(s) de aprobar"];
                 }
             }
-            if (in_array($rol, [1, 3])) {
+            if ($pu['pasantes']) {
                 $db->query("SELECT COUNT(*) AS total FROM pasantes WHERE is_active = TRUE
                             AND estado = 'En Curso' AND fecha_fin IS NOT NULL
                             AND fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasPasante || ' days')::INTERVAL)");
@@ -358,6 +372,8 @@ class DashboardController extends Controller {
                     $alertas[] = ['tipo' => 'info', 'ico' => 'bi-journal-text',
                         'msg' => "$pasantesCulm pasante(s) culminan en los próximos {$diasPasante} días"];
                 }
+            }
+            if ($pu['talleres']) {
                 if (($data['kpiTalleresVencidos'] ?? 0) > 0) {
                     $n = $data['kpiTalleresVencidos'];
                     $alertas[] = ['tipo' => 'danger', 'ico' => 'bi-calendar-x',
@@ -369,7 +385,7 @@ class DashboardController extends Controller {
                         'msg' => "$n actividad(es) de formación actualmente en curso o programadas"];
                 }
             }
-            if (in_array($rol, [1, 4]) && ($data['kpiBienesAlerta'] ?? 0) > 0) {
+            if ($pu['inventario'] && ($data['kpiBienesAlerta'] ?? 0) > 0) {
                 $n = $data['kpiBienesAlerta'];
                 $alertas[] = ['tipo' => 'danger', 'ico' => 'bi-exclamation-triangle',
                     'msg' => "$n bien(es) en estado de alerta (dañado o en reparación)"];

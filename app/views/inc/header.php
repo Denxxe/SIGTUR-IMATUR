@@ -66,7 +66,7 @@
             </div>
             <div class="sidebar__user-meta">
                 <div class="sidebar__user-name"><?php echo $_SESSION['user_username'] ?? 'Usuario'; ?></div>
-                <div class="sidebar__user-role"><?php echo $_SESSION['user_rol_name'] ?? 'Administrador'; ?></div>
+                <div class="sidebar__user-role"><?php echo htmlspecialchars($_SESSION['user_rol_name'] ?? ''); ?></div>
             </div>
             <a href="<?php echo URL_ROOT; ?>/auth/logout" class="sidebar__logout" title="Cerrar Sesión">
                 <i class="bi bi-box-arrow-right"></i>
@@ -271,7 +271,7 @@
                                 </a>
                             <?php endforeach; endif; ?>
                         </div>
-                        <?php if (in_array($rol, [1, 2], true)): ?>
+                        <?php if (CentroAlertas::aplicaA($rol)): ?>
                         <a href="<?php echo URL_ROOT; ?>/reportes/alertas" class="dropdown-item" style="text-align:center;padding:9px;font-size:12px;font-weight:600;color:var(--brand-600);">
                             Ver centro de alertas <i class="bi bi-arrow-right"></i>
                         </a>

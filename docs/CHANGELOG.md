@@ -18,6 +18,33 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-04 — Roles: un rol nuevo ya funciona sin tocar código · RRHH podía hacerse Administrador (mig. 084)
+
+**Prueba hecha:** con un usuario temporal se recorrieron los roles 1 a 6 (menú, 31 URLs, 11 descargas,
+panel, catálogo de reportes, búsqueda y campana) y después un **rol 7 creado desde la pantalla**.
+Menú y acceso por URL ya coincidían. Aparecieron cuatro defectos:
+
+1. **Escalada de privilegios.** `UsuariosController::store` no validaba el rol asignado: RRHH (que
+   tiene Usuarios) se ascendió a Administrador con una sola petición, y podía cambiarle la clave al
+   admin o suspenderlo. Ahora solo un Administrador asigna ese rol o toca una cuenta de
+   Administrador, y nadie cambia su propio rol (`errorDelegacion`). La opción ya no se ofrece en el
+   formulario.
+2. **Roles nuevos a medias.** El Router y el menú leían `permisos_rol`, pero ~140 chequeos de reportes,
+   panel, búsqueda, descargas y alertas usaban números de rol fijos. Un rol nuevo veía su menú pero el
+   panel vacío y los reportes denegados. Todos pasan a preguntar por el **módulo**
+   (`requireModulo` / `sigtur_puede`). La escritura de bienes, que era `[1, 4]` fijo, pasa a ser la
+   casilla *Bienes: registrar y modificar* (`InventarioEscritura`, mig. 084, asignada al rol 4).
+   El Administrador ve exactamente lo mismo; ningún rol perdió nada. Ganaron lo que su propio permiso
+   ya decía que tenían: RRHH los reportes y tarjetas de Pasantes; Turismo y Solo Lectura los de
+   Recepción; Turismo e Inventario el Centro de Alertas; Recepción la acción rápida de Asistencia.
+   Los reportes de visitantes salen de «Recursos Humanos» a una sección propia, «Recepción».
+3. **El sidebar decía «Administrador» bajo el nombre de todo usuario** (`user_rol_name` nunca se
+   asignaba). Lo refresca el Router en cada request.
+4. **`TalleresController::exportarInformeCsv` daba error fatal**: llamaba a un `requireRoles` que esa
+   clase no tiene.
+
+Además: el rol 4 se llamaba «Uio» (renombrado por error desde la pantalla el 2026-09-17) → «Inventario».
+
 ### 2026-10-03 — PHP y PostgreSQL trabajaban en UTC: 4 horas adelantados
 
 Encontrado preparando el despliegue: `php.ini` no define `date.timezone` (PHP cae en UTC) y el

@@ -78,16 +78,37 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 | 4 | Inventario | Dashboard, Inventario, Categorias, Ubicaciones, ActividadesInventario, Reportes |
 | 5 | Recepción | Dashboard, Visitantes, Visitas, Asistencias |
 
-### Protección por reporte (ReportesController::requireRoles)
+### Regla única: se pregunta por el MÓDULO, nunca por el número de rol (2026-10-04)
 
-| Método(s) | Roles permitidos |
-|-----------|-----------------|
-| `asistencia`, `exportarAsistenciaCsv/Pdf` | [1, 2] |
-| `visitantes`, `exportarVisitantesCsv/Pdf` | [1, 2] |
-| `talleres`, `exportarTalleresCsv/Pdf`, `rutas`, `exportarRutasCsv/Pdf`, `exportarParticipantesCsv`, `dossier`, `exportarDossierCsv`, `pasantes`, `exportarPasantesCsv/Pdf` | [1, 3] |
-| `inventario`, `exportarInventarioCsv/Pdf`, `bajasInventario`, `exportarBajasInventarioCsv` | [1, 4] |
-| `permisos`, `exportarPermisosCsv` | [1, 2] |
-| `indicadores`, `index` | todos |
+Fuera del Router, todo lo que depende del rol (reportes, panel principal, búsqueda global, descargas
+privadas, Centro de Alertas, campana, catálogo de reportes) pregunta **si el rol tiene asignado el
+módulo** en `permisos_rol`. Así un rol creado desde *Roles y Permisos* funciona completo solo con
+marcar sus casillas, sin tocar código. Antes había ~140 chequeos `in_array($rol, [1, 2])` y un rol
+nuevo veía el menú correcto pero el panel vacío y los reportes denegados.
+
+| Dónde | Usar |
+|---|---|
+| Controlador (corta la acción) | `$this->requireModulo('EmpleadosController')` · varios = cualquiera de ellos. Redirige a `$volverSinPermiso` (propiedad, por defecto `/dashboard/index`) |
+| Vista / modelo | `sigtur_puede('RutasController', ...)` (en `session_helper.php`) |
+| Otro rol que no es el de la sesión | `RolesController::rolTieneModulo($rol, $modulo)` (lo usa `CentroAlertas`) |
+| Lo no delegable | `$this->requireAdmin()` / `sigtur_es_admin()`: Bitácora, Accesos, gestión de cuentas de Administrador, aprobar pasantes (RN-PS01), feed de actividad del panel |
+
+Mapa vigente: reportes de RRHH → `EmpleadosController` · visitantes → `VisitantesController` ·
+talleres/cobertura/trimestral/dossier → `TalleresController` · pasantes → `PasantesController` ·
+rutas → `RutasController` · bienes → `InventarioController` · duplicados → Talleres **o** Rutas ·
+Centro de Alertas → cualquiera de `CentroAlertas::MODULOS` (y cada bloque de alertas, por su módulo) ·
+Indicadores (tarjeta del catálogo) → Empleados, Talleres, Rutas o Inventario.
+
+- **Capacidades dentro de un módulo** se modelan como token aparte en `getModulos()`, no como lista
+  de roles: `AuditoriaPapelera` y **`InventarioEscritura`** (*Bienes: registrar y modificar*, mig. 084;
+  sin ella el módulo Inventario es de solo lectura — `InventarioController::puedeEscribir()`).
+- **Nunca escribir `in_array($rol, [...])` ni `requireRoles`.** Si algo parece necesitar un número de
+  rol, o es exclusivo del Administrador, o le falta un módulo/capacidad en `getModulos()`.
+- El nombre del rol en sesión (`user_rol_name`, sidebar y panel) lo refresca el Router en cada request
+  desde `Usuario::estadoSesion()`, igual que `user_rol`.
+- **Gestión de usuarios delegada** (`UsuariosController::errorDelegacion`): un rol no Administrador con
+  acceso a Usuarios no puede asignar el rol Administrador, tocar ni suspender una cuenta de
+  Administrador, ni cambiarse su propio rol (antes RRHH podía ascenderse a Administrador).
 
 ### Sidebar (header.php) — generado desde el RBAC, no cableado (H-12, 2026-08-27)
 
@@ -107,9 +128,8 @@ El menú **no** tiene condiciones por número de rol. `header.php` recorre
 - `DashboardController` se pinta siempre, arriba y sin etiqueta de grupo (todo rol lo tiene:
   `storePermisos()` lo agrega de oficio). `VisitasController` se excluye del menú a propósito — es
   acceso directo desde Visitantes.
-- Los guards **por método** son otra capa y siguen siendo válidos: el enlace «Ver centro de alertas»
-  de la campana usa `in_array($rol,[1,2])` porque replica el `requireRoles([1,2])` de
-  `ReportesController::alertas()`, no un permiso de módulo.
+- Los guards **por método** son otra capa (ver la regla única arriba): el enlace «Ver centro de
+  alertas» de la campana usa `CentroAlertas::aplicaA($rol)`, lo mismo que exige `ReportesController::alertas()`.
 
 ---
 
@@ -411,9 +431,9 @@ se carga a mano: **nunca bloquea la nómina**.
 
 **Exportación multi-hoja (`app/core/XlsxMultiSheet.php`, migración 059):** para documentos que deben reproducir un formato oficial de **varias hojas** (ej. Bono Vacacional: 4 tipos de personal + resumen) se extrajo el mismo mecanismo hecho a mano de `ReportesController` (ZipArchive + XML, sin librerías externas, celdas `inlineStr` para preservar cédulas/códigos) a una clase reusable: `nuevaHoja()`/`membrete()`/`filaFusionada()`/`filaCeldas()`/`cerrarHoja()`/`descargar()`. Misma paleta de 8 estilos (`XlsxMultiSheet::S_*`) que `ReportesController::descargarXlsx()`, para verse consistente. `ReportesController` sigue con su propio escritor de una sola hoja (no se tocó); usar `XlsxMultiSheet` para cualquier exportación nueva que necesite más de una hoja.
 
-**Organización de `ReportesController` (2026-08-28):** el controlador llegó a **3.405 líneas y 101 métodos** y se repartió en **8 traits** bajo `app/controllers/reportes/`, quedando en `ReportesController.php` solo el índice y los tres helpers transversales (`requireRoles`, `qsFiltros`, `renderReporte`). Los traits se componen en la misma clase, así que `$this`, los métodos privados y las firmas son **idénticos**: no cambió ninguna URL ni llamada. Se incluyen con `require_once __DIR__ . '/reportes/…'` porque el autocargador de `public/index.php` solo mira rutas planas y no entra en subdirectorios. **Un reporte nuevo va en el trait de su área**, no en el controlador: `ReportesRrhhTrait` (personal, asistencia, permisos, disciplina, vacaciones) · `ReportesFormacionTrait` (talleres, cobertura, dossier, pasantes, trimestral) · `ReportesTurismoTrait` (rutas, participación, ejecuciones) · `ReportesInventarioTrait` (bienes, kardex, asignaciones, bajas) · `ReportesRecepcionTrait` (visitantes, visitas) · `ReportesSistemaTrait` (alertas, auditoría, accesos, duplicados) · `ReportesIndicadoresTrait` (CMI) · `ReportesExportTrait` (helpers CSV/XLSX/PDF).
+**Organización de `ReportesController` (2026-08-28):** el controlador llegó a **3.405 líneas y 101 métodos** y se repartió en **8 traits** bajo `app/controllers/reportes/`, quedando en `ReportesController.php` solo el índice y los tres helpers transversales (`requireModulo`, `qsFiltros`, `renderReporte`). Los traits se componen en la misma clase, así que `$this`, los métodos privados y las firmas son **idénticos**: no cambió ninguna URL ni llamada. Se incluyen con `require_once __DIR__ . '/reportes/…'` porque el autocargador de `public/index.php` solo mira rutas planas y no entra en subdirectorios. **Un reporte nuevo va en el trait de su área**, no en el controlador: `ReportesRrhhTrait` (personal, asistencia, permisos, disciplina, vacaciones) · `ReportesFormacionTrait` (talleres, cobertura, dossier, pasantes, trimestral) · `ReportesTurismoTrait` (rutas, participación, ejecuciones) · `ReportesInventarioTrait` (bienes, kardex, asignaciones, bajas) · `ReportesRecepcionTrait` (visitantes, visitas) · `ReportesSistemaTrait` (alertas, auditoría, accesos, duplicados) · `ReportesIndicadoresTrait` (CMI) · `ReportesExportTrait` (helpers CSV/XLSX/PDF).
 
-**Reportes (centro de reportes):** `reportes/index` es data-driven (arreglo `$secciones` con RBAC por rol). Para un reporte tabular nuevo: agregar método en el **trait de su área** (ver arriba) que arme `columnas`+`filas` (celda string = escapada; `['raw'=>'<html>']` = sin escapar, para badges), `resumen` (tiles), `filtros` (GET) y `export_url`, y renderice la **vista genérica `reportes/tabla.php`** + un `exportarXCsv()` con `exportCsv()`; luego añadir la tarjeta en `reportes/index`. **`exportCsv($filename,$headers,$rows)` exporta un `.xlsx` REAL** (OOXML vía `ZipArchive`, sin librerías externas — pese al nombre, no es CSV): membrete institucional (REPÚBLICA/ALCALDÍA/IMATUR+RIF), encabezados en color, bordes, zebra; celdas como texto para preservar cédulas/códigos con ceros. **`exportCsvSecciones($filename,$tituloReporte,$secciones)`** es la variante para reportes que NO son una tabla plana (varias secciones con su propio título/encabezado en una sola hoja, ej. Dossier de Taller) — comparte el mismo membrete y empaquetador (`construirHojaMembrete`/`descargarXlsx`) que `exportCsv()`. **PDF:** `exportPdf($titulo,$subtitulo,$headers,$rows,$kpis)` renderiza `reportes/pdf_template.php` (logos reales `public/assets/images/Logo.png` + `Logo_imatur-removebg-preview.png`, RIF, KPIs, tabla, pie institucional) — es el estándar "documento oficial" (Rutas, Comisión de Servicio, Permisos y Reposos). Reportes actuales incluyen RRHH (directorio, asistencia, permisos, amonestaciones, egresos, comisión, constancias, expedientes incompletos), Formación/Turismo (talleres, cobertura por parroquia, rutas, participación), Inventario (inventario, kardex, bienes asignados, bajas), Seguridad (auditoría) y Centro de Alertas. **Impresión/PDF vía `window.print()`:** botón + reglas `@media print` (ocultan sidebar/header/controles) → convención deliberada para vistas simples (listados, Indicadores); marcar con `.no-print` lo que no deba imprimirse. Para vistas que son "documento oficial" propio (ej. Dossier de Taller, `reportes/taller_detalle.php`) el `window.print()` incluye además un membrete institucional impreso (`d-none d-print-block`, mismos logos/RIF) para no depender solo del layout de pantalla.
+**Reportes (centro de reportes):** `reportes/index` es data-driven (arreglo `$secciones`; cada sección/tarjeta declara sus `modulos`). Para un reporte tabular nuevo: agregar método en el **trait de su área** (ver arriba) que arme `columnas`+`filas` (celda string = escapada; `['raw'=>'<html>']` = sin escapar, para badges), `resumen` (tiles), `filtros` (GET) y `export_url`, y renderice la **vista genérica `reportes/tabla.php`** + un `exportarXCsv()` con `exportCsv()`; luego añadir la tarjeta en `reportes/index`. **`exportCsv($filename,$headers,$rows)` exporta un `.xlsx` REAL** (OOXML vía `ZipArchive`, sin librerías externas — pese al nombre, no es CSV): membrete institucional (REPÚBLICA/ALCALDÍA/IMATUR+RIF), encabezados en color, bordes, zebra; celdas como texto para preservar cédulas/códigos con ceros. **`exportCsvSecciones($filename,$tituloReporte,$secciones)`** es la variante para reportes que NO son una tabla plana (varias secciones con su propio título/encabezado en una sola hoja, ej. Dossier de Taller) — comparte el mismo membrete y empaquetador (`construirHojaMembrete`/`descargarXlsx`) que `exportCsv()`. **PDF:** `exportPdf($titulo,$subtitulo,$headers,$rows,$kpis)` renderiza `reportes/pdf_template.php` (logos reales `public/assets/images/Logo.png` + `Logo_imatur-removebg-preview.png`, RIF, KPIs, tabla, pie institucional) — es el estándar "documento oficial" (Rutas, Comisión de Servicio, Permisos y Reposos). Reportes actuales incluyen RRHH (directorio, asistencia, permisos, amonestaciones, egresos, comisión, constancias, expedientes incompletos), Formación/Turismo (talleres, cobertura por parroquia, rutas, participación), Inventario (inventario, kardex, bienes asignados, bajas), Seguridad (auditoría) y Centro de Alertas. **Impresión/PDF vía `window.print()`:** botón + reglas `@media print` (ocultan sidebar/header/controles) → convención deliberada para vistas simples (listados, Indicadores); marcar con `.no-print` lo que no deba imprimirse. Para vistas que son "documento oficial" propio (ej. Dossier de Taller, `reportes/taller_detalle.php`) el `window.print()` incluye además un membrete institucional impreso (`d-none d-print-block`, mismos logos/RIF) para no depender solo del layout de pantalla.
 
 **Listados con búsqueda + paginación (convención global, opt-in):** agregar `data-tabla-buscable` al contenedor `.sig-table-wrap` (que envuelve un `table.sig-table`) inyecta una **barra de búsqueda** arriba y un **paginador** abajo, del lado cliente (`initTablasBuscables` en `sigtur-validations.js`). Opcionales: `data-por-pagina` (default 10) y `data-buscar-placeholder`. Filtra filas por texto y pagina; ignora la fila de estado vacío. Aplicado en los índices de varios módulos (empleados, inventario, pasantes, usuarios, amonestaciones, permisos, y catálogos). **Excepciones (paginación del lado SERVIDOR, no usar el helper):** `talleres`, `rutas`, `auditoría`, **`asistencias` y `visitantes`** paginan en el backend (modelos con `paginate($pagina,$porPagina,$filtros)` → `['items','total']`; controlador lee `$_GET['p']`+filtros; vista con form GET de filtro y nav de páginas que preserva filtros). Patrón de referencia: `Taller::paginate` / `Asistencia::paginate` / `Visita::paginate`. El helper cliente filtra sobre las filas ya cargadas; para volúmenes grandes usar siempre paginación servidor.
 
@@ -491,10 +511,10 @@ Mecanismo de **token de un solo uso** para que un POST repetido del mismo client
 - No hay que tocar cada formulario/controlador: la protección es transversal. Para un POST que deba permitir reenvíos legítimos, marcar el form con `data-no-token` (servidor) y/o `data-allow-multi-submit` (cliente).
 - **Anti-duplicado de contenido (empleados):** además del token, `Empleado::existeCedula($ced, $excluirId)` impide registrar dos veces la misma cédula como empleado (activo o egresado). `EmpleadosController::store()` normaliza la cédula a dígitos y bloquea con aviso (sugiere usar «Reingreso» si ya egresó). La cédula se compara solo por dígitos (`regexp_replace … '[^0-9]'`).
 
-### Protección de roles en reportes
+### Protección de reportes y acciones
 
 ```php
-$this->requireRoles([1, 2]);  // al inicio del método
+$this->requireModulo('EmpleadosController');  // al inicio del método — ver «Regla única» en RBAC
 ```
 
 ### Auditoría

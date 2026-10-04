@@ -15,7 +15,7 @@ trait ReportesFormacionTrait {
     // Formación — Cobertura comunitaria por parroquia (beneficiarios)
     // =========================================================================
     public function coberturaFormacion() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         $regs = $this->queryCoberturaFormacion();
         $filas = []; $totalPart = 0;
         foreach ($regs as $r) {
@@ -38,7 +38,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarCoberturaCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         $rows = [];
         foreach ($this->queryCoberturaFormacion() as $r) {
             $rows[] = [$r->parroquia, $r->municipio, (int)$r->participaciones];
@@ -74,7 +74,7 @@ trait ReportesFormacionTrait {
     // RF28: Reporte de Talleres
     // =========================================================================
     public function talleres() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $talleres = $this->queryTalleres();
             $stats    = $this->statsTalleres();
@@ -97,7 +97,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarTalleresCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $talleres = $this->queryTalleres();
             $headers  = ['Taller', 'Tipo', 'Facilitador', 'Sede', 'Fecha Inicio', 'Estado', 'Ámbito', 'Inscritos', 'Cupo Máx.', 'Mujeres', 'Hombres', 'Niños/as', 'Total Atend.'];
@@ -127,7 +127,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarTalleresPdf() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $talleres = $this->queryTalleres();
             $stats    = $this->statsTalleres();
@@ -225,7 +225,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarParticipantesCsv($id_taller) {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $db = new Database();
             $db->query("SELECT
@@ -285,7 +285,7 @@ trait ReportesFormacionTrait {
     // =========================================================================
 
     public function dossier($id) {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $db = new Database();
             $db->query("SELECT t.*, uf.nombre as sede,
@@ -336,7 +336,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarDossierCsv($id) {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $db = new Database();
             $db->query("SELECT t.*, p.nombre || ' ' || p.apellido as facilitador, uf.nombre as sede
@@ -420,7 +420,7 @@ trait ReportesFormacionTrait {
     // =========================================================================
 
     public function pasantes() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('PasantesController');
         try {
             $filtroEstado = trim($_GET['estado']       ?? '');
             $fi           = trim($_GET['fecha_inicio'] ?? '');
@@ -474,7 +474,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarPasantesCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('PasantesController');
         try {
             $db = new Database();
             $db->query("SELECT p.*,
@@ -501,7 +501,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarPasantesPdf() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('PasantesController');
         try {
             $db = new Database();
             $db->query("SELECT p.*,
@@ -530,7 +530,7 @@ trait ReportesFormacionTrait {
     // Formación — Informe trimestral consolidado (D-RE01/02)
     // =========================================================================
     public function formacionTrimestral() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         try {
             $anio = (int)($_GET['anio'] ?? date('Y'));
             $q = $this->queryFormacionTrimestral($anio);
@@ -574,7 +574,7 @@ trait ReportesFormacionTrait {
     }
 
     public function exportarFormacionTrimestralCsv() {
-        $this->requireRoles([1, 3]);
+        $this->requireModulo('TalleresController');
         $anio = (int)($_GET['anio'] ?? date('Y'));
         $q = $this->queryFormacionTrimestral($anio);
         $romanos = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];

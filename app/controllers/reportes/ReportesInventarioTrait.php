@@ -15,7 +15,7 @@ trait ReportesInventarioTrait {
     // Inventario — Kardex / movimientos
     // =========================================================================
     public function kardex() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         $regs = $this->queryKardex();
         $filas = [];
         foreach ($regs as $r) {
@@ -46,7 +46,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarKardexCsv() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         $rows = [];
         foreach ($this->queryKardex() as $r) {
             $rows[] = [$r->fecha, $r->codigo_bn, $r->item, $r->tipo_movimiento, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->descripcion];
@@ -77,7 +77,7 @@ trait ReportesInventarioTrait {
     // Inventario — Bienes asignados (responsable actual)
     // =========================================================================
     public function bienesAsignados() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         $regs = $this->queryBienesAsignados();
         $filas = [];
         foreach ($regs as $r) {
@@ -101,7 +101,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarBienesAsignadosCsv() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         $rows = [];
         foreach ($this->queryBienesAsignados() as $r) {
             $rows[] = [$r->codigo_bn, $r->item, $r->condicion, trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->fecha];
@@ -126,7 +126,7 @@ trait ReportesInventarioTrait {
     // Reporte de Inventario
     // =========================================================================
     public function inventario() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $registros = $this->queryInventario();
             $stats     = $this->statsInventario();
@@ -151,7 +151,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarInventarioCsv() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $registros = $this->queryInventario();
             $headers   = ['Código BN', 'Nombre', 'Categoría', 'Ubicación', 'Condición', 'Marca', 'Modelo', 'Serial'];
@@ -176,7 +176,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarInventarioPdf() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $registros = $this->queryInventario();
             $stats     = $this->statsInventario();
@@ -376,7 +376,7 @@ trait ReportesInventarioTrait {
     }
 
     public function bajasInventario() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $f       = $this->bajasFiltros();
             $bajas   = $this->bajasQuery($f);
@@ -400,7 +400,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarBajasInventarioCsv() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $bajas = $this->bajasQuery($this->bajasFiltros());
 
@@ -433,7 +433,7 @@ trait ReportesInventarioTrait {
     }
 
     public function exportarBajasInventarioPdf() {
-        $this->requireRoles([1, 4]);
+        $this->requireModulo('InventarioController');
         try {
             $f       = $this->bajasFiltros();
             $bajas   = $this->bajasQuery($f);

@@ -57,6 +57,7 @@ class Router {
                 exit;
             }
             $_SESSION['user_rol'] = (int)$estado->id_rol;
+            $_SESSION['user_rol_name'] = (string)($estado->rol_nombre ?? '');
         }
 
         // --- RBAC Middleware (Control de Acceso por Rol) ---

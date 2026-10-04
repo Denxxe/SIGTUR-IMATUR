@@ -29,6 +29,33 @@ class Controller {
         }
     }
 
+    /** A dónde vuelve quien entra a una acción sin el módulo requerido. */
+    protected string $volverSinPermiso = '/dashboard/index';
+
+    /**
+     * Corta la acción si el rol no tiene ninguno de estos módulos asignados
+     * (ver sigtur_puede). El Router ya filtra por controlador; esto cubre las
+     * acciones de un controlador que pertenecen a otro módulo (p. ej. cada
+     * reporte depende del módulo de su área).
+     */
+    protected function requireModulo(string ...$modulos): void {
+        if (sigtur_puede(...$modulos)) return;
+        flash('global_msg', 'No tienes permiso para acceder a esta sección.', 'danger');
+        header('Location: ' . URL_ROOT . $this->volverSinPermiso);
+        exit;
+    }
+
+    protected function requireAdmin(): void {
+        if (sigtur_es_admin()) return;
+        flash('global_msg', 'Esta sección es exclusiva del Administrador.', 'danger');
+        header('Location: ' . URL_ROOT . $this->volverSinPermiso);
+        exit;
+    }
+
+    protected function esAdmin(): bool {
+        return sigtur_es_admin();
+    }
+
     // Helper para obtener User ID de la sesión actual
     protected function getUserId() {
         return $_SESSION['user_id'] ?? null;

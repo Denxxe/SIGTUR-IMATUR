@@ -21,7 +21,10 @@ class DescargaController extends Controller {
         'webp' => 'image/webp',
     ];
 
-    private function rol(): int { return (int)($_SESSION['user_rol'] ?? 0); }
+    /** 403 si el rol no tiene asignado ninguno de los módulos dueños del archivo. */
+    private function exigir(string ...$modulos): void {
+        if (!sigtur_puede(...$modulos)) $this->abort(403, 'Acceso denegado.');
+    }
 
     private function abort(int $code, string $msg): void {
         http_response_code($code);
@@ -30,7 +33,7 @@ class DescargaController extends Controller {
 
     /** Recaudo del expediente de un empleado — RRHH / Admin. */
     public function expediente($idDoc = 0) {
-        if (!in_array($this->rol(), [1, 2], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('EmpleadosController');
         $db = new Database();
         $db->query("SELECT archivo_url, nombre_original FROM expediente_documentos WHERE id = :id AND is_active = TRUE");
         $db->bind(':id', (int)$idDoc);
@@ -41,7 +44,7 @@ class DescargaController extends Controller {
 
     /** Foto de una persona (carnetización) — RRHH / Turismo / Admin. */
     public function foto($idPersona = 0) {
-        if (!in_array($this->rol(), [1, 2, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('EmpleadosController', 'PasantesController');
         $db = new Database();
         $db->query("SELECT foto_url FROM personas WHERE id = :id AND is_active = TRUE");
         $db->bind(':id', (int)$idPersona);
@@ -52,7 +55,7 @@ class DescargaController extends Controller {
 
     /** Documento de un pasante — Turismo / Admin. */
     public function pasante($idDoc = 0) {
-        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('PasantesController');
         $db = new Database();
         $db->query("SELECT archivo_url FROM pasante_documentos WHERE id = :id");
         $db->bind(':id', (int)$idDoc);
@@ -63,7 +66,7 @@ class DescargaController extends Controller {
 
     /** Evidencia de una actividad de formación (foto o PDF) — Turismo / Admin. */
     public function taller($idEv = 0) {
-        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('TalleresController');
         $db = new Database();
         $db->query("SELECT archivo, nombre_original FROM taller_evidencias
                      WHERE id = :id AND is_active = TRUE");
@@ -75,7 +78,7 @@ class DescargaController extends Controller {
 
     /** Documento de respaldo de un bien (factura, actas, oficios) — Inventario / Admin. */
     public function bien($idDoc = 0) {
-        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('InventarioController');
         $db = new Database();
         $db->query("SELECT archivo_url, nombre_original FROM inventario_documentos
                      WHERE id = :id AND is_active = TRUE");
@@ -87,7 +90,7 @@ class DescargaController extends Controller {
 
     /** Formulario BM-1 recibido de la Alcaldía — Inventario / Admin. */
     public function bm1($idConsolidado = 0) {
-        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('InventarioController');
         $db = new Database();
         $db->query("SELECT archivo_url, nombre_original FROM inventario_consolidados_bm1
                      WHERE id = :id AND is_active = TRUE");
@@ -104,7 +107,7 @@ class DescargaController extends Controller {
      * archivo equivocado o un 404 según el id que coincidiera.
      */
     public function acta($idActa = 0) {
-        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('InventarioController');
         $db = new Database();
         $db->query("SELECT archivo_url, nombre_original FROM inventario_actas_desincorporacion
                      WHERE id = :id AND is_active = TRUE");
@@ -117,7 +120,7 @@ class DescargaController extends Controller {
     /** Foto de un bien — Inventario / Admin. */
     /** Oficio de solicitud recibido de una institución (R-12) — Turismo / Admin. */
     public function oficioRuta($idEjecucion = 0) {
-        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('RutasController');
         $db = new Database();
         $db->query("SELECT oficio_archivo, oficio_original FROM ruta_ejecuciones
                      WHERE id = :id AND is_active = TRUE");
@@ -129,7 +132,7 @@ class DescargaController extends Controller {
 
     /** Respuesta escaneada de una institucion custodia a un permiso (R-20) — Turismo / Admin. */
     public function permisoRuta($idPermiso = 0) {
-        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('RutasController');
         $db = new Database();
         $db->query("SELECT respuesta_archivo, respuesta_original FROM ruta_permisos
                      WHERE id = :id AND is_active = TRUE");
@@ -141,7 +144,7 @@ class DescargaController extends Controller {
 
     /** Captura o voucher de un pago de ruta (R-39) — Turismo / Admin. */
     public function comprobantePago($idPago = 0) {
-        if (!in_array($this->rol(), [1, 3], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('RutasController');
         $db = new Database();
         $db->query("SELECT comprobante_archivo, comprobante_original FROM ruta_pagos
                      WHERE id = :id AND is_active = TRUE");
@@ -152,7 +155,7 @@ class DescargaController extends Controller {
     }
 
     public function fotoBien($idBien = 0) {
-        if (!in_array($this->rol(), [1, 4], true)) $this->abort(403, 'Acceso denegado.');
+        $this->exigir('InventarioController');
         $db = new Database();
         $db->query("SELECT foto_url FROM inventario WHERE id = :id AND is_active = TRUE");
         $db->bind(':id', (int)$idBien);

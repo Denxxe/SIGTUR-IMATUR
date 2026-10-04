@@ -97,13 +97,26 @@ class CentroAlertas extends Model {
         return $out;
     }
 
+    /** Módulos que aportan alertas: con cualquiera de ellos se ve el Centro de Alertas. */
+    const MODULOS = ['EmpleadosController', 'TalleresController', 'PasantesController', 'InventarioController'];
+
+    /** ¿Este rol ve alguna alerta? (campana y enlace al Centro de Alertas). */
+    public static function aplicaA(int $rol): bool {
+        foreach (self::MODULOS as $m) {
+            if (RolesController::rolTieneModulo($rol, $m)) return true;
+        }
+        return false;
+    }
+
     /** Lista de alertas aplicables al rol (incluye las de conteo 0). */
     public static function resumen(int $rol): array {
         $db = new Database();
         $estBaja = Inventario::sqlEstBaja();   // mig. 076: el texto no se cablea
-        $esRRHH = in_array($rol, [1, 2], true);
-        $esForm = in_array($rol, [1, 3], true);
-        $esInv  = in_array($rol, [1, 4], true);
+        // Cada bloque depende del módulo asignado al rol en Roles y Permisos.
+        $esRRHH = RolesController::rolTieneModulo($rol, 'EmpleadosController');
+        $esTall = RolesController::rolTieneModulo($rol, 'TalleresController');
+        $esPas  = RolesController::rolTieneModulo($rol, 'PasantesController');
+        $esInv  = RolesController::rolTieneModulo($rol, 'InventarioController');
 
         // Umbrales de preaviso (config, con fallback) — compartidos con el Dashboard.
         $diasContrato = 30; $diasPasante = 15;
@@ -149,17 +162,21 @@ class CentroAlertas extends Model {
             $alertas[] = ['clave' => 'permisos_en_curso',    'titulo' => 'Permisos / reposos en curso', 'desc' => 'Ausencias justificadas vigentes hoy.', 'n' => count($idsEnCurso), 'icono' => 'bi-info-circle', 'url' => URL_ROOT . '/permisos/index', 'sev' => 'info', 'ids' => $idsEnCurso];
         }
 
-        if ($esForm) {
+        if ($esTall) {
             $idsTallVenc = $ids("SELECT id FROM talleres
                         WHERE is_active = TRUE AND (
                             (estado = 'Programado' AND fecha_inicio < CURRENT_DATE)
                             OR (estado = 'En Curso' AND fecha_fin IS NOT NULL AND fecha_fin < CURRENT_DATE)
                         )");
+
+            $alertas[] = ['clave' => 'talleres_vencidos', 'titulo' => 'Talleres / actividades vencidas', 'desc' => 'Programadas cuya fecha ya pasó (sin ejecutarse) o en curso sin finalizar.', 'n' => count($idsTallVenc), 'icono' => 'bi-calendar-x', 'url' => URL_ROOT . '/talleres/index', 'sev' => 'danger', 'ids' => $idsTallVenc];
+        }
+
+        if ($esPas) {
             $idsPasCulm = $ids("SELECT id FROM pasantes
                         WHERE is_active = TRUE AND estado = 'En Curso' AND fecha_fin IS NOT NULL
                           AND fecha_fin BETWEEN CURRENT_DATE AND (CURRENT_DATE + ($diasPasante || ' days')::INTERVAL)");
 
-            $alertas[] = ['clave' => 'talleres_vencidos', 'titulo' => 'Talleres / actividades vencidas', 'desc' => 'Programadas cuya fecha ya pasó (sin ejecutarse) o en curso sin finalizar.', 'n' => count($idsTallVenc), 'icono' => 'bi-calendar-x', 'url' => URL_ROOT . '/talleres/index', 'sev' => 'danger', 'ids' => $idsTallVenc];
             $alertas[] = ['clave' => 'pasantes_por_culminar', 'titulo' => 'Pasantes por culminar', 'desc' => "Pasantías que culminan en los próximos {$diasPasante} días.", 'n' => count($idsPasCulm), 'icono' => 'bi-journal-text', 'url' => URL_ROOT . '/pasantes/index', 'sev' => 'info', 'ids' => $idsPasCulm];
         }
 
