@@ -6,6 +6,11 @@ $nAmones = count($data['amonestaciones'] ?? []);
 $nFaltas = count($data['faltas'] ?? []);
 $ffecha = fn($f) => !empty($f) ? date('d/m/Y', strtotime($f)) : '—';
 $egresado = !empty($e->fecha_egreso);
+// Faltas que ya originaron una amonestación activa: no se escalan dos veces.
+$faltasEscaladas = [];
+foreach ($data['amonestaciones'] ?? [] as $a) {
+    if (!empty($a->id_falta_origen)) $faltasEscaladas[(int)$a->id_falta_origen] = true;
+}
 ?>
 
 <div class="page__head anim-slide-up">
@@ -63,12 +68,12 @@ $egresado = !empty($e->fecha_egreso);
                                 <span class="sig-badge <?php echo $tc; ?>" style="font-size:10px"><?php echo htmlspecialchars($ti); ?></span></td>
                             <td style="font-size:13px"><?php echo htmlspecialchars($f->motivo ?? '—'); ?></td>
                             <td class="col-actions">
-                                <?php if (!$egresado): ?>
-                                <form action="<?php echo URL_ROOT; ?>/amonestaciones/amonestarDesdeFalta" method="POST" style="display:inline">
-                                    <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
-                                    <input type="hidden" name="id_falta" value="<?php echo $f->id; ?>">
-                                    <button type="submit" class="row-action" title="Generar amonestación a partir de esta falta"><i class="bi bi-flag"></i></button>
-                                </form>
+                                <?php if (isset($faltasEscaladas[(int)$f->id])): ?>
+                                <span class="sig-badge sig-badge--neutral" style="font-size:10px" title="Ya generó una amonestación. Si se anula, podrá escalarse de nuevo."><i class="bi bi-flag-fill"></i> Amonestada</span>
+                                <?php elseif (!$egresado): ?>
+                                <button type="button" class="row-action js-escalar" title="Generar amonestación a partir de esta falta"
+                                        data-falta="<?php echo (int)$f->id; ?>"
+                                        data-desc="<?php echo htmlspecialchars($ffecha($f->fecha) . ' · ' . ($f->tipo ?? Falta::TIPO_DEFAULT) . (!empty($f->motivo) ? ' · ' . $f->motivo : '')); ?>"><i class="bi bi-flag"></i></button>
                                 <?php endif; ?>
                                 <button type="button" class="row-action row-action--del js-anular" title="Anular falta" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarFalta/<?php echo $f->id; ?>/<?php echo $eid; ?>" data-tipo="falta"><i class="bi bi-trash"></i></button>
                             </td>
@@ -154,6 +159,37 @@ $egresado = !empty($e->fecha_egreso);
     </div>
 </div>
 
+<!-- Modal: confirmar escalado falta → amonestación -->
+<?php
+$amonActivas = count($data['amonestaciones'] ?? []);
+$amonTras    = $amonActivas + 1;
+?>
+<div class="modal fade" id="modalEscalar" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/amonestaciones/amonestarDesdeFalta" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-flag"></i> Generar amonestación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
+                <input type="hidden" name="id_falta" id="escalarFalta" value="">
+                <p style="font-size:13px;margin-bottom:8px">Se registrará una amonestación a partir de esta falta:</p>
+                <p id="escalarDesc" style="font-size:13px;font-weight:600;margin-bottom:12px"></p>
+                <p style="font-size:13px;margin:0;color:<?php echo $amonTras >= Amonestacion::LIMITE_DESPIDO ? 'var(--danger-600)' : 'var(--text-secondary)'; ?>">
+                    El empleado quedará con <strong><?php echo $amonTras; ?>/<?php echo Amonestacion::LIMITE_DESPIDO; ?></strong> amonestaciones activas<?php
+                    echo $amonTras >= Amonestacion::LIMITE_DESPIDO ? ' — <strong>causa de despido</strong>.' : '.'; ?>
+                    Una falta se escala una sola vez.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-flag"></i> Generar amonestación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal: Anular falta / amonestación (con motivo) -->
 <div class="modal fade" id="modalAnular" tabindex="-1">
     <div class="modal-dialog">
@@ -178,6 +214,15 @@ $egresado = !empty($e->fecha_egreso);
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var modalEsc = new bootstrap.Modal(document.getElementById('modalEscalar'));
+    document.querySelectorAll('.js-escalar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('escalarFalta').value = btn.dataset.falta;
+            document.getElementById('escalarDesc').textContent = btn.dataset.desc || '';
+            modalEsc.show();
+        });
+    });
+
     var modal = new bootstrap.Modal(document.getElementById('modalAnular'));
     var form  = document.getElementById('formAnular');
     document.querySelectorAll('.js-anular').forEach(function (btn) {

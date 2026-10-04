@@ -18,6 +18,39 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-04 (c) — Antigüedad pública para todo el personal · cuatro arreglos de uso
+
+- **Ingreso a la administración pública para todos**, no solo comisión de servicio. Quien trabajó en
+  otro ente y hoy está en la nómina de IMATUR conserva esos años para vacaciones y prima de
+  antigüedad; el aviso de Nómina «sin fecha de ingreso a la administración» ya se puede resolver. El
+  campo se precarga con la fecha de ingreso (hoy por defecto), la sigue mientras nadie lo toque, es
+  editable, y el servidor rechaza una fecha posterior al ingreso a IMATUR (sin dato, guarda la de
+  ingreso).
+- **«Registrar sueldo»** pedía 9 montos y solo dos se leían (sueldo básico en la quincena y el bono;
+  prima de discapacidad en el bono). Ahora pide esos dos; la tarjeta explica que las primas las deriva
+  Nómina.
+- **Bono vacacional:** el botón de guardar el total confirmado **sí existía, pero no enviaba**: el
+  `<form style="display:contents">` envolvía celdas de un `<tr>` y el navegador lo sacaba de la tabla,
+  dejando el botón huérfano (solo Enter funcionaba). El form vive dentro de la celda y el botón se
+  asocia con `form="…"`.
+- **Alta de empleado:** el familiar lleva género (la carga familiar ya lo tenía en el expediente).
+- **Escalado falta → amonestación:** modal de confirmación con la falta y el conteo resultante
+  («quedará con 3/3 — causa de despido»).
+
+### 2026-10-04 (b) — Prueba de formularios guardando: una falta se escalaba varias veces
+
+Recorrido guardando datos (no solo abriendo pantallas) sobre un respaldo de la base, restaurado al
+terminar. Todos los formularios de la lista de §6 guardan; **B1 queda cerrado**. Dos defectos:
+
+1. **Escalado falta → amonestación repetible.** Cada clic en la bandera creaba otra amonestación de la
+   misma falta: tres clics = causa de despido por una sola inasistencia. Y el controlador usaba el
+   `id_empleado` del formulario, no el de la falta. Ahora `Amonestacion::activaDesdeFalta()` impide el
+   segundo escalado mientras la amonestación siga activa, se usa el empleado de la falta y la vista
+   muestra «Amonestada» en lugar de la bandera.
+2. **Folio anunciado ≠ folio asignado.** `Empleado::proximoNumeroExpediente()` calculaba `MAX(id)+1`,
+   pero el folio se deriva del id de la secuencia, que va por delante tras altas fallidas o borradas.
+   Ahora lee la secuencia sin consumirla.
+
 ### 2026-10-04 — Roles: un rol nuevo ya funciona sin tocar código · RRHH podía hacerse Administrador (mig. 084)
 
 **Prueba hecha:** con un usuario temporal se recorrieron los roles 1 a 6 (menú, 31 URLs, 11 descargas,

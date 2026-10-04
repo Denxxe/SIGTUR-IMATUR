@@ -171,7 +171,12 @@ class Empleado extends Model
     public static function proximoNumeroExpediente(): string
     {
         $db = new Database();
-        $db->query("SELECT COALESCE(MAX(id), 0) + 1 AS prox FROM empleados");
+        // El folio se deriva del id que asigna la SECUENCIA, no de MAX(id)+1: tras
+        // un alta fallida o un registro borrado la secuencia va por delante y el
+        // asistente anunciaba un folio que luego no se asignaba. Se lee el
+        // próximo valor sin consumirlo (es una vista previa, no una reserva).
+        $db->query("SELECT CASE WHEN s.is_called THEN s.last_value + 1 ELSE s.last_value END AS prox
+                    FROM empleados_id_seq s");
         $row = $db->single();
         return self::formatoFolio($row->prox ?? 1);
     }

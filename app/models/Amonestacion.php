@@ -14,6 +14,19 @@ class Amonestacion extends Model
         return $db->resultSet();
     }
 
+    /**
+     * Amonestación ACTIVA ya generada a partir de esta falta (null si no hay).
+     * Una falta se escala una sola vez: sin este control, tres clics sobre la
+     * misma inasistencia dejaban al empleado en causa de despido. Si esa
+     * amonestación se anula, la falta vuelve a poder escalarse.
+     */
+    public static function activaDesdeFalta(int $idFalta) {
+        $db = new Database();
+        $db->query("SELECT * FROM amonestaciones WHERE id_falta_origen = :f AND is_active = TRUE LIMIT 1");
+        $db->bind(':f', $idFalta);
+        return $db->single() ?: null;
+    }
+
     public static function find($id) {
         $db = new Database();
         $db->query("SELECT * FROM amonestaciones WHERE id = :id");

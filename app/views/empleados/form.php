@@ -202,10 +202,18 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                     <?php endforeach; ?>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingreso">Fecha de ingreso <span class="req">*</span></label>
-                <input type="date" name="fecha_ingreso" id="wz_fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>" oninput="wzVencCalc()"></div></div>
-            <div class="col-md-4" id="wz_ingadm_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingadm">Ingreso a la administración pública <small style="color:var(--text-secondary)">(comisión)</small></label>
-                <input type="date" name="fecha_ingreso_administracion" id="wz_fecha_ingadm" class="sig-input" value="<?php echo $val('fecha_ingreso_administracion'); ?>">
-                <small style="color:var(--text-tertiary)">Antigüedad para vacaciones: fecha original en Alcaldía/Gobernación.</small></div></div>
+                <input type="date" name="fecha_ingreso" id="wz_fecha_ingreso" class="sig-input" required value="<?php echo $val('fecha_ingreso', date('Y-m-d')); ?>" oninput="wzVencCalc(); wzSyncIngAdm()"></div></div>
+            <?php
+            // Ingreso a la administración pública: para TODO el personal, no solo comisión.
+            // Quien llegó a IMATUR con años previos en otro ente público los conserva para
+            // la antigüedad (vacaciones y prima de antigüedad de Nómina). Si no los tiene,
+            // coincide con el ingreso a IMATUR: por eso se precarga con esa fecha.
+            $ingAdm = $val('fecha_ingreso_administracion') ?: $val('fecha_ingreso', date('Y-m-d'));
+            ?>
+            <div class="col-md-4" id="wz_ingadm_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingadm">Ingreso a la administración pública</label>
+                <input type="date" name="fecha_ingreso_administracion" id="wz_fecha_ingadm" class="sig-input" value="<?php echo htmlspecialchars($ingAdm); ?>"
+                       data-auto="<?php echo $val('fecha_ingreso_administracion') ? '0' : '1'; ?>" oninput="this.dataset.auto='0'">
+                <small style="color:var(--text-tertiary)">Base de la antigüedad (vacaciones y prima de antigüedad). Cámbiela si trabajó antes en otro ente público (Alcaldía, Gobernación, ministerio…).</small></div></div>
             <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_venc">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
                 <input type="date" name="fecha_vencimiento_contrato" id="wz_fecha_venc" class="sig-input" value="<?php echo $val('fecha_vencimiento_contrato'); ?>" oninput="wzVencCalc()">
                 <small id="wz_venc_info" style="display:block;margin-top:4px;color:var(--text-tertiary)">Mínimo 3 meses desde el ingreso.</small></div></div>
@@ -334,8 +342,11 @@ function wzOrigenCambio() {
     }
     const f = document.getElementById('emp_fecha_nac');
     if (f) { f.dataset.edadMax = esComision ? '70' : '65'; f.dispatchEvent(new Event('edad:refresh')); }
-    const adm = document.getElementById('wz_ingadm_wrap');
-    if (adm) adm.style.display = esComision ? '' : 'none';
+}
+// Mientras nadie la toque, el ingreso a la administración sigue al ingreso a IMATUR.
+function wzSyncIngAdm() {
+    const adm = document.getElementById('wz_fecha_ingadm');
+    if (adm && adm.dataset.auto === '1') adm.value = document.getElementById('wz_fecha_ingreso').value;
 }
 function wzToggleUniforme() {
     const on = document.getElementById('wz_uniforme').checked;
@@ -449,10 +460,13 @@ function cfAddRow(d) {
     row.className = 'row g-2 align-items-end';
     row.style.marginBottom = '8px';
     row.innerHTML = `
-        <div class="col-md-4"><input type="text" name="cf_nombre[]" class="sig-input" placeholder="Nombre y apellido"></div>
-        <div class="col-md-3"><input type="text" name="cf_cedula[]" class="sig-input" placeholder="Cédula"></div>
-        <div class="col-md-2"><input type="date" name="cf_fnac[]" class="sig-input js-edad"></div>
-        <div class="col-md-2"><select name="cf_parentesco[]" class="sig-select">
+        <div class="col-md-3"><input type="text" name="cf_nombre[]" class="sig-input" placeholder="Nombre y apellido" aria-label="Nombre y apellido del familiar"></div>
+        <div class="col-md-2"><input type="text" name="cf_cedula[]" class="sig-input" placeholder="Cédula" aria-label="Cédula del familiar"></div>
+        <div class="col-md-2"><input type="date" name="cf_fnac[]" class="sig-input js-edad" aria-label="Fecha de nacimiento del familiar"></div>
+        <div class="col-md-2"><select name="cf_genero[]" class="sig-select" aria-label="Género del familiar">
+            <option value="">Género</option><option value="F">Femenino</option><option value="M">Masculino</option>
+        </select></div>
+        <div class="col-md-2"><select name="cf_parentesco[]" class="sig-select" aria-label="Parentesco">
             <option value="">Parentesco</option>
             <?php foreach (CargaFamiliar::PARENTESCOS as $p): ?><option value="<?php echo $p; ?>"><?php echo $p; ?></option><?php endforeach; ?>
         </select></div>

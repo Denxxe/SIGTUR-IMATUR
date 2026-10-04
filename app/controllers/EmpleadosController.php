@@ -256,9 +256,11 @@ class EmpleadosController extends Controller {
                 'tipo_contrato'  => $tipoContrato,
                 'institucion_origen'   => $institucionOrigen,
                 'es_comision_servicio' => $esComisionServicio,
-                // Antigüedad para vacaciones (3A): solo comisionados; si no, usa fecha_ingreso.
-                'fecha_ingreso_administracion' => ($institucionOrigen !== 'IMATUR' && !empty($_POST['fecha_ingreso_administracion']))
-                                                  ? $_POST['fecha_ingreso_administracion'] : null,
+                // Base de la antigüedad (vacaciones y prima de antigüedad) para TODO el personal:
+                // quien trabajó antes en otro ente público conserva esos años. Sin dato, es el
+                // mismo día del ingreso a IMATUR.
+                'fecha_ingreso_administracion' => !empty($_POST['fecha_ingreso_administracion'])
+                                                  ? $_POST['fecha_ingreso_administracion'] : $_POST['fecha_ingreso'],
                 'clasificacion'  => $clasificacion,
                 'grupo_rotacion' => $grupoRotacion,
                 'uniforme'       => $uniforme,
@@ -362,6 +364,14 @@ class EmpleadosController extends Controller {
                 }
             }
 
+            // El ingreso a la administración pública no puede ser posterior al ingreso a IMATUR.
+            if (!empty($data['fecha_ingreso_administracion']) && !empty($data['fecha_ingreso'])
+                && $data['fecha_ingreso_administracion'] > $data['fecha_ingreso']) {
+                flash('global_msg', 'El ingreso a la administración pública no puede ser posterior al ingreso a IMATUR: déjelo igual si no trabajó antes en otro ente público.', 'danger');
+                header('Location: ' . $volverForm);
+                return;
+            }
+
             // Validación de correo electrónico
             if (!empty($data['correo']) && !$this->emailValido($data['correo'])) {
                 flash('global_msg', 'El correo electrónico "' . htmlspecialchars($data['correo']) . '" no es válido (sin espacios ni símbolos especiales; ejemplo: nombre@dominio.com).', 'danger');
@@ -438,6 +448,7 @@ class EmpleadosController extends Controller {
         $cedulas     = $_POST['cf_cedula']     ?? [];
         $fnacs       = $_POST['cf_fnac']       ?? [];
         $parentescos = $_POST['cf_parentesco'] ?? [];
+        $generos     = $_POST['cf_genero']     ?? [];
         foreach ($nombres as $i => $nombre) {
             $nombre = trim($nombre);
             if ($nombre === '') continue;
@@ -448,6 +459,7 @@ class EmpleadosController extends Controller {
                     'cedula'          => $cedulas[$i] ?? null,
                     'fecha_nacimiento'=> $fnacs[$i] ?? null,
                     'parentesco'      => $parentescos[$i] ?? '',
+                    'genero'          => $generos[$i] ?? null,
                 ], $this->getUserId());
             } catch (Exception $e) {
                 // Un familiar inválido no debe abortar el alta del empleado

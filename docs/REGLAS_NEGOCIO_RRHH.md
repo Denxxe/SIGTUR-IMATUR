@@ -113,8 +113,12 @@ La tabla `vacaciones` existe desde migración 002.
 modelo `Vacacion`), resolviendo D-RH04, D-RH05 y D-NEW05.
 
 - **Fórmula (`Vacacion::diasPorAnios`):** 15 días hábiles + 1 por año de servicio, **tope 30**.
-- **Antigüedad:** cuenta desde `fecha_ingreso_administracion` (administración pública) cuando existe,
-  no desde el ingreso a IMATUR — así la comisión de servicio no pierde años.
+- **Antigüedad:** cuenta desde `fecha_ingreso_administracion` (ingreso a la administración pública),
+  no desde el ingreso a IMATUR. **Aplica a todo el personal (2026-10-04)**, no solo a la comisión de
+  servicio: quien trabajó antes en la Alcaldía, la Gobernación u otro ente y hoy está en la nómina de
+  IMATUR conserva esos años (no es comisión: comisión es seguir en la nómina del otro ente). En el alta
+  se precarga con la fecha de ingreso (por defecto hoy) y es editable; no puede ser posterior al
+  ingreso a IMATUR. La usan Vacaciones y la prima de antigüedad de Nómina.
 - **Días hábiles (`Vacacion::diasHabiles`):** excluye fines de semana **y feriados** (tabla `feriados`).
 - **Feriados:** los fijos son recurrentes (se comparan por mes-día); Carnaval y Semana Santa son
   **movibles** y se **calculan** con `Feriado::generarAnio($anio)` desde el Domingo de Resurrección

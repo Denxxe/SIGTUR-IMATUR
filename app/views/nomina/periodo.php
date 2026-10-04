@@ -218,22 +218,27 @@ $delta = $totConf - $totCalc;
                                     <?php endif; ?>
                                 </td>
                             <?php else: ?>
-                                <form action="<?php echo URL_ROOT; ?>/nomina/guardarDetalle" method="POST" style="display:contents;">
-                                    <input type="hidden" name="id_detalle" value="<?php echo (int)$f->id; ?>">
-                                    <input type="hidden" name="grado_escala" value="<?php echo htmlspecialchars($f->grado_escala ?? ''); ?>">
-                                    <td class="text-end">
+                                <?php /* Un <form> no puede envolver celdas de una tabla: el navegador lo
+                                         saca del <tr> y el botón quedaba desconectado (se veía pero no
+                                         enviaba; solo funcionaba Enter). El form vive dentro de la celda
+                                         y el botón de la celda vecina se le asocia con form="…". */
+                                      $fid = 'fdet_' . (int)$f->id; ?>
+                                <td class="text-end">
+                                    <form id="<?php echo $fid; ?>" action="<?php echo URL_ROOT; ?>/nomina/guardarDetalle" method="POST">
+                                        <input type="hidden" name="id_detalle" value="<?php echo (int)$f->id; ?>">
+                                        <input type="hidden" name="grado_escala" value="<?php echo htmlspecialchars($f->grado_escala ?? ''); ?>">
                                         <input type="number" step="0.01" min="0" name="total_bono_vacacional" class="sig-input"
-                                               style="width:110px;text-align:right;"
+                                               style="width:110px;text-align:right;" aria-label="Total confirmado"
                                                value="<?php echo $tConf !== null ? $tConf : ''; ?>"
                                                placeholder="<?php echo $tCalc !== null ? $fmt($tCalc) : 'Capturar'; ?>">
-                                        <?php if ($dif !== null && abs($dif) > 0.01): ?>
-                                            <br><small style="color:var(--warning-600);">dif. <?php echo $fmt($dif); ?></small>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td class="col-actions">
-                                        <button type="submit" class="btn-sig btn-sig--xs btn-sig--primary" title="Guardar total"><i class="bi bi-check-lg"></i></button>
-                                    </td>
-                                </form>
+                                    </form>
+                                    <?php if ($dif !== null && abs($dif) > 0.01): ?>
+                                        <small style="color:var(--warning-600);">dif. <?php echo $fmt($dif); ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="col-actions">
+                                    <button type="submit" form="<?php echo $fid; ?>" class="btn-sig btn-sig--xs btn-sig--primary" title="Guardar total"><i class="bi bi-check-lg"></i> Guardar</button>
+                                </td>
                             <?php endif; ?>
                         </tr>
                     <?php endforeach; ?>

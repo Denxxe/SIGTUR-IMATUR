@@ -67,6 +67,12 @@ class AmonestacionesController extends Controller {
         try {
             $falta = Falta::find($idFalta);
             if (!$falta || !$falta->is_active) throw new Exception('La falta no existe o ya fue anulada.');
+            // El empleado es el de la falta, no el que viaja en el formulario.
+            $idEmpleado = (int)$falta->id_empleado;
+            if ($previa = Amonestacion::activaDesdeFalta($idFalta)) {
+                throw new Exception('esta falta ya generó la amonestación del '
+                    . date('d/m/Y', strtotime($previa->fecha)) . '. Una falta se escala una sola vez.');
+            }
             $motivo = 'Originada por falta del ' . date('d/m/Y', strtotime($falta->fecha))
                     . ' (' . ($falta->tipo ?? 'falta') . ')'
                     . (!empty($falta->motivo) ? ': ' . $falta->motivo : '');
@@ -76,7 +82,7 @@ class AmonestacionesController extends Controller {
                 'motivo'          => $motivo,
                 'id_falta_origen' => $idFalta,
             ], $this->getUserId());
-            flash('global_msg', 'Amonestación generada a partir de la falta.', 'warning');
+            flash('global_msg', 'Amonestación generada a partir de la falta.');
         } catch (Exception $e) {
             flash('global_msg', 'No se pudo generar la amonestación: ' . $e->getMessage(), 'danger');
         }

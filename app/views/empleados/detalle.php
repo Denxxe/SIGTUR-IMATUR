@@ -538,21 +538,19 @@ $fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
         <p class="sig-table-empty" style="padding:12px 16px;">Sin datos salariales registrados.</p>
     <?php else: ?>
         <table class="sig-table">
-            <thead><tr><th>Sueldo Básico</th><th>Prima Prof.</th><th>Prima Resp.</th><th>Prima Antig.</th><th>Prima/Hijo</th><th>Bono Transp.</th><th>Prima FOND</th><th>Prima Discap.</th><th>Caja Ahorro</th></tr></thead>
+            <thead><tr><th>Sueldo Básico</th><th>Prima Discap.</th><th>Vigente desde</th></tr></thead>
             <tbody>
                 <tr>
                     <td><?php echo $fmtMonto($sueldoActual->sueldo_basico); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->prima_profesional); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->prima_responsabilidad); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->prima_antiguedad); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->prima_por_hijo); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->bono_transporte); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->prima_fond); ?></td>
                     <td><?php echo $fmtMonto($sueldoActual->prima_discapacidad); ?></td>
-                    <td><?php echo $fmtMonto($sueldoActual->caja_ahorro); ?></td>
+                    <td><?php echo $ffecha($sueldoActual->fecha_efectiva); ?></td>
                 </tr>
             </tbody>
         </table>
+        <p style="padding:0 16px;font-size:12px;color:var(--text-tertiary);margin:6px 0 0;">
+            Las primas de profesionalización, antigüedad, por hijo y el transporte <strong>las calcula Nómina</strong>
+            a partir del grado, los años en la administración pública y la carga familiar (ver «Datos de nómina»).
+        </p>
     <?php endif; ?>
     <?php if (!empty($historialSueldos)): ?>
     <details style="padding:8px 16px 12px;">
@@ -754,23 +752,18 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
                 <p class="text-muted" style="font-size:13px;">
-                    Se agrega como un nuevo registro; no borra el historial anterior — es insumo de Nómina/Bono Vacacional.
+                    Se agrega como un nuevo registro; no borra el historial anterior. Solo se captura lo que el
+                    sistema no puede calcular: las primas de profesionalización, antigüedad, por hijo y el
+                    transporte las deriva Nómina (grado, años en la administración pública, carga familiar).
                 </p>
                 <div class="row g-2">
-                    <div class="col-6 sig-field"><label class="sig-field__label">Sueldo Básico</label><input type="number" step="0.01" min="0" name="sueldo_basico" class="sig-input" value="<?php echo $sueldoActual->sueldo_basico ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Profesional</label><input type="number" step="0.01" min="0" name="prima_profesional" class="sig-input" value="<?php echo $sueldoActual->prima_profesional ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Responsabilidad</label><input type="number" step="0.01" min="0" name="prima_responsabilidad" class="sig-input" value="<?php echo $sueldoActual->prima_responsabilidad ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Antigüedad</label><input type="number" step="0.01" min="0" name="prima_antiguedad" class="sig-input" value="<?php echo $sueldoActual->prima_antiguedad ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima por Hijo (unitaria)</label><input type="number" step="0.01" min="0" name="prima_por_hijo" class="sig-input" value="<?php echo $sueldoActual->prima_por_hijo ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Bono Transporte</label><input type="number" step="0.01" min="0" name="bono_transporte" class="sig-input" value="<?php echo $sueldoActual->bono_transporte ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima FOND</label><input type="number" step="0.01" min="0" name="prima_fond" class="sig-input" value="<?php echo $sueldoActual->prima_fond ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Prima Discapacidad</label><input type="number" step="0.01" min="0" name="prima_discapacidad" class="sig-input" value="<?php echo $sueldoActual->prima_discapacidad ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Caja de Ahorro</label><input type="number" step="0.01" min="0" name="caja_ahorro" class="sig-input" value="<?php echo $sueldoActual->caja_ahorro ?? 0; ?>"></div>
-                    <div class="col-6 sig-field"><label class="sig-field__label">Vigente desde</label><input type="date" name="fecha_efectiva" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label" for="sal_basico">Sueldo Básico (mensual) <span class="req">*</span></label><input id="sal_basico" type="number" step="0.01" min="0.01" required name="sueldo_basico" class="sig-input" value="<?php echo $sueldoActual->sueldo_basico ?? ''; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label" for="sal_discap">Prima Discapacidad</label><input id="sal_discap" type="number" step="0.01" min="0" name="prima_discapacidad" class="sig-input" value="<?php echo $sueldoActual->prima_discapacidad ?? 0; ?>"></div>
+                    <div class="col-6 sig-field"><label class="sig-field__label" for="sal_desde">Vigente desde</label><input id="sal_desde" type="date" name="fecha_efectiva" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>"></div>
                 </div>
                 <div class="sig-field mt-2">
-                    <label class="sig-field__label">Motivo</label>
-                    <input type="text" name="motivo" class="sig-input" placeholder="Ej: aumento decretado, ajuste de escala…">
+                    <label class="sig-field__label" for="sal_motivo">Motivo</label>
+                    <input id="sal_motivo" type="text" name="motivo" class="sig-input" placeholder="Ej: aumento decretado, ajuste de escala…">
                 </div>
             </div>
             <div class="modal-footer">

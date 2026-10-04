@@ -42,7 +42,7 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
-| ~~1~~ | ✅ ~~Verificación en navegador~~ **Hecha en lo esencial (2026-10-03)**: ~50 páginas recorridas (menú completo + Rutas, Nómina e Inventario a dos niveles), **0 errores de PHP** en el log; el menú de **los 6 roles** coincide con `permisos_rol` y Solo Lectura queda denegado en 8 módulos ajenos probados por URL. Un hallazgo menor corregido (Cobro decía a la vez «gratuito» y «falta fijar la tarifa"). **Falta:** probar los formularios (guardar, no solo abrir) — ver §6 | — | — |
+| ~~1~~ | ✅ ~~Verificación en navegador~~ **Hecha en lo esencial (2026-10-03)**: ~50 páginas recorridas (menú completo + Rutas, Nómina e Inventario a dos niveles), **0 errores de PHP** en el log; el menú de **los 6 roles** coincide con `permisos_rol` y Solo Lectura queda denegado en 8 módulos ajenos probados por URL. Un hallazgo menor corregido (Cobro decía a la vez «gratuito» y «falta fijar la tarifa"). **2026-10-04: formularios probados guardando** (alta de empleado B1, traslado, falta→amonestación, vacaciones, Ubicaciones, parámetros/quincena/recálculo/bono vacacional de Nómina, evidencia de taller): todos guardan. Se corrigieron 2 defectos (ver §6) | — | — |
 | 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver `CHANGELOG.md` |
 | 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver `CHANGELOG.md` |
 | 4 | ~~**Corregir H-16**~~ | — | ✅ **Hecho (2026-09-17, mig. 076).** Y eran **cuatro** consultas, no tres: el mismo error estaba en el KPI `kpiBajasAnio` del Dashboard. Junto con C-6. Ver `CHANGELOG.md` |
@@ -439,6 +439,27 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 ---
 
 ## 6. VERIFICACIÓN MANUAL PENDIENTE (probar en navegador)
+
+> ✅ **2026-10-04 — prueba de formularios guardando datos (navegador + HTTP), sobre un respaldo de la
+> base que luego se restauró.** Todo guarda: **B1 cerrado** (alta de 5 pasos con familiar → expediente),
+> traslado (cambia el departamento y queda en historial), falta → amonestación, vacaciones (09/10–13/10
+> = **2 días hábiles**: descuenta fin de semana y el feriado del 12/10), modal de Ubicaciones (sede +
+> depósito, la edición recarga los valores), Nómina (cargar mes, generar quincena, avisos, recalcular,
+> datos de nómina, sueldo, total confirmado del bono vacacional) y evidencia de taller (rechaza un
+> `.png` con PHP dentro; la imagen real se descarga idéntica solo con sesión).
+>
+> **Corregido:** (1) **una misma falta se podía escalar varias veces** — tres clics sobre una sola
+> inasistencia = causa de despido; además el controlador tomaba el empleado del formulario y no de la
+> falta. Ahora una falta se escala una vez (vuelve a poder si se anula su amonestación) y la bandera
+> pasa a «Amonestada». (2) **El asistente de alta anunciaba un folio que no se asignaba** (`EXP-0005`
+> anunciado, `EXP-0020` real): usaba `MAX(id)+1` en vez de la secuencia.
+>
+> ✅ **Resuelto el mismo día:** el ingreso a la administración pública se habilitó para **todo** el
+> personal (precargado con la fecha de ingreso, editable; ver `REGLAS_NEGOCIO_RRHH.md`). Y los cuatro
+> menores: «Registrar sueldo» pide solo lo que Nómina no calcula (sueldo básico y prima de
+> discapacidad); el botón de guardar del bono vacacional **existía pero estaba desconectado** (un
+> `<form>` envolviendo celdas de tabla); el asistente pide el género del familiar; el escalado pide
+> confirmación y avisa con cuántas amonestaciones queda el empleado.
 
 > ✅ **2026-10-03 — recorrido de lectura hecho:** todas las pantallas de abajo **abren sin error**
 > (incluidas las 9 fases de Rutas) y el menú de los 6 roles coincide con *Roles y Permisos*. Lo que
