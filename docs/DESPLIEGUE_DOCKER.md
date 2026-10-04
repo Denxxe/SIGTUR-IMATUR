@@ -3,10 +3,14 @@
 Guía para levantar el sistema en una PC con Windows y entrar desde **otras computadoras y
 teléfonos de la misma red**, y opcionalmente **desde internet**.
 
-> ⚠️ Los archivos de Docker (`docker-compose.yml`, `docker/`, `.env.example`) se escribieron el
-> 2026-10-03 y **todavía no se han levantado en una máquina con Docker**. La configuración PHP y la
-> selección de URL sí se probaron; la construcción de la imagen no. Si algo falla en el paso 4,
-> el error que muestre la consola dice exactamente qué.
+> ✅ **Probado el 2026-10-03** (Windows 11, Docker 29.8, Compose v5.5): la imagen construye, la base
+> se crea sola con las 69 tablas (migraciones 001-083), el login `admin` entra al panel, se accede
+> por `localhost` y por la IP de la red local, Apache devuelve 403 a `config.php`, `app/` y
+> `database/`, la tarea de estados corre y un respaldo manual genera el `.sql` en
+> `docker-data/backups/`.
+>
+> Si se ejecutan comandos `docker compose exec … /var/www/…` desde **Git Bash**, anteponer
+> `MSYS_NO_PATHCONV=1`: Git Bash reescribe las rutas que empiezan por `/`. En PowerShell o CMD no hace falta.
 
 **Qué se levanta:** tres contenedores.
 
@@ -133,6 +137,16 @@ Cualquiera con el enlace llega a la pantalla de login. No hace falta abrir puert
 | Detener | `docker compose stop` |
 | Arrancar | `docker compose start` |
 
+**Después de reiniciar la PC** no hay que hacer nada si Docker Desktop tiene marcado *Start Docker
+Desktop when you sign in* (paso 1.4): al iniciar sesión en Windows arranca Docker, y Docker levanta
+solos los tres contenedores (`restart: unless-stopped`). Tarda 1-2 minutos. Sin esa opción, abrir
+Docker Desktop a mano y esperar a *Engine running*; no hace falta ningún comando. Si se detuvo con
+`docker compose stop`, en cambio, **no** vuelve solo: hay que ejecutar `docker compose start` desde
+la carpeta del proyecto.
+
+> Docker arranca al **iniciar sesión**, no al encender: la PC tiene que quedar con la sesión de
+> Windows abierta (puede estar bloqueada con Win+L).
+
 **Dónde quedan los datos:**
 
 - La base de datos: en el volumen de Docker `sigtur_bd`.
@@ -170,3 +184,57 @@ migraciones en `database/migrations/`, aplicar **solo las nuevas**, en orden (so
 docker compose cp database\migrations\084_ejemplo.sql db:/tmp/m.sql
 docker compose exec db psql -U postgres -d SIGTUR-IMATUR -v ON_ERROR_STOP=1 -f /tmp/m.sql
 ```
+
+## 9. Llevar el sistema a otra computadora
+
+**Instalación nueva (base vacía):** repetir los pasos 1 a 5 en la otra PC. Cambian dos cosas: su IP
+(`ipconfig`), que va en `APP_URLS`, y la regla del firewall, que se crea de nuevo en esa PC.
+
+**Mudar el sistema con sus datos** (usuarios, empleados, documentos). Probado el 2026-10-03:
+
+1. En la PC **vieja**, sacar un respaldo al momento:
+   `docker compose exec tareas php cron/respaldo_bd.php`
+2. Copiar a un pendrive **el último `.sql` de `docker-data\backups\`** y la carpeta completa
+   **`docker-data\uploads\`** (fotos y documentos subidos: no van dentro del `.sql`).
+3. En la PC **nueva**, pasos 1 a 4. Se crea una base vacía con el `admin` de arranque.
+4. Pegar la carpeta `uploads` dentro de `docker-data\` de la PC nueva (reemplazando la vacía).
+5. Restaurar el respaldo con los tres comandos de **Restaurar un respaldo** (sección 7). La base
+   vacía se reemplaza por la de la PC vieja, con sus usuarios y contraseñas.
+6. Ajustar `APP_URLS` en el `.env` con la IP de la PC nueva y ejecutar `docker compose up -d`.
+7. Apagar el sistema en la PC vieja (`docker compose stop`): dos copias vivas se separan en cuanto
+   alguien registre algo en una de ellas.
+
+> **Fijar la IP del servidor.** El router puede asignarle otra IP al reiniciar y los teléfonos
+> dejarían de encontrarlo. En la página del router (suele ser `http://192.168.1.1` o la *Puerta de
+> enlace* que muestra `ipconfig`) buscar *DHCP → Reserva de IP / Static lease* y reservar la IP
+> actual para esa PC.
+
+## 10. Entrar con un nombre en vez de IP y puerto
+
+Cada dirección nueva hay que agregarla a `APP_URLS` (exacta: con `http`/`https` y con el puerto si
+lo lleva) y ejecutar `docker compose up -d`. Si no está en la lista, el sistema funciona pero los
+enlaces vuelven a la primera dirección de la lista.
+
+**a) Quitar el `:8080`.** En el `.env`: `PUERTO=80` y `APP_URLS=http://192.168.100.144` (sin
+puerto). Se entra con `http://192.168.100.144`. Choca con el Apache de Laragon, que también usa el
+80: sirve en la PC que solo hace de servidor, no en la de desarrollo. La regla del firewall pasa a
+`-LocalPort 80`.
+
+**b) Nombre gratis, con HTTPS, desde casa y desde fuera: Tailscale.** Con Tailscale instalado (sección
+6, opción A), en la consola de administración de Tailscale activar *DNS → MagicDNS* y *HTTPS
+Certificates*. Luego, en la PC servidor:
+
+```powershell
+tailscale serve --bg 8080
+```
+
+Muestra una dirección como `https://nombre-pc.tailXXXX.ts.net`: agregarla a `APP_URLS`. Solo la
+abren los equipos con Tailscale y la misma cuenta.
+
+**c) Dominio propio público (`https://sigtur.midominio.com`).** Comprar un dominio (unos 10 USD al
+año), ponerlo en Cloudflare y crear un *tunnel* con nombre que apunte a `http://localhost:8080`.
+Cualquiera con el enlace llega al login: antes, contraseñas fuertes para todos (sección 6).
+
+> Un nombre **solo dentro de la red**, sin Tailscale ni dominio, depende de que el router permita
+> registrar nombres (*DNS local / Static DNS*). La mayoría de los routers que dan los proveedores
+> no lo permiten, y el archivo `hosts` sirve en computadoras pero no en teléfonos.
