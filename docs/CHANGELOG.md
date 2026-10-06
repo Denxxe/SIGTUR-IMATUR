@@ -18,6 +18,22 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-06 — Indicadores por rol · documentación y documento único para el cliente
+
+- **Indicadores por rol.** RRHH y Solo Lectura veían en *Indicadores de Gestión* las cifras de Rutas,
+  Formación y Bienes. Cada dato tiene ahora su área (Personal, Recepción, Formación, Turismo,
+  Pasantes, Inventario) y el controlador vacía las ajenas antes de entregar la vista, así tampoco
+  viajan dentro de los datos de los gráficos. La vista oculta tarjetas, mosaicos del semáforo,
+  derivados, secciones y tablas de respaldo según el área; los gráficos se dibujan solo si su
+  contenedor existe. La tarjeta del catálogo usa la misma lista de módulos
+  (`ReportesController::modulosIndicadores()`). La lista de áreas es un método y no una constante:
+  las constantes en traits llegan en PHP 8.2 y el servidor usa 8.1. Verificado con los roles 1-6.
+- **Documentación al día** (15 archivos de `docs/`): reglas nuevas en modelo de negocio, reglas,
+  manual, especificación y diagramas; migración 084 en las referencias de estado.
+- **`PREGUNTAS_CLIENTE.md` reescrito** como el documento único para enviar al cliente: por módulo,
+  qué funciona, preguntas priorizadas y recaudos; lista de chequeo consolidada, planillas por
+  trabajador y por bien, y datos de producción a definir.
+
 ### 2026-10-04 (d) — Bienes: un rol de consulta ya no ve botones de escritura
 
 El servidor bloqueaba la escritura sin `InventarioEscritura` desde la mig. 084, pero tres pantallas

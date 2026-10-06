@@ -111,7 +111,7 @@ flowchart LR
 
     subgraph DBF["database/"]
         SC["schema_consolidado.sql"]
-        MG["migrations/ 001-083"]
+        MG["migrations/ 001-084"]
     end
 
     subgraph STO["storage/ (NO accesible por web)"]

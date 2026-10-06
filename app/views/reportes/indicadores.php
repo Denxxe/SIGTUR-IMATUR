@@ -9,6 +9,12 @@ function fmtMes(string $ym): string {
 }
 ?>
 
+<?php
+// Áreas visibles según los módulos del rol (ReportesIndicadoresTrait::filtrarIndicadoresPorRol).
+// Lo que no se ve, tampoco se envió: el controlador ya vació esos datos.
+$pu = $data['puede'] ?? [];
+$ve = fn(string $area): bool => !empty($pu[$area]);
+?>
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
         <div class="page__eyebrow">
@@ -68,22 +74,27 @@ function areaSep(string $label, string $color, string $icon): void {
 ?>
 
 <!-- Fila 1: Recursos Humanos + Recepción ──────────────────────────────── -->
+<?php if ($ve('personal') || $ve('visitas') || $ve('pasantes') || $ve('inventario')): ?>
 <?php areaSep('Recursos Humanos y Recepción', '#3B82F6', 'bi-people'); ?>
 <div class="row g-3 mb-5 anim-slide-up">
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Empleados Activos',  'value'=>$data['kpiEmpleados'],       'sub'=>'en nómina institucional',   'icon'=>'bi-people-fill',     'bg'=>'#3B82F6']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Visitas Hoy',         'value'=>$data['kpiVisitasHoy'],      'sub'=>'registradas esta jornada',  'icon'=>'bi-door-open-fill',  'bg'=>'#0891B2']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Pasantes en Curso',   'value'=>$data['kpiPasantesEnCurso'], 'sub'=>'realizando pasantías',      'icon'=>'bi-journal-text',    'bg'=>'#0EA5E9']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes Activos',      'value'=>$data['kpiBienesActivos'],   'sub'=>'activos registrados',       'icon'=>'bi-box-seam-fill',   'bg'=>'#64748B']); ?></div>
+    <?php if ($ve('personal')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Empleados Activos',  'value'=>$data['kpiEmpleados'],       'sub'=>'en nómina institucional',   'icon'=>'bi-people-fill',     'bg'=>'#3B82F6']); ?></div><?php endif; ?>
+    <?php if ($ve('visitas')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Visitas Hoy',         'value'=>$data['kpiVisitasHoy'],      'sub'=>'registradas esta jornada',  'icon'=>'bi-door-open-fill',  'bg'=>'#0891B2']); ?></div><?php endif; ?>
+    <?php if ($ve('pasantes')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Pasantes en Curso',   'value'=>$data['kpiPasantesEnCurso'], 'sub'=>'realizando pasantías',      'icon'=>'bi-journal-text',    'bg'=>'#0EA5E9']); ?></div><?php endif; ?>
+    <?php if ($ve('inventario')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes Activos',      'value'=>$data['kpiBienesActivos'],   'sub'=>'activos registrados',       'icon'=>'bi-box-seam-fill',   'bg'=>'#64748B']); ?></div><?php endif; ?>
 </div>
+<?php endif; ?>
 
 <!-- Fila 2: Formación y Turismo ───────────────────────────────────────── -->
+<?php if ($ve('talleres') || $ve('rutas') || $ve('inventario')): ?>
 <?php areaSep('Formación y Turismo', '#7C3AED', 'bi-mortarboard'); ?>
 <div class="row g-3 mb-5 anim-slide-up">
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Actividades Activas', 'value'=>$data['kpiActividadesActivas'], 'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',  'bg'=>'#7C3AED']); ?></div>
+    <?php if ($ve('talleres')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Actividades Activas', 'value'=>$data['kpiActividadesActivas'], 'sub'=>'en curso o programadas',         'icon'=>'bi-mortarboard-fill',  'bg'=>'#7C3AED']); ?></div>
     <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Formados '.$data['anioActual'], 'value'=>$data['kpiFormadosAnio'],       'sub'=>'inscripciones activas en el año','icon'=>'bi-person-check-fill', 'bg'=>'#059669']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Rutas Operativas',    'value'=>$data['kpiRutasActivas'],       'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',      'bg'=>'#D97706']); ?></div>
-    <div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes en Alerta',    'value'=>$data['kpiBienesAlerta'],       'sub'=>'dañados o en reparación',        'icon'=>'bi-exclamation-triangle-fill','bg'=>'#DC2626','alert'=>true]); ?></div>
+    <?php endif; ?>
+    <?php if ($ve('rutas')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Rutas Operativas',    'value'=>$data['kpiRutasActivas'],       'sub'=>'en estado Activa',               'icon'=>'bi-geo-alt-fill',      'bg'=>'#D97706']); ?></div><?php endif; ?>
+    <?php if ($ve('inventario')): ?><div class="col-6 col-md-3"><?php kpiCard(['label'=>'Bienes en Alerta',    'value'=>$data['kpiBienesAlerta'],       'sub'=>'dañados o en reparación',        'icon'=>'bi-exclamation-triangle-fill','bg'=>'#DC2626','alert'=>true]); ?></div><?php endif; ?>
 </div>
+<?php endif; ?>
 
 <?php
 // ── Cálculo de ratios — Eficiencia Operativa ──────────────────────────────
@@ -193,6 +204,7 @@ $semTiles = [];
 // 1. Eficacia formativa (tasa de finalización)
 $semTiles[] = [
     'area'   => 'Eficacia Formativa',
+    'ver'    => $ve('talleres'),
     'icon'   => 'bi-mortarboard-fill',
     'estado' => $totalActs === 0 ? 'nodata' : ($tasaFinaliz >= 85 ? 'ok' : ($tasaFinaliz >= 70 ? 'warn' : 'crit')),
     'metric' => $totalActs === 0 ? '— sin actividades' : $tasaFinaliz . '% finalizadas',
@@ -201,6 +213,7 @@ $semTiles[] = [
 // 2. Ocupación de cupos
 $semTiles[] = [
     'area'   => 'Ocupación de Cupos',
+    'ver'    => $ve('talleres'),
     'icon'   => 'bi-people-fill',
     'estado' => $totalCupos === 0 ? 'nodata' : ($tasaOcupacion >= 75 ? 'ok' : ($tasaOcupacion >= 50 ? 'warn' : 'crit')),
     'metric' => $totalCupos === 0 ? '— sin cupos definidos' : $tasaOcupacion . '% ocupación',
@@ -209,6 +222,7 @@ $semTiles[] = [
 // 3. Control de cancelaciones
 $semTiles[] = [
     'area'   => 'Control de Cancelaciones',
+    'ver'    => $ve('talleres'),
     'icon'   => 'bi-x-circle-fill',
     'estado' => $totalActs === 0 ? 'nodata' : ($tasaCancel <= 5 ? 'ok' : ($tasaCancel <= 10 ? 'warn' : 'crit')),
     'metric' => $totalActs === 0 ? '— sin actividades' : $tasaCancel . '% canceladas',
@@ -217,6 +231,7 @@ $semTiles[] = [
 // 4. Meta anual de formación
 $semTiles[] = [
     'area'   => 'Meta de Formación',
+    'ver'    => $ve('talleres'),
     'icon'   => 'bi-flag-fill',
     'estado' => $semPctTall === null ? 'nometa' : ($semPctTall >= 100 ? 'ok' : ($semPctTall >= 70 ? 'warn' : 'crit')),
     'metric' => $semPctTall === null ? '— meta no definida' : $semPctTall . '% (' . $semTallAnio . '/' . $semMetaTall . ')',
@@ -225,6 +240,7 @@ $semTiles[] = [
 // 5. Meta anual de rutas
 $semTiles[] = [
     'area'   => 'Meta de Rutas',
+    'ver'    => $ve('rutas'),
     'icon'   => 'bi-geo-alt-fill',
     'estado' => $semPctRut === null ? 'nometa' : ($semPctRut >= 100 ? 'ok' : ($semPctRut >= 70 ? 'warn' : 'crit')),
     'metric' => $semPctRut === null ? '— meta no definida' : $semPctRut . '% (' . $semRutAnio . '/' . $semMetaRut . ')',
@@ -233,11 +249,15 @@ $semTiles[] = [
 // 6. Salud del patrimonio (inverso de la depreciación)
 $semTiles[] = [
     'area'   => 'Salud del Patrimonio',
+    'ver'    => $ve('inventario'),
     'icon'   => 'bi-box-seam-fill',
     'estado' => $totalBienes === 0 ? 'nodata' : ($tasaDeprec <= 10 ? 'ok' : ($tasaDeprec <= 15 ? 'warn' : 'crit')),
     'metric' => $totalBienes === 0 ? '— sin bienes' : $tasaDeprec . '% deteriorado',
     'hint'   => 'Umbral < 15%',
 ];
+
+// Solo los mosaicos de las áreas que el rol tiene asignadas.
+$semTiles = array_values(array_filter($semTiles, fn($t) => $t['ver']));
 
 // Conteo global para el resumen del encabezado
 $semOk = $semWarn = $semCrit = 0;
@@ -248,6 +268,7 @@ foreach ($semTiles as $st) {
 }
 ?>
 
+<?php if (!empty($semTiles)): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SEMÁFORO DE GESTIÓN INSTITUCIONAL — lectura ejecutiva de un vistazo
 ════════════════════════════════════════════════════════════════════════ -->
@@ -290,11 +311,14 @@ foreach ($semTiles as $st) {
     <?php endforeach; ?>
 </div>
 
+<?php endif; ?>
+
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: EFICIENCIA OPERATIVA (por área)
 ════════════════════════════════════════════════════════════════════════ -->
 
 <!-- Sub-área: Formación ─────────────────────────────────────────────── -->
+<?php if ($ve('talleres')): ?>
 <?php areaSep('Eficiencia · Formación — ' . $data['anioActual'], '#7C3AED', 'bi-mortarboard'); ?>
 <div class="row g-3 mb-4 anim-slide-up">
     <div class="col-6 col-md-4">
@@ -368,7 +392,9 @@ foreach ($semTiles as $st) {
     </div>
 </div>
 
+<?php endif; ?>
 <!-- Sub-área: Recursos Humanos ──────────────────────────────────────── -->
+<?php if ($ve('personal')): ?>
 <?php areaSep('Eficiencia · Recursos Humanos — ' . $data['anioActual'], '#3B82F6', 'bi-people'); ?>
 <div class="row g-3 mb-4 anim-slide-up">
     <?php
@@ -381,7 +407,9 @@ foreach ($semTiles as $st) {
     ?>
 </div>
 
+<?php endif; ?>
 <!-- Sub-área: Inventario y Patrimonio ───────────────────────────────── -->
+<?php if ($ve('inventario')): ?>
 <?php areaSep('Eficiencia · Inventario y Patrimonio', '#64748B', 'bi-box-seam'); ?>
 <div class="row g-3 mb-4 anim-slide-up">
     <?php
@@ -393,6 +421,8 @@ foreach ($semTiles as $st) {
         $aiAsig . ' asignados / ' . $aiTot . ' durables', 'bi-person-check', 'Bajo custodia actual', (int)round($tasaAsig), false);
     ?>
 </div>
+
+<?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      INDICADORES DERIVADOS DE PRODUCTIVIDAD
@@ -408,13 +438,14 @@ $ctD       = $data['coberturaTerrForma'] ?? null;
 $cobPctD   = (int)($ctD->total_municipios ?? 0) > 0
            ? round(((int)($ctD->municipios_cubiertos ?? 0) / (int)$ctD->total_municipios) * 100) : 0;
 
-$derivados = [
-    ['Participantes / Actividad', $avgPartAct,         'promedio de inscritos por actividad', 'bi-people',          '#7C3AED'],
-    ['Formados / Capacitador',    number_format($avgPorCap), 'carga formativa por facilitador',     'bi-person-badge',    '#059669'],
-    ['Visitas / Día',             $avgVisDia,          'promedio diario (últimos 14 días)',   'bi-door-open',       '#0891B2'],
-    ['Cobertura Territorial',     $cobPctD . '%',      'municipios del estado con actividad', 'bi-geo-alt',         '#D97706'],
-];
+$derivados = array_values(array_filter([
+    $ve('talleres') ? ['Participantes / Actividad', $avgPartAct,         'promedio de inscritos por actividad', 'bi-people',          '#7C3AED'] : null,
+    $ve('talleres') ? ['Formados / Capacitador',    number_format($avgPorCap), 'carga formativa por facilitador',     'bi-person-badge',    '#059669'] : null,
+    $ve('visitas')  ? ['Visitas / Día',             $avgVisDia,          'promedio diario (últimos 14 días)',   'bi-door-open',       '#0891B2'] : null,
+    $ve('talleres') ? ['Cobertura Territorial',     $cobPctD . '%',      'municipios del estado con actividad', 'bi-geo-alt',         '#D97706'] : null,
+]));
 ?>
+<?php if (!empty($derivados)): ?>
 <div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
     <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
     <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Indicadores Derivados de Productividad — <?php echo $data['anioActual']; ?></span>
@@ -439,7 +470,10 @@ $derivados = [
     <?php endforeach; ?>
 </div>
 
+<?php endif; ?>
+
 <!-- PROP-P01: Tipo de Contrato — RRHH -->
+<?php if ($ve('personal')): ?>
 <?php areaSep('Recursos Humanos', '#3B82F6', 'bi-people'); ?>
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-5">
@@ -584,6 +618,9 @@ $amDesp = (int)($data['amonDespido'] ?? 0);
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('talleres')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN
 ════════════════════════════════════════════════════════════════════════ -->
@@ -668,6 +705,9 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('visitas')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: RECEPCIÓN DE VISITANTES
 ════════════════════════════════════════════════════════════════════════ -->
@@ -704,6 +744,9 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('talleres')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN — DEMOGRAFÍA Y GÉNERO (F-3)
 ════════════════════════════════════════════════════════════════════════ -->
@@ -767,6 +810,9 @@ function pctDem($v, $t) { return $t > 0 ? round(($v/$t)*100, 1) : 0; }
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('talleres')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN — COBERTURA TERRITORIAL Y CAPACITADORES (F-4, F-5)
 ════════════════════════════════════════════════════════════════════════ -->
@@ -853,6 +899,9 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('rutas')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: TURISMO — RUTAS POR TIPO Y META (T-1, T-2)
 ════════════════════════════════════════════════════════════════════════ -->
@@ -974,6 +1023,9 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('rutas')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: TURISMO — DEMOGRAFÍA DE PARTICIPANTES (T-DEMO)
 ════════════════════════════════════════════════════════════════════════ -->
@@ -1034,6 +1086,9 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
 </div>
 <?php endif; ?>
 
+<?php endif; ?>
+
+<?php if ($ve('inventario')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: INVENTARIO DE BIENES
 ════════════════════════════════════════════════════════════════════════ -->
@@ -1117,10 +1172,14 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
     </div>
 </div>
 
+<?php endif; ?>
+
+<?php if ($ve('personal') || $ve('inventario')): ?>
 <!-- ══════════════════════════════════════════════════════════════════════
      TABLAS DE RESPALDO
 ════════════════════════════════════════════════════════════════════════ -->
 <div class="row g-4 anim-slide-up" style="margin-bottom:var(--sp-8);">
+    <?php if ($ve('personal')): ?>
     <div class="col-md-6">
         <div class="sig-card">
             <div class="sig-card__head">
@@ -1149,6 +1208,8 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
             </div>
         </div>
     </div>
+    <?php endif; ?>
+    <?php if ($ve('inventario')): ?>
     <div class="col-md-6">
         <div class="sig-card">
             <div class="sig-card__head">
@@ -1177,7 +1238,9 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <!-- ══════════════════════════════════════════════════════════════════════
      APEXCHARTS — inicialización
@@ -1193,6 +1256,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const noData = { text: 'Sin datos disponibles', style: { color: ts, fontSize: '12px', fontWeight: '400' } };
     const axLbl  = { style: { colors: tp, fontSize: '11px' } };
     const palette = ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#F97316','#64748B'];
+    // Un gráfico solo se dibuja si su sección está en la página: las áreas que el
+    // rol no tiene asignadas no se imprimen, y ApexCharts falla sin contenedor.
+    function apex(sel, opts) {
+        const el = document.querySelector(sel);
+        if (el) new ApexCharts(el, opts).render();
+    }
     const donutLabelOpts = {
         show: true,
         total: { show: true, label: 'TOTAL', color: ts, fontSize: '10px', fontWeight: '700',
@@ -1207,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valD[] = (int)($e->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartEmpDepto'), {
+    apex('#chartEmpDepto', {
         chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Empleados', data: <?php echo json_encode($valD); ?> }],
         xaxis: { categories: <?php echo json_encode($lblD); ?>, labels: axLbl },
@@ -1217,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
         legend: { show: false },
         grid, theme, noData
-    }).render();
+    });
 
     // ── 2. Asistencia mensual (barras verticales) ─────────────────────
     <?php
@@ -1227,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valA[] = (int)($a->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartAsistMes'), {
+    apex('#chartAsistMes', {
         chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Registros', data: <?php echo json_encode($valA); ?> }],
         xaxis: { categories: <?php echo json_encode($lblA); ?>, labels: axLbl },
@@ -1236,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', function () {
         colors: ['#F59E0B'],
         dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
         grid, theme, noData
-    }).render();
+    });
 
     // ── 3. Actividades por mes — tendencia (área) ─────────────────────
     <?php
@@ -1246,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valM[] = (int)($t->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartTallMes'), {
+    apex('#chartTallMes', {
         chart: { type: 'area', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Actividades', data: <?php echo json_encode($valM); ?> }],
         xaxis: { categories: <?php echo json_encode($lblM); ?>, labels: axLbl, axisBorder: { show: false } },
@@ -1256,7 +1325,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.03, stops: [20, 100] } },
         markers: { size: 5, colors: ['#7C3AED'], strokeWidth: 2, strokeColors: isDark ? '#1e1e2d' : '#fff' },
         grid, theme, noData
-    }).render();
+    });
 
     // ── 4. Tipo de actividad (donut) ──────────────────────────────────
     <?php
@@ -1266,7 +1335,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valTT[] = (int)($t->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartTallTipo'), {
+    apex('#chartTallTipo', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: <?php echo json_encode($valTT); ?>,
         labels: <?php echo json_encode($lblTT); ?>,
@@ -1276,14 +1345,14 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
 
     // ── 5. Participantes internos vs externos (donut) ─────────────────
     <?php
     $internos = (int)($data['participantesTipo']->internos ?? 0);
     $externos = (int)($data['participantesTipo']->externos ?? 0);
     ?>
-    new ApexCharts(document.querySelector('#chartPartTipo'), {
+    apex('#chartPartTipo', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: [<?php echo $internos; ?>, <?php echo $externos; ?>],
         labels: ['Internos IMATUR', 'Externos'],
@@ -1293,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
 
     // ── 6. Visitas por día — últimos 14 días (barras) ─────────────────
     <?php
@@ -1304,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valVD[] = (int)($v->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartVisitasDia'), {
+    apex('#chartVisitasDia', {
         chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Visitas', data: <?php echo json_encode($valVD); ?> }],
         xaxis: { categories: <?php echo json_encode($lblVD); ?>, labels: axLbl, axisBorder: { show: false } },
@@ -1313,7 +1382,7 @@ document.addEventListener('DOMContentLoaded', function () {
         colors: ['#0891B2'],
         dataLabels: { enabled: false },
         grid, theme, noData
-    }).render();
+    });
 
     // ── 7. Visitas por motivo (barras horizontales) ───────────────────
     <?php
@@ -1323,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valVM[] = (int)($v->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartVisitasMotivo'), {
+    apex('#chartVisitasMotivo', {
         chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Visitas', data: <?php echo json_encode($valVM); ?> }],
         xaxis: { categories: <?php echo json_encode($lblVM); ?>, labels: { style: { colors: tp, fontSize: '10px' } } },
@@ -1333,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '10px' } },
         legend: { show: false },
         grid, theme, noData
-    }).render();
+    });
 
     // ── 8. Estado físico del inventario (radialBar) ───────────────────
     <?php
@@ -1345,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valIC[] = $totalInv > 0 ? round(((int)($c->total ?? 0) / $totalInv) * 100) : 0;
     }
     ?>
-    new ApexCharts(document.querySelector('#chartInvCond'), {
+    apex('#chartInvCond', {
         chart: { type: 'radialBar', height: 320, background: 'transparent' },
         series: <?php echo json_encode($valIC); ?>,
         labels: <?php echo json_encode($lblIC); ?>,
@@ -1363,10 +1432,10 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         legend: { show: true, position: 'bottom', labels: { colors: tp }, fontSize: '11px' },
         theme, noData
-    }).render();
+    });
 
     // ── NEW: Demografía formación (donut) ────────────────────────────
-    new ApexCharts(document.querySelector('#chartDemografia'), {
+    apex('#chartDemografia', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: [<?php echo $demMujeres; ?>, <?php echo $demHombres; ?>, <?php echo $demNinas; ?>, <?php echo $demNinos; ?>],
         labels: ['Mujeres', 'Hombres', 'Niñas', 'Niños'],
@@ -1376,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
 
     // ── NEW: Tipo de entidad atendida (barras horizontales) ──────────
     <?php
@@ -1386,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valTE[] = (int)($te->participantes ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartTipoEntidad'), {
+    apex('#chartTipoEntidad', {
         chart: { type: 'bar', height: 280, background: 'transparent', toolbar: { show: false } },
         series: [{ name: 'Participantes', data: <?php echo json_encode($valTE); ?> }],
         xaxis: { categories: <?php echo json_encode($lblTE); ?>, labels: { style: { colors: tp, fontSize: '11px' } } },
@@ -1396,7 +1465,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
         legend: { show: false },
         grid, theme, noData
-    }).render();
+    });
 
     // ── NEW: Participantes por tipo de ruta (donut) ─────────────────
     <?php if (!empty($data['rutasPorTipo'])): ?>
@@ -1407,7 +1476,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valRT[] = (int)($rt->participantes ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartRutasTipo'), {
+    apex('#chartRutasTipo', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: <?php echo json_encode($valRT); ?>,
         labels: <?php echo json_encode($lblRT); ?>,
@@ -1417,7 +1486,7 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
     <?php endif; ?>
 
     // ── 9. Inventario por categoría (donut) ───────────────────────────
@@ -1428,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valCat[] = (int)($i->total ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartInvCat'), {
+    apex('#chartInvCat', {
         chart: { type: 'donut', height: 320, background: 'transparent' },
         series: <?php echo json_encode($valCat); ?>,
         labels: <?php echo json_encode($lblCat); ?>,
@@ -1438,11 +1507,11 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
 
     // ── T-DEMO: Demografía de participantes en rutas (donut) ─────────────────
     <?php if (!empty($drTot)): ?>
-    new ApexCharts(document.querySelector('#chartDemografiaRutas'), {
+    apex('#chartDemografiaRutas', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: [<?php echo $drMuj; ?>, <?php echo $drHom; ?>, <?php echo $drNia; ?>, <?php echo $drNio; ?>],
         labels: ['Mujeres', 'Hombres', 'Niñas (5-11)', 'Niños (5-11)'],
@@ -1452,7 +1521,7 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
     <?php endif; ?>
 
     // ── PROP-P01: Tipo de contrato (donut) ────────────────────────────
@@ -1463,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', function () {
         $valCT[] = (int)($ec->total   ?? 0);
     }
     ?>
-    new ApexCharts(document.querySelector('#chartContratoTipo'), {
+    apex('#chartContratoTipo', {
         chart: { type: 'donut', height: 280, background: 'transparent' },
         series: <?php echo json_encode($valCT); ?>,
         labels: <?php echo json_encode($lblCT); ?>,
@@ -1473,7 +1542,7 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
-    }).render();
+    });
 
     // ── BLOQUE VERDE: Frecuencia de rutas ejecutadas por mes (barras) ─────────
     <?php
@@ -1484,7 +1553,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     ?>
     if (document.querySelector('#chartRutasMes')) {
-        new ApexCharts(document.querySelector('#chartRutasMes'), {
+        apex('#chartRutasMes', {
             chart: { type: 'bar', height: 260, background: 'transparent', toolbar: { show: false } },
             series: [{ name: 'Rutas ejecutadas', data: <?php echo json_encode($valRM); ?> }],
             xaxis: { categories: <?php echo json_encode($lblRM); ?>, labels: axLbl },
@@ -1493,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', function () {
             colors: ['#D97706'],
             dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
             grid, theme, noData
-        }).render();
+        });
     }
 
     // ── BLOQUE VERDE: Movimientos de inventario por tipo (donut) ──────────────
@@ -1505,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     ?>
     if (document.querySelector('#chartMovInv')) {
-        new ApexCharts(document.querySelector('#chartMovInv'), {
+        apex('#chartMovInv', {
             chart: { type: 'donut', height: 280, background: 'transparent' },
             series: <?php echo json_encode($valMI); ?>,
             labels: <?php echo json_encode($lblMI); ?>,
@@ -1515,7 +1584,7 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
             dataLabels: { enabled: false },
             theme, noData
-        }).render();
+        });
     }
 });
 </script>

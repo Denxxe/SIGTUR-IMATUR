@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-04 · **Migraciones aplicadas:** hasta **084** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-06 · **Migraciones aplicadas:** hasta **084** · **Rama:** `development_stage`
 
 > ⚠️ **2026-09-02 — Bienes: la Alcaldía cambió el procedimiento de codificación.** IMATUR pasa a
 > asignar el código de sus propios bienes y el acta de baja pasa a ser **Acta de Desincorporación**
@@ -35,60 +35,68 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 
 ## 0. RUTA AL CIERRE — en qué orden trabajar
 
-> Actualizado 2026-08-27, tras cerrar H-12…H-15 y las fases N-A…N-D de Nómina.
-> El detalle de cada punto está en las secciones 3 (insumos del cliente) y 5 (programación).
+> Actualizado 2026-10-06. El detalle de cada punto está en las secciones 3 (insumos del cliente) y 5
+> (programación). **Para enviar al cliente: `PREGUNTAS_CLIENTE.md`** — las mismas preguntas e IDs de
+> la §3, en lenguaje llano, con la lista de chequeo de recaudos.
 
 ### 0.1 Se puede programar YA, sin esperar a nadie
 
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
-| ~~1~~ | ✅ ~~Verificación en navegador~~ **Hecha en lo esencial (2026-10-03)**: ~50 páginas recorridas (menú completo + Rutas, Nómina e Inventario a dos niveles), **0 errores de PHP** en el log; el menú de **los 6 roles** coincide con `permisos_rol` y Solo Lectura queda denegado en 8 módulos ajenos probados por URL. Un hallazgo menor corregido (Cobro decía a la vez «gratuito» y «falta fijar la tarifa"). **2026-10-04: formularios probados guardando** (alta de empleado B1, traslado, falta→amonestación, vacaciones, Ubicaciones, parámetros/quincena/recálculo/bono vacacional de Nómina, evidencia de taller): todos guardan. Se corrigieron 2 defectos (ver §6) | — | — |
-| 2 | ~~**Tarea programada de respaldo**~~ | — | ✅ **Hecho (2026-08-28).** Y eran **dos**, no una: faltaba también `actualizar_estados.php`. Ver `CHANGELOG.md` |
-| 3 | ~~**Generador de feriados movibles por año**~~ | — | ✅ **Hecho (2026-08-28).** `Feriado::generarAnio()` + botón en `/vacaciones/feriados`. Ver `CHANGELOG.md` |
-| 4 | ~~**Corregir H-16**~~ | — | ✅ **Hecho (2026-09-17, mig. 076).** Y eran **cuatro** consultas, no tres: el mismo error estaba en el KPI `kpiBajasAnio` del Dashboard. Junto con C-6. Ver `CHANGELOG.md` |
-| 5 | ~~**Acta de Desincorporación a nivel de datos**~~ | — | ✅ **Hecho (2026-09-17, mig. 077).** Tabla, lote, retiro en bloque y anulación que revierte. Solo el **imprimible** sigue esperando el formato (R-2). Ver CHANGELOG |
-| ~~6~~ | ✅ ~~Rutas T-B — quitar el rango 5–11 cableado~~ **HECHO (2026-09-17, mig. 079)**, junto con **T-I** (restricciones por recorrido y cupo diario). H-17 cerrado | — | — |
-| ~~7~~ | ✅ ~~Rutas T-A — separar catálogo de ejecución~~ **HECHO (2026-09-17, mig. 078)**, y detrás de él **las nueve fases del módulo** (T-A…T-I, mig. 078-083, 2026-09-17/18). H-18 cerrado | — | — |
-| ~~8~~ | ✅ ~~Rutas T-C — tarifa y cobro~~ **HECHO (2026-09-18, mig. 083)** — y no solo declarativa: registro de pagos con abonos, comprobante, exoneración con motivo y acta de pago numerada. H-14 cerrado | — | — |
-| ~~9-bis~~ | ✅ ~~Bienes en solo lectura~~ **Hecho (2026-10-04):** sin el permiso `InventarioEscritura` ya no se dibujan los botones de registrar, editar, codificar, eliminar, subir foto/documento ni registrar movimiento o recepción BM-1, y el listado muestra «Solo consulta». Actas, conteos, relaciones, plan y suficiencia ya lo hacían | — | — |
-| 9 | Deuda técnica de §5.2: `label[for]` en los formularios restantes (quedan 76, dentro de bucles) · whitelist en `Taller::actualizarPersona` · estilos inline → clases (quedan ~2.199) · más pruebas. *(Dividir `ReportesController` ya se hizo el 2026-08-28: 3.405 → 101 líneas.)* | Gradual | No bloquea entrega; hacer cuando haya holgura |
+| 1 | **Motor de codificación propia de Bienes** (R-12 / C-1…C-4), con el punto de partida como clave de configuración | Mediano | Queda listo para cuando lleguen B-73 y B-75; sin ellos no se activa |
+| 2 | Deuda técnica de §5.2: `label[for]` en los formularios restantes (quedan 76, dentro de bucles) · whitelist en `Taller::actualizarPersona` · estilos inline → clases (quedan ~2.199) · más pruebas | Gradual | No bloquea entrega |
+
+**Hecho y retirado de esta lista** (detalle en `CHANGELOG.md`): verificación en navegador (2026-10-03)
+y **prueba de formularios guardando** (2026-10-04, B1 cerrado) · tareas programadas y feriados movibles
+(08-28) · H-16 y Acta de Desincorporación a nivel de datos (09-17) · Rutas T-A…T-I (09-17/18) ·
+Bienes en solo consulta (10-04) · **Indicadores por rol** (10-06): cada rol ve en Indicadores solo las áreas de sus módulos.
 
 ### 0.2 Espera al cliente (sección 3)
 
-Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entrega.**
+Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entrega.** Todo está en
+`PREGUNTAS_CLIENTE.md`, con el mismo ID.
 
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
-| 🔴 1 | **B-81 — ¿el oficio de relación recibido sigue vigente?** Es el del procedimiento **anterior** (pide que la Alcaldía codifique y no tiene columna de código). Ya está construido tal cual llegó; si hay versión nueva, es agregar una columna. **Más B-73** punto de partida de la secuencia y **B-75** catálogo de clasificación | R-12: sin B-73/B-75 IMATUR no puede codificar. ~~R-1~~ ✅ **el oficio ya está construido** (mig. 075) |
-| 🔴 2 | **Un mes de bono vacacional ya calculado** | Valida o corrige el supuesto del total (mig. 073; ver `CHANGELOG.md`). Con un mes basta |
-| ~~3~~ | ~~**Rutas: R-14 + R-37…R-40 + el resto del cuestionario**~~ | ✅ **CERRADO el 2026-09-17.** Llegaron **R-17…R-64**, los **siete formatos** y —dentro de `PREGUNTAS_CLIENTE.md` §4— **R-14 y todo el bloque de cobro**. **63 de 64 respondidas; el módulo ya no espera nada del cliente.** Solo falta ver **un** oficio de permiso (formato menor). Plan: `docs/PLAN_MODULO_RUTAS.md` §1-bis |
+| 🔴 1 | **Inventario digital de la encargada** + **B-73** (punto de partida de la secuencia) + **B-75** (catálogo de grupos/subgrupos/secciones) | Carga de los ~142 bienes y la codificación propia (R-12). Sin B-73/B-75 IMATUR no puede codificar |
+| 🔴 2 | **Formato del Acta de Desincorporación** (+ B-79: quién firma, correlativo) y **formato del acta de asignación** | R-2 (imprimible definitivo; el flujo ya funciona) y R-3 |
+| 🔴 3 | **Un mes de bono vacacional ya calculado** | Confirma o corrige el supuesto del total (mig. 073) |
 | 🔴 4 | **N-3** — «días adicionales» de la hoja INTERESES, **con recorte de pantalla** | Fase N-E: Liquidación de Prestaciones Sociales |
-| 🟡 5 | **Acta de Desincorporación** · **acta de asignación** · **el inventario digital de la encargada** (~~oficio de donación~~ ✅ recibido y construido · ~~oficio de retiro~~: fuera del alcance) | R-2, R-3 y la carga de los ~142 bienes. **R-11 ✅ cerrado** (mig. 075) |
-| 🟡 5-bis | **B-82 — confirmar la designación vigente de la Presidenta.** Los dos documentos entregados dicen Resolución **N° 32** del 05/09/2025 y Gaceta Extraordinaria **N° 87** del 05/09/2025; el sistema tenía 025/2024 y 042/2024, de relleno, imprimiéndose en **5 documentos reales**. Ya se corrigió en la mig. 075 — falta el visto bueno | Constancias de trabajo, cartas de pasantes y los 2 oficios de rutas dejan de llevar una resolución equivocada |
-| 🟡 6 | **N-1** (días base 75 vs 85/45) y **N-2** (semanas ×4/×5) | No bloquean: son parámetros. Vuelven **definitivos** los montos |
-| 🟡 7 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
-| 🟢 8 | Planilla física de asistencia · D-RT02 tarifa · D-RT03 informe automático · D-FO05 metas · D-FO08-bis facilitadores · D-OF03 libro de correspondencia · D-TX03 históricos | Mejoras y reportes puntuales |
+| 🔴 5 | **Datos de nómina por trabajador** (ver 0.3) y **cesta ticket + tasa** de cada mes a pagar | Emitir una nómina real |
+| 🟡 6 | **B-81** (¿sigue vigente el oficio de relación?) · **B-74, B-76…B-78, B-80** (reglas de la secuencia, reutilización de códigos, acuse de la Alcaldía, notificación por escrito) | Detalles del procedimiento nuevo de Bienes |
+| 🟡 7 | **B-82** visto bueno a Resolución 32 / Gaceta 87 · **B-83** abogado visador | Documentos que ya se imprimen |
+| 🟡 8 | **N-1** (días base 75 vs 85/45) · **N-2** (semanas ×4/×5) · **N-4** (qué tasa del dólar) · menores del bono de responsabilidad | Montos **definitivos** (no bloquean: son parámetros) |
+| 🟡 9 | **R-72** lista oficial de recorridos · **R-71** cuadro de visitantes del custodio · **formato del oficio de permiso** (T-H) · **visto bueno al acta de pago** (R-39) | Cargar el catálogo de Rutas y fijar dos imprimibles provisionales |
+| 🟡 10 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
+| 🟢 11 | **D-FO05** metas anuales · **D-FO08-bis** varios facilitadores · **D-NEW01** oficio de formación · planilla física de asistencia · dotación por empleado (Suficiencia) · revisión de las 11 categorías · **D-OF03** libro de correspondencia · **D-TX03** históricos | Mejoras y reportes puntuales |
 
 ### 0.3 Carga de datos — sin esto el sistema está correcto pero vacío
 
 | Qué | Estado hoy |
 |---|---|
 | Personal real | **3 empleados** de prueba |
-| Datos de nómina por trabajador (sueldo base, grado, fecha de ingreso a la administración, hijos, cuenta bancaria) | **1 fila** de prueba en `empleado_salarios` |
+| Datos de nómina por trabajador: sueldo básico, grado de instrucción, **ingreso a la administración pública** (desde 2026-10-04 para **todo** el personal, no solo comisión), carga familiar/hijos, cuenta y banco, tipo de personal | **1 fila** de prueba en `empleado_salarios` |
 | Cesta ticket y tasa del dólar por mes | 1 mes cargado (2026-07, valores de la plantilla) |
 | Catálogo de cargos | **5** cargos |
-| Los ~142 bienes | **0** — ya se puede cargar (ubicaciones sembradas en la mig. 069). **2026-09-02: pedir el inventario digital que lleva la encargada** — permite carga masiva en vez de tecleo, y de paso trae el catálogo de códigos en uso y el punto de partida de la secuencia (B-73/B-75) |
-| Catálogo de rutas real | Pendiente de **R-72** (lista y nombres oficiales de los recorridos) |
+| Los ~142 bienes | **0** — se pueden cargar ya; con el inventario digital de la encargada, en bloque |
+| Catálogo de rutas real | Pendiente de **R-72** |
 | Coordinador de *Compra de Bienes y Servicios* | **Vacante** → los movimientos de bienes están bloqueados por diseño (B-32) |
-| Datos institucionales de configuración | ✅ **Corregido en la mig. 075** con los datos de los dos documentos firmados: cargo **Presidenta**, Resolución **32**/05-09-2025, Gaceta **87**/05-09-2025, cédula y nombre completo de la Presidenta. Falta el visto bueno del cliente (**B-82**) y llenar el abogado visador del documento de donación |
-| Configuración de producción | `URL_ROOT`, credenciales de BD (hoy `postgres/1234`), clave del admin, SMTP |
+| Datos institucionales de configuración | ✅ Corregidos en la mig. 075 (Presidenta, Resolución 32, Gaceta 87). Falta el visto bueno (**B-82**) y el abogado visador (**B-83**) |
+| Configuración de producción | `URL_ROOT`, credenciales de BD (hoy de desarrollo), clave del admin, SMTP. **Quién los define** se pregunta en `PREGUNTAS_CLIENTE.md` |
 
 ### 0.4 Lo que ya NO falta
 
-Cerrado en el ciclo del 2026-08-27: los **4 defectos abiertos** de la auditoría (H-12 sidebar vs RBAC ·
-H-13 tabla huérfana · H-14 tarifa fantasma · H-15 evidencias públicas), el **módulo de Bienes
-inalcanzable** (mig. 069), los **feriados movibles** (mig. 071) y las **fases N-A a N-D de Nómina**
-(mig. 072/073). Detalle en la sección 2.
+**Ciclo 2026-10-04 (mig. 084):** roles por **módulo** (un rol creado en *Roles y Permisos* funciona
+sin tocar código; escritura de Bienes como capacidad `InventarioEscritura`) · cerrada la **escalada de
+RRHH a Administrador** · nombre real del rol en el menú · **prueba de formularios guardando** (B1
+cerrado) · una falta se escala **una sola vez** y **con confirmación** · folio de expediente anunciado
+= asignado · **ingreso a la administración pública para todo el personal** · *Registrar sueldo* solo
+pide sueldo básico y prima de discapacidad · botón **Guardar** del total del bono vacacional
+(estaba desconectado) · **género** del familiar en el alta · Bienes en **solo consulta** sin el
+permiso.
+
+**Antes:** 2026-09-17/18 Rutas completas (T-A…T-I) y Bienes (actas, relación, donación) · 2026-08-27
+auditoría H-12…H-15, feriados movibles, Nómina N-A…N-D. Detalle en la sección 2 y en `CHANGELOG.md`.
 
 ---
 
@@ -164,8 +172,8 @@ aquí y los demás documentos lo referencian.
 
   | Documento | Estado |
   |---|---|
-  | **Bono Vacacional** | ✅ Recibido y montado (v1, captura manual del total) |
-  | **Nómina quincenal regular** | ✅ **Recibida 2026-08-07** y descifrada. ⏳ Pendiente de construir |
+  | **Bono Vacacional** | ✅ Recibido; calcula con el motor (mig. 073). Solo el **total** se confirma a mano hasta tener un mes real |
+  | **Nómina quincenal regular** | ✅ **Recibida 2026-08-07** y **construida** (mig. 072: cálculo, quincena con cierre y export de 6 hojas) |
   | **Liquidación de Prestaciones Sociales** | ✅ Recibida. ⏳ Bloqueada por **1 sola pregunta** (N-3) |
 
 - **Preguntas abiertas — quedan 4**:
@@ -184,12 +192,12 @@ aquí y los demás documentos lo referencian.
 - **⚠️ 7 defectos detectados en la plantilla del cliente** (plan §5), verificados contra los valores calculados: el tramo ≥23 años paga **el doble** la prima de antigüedad, el FAOV patronal de la hoja de Comisión está al **20 % en vez de 2 %**, la fórmula de antigüedad de esa hoja está **corrupta** (`C621`, `ij6f`), y la fila de Obreros del RESUMEN está **desplazada una columna**. Están en las fórmulas, así que sobreviven a cualquier mes real. **Avisárselo al cliente** — es la mejor justificación del módulo.
 
 - **Insumos operativos que siguen faltando:**
-  - [ ] Sueldo base, grado de instrucción, años en la administración pública, nº de hijos y **cuenta bancaria** de cada empleado activo (hoy `empleado_salarios` tiene 1 fila de prueba).
+  - [ ] Sueldo base, grado de instrucción, **fecha de ingreso a la administración pública** (para todo el personal desde 2026-10-04), carga familiar/hijos y **cuenta bancaria** de cada empleado activo (hoy `empleado_salarios` tiene 1 fila de prueba).
   - [ ] Cesta ticket vigente **con su mes** (julio: 22.907; al 23/07 el cliente dijo 28.388 — cambia mensual).
   - [ ] Tasa del dólar del período. **Desde 2026-09-13 el sistema la sugiere** consultando el BCV (botón en `/nomina/parametros`, mig. 074); lo que falta es **confirmar el criterio** (N-4), no el dato.
   - [ ] La **tabla de escala salarial por grado** que Talento Humano ofreció en el último audio (tramo confuso, confirmar).
 
-- **Construcción pendiente** (fases N-A…N-E en el plan §6.3): motor de cálculo → entradas que faltan → nómina quincenal con export de 6 hojas → migrar Bono Vacacional a cálculo → Liquidación.
+- **Construcción pendiente:** solo la fase **N-E** (Liquidación), bloqueada por **N-3**. N-A…N-D están hechas (mig. 072/073).
 
 > **Regla:** ningún número entra al código desde un audio. De 7 afirmaciones numéricas de las notas de voz, **3 resultaron equivocadas** al contrastarlas con la plantilla.
 
@@ -202,6 +210,28 @@ aquí y los demás documentos lo referencian.
 - **Acción:** ninguna. Se evaluó vincular cargo↔departamento (mig. tentativa 053) y se **descartó/revirtió** por esta decisión.
 
 ### 3.4 ⚠️ Inventario — levantamiento completo (2026-08-04), **pero el procedimiento cambió (2026-09-02)**
+
+> ### 📋 Abiertas al 2026-10-06 — enunciado único (espejo llano en `PREGUNTAS_CLIENTE.md` §2)
+>
+> | ID | Pregunta | Bloquea |
+> |----|----------|---------|
+> | 🔴 **B-73** | ¿Desde qué número arranca la secuencia propia? ¿Se espera la última revisión de la Alcaldía o se parte del mayor N° de orden del listado interno? | R-12 — sin esto no se codifica |
+> | 🔴 **B-75** | Lista de grupos/subgrupos/secciones que IMATUR puede usar (reabre **B-60**) | R-12 — la clasificación del código |
+> | 🔴 Formato | **Acta de Desincorporación** (por lote) | R-2 — el imprimible es provisional |
+> | 🔴 **B-79** | Acta de Desincorporación: ¿quién firma por IMATUR además de la Coordinadora y la Presidencia? ¿lleva correlativo? (el registro del acta sellada ya marca los bienes como retirados) | R-2 |
+> | 🔴 Formato | **Acta de asignación** («acta de encargado») | R-3 |
+> | 🔴 Insumo | **Inventario digital de la encargada** (B-71: existe) | Carga de los ~142 bienes + B-73 + códigos en uso |
+> | 🟡 **B-74** | ¿Una secuencia para todo IMATUR o una por grupo-subgrupo-sección? ¿Sigue de 3 dígitos — qué pasa después de 999? | Algoritmo del siguiente número |
+> | 🟡 **B-76** | ¿El código de un bien desincorporado se reutiliza? | Colisiones de código |
+> | 🟡 **B-77** | Relación de bienes nuevos: ¿monto en Bs a la fecha de compra? ¿Cada cuánto se envía? | Contenido y disparador del oficio |
+> | 🟡 **B-78** | ¿La Alcaldía devuelve algo (acuse, sello, BM-1 nuevo) al recibir la relación? | Si se modela un documento entrante |
+> | 🟡 **B-80** | ¿Tienen por escrito la notificación del procedimiento nuevo? | Respaldo en el expediente |
+> | 🟡 **B-81** | ¿El oficio de relación entregado (junio, sin columna de código) sigue vigente o hay formato nuevo? | Una columna en el imprimible |
+> | 🟡 **B-82** | Visto bueno: Resolución N° 32 y Gaceta Extraordinaria N° 87, ambas del 05/09/2025 | Ya corregido (mig. 075); 5 documentos la imprimen |
+> | 🟢 **B-83** | Nombre e IPSA del abogado que visa el documento de donación | El bloque solo se imprime si está configurado |
+> | 🟢 B-63 (cifras) | Dotación real por empleado (sillas, escritorios, computadoras) y qué categorías no se reparten por persona | Que *Suficiencia de Bienes* compare contra datos reales (hoy, 3 dotaciones de ejemplo) |
+> | 🟢 Revisión | Las 11 categorías internas propuestas (plan §8) | Agrupación de los reportes |
+> | ⚙️ Acción interna | Asignar el Coordinador de *Compra de Bienes y Servicios* | Movimientos de bienes (bloqueados por diseño, B-32) |
 
 > ### ✅ 2026-09-17 — Llegaron 2 de los 4 formatos, y quedaron construidos (mig. 075)
 >

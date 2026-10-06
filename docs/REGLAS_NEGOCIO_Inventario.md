@@ -355,12 +355,15 @@ sin código, donaciones, por departamento y en almacén.
 
 | Quién | Puede |
 |---|---|
-| Coordinación de Bienes · Administrador | Crear, editar, mover, dar de baja |
-| Cualquier otro rol con acceso al módulo | **Solo lectura** |
+| Rol con la casilla **«Bienes: registrar y modificar»** (hoy: Inventario) · Administrador | Crear, editar, codificar, mover, dar de baja, adjuntar documentos |
+| Cualquier otro rol con acceso al módulo | **Solo consulta** |
 
-El RBAC del sistema es por controlador, no por acción, así que la distinción
-lectura/escritura se resuelve dentro del módulo
-(`InventarioController::puedeEscribir()`).
+Desde la mig. 084 la escritura es una **capacidad asignable** en *Roles y
+Permisos* (`InventarioEscritura`), no una lista fija de roles
+(`InventarioController::puedeEscribir()`). Sin ella, las pantallas **no
+dibujan** los botones de escritura (listado, BM-1, hoja de vida, movimientos,
+actas, conteos, relaciones, plan, suficiencia) y el listado muestra «Solo
+consulta»; el servidor además rechaza la acción.
 
 **Etiquetas** (B-14, B-15): la Alcaldía pega la suya en la inspección; el
 sistema genera una propia con el código y un **QR** que abre la hoja de vida

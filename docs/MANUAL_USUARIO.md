@@ -43,7 +43,11 @@ Aplicación web de uso interno. Última actualización: 2026-09-19.
 | **Recepción** | Registro de visitas y asistencia. |
 | **Solo Lectura** | Consulta de reportes y visitantes, sin modificar nada. |
 
+Estos son los roles de partida; el menú de cada usuario muestra **solo** los módulos de su rol, y lo mismo vale para el panel principal, los reportes, la búsqueda y las alertas.
+
 > Si intentas entrar a algo fuera de tu rol, el sistema te redirige con un aviso. Los cambios de permisos los hace el Administrador en *Sistema → Roles y Permisos*.
+
+**Crear un rol nuevo.** En *Sistema → Roles y Permisos* se crea el rol (nombre y descripción) y se **marcan los módulos** que verá. No hace falta nada más: el rol funciona completo con esas casillas. En el grupo *Inventario* hay una casilla especial, **«Bienes: registrar y modificar»**: sin ella, quien tenga el módulo de Bienes solo puede **consultar** (no ve los botones de registrar, editar, codificar ni eliminar).
 
 ---
 
@@ -51,14 +55,18 @@ Aplicación web de uso interno. Última actualización: 2026-09-19.
 
 ### 4.1 Recursos Humanos (RRHH)
 
-**Empleados.** Alta mediante un **asistente por pasos** (datos personales → formación → institucionales → carga familiar → resumen). Cada trabajador tiene un **expediente** con:
+**Empleados.** Alta mediante un **asistente por pasos** (datos personales → formación → institucionales → carga familiar → resumen). Dos campos a tener en cuenta:
+- **Ingreso a la administración pública** (paso *Institucionales*): viene con la misma fecha del ingreso a IMATUR. **Cámbiala** si el trabajador trabajó antes en otro ente público (Alcaldía, Gobernación, un ministerio…): de esta fecha salen sus **días de vacaciones** y su **prima de antigüedad**. No puede ser posterior al ingreso a IMATUR. Aplica a todo el personal, no solo a la comisión de servicio.
+- En la **carga familiar** se indica también el **género** de cada familiar.
+
+Cada trabajador tiene un **expediente** con:
 
 - **Datos personales, académicos y laborales**, con **foto** (la misma que sale en el carnet).
 - **Recaudos del expediente:** carga de documentos escaneados, con aviso de cuántos obligatorios faltan.
 - **Carga familiar, cursos y experiencia laboral.**
 - **Constancias y documentos generados** (ver más abajo).
 - **Traslados de departamento:** cambiar de unidad es una **reasignación con historial** — se registra fecha y motivo, y los traslados anteriores quedan a la vista.
-- **Datos salariales:** cada sueldo se registra con su **fecha efectiva**; nunca se sobrescribe el anterior, se acumula el historial. Es el insumo del cálculo de nómina.
+- **Datos salariales** (*Registrar sueldo*): solo se escriben el **sueldo básico** mensual y, si aplica, la **prima de discapacidad**, con su fecha de vigencia; nunca se sobrescribe el anterior, se acumula el historial. Las primas de profesionalización, antigüedad, por hijo y el transporte **las calcula Nómina sola**.
 - **Datos de nómina:** cuenta bancaria, si cobra el bono de responsabilidad en divisas, sueldo de la dependencia de origen (comisión de servicio) y corrección del código de grado de instrucción.
 - **Historial de egresos / reingresos.**
 - Botones **Ficha Técnica** (imprimible) y **Carnet**.
@@ -70,7 +78,7 @@ Aplicación web de uso interno. Última actualización: 2026-09-19.
 
 **Permisos y Reposos.** Registrar, aprobar, rechazar o anular; se distingue Permiso de Reposo.
 
-**Amonestaciones y Faltas.** El sistema cuenta las faltas (injustificada / incumplimiento) y permite **escalar una falta a amonestación**. Con **3 amonestaciones activas** aparece la alerta **"causa de despido"** — es **solo una alerta**: el egreso siempre es una decisión y una acción manual. Anular una amonestación o una falta exige **motivo**.
+**Amonestaciones y Faltas.** El sistema cuenta las faltas (injustificada / incumplimiento) y permite **escalar una falta a amonestación** con el botón de la bandera: pide **confirmación**, muestra con cuántas amonestaciones quedará el trabajador y cada falta se escala **una sola vez** (después aparece como *Amonestada*). Con **3 amonestaciones activas** aparece la alerta **"causa de despido"** — es **solo una alerta**: el egreso siempre es una decisión y una acción manual. Anular una amonestación o una falta exige **motivo**.
 
 **Vacaciones.** Calcula el saldo: **15 días hábiles + 1 por año de servicio, con tope de 30**, sobre la antigüedad total en la Administración Pública. Los días **excluyen fines de semana y feriados**.
 - Pantalla **Feriados**: los fijos se cargan una vez; **Carnaval y Semana Santa se calculan solos** por año con el botón *Generar*. El sistema avisa si a los próximos años les faltan.
@@ -160,7 +168,7 @@ Para entrar a un museo, castillo o fundación hace falta un **oficio de permiso*
 ### 4.5 Inventario (Bienes)
 
 **Alta y codificación.** Un bien nace **sin código**, en estatus **"En espera de codificación"**.
-1. Se registra el bien con sus datos (Durable = inventariable; Fungible = consumible con cantidad).
+1. Se registra el bien con sus datos (cada bien es un registro individual: dos sillas iguales son dos registros).
 2. Cuando llega el **BM-1** de la Alcaldía, se registra su recepción en *Formularios BM-1 recibidos* (se puede adjuntar el escaneado; es opcional, a veces llega en papel).
 3. Desde ahí se **codifica** cada bien — grupo, subgrupo, sección y N° de orden, que componen el código (`2-01-108-084`) — y el bien pasa a **Activo**. Queda registrado **en qué BM-1 vino** cada código.
 
@@ -186,12 +194,14 @@ El listado tiene pestaña **"Sin codificar"** con su contador. El N° de orden n
 - **Acta de Desincorporación (por lote):** se arma con los bienes ya desincorporados, se imprime y se lleva a la Alcaldía (*emitida*). Cuando vuelve sellada se registra con su escaneado (*firmada*) y **todos sus bienes pasan a "Retirado" de una vez**. Si se anula un acta firmada, el **retiro se revierte**: el aval que lo respaldaba dejó de existir.
   > El imprimible del acta es **provisional** hasta que llegue el formato oficial. La información registrada no cambia.
 
+> **Solo consulta:** si tu rol tiene el módulo de Bienes pero no el permiso *Bienes: registrar y modificar*, verás el distintivo **«Solo consulta»** y no aparecerán los botones de registrar, editar, codificar, mover ni eliminar.
+
 > **Cambio en curso (2026-09):** la Alcaldía notificó que **IMATUR pasará a codificar sus propios bienes**, continuando la secuencia desde su última revisión. Mientras eso no se active en el sistema, el circuito sigue siendo el descrito arriba.
 
 ### 4.6 Sistema (Administrador)
 
-- **Configuración institucional:** director y cargo firmante, RIF, resolución y gaceta, teléfono, correo, dirección y lema (salen en constancias, carnets y membretes), **metas anuales** de talleres y rutas, **días de preaviso** de contratos y pasantías, **tolerancias** de puntualidad y de salida anticipada, correlativos de oficios, **días de bono vacacional por tipo de personal** y **monto de la cesta ticket**.
-- **Usuarios**, **Roles y Permisos**, **Municipios y Parroquias**.
+- **Configuración institucional:** director y cargo firmante, RIF, resolución y gaceta, teléfono, correo, dirección y lema (salen en constancias, carnets y membretes), **metas anuales** de talleres y rutas, **días de preaviso** de contratos y pasantías, **tolerancias** de puntualidad y de salida anticipada, correlativos de oficios y el cupo diario de rutas. *(Los parámetros de Nómina —cesta ticket, tasa del dólar, porcentajes, días del bono vacacional— están en **Nómina → Parámetros**, §5.1.)*
+- **Usuarios**, **Roles y Permisos** (ver §3), **Municipios y Parroquias**. Un rol distinto del Administrador que tenga *Usuarios* (por ejemplo RRHH) puede crear cuentas para el personal, pero no puede asignar el rol Administrador, tocar una cuenta de Administrador ni cambiar su propio rol.
 - **Auditoría** (bitácora de cambios: quién, qué y cuándo), **Accesos** (inicios de sesión) y **Papelera de Reciclaje**.
 
 ---
@@ -220,7 +230,7 @@ Ambas **cambian todos los meses**. Si el mes no está cargado, el sistema no dej
 
 Mismo flujo (generar → revisar → exportar → cerrar), con dos particularidades:
 - Los **días que corresponden** salen del **tipo de personal**, según lo configurado en *Configuración* (contrato colectivo).
-- El **total** de cada trabajador se puede **capturar o corregir a mano**, y el botón **"Aceptar calculados"** da por buenos de una vez todos los totales que el sistema estimó y que aún nadie confirmó. Al **recalcular**, los totales ya confirmados **se conservan**.
+- El **total** de cada trabajador se puede **capturar o corregir a mano**: se escribe en la columna *Total confirmado* y se pulsa **Guardar** en esa fila (o Enter). El botón **"Aceptar calculados"** da por buenos de una vez todos los totales que el sistema estimó y que aún nadie confirmó. Al **recalcular**, los totales ya confirmados **se conservan**.
 
 > **Pendiente:** la **Liquidación de Prestaciones Sociales** aún no está en el sistema; queda para una entrega posterior.
 
@@ -231,7 +241,8 @@ Mismo flujo (generar → revisar → exportar → cerrar), con dos particularida
 Entra a **Análisis → Reportes**. Verás solo las tarjetas de tu rol. Cada reporte permite **filtrar** y **exportar a Excel/PDF**.
 
 - **Alertas:** Centro de Alertas (pendientes por atender).
-- **RRHH:** directorio de personal, asistencia, permisos y reposos, amonestaciones y faltas, **egresos y rotación**, comisión de servicio, constancias emitidas, expedientes incompletos, carga familiar, **saldo de vacaciones**, visitantes y estadísticas de visitas.
+- **RRHH:** directorio de personal, asistencia, permisos y reposos, amonestaciones y faltas, **egresos y rotación**, comisión de servicio, constancias emitidas, expedientes incompletos, carga familiar y **saldo de vacaciones**.
+- **Recepción:** reporte de visitantes y estadísticas de visitas.
 - **Formación/Turismo:** talleres, **informe trimestral**, cobertura comunitaria, rutas, participación en rutas, **ejecuciones de ruta**, pasantes y posibles duplicados.
 - **Inventario:** inventario, kardex de movimientos, bienes asignados, **bienes desincorporados** (con la columna *Por retirar / Retirado*), **conteos**, **mantenimiento preventivo**, **etiquetas** y **suficiencia de bienes**.
 - **Seguridad (Admin):** auditoría del sistema y **accesos** (quién entró, cuándo y desde qué IP).

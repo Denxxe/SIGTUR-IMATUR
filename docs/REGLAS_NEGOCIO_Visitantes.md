@@ -73,7 +73,7 @@ Reporte implementado con filtros por: período (fechas), institución/procedenci
 | BVIS-01 | Reporte de visitantes por período/procedencia/motivo | ✅ Resuelto — filtros completos implementados |
 | BVIS-02 | Campo `tipo_documento` para extranjeros | ✅ Resuelto — D-VIS03: no aplica, solo venezolanos |
 | BVIS-03 | Categorías de motivo de visita | ✅ Resuelto — lista de 6 categorías predefinidas |
-| BVIS-04 | Indicador "visitas activas del día" en Dashboard | ✅ Resuelto — `DashboardController` calcula `kpiVisitasHoy`, `kpiVisitasActivas` (entradas de hoy sin salida registrada) y el delta contra ayer, para los roles 1, 2 y 5 |
+| BVIS-04 | Indicador "visitas activas del día" en Dashboard | ✅ Resuelto — `DashboardController` calcula `kpiVisitasHoy`, `kpiVisitasActivas` (entradas de hoy sin salida registrada) y el delta contra ayer, para todo rol que tenga el módulo *Recepción (Visitas)* asignado (desde 2026-10-04 se decide por módulo, no por número de rol) |
 | BVIS-05 | Estadísticas de visitas en módulo de Reportes | ✅ Resuelto — `reportes/visitantes.php` |
 
 > **Módulo sin pendientes.** Verificado el 2026-08-28: las seis brechas están cerradas.

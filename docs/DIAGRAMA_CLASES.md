@@ -1041,7 +1041,7 @@ classDiagram
 
     class ReportesController {
         +index()
-        -requireRoles(roles)
+        #requireModulo(modulos)
     }
     class ReportesRrhhTrait {
         <<trait>>

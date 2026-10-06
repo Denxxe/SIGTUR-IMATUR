@@ -1,7 +1,7 @@
 # Modelo de Datos — Diagrama Entidad-Relación (ER)
 
 **SIGTUR-IMATUR** · PostgreSQL 17 · **69 tablas** · esquema `public`
-**Estado:** migraciones **001–083** aplicadas · **Última actualización:** 2026-09-19
+**Estado:** migraciones **001–084** aplicadas · **Última actualización:** 2026-10-06 (la 084 no cambia el esquema: agrega el permiso `InventarioEscritura` en `permisos_rol`)
 
 > **Para qué sirve este documento.** Es el insumo para dibujar el **ER** del sistema (en
 > draw.io, ERDPlus, MySQL Workbench, dbdiagram.io o el que se use). Contiene: las entidades

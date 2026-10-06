@@ -11,7 +11,55 @@
  */
 trait ReportesIndicadoresTrait {
 
+    /**
+     * Cada indicador pertenece al módulo que lo alimenta. Un rol ve solo las
+     * áreas cuyos módulos tiene asignados en Roles y Permisos; el resto ni
+     * siquiera llega a la vista (se vacía aquí), así sus cifras no viajan al
+     * navegador dentro de los datos de los gráficos.
+     */
+    // Método y no constante: las constantes en traits llegan en PHP 8.2 y el servidor usa 8.1.
+    private static function areasIndicadores(): array {
+        return [
+            'personal'   => ['modulo' => 'EmpleadosController', 'claves' => [
+                'kpiEmpleados', 'empPorDepto', 'asistenciaPorMes', 'empPorContrato', 'empPorClasificacion',
+                'permisosVigentes', 'permisosPendientes', 'amonResumen', 'amonDespido', 'puntualidadMes',
+                'jornadaMes', 'precisionAsist', 'empDocTotal', 'empDocCompletos']],
+            'visitas'    => ['modulo' => 'VisitantesController', 'claves' => [
+                'kpiVisitasHoy', 'visitasPorDia', 'visitasPorMotivo']],
+            'talleres'   => ['modulo' => 'TalleresController', 'claves' => [
+                'kpiActividadesActivas', 'kpiFormadosAnio', 'talleresPorMes', 'talleresPorTipo', 'participantesTipo',
+                'demografiaFormacion', 'coberturaTerrForma', 'municipiosCubiertos', 'tipoEntidad', 'capacitadores',
+                'metaTalleres', 'talleresAnio', 'kpiOcupacion', 'kpiEficienciaActs', 'coberturaParroquia']],
+            'rutas'      => ['modulo' => 'RutasController', 'claves' => [
+                'kpiRutasActivas', 'rutasPorTipo', 'metaRutas', 'rutasAnio', 'demografiaRutas', 'rutasPorMes']],
+            'pasantes'   => ['modulo' => 'PasantesController', 'claves' => ['kpiPasantesEnCurso']],
+            'inventario' => ['modulo' => 'InventarioController', 'claves' => [
+                'kpiBienesActivos', 'kpiBienesAlerta', 'invPorCat', 'invPorCondicion', 'kpiDepreciacion',
+                'precisionInv', 'movInventario', 'asignacionInv']],
+        ];
+    }
+
+    /** Módulos que dan acceso a Indicadores (cualquiera de ellos). */
+    public static function modulosIndicadores(): array {
+        return array_column(self::areasIndicadores(), 'modulo');
+    }
+
+    private static function filtrarIndicadoresPorRol(array $data): array {
+        $puede = [];
+        foreach (self::areasIndicadores() as $area => $def) {
+            $puede[$area] = sigtur_puede($def['modulo']);
+            if ($puede[$area]) continue;
+            foreach ($def['claves'] as $k) {
+                if (!array_key_exists($k, $data)) continue;
+                $data[$k] = is_array($data[$k]) ? [] : (is_int($data[$k]) ? 0 : null);
+            }
+        }
+        $data['puede'] = $puede;
+        return $data;
+    }
+
     public function indicadores() {
+        $this->requireModulo(...self::modulosIndicadores());
         try {
             $db = new Database();
             // Estatus «Desincorporado» listo para incrustar en SQL (mig. 076). El
@@ -484,7 +532,7 @@ trait ReportesIndicadoresTrait {
                 'coberturaParroquia'    => $coberturaParroquia,
                 'rutasPorMes'           => $rutasPorMes,
             ];
-            $this->view('reportes/indicadores', $data);
+            $this->view('reportes/indicadores', self::filtrarIndicadoresPorRol($data));
         } catch (Exception $e) {
             flash('global_msg', 'Error al cargar los indicadores: ' . $e->getMessage(), 'danger');
             header('Location: ' . URL_ROOT . '/reportes/index');

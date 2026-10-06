@@ -1,7 +1,7 @@
 # Casos de Uso y Diagramas de Casos de Uso
 
 **SIGTUR-IMATUR** · **75 casos de uso** · **Última actualización:** 2026-09-19
-**Sistema descrito:** migraciones 001–083
+**Sistema descrito:** migraciones 001–084
 
 > **Para qué sirve.** Insumo para dibujar los **diagramas de casos de uso** (UML) y para
 > especificar cada uno en formato extendido. Los identificadores `CU-xx` son los mismos que usa la
@@ -101,7 +101,7 @@ flowchart LR
 | CU-01 | Iniciar sesión | Todos | RF-SEG-01…04 |
 | CU-02 | Recuperar contraseña olvidada | Todos | RF-SEG-07 |
 | CU-03 | Gestionar la cuenta propia (usuario y contraseña) | Todos | RF-SEG-18 |
-| CU-04 | Administrar usuarios del sistema | A1 | RF-SEG-01, RF-SEG-19 |
+| CU-04 | Administrar usuarios del sistema | A1 + rol con el módulo *Usuarios* (sin tocar cuentas de Administrador) | RF-SEG-01, RF-SEG-19 |
 | CU-05 | Administrar roles y permisos | A1 | RF-SEG-05, RF-SEG-06 |
 | CU-06 | Consultar la bitácora de auditoría y los accesos | A1 | RF-SEG-09, RF-SEG-10 |
 | CU-07 | Restaurar un registro desde la papelera | A1 + rol con permiso | RF-SEG-11 |

@@ -67,7 +67,7 @@ $secciones = [
         ],
     ],
     [
-        'titulo' => 'Indicadores de Gestión', 'icono' => 'bi-graph-up-arrow', 'modulos' => ['EmpleadosController', 'TalleresController', 'RutasController', 'InventarioController'],
+        'titulo' => 'Indicadores de Gestión', 'icono' => 'bi-graph-up-arrow', 'modulos' => ReportesController::modulosIndicadores(),
         'reportes' => [
             ['Indicadores de Gestión', 'KPIs globales: personal, formación, turismo e inventario, con tendencias.', 'reportes/indicadores', 'bi-bar-chart-line', '#059669'],
         ],

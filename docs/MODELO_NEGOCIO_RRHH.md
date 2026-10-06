@@ -125,6 +125,8 @@ El departamento se denomina oficialmente **OAC — Oficina de Atención al Ciuda
 | Origen / Institución (nómina) | Alcaldía · Gobernación · IMATUR | De dónde proviene y quién paga |
 | Comisión de servicio | **Derivado** | = (origen ≠ IMATUR). Alcaldía/Gobernación ⇒ Sí; IMATUR ⇒ No |
 
+**Servicio previo ≠ comisión de servicio (aclarado 2026-10-04):** comisión es **seguir en la nómina** de la Alcaldía o la Gobernación mientras se trabaja en IMATUR. Quien trabajó antes en otro ente público, se desvinculó y hoy está en la nómina de IMATUR es **personal IMATUR con servicio previo**: no es comisión, pero sus años cuentan para la antigüedad (campo *Ingreso a la administración pública*, §3.1).
+
 **Edad permitida (aclarada 2026-06-06):** comisión de servicio (Alcaldía/Gobernación) **18–70**; personal IMATUR **18–65**. Mínimo 18 siempre.
 
 **Diferencias clave Contratado vs Fijo:**
@@ -164,6 +166,7 @@ La transición se alcanza por **años de servicio acumulados**:
 - Una **amonestación** es, por lo general, la **acumulación de faltas injustificadas** — habitualmente una amonestación equivale a cierto número de faltas injustificadas, **pero esto puede variar** según el caso.
 - **3 amonestaciones** son causa de despido para un empleado **Contratado**.
 - El sistema debe **contabilizar faltas injustificadas** y **registrar amonestaciones** por empleado (ver D-RH28 para la regla exacta falta→amonestación).
+- ✅ **Implementado (mig. 031/048; afinado 2026-10-04):** una falta puede **escalarse** a amonestación desde el detalle del empleado, **con confirmación** y **una sola vez** por falta (si la amonestación se anula, vuelve a poder escalarse). El sistema solo alerta la causa de despido: el egreso es manual.
 
 ---
 
@@ -220,7 +223,8 @@ Los campos a registrar surgen del **`FORMATO DE REGISTRO DE DATOS.xls` (hoja LIS
 | Institución / Nómina | Alcaldía / Gobernación / IMATUR |
 | Tipo de personal | Fijo / Contratado |
 | Clasificación | **Empleado / Obrero** (ver D-RH26) |
-| Fecha de ingreso | Base para tiempo de servicio |
+| Fecha de ingreso | Ingreso a IMATUR — base del tiempo de servicio en la institución |
+| Ingreso a la administración pública | **Base de la antigüedad** (vacaciones y prima de antigüedad de Nómina). Para **todo** el personal (2026-10-04): se precarga con la fecha de ingreso y se cambia si trabajó antes en otro ente público. No puede ser posterior al ingreso a IMATUR |
 | Tiempo de servicio | Derivado (calculado) |
 | Estatus | Activo / Inactivo |
 | Uniforme (Sí/No) + tallas camisa/pantalón/zapato | Ver D-RH35 |
@@ -252,6 +256,7 @@ Se registran los familiares del empleado. Estructura según la Ficha Técnica:
 | Cédula |
 | Fecha de nacimiento |
 | Parentesco (padre, madre, cónyuge/concubino, hijo/a) |
+| Género · ¿vive? (mig. 039; el asistente de alta pide el género desde 2026-10-04) |
 
 **Para qué se usa (D-RH21 — confirmado que SÍ importa):**
 - Información familiar del empleado para el expediente.
@@ -383,7 +388,7 @@ Taxonomía consolidada de `REPOSOS, PERMISOS Y VACACIONES.xls` + respuestas del 
 - Los empleados en comisión de servicio (Alcaldía/Gobernación) tienen las vacaciones **coordinadas entre IMATUR y la institución de origen**.
 - Se toman en cuenta los períodos de comisión de servicio para el cálculo.
 
-> ⚠️ **Pendiente:** fórmula exacta de días por años de servicio y la coordinación con Alcaldía/Gobernación. Ver D-RH04, D-RH05, D-NEW05.
+> ✅ **Implementado (mig. 045/046):** 15 días hábiles + 1 por año, tope 30, contados desde el **ingreso a la administración pública** — que desde el 2026-10-04 se registra para **todo** el personal, no solo comisión (ver §2.2 y §3.1). Queda abierta solo la coordinación operativa con el ente de origen de quien está en comisión.
 
 ---
 
@@ -464,6 +469,16 @@ El sistema debe **generar y/o registrar** los siguientes documentos, guardando *
 | Directora de Talento Humano | — | Oficializa permisos, firma permisos laborales, registra y gestiona expedientes, emite constancias |
 | Coordinador de departamento | — | Participa en decisiones de traspaso de su área |
 | Jefe inmediato | — | Recibe notificación de permisos por diligencia |
+
+### 9.1 Acceso al sistema por rol (2026-10-04)
+
+- Lo que ve y puede hacer cada usuario lo decide su **rol**, y el rol se arma en *Sistema → Roles y
+  Permisos* **marcando módulos**. Un rol creado desde esa pantalla funciona completo (menú, panel
+  principal, reportes, búsqueda, descargas y alertas de sus módulos) sin tocar programación.
+- Lo exclusivo del Administrador no se delega: bitácora de auditoría, accesos, aprobar pasantes y
+  gestionar cuentas de Administrador.
+- Talento Humano puede crear cuentas de usuario para el personal, pero **no** puede crear ni tocar
+  cuentas de Administrador ni cambiarse su propio rol.
 
 ---
 

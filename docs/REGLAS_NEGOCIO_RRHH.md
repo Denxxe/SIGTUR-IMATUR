@@ -65,6 +65,7 @@ Reglas vigentes de baja:
 - El sistema **cuenta** `faltas` injustificadas y `amonestaciones` por empleado y las muestra en un roster con semáforo; **RRHH las registra manualmente** (el sistema solo notifica — D-RH28).
 - **3 amonestaciones activas** (`Amonestacion::LIMITE_DESPIDO`) = **causa de despido** (aplica a Contratado) → alerta en el detalle/roster.
 - Módulo: `AmonestacionesController` (roster `index`, `empleado($id)` detalle, registrar/eliminar falta y amonestación). Las faltas injustificadas son distintas de los permisos/ausencias justificadas (R-8).
+- **Escalado falta → amonestación (2026-10-04):** se hace **con confirmación** (el modal muestra la falta y con cuántas amonestaciones quedará el empleado, p. ej. «3/3 — causa de despido») y **una falta se escala una sola vez** (`Amonestacion::activaDesdeFalta()`): mientras su amonestación esté activa, la falta muestra «Amonestada». Si esa amonestación se anula, la falta puede volver a escalarse. El empleado es siempre el de la falta, no el que envíe el formulario.
 
 ---
 
@@ -165,9 +166,10 @@ si un empleado marca salida antes de su hora, más allá de esa tolerancia, el m
 
 ---
 
-## RN-RH11 — Carga Familiar (confirmado 2026-06-04, pendiente R-4)
+## RN-RH11 — Carga Familiar (✅ implementado mig.026/039)
 
-- **Tabla dedicada** (no campo de texto). Campos: nombre y apellido, cédula, fecha de nacimiento, parentesco (padre/madre/cónyuge-concubino/hijo).
+- **Tabla dedicada** (no campo de texto). Campos: nombre y apellido, cédula, fecha de nacimiento, parentesco (padre/madre/cónyuge-concubino/hijo), **género** y si vive. El asistente de alta pide también el género del familiar (2026-10-04).
+- Nómina cuenta los **hijos** desde aquí (prima por hijo).
 - Usos: expediente, base de bono escolaridad/beneficios (D-RH29), reportes, justificación de faltas médicas de familiar.
 
 ---
@@ -214,7 +216,14 @@ si un empleado marca salida antes de su hora, más allá de esa tolerancia, el m
 
 ## RN-RH09 — Empleado con usuario del sistema
 
-Un empleado puede o no tener usuario en el sistema. La tabla `usuarios` tiene FK opcional a `empleados`. La desactivación del usuario (`is_active = FALSE`) es independiente del estado del empleado.
+Un empleado puede o no tener usuario en el sistema. Cada usuario pertenece a un empleado (`usuarios.id_empleado`). El egreso del empleado desactiva su cuenta y el reingreso la reactiva.
+
+**Gestión de usuarios delegada (2026-10-04):** un rol distinto de Administrador con acceso a *Usuarios* (p. ej. RRHH) puede crear y mantener cuentas, pero **no** puede asignar el rol Administrador, ni modificar o suspender una cuenta de Administrador, ni cambiar su propio rol. Antes RRHH podía ascenderse a Administrador.
+
+## RN-RH16 — Sueldo: qué se captura y qué deriva Nómina (2026-10-04)
+
+- En *Registrar sueldo* se capturan solo el **sueldo básico** (mensual) y la **prima de discapacidad**. Cada registro es nuevo y conserva el historial (vigente desde una fecha).
+- Las primas de **profesionalización, antigüedad, por hijo** y el **transporte** no se teclean: Nómina las **deriva** del grado de instrucción, los años en la administración pública, la carga familiar y los parámetros (`/nomina/parametros`).
 
 ---
 

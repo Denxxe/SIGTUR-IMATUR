@@ -14,6 +14,12 @@
 
 ---
 
+> **Visibilidad por rol (2026-10-06).** La página de Indicadores muestra a cada rol solo las áreas cuyos
+> módulos tiene asignados en *Roles y Permisos*: Personal (Empleados), Recepción (Visitantes), Formación
+> (Talleres), Turismo (Rutas), Pasantes e Inventario. Los datos de las áreas ajenas no se calculan para la
+> vista: `ReportesIndicadoresTrait::filtrarIndicadoresPorRol()` los vacía antes de entregarla, así no viajan
+> al navegador. El Administrador ve todo. Para entrar basta tener uno de esos módulos y Reportes.
+
 ## Índice
 
 1. [Parámetros configurables (metas y umbrales)](#1-parámetros-configurables)
@@ -188,7 +194,7 @@ Ruta: `reportes/indicadores`. Acceso: todos los roles. Origen: `ReportesControll
 | — | **Inventario por categoría** | Composición del patrimonio por tipo de bien. | `COUNT(bienes)` por categoría (incluye categorías con 0). | `categorias` ⟕ `inventario` |
 | — | **Inventario por condición** | Estado general del patrimonio. | `COUNT(*)` agrupado por `condicion`. | `inventario` |
 | **PROP-I01** | **Tasa de depreciación operativa** | % del patrimonio deteriorado (necesidad de mantenimiento/reposición). | `deteriorados / total × 100`, donde deteriorados = `Dañado` + `En Reparación`. (En el panel se muestra como **Salud del Patrimonio** = `100 − depreciación`). | `inventario` |
-| **CMI-I01** | **Precisión del registro** | Calidad de los datos del inventario. | `bienes correctos / total × 100`, donde correcto = `Durable` con `codigo_bn` no vacío, o cualquier `Fungible` (la categoría y la ubicación son FK obligatorias). Umbral verde ≥95%, ámbar ≥85%. | `inventario` |
+| **CMI-I01** | **Precisión del registro** | Calidad de los datos del inventario. | `bienes codificados / bienes activos × 100`, donde codificado = `codigo_bn` no vacío; se excluyen los desincorporados. Desde la mig. 067 no existe la distinción Durable/Fungible: todo bien inventariado debe tener su código (la categoría y la ubicación son FK obligatorias). Umbral verde ≥95%, ámbar ≥85%. | `inventario` |
 | **CMI-I02** | **Movimientos de bienes (año)** | Volumen y tipo de movimientos de patrimonio. | `COUNT(*)` por `tipo_movimiento` (Asignación/Devolución/Traslado/Baja/Mantenimiento), año actual. Donut + tabla. | `actividad_inventario` |
 | **CMI-I03** | **Asignación de responsables** | % de bienes durables bajo custodia activa. | `durables cuyo ÚLTIMO movimiento = 'Asignacion' / total de durables × 100` (`DISTINCT ON (id_inventario)` ordenado por fecha desc). Informativo (sin veredicto: no todo durable requiere custodia). | `actividad_inventario` ⋈ `inventario` |
 

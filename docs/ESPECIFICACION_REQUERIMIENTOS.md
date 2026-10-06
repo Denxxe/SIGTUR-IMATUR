@@ -3,7 +3,7 @@
 **Sistema Integral de Gestión Turística y Administrativa — SIGTUR-IMATUR**
 **Cliente:** Instituto Municipal de Turismo de Cumaná (IMATUR) · Municipio Sucre, estado Sucre, Venezuela
 **Versión del documento:** 1.0 · **Fecha:** 2026-09-19
-**Versión del sistema descrita:** migraciones 001–083 · rama `development_stage`
+**Versión del sistema descrita:** migraciones 001–084 · rama `development_stage`
 
 > **Alcance de este documento.** Especifica **qué hace** el sistema (requerimientos funcionales),
 > **con qué calidad** (no funcionales), **para quién** (actores), **bajo qué reglas** (reglas de
@@ -131,8 +131,14 @@ línea y mensajes de error que digan **qué corregir**, no códigos.
 | **A5** | **Recepcionista / OAC** | 5 | Registro de visitantes y visitas, marcaje de asistencia |
 | **A6** | **Consulta (Solo Lectura)** | 6 | Reportes y visitantes, sin capacidad de modificación |
 
-> **A1 es el único que puede** administrar usuarios/roles, ver la **Bitácora general**, editar
-> **Municipios/Parroquias** y aprobar la transición *Postulado → Aceptado* de un pasante.
+> Estos son los **roles sembrados**; el acceso de cada uno lo definen los **módulos marcados** en
+> *Roles y Permisos* (`permisos_rol`), no su número. Un rol nuevo creado desde esa pantalla funciona
+> completo —menú, panel, reportes, búsqueda, descargas y alertas— solo con sus casillas (2026-10-04).
+>
+> **Solo A1** puede ver la **Bitácora general** y los **Accesos**, editar **Municipios/Parroquias**,
+> aprobar la transición *Postulado → Aceptado* de un pasante y **gestionar cuentas de Administrador**.
+> Un rol con el módulo *Usuarios* delegado (hoy A2) crea cuentas, pero no puede asignar el rol
+> Administrador, tocar una cuenta de Administrador ni cambiarse su propio rol.
 
 ### 3.2 Actores de negocio que NO usan el sistema
 Son quienes firman o autorizan fuera de él, y cuyo acto **se registra** dentro:
@@ -443,6 +449,7 @@ flowchart LR
 | RNF-SEG-08 | Las credenciales viven en `config/config.php`, **fuera del control de versiones** | `.gitignore` |
 | RNF-SEG-09 | La bitácora **nunca registra contraseñas** | `Model::fetchFullRow()` elimina la columna |
 | RNF-SEG-10 | Los archivos subidos se validan por **extensión, tamaño (≤ 5 MB) y tipo MIME real** | Prueba con archivo renombrado |
+| RNF-SEG-11 | El acceso se decide por **módulo asignado al rol** en todas las capas (Router, menú, acciones, reportes, descargas, búsqueda, alertas); ninguna regla usa números de rol fijos salvo lo exclusivo del Administrador. La escritura de Bienes es una capacidad aparte (`InventarioEscritura`) | Prueba con un rol creado desde la pantalla |
 
 ### 5.2 Rendimiento (RNF-REN)
 

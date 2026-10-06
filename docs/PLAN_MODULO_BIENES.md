@@ -531,7 +531,7 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 | ✅ R-6 | ~~Alertas~~ **hecho** (+ mantenimiento preventivo) | B-20, B-12. Se enganchan al Centro de Alertas existente. |
 | ✅ R-7 | ~~Mantenimiento preventivo programado~~ **hecho** | B-56. Requiere la tabla `inventario_mantenimiento_plan`. |
 | ✅ R-8 | ~~Conteo por cambio de gestión~~ **hecho**, con acta imprimible | B-05, B-48, B-50. Es el **dolor #2**. |
-| ✅ R-9 | ~~RBAC del módulo~~ **hecho** (`InventarioController::puedeEscribir()`) | B-58. Hoy sigue el rol 4 genérico. |
+| ✅ R-9 | ~~RBAC del módulo~~ **hecho** (`InventarioController::puedeEscribir()`) | B-58. Desde la mig. 084 la escritura es la casilla asignable **«Bienes: registrar y modificar»** (`InventarioEscritura`); hoy la tiene el rol Inventario. Sin ella, las pantallas ocultan los botones de escritura (2026-10-04). |
 | ✅ R-10 | ~~Eliminar `tipo_bien` y `cantidad`~~ **hecho** (mig. 067) | B-66 confirmada por el cliente. | 
 
 ### 12.3 Qué se le pide al cliente
