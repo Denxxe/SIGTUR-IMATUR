@@ -1,4 +1,5 @@
 <?php require_once '../app/views/inc/header.php'; ?>
+<?php $puedeEscribir = InventarioController::puedeEscribir(); // sin él, solo consulta ?>
 <?php
 /**
  * Recepción del Formulario BM-1 — Fase 3 (§2-bis del plan).
@@ -20,9 +21,11 @@ $lista      = $data['consolidados'] ?? [];
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/inventario/index" class="btn-sig btn-sig--ghost"><i class="bi bi-arrow-left"></i> Bienes</a>
+        <?php if ($puedeEscribir): ?>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalBM1">
             <i class="bi bi-inbox"></i> Registrar recepción
         </button>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -54,9 +57,11 @@ $lista      = $data['consolidados'] ?? [];
                             <td><?php echo htmlspecialchars($p->ubicacion ?? '—'); ?></td>
                             <td style="font-size:12px;color:var(--text-tertiary);"><?php echo htmlspecialchars(substr((string)$p->created_at, 0, 10)); ?></td>
                             <td class="col-actions">
+                                <?php if ($puedeEscribir): ?>
                                 <button class="row-action" onclick='codificarDesdeBM1(<?php echo htmlspecialchars(json_encode(["id"=>$p->id,"nombre"=>$p->nombre]), ENT_QUOTES, "UTF-8"); ?>)'>
                                     <i class="bi bi-upc-scan"></i> Codificar
                                 </button>
+                                <?php else: ?>—<?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -89,7 +94,9 @@ $lista      = $data['consolidados'] ?? [];
                             <?php if (!empty($c->archivo_url)): ?>
                                 <a href="<?php echo URL_ROOT; ?>/descarga/bm1/<?php echo (int)$c->id; ?>" target="_blank" class="row-action row-action--view"><i class="bi bi-eye"></i> Ver</a>
                             <?php endif; ?>
+                            <?php if ($puedeEscribir): ?>
                             <a href="<?php echo URL_ROOT; ?>/inventario/eliminarBM1/<?php echo (int)$c->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -50,7 +50,7 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 | ~~6~~ | ✅ ~~Rutas T-B — quitar el rango 5–11 cableado~~ **HECHO (2026-09-17, mig. 079)**, junto con **T-I** (restricciones por recorrido y cupo diario). H-17 cerrado | — | — |
 | ~~7~~ | ✅ ~~Rutas T-A — separar catálogo de ejecución~~ **HECHO (2026-09-17, mig. 078)**, y detrás de él **las nueve fases del módulo** (T-A…T-I, mig. 078-083, 2026-09-17/18). H-18 cerrado | — | — |
 | ~~8~~ | ✅ ~~Rutas T-C — tarifa y cobro~~ **HECHO (2026-09-18, mig. 083)** — y no solo declarativa: registro de pagos con abonos, comprobante, exoneración con motivo y acta de pago numerada. H-14 cerrado | — | — |
-| 9-bis | **Bienes en solo lectura:** el servidor ya bloquea la escritura sin el permiso `InventarioEscritura`, pero 8 pantallas de Bienes (~25 botones) siguen **mostrando** registrar/editar/eliminar. Hoy no afecta a ningún rol real (Admin e Inventario escriben); importa al crear un rol de consulta | Pequeño | Antes de dar a un rol nuevo acceso de lectura a Bienes |
+| ~~9-bis~~ | ✅ ~~Bienes en solo lectura~~ **Hecho (2026-10-04):** sin el permiso `InventarioEscritura` ya no se dibujan los botones de registrar, editar, codificar, eliminar, subir foto/documento ni registrar movimiento o recepción BM-1, y el listado muestra «Solo consulta». Actas, conteos, relaciones, plan y suficiencia ya lo hacían | — | — |
 | 9 | Deuda técnica de §5.2: `label[for]` en los formularios restantes (quedan 76, dentro de bucles) · whitelist en `Taller::actualizarPersona` · estilos inline → clases (quedan ~2.199) · más pruebas. *(Dividir `ReportesController` ya se hizo el 2026-08-28: 3.405 → 101 líneas.)* | Gradual | No bloquea entrega; hacer cuando haya holgura |
 
 ### 0.2 Espera al cliente (sección 3)

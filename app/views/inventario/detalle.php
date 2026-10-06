@@ -7,6 +7,8 @@
  * "desde que se compró, cada movimiento, cada reparación, hasta la baja".
  */
 $b    = $data['bien'];
+// Sin «Bienes: registrar y modificar» (InventarioEscritura) la hoja de vida es de consulta.
+$puedeEscribir = InventarioController::puedeEscribir();
 $ecls = Inventario::ESTATUS_BADGES[$b->estatus ?? ''] ?? 'sig-badge--neutral';
 $ccls = Inventario::CONDICION_BADGES[$b->condicion ?? ''] ?? 'sig-badge--neutral';
 $cons = $data['consolidado'] ?? null;
@@ -107,11 +109,13 @@ $fmt  = fn($v) => $v !== null && $v !== '' ? htmlspecialchars((string)$v) : '<sp
                         <i class="bi bi-image" style="font-size:2.5rem;"></i><br>Sin foto
                     </div>
                 <?php endif; ?>
+                <?php if ($puedeEscribir): ?>
                 <form action="<?php echo URL_ROOT; ?>/inventario/subirFoto" method="POST" enctype="multipart/form-data" style="margin-top:var(--sp-3);">
                     <input type="hidden" name="id_inventario" value="<?php echo (int)$b->id; ?>">
-                    <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required style="margin-bottom:var(--sp-2);">
+                    <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required style="margin-bottom:var(--sp-2);" aria-label="Foto del bien">
                     <button type="submit" class="btn-sig btn-sig--ghost" style="width:100%;"><i class="bi bi-upload"></i> Subir foto</button>
                 </form>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -122,7 +126,6 @@ $fmt  = fn($v) => $v !== null && $v !== '' ? htmlspecialchars((string)$v) : '<sp
 <?php
 // El documento de donación es el título del bien cuando no hay factura: sin
 // donante identificado no puede redactarse, así que los datos se capturan aquí.
-$puedeEscribir = InventarioController::puedeEscribir();
 $listoDonacion = !empty($b->donante) && !empty($b->donante_cedula);
 ?>
 <div class="sig-card anim-slide-up" style="margin-top:var(--sp-4);border-left:3px solid var(--brand-500,#3b82f6);">
@@ -211,6 +214,7 @@ $listoDonacion = !empty($b->donante) && !empty($b->donante_cedula);
 <div class="sig-card anim-slide-up" style="margin-top:var(--sp-4);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-paperclip"></i> Documentos de respaldo</div></div>
     <div class="sig-card__body" style="padding:var(--sp-4);">
+        <?php if ($puedeEscribir): ?>
         <form action="<?php echo URL_ROOT; ?>/inventario/subirDocumento" method="POST" enctype="multipart/form-data"
               style="display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;margin-bottom:var(--sp-4);">
             <input type="hidden" name="id_inventario" value="<?php echo (int)$b->id; ?>">
@@ -232,6 +236,7 @@ $listoDonacion = !empty($b->donante) && !empty($b->donante_cedula);
             </div>
             <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-upload"></i> Adjuntar</button>
         </form>
+        <?php endif; ?>
 
         <?php if (empty($data['documentos'])): ?>
             <p style="color:var(--text-tertiary);margin:0;">Este bien todavía no tiene documentos adjuntos.</p>
@@ -249,7 +254,9 @@ $listoDonacion = !empty($b->donante) && !empty($b->donante_cedula);
                             <td style="font-size:12px;color:var(--text-tertiary);"><?php echo htmlspecialchars(substr((string)$d->created_at, 0, 10)); ?></td>
                             <td class="col-actions">
                                 <a href="<?php echo URL_ROOT; ?>/descarga/bien/<?php echo (int)$d->id; ?>" target="_blank" class="row-action row-action--view"><i class="bi bi-eye"></i> Ver</a>
+                                <?php if ($puedeEscribir): ?>
                                 <a href="<?php echo URL_ROOT; ?>/inventario/eliminarDocumento/<?php echo (int)$d->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

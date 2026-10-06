@@ -1,4 +1,5 @@
 <?php require_once '../app/views/inc/header.php'; ?>
+<?php $puedeEscribir = InventarioController::puedeEscribir(); // sin él, solo consulta ?>
 <?php
 /**
  * Movimientos de bienes — Fase 2 (mig. 063).
@@ -22,9 +23,11 @@ $enCurso     = $data['enCurso'] ?? [];
         <p class="page__subtitle">Traslados, asignación de responsable y mantenimiento de los bienes.</p>
     </div>
     <div class="page__actions">
+        <?php if ($puedeEscribir): ?>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalMov" onclick="nuevoMov()" <?php echo $autorizador ? '' : 'disabled'; ?>>
             <i class="bi bi-arrow-left-right"></i> Registrar Movimiento
         </button>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -104,7 +107,9 @@ $enCurso     = $data['enCurso'] ?? [];
                         <td><?php echo trim(($a->emp_nombre ?? '') . ' ' . ($a->emp_apellido ?? '')) ?: '<span style="color:var(--text-tertiary)">—</span>'; ?></td>
                         <td style="font-size:12.5px;"><?php echo htmlspecialchars($a->autorizador ?: '—'); ?></td>
                         <td class="col-actions">
+                            <?php if ($puedeEscribir): ?>
                             <a href="<?php echo URL_ROOT; ?>/actividadesinventario/delete/<?php echo $a->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -18,6 +18,16 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-04 (d) — Bienes: un rol de consulta ya no ve botones de escritura
+
+El servidor bloqueaba la escritura sin `InventarioEscritura` desde la mig. 084, pero tres pantallas
+seguían dibujando los botones: el listado (registrar, editar, codificar, retirado, eliminar), la
+recepción del BM-1 (registrar, codificar, eliminar), la hoja de vida del bien (subir foto, adjuntar y
+eliminar documentos; además `$puedeEscribir` solo se definía dentro del bloque de donación) y
+Movimientos (registrar, eliminar). Ahora consultan `InventarioController::puedeEscribir()` como ya lo
+hacían actas, conteos, relaciones, plan de mantenimiento y suficiencia, y el listado muestra «Solo
+consulta». Verificado con un rol de prueba con Inventario sin escritura frente al rol Inventario.
+
 ### 2026-10-04 (c) — Antigüedad pública para todo el personal · cuatro arreglos de uso
 
 - **Ingreso a la administración pública para todos**, no solo comisión de servicio. Quien trabajó en

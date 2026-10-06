@@ -1,5 +1,10 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 <?php
+// Sin el permiso «Bienes: registrar y modificar» (InventarioEscritura, mig. 084)
+// el módulo es de consulta: no se dibujan los botones que el servidor rechazaría.
+$puedeEscribir = InventarioController::puedeEscribir();
+?>
+<?php
 /**
  * Bienes / Inventario — Fase 1 (mig. 062), ver docs/PLAN_MODULO_BIENES.md.
  *
@@ -45,9 +50,16 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <a href="<?php echo URL_ROOT; ?>/inventario/etiquetas" target="_blank" class="btn-sig btn-sig--ghost">
             <i class="bi bi-upc-scan"></i> Etiquetas
         </a>
+        <?php if (!$puedeEscribir): ?>
+        <span class="sig-badge sig-badge--neutral" style="align-self:center;" title="Su rol no tiene el permiso «Bienes: registrar y modificar»">
+            <i class="bi bi-eye"></i> Solo consulta
+        </span>
+        <?php endif; ?>
+        <?php if ($puedeEscribir): ?>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInv" onclick="nuevoInv()">
             <i class="bi bi-plus-circle"></i> Registrar Bien
         </button>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -200,15 +212,19 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                         </td>
                         <td><span class="sig-badge <?php echo $ccls; ?>"><?php echo htmlspecialchars($item->condicion ?? '—'); ?></span></td>
                         <td class="col-actions">
-                            <?php if ($sinCodigo): ?>
+                            <?php if ($sinCodigo && $puedeEscribir): ?>
                                 <button class="row-action" onclick='codificarInv(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-upc-scan"></i> Codificar</button>
                             <?php endif; ?>
                             <a href="<?php echo URL_ROOT; ?>/inventario/detalle/<?php echo (int)$item->id; ?>" class="row-action row-action--view"><i class="bi bi-journal-text"></i> Hoja de vida</a>
+                            <?php if ($puedeEscribir): ?>
                             <button class="row-action row-action--edit" onclick='editarInv(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
-                            <?php if ($est === Inventario::EST_BAJA && empty($item->retirado_alcaldia)): ?>
+                            <?php endif; ?>
+                            <?php if ($puedeEscribir && $est === Inventario::EST_BAJA && empty($item->retirado_alcaldia)): ?>
                                 <button class="row-action" onclick='marcarRetirado(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-truck"></i> Retirado por la Alcaldía</button>
                             <?php endif; ?>
+                            <?php if ($puedeEscribir): ?>
                             <a href="<?php echo URL_ROOT; ?>/inventario/delete/<?php echo $item->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
