@@ -55,10 +55,10 @@ function kpiCard(array $k): void {
     echo '<div class="u-ai-flex-start u-jc-space-between u-gap-sp-3" style="display:flex;">';
     echo '<div class="u-minw-0 u-flex-1">';
     echo '<div class="u-fs-0_67rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-ws-nowrap u-ov-hidden u-textov-ellipsis u-mb-4px">' . htmlspecialchars($k['label']) . '</div>';
-    echo '<div class="u-fw-800 u-lh-1 u-mb-4px" style="font-size:1.875rem; color:' . $valColor . ';">' . number_format($k['value']) . '</div>';
+    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $valColor . ';line-height:1;margin-bottom:4px;">' . number_format($k['value']) . '</div>';
     echo '<div class="u-c-text-tertiary u-ws-nowrap u-ov-hidden u-textov-ellipsis" style="font-size:0.69rem;">' . htmlspecialchars($k['sub']) . '</div>';
     echo '</div>';
-    echo '<div class="u-fsh-0 u-h-42px u-ai-center u-jc-center" style="width:42px; border-radius:10px; background:' . $k['bg'] . '; display:flex;">';
+    echo '<div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:' . $k['bg'] . ';display:flex;align-items:center;justify-content:center;">';
     echo '<i class="bi ' . $k['icon'] . '" style="font-size:1.15rem;color:white;"></i></div>';
     echo '</div></div></div>';
 }
@@ -66,9 +66,9 @@ function kpiCard(array $k): void {
 // Helper separador de área (mini-versión)
 function areaSep(string $label, string $color, string $icon): void {
     echo '<div style="display:flex;" class="anim-slide-up u-ai-center u-gap-sp-3 u-mb-sp-3">';
-    echo '<div class="u-br-2px u-fsh-0" style="width:3px; height:16px; background:' . $color . ';"></div>';
+    echo '<div style="width:3px;height:16px;border-radius:2px;background:' . $color . ';flex-shrink:0;"></div>';
     echo '<span class="u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary" style="font-size:0.68rem;">';
-    echo '<i class="bi ' . $icon . ' u-c--_-color-_-" style="margin-right:3px;"></i>' . htmlspecialchars($label);
+    echo '<i class="bi ' . $icon . '" style="color:' . $color . ';margin-right:3px;"></i>' . htmlspecialchars($label);
     echo '</span><div class="u-flex-1 u-h-1px u-bg-border-subtle"></div></div>';
 }
 ?>
@@ -141,9 +141,9 @@ function verdictPill(string $color): string {
     if ($color === '#059669') { $txt = 'Óptimo';   $ico = 'bi-check-circle-fill'; }
     elseif ($color === '#D97706') { $txt = 'Aceptable'; $ico = 'bi-exclamation-triangle-fill'; }
     else { $txt = 'Crítico'; $ico = 'bi-x-octagon-fill'; }
-    return '<span class="u-ai-center u-fs-9px u-fw-800 u-c--_-color-_-" style="display:inline-flex; gap:3px; '
-         . 'text-transform:uppercase; letter-spacing:.03em; background:' . $color . '18; '
-         . 'padding:2px 7px; border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;'
+         . 'text-transform:uppercase;letter-spacing:.03em;color:' . $color . ';background:' . $color . '18;'
+         . 'padding:2px 7px;border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
 }
 
 // ── Helper: tarjeta de métrica con valor grande, sub, veredicto y barra ───
@@ -154,14 +154,14 @@ function metricCard(string $label, string $valueDisplay, string $color, string $
     echo '<div class="u-ai-flex-start u-jc-space-between u-gap-sp-2" style="display:flex;">';
     echo '<div class="u-minw-0 u-flex-1">';
     echo '<div class="u-fs-0_65rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-mb-4px">' . htmlspecialchars($label) . '</div>';
-    echo '<div class="u-fw-800 u-c--_-color-_- u-lh-1 u-mb-4px" style="font-size:1.875rem;">' . $valueDisplay . '</div>';
+    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $color . ';line-height:1;margin-bottom:4px;">' . $valueDisplay . '</div>';
     echo '<div class="u-fs-0_65rem u-c-text-tertiary">' . htmlspecialchars($sub) . '</div>';
     if ($verdict) echo '<div class="u-mt-5px">' . verdictPill($color) . '</div>';
     echo '</div>';
-    echo '<div class="u-fsh-0 u-br-8px u-ai-center u-jc-center" style="width:38px; height:38px; background:' . $color . '22; display:flex;"><i class="bi ' . $icon . ' u-fs-1rem u-c--_-color-_-"></i></div>';
+    echo '<div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:' . $color . '22;display:flex;align-items:center;justify-content:center;"><i class="bi ' . $icon . '" style="font-size:1rem;color:' . $color . ';"></i></div>';
     echo '</div>';
     if ($barPct !== null) {
-        echo '<div class="u-mt-sp-3"><div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden"><div class="u-h-100pct u-br-2px" style="width:' . min(100, max(0, $barPct)) . '%; background:' . $color . ';"></div></div>';
+        echo '<div class="u-mt-sp-3"><div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden"><div style="height:100%;width:' . min(100, max(0, $barPct)) . '%;background:' . $color . ';border-radius:2px;"></div></div>';
         if ($meta !== '') echo '<div class="u-ta-right u-mt-2px"><span class="u-fs-9px u-c-text-tertiary">' . htmlspecialchars($meta) . '</span></div>';
         echo '</div>';
     }

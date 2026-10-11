@@ -538,18 +538,32 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 ## 6. VERIFICACIÓN MANUAL PENDIENTE (probar en navegador)
 
-> 🟡 **2026-10-11 — Codificación propia (mig. 087): falta verla en el navegador.** Probada con 10 casos
-> automáticos y 13 comprobaciones de punta a punta (sobre un respaldo, restaurado), y renderizando
-> listado, hoja de vida y `/inventario/codificacion` con el motor encendido y apagado. Falta el vistazo
-> en navegador del modal *Codificar* encendido (selector de clasificación, número propuesto).
+> ✅ **2026-10-11 — Revisión visual con capturas reales (Edge headless + Laragon), sin la extensión de Chrome.**
+> Se capturaron las pantallas renderizadas con sesión de administrador y datos de prueba (sobre un
+> respaldo, restaurado después). Dos comprobaciones:
+> - **Migración de estilos, píxel a píxel:** 24 pantallas con el código de antes y el de ahora. 21
+>   idénticas; la diferencia restante era ruido de los gráficos animados (dos capturas de la *misma*
+>   versión difieren más) — **salvo Indicadores, donde había una regresión real** (ver abajo).
+> - **Pantallas nuevas:** Liquidación (listado, detalle, imprimible), Parámetros, Codificación, Bienes
+>   sin codificar y Oficio de formación (formulario e imprimible).
 >
-> 🟡 **2026-10-11 — Liquidación (mig. 086): falta verla en el navegador.** Probada con 47 casos
-> automáticos contra los valores de Excel, de punta a punta contra la base (sobre un respaldo,
-> restaurado después) y renderizando las 8 pantallas sin errores de PHP. Lo que falta es **un vistazo
-> en navegador**, porque la extensión de Chrome no estaba disponible: `/nomina/liquidaciones`, el
-> detalle (modal *Corregir mes*, *Ajustes*, *Anular*), el imprimible (sin la URL de Chrome en la
-> hoja), la tarjeta de tasas del BCV y la sección de liquidación del modal de parámetros en
-> `/nomina/parametros`, y el botón *Liquidar prestaciones* en el expediente de un egresado.
+> **Lo que encontró y quedó corregido:**
+> 1. **Indicadores sin colores de semáforo** (regresión de la migración de estilos): 12 `style` armados
+>    con PHP concatenado dentro de un `echo` (`color:' . $color . '`) no se reconocieron como
+>    dinámicos; uno se convirtió en una clase inválida y otro se perdió. Rehechas las 3 vistas
+>    afectadas desde el respaldo sin tocar esas etiquetas; la clase inválida, fuera.
+> 2. **Liquidación: la tabla mes a mes se guardaba en 0** (total, integral, depósito, tasa, interés),
+>    aunque el resumen estaba bien. `calcularMeses()` unía `$m + $c` y las derivadas viejas de la BD
+>    tapaban las nuevas. Ahora `$c + $m`, con prueba.
+> 3. **Oficio de formación con Cada Palabra En Mayúscula:** la capitalización automática de texto libre
+>    (B5) alcanzaba al cuerpo del oficio. Exento con `js-no-capitalize`.
+> 4. **Bienes (defecto previo, no de hoy):** con 9 botones el título se aplastaba a una palabra por
+>    línea y el aviso «Sin codificar» se partía en columnas. `.page__actions` ahora pasa a otra fila y
+>    el título conserva 320 px; el aviso, envuelto. Verificado que el resto de pantallas no cambia.
+> 5. **Panel principal con la fecha en inglés** («11 DE OCTOBER», «Asistencias Oct»): `date('F'/'M')`.
+>
+> Pendiente solo lo que exige **interactuar** (abrir modales, enviar formularios en un navegador real):
+> el modal *Codificar* encendido, *Corregir mes* y *Anular* de la Liquidación.
 
 > ✅ **2026-10-04 — prueba de formularios guardando datos (navegador + HTTP), sobre un respaldo de la
 > base que luego se restauró.** Todo guarda: **B1 cerrado** (alta de 5 pasos con familiar → expediente),

@@ -186,7 +186,9 @@ if (!empty($oficiosPrevios)):
         <div class="u-fs-11px u-c-text-tertiary u-mb-sp-3 u-ta-center">
             <i class="bi bi-eye"></i> Vista previa — el N° de oficio se asigna al generar
         </div>
-        <div class="u-br-4px" style="background:#fff; border:1px solid #d1d5db; box-shadow:0 2px 14px rgba(0,0,0,.08); padding:40px 48px 36px; font-family:'Times New Roman',Times,Georgia,serif; font-size:11pt; color:#111; line-height:1.7;">
+        <div style="background:#fff; border:1px solid #d1d5db; border-radius:4px; box-shadow:0 2px 14px rgba(0,0,0,.08);
+                    padding:40px 48px 36px;
+                    font-family:'Times New Roman',Times,Georgia,serif; font-size:11pt; color:#111; line-height:1.7;">
 
             <?php require '../app/views/inc/membrete.php'; ?>
 

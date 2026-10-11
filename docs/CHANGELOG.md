@@ -18,6 +18,29 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 (h) — Revisión visual con capturas: 5 defectos encontrados y corregidos
+
+Sin la extensión de Chrome, la revisión se hizo renderizando cada pantalla con sesión de administrador
+y fotografiándola con Edge en modo headless (los estilos los sirve Laragon). La migración de estilos
+se comparó **píxel a píxel** contra el código anterior (24 pantallas, 21 idénticas).
+
+- **Regresión de la migración de estilos en Indicadores:** los valores perdieron su color de semáforo.
+  Los `style` armados con PHP concatenado dentro de un `echo` (`color:' . $color . '`) pasaban por
+  texto estático: uno terminó en una clase inválida (`.u-c--_-color-_-`) y una pieza sin «propiedad:»
+  (`' . $border . '`) se perdió. Afectaba a 3 vistas (indicadores, oficio de rutas, visitantes); se
+  rehicieron desde el respaldo sin tocar esas etiquetas. *La verificación textual de la migración no
+  lo podía ver: comparaba texto, y el texto «equivalente» era justamente el roto.*
+- **Liquidación:** la tabla mes a mes se guardaba con las derivadas en 0. `calcularMeses()` hacía
+  `$m + $c` y las claves viejas de la BD ganaban. Ahora `$c + $m`; prueba con renglones «como de BD».
+- **Oficio de formación:** el cuerpo salía con mayúscula en cada palabra (capitalización automática
+  B5). Exento con `js-no-capitalize`.
+- **Encabezado de páginas con muchos botones** (Bienes): el título quedaba aplastado. `.page__actions`
+  con `flex-wrap` y el título con 320 px mínimos; verificado que el resto de pantallas no cambia.
+  El aviso de «Sin codificar» se partía en columnas (texto suelto dentro de un contenedor flex).
+- **Panel principal:** la fecha y los meses salían en inglés (`date('F')`/`date('M')`).
+
+Pruebas 190 → 193.
+
 ### 2026-10-11 (g) — Bienes: B-74 cerrada · B-84 precisada (sin código)
 
 - **B-74: una sola numeración** para todo IMATUR. Ya era el valor por defecto de la codificación propia

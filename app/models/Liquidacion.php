@@ -250,7 +250,10 @@ class Liquidacion extends Model
             // Solo importa la tasa cuando hay saldo sobre el cual aplicarla.
             if ($anual === null && abs($c['saldo_antes_interes']) > 0.0001) $tot['sin_tasa'][] = $per;
 
-            $out[] = $m + $c;
+            // Lo calculado manda sobre lo leído: los renglones que vienen de la BD
+            // traen las derivadas del cálculo anterior (o 0), y con `$m + $c` esas
+            // claves viejas tapaban las nuevas — la tabla mes a mes se guardaba en 0.
+            $out[] = $c + $m;
         }
         $tot['saldo'] = $saldo;
         return ['meses' => $out, 'totales' => $tot];

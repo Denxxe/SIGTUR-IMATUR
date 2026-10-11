@@ -160,7 +160,9 @@
   justify-content: space-between; gap: var(--sp-6);
   margin-bottom: var(--sp-6);
 }
-.page__title-block { flex: 1; min-width: 0; }
+/* El título nunca baja de 320px: con muchas acciones (p. ej. Bienes, 9 botones) los botones
+   eran rígidos y lo aplastaban a una palabra por línea. Ahora son ellos los que pasan a otra fila. */
+.page__title-block { flex: 1 1 320px; min-width: 320px; }
 .page__eyebrow {
   font-size: 11px; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
@@ -176,7 +178,7 @@
   letter-spacing: -0.02em; color: var(--text-primary); line-height: 1.15;
 }
 .page__subtitle { font-size: var(--fs-md); color: var(--text-secondary); margin-top: 6px; }
-.page__actions { display: flex; align-items: center; gap: var(--sp-3); flex-shrink: 0; }
+.page__actions { display: flex; align-items: center; gap: var(--sp-3); flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; }
 
 /* ===== CARDS ===== */
 .sig-card {
@@ -777,7 +779,6 @@ form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
 .u-br-50pct { border-radius: 50% !important; }
 .u-br-6px { border-radius: 6px !important; }
 .u-br-8px { border-radius: 8px !important; }
-.u-c--_-color-_- { color: ' . $color . ' !important; }
 .u-c-brand-500 { color: var(--brand-500) !important; }
 .u-c-brand-600 { color: var(--brand-600) !important; }
 .u-c-danger-500 { color: var(--danger-500) !important; }

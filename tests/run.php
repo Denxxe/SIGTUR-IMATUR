@@ -338,6 +338,13 @@ $led = Liquidacion::calcularMeses($cadena, $tasasPlantilla, $PL);
 check($cerca($led['meses'][3]['saldo'], -89.06894538947482), 'Q18 sale igual que en Excel (saldo encadenado sin redondear)');
 check($cerca($led['totales']['anticipos'], 91), 'total de anticipos = 91');
 check($led['totales']['sin_tasa'] === [], 'sin meses faltos de tasa');
+// Renglones como los devuelve la BD: ya traen las derivadas del cálculo anterior.
+$conViejos = array_map(fn($r) => $r + ['total_mensual' => 0, 'salario_integral' => 0, 'monto_deposito' => 0,
+                                       'interes' => 0, 'saldo' => 0, 'tasa_mensual' => null, 'id' => 1], $cadena);
+$ledV = Liquidacion::calcularMeses($conViejos, $tasasPlantilla, $PL);
+check($cerca($ledV['meses'][2]['monto_deposito'], 9.70486111111111), 'lo calculado reemplaza a lo leído de la BD (no quedan los 0 viejos)');
+check($cerca($ledV['meses'][2]['tasa_mensual'], 56.18 / 12), 'la tasa del mes se toma de la tabla, no del valor viejo del renglón');
+check($ledV['meses'][2]['id'] === 1, 'conserva el id del renglón para poder guardarlo');
 unset($tasasPlantilla['2022-04']);
 eq(Liquidacion::calcularMeses($cadena, $tasasPlantilla, $PL)['totales']['sin_tasa'], ['2022-04'],
    'un mes con saldo y sin tasa se reporta (no se inventa la tasa)');

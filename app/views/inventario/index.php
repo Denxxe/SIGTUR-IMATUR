@@ -94,6 +94,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
 <?php if ($ver === 'pendientes' && !empty($data['items'])): ?>
     <div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
         <i class="bi bi-info-circle"></i>
+        <div><?php /* .sig-alert es flex: sin este contenedor, cada <strong> y <a> era una columna */ ?>
         <?php if ($propia): ?>
         Estos bienes ya están registrados pero <strong>aún no tienen código</strong>. Con la
         codificación propia encendida, asígnaselo con <strong>Codificar</strong>: el sistema propone el
@@ -107,6 +108,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados">BM-1 recibidos</a>
         y transcribe desde ahí los códigos asignados.
         <?php endif; ?>
+        </div>
     </div>
 <?php endif; ?>
 

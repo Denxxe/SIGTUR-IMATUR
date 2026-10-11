@@ -8,6 +8,11 @@ $anio = (int)($data['anio'] ?? date('Y'));
 
 $rolLabel = ($_SESSION['user_rol_name'] ?? '') !== '' ? $_SESSION['user_rol_name'] : 'Usuario';
 
+// date('M')/date('F') salen en inglés («OCTOBER», «Aug»): los meses van en español.
+$mesesEs   = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+$mesCorto  = ucfirst(mb_substr($mesesEs[(int)date('n')], 0, 3, 'UTF-8'));
+$fechaHoy  = date('j') . ' de ' . $mesesEs[(int)date('n')] . ' de ' . date('Y');
+
 if (!function_exists('fmtMesDash')) {
     function fmtMesDash(string $ym): string {
         static $m = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -37,15 +42,15 @@ if ($ve('personal')) {
     $kpiSections[] = ['label'=>'Recursos Humanos','color'=>'#3B82F6','icon'=>'bi-people','cards'=>[
         ['label'=>'Empleados Activos',    'value'=>number_format($data['kpiEmpleados']??0),        'sub'=>'en nómina institucional',            'icon'=>'bi-people-fill',               'bg'=>'#3B82F6','href'=>URL_ROOT.'/empleados/index',
             'status'=>kpiSt($data['kpiEmpleados']??0,1,1)],
-        ['label'=>'Asistencias '.date('M'),'value'=>number_format($data['kpiAsistenciaMes']??0),   'sub'=>'registros este mes',                 'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index',
+        ['label'=>'Asistencias '.$mesCorto,'value'=>number_format($data['kpiAsistenciaMes']??0),   'sub'=>'registros este mes',                 'icon'=>'bi-calendar-check-fill',       'bg'=>'#059669','href'=>URL_ROOT.'/asistencias/index',
             'delta'=>$data['deltaAsistenciaMes']??null],
         ['label'=>'Contratos por Vencer', 'value'=>number_format($data['kpiContratosVencen']??0),  'sub'=>'próximos a vencer',                  'icon'=>'bi-person-badge-fill',         'bg'=>$alContr?'#DC2626':'#64748B','alert'=>$alContr,
             'status'=>kpiSt($data['kpiContratosVencen']??0,0,2,true)],
         ['label'=>'Permisos/Reposos Hoy', 'value'=>number_format($data['kpiPermisosVigentes']??0), 'sub'=>($data['kpiPermisosPendientes']??0).' pendiente(s) de aprobar','icon'=>'bi-calendar2-week-fill','bg'=>$alPend?'#0EA5E9':'#0891B2','href'=>URL_ROOT.'/permisos/index','alert'=>$alPend],
         ['label'=>'Amonestaciones',       'value'=>number_format($data['kpiAmonDespido']??0),      'sub'=>'en causa de despido (3+)',           'icon'=>'bi-flag-fill',                 'bg'=>$alDesp?'#DC2626':'#64748B','href'=>URL_ROOT.'/amonestaciones/index','alert'=>$alDesp,
             'status'=>kpiSt($data['kpiAmonDespido']??0,0,1,true)],
-        ['label'=>'Impuntualidad '.date('M'),'value'=>$pctImp.'%',                                 'sub'=>($data['kpiImpuntualMes']??0).' marcaje(s) tarde','icon'=>'bi-alarm-fill',       'bg'=>$colImp,'href'=>URL_ROOT.'/reportes/asistencia'],
-        ['label'=>'Ausencias '.date('M'),    'value'=>number_format($data['kpiAusenciasMes']??0),    'sub'=>'inasistencias registradas','icon'=>'bi-person-x-fill', 'bg'=>($data['kpiAusenciasMes']??0)>0?'#DC2626':'#64748B','href'=>URL_ROOT.'/amonestaciones/index',
+        ['label'=>'Impuntualidad '.$mesCorto,'value'=>$pctImp.'%',                                 'sub'=>($data['kpiImpuntualMes']??0).' marcaje(s) tarde','icon'=>'bi-alarm-fill',       'bg'=>$colImp,'href'=>URL_ROOT.'/reportes/asistencia'],
+        ['label'=>'Ausencias '.$mesCorto,    'value'=>number_format($data['kpiAusenciasMes']??0),    'sub'=>'inasistencias registradas','icon'=>'bi-person-x-fill', 'bg'=>($data['kpiAusenciasMes']??0)>0?'#DC2626':'#64748B','href'=>URL_ROOT.'/amonestaciones/index',
             'status'=>kpiSt($data['kpiAusenciasMes']??0,0,1,true)],
     ]];
 }
@@ -108,7 +113,7 @@ if ($ve('inventario')) {
 
 <div class="page__head anim-slide-up">
     <div class="page__title-block">
-        <div class="page__eyebrow"><?php echo htmlspecialchars($rolLabel); ?> · <?php echo date('d \d\e F \d\e Y'); ?></div>
+        <div class="page__eyebrow"><?php echo htmlspecialchars($rolLabel); ?> · <?php echo $fechaHoy; ?></div>
         <h1 class="page__title">Panel Principal</h1>
         <p class="page__subtitle">Métricas operativas en tiempo real — <?php echo date('H:i'); ?></p>
     </div>

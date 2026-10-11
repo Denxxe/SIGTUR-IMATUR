@@ -45,14 +45,14 @@ $t = $data['taller'];
                     <div class="col-12">
                         <div class="sig-field">
                             <label class="sig-field__label" for="of_asunto">Asunto (registro interno)</label>
-                            <input type="text" name="asunto" id="of_asunto" class="sig-input" maxlength="500"
+                            <input type="text" name="asunto" id="of_asunto" class="sig-input js-no-capitalize" maxlength="500"
                                    value="<?php echo htmlspecialchars(($t->tipo_actividad ?? 'Actividad') . ': ' . $t->nombre); ?>">
                         </div>
                     </div>
                     <div class="col-12">
                         <div class="sig-field">
                             <label class="sig-field__label" for="of_cuerpo">Texto del oficio <span class="req">*</span></label>
-                            <textarea name="cuerpo" id="of_cuerpo" class="sig-textarea" rows="11" required><?php echo htmlspecialchars($data['cuerpo']); ?></textarea>
+                            <textarea name="cuerpo" id="of_cuerpo" class="sig-textarea js-no-capitalize" rows="11" required><?php echo htmlspecialchars($data['cuerpo']); ?></textarea>
                             <small class="u-c-text-tertiary u-fs-12px">
                                 Deje una línea en blanco entre párrafos. El membrete, la fecha, el número, el destinatario y la
                                 firma de la Presidencia se agregan solos.
