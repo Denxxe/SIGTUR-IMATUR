@@ -251,7 +251,7 @@ Estas son las únicas migraciones que dejaron una **trampa o una convención viv
 | 086 | **Liquidación: nada de la ley en el código.** Garantía por trimestre, días adicionales (cantidad/desde/tope), retroactivo (días/umbral), modo de trimestres, divisores 30/360, «Bono 50 %» y los 15/30 de Vacaciones son claves de `configuracion_sistema` (`Liquidacion::PARAMS_DEFAULT`, `Vacacion::regla()`), editables en `/nomina/parametros`. Las funciones de cálculo reciben `$params` para poder probarse sin BD. **La tasa de `nomina_tasas_bcv` es la de interés de prestaciones (ANUAL), no el tipo de cambio** — no confundir con `nomina_parametros_mes.tasa_dolar`. Los meses de `liquidacion_meses` guardan las ENTRADAS (editables, `editado`) y las derivadas se recalculan en cadena con `Liquidacion::recalcular()`; *reconstruir* resiembra desde la ficha y descarta correcciones. Una liquidación viva por egreso; el número `LIQ-` se asigna al **cerrar**, no al crear. |
 | 087 | **Codificación propia de bienes: apagada por defecto.** `bienes_codificacion_propia = 0` → `codificar()` transcribe el BM-1 («de la Alcaldía», `verificado_alcaldia = TRUE`); `= 1` → codifica IMATUR (`codificado_por = IMATUR`, **sin** tocar `verificado_alcaldia`). Quién decide es el controlador: lo que viene de un BM-1 es siempre de la Alcaldía. El siguiente número sale **solo** de `CodificacionBienes::siguienteNroOrden()` (compara como entero y mira **todos** los bienes, papelera incluida: los códigos no se reciclan, B-76). Los repetidos se comprueban con `CodificacionBienes::nroOrdenOcupado()` (`084` = `84`), no con `findByNroOrden()`. No enciende sin `bienes_nro_orden_inicio` (B-73) ni sin una clasificación vigente (B-75), y se apaga sola si se da de baja la última. |
 
-> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 087 el 2026-10-11):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–087** (**73 tablas**; la 084 solo agrega un permiso) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
+> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 088 el 2026-10-11):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–088** (**73 tablas**; la 084 solo agrega un permiso) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
 >
 > 🔴 **Toda migración nueva se añade TAMBIÉN al final del consolidado, en el mismo commit.** Se
 > olvidó dos veces (075–083 quedaron fuera hasta el 2026-10-03) y una instalación nueva habría
@@ -622,7 +622,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 18n. **Bono Vacacional v1 — "registro + reporte", no cálculo legal (migración 059, R-11)** — el sistema NO calcula el monto legal del bono vacacional ni de una futura liquidación: **organiza** datos que Talento Humano ya captura (igual que hoy en Excel) y los exporta en el formato exacto. `Sueldo::actual($idEmpleado, $fecha)` resuelve el sueldo vigente en una fecha (última fila de `empleado_salarios` con `fecha_efectiva <= $fecha`) — **nunca UPDATE, siempre INSERT** (mismo patrón que `Empleado::trasladar()`), necesario para poder reconstruir el sueldo vigente en una fecha pasada. `BonoVacacional::tipoPersonal()` deriva la categoría (Alto Nivel/Empleados Fijos/Obreros Fijos/Contratados) de datos que YA existen (`cargos.nivel_jerarquico`, `tipo_contrato`, `clasificacion`) — sin captura adicional. Los días base van por **condición** del trabajador desde la mig. 085 (`bono_vac_dias_fijo` = 85, `bono_vac_dias_contratado` = 45, + 1 por año a todos; `BonoVacacional::condicion()`/`diasBase()`, que también alimentan la alícuota de la quincena) y son un **beneficio de contrato colectivo superior a la LOTTT** (Art. 192: 15+1/año, tope 30) — no hardcodear ese número en código, es editable. `BonoVacacional::generarPeriodo()` congela un snapshot (`bono_vacacional_detalle`) por empleado activo; `total_bono_vacacional` queda `NULL` hasta que RRHH lo captura/verifica en `/nomina/verPeriodo/{id}` — un período `Cerrado` bloquea más edición (`actualizarDetalle()` lanza excepción). No confundir con el módulo `Vacaciones` (mig.045, cuenta **días**): éste calcula el **monto** en Bs a pagar.
 
-19. **`configuracion_sistema` correlativos por módulo** — claves `correlativo_oficio_ruta`/`ano_correlativo_ruta` (renombradas desde 007). `ConfigSistema::generarNumeroOficio($modulo)` acepta parámetro de módulo. Formato resultado: `RUTA-007/2026` o `FORM-001/2026`. Módulos vivos: `ruta`, `formacion`, `bienes`, `acta`, `constancia`, `pasante` y **`permiso`** (oficios de permiso de acceso, mig. 081, prefijo `PERM-`) y **`actapago`** (actas de pago en efectivo, mig. 083, prefijo `ACTP-`). **Un número anulado no se recicla** en ninguno.
+19. **`configuracion_sistema` correlativos por módulo** — claves `correlativo_oficio_ruta`/`ano_correlativo_ruta` (renombradas desde 007). `ConfigSistema::generarNumeroOficio($modulo)` acepta parámetro de módulo. Formato resultado: `RUTA-007/2026` o `FORM-001/2026`. Módulos vivos: `ruta`, `formacion` (oficio de formación `FORM-`, mig. 088: `Taller::emitirOficio()`, cuerpo editable guardado en `oficios_emitidos.cuerpo`), `bienes`, `acta`, `constancia`, `pasante` y **`permiso`** (oficios de permiso de acceso, mig. 081, prefijo `PERM-`) y **`actapago`** (actas de pago en efectivo, mig. 083, prefijo `ACTP-`). **Un número anulado no se recicla** en ninguno.
 
 20. **`inventario.condicion` CHECK** — ahora incluye `'En Reparación'`. Actualizar whitelist en todos los controladores que validen este campo: `['Nuevo','Bueno','Regular','Dañado','En Reparación']`.
 
@@ -650,7 +650,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 createdb -U postgres "SIGTUR-IMATUR"
 
 # 3. Importar el esquema consolidado — UN SOLO ARCHIVO, esto es toda la BD
-#    (esquema base + migraciones 001-087 + catálogos + admin de arranque):
+#    (esquema base + migraciones 001-088 + catálogos + admin de arranque):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
 # 4. NO HAY PASO 4. No se aplica ninguna migración encima del consolidado.
@@ -663,7 +663,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 #    Login de arranque: admin / Sigtur2026  <-- CAMBIAR EN EL PRIMER INGRESO
 ```
 
-> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–087). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
+> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–088). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
 
 ---
 
@@ -724,6 +724,6 @@ correspondiente:
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-087 + catálogos + admin de arranque; no aplicar migraciones encima** |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-088 + catálogos + admin de arranque; no aplicar migraciones encima** |
 | Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Historial de migraciones | `database/migrations/` — una por archivo; **no** se aplican sobre el consolidado |

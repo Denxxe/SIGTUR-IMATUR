@@ -1,7 +1,7 @@
 # Modelo de Datos — Diagrama Entidad-Relación (ER)
 
 **SIGTUR-IMATUR** · PostgreSQL 17 · **73 tablas** · esquema `public`
-**Estado:** migraciones **001–087** aplicadas · **Última actualización:** 2026-10-11 (la 087 agrega `inventario_clasificaciones` y la procedencia del código; la 086, las 3 tablas de la Liquidación)
+**Estado:** migraciones **001–088** aplicadas · **Última actualización:** 2026-10-11 (la 088 agrega `id_taller` y `cuerpo` a `oficios_emitidos`; la 087, `inventario_clasificaciones`; la 086, las 3 tablas de la Liquidación)
 
 > **Para qué sirve este documento.** Es el insumo para dibujar el **ER** del sistema (en
 > draw.io, ERDPlus, MySQL Workbench, dbdiagram.io o el que se use). Contiene: las entidades
@@ -9,7 +9,7 @@
 > cardinalidad, y los diagramas Mermaid ya listos por subsistema.
 >
 > **Fuente de verdad del esquema:** `database/schema_consolidado.sql` (base + migraciones
-> 001–087, 73 tablas, autosuficiente). Si algo aquí discrepa del SQL, **manda el SQL**.
+> 001–088, 73 tablas, autosuficiente). Si algo aquí discrepa del SQL, **manda el SQL**.
 
 ---
 

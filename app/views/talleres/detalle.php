@@ -42,6 +42,9 @@
            class="btn-sig btn-sig--ghost" target="_blank">
             <i class="bi bi-file-earmark-pdf"></i> Dossier / PDF
         </a>
+        <a href="<?php echo URL_ROOT; ?>/talleres/oficio/<?php echo $data['taller']->id; ?>" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-envelope-paper"></i> Oficio
+        </a>
         <?php if (!in_array($data['taller']->estado ?? '', ['Finalizado', 'Cancelado'])): ?>
             <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalInscripcion">
                 <i class="bi bi-person-plus"></i> Agregar Participante

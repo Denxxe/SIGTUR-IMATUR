@@ -2,10 +2,11 @@
 /**
  * Acta de pago en efectivo — T-C (mig. 083).
  *
- * ⚠️ **ES UNA PROPUESTA NUESTRA.** Sobre este documento el cliente dijo:
- * *«el formato nace del momento, **pueden darnos una idea**, pero funciona como
- * respaldo de que el servicio fue pagado»* (R-39). Es el único documento del
- * módulo que diseñamos en vez de replicar, así que se somete a su visto bueno.
+ * ✅ **APROBADO por IMATUR el 2026-10-11 (R-39).** Sobre este documento el
+ * cliente había dicho: *«el formato nace del momento, **pueden darnos una
+ * idea**, pero funciona como respaldo de que el servicio fue pagado»*. Es el
+ * único documento del módulo que diseñamos en vez de replicar; la propuesta se
+ * aprobó tal como está.
  *
  * El criterio para armarlo: lo mínimo que hace de un papel un respaldo válido —
  * quién recibió, de quién, cuánto, por qué concepto y en qué fecha, con las dos
@@ -58,11 +59,6 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
 
     .pie { margin-top: 30px; font-size: 8pt; color: #555; text-align: center; line-height: 1.6; }
 
-    .aviso-propuesta {
-        margin-top: 26px; padding: 8px 12px; border: 1px dashed #b45309;
-        background: #fffbeb; color: #92400e; font-size: 8.5pt; line-height: 1.5;
-    }
-
     .barra { position: sticky; top: 0; z-index: 10; background: #16407A; color: #fff; padding: 10px 18px; display: flex; gap: 10px; align-items: center; }
     .barra a, .barra button { background: #fff; color: #16407A; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; }
     .barra .aviso { font-size: 12px; opacity: .9; margin-right: auto; }
@@ -70,7 +66,7 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
     @page { margin: 0; }
     @media print {
         body { background: #fff; }
-        .barra, .aviso-propuesta { display: none !important; }
+        .barra { display: none !important; }
         .hoja { width: auto; min-height: 0; margin: 0; box-shadow: none; padding: 1.5cm 2cm; }
     }
 </style>
@@ -78,7 +74,7 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
 <body>
 
 <div class="barra">
-    <span class="aviso">Formato propuesto por nosotros — a validar con IMATUR (R-39)</span>
+    <span class="aviso">Acta de pago <?php echo $v($pg->acta_numero); ?></span>
     <button onclick="window.print()">Imprimir</button>
     <a href="<?php echo URL_ROOT; ?>/rutas/detalle/<?php echo (int)$ej->id; ?>">Volver</a>
 </div>
@@ -149,14 +145,6 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
         Cuenta de IMATUR para el cobro de rutas: <?php echo $cv('rutas_cuenta_cobro'); ?>
     </div>
     <?php endif; ?>
-
-    <div class="aviso-propuesta">
-        <strong>Nota interna (no se imprime).</strong> Este formato es una <strong>propuesta</strong>:
-        sobre el acta de pago el cliente dijo «pueden darnos una idea» (R-39). Lleva lo mínimo que
-        hace de un papel un respaldo válido — quién recibió, de quién, cuánto (en cifras y en letras),
-        por qué concepto y cuándo, con las dos firmas. Si IMATUR pide cambios, se ajusta solo esta
-        vista: el correlativo y el registro del pago no se tocan.
-    </div>
 </div>
 
 </body>

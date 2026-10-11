@@ -42,7 +42,7 @@ Seis hojas. Las tres primeras comparten disposición; Contratados y Comisión di
 | `EMPLEADOS FIJOS INSTI` | Personal fijo | — |
 | `OBREROS FIJOS INST` | Obreros | — |
 | `CONTRATADOS 2` | Contratados | Añade `SALARIO BASE SEMANAL`; sin prima de antigüedad en el resumen |
-| `NOMINA DE INSTITUTOS ASIGNA CO` | **Comisión de servicio** | Calcula la **diferencia** entre el sueldo del cargo y el que paga la dependencia de origen; bono de responsabilidad en divisas |
+| `NOMINA DE INSTITUTOS ASIGNA CO` | **Comisión de servicio** | Calcula la **diferencia** entre el sueldo del cargo y el que paga la dependencia de origen. La plantilla le paga bono de responsabilidad a toda la hoja; **decidido 2026-10-11: solo a los de alto nivel** (§6.1) |
 | `RESUMEN` | Consolidado por tipo de personal | Suma las 5 hojas |
 
 En el sistema los 5 grupos ya son derivables sin captura adicional: los 4 primeros con
@@ -145,7 +145,7 @@ Hoy la tabla almacena **el monto de cada prima**, capturado a mano. Las fórmula
 | Años en la administración pública | ✅ `empleados.fecha_ingreso_administracion` (mig. 045) |
 | Nº de hijos | ✅ Derivable de `carga_familiar` |
 | Nº de cuenta bancaria de nómina | ❌ **No existe** — agregar |
-| Cantidad de divisas del bono de responsabilidad | ❌ **No existe** — agregar (solo Alto Nivel y Comisión) |
+| Cantidad de divisas del bono de responsabilidad | ✅ `empleados.divisas_bono_responsabilidad` (mig. 072) — solo la cobra el **alto nivel** (`Nomina::cobraResponsabilidad()`) |
 | Sueldo que paga la dependencia de origen (comisión) | ❌ **No existe** — agregar |
 | Tasa del dólar y cesta ticket del mes | ⚠️ Config sin histórico; **ambos cambian cada mes** → necesitan tabla con vigencia |
 
@@ -191,7 +191,7 @@ justificación del módulo.
 | **N-4** | ¿Cuál tasa del dólar aplican exactamente? | ✅ **Cerrada 2026-10-06:** la de la **maqueta** de nómina que reciben cada mes, cargada a mano. La consulta al BCV (mig. 074) queda como referencia |
 
 Menores: de dónde sale la **cantidad de divisas** de cada trabajador, y si el **bono de
-responsabilidad** aplica solo a Alto Nivel y Comisión.
+responsabilidad** aplica solo a Alto Nivel y Comisión. *(✅ Resuelto 2026-10-11: solo alto nivel.)*
 
 > **2026-10-06 — respondidas (notas del equipo, no formato).** Detalle y estado en `BACKLOG.md` §3.1.
 > - **N-2 ✅** 4 semanas. Ya era el default.
@@ -214,7 +214,8 @@ responsabilidad** aplica solo a Alto Nivel y Comisión.
 >   **cesta ticket** (lo único que varía con el dólar) y la tasa. Se cargan **a mano**, una vez por
 >   mes, en `/nomina/parametros` — el modelo actual (`nomina_parametros_mes`, UNIQUE por mes) ya
 >   sirve. *Consultar BCV* es solo referencia: el cálculo usa lo que diga la maqueta.
-> - **Bono de responsabilidad:** solo Alto Nivel (fijo o contratado); las divisas las fija la
+> - **Bono de responsabilidad (✅ cerrado 2026-10-11):** solo Alto Nivel (fijo o contratado), **también si está en
+>   comisión de servicio**; un comisionado que no es de alto nivel no lo cobra. Las divisas las fija la
 >   contratación colectiva de la Alcaldía. Queda la duda de Comisión de Servicio.
 
 ### 6.2 Insumos operativos

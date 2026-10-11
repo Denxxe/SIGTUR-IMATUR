@@ -5,7 +5,7 @@
 
 > **Revisión del 2026-08-28.** Se corrigió la tabla de entidades, que seguía listando
 > `participantes_taller.es_brigadista` y `taller_inventario`, **eliminados en la migración 050**
-> por no usarse. El módulo está completo salvo una decisión opcional del cliente (D-NEW01).
+> por no usarse. El módulo está completo (D-NEW01 se construyó el 2026-10-11).
 
 ## Contexto institucional
 
@@ -168,9 +168,10 @@ Las **evidencias** de un taller se guardan en `storage/uploads/talleres/`, **fue
 y se sirven por `DescargaController::taller()` con control de rol (1 y 3). La subida valida extensión,
 **MIME real** y tamaño ≤5 MB en `TalleresController::procesarEvidencias()` (hallazgo **H-15**).
 
-🔒 **D-NEW01 / pregunta D5 — sin resolver.** Las claves `correlativo_oficio_formacion` y
-`ano_correlativo_formacion` existen en `configuracion_sistema` desde la **mig. 007**, pero
-**nada las usa**: no hay oficio de formación en el sistema. Antes de construirlo hace falta saber
-del cliente **qué dice ese documento y a quién se dirige** — igual que con los formatos de Bienes,
-inventarlo garantiza rehacerlo. `oficios_emitidos` tampoco tiene `id_taller`, así que el día que se
-confirme requiere migración además de UI.
+✅ **D-NEW01 — resuelta y construida (2026-10-11, mig. 088).** El cliente confirmó que **sí** quieren
+un oficio numerado para las actividades. Correlativo propio `FORM-NNN/AAAA`
+(`correlativo_oficio_formacion`), que no se recicla. Como no entregaron un modelo, el oficio usa el
+membrete, la firma y el pie del oficio de rutas (el que ya aprobaron) y su **cuerpo es editable**: el
+sistema propone un texto con el tipo y nombre de la actividad, la fecha en letras, la hora, el lugar y
+el público (si es externa), y Talento/Formación lo ajusta antes de emitir. El texto se guarda tal como
+salió (`oficios_emitidos.cuerpo`, con `id_taller`) para reimprimirlo idéntico.

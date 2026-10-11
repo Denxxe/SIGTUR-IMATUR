@@ -595,7 +595,7 @@ $gradosNomina  = $data['grados_nomina']  ?? [];
 $gradoManual   = $e->codigo_grado ?? null;
 $gradoEfectivo = $gradoManual ?: $gradoDerivado;
 $esComision    = ($tipoPersonal === 'Comisión de Servicio');
-$llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio'], true);
+$llevaDivisas  = Nomina::cobraResponsabilidad($e);   // solo alto nivel, aunque esté en comisión
 ?>
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
     <div class="u-p-12px-16px u-jc-space-between u-ai-center u-fwr-wrap u-gap-8px" style="display:flex;">
@@ -735,7 +735,8 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     <input type="number" step="0.01" min="0" name="divisas_bono_responsabilidad" id="dn_divisas" class="sig-input"
                            value="<?php echo (float)($e->divisas_bono_responsabilidad ?? 0); ?>">
                     <small class="u-c-text-tertiary u-fs-12px">
-                        Solo Alto Nivel y Comisión de Servicio. Se pacta en divisas y se paga al cambio del mes.
+                        Solo cargos de alto nivel (Presidencia y Direcciones), fijos o contratados, aunque estén en
+                        comisión de servicio. Se pacta en divisas y se paga al cambio del mes.
                     </small>
                 </div>
                 <div class="sig-field">

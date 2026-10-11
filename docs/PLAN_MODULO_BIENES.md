@@ -280,9 +280,10 @@ la Alcaldía**, no de ninguna hoja suelta.
   codificación». Si se confirma: la **relación de bienes nuevos** (R-1) deja de tener destinatario, y
   el **Acta de Desincorporación** ya no necesitaría el sello de la Alcaldía como aval (hoy el flujo
   es *registrar el acta sellada → marcar retirados*). **No se toca nada hasta confirmarlo.**
-- **B-79-bis — ¿acta por bien?** «IMATUR sí debe tener el suyo por cada bien». Un acta de lote con
-  un solo renglón ya cubre ese caso; si exigen **un acta por bien siempre**, es una restricción, no
-  un rediseño.
+- **B-79-bis — ✅ resuelta 2026-10-11.** El **Acta de Desincorporación agrupa varios bienes** (lo
+  construido no cambia). El «uno por cada bien» era el **acta de incorporación**: un documento por
+  cada bien que entra → **B-84**, pendiente de formato (y de saber si es la misma que el acta de
+  asignación, R-3).
 - **B-63 — la dotación es por departamento.** `inventario_dotacion.unidades_por_empleado` no sirve:
   pasa a ser *unidades por departamento y categoría*. Rehacer la tabla y `suficiencia` cuando
   lleguen las cifras.

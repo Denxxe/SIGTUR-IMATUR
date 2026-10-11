@@ -457,9 +457,9 @@ class RutasController extends Controller {
     }
 
     /**
-     * El acta de pago en efectivo (R-39). ⚠️ El formato es **propuesta nuestra**:
-     * el cliente dijo «pueden darnos una idea». Si pide cambios se ajusta solo
-     * la vista; el correlativo y el registro del pago no se tocan.
+     * El acta de pago en efectivo (R-39). El formato lo propusimos nosotros (el
+     * cliente dijo «pueden darnos una idea») y **IMATUR lo aprobó el 2026-10-11**.
+     * Si piden cambios se ajusta solo la vista; el correlativo y el pago no se tocan.
      */
     public function actaPago($id) {
         $pg = PagoRuta::find((int)$id);

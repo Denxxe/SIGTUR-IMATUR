@@ -717,7 +717,7 @@ class Liquidacion extends Model
         $tipo = $liq->tipo_personal;
 
         $primaResp = 0.0;
-        if (in_array($tipo, Nomina::TIPOS_CON_RESPONSABILIDAD, true)) {
+        if (Nomina::cobraResponsabilidad($emp)) {   // solo alto nivel (2026-10-11)
             $divisas = (float)($emp->divisas_bono_responsabilidad ?? 0);
             $pm = Nomina::parametrosMes(substr($liq->fecha_egreso, 0, 7));
             if ($divisas > 0 && !$pm) {

@@ -210,6 +210,14 @@ eq(Nomina::tipoPersonal($mk(['institucion_origen' => 'Gobernación'])),    'Comi
 eq(Nomina::tipoPersonal($mk(['institucion_origen' => 'Alcaldía', 'nivel_jerarquico' => 'Dirección'])),
    'Comisión de Servicio', 'un director en comisión va a la hoja de Comisión, no a Alto Nivel');
 
+echo "\n== Nomina::cobraResponsabilidad (solo alto nivel, 2026-10-11) ==\n";
+check(Nomina::cobraResponsabilidad($mk(['nivel_jerarquico' => 'Dirección'])), 'director fijo → cobra');
+check(Nomina::cobraResponsabilidad($mk(['nivel_jerarquico' => 'Presidencia', 'tipo_contrato' => 'Contratado'])), 'alto nivel contratado → cobra');
+check(Nomina::cobraResponsabilidad($mk(['institucion_origen' => 'Alcaldía', 'nivel_jerarquico' => 'Dirección'])), 'director EN COMISIÓN → cobra (va en la hoja de Comisión, pero es alto nivel)');
+check(!Nomina::cobraResponsabilidad($mk(['institucion_origen' => 'Gobernación', 'nivel_jerarquico' => 'Coordinación'])), 'comisión de servicio que no es alto nivel → NO cobra (antes sí)');
+check(!Nomina::cobraResponsabilidad($mk(['nivel_jerarquico' => 'Coordinación'])), 'coordinador de IMATUR → no cobra');
+check(Nomina::cobraResponsabilidad((object)['nivel_cargo' => 'Dirección']), 'acepta el alias nivel_cargo de Empleado::find()');
+
 echo "\n== BonoVacacional::condicion (N-1: los días van por fijo/contratado, mig. 085) ==\n";
 eq(BonoVacacional::condicion($mk([])),                                   'Fijo',       'empleado fijo → Fijo (85)');
 eq(BonoVacacional::condicion($mk(['clasificacion' => 'Obrero'])),        'Fijo',       'obrero fijo → Fijo (85)');
@@ -481,6 +489,18 @@ try { Taller::actualizarPersona(1, ['nombre = nombre; --' => 'x'], 1); check(fal
 catch (InvalidArgumentException $e) { check(true, 'rechaza una clave que intenta inyectar SQL'); }
 check(Taller::COLUMNAS_PERSONA_EDITABLES === ['nombre', 'apellido', 'telefono', 'correo', 'genero', 'fecha_nacimiento', 'parroquia_id', 'direccion'],
       'las columnas permitidas son exactamente las que usan talleres y rutas');
+
+echo "\n== Taller::cuerpoOficioPropuesto (oficio de formación, D-NEW01) ==\n";
+$tOf = (object)['nombre' => 'Atención al turista', 'tipo_actividad' => 'Charla', 'fecha_inicio' => '2026-10-20',
+                'hora_inicio' => '09:00:00', 'ubicacion' => 'U.E. Antonio José de Sucre', 'es_interna' => false, 'tipo_ente' => 'Escuela'];
+$cOf = Taller::cuerpoOficioPropuesto($tOf);
+check(strpos($cOf, 'la charla «Atención al turista» el día martes 20 de octubre de 2026 a las 09:00') !== false, 'usa tipo, nombre, fecha en letras y hora');
+check(strpos($cOf, 'en U.E. Antonio José de Sucre, dirigida a estudiantes de educación primaria') !== false, 'lugar y público de una actividad externa');
+check(count(preg_split('/\n\s*\n/', $cOf)) === 3, 'tres párrafos separados por línea en blanco');
+$tOf->tipo_actividad = 'Taller'; $tOf->es_interna = true;
+$cOf2 = Taller::cuerpoOficioPropuesto($tOf);
+check(strpos($cOf2, 'el taller «') !== false, 'artículo masculino para «taller»');
+check(strpos($cOf2, 'dirigida a') === false, 'una actividad interna no menciona público externo');
 
 echo "\n== sigtur_uid (ids únicos para label[for] en bucles) ==\n";
 $u1 = sigtur_uid('am fecha'); $u2 = sigtur_uid('am fecha');

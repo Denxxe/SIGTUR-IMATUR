@@ -312,7 +312,7 @@ flowchart LR
 | RF-FOR-13 | Debe emitir la **carta de postulación**, la **carta de aceptación** (con correlativo) y el **carnet de pasante** | A | ✅ |
 | RF-FOR-14 | Debe calcular y mostrar la **duración de la pasantía** en días | B | ✅ |
 | RF-FOR-15 | Debe mantener el catálogo de **sedes de formación** con su parroquia e indicador de sede propia | M | ✅ |
-| RF-FOR-16 | Debe registrar el **oficio de formación** recibido | B | 🔒 Bloqueado — falta el formato y el destinatario (D-FO06/D-NEW01) |
+| RF-FOR-16 | Debe emitir un **oficio de formación** numerado (`FORM-NNN/AAAA`) | B | ✅ **2026-10-11 (mig. 088)** — cuerpo editable, se guarda y se reimprime |
 
 ### 4.5 Turismo — Rutas (RF-TUR)
 

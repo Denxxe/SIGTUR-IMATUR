@@ -30,8 +30,11 @@ class Nomina extends Model
     /** Los 5 tipos de personal = las 5 hojas del formato oficial. */
     const TIPOS = ['Alto Nivel', 'Empleados Fijos', 'Obreros Fijos', 'Contratados', 'Comisión de Servicio'];
 
-    /** Tipos que cobran bono de responsabilidad en divisas. */
-    const TIPOS_CON_RESPONSABILIDAD = ['Alto Nivel', 'Comisión de Servicio'];
+    /**
+     * Niveles de cargo de ALTO NIVEL. Definen la hoja «Alto Nivel» y, sobre
+     * todo, quién cobra el bono de responsabilidad en divisas.
+     */
+    const NIVELES_ALTO_NIVEL = ['Presidencia', 'Dirección'];
 
     /** Factor semanal de la base de SSO/LRPPF y aportes: 12 meses / 52 semanas. */
     const FACTOR_SEMANAL = 12 / 52;
@@ -467,11 +470,34 @@ class Nomina extends Model
         // `Empleado::find()` aliasa `cargos.nivel_jerarquico` como `nivel_cargo`,
         // mientras las consultas de nómina lo traen con su nombre. Se aceptan los
         // dos para que el tipo no salga mal según por dónde venga el empleado.
-        $nivel = $empleado->nivel_jerarquico ?? ($empleado->nivel_cargo ?? null);
-        if (in_array($nivel, ['Presidencia', 'Dirección'], true)) return 'Alto Nivel';
+        if (self::esAltoNivel($empleado)) return 'Alto Nivel';
         if (($empleado->tipo_contrato ?? '') === 'Contratado')     return 'Contratados';
         if (($empleado->clasificacion ?? '') === 'Obrero')         return 'Obreros Fijos';
         return 'Empleados Fijos';
+    }
+
+    /**
+     * ¿El cargo es de alto nivel? `Empleado::find()` aliasa
+     * `cargos.nivel_jerarquico` como `nivel_cargo`, mientras las consultas de
+     * nómina lo traen con su nombre: se aceptan los dos.
+     */
+    public static function esAltoNivel($empleado): bool
+    {
+        $nivel = $empleado->nivel_jerarquico ?? ($empleado->nivel_cargo ?? null);
+        return in_array($nivel, self::NIVELES_ALTO_NIVEL, true);
+    }
+
+    /**
+     * ¿Cobra bono de responsabilidad en divisas? **Solo el alto nivel**, fijo o
+     * contratado, y también si está en comisión de servicio (va en la hoja de
+     * Comisión, pero su cargo sigue siendo de alto nivel). Decidido 2026-10-11:
+     * la plantilla del cliente lo pagaba a toda la hoja de Comisión, pero la
+     * respuesta de Talento Humano fue «solo Alto Nivel»; manda la respuesta.
+     * Antes se decidía por la hoja (Alto Nivel + Comisión de Servicio).
+     */
+    public static function cobraResponsabilidad($empleado): bool
+    {
+        return self::esAltoNivel($empleado);
     }
 
     /**
@@ -540,8 +566,11 @@ class Nomina extends Model
         $tipo = self::tipoPersonal($empleado);
         if (empty($empleado->cuenta_nomina)) $adv[] = 'Sin cuenta bancaria de nómina.';
 
-        $divisas = in_array($tipo, self::TIPOS_CON_RESPONSABILIDAD, true)
+        $divisas = self::cobraResponsabilidad($empleado)
             ? (float)($empleado->divisas_bono_responsabilidad ?? 0) : 0.0;
+        if (!self::cobraResponsabilidad($empleado) && (float)($empleado->divisas_bono_responsabilidad ?? 0) > 0) {
+            $adv[] = 'Tiene divisas de bono de responsabilidad cargadas, pero su cargo no es de alto nivel: el bono no se paga.';
+        }
 
         $sueldoOrigen = 0.0;
         if ($tipo === 'Comisión de Servicio') {

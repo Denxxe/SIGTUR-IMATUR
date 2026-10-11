@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-11 · **Migraciones aplicadas:** hasta **087** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-11 · **Migraciones aplicadas:** hasta **088** · **Rama:** `development_stage`
 
 > ✅ **2026-10-11 (b) — Bienes: motor de codificación propia construido y APAGADO (mig. 087).**
 > IMATUR ya puede asignar el código de sus bienes con secuencia propia, catálogo de clasificaciones y
@@ -85,10 +85,10 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 | 🔴 3 | **Formato del Acta de Desincorporación** y **formato del acta de asignación** (B-79 ✅ respondida) | R-2 (imprimible definitivo; el flujo ya funciona) y R-3 |
 | 🟡 4 | **B-74** (secuencia: «se verá en el oficio») · **B-77/B-78-bis** (¿la relación a la Alcaldía desaparece tras la última codificación?) · nuevo formato de relación con código (B-81 ✅) | Detalles del procedimiento nuevo de Bienes |
 | 🟡 5 | **B-83** abogado visador (B-82 ✅ confirmada) | Documento de donación |
-| 🟡 6 | Bono de responsabilidad en **Comisión** (N-2 ✅) | Montos **definitivos** (no bloquean: son parámetros) |
-| 🟡 7 | **R-72** lista oficial de recorridos · **R-71** cuadro de visitantes del custodio · **formato del oficio de permiso** (T-H) · **visto bueno al acta de pago** (R-39) | Cargar el catálogo de Rutas y fijar dos imprimibles provisionales |
+| ✅ 6 | ~~Bono de responsabilidad en **Comisión**~~ **Decidido 2026-10-11: solo alto nivel** (aunque esté en comisión) | — |
+| 🟡 7 | **R-72** lista oficial de recorridos · **R-71** cuadro de visitantes del custodio · **formato del oficio de permiso** (T-H) · ✅ ~~visto bueno al acta de pago (R-39)~~ aprobada 2026-10-11 | Cargar el catálogo de Rutas y fijar dos imprimibles provisionales |
 | 🟡 8 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
-| 🟢 9 | **D-FO05** metas anuales · **D-FO08-bis** varios facilitadores · **D-NEW01** oficio de formación · planilla física de asistencia · cifras de dotación **por departamento** (Suficiencia, B-63 ✅ criterio) · **D-OF03** libro de correspondencia · **D-TX03** históricos | Mejoras y reportes puntuales |
+| 🟢 9 | **D-FO05** metas anuales · **D-FO08-bis** varios facilitadores · ✅ ~~D-NEW01~~ (oficio de formación, construido 2026-10-11, mig. 088) · planilla física de asistencia · cifras de dotación **por departamento** (Suficiencia, B-63 ✅ criterio) · **D-OF03** libro de correspondencia · **D-TX03** históricos | Mejoras y reportes puntuales |
 
 ### 0.3 Carga de datos — sin esto el sistema está correcto pero vacío
 
@@ -209,7 +209,7 @@ aquí y los demás documentos lo referencian.
 > | **N-3** | «Los días dictados en la ley: 15 por trimestre = 60 al año; **2 días adicionales por año** a partir del segundo (60, 62, 64…), acumulativos **hasta 30**» | Es la garantía de prestaciones del **art. 142 LOTTT**. Pero **no explica los números de la columna** (79, 82, 120, 150 / 360): con esa regla saldrían 60, 62, 64. Lo más probable es que esa columna sean **los días de las alícuotas del salario integral** — 79 = 75+4 y 82 = 75+7 (bono vacacional), 120→150 (bono de fin de año, que ya usamos en 150) | ✅ **Cerrada.** El cliente confirmó (N-3-bis = **sí**): en esa columna se colocaron los días del **bono vacacional** y del **aguinaldo**. La N-E ya se puede construir |
 > | **N-1** | «Personal **fijo 85**, contratados **45**, y a todos **+1 día por año**»; de Alto Nivel quedó la frase «alto nivel contratado» sin cifra | Los días base dependen de la **condición** del trabajador, no del tipo de personal: «alto nivel contratado» se refiere a **los de alto nivel que sean contratados**: cobran los 45 de los contratados; el alto nivel fijo, los 85 de los fijos. Se descarta el «75 para todos» de la plantilla quincenal | ✅ **Cerrada y aplicada (mig. 085):** fijo **85**, contratado **45** (el alto nivel y la comisión según su contrato), **+1 día por año a todos**. La alícuota de la quincena usa los mismos días |
 > | **N-4** | Llega una **maqueta** al inicio de cada mes; el sueldo no varía con el dólar, **solo la cesta ticket** («anclada al BCV»). «**Cada nómina lleva la suya** según la cesta realizada» | Contesta «¿una por mes?» con un **no**, pero no dice si «cada nómina» es cada **quincena** o cada **hoja** (tipo de personal) — la plantilla trae 36,58 y 36,23 en hojas distintas del mismo período | ✅ **Cerrada (aclarado 2026-10-06).** La maqueta llega **una vez al mes** y trae la cesta ticket y la tasa: se cargan **a mano** en `/nomina/parametros`, uno por mes, que es lo que el sistema ya guarda. El botón *Consultar BCV* es solo referencia. Los 36,58/36,23 de la plantilla eran datos de prueba. Si alguna maqueta trajera valores distintos por tipo de personal, se reabre |
-> | Bono resp. | Las divisas **las dicta la contratación colectiva de la Alcaldía**; aplica **solo a Alto Nivel, fijo o contratado** — no a fijos ni contratados | El código ya lo hace para Alto Nivel (el nivel del cargo manda sobre el contrato). La diferencia es **Comisión de Servicio**: la plantilla le paga el bono y la respuesta no la menciona | 🟡 Repreguntar si Comisión **sin** cargo de alto nivel cobra. No se toca `TIPOS_CON_RESPONSABILIDAD` mientras tanto |
+> | Bono resp. | Las divisas **las dicta la contratación colectiva de la Alcaldía**; aplica **solo a Alto Nivel, fijo o contratado** — no a fijos ni contratados | El código ya lo hace para Alto Nivel (el nivel del cargo manda sobre el contrato). La diferencia es **Comisión de Servicio**: la plantilla le paga el bono y la respuesta no la menciona | ✅ **Cerrada 2026-10-11: solo alto nivel.** Un trabajador en comisión que no es de alto nivel **no** cobra; un director en comisión **sí** (va en la hoja de Comisión, pero su cargo es de alto nivel). La regla pasó a `Nomina::cobraResponsabilidad()` (por nivel del cargo, ya no por hoja) |
 
 - **Hecho (2026-07-16, mig.059):** Bono Vacacional v1 = **"registro + reporte"**: Talento Humano captura/verifica sueldo, primas y el total final; el sistema organiza y exporta el `.xlsx` multi-hoja en el formato exacto. Incluye `empleado_salarios`, módulo `/nomina`, parámetros en `/config` y `XlsxMultiSheet`.
 
@@ -232,7 +232,7 @@ aquí y los demás documentos lo referencian.
 
   | # | Pregunta | Bloquea |
   |---|---|---|
-  | **Bono resp.** | ¿Un trabajador en **comisión de servicio** que **no** ocupa cargo de alto nivel cobra el bono? (la plantilla lo paga en la hoja de Comisión) | `Nomina::TIPOS_CON_RESPONSABILIDAD` |
+  | — | Ninguna. ✅ **Bono resp.** cerrada el 2026-10-11 (solo alto nivel) | — |
 
   ✅ **N-2 cerrada:** la base son **4 semanas**. ✅ **N-3 cerrada:** 79/82 = días del bono vacacional, 120/150 = días del aguinaldo (confirmado 2026-10-06). ✅ **N-4 cerrada:** cesta ticket y tasa salen de la **maqueta mensual** y se cargan a mano; el BCV es referencia. ✅ **N-1 cerrada (mig. 085):** fijo **85**, contratado **45** (el alto nivel y la comisión según su contrato), **+1 día por año a todos**.
 
@@ -276,7 +276,7 @@ aquí y los demás documentos lo referencian.
 > | **B-74** | «Se verá en el oficio pasado» | 🔒 Sin respuesta útil todavía. Ya no bloquea: dígitos y «una o varias secuencias» son parámetros (mig. 087) |
 > | **B-76** | **No se recicla**: el código es del bien aunque esté dañado | ✅ **Cerrada.** El código ya lo cumple: `findByNroOrden()` cuenta los desincorporados (siguen `is_active = TRUE`) |
 > | **B-79** | Firman **solo dos** (Coordinadora de Bienes + Presidencia). **Sí** lleva correlativo de IMATUR. Sobre el acta sellada por la Alcaldía: «no lo han hecho; IMATUR sí debe tener el suyo **por cada bien**» | ✅ Firmas y correlativo **cerrados** (ya es así). ⚠️ «por cada bien» → **B-79-bis** |
-> | **B-77** | La relación se hace **cada vez que llega un bien nuevo** | ✅ Disparador: por bien, no por lote mensual. El monto en Bs quedó sin contestar |
+> | **B-77** | La relación se hace **cada vez que llega un bien nuevo** | ✅ Disparador: por bien, no por lote mensual. ✅ **Monto: en Bs, el de la compra** (2026-10-11) — ya era así: la relación imprime el «Costo (Bs.)» del bien |
 > | **B-78** | La Alcaldía devuelve **el inventario actualizado**; pero **desde la nueva codificación ya no se envía a la Alcaldía**: queda en IMATUR, que se encarga de desincorporar, registrar bienes nuevos y codificarlos | ⚠️ **Cambia el alcance → B-78-bis** |
 > | **B-81** | Viene un **formato nuevo con columna de código** | ✅ **Cerrada.** Esperar el formato (no solo agregar la columna: el cuerpo del oficio actual pide codificar) |
 > | **B-80** | **No existe por escrito**: fue de palabra | ✅ **Cerrada.** Queda como riesgo: la responsabilidad de codificar se asume sin respaldo documental |
@@ -294,10 +294,10 @@ aquí y los demás documentos lo referencian.
 > | 🔴 Formato | **Acta de Desincorporación** | R-2 — el imprimible es provisional |
 > | 🔴 Formato | **Acta de asignación** («acta de encargado») | R-3 |
 > | 🟡 **B-78-bis** 🆕 | Si tras la última codificación **nada se envía a la Alcaldía**: ¿el Acta de Desincorporación **sigue necesitando el sello de la Alcaldía** como aval, o la firman solo IMATUR? ¿Y la relación de bienes nuevos deja de emitirse? | El flujo de baja (hoy: registrar el acta sellada) y R-1 |
-> | 🟡 **B-79-bis** 🆕 | «IMATUR debe tener el suyo por cada bien»: ¿un **acta por cada bien desincorporado**, o un acta por lote que lista varios bienes (lo construido)? | C-5 — el acta por lote |
+> | ✅ **B-79-bis** | **Resuelta 2026-10-11:** el **Acta de Desincorporación agrupa varios bienes** (por lote, lo construido). El «uno por cada bien» se refería al **acta de incorporación** del bien → **B-84** | — |
+> | 🟡 **B-84** 🆕 | **Acta de incorporación de bien**: se hace **una por cada bien que entra**. ¿Tienen el formato? ¿Es el mismo documento que el acta de asignación («acta de encargado») o uno distinto? | Un imprimible nuevo por bien (hoy no existe) |
 > | 🟡 **B-74** | Una secuencia o varias; qué pasa después de 999 | Algoritmo del siguiente número |
 > | 🟡 Formato | **Relación de bienes nuevos con código** (B-81) | Sustituir el oficio de junio |
-> | 🟢 **B-77 (monto)** | ¿El monto va en Bs a la fecha de compra? | Contenido de la relación |
 > | 🟢 **B-83** | Abogado visador | Documento de donación |
 > | 🟢 B-63 (cifras) | Cuántos bienes por **departamento** y categoría | Suficiencia de Bienes con datos reales |
 > | ⚙️ Acción interna | Asignar el Coordinador de *Compra de Bienes y Servicios* | Movimientos de bienes (bloqueados por diseño, B-32) |
@@ -396,7 +396,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 
 ### 3.5 Turismo (Rutas)
 
-> ✅ **2026-09-18 — construido por completo (T-A…T-I).** De esta sección solo siguen vivos: el **formato del oficio de permiso**, el **visto bueno al acta de pago** (R-39) y **R-71/R-72**. El resto queda como registro de las respuestas.
+> ✅ **2026-09-18 — construido por completo (T-A…T-I).** De esta sección solo siguen vivos: el **formato del oficio de permiso**, ✅ ~~el visto bueno al acta de pago (R-39)~~ (aprobada 2026-10-11) y **R-71/R-72**. El resto queda como registro de las respuestas.
 
 > **Actualizado 2026-09-17 — llegaron R-17…R-64 y SIETE formatos reales** (`docs/formatos/rutas_*`).
 > **57 de 64 preguntas respondidas.** Análisis, modelo y fases: **`docs/PLAN_MODULO_RUTAS.md`**
@@ -432,7 +432,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | ID | Pregunta |
 |----|----------|
 | 🟡 Formato | **Oficio de permiso a las instituciones custodias** (R-20) — el proceso apareció el 2026-09-17 y es **la mitad del pedido explícito del cliente** (R-64: *«los reportes y los oficios»*). El flujo se puede construir sin él; el imprimible no |
-| 🟢 Formato | **Acta de pago en efectivo** (R-39) — **el cliente pidió que la propongamos nosotros**, así que no bloquea: se diseña y se somete a su visto bueno |
+| ✅ Formato | **Acta de pago en efectivo** (R-39) — la propusimos nosotros y **IMATUR la aprobó tal cual el 2026-10-11** |
 | ⚪ R-32 | ¿Se le paga al guía externo? Sin responder, pero **ya no importa**: R-31 aclara que lo pone el punto visitado |
 
 **Nuevas — surgen de la segunda tanda de respuestas:**
@@ -465,7 +465,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 |----|----------|
 | ✅ D-FO06 | ~~¿CRUD de **oficios base** (`oficios`) + vínculo con `talleres.id_oficio`?~~ — **CERRADO 2026-08-04:** tabla y columna eliminadas (mig. 060). Si el cliente pide llevar registro de oficios **recibidos**, se construye desde cero como módulo propio. |
 | ⚠️ D-FO05 | **Reclasificada (2026-08-28): ya está construido, falta el dato.** `meta_talleres_anio` y `meta_rutas_anio` existen en Configuración y alimentan el indicador *planificado vs. ejecutado* (`ReportesController` ~L2291). Hoy valen **100 cada una, de relleno**. No es una decisión de diseño: hay que **pedir las metas reales** (pregunta D4) |
-| 🔒 D-NEW01 | **¿Activar el correlativo de oficios de formación (`FORM-XXX`)?** Precisado el 2026-08-28: **no es "cablear una llamada".** Las claves `correlativo_oficio_formacion`/`ano_correlativo_formacion` existen desde la mig. 007 pero **nada las usa**, y `oficios_emitidos` **no tiene `id_taller`**. Falta lo esencial: **qué dice ese documento y a quién se dirige**. Construirlo a ciegas repite el error que se evitó con los formatos de Bienes. Requiere migración + flujo tipo `/rutas/oficio` (~550 líneas de referencia) |
+| ✅ D-NEW01 | **Oficio de formación numerado: SÍ (2026-10-11) — construido (mig. 088).** `FORM-NNN/AAAA` con su correlativo; como no hay formato del cliente usa el membrete/firma/pie del oficio de rutas y el **cuerpo es editable** (se propone con los datos de la actividad y se guarda tal como salió, para reimprimirlo). Botón «Oficio» en el detalle del taller. Si el cliente trae un modelo, se ajusta el texto propuesto |
 
 ### 3.7 Transversal
 | ID | Pregunta |
@@ -512,7 +512,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | ~~Bienes~~ | ✅ ~~Codificación interna con secuencia propia (R-12/C-1…C-4, C-7)~~ — **construida (2026-10-11, mig. 087), apagada**. Para encenderla: **B-73** y **B-75** | §3.4 · plan §2-sexies |
 | ~~**Rutas**~~ | ✅ ~~T-A — separar catálogo de ejecución (H-18)~~ **HECHA (mig. 078)** | §3.5 · plan §7 |
 | ~~**Rutas**~~ | ✅ ~~T-B — edad por catálogo (H-17)~~ **HECHA (mig. 079).** Junto con **T-I** (restricciones por ruta y cupo diario de 60, configurable en `rutas_cupo_diario`) | §3.5 · plan §2 |
-| ~~**Rutas**~~ | ✅ ~~T-C — tarifa y cobro~~ **HECHA (mig. 083)**: tarifa en USD por recorrido, tasa congelada por salida, pagos con abonos y comprobante, exoneración, acta de pago. 🔒 El **acta de pago** es propuesta nuestra (R-39): falta el visto bueno del cliente | §3.5 · plan §5 |
+| ~~**Rutas**~~ | ✅ ~~T-C — tarifa y cobro~~ **HECHA (mig. 083)**: tarifa en USD por recorrido, tasa congelada por salida, pagos con abonos y comprobante, exoneración, acta de pago. ✅ El **acta de pago** (propuesta nuestra, R-39) quedó **aprobada** el 2026-10-11 | §3.5 · plan §5 |
 | ~~**Rutas**~~ | ✅ ~~T-D — cierre y reprogramación~~ **HECHA**: cierre con motivo obligatorio y reprogramación como salida nueva enlazada | §3.5 · plan §4 |
 | ~~**Rutas**~~ | ✅ ~~T-E — solicitud y aprobación~~ **HECHA**: oficio de la institución archivado con descarga controlada, aprobación de la Presidencia con fecha y autor | §3.5 · plan §3.4 |
 | ~~**Rutas**~~ | ✅ ~~T-F — itinerario por salida y personal asignado~~ **HECHA (mig. 082)** | §3.5 |

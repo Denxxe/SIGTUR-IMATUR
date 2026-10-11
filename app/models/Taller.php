@@ -679,4 +679,90 @@ class Taller extends Model {
         $db->bind(':id',     $id);
         return $db->execute();
     }
+
+    // ── Oficio de formación (D-NEW01, mig. 088) ─────────────────────────────
+    // Numerado con su propio correlativo `FORM-NNN/AAAA`. No hay formato del
+    // cliente: se usa el membrete, firma y pie del oficio de rutas, y el cuerpo
+    // es editable antes de emitir. Se guarda el texto tal como salió.
+
+    const PREFIJO_OFICIO = 'FORM-';
+
+    /**
+     * Texto propuesto del oficio, armado con los datos de la actividad. FUNCIÓN
+     * PURA (recibe el taller ya cargado). Párrafos separados por línea en blanco.
+     */
+    public static function cuerpoOficioPropuesto($t): string {
+        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
+                  'septiembre','octubre','noviembre','diciembre'];
+        $dias  = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+        $fecha = '';
+        if (!empty($t->fecha_inicio) && ($ts = strtotime($t->fecha_inicio))) {
+            $fecha = $dias[(int)date('w', $ts)] . ' ' . date('j', $ts) . ' de ' . $meses[(int)date('n', $ts) - 1]
+                   . ' de ' . date('Y', $ts);
+        }
+        $hora  = !empty($t->hora_inicio) ? ' a las ' . substr($t->hora_inicio, 0, 5) : '';
+        $tipo  = mb_strtolower($t->tipo_actividad ?? 'actividad', 'UTF-8');
+        $art   = in_array($t->tipo_actividad ?? '', ['Charla', 'Inducción'], true) ? 'la' : 'el';
+        $lugar = !empty($t->ubicacion) ? ', en ' . $t->ubicacion : '';
+        $publicos = [
+            'Escuela'              => 'estudiantes de educación primaria',
+            'Liceo'                => 'estudiantes de educación media',
+            'Comunidad'            => 'la comunidad',
+            'Prestador de Servicio'=> 'prestadores de servicios turísticos',
+        ];
+        $publico = !empty($t->tipo_ente) && empty($t->es_interna) && isset($publicos[$t->tipo_ente])
+            ? ', dirigida a ' . $publicos[$t->tipo_ente] : '';
+
+        return "Reciba un cordial saludo de parte de quienes conformamos el equipo de Formación del "
+             . "Instituto Municipal Autónomo de Turismo (IMATUR Sucre).\n\n"
+             . "Por medio del presente, se le informa que en el marco del plan de formación turística "
+             . "del municipio Sucre, se estará realizando {$art} {$tipo} «" . trim($t->nombre ?? '') . "»"
+             . ($fecha !== '' ? " el día {$fecha}{$hora}" : '') . "{$lugar}{$publico}; en tal sentido, "
+             . "solicitamos su valiosa colaboración para el buen desarrollo de la actividad.\n\n"
+             . "Sin más que hacer referencia y agradeciendo de antemano la atención que sirva brindarle "
+             . "a la presente, se despide.";
+    }
+
+    /** Emite el oficio: asigna el número FORM-NNN/AAAA y guarda el texto. Devuelve el id. */
+    public static function emitirOficio(int $idTaller, array $d, $userId): int {
+        $t = self::find($idTaller);
+        if (!$t) throw new Exception('La actividad no existe.');
+        $dest   = trim((string)($d['destinatario_nombre'] ?? ''));
+        $cuerpo = trim(str_replace("\r\n", "\n", (string)($d['cuerpo'] ?? '')));
+        if ($dest === '')   throw new Exception('El nombre del destinatario es obligatorio.');
+        if ($cuerpo === '') throw new Exception('El texto del oficio no puede quedar vacío.');
+
+        $numero = self::PREFIJO_OFICIO . ConfigSistema::generarNumeroOficio('formacion');
+        $db = new Database();
+        $db->query("INSERT INTO oficios_emitidos
+                        (numero, fecha, destinatario_nombre, destinatario_cargo, asunto, id_taller, cuerpo, created_by)
+                    VALUES (:n, CURRENT_DATE, :dn, :dc, :as, :t, :c, :u) RETURNING id");
+        $db->bind(':n',  $numero);
+        $db->bind(':dn', $dest);
+        $db->bind(':dc', trim((string)($d['destinatario_cargo'] ?? '')) ?: null);
+        $db->bind(':as', mb_substr(trim((string)($d['asunto'] ?? '')) ?: (($t->tipo_actividad ?? 'Actividad') . ': ' . $t->nombre), 0, 500));
+        $db->bind(':t',  $idTaller);
+        $db->bind(':c',  $cuerpo);
+        $db->bind(':u',  $userId);
+        $id = (int)$db->single()->id;
+        self::auditStatic('oficios_emitidos', 'INSERT', $id, null,
+            ['numero' => $numero, 'id_taller' => $idTaller, 'destinatario_nombre' => $dest], $userId);
+        return $id;
+    }
+
+    /** Oficios emitidos de una actividad (más reciente primero). */
+    public static function oficios(int $idTaller): array {
+        $db = new Database();
+        $db->query("SELECT * FROM oficios_emitidos WHERE id_taller = :t AND is_active = TRUE
+                     ORDER BY created_at DESC, id DESC");
+        $db->bind(':t', $idTaller);
+        return $db->resultSet();
+    }
+
+    public static function findOficio(int $idOficio) {
+        $db = new Database();
+        $db->query("SELECT * FROM oficios_emitidos WHERE id = :id AND id_taller IS NOT NULL AND is_active = TRUE");
+        $db->bind(':id', $idOficio);
+        return $db->single();
+    }
 }

@@ -707,6 +707,57 @@ class TalleresController extends Controller {
         exit;
     }
 
+    // ── Oficio de formación numerado (D-NEW01, mig. 088) ────────────────────
+
+    /** GET: formulario con el texto propuesto · POST: emite (asigna FORM-NNN/AAAA) e imprime. */
+    public function oficio($id) {
+        $taller = Taller::find((int)$id);
+        if (!$taller) {
+            flash('global_msg', 'Actividad no encontrada.', 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+            // El cuerpo es texto libre de varios párrafos: se recorta y se le
+            // quitan etiquetas (sanitizePost), y se imprime escapado.
+            $_POST = $this->sanitizePost();
+            try {
+                $idOficio = Taller::emitirOficio((int)$id, $_POST, $this->getUserId());
+                header('Location: ' . URL_ROOT . '/talleres/verOficio/' . $idOficio);
+                exit;
+            } catch (Exception $e) {
+                flash('global_msg', $e->getMessage(), 'danger');
+                header('Location: ' . URL_ROOT . '/talleres/oficio/' . (int)$id);
+                exit;
+            }
+        }
+        $this->view('talleres/oficio', [
+            'titulo'   => 'Oficio de formación: ' . $taller->nombre,
+            'taller'   => $taller,
+            'cuerpo'   => Taller::cuerpoOficioPropuesto($taller),
+            'previos'  => Taller::oficios((int)$id),
+        ]);
+    }
+
+    /** Imprime (o reimprime) un oficio de formación ya emitido, tal como salió. */
+    public function verOficio($idOficio) {
+        $of = Taller::findOficio((int)$idOficio);
+        $taller = $of ? Taller::find((int)$of->id_taller) : null;
+        if (!$of || !$taller) {
+            flash('global_msg', 'Oficio no encontrado.', 'danger');
+            header('Location: ' . URL_ROOT . '/talleres/index');
+            exit;
+        }
+        $meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        $ts = strtotime($of->fecha);
+        $this->view('talleres/oficio_imprimible', [
+            'oficio'    => $of,
+            'taller'    => $taller,
+            'config'    => ConfigSistema::getAll(),
+            'fecha_txt' => date('j', $ts) . ' de ' . $meses[(int)date('n', $ts) - 1] . ' de ' . date('Y', $ts),
+        ]);
+    }
+
     public function listaAsistencia($id) {
         $taller = Taller::find($id);
         if (!$taller) {

@@ -86,11 +86,11 @@ Ya está claro cómo se calculan los días (gracias por confirmar que 79/82 son 
 - **Una liquidación que ustedes ya hayan calculado** de un trabajador real (la hoja llena, con sus números), para compararla con la del sistema; y
 - **La tasa de interés de prestaciones sociales del BCV de cada mes** (la que ustedes escriben en la columna «INTERESES BCV» de la hoja). Se carga en *Nómina → Parámetros*. Sin ella, los intereses de ese mes quedan en 0 y el sistema lo avisa.
 
-**3. 🟢 Bono de responsabilidad y comisión de servicio**
+**3. ✅ Bono de responsabilidad y comisión de servicio** — *resuelta*
 
-Entendimos: **solo Alto Nivel** (fijo o contratado), con las divisas que fija la contratación
-colectiva de la Alcaldía. Pero su plantilla también lo paga en la hoja de **Comisión de Servicio**:
-¿un trabajador en comisión que **no** es de alto nivel lo cobra?
+Lo cobra **solo el personal de alto nivel** (Presidencia y Direcciones), fijo o contratado, también si
+está en comisión de servicio. Un trabajador en comisión que no es de alto nivel **no** lo cobra. El
+sistema ya calcula así.
 
 ### ❓ Preguntas — Personal
 
@@ -159,20 +159,24 @@ encarga de desincorporar, registrar y codificar. Entonces:
   solo ustedes?
 - La **relación de bienes nuevos**, ¿deja de hacerse, o se sigue haciendo para el archivo de IMATUR?
 
-**4. 🟡 «Un acta por cada bien» (B-79-bis)**
+**4. ✅ «Un acta por cada bien» (B-79-bis)** — *resuelta*
 
-Anotamos que IMATUR «debe tener el suyo por cada bien». ¿Quiere decir **un acta por cada bien**
-desincorporado, o **un acta que lista varios bienes** a la vez? *(El sistema hoy hace la segunda, y
-también sirve para un solo bien.)*
+El **Acta de Desincorporación agrupa varios bienes** (así está hecha). Lo de «uno por cada bien» es el
+**acta de incorporación**: se hace una por cada bien que entra.
+
+**4-bis. 🟡 El acta de incorporación de bien (B-84)**
+
+¿Nos pueden pasar una (foto o escaneado)? Y para no duplicar trabajo: ¿es la **misma** que el acta de
+asignación («acta de encargado») o es **otro** documento?
 
 **5. 🟡 Reglas de la secuencia (B-74)**
 
 ¿Una sola secuencia para todo IMATUR o una por grupo-subgrupo-sección? ¿Qué pasa después del 999?
 *(Nos dijeron que se verá en el oficio: cuando lo tengan, nos basta con una foto.)*
 
-**6. 🟢 El monto de la relación (B-77)**
+**6. ✅ El monto de la relación (B-77)** — *resuelta*
 
-¿Va en bolívares a la fecha de compra?
+En bolívares, el de la compra. El sistema ya lo imprime así.
 
 **7. 🟢 ¿Quién es el abogado que visa el documento de donación? (B-83)**
 
@@ -223,10 +227,10 @@ El Castillo de San Antonio pide un cuadro con *Niño / Niña / Adolescente / Muj
 y *Local / Nacional / Extranjero*, distinto de la Ficha Institucional. ¿Quieren que **el sistema lo
 imprima** también, o lo llenan a mano allá?
 
-**3. 🟢 Visto bueno al acta de pago en efectivo (R-39)**
+**3. ✅ Acta de pago en efectivo (R-39)** — *aprobada*
 
-Nos pidieron proponerla y ya está en el sistema: quién pagó, por cuál salida, cuánto, fecha y quién
-recibió, con número correlativo. **Revísenla y díganos si la aprueban** o qué cambiar.
+La propuesta quedó aprobada tal como está: quién pagó, por cuál salida, cuánto (en cifras y en
+letras), fecha y quién recibió, con número correlativo.
 
 ### 📎 Recaudos de este módulo
 
@@ -256,14 +260,17 @@ El sistema compara lo planificado contra lo ejecutado, pero hoy usa un valor de 
 
 Hoy se registra uno. Si suelen ser varios, lo cambiamos.
 
-**3. 🟢 ¿Quieren numerar los oficios de formación? (D-NEW01)**
+**3. ✅ Oficio de formación numerado (D-NEW01)** — *hecho*
 
-Podemos hacerlo (`FORM-001/2026`), pero antes necesitamos **ver ese oficio**: qué dice y a quién va.
+Ya está en el sistema: en el detalle de cada actividad, botón **«Oficio»**. Lleva número `FORM-001/2026`,
+el membrete, la firma de la Presidencia y un texto propuesto con los datos de la actividad que se puede
+corregir antes de emitir. Si tienen un oficio de formación de los que usan hoy, mándenlo y ajustamos el
+texto para que salga igual.
 
 ### 📎 Recaudos de este módulo
 
 - 🟢 Las **metas anuales** (pregunta 1).
-- 🟢 Un **oficio de formación** de ejemplo, si quieren la pregunta 3.
+- 🟢 *(Opcional)* Un **oficio de formación** de los que usan hoy, para que el texto propuesto salga igual.
 
 ---
 ---
@@ -317,7 +324,7 @@ Si tienen información de años anteriores en Excel o papel: ¿de qué módulos,
 - [ ] Verificación de un mes de bono vacacional en el sistema (directora de Talento Humano)
 - [ ] Una liquidación real ya calculada (para comparar)
 - [ ] Tasas de interés de prestaciones sociales del BCV, mes a mes
-- [ ] Respuesta sobre el bono de responsabilidad en comisión
+- [x] ~~Respuesta sobre el bono de responsabilidad en comisión~~ (resuelta 2026-10-11)
 - [ ] Tabla de escala salarial por grado *(si existe)*
 - [ ] Planilla física de asistencia *(opcional)*
 
@@ -325,8 +332,9 @@ Si tienen información de años anteriores en Excel o papel: ¿de qué módulos,
 - [ ] Archivo **actual** del inventario de la encargada, con el departamento de cada bien
 - [ ] Formato del Acta de Desincorporación
 - [ ] Formato del acta de asignación («acta de encargado»)
+- [ ] Formato del acta de incorporación de bien (B-84) — y si es la misma que la de asignación
 - [ ] Última codificación de la Alcaldía, completa (B-73, B-75)
-- [ ] Respuestas B-78-bis, B-79-bis, B-74 y B-77
+- [ ] Respuestas B-78-bis, B-79-bis y B-74 (B-77 resuelta)
 - [ ] Formato nuevo de la relación de bienes, con código
 - [ ] Nombre e IPSA del abogado visador (B-83)
 - [ ] Dotación de bienes por departamento
@@ -336,12 +344,12 @@ Si tienen información de años anteriores en Excel o papel: ¿de qué módulos,
 - [ ] Lista oficial de rutas con sus nombres (R-72)
 - [ ] Un oficio de permiso a museos/castillos
 - [ ] Respuesta sobre el cuadro de visitantes del custodio (R-71)
-- [ ] Visto bueno al acta de pago (R-39)
+- [x] ~~Visto bueno al acta de pago (R-39)~~ (aprobada 2026-10-11)
 - [ ] Excel semestral de rutas *(opcional)*
 
 **Formación**
 - [ ] Metas anuales de talleres y rutas *(opcional)*
-- [ ] Respuestas D-FO08-bis y D-NEW01, con un oficio de ejemplo *(opcional)*
+- [ ] Respuesta D-FO08-bis · *(opcional)* un oficio de formación de ejemplo (D-NEW01 ya está hecho)
 
 **Sistema**
 - [ ] Datos del correo saliente (servidor, puerto, usuario, clave)
@@ -410,7 +418,7 @@ datos (no los inventamos nosotros):
   **4 semanas** · los días adicionales de prestaciones siguen la ley (15 por trimestre + 2 por año) · en la hoja
   INTERESES, 79/82 son días del bono vacacional y 120/150 del aguinaldo ·
   días del bono vacacional: fijos 85 y contratados 45 (el alto nivel según su contrato), + 1 por año a todos · la cesta ticket y la tasa salen de la maqueta que reciben cada mes y se cargan a mano · las divisas del bono de
-  responsabilidad las fija la contratación colectiva de la Alcaldía.
+  responsabilidad las fija la contratación colectiva de la Alcaldía y lo cobra **solo el alto nivel**, aunque esté en comisión.
 - **Bienes:** el levantamiento de agosto (59 preguntas) · el procedimiento nuevo de septiembre (IMATUR
   codifica, Acta de Desincorporación por lote, sin oficio de retiro) · existe la versión digital del
   inventario · los saltos en el N° de orden no son bajas · ya recibimos el oficio de relación, el

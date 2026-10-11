@@ -18,6 +18,34 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 (f) — Oficio de formación numerado (mig. 088) · acta de pago aprobada · B-77
+
+- **D-NEW01: sí quieren el oficio de formación numerado.** Construido con su correlativo
+  `FORM-NNN/AAAA` (las claves existían desde la mig. 007 sin uso). No hay modelo del cliente, así que
+  se tomó el membrete, la firma y el pie del oficio de rutas —el que ya aprobaron— y el **cuerpo es
+  editable**: el sistema propone un texto con la actividad, la fecha en letras, la hora, el lugar y el
+  público, y se ajusta antes de emitir. `oficios_emitidos` gana `id_taller` y `cuerpo`: el oficio se
+  guarda tal como salió y se reimprime idéntico. El texto se imprime escapado (probado con un
+  `<script>` en el cuerpo). Botón «Oficio» en el detalle de la actividad. 5 pruebas nuevas (190).
+- **R-39: el acta de pago en efectivo quedó aprobada tal cual.** Se quitaron los avisos de «propuesta».
+- **B-77: el monto de la relación de bienes va en Bs, el de la compra.** Ya era así (`Costo (Bs.)`).
+- **B-79-bis: el Acta de Desincorporación agrupa varios bienes** (sin cambios). El «uno por cada
+  bien» era el **acta de incorporación**, documento distinto que se hace al entrar cada bien: queda
+  como **B-84**, pendiente de su formato.
+
+### 2026-10-11 (e) — Nómina: el bono de responsabilidad, solo para el alto nivel
+
+- **Decisión.** La plantilla del cliente pagaba el bono de responsabilidad en divisas a toda la hoja
+  de *Comisión de Servicio*, pero Talento Humano respondió «solo Alto Nivel». Manda la respuesta: lo
+  cobra **solo el cargo de alto nivel** (Presidencia y Direcciones), fijo o contratado.
+- **El matiz que obligó a cambiar la regla, no solo una lista.** Un director en comisión de servicio
+  va en la hoja de Comisión (paga la diferencia con su dependencia de origen), pero su cargo **sigue
+  siendo de alto nivel** y cobra el bono. Por eso la regla dejó de mirar la hoja
+  (`TIPOS_CON_RESPONSABILIDAD`, eliminada) y pasó a mirar el nivel del cargo:
+  `Nomina::cobraResponsabilidad()`, usada en la quincena, la liquidación y el expediente.
+- Si a alguien que no es de alto nivel le quedan divisas cargadas, la quincena lo advierte en vez de
+  pagarlas en silencio. 6 pruebas nuevas (185 en total).
+
 ### 2026-10-11 (d) — Bienes: cargados los 23 bienes que traían los documentos del cliente (sin migración)
 
 - **De dónde salen.** Las imágenes ya archivadas en `docs/formatos/` traían bienes reales: el BM-1
