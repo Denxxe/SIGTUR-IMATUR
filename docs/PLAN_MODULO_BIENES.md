@@ -244,6 +244,52 @@ cada uno tenga su propio N° de orden y su propia hoja de vida.
 
 ---
 
+## 2-quinquies. Una planilla ANTIGUA de la encargada (2026-10-06) — muestra del formato, no el inventario
+
+Archivo: `docs/formatos/planilla_inventario_encargada_MUESTRA_antigua.docx`. El cliente la entregó **solo para
+que viéramos cómo llevan su listado interno**; es **vieja** y **no es el inventario vigente**. No se
+carga ni se concilia: el archivo actual de la encargada **sigue pendiente** (BACKLOG §3.4).
+
+### 2-quinquies.1 Lo que enseña del formato
+
+Encabezado: *Responsable* (la encargada) · *Dirección o Coordinación: IMATUR*. Una sola tabla:
+`GRUPO │ SUBGRUPO │ SECCIÓN │ CANTIDAD │ N° DE ORDEN │ NOMBRE Y DESCRIPCIÓN │ OBSERVACIONES`.
+
+| Rasgo | Qué implica para la carga del archivo vigente |
+|---|---|
+| Mismas columnas del BM-1, sin valores en Bs | El importador puede leer las mismas 7 columnas |
+| **Observaciones = condición física** (`REGULAR`, `DAÑADAS`/`DAÑADO`, `NUEVO`; no usa «Bueno») | Mapear a `condicion`: plurales y femeninos incluidos |
+| Bienes sin código como **«S/C»** | Entran como *En espera de codificación* (`EST_SIN_CODIFICAR`) |
+| Renglones con **cantidad > 1** (p. ej. 11 sillas plásticas), siempre «S/C» | Se parten en **un registro por unidad** (B-09/B-62) |
+| Marca, modelo y serial **dentro de la descripción** (`MARCA …`, `MODELO: …`, `SERIAL: …`) | Extraer solo lo rotulado; el resto queda en la descripción (hallazgo 2 de §2-bis) |
+| «DONADO» escrito en la descripción | Señal de `origen = Donación` |
+| Todo `2-01-108` | Confirma el hallazgo 1 de §2-bis: el código no clasifica, hace falta la categoría interna |
+| **No trae departamento** ni fecha ni monto | Hay que pedir que el archivo vigente traiga el **departamento** (el BM-1 lo trae por bandas): sin él no hay responsable derivado (§4.2) ni conteo por departamento |
+| N° de orden **repetidos** (068, 110) en la muestra | El importador debe **reportar** los repetidos en vez de rechazar el archivo entero (`findByNroOrden` rechaza el segundo) |
+
+Al compararla con el BM-1 sellado (26/04/2025) se ven diferencias —el BM-1 ya codificó bienes que
+aquí figuran «S/C» y llega al N° **171**, la planilla al 152—, coherentes con que sea anterior. Eso
+solo confirma lo de B-72: **el punto de partida (B-73) saldrá de la última codificación completa de
+la Alcaldía**, no de ninguna hoja suelta.
+
+### 2-quinquies.2 Respuestas del 2026-10-06 que cambian el plan
+
+- **B-78-bis — la Alcaldía sale del circuito.** Tras la última codificación «ya no se enviará a la
+  Alcaldía, se quedará en IMATUR, y ella se encargará de desincorporación, bienes nuevos y
+  codificación». Si se confirma: la **relación de bienes nuevos** (R-1) deja de tener destinatario, y
+  el **Acta de Desincorporación** ya no necesitaría el sello de la Alcaldía como aval (hoy el flujo
+  es *registrar el acta sellada → marcar retirados*). **No se toca nada hasta confirmarlo.**
+- **B-79-bis — ¿acta por bien?** «IMATUR sí debe tener el suyo por cada bien». Un acta de lote con
+  un solo renglón ya cubre ese caso; si exigen **un acta por bien siempre**, es una restricción, no
+  un rediseño.
+- **B-63 — la dotación es por departamento.** `inventario_dotacion.unidades_por_empleado` no sirve:
+  pasa a ser *unidades por departamento y categoría*. Rehacer la tabla y `suficiencia` cuando
+  lleguen las cifras.
+- **B-76 — los códigos no se reciclan.** Ya era así: un desincorporado conserva `is_active = TRUE`
+  y `findByNroOrden()` lo sigue contando.
+
+---
+
 ## 3. Cambios al modelo de datos
 
 ### 3.1 `inventario` — columnas nuevas

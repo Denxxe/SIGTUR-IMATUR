@@ -109,7 +109,7 @@ línea y mensajes de error que digan **qué corregir**, no códigos.
 |---|---|
 | Seguridad y Sistema | ✅ Completo |
 | RRHH (sin nómina) | ✅ Completo |
-| Nómina | 🟢 Motor de cálculo y bono vacacional completos · 🔒 **falta Liquidación de Prestaciones Sociales** |
+| Nómina | ✅ Quincena, bono vacacional y **Liquidación de Prestaciones Sociales** (mig. 086) · todas las reglas como parámetros · ⏳ faltan datos reales |
 | Formación | ✅ Completo |
 | Turismo (Rutas) | ✅ Las nueve fases construidas · ⏳ falta el formato oficial de 2 imprimibles |
 | Bienes | ✅ Fases 1–4 construidas · 🔒 faltan 2 formatos oficiales y la carga de los bienes reales |
@@ -289,7 +289,9 @@ flowchart LR
 | RF-NOM-11 | Debe **exportar a Excel** una hoja por tipo de personal más una hoja RESUMEN | A | ✅ |
 | RF-NOM-12 | Un período **cerrado** no debe poder recalcularse ni editarse | A | ✅ |
 | RF-NOM-13 | Debe calcular el **Bono Vacacional** con días según el tipo de personal (configurables por contrato colectivo), permitiendo **corregir el total a mano** y **aceptar en bloque** los calculados; al recalcular, los confirmados se conservan | A | ✅ |
-| RF-NOM-14 | Debe calcular la **Liquidación de Prestaciones Sociales** | A | 🔒 **No implementado** — bloqueado por la pregunta N-3 (días adicionales de la hoja INTERESES) |
+| RF-NOM-14 | Debe calcular la **Liquidación de Prestaciones Sociales** | A | ✅ **2026-10-11 (mig. 086)**: garantía mes a mes con intereses del BCV (art. 142 a/b, 143), retroactivo (142 c) y pago de la mayor (142 d), fracciones de vacaciones, bono vacacional y aguinaldo, anticipos (144), interés de mora; imprimible y `.xlsx` de 3 hojas en el formato del cliente |
+| RF-NOM-15 | Todas las cifras de la ley y del contrato que intervienen en la nómina y la liquidación deben ser **parámetros editables**, sin tocar el código | A | ✅ **2026-10-11 (mig. 086)** — `/nomina/parametros` |
+| RF-NOM-16 | Debe registrar la **tasa de interés de prestaciones sociales del BCV** de cada mes | A | ✅ **2026-10-11 (mig. 086)** — `nomina_tasas_bcv` |
 
 ### 4.4 Formación (RF-FOR)
 
@@ -654,8 +656,8 @@ HTTP/HTTPS en red local. **No se expone a internet**; no hay API pública ni int
 
 | ID | Insumo pendiente | Bloquea |
 |---|---|---|
-| **N-3** | Definición de los "días adicionales" de la hoja INTERESES, con evidencia | RF-NOM-14 (Liquidación de Prestaciones Sociales) |
-| **N-1 / N-2** | Días base (75 vs 85/45) y semanas (×4/×5) | No bloquea: son parámetros. Vuelven definitivos los montos |
+| ~~**N-1…N-4**~~ | ✅ Respondidas 2026-10-06; RF-NOM-14 construido el 2026-10-11 | — |
+| **Tasas BCV** | Tasa de interés de prestaciones de cada mes | No bloquea: sin ella los intereses de la liquidación quedan en 0, con aviso |
 | **B-73 / B-75** | Punto de partida de la secuencia de códigos y catálogo de clasificación | RF-BIE-18 (codificación propia de IMATUR) |
 | **R-2 / R-3** | Formato del **Acta de Desincorporación** y del **acta de asignación** | RF-BIE-16 (imprimible definitivo) |
 | **B-81** | Confirmación de vigencia del oficio de relación recibido | Ajuste menor de RF-BIE-14 |
@@ -727,7 +729,7 @@ Explícitamente **no** forma parte del sistema (decisiones registradas con el cl
 
 | RF | Estado | Motivo |
 |---|---|---|
-| RF-NOM-14 | 🔒 No implementado | Falta la definición N-3 |
+| RF-NOM-14 | 🛠️ No implementado | Desbloqueado: N-3 respondida el 2026-10-06 |
 | RF-BIE-18 | 🔒 No implementado | Faltan B-73 y B-75 |
 | RF-BIE-16 | 🟡 Imprimible provisional | Falta el formato oficial (R-2) |
 | RF-TUR-28 | 🟡 Imprimible provisional | Falta el formato oficial |

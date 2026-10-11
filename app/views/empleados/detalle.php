@@ -76,6 +76,22 @@ if ($egresado) {
                 <?php if (!empty($e->observacion_egreso)): ?><br>Observación: <?php echo htmlspecialchars($e->observacion_egreso); ?><?php endif; ?>
             </span>
         </div>
+        <?php if (sigtur_puede('NominaController')):
+            $___liq = Liquidacion::vigenteDeEmpleado((int)$eid);
+            $___liqDeEsteEgreso = $___liq && $___liq->fecha_egreso === $e->fecha_egreso; ?>
+            <div style="margin-left:auto;">
+                <?php if ($___liqDeEsteEgreso): ?>
+                    <a href="<?php echo URL_ROOT; ?>/nomina/verLiquidacion/<?php echo (int)$___liq->id; ?>" class="btn-sig btn-sig--ghost">
+                        <i class="bi bi-briefcase"></i> Ver liquidación (<?php echo htmlspecialchars($___liq->numero ?: $___liq->estado); ?>)
+                    </a>
+                <?php else: ?>
+                    <form action="<?php echo URL_ROOT; ?>/nomina/nuevaLiquidacion" method="POST" style="display:inline;">
+                        <input type="hidden" name="id_empleado" value="<?php echo (int)$eid; ?>">
+                        <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-calculator"></i> Liquidar prestaciones</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>

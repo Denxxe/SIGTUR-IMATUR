@@ -1,14 +1,17 @@
 <?php
 /**
- * NominaController — Bono Vacacional (R-11, 1ra entrega).
- * RBAC: rol 2 (RRHH) + admin '*' vía permisos_rol (mig.059).
- * v1 = "registro + reporte": el sistema organiza sueldo/primas/días ya
- * capturados y exporta el .xlsx multi-hoja; el total final es una celda de
- * captura/verificación manual (BonoVacacional::actualizarDetalle) hasta que
- * el cliente confirme un mes ya calculado para calibrar la fórmula exacta.
- * Liquidación de Prestaciones Sociales queda para una 2da entrega.
+ * NominaController — los tres documentos de nómina (R-11):
+ *   · Bono vacacional (mig. 059/073) · Nómina quincenal (mig. 072)
+ *   · Liquidación de Prestaciones Sociales (mig. 086) — en el trait
+ *     `nomina/NominaLiquidacionTrait.php`.
+ * RBAC: módulo `NominaController` (rol 2 + admin '*').
+ * Todos los montos, porcentajes y días se editan en /nomina/parametros.
  */
+// El autocargador solo mira rutas planas: los traits se incluyen a mano (igual que reportes/).
+require_once __DIR__ . '/nomina/NominaLiquidacionTrait.php';
+
 class NominaController extends Controller {
+    use NominaLiquidacionTrait;
 
     protected string $volverSinPermiso = '/nomina/index';
 
@@ -49,6 +52,11 @@ class NominaController extends Controller {
                 fn($clave) => ConfigSistema::get($clave),
                 BonoVacacional::CONFIG_DIAS
             ),
+            // Liquidación (mig. 086): reglas de la LOTTT como parámetros y la
+            // tasa de interés del BCV por mes.
+            'liq'       => Liquidacion::params(),
+            'vacRegla'  => Vacacion::regla(),
+            'tasasBcv'  => Liquidacion::tasasBcv(),
         ]);
     }
 
@@ -102,13 +110,24 @@ class NominaController extends Controller {
         $this->requireModulo('NominaController');
         $_POST = $this->sanitizePost();
 
-        $permitidas = array_merge(
-            array_keys(Nomina::params()),          // nomina_*
-            array_values(BonoVacacional::CONFIG_DIAS) // bono_vac_dias_*
-        );
+        $permitidas = array_unique(array_merge(
+            array_keys(Nomina::params()),               // nomina_*
+            array_values(BonoVacacional::CONFIG_DIAS),  // bono_vac_dias_*
+            array_keys(Liquidacion::PARAMS_DEFAULT),    // liq_* (mig. 086)
+            ['vacaciones_dias_base', 'vacaciones_dias_tope']
+        ));
 
         $guardados = 0;
         try {
+            // Único parámetro de texto: cómo se cuentan los trimestres de la garantía.
+            $modo = $_POST[Liquidacion::CLAVE_MODO_TRIMESTRE] ?? null;
+            if ($modo !== null) {
+                if (!in_array($modo, Liquidacion::MODOS_TRIMESTRE, true)) {
+                    throw new Exception('Modo de trimestre inválido.');
+                }
+                ConfigSistema::set(Liquidacion::CLAVE_MODO_TRIMESTRE, $modo, $this->getUserId());
+                $guardados++;
+            }
             foreach ($permitidas as $clave) {
                 if (!isset($_POST[$clave])) continue;
                 $valor = str_replace(',', '.', trim($_POST[$clave]));
@@ -124,7 +143,8 @@ class NominaController extends Controller {
             // Los escalares se memoizan por petición: sin esto, la pantalla
             // que se dibuja después del redirect mostraría los valores viejos.
             Nomina::invalidarCache();
-            flash('global_msg', $guardados . ' valor(es) guardado(s). Las quincenas en borrador los tomarán al recalcularlas; las cerradas no cambian.');
+            Liquidacion::invalidarCache();
+            flash('global_msg', $guardados . ' valor(es) guardado(s). Las quincenas, bonos y liquidaciones en borrador los tomarán al recalcularlos; los cerrados no cambian.');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }

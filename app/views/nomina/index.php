@@ -8,6 +8,7 @@
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/nomina/quincenal" class="btn-sig btn-sig--ghost"><i class="bi bi-cash-stack"></i> Nómina quincenal</a>
+        <a href="<?php echo URL_ROOT; ?>/nomina/liquidaciones" class="btn-sig btn-sig--ghost"><i class="bi bi-briefcase"></i> Liquidaciones</a>
         <a href="<?php echo URL_ROOT; ?>/nomina/parametros" class="btn-sig btn-sig--ghost"><i class="bi bi-sliders"></i> Parámetros</a>
         <?php if (!empty($data['meses'])): ?>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalNuevoPeriodo">

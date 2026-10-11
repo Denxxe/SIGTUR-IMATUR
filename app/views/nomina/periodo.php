@@ -66,12 +66,12 @@ $delta = $totConf - $totCalc;
     <i class="bi bi-question-circle"></i>
     <div>
         <strong>La fórmula del total todavía no está confirmada.</strong>
-        La plantilla del cliente documenta la <em>alícuota</em> (el devengo diario), no el monto que se
-        paga, y el mes ya calculado que prometió no llegó. La columna <em>Total calculado</em> es la
-        estimación del sistema bajo un supuesto explícito
+        La columna <em>Total calculado</em> es la estimación del sistema
         (<code>sueldo normal diario × días correspondientes</code>);
-        la columna <em>Total confirmado</em> es la cifra oficial.
-        <strong>Cuando llegue un mes real, la diferencia entre ambas dice si el supuesto acierta.</strong>
+        la columna <em>Total confirmado</em> es la cifra oficial que registra Talento Humano.
+        <strong>Para verificarla:</strong> escriba en <em>Total confirmado</em> el monto que usted
+        calcula para cada trabajador y revise la columna <em>Diferencia</em>. Si da cero, la estimación
+        es correcta; si no, informe al equipo de desarrollo en qué trabajadores difiere y por cuánto.
     </div>
 </div>
 

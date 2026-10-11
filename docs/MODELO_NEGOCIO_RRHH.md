@@ -502,7 +502,7 @@ El sistema debe **generar y/o registrar** los siguientes documentos, guardando *
 | R-8 | Permisos y reposos · **vacaciones (días)** | ✅ mig. 032 · 045/046 |
 | R-9 | Faltas y amonestaciones, con escalado | ✅ mig. 031 · 048 |
 | R-10 | Constancias multi-tipo con correlativo | ✅ mig. 034 |
-| R-11 | **Nómina** | ⚠️ **Parcial.** Motor de cálculo, quincena y bono vacacional ✅ (mig. 072/073). 🔒 Falta la **Liquidación de Prestaciones Sociales** |
+| R-11 | **Nómina** | ✅ **Completo.** Motor de cálculo, quincena y bono vacacional (mig. 072/073) y **Liquidación de Prestaciones Sociales** (mig. 086, 2026-10-11). Todas las reglas son parámetros |
 | R-12 | Egreso / desincorporación y reingreso con histórico | ✅ mig. 036 |
 
 **Decisiones RRHH:** las 36 preguntas D-RH01…D-RH36 de las sesiones del 2026-06-02/04 quedaron

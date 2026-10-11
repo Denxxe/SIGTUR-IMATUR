@@ -249,4 +249,4 @@ Mapa hacia la hoja de ruta R-1…R-12 (`MODELO_NEGOCIO_RRHH.md` §10, cerrada).
 | BRH-14 | Asistencia: puntualidad/ausentismo/horas-reporte + En Ruta | ✅ Hecho (migración 029) | R-7 |
 | BRH-15 | Amonestaciones + conteo faltas injustificadas + alerta despido | ✅ Hecho (migración 031) | R-9 |
 | BRH-16 | Documentos generados (constancias) con correlativo + log | ✅ Hecho (migración 034) | R-10 |
-| BRH-17 | Generación de nómina para Alcaldía/Gobernación | ⚠️ **Parcial (mig. 072/073).** El motor **calcula**: nómina quincenal con export de 6 hojas, 5 tipos de personal, primas derivadas y bono vacacional. 🔒 Falta la **Liquidación de Prestaciones Sociales**, bloqueada por la pregunta N-3 | R-11 |
+| BRH-17 | Generación de nómina para Alcaldía/Gobernación | ✅ **Completo (mig. 072/073/086).** El motor **calcula**: nómina quincenal con export de 6 hojas, 5 tipos de personal, primas derivadas, bono vacacional y **Liquidación de Prestaciones Sociales** (garantía art. 142 a/b con intereses del BCV, retroactivo 142 c, pago de la mayor 142 d, fracciones, anticipos, mora). Las cifras de la LOTTT y del contrato son parámetros | R-11 |

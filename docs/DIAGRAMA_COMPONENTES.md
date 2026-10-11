@@ -339,7 +339,7 @@ flowchart TB
                 EXT["Extensiones: pdo_pgsql · zip · fileinfo"]
             end
             subgraph DBE["&lt;&lt;executionEnvironment&gt;&gt; PostgreSQL 17"]
-                DBI["&lt;&lt;database&gt;&gt;<br/>SIGTUR-IMATUR<br/>69 tablas"]
+                DBI["&lt;&lt;database&gt;&gt;<br/>SIGTUR-IMATUR<br/>72 tablas"]
             end
             subgraph SCH["&lt;&lt;executionEnvironment&gt;&gt; Programador de tareas"]
                 TK1["SIGTUR-Estados<br/>cada 10 min"]

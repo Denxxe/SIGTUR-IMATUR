@@ -110,7 +110,8 @@ class Nomina extends Model
             'nomina_pct_rpe_patronal'        => 1.7,
             'nomina_dias_bono_fin_anio'      => 150,
             'nomina_dias_base_anio'          => 360,
-            'nomina_dias_bono_vac_base'      => 75,
+            'nomina_dias_mes'                => 30,   // mig. 086: sueldo diario = mensual / 30
+            'nomina_pct_bono_50'             => 50,   // mig. 086: el «Bono 50 %» de la plantilla
         ];
 
         $out = [];
@@ -564,7 +565,9 @@ class Nomina extends Model
                 'tasa_dolar'             => $tasa,
                 'divisas'                => $divisas,
                 'sueldo_dependencia_origen' => $sueldoOrigen,
-                'dias_bono_vac_base'     => (float)$params['nomina_dias_bono_vac_base'],
+                // Días base del bono vacacional según la condición (fijo 85 /
+                // contratado 45, mig. 085): los mismos que paga el bono vacacional.
+                'dias_bono_vac_base'     => (float)BonoVacacional::diasBase($empleado),
             ],
             'advertencias' => $adv,
         ];
@@ -625,10 +628,10 @@ class Nomina extends Model
 
         // ── Alícuotas y conceptos derivados ───────────────────────────────
         $cesta   = $n('monto_cesta_ticket');
-        $diario  = (($total * 2) + $cesta) / self::DIAS_MES;
+        $diario  = (($total * 2) + $cesta) / ((float)($p['nomina_dias_mes'] ?? self::DIAS_MES) ?: self::DIAS_MES);
 
         $diasAnio    = (float)$p['nomina_dias_base_anio'] ?: 360;
-        $diasVacBase = (float)($in['dias_bono_vac_base'] ?? $p['nomina_dias_bono_vac_base']);
+        $diasVacBase = (float)($in['dias_bono_vac_base'] ?? ($p['nomina_dias_bono_vac_base'] ?? 0));
         $aniosAdmin  = max(0, (int)($in['anios_administracion'] ?? 0));
         $diasHabiles = $diasVacBase + $aniosAdmin;
 
@@ -637,7 +640,7 @@ class Nomina extends Model
         $integralDiario = $diario + $alicVac + $alicFin;
 
         $becas  = $nHijos * (float)$p['nomina_becas_por_hijo'];
-        $bono50 = $base * 0.5;
+        $bono50 = $base * ((float)($p['nomina_pct_bono_50'] ?? 50) / 100);
 
         // El bono de responsabilidad se pacta EN DIVISAS y se paga en
         // bolívares al cambio del mes; la quincena paga la mitad.

@@ -13,7 +13,7 @@
 
 1. [Actores](#1-actores)
 2. [Diagrama general de casos de uso](#2-diagrama-general-de-casos-de-uso)
-3. [Catálogo completo (CU-01…CU-75)](#3-catálogo-completo-cu-01cu-75)
+3. [Catálogo completo (CU-01…CU-77)](#3-catálogo-completo-cu-01cu-77)
 4. [Diagramas por subsistema](#4-diagramas-por-subsistema)
 5. [Especificación extendida de los casos de uso críticos](#5-especificación-extendida-de-los-casos-de-uso-críticos)
 6. [Relaciones entre casos de uso](#6-relaciones-entre-casos-de-uso)
@@ -92,7 +92,7 @@ flowchart LR
 
 ---
 
-## 3. Catálogo completo (CU-01…CU-75)
+## 3. Catálogo completo (CU-01…CU-77)
 
 ### 3.1 Seguridad y Sistema
 
@@ -141,7 +141,8 @@ flowchart LR
 | CU-31 | Corregir advertencias y recalcular el período | A2 | RF-NOM-09 |
 | CU-32 | Cerrar y exportar la quincena | A2 | RF-NOM-11, RF-NOM-12 |
 | CU-33 | Procesar el Bono Vacacional | A2 | RF-NOM-13 |
-| — | *(Liquidación de Prestaciones Sociales)* | A2 | RF-NOM-14 🔒 **no implementado** |
+| CU-76 | Liquidar las prestaciones sociales de un egresado (corregir meses, cerrar, anular, imprimir, exportar) | A2 | RF-NOM-14 |
+| CU-77 | Cargar la tasa de interés de prestaciones del BCV y editar las reglas de la LOTTT | A2 | RF-NOM-15, RF-NOM-16 |
 
 ### 3.4 Formación
 

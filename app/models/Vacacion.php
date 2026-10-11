@@ -48,9 +48,31 @@ class Vacacion extends Model {
         return (int)$ini->diff($fin)->y;
     }
 
-    /** Derecho de UN año, dado los años de servicio cumplidos: 15 + años, tope 30. */
+    /**
+     * Días base y tope (art. 190 LOTTT: 15 + 1 por año, hasta 30). Son
+     * parámetros (`vacaciones_dias_base`/`vacaciones_dias_tope`, mig. 086) que
+     * se editan en Nómina → Parámetros; las constantes son solo el respaldo si
+     * falta la clave o no hay configuración cargada (pruebas sin BD).
+     */
+    public static function regla(): array {
+        static $cache = null;
+        if ($cache !== null) return $cache;
+        $base = self::DIAS_BASE; $tope = self::TOPE_DIAS;
+        if (class_exists('ConfigSistema')) {
+            try {
+                $b = ConfigSistema::get('vacaciones_dias_base');
+                $t = ConfigSistema::get('vacaciones_dias_tope');
+                if ($b !== null && $b !== '') $base = (int)$b;
+                if ($t !== null && $t !== '') $tope = (int)$t;
+            } catch (\Throwable $e) { /* sin BD: se usan los valores de ley */ }
+        }
+        return $cache = ['base' => $base, 'tope' => $tope];
+    }
+
+    /** Derecho de UN año, dado los años de servicio cumplidos: base + años, con tope. */
     public static function diasPorAnios(int $anios): int {
-        return min(self::DIAS_BASE + max(0, $anios), self::TOPE_DIAS);
+        $r = self::regla();
+        return min($r['base'] + max(0, $anios), $r['tope']);
     }
 
     /** Derecho del año en curso (lo que corresponde según la antigüedad actual). */

@@ -208,7 +208,7 @@ El listado tiene pestaña **"Sin codificar"** con su contador. El N° de orden n
 
 ## 5. Nómina
 
-Módulo del rol **RRHH** (y Administrador). Tiene tres pantallas.
+Módulo del rol **RRHH** (y Administrador). Tiene cuatro pantallas: Parámetros, Nómina quincenal, Bono Vacacional y Liquidaciones.
 
 ### 5.1 Parámetros del mes
 
@@ -217,6 +217,10 @@ Antes de generar cualquier nómina hay que cargar el mes:
 - **Tasa del dólar** del mes — con ella se paga el bono de responsabilidad, pactado en divisas.
 
 Ambas **cambian todos los meses**. Si el mes no está cargado, el sistema no deja generar el período.
+
+En la misma pantalla:
+- **Tasa de interés de prestaciones del BCV**, también por mes (tarjeta *Tasa de interés de prestaciones sociales*). Es la tasa **anual** que publica el BCV —no la del dólar—; la usa la Liquidación (§5.4). La *tasa activa* es opcional y sirve para el interés de mora.
+- **Montos, porcentajes y días** (botón *Editar*): transporte, prima por hijo, deducciones y aportes, días del aguinaldo, días del bono vacacional, y **las reglas de la ley** — días de garantía por trimestre, días adicionales por año y su tope, días por año del retroactivo, días de vacaciones y su tope. **Nada de esto está fijo en el programa:** si cambia la ley o el contrato colectivo, se corrige aquí y el sistema sigue calculando. Lo ya cerrado no cambia; lo que está en borrador toma los valores nuevos al pulsar *Recalcular*.
 
 ### 5.2 Nómina quincenal
 
@@ -229,10 +233,19 @@ Ambas **cambian todos los meses**. Si el mes no está cargado, el sistema no dej
 ### 5.3 Bono Vacacional
 
 Mismo flujo (generar → revisar → exportar → cerrar), con dos particularidades:
-- Los **días que corresponden** salen del **tipo de personal**, según lo configurado en *Configuración* (contrato colectivo).
+- Los **días que corresponden** salen de la **condición** del trabajador (fijo o contratado) más 1 por año de servicio, según lo configurado en *Nómina → Parámetros* (contrato colectivo).
 - El **total** de cada trabajador se puede **capturar o corregir a mano**: se escribe en la columna *Total confirmado* y se pulsa **Guardar** en esa fila (o Enter). El botón **"Aceptar calculados"** da por buenos de una vez todos los totales que el sistema estimó y que aún nadie confirmó. Al **recalcular**, los totales ya confirmados **se conservan**.
 
-> **Pendiente:** la **Liquidación de Prestaciones Sociales** aún no está en el sistema; queda para una entrega posterior.
+### 5.4 Liquidación de Prestaciones Sociales
+
+Se hace cuando un trabajador **egresa** (el egreso se procesa en su expediente).
+
+1. **Crear la liquidación:** en *Nómina → Liquidaciones* aparece la lista de **egresados sin liquidación**; pulsa **Liquidar**. También puedes hacerlo desde el expediente del egresado (**Liquidar prestaciones**). El sistema arma un renglón **por cada mes** trabajado —como la hoja INTERESES—: salario, salario integral, días de prestaciones depositados (15 por trimestre y los días adicionales de cada aniversario), anticipos e intereses del BCV.
+2. **Revisar las advertencias.** El sistema dice lo que no sabe en vez de inventarlo: meses **sin sueldo registrado** (los anteriores a que se cargara el sueldo en el sistema), meses **sin tasa del BCV**, vacaciones vencidas que hay que verificar.
+3. **Corregir.** En la tabla mes a mes, el lápiz de **Corregir mes** permite escribir el sueldo de un mes pasado, un anticipo otorgado o los días depositados; toda la cadena de intereses se recalcula. En **Ajustes** se escriben la **fecha de pago** (para el interés de mora) y, si hace falta, otros días para las fracciones de vacaciones, bono vacacional o fin de año (vacío = el cálculo del sistema). **Reconstruir desde la ficha** vuelve a armar los meses y **descarta** las correcciones.
+4. **Leer el resultado.** La antigüedad se paga por lo **mayor** entre la garantía depositada y el cálculo de 30 días por año al último salario integral (art. 142 LOTTT); la pantalla dice cuál aplicó.
+5. **Imprimir** el documento para la firma del trabajador y de Talento Humano, o **Exportar** el Excel con las tres hojas (FORMATO, INTERESES, INTERÉS DE MORA).
+6. **Cerrar.** Al cerrar recibe su número (**LIQ-001/2026**…) y ya no se puede modificar. Si hubo un error, **Anular** (con motivo) la conserva como anulada y permite liquidar de nuevo ese egreso.
 
 ---
 

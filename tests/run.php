@@ -19,7 +19,9 @@ require_once APP_ROOT . '/app/models/Usuario.php';
 require_once APP_ROOT . '/app/models/Vacacion.php';
 require_once APP_ROOT . '/app/models/Empleado.php';
 require_once APP_ROOT . '/app/models/Nomina.php';
+require_once APP_ROOT . '/app/models/BonoVacacional.php';
 require_once APP_ROOT . '/app/models/Feriado.php';
+require_once APP_ROOT . '/app/models/Liquidacion.php';
 
 $tests = 0; $fails = 0;
 
@@ -203,6 +205,22 @@ eq(Nomina::tipoPersonal($mk(['institucion_origen' => 'Gobernación'])),    'Comi
 eq(Nomina::tipoPersonal($mk(['institucion_origen' => 'Alcaldía', 'nivel_jerarquico' => 'Dirección'])),
    'Comisión de Servicio', 'un director en comisión va a la hoja de Comisión, no a Alto Nivel');
 
+echo "\n== BonoVacacional::condicion (N-1: los días van por fijo/contratado, mig. 085) ==\n";
+eq(BonoVacacional::condicion($mk([])),                                   'Fijo',       'empleado fijo → Fijo (85)');
+eq(BonoVacacional::condicion($mk(['clasificacion' => 'Obrero'])),        'Fijo',       'obrero fijo → Fijo (85)');
+eq(BonoVacacional::condicion($mk(['nivel_jerarquico' => 'Dirección'])), 'Fijo',       'alto nivel fijo → Fijo (85)');
+eq(BonoVacacional::condicion($mk(['nivel_jerarquico' => 'Dirección', 'tipo_contrato' => 'Contratado'])),
+   'Contratado', 'alto nivel contratado → Contratado (45)');
+eq(BonoVacacional::condicion($mk(['tipo_contrato' => 'Contratado'])),    'Contratado', 'contratado → Contratado (45)');
+
+echo "\n== Nomina::calcular — días del bono en la alícuota (base de la condición + años) ==\n";
+$cv = Nomina::calcular(['sueldo_base_mensual' => 376, 'anios_administracion' => 4,
+                        'dias_bono_vac_base' => 85, 'semanas' => 4], $PN);
+eq($cv['dias_habiles_bono_vac'], 89, 'fijo con 4 años → 85 + 4 = 89 días');
+$cv = Nomina::calcular(['sueldo_base_mensual' => 376, 'anios_administracion' => 2,
+                        'dias_bono_vac_base' => 45, 'semanas' => 4], $PN);
+eq($cv['dias_habiles_bono_vac'], 47, 'contratado con 2 años → 45 + 2 = 47 días');
+
 echo "\n== Nomina::aniosAdministracion ==\n";
 $e1 = (object)['fecha_ingreso' => '2020-01-01', 'fecha_ingreso_administracion' => '2010-06-01'];
 eq(Nomina::aniosAdministracion($e1, '2026-07-31'), 16, 'usa la fecha de administración pública, no la de IMATUR');
@@ -263,6 +281,115 @@ foreach (range(2026, 2060) as $a) {
     }
 }
 check($diaSemanaOk, 'en 2026-2060 cada feriado cae en su día de semana' . ($anioFalla ? " (falla en $anioFalla)" : ''));
+
+// =====================================================================
+// Liquidación de Prestaciones Sociales (mig. 086, fase N-E)
+// =====================================================================
+// Los valores esperados son los que YA calculó Excel en la hoja INTERESES de
+// `LIQUIDACION MES JULIO 2026.xls` (datos de prueba, fórmulas reales). Los
+// parámetros se inyectan: se prueba la fórmula, no la configuración.
+$PL = [
+    'liq_dias_garantia_trimestre'     => 15,
+    'liq_dias_adicionales_anio'       => 2,
+    'liq_dias_adicionales_desde_anio' => 2,
+    'liq_dias_adicionales_tope'       => 30,
+    'liq_dias_retroactivo_anio'       => 30,
+    'liq_meses_fraccion_retroactivo'  => 6,
+    'nomina_dias_mes'                 => 30,
+    'nomina_dias_base_anio'           => 360,
+    'liq_trimestre_modo'              => 'calendario',
+];
+$cerca = fn($a, $b, $tol = 1e-6) => abs((float)$a - (float)$b) < $tol;
+
+echo "\n== Liquidacion::calcularMes — fila 17 de INTERESES ==\n";
+$f17 = Liquidacion::calcularMes([
+    'bono_transporte' => 12.5, 'dias_alic_vac' => 79, 'dias_alic_fin' => 120,
+    'dias_deposito' => 15, 'anticipo' => 91,
+], 0.0, 56.18 / 12, $PL);
+check($cerca($f17['salario_diario'], 0.4166666666666667),  'H17 salario diario = G/30');
+check($cerca($f17['alic_vac'], 0.0914351851851852),         'I17 alícuota bono vacacional = H×79/360');
+check($cerca($f17['alic_fin'], 0.1388888888888889),         'J17 alícuota fin de año = H×120/360');
+check($cerca($f17['salario_integral'], 0.6469907407407407), 'K17 salario integral = H+I+J');
+check($cerca($f17['monto_deposito'], 9.70486111111111),     'M17 depósito = K×15 días');
+check($cerca($f17['saldo_antes_interes'], -81.29513888888889), 'N17 = saldo anterior + M − anticipo');
+check($cerca($f17['interes'], -3.8059674189814814),         'P17 interés = N × tasa BCV mensual %');
+check($cerca($f17['saldo'], -85.10110630787037),            'Q17 saldo = N + P');
+
+echo "\n== Liquidacion::calcularMeses — encadenado filas 15-18 ==\n";
+$fila = fn($mes, $transp) => ['mes' => $mes, 'bono_transporte' => $transp, 'dias_alic_vac' => 79,
+                              'dias_alic_fin' => 120, 'dias_deposito' => 0, 'anticipo' => 0];
+$cadena = [$fila('2022-01-01', 1.75), $fila('2022-02-01', 1.75), $fila('2022-03-01', 12.5), $fila('2022-04-01', 12.5)];
+$cadena[2]['dias_deposito'] = 15; $cadena[2]['anticipo'] = 91;
+$tasasPlantilla = ['2022-01' => 58.35, '2022-02' => 57.99, '2022-03' => 56.18, '2022-04' => 55.95];
+$led = Liquidacion::calcularMeses($cadena, $tasasPlantilla, $PL);
+check($cerca($led['meses'][3]['saldo'], -89.06894538947482), 'Q18 sale igual que en Excel (saldo encadenado sin redondear)');
+check($cerca($led['totales']['anticipos'], 91), 'total de anticipos = 91');
+check($led['totales']['sin_tasa'] === [], 'sin meses faltos de tasa');
+unset($tasasPlantilla['2022-04']);
+eq(Liquidacion::calcularMeses($cadena, $tasasPlantilla, $PL)['totales']['sin_tasa'], ['2022-04'],
+   'un mes con saldo y sin tasa se reporta (no se inventa la tasa)');
+
+echo "\n== Liquidacion::calcularMes — cambios de días de la plantilla ==\n";
+$f24 = Liquidacion::calcularMes(['bono_transporte' => 12.5, 'dias_alic_vac' => 80, 'dias_alic_fin' => 120, 'dias_deposito' => 6], 0.0, null, $PL);
+check($cerca($f24['salario_integral'], 0.6481481481481481), 'K24 con 80 días de bono vacacional');
+check($cerca($f24['monto_deposito'], 3.888888888888889),    'M24 = K × 6 días adicionales');
+check($f24['interes'] === 0.0,                              'sin tasa → interés 0 (lo reporta calcularMeses)');
+$f27 = Liquidacion::calcularMes(['bono_transporte' => 12.5, 'dias_alic_vac' => 80, 'dias_alic_fin' => 150], 0.0, null, $PL);
+check($cerca($f27['alic_fin'], 0.1736111111111111),         'J27 con 150 días de aguinaldo');
+
+echo "\n== Liquidacion::diasDeposito (art. 142 a/b) ==\n";
+eq(Liquidacion::diasDeposito('2020-01-10', '2020-01-01', '2025-06-30', $PL), 0.0,  'enero (no cierra trimestre) → 0');
+eq(Liquidacion::diasDeposito('2020-01-10', '2020-03-01', '2025-06-30', $PL), 15.0, 'marzo cierra trimestre → 15');
+eq(Liquidacion::diasDeposito('2020-02-10', '2020-03-01', '2025-06-30', $PL), 10.0, 'trimestre incompleto → 5 por mes trabajado');
+eq(Liquidacion::diasDeposito('2020-01-10', '2021-01-01', '2025-06-30', $PL), 0.0,  'primer aniversario → sin días adicionales');
+eq(Liquidacion::diasDeposito('2020-01-10', '2022-01-01', '2025-06-30', $PL), 2.0,  'segundo aniversario → 2 días adicionales');
+eq(Liquidacion::diasDeposito('2020-01-10', '2023-01-01', '2025-06-30', $PL), 4.0,  'tercer aniversario → 4');
+eq(Liquidacion::diasDeposito('2000-01-10', '2020-01-01', '2025-06-30', $PL), 30.0, 'año 20 → tope de 30');
+eq(Liquidacion::diasDeposito('2020-01-10', '2025-05-01', '2025-05-20', $PL), 10.0, 'mes del egreso → lo que falta del trimestre');
+eq(Liquidacion::diasDeposito('2020-01-10', '2025-07-01', '2025-05-20', $PL), 0.0,  'después del egreso → 0');
+eq(Liquidacion::diasDeposito('2020-01-10', '2020-03-01', '2025-06-30', ['liq_trimestre_modo' => 'ingreso'] + $PL), 15.0,
+   'modo «ingreso»: el 3.er mes desde el ingreso → 15');
+eq(Liquidacion::diasDeposito('2020-01-10', '2022-01-01', '2025-06-30', ['liq_dias_adicionales_anio' => 3] + $PL), 3.0,
+   'configurable: 3 días adicionales por año si cambia la regla');
+eq(Liquidacion::diasDeposito('2020-01-10', '2020-03-01', '2025-06-30', ['liq_dias_garantia_trimestre' => 30] + $PL), 30.0,
+   'configurable: 30 días por trimestre si cambia la regla');
+
+echo "\n== Liquidacion::diasRetroactivo (art. 142 c) ==\n";
+eq(Liquidacion::diasRetroactivo(3, 6, 0, $PL), 90.0,  '3 años y 6 meses justos → 90 (la fracción no supera 6 meses)');
+eq(Liquidacion::diasRetroactivo(3, 6, 1, $PL), 120.0, '3 años, 6 meses y 1 día → 120');
+eq(Liquidacion::diasRetroactivo(3, 7, 0, $PL), 120.0, '3 años y 7 meses → 120');
+eq(Liquidacion::diasRetroactivo(3, 4, 0, ['liq_meses_fraccion_retroactivo' => 3] + $PL), 120.0,
+   'configurable: umbral de la fracción');
+
+echo "\n== Liquidacion::calcularResumen (hoja FORMATO, art. 142 d) ==\n";
+$res = Liquidacion::calcularResumen([
+    'sueldo_base' => 300, 'dias_alic_vac' => 85, 'dias_alic_fin' => 150,
+    'anios' => 3, 'meses' => 7, 'dias' => 0,
+    'monto_garantia' => 2000, 'intereses' => 150, 'anticipos' => 100,
+    'dias_vacaciones' => 10, 'dias_bono_vac' => 20, 'dias_fin_anio' => 50,
+], $PL);
+eq($res['salario_normal_diario'], 10.0,  'H11 salario normal diario = mensual / 30');
+eq($res['salario_integral_diario'], 16.52, 'H14 = TRUNC(10 + 2,3611 + 4,1666; 2) = 16,52');
+eq($res['dias_retroactivo'], 120.0,      '3 años y 7 meses → 120 días de retroactivo');
+eq($res['monto_retroactivo'], 1982.4,    'retroactivo = 120 × 16,52');
+eq($res['antiguedad_aplicada'], 'garantia', 'la garantía (2.000) supera al retroactivo → se paga la garantía');
+eq($res['monto_antiguedad'], 2000.0,     'antigüedad = la mayor de las dos');
+eq($res['subtotal'], 2000 + 100 + 200 + 500 + 150 - 100.0, 'subtotal = antigüedad + fracciones + intereses − anticipos');
+$res2 = Liquidacion::calcularResumen(['sueldo_base' => 300, 'dias_alic_vac' => 85, 'dias_alic_fin' => 150,
+                                       'anios' => 3, 'meses' => 7, 'monto_garantia' => 1000], $PL);
+eq($res2['antiguedad_aplicada'], 'retroactivo', 'si el retroactivo es mayor, se paga el retroactivo');
+
+echo "\n== Liquidacion::calcularMora (hoja INTERES DE MORA) ==\n";
+$mora = Liquidacion::calcularMora(1000, '2026-07-15', '2026-09-20', ['2026-08' => 58.35, '2026-09' => 60]);
+eq($mora['total'], 98.6, 'agosto 4,86 % (truncado) + septiembre 5,00 % sobre 1.000');
+eq(count($mora['meses']), 2, 'cuenta desde el mes siguiente al egreso hasta el del pago');
+eq(Liquidacion::calcularMora(1000, '2026-07-15', null, [])['total'], 0.0, 'sin fecha de pago no hay mora');
+eq(Liquidacion::calcularMora(1000, '2026-07-15', '2026-08-10', [])['sin_tasa'], ['2026-08'], 'mes sin tasa → se reporta');
+
+echo "\n== Liquidacion::mesesCompletos / tiempoServicio ==\n";
+eq(Liquidacion::mesesCompletos('2026-01-01', '2026-06-30'), 6, 'enero a fin de junio = 6 meses completos');
+eq(Liquidacion::mesesCompletos('2026-01-01', '2026-06-29'), 5, 'un día antes de cerrar junio = 5');
+eq(Liquidacion::tiempoServicio('2020-01-10', '2023-08-25'), ['anios' => 3, 'meses' => 7, 'dias' => 15], 'tiempo laboral: años, meses y días');
 
 echo "\n" . str_repeat('-', 48) . "\n";
 echo "$tests pruebas ejecutadas, $fails fallo(s).\n";

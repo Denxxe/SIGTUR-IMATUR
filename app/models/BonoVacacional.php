@@ -27,26 +27,15 @@ class BonoVacacional extends Model
     /** Los 5 tipos de personal. Fuente única: Nomina::TIPOS. */
     const TIPOS = Nomina::TIPOS;
 
-    /** Clave de configuración con los días base por tipo de personal (contrato colectivo, no LOTTT). */
-    const CONFIG_DIAS = [
-        'Alto Nivel'           => 'bono_vac_dias_alto_nivel',
-        'Empleados Fijos'      => 'bono_vac_dias_empleados_fijos',
-        'Obreros Fijos'        => 'bono_vac_dias_obreros_fijos',
-        'Contratados'          => 'bono_vac_dias_contratados',
-        'Comisión de Servicio' => 'bono_vac_dias_comision',
-    ];
-
     /**
-     * ¿El tipo suma años de servicio a los días base? (Obreros Fijos es plano).
-     *
-     * ⚠️ Esta distinción y los días base de `CONFIG_DIAS` son la **pregunta
-     * N-1, sin responder**: la plantilla de nómina usa 75 en las cinco hojas,
-     * incluidas obreros y contratados, mientras la configuración tiene 85 y 45.
-     * Se conservan como parámetros hasta que el cliente aclare cuál manda.
+     * Días base del bono por CONDICIÓN del trabajador, no por tipo de personal
+     * (respuesta N-1, 2026-10-06, mig. 085): fijo 85, contratado 45. El alto
+     * nivel y la comisión de servicio siguen su propio contrato. Son cifras de
+     * contratación colectiva: viven en `configuracion_sistema`, no aquí.
      */
-    const SUMA_ANIOS = [
-        'Alto Nivel' => true, 'Empleados Fijos' => true, 'Obreros Fijos' => false,
-        'Contratados' => true, 'Comisión de Servicio' => true,
+    const CONFIG_DIAS = [
+        'Fijo'       => 'bono_vac_dias_fijo',
+        'Contratado' => 'bono_vac_dias_contratado',
     ];
 
     /**
@@ -59,22 +48,26 @@ class BonoVacacional extends Model
         return Nomina::tipoPersonal($empleado);
     }
 
-    public static function diasBase(string $tipo): int
+    /** Condición que decide los días base: 'Contratado' o 'Fijo' (`empleados.tipo_contrato`). */
+    public static function condicion($empleado): string
     {
-        $clave = self::CONFIG_DIAS[$tipo] ?? null;
-        return $clave ? (int)ConfigSistema::get($clave) : 0;
+        return ($empleado->tipo_contrato ?? '') === 'Contratado' ? 'Contratado' : 'Fijo';
+    }
+
+    public static function diasBase($empleado): int
+    {
+        return (int)ConfigSistema::get(self::CONFIG_DIAS[self::condicion($empleado)]);
     }
 
     /**
-     * Días que le corresponden. Los años se cuentan **a la fecha de corte** del
-     * período, no a hoy: generar un período pasado tiene que dar el mismo
-     * número que dio entonces.
+     * Días que le corresponden: base de su condición + 1 por año de servicio,
+     * **a todos** (antes los obreros no sumaban años). Los años se cuentan a la
+     * fecha de corte del período: generar un período pasado da el mismo número
+     * que dio entonces.
      */
-    public static function diasCorrespondientes($empleado, string $tipo, ?string $fechaCorte = null): int
+    public static function diasCorrespondientes($empleado, ?string $fechaCorte = null): int
     {
-        $base = self::diasBase($tipo);
-        if (!(self::SUMA_ANIOS[$tipo] ?? false)) return $base;
-        return $base + Nomina::aniosAdministracion($empleado, $fechaCorte);
+        return self::diasBase($empleado) + Nomina::aniosAdministracion($empleado, $fechaCorte);
     }
 
     /** Listado de períodos generados (más reciente primero). */
@@ -180,15 +173,10 @@ class BonoVacacional extends Model
         $e = $c['entradas'];
         $tipo = $e['tipo_personal'];
 
-        // Los días del bono vienen del contrato colectivo (bono_vac_dias_*), que
-        // NO es lo mismo que los `dias_habiles_bono_vac` de la alícuota (esos
-        // usan `nomina_dias_bono_vac_base`). Se contradicen: es la pregunta N-1.
-        $dias = self::diasCorrespondientes($emp, $tipo, $fechaCorte);
-
-        // Alícuota recalculada con los días del contrato colectivo, para que sea
-        // coherente con los días que este documento paga.
-        $diasAnio = (float)Nomina::params()['nomina_dias_base_anio'] ?: 360;
-        $alicuota = round($r['sueldo_normal_diario'] * ($dias / $diasAnio), 2);
+        // Los mismos días que usa la alícuota de la quincena (mig. 085): base de
+        // la condición del trabajador + años de servicio.
+        $dias = (int)$r['dias_habiles_bono_vac'];
+        $alicuota = (float)$r['alicuota_bono_vac'];
 
         // ESTIMACIÓN, no la fórmula del cliente (ver docblock de la clase).
         $totalCalculado = round($r['sueldo_normal_diario'] * $dias, 2);

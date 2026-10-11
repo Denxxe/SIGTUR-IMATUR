@@ -1,7 +1,7 @@
 # Modelo de Datos — Diagrama Entidad-Relación (ER)
 
-**SIGTUR-IMATUR** · PostgreSQL 17 · **69 tablas** · esquema `public`
-**Estado:** migraciones **001–084** aplicadas · **Última actualización:** 2026-10-06 (la 084 no cambia el esquema: agrega el permiso `InventarioEscritura` en `permisos_rol`)
+**SIGTUR-IMATUR** · PostgreSQL 17 · **72 tablas** · esquema `public`
+**Estado:** migraciones **001–086** aplicadas · **Última actualización:** 2026-10-11 (la 086 agrega las 3 tablas de la Liquidación de Prestaciones Sociales; la 085 no cambia el esquema)
 
 > **Para qué sirve este documento.** Es el insumo para dibujar el **ER** del sistema (en
 > draw.io, ERDPlus, MySQL Workbench, dbdiagram.io o el que se use). Contiene: las entidades
@@ -9,8 +9,7 @@
 > cardinalidad, y los diagramas Mermaid ya listos por subsistema.
 >
 > **Fuente de verdad del esquema:** `database/schema_consolidado.sql` (base + migraciones
-> 001–074, 60 tablas) + `database/migrations/075…083` (9 tablas más). Si algo aquí discrepa
-> del SQL, **manda el SQL**.
+> 001–086, 72 tablas, autosuficiente). Si algo aquí discrepa del SQL, **manda el SQL**.
 
 ---
 
@@ -21,7 +20,7 @@
 3. [Sistema y seguridad](#3-sistema-y-seguridad-7-tablas)
 4. [Geografía](#4-geografía-2-tablas)
 5. [Personas y RRHH](#5-personas-y-rrhh-18-tablas)
-6. [Nómina](#6-nómina-8-tablas)
+6. [Nómina](#6-nómina-11-tablas)
 7. [Formación](#7-formación-7-tablas)
 8. [Turismo / Rutas](#8-turismo--rutas-12-tablas)
 9. [Recepción](#9-recepción-2-tablas)
@@ -426,13 +425,14 @@ erDiagram
 
 ---
 
-## 6. Nómina (8 tablas)
+## 6. Nómina (11 tablas)
 
 ### 6.1 Parámetros (no dependen del trabajador)
 
 - **`nomina_grados`** — % de prima por grado de instrucción. `id · codigo VARCHAR(10) UQ NN · nombre NN · porcentaje NUMERIC(6,3) NN · orden · is_active`.
 - **`nomina_antiguedad`** — escala de prima por años. **PK = `anios SMALLINT`** · `porcentaje NUMERIC(6,3) NN · es_tope BOOLEAN` (tope 30 %).
 - **`nomina_parametros_mes`** — vigencia mensual. `id · periodo CHAR(7) UQ NN` (`AAAA-MM`, **CK** regex) `· monto_cesta_ticket NUMERIC(14,2) · tasa_dolar NUMERIC(14,4) · observaciones`.
+- **`nomina_tasas_bcv`** *(086)* — tasa de **interés** de prestaciones sociales del BCV por mes (no el tipo de cambio). `id · periodo CHAR(7) UQ NN` (**CK** regex) `· tasa_prestaciones NUMERIC(8,4) NN` (% anual) `· tasa_activa NUMERIC(8,4)` (% anual, mora) `· observaciones`.
 
 ### 6.2 Datos salariales del trabajador
 
@@ -447,6 +447,11 @@ erDiagram
 - **`bono_vacacional_periodos`** — `id · periodo VARCHAR(20) NN · fecha_corte NN · estado` **CK** ∈ {Borrador, Cerrado} `· cerrado_at · cerrado_by`.
 - **`bono_vacacional_detalle`** — `id · id_periodo FK CASCADE NN · id_empleado FK NN · tipo_personal CK · dias_vacaciones · grado_escala` + componentes salariales + `total_bono_vacacional` (el único capturable a mano).
 
+### 6.4 Liquidación de Prestaciones Sociales *(086)*
+
+- **`liquidaciones`** — hoja FORMATO: snapshot del trabajador y resultado. `id · numero VARCHAR(20) UQ` (`LIQ-NNN/AAAA`, al cerrar) `· id_empleado FK NN · id_egreso FK→empleados_egresos · fecha_ingreso NN · fecha_egreso NN · motivo_egreso · fecha_pago · tipo_personal · condicion · cargo · departamento · anios · meses · dias` + último salario (9 componentes, `subtotal_mensual`, `salario_normal_diario`, alícuotas, `salario_integral_diario`) + antigüedad (`dias/monto_retroactivo`, `dias/monto_garantia`, `antiguedad_aplicada`, `monto_antiguedad`) + fracciones (`dias_*`, `dias_*_manual`, `monto_*`) `· intereses · anticipos · subtotal · interes_mora · detalle_mora JSONB · total · estado` **CK** ∈ {Borrador, Cerrada, Anulada} `· advertencias · observaciones · motivo_anulacion`. **UQ parcial (id_empleado, fecha_egreso) WHERE estado ≠ Anulada**.
+- **`liquidacion_meses`** — hoja INTERESES, un renglón por mes. `id · id_liquidacion FK CASCADE NN · mes DATE NN` + entradas (`salario_base · prima_profesional · prima_antiguedad · bono_transporte · bono_hijos · dias_alic_vac · dias_alic_fin · dias_deposito · anticipo`) + derivadas (`total_mensual · salario_diario · alic_vac · alic_fin · salario_integral · monto_deposito · saldo_antes_interes · tasa_mensual · interes · saldo`) `· editado BOOLEAN`. **UQ (id_liquidacion, mes)**.
+
 ```mermaid
 erDiagram
     EMPLEADOS ||--o{ EMPLEADO_SALARIOS : "historial salarial"
@@ -454,6 +459,9 @@ erDiagram
     NOMINA_PERIODOS ||--o{ NOMINA_DETALLE : "agrupa"
     EMPLEADOS ||--o{ BONO_VACACIONAL_DETALLE : "se le calcula"
     BONO_VACACIONAL_PERIODOS ||--o{ BONO_VACACIONAL_DETALLE : "agrupa"
+    EMPLEADOS ||--o{ LIQUIDACIONES : "se liquida"
+    EMPLEADOS_EGRESOS ||--o| LIQUIDACIONES : "origina"
+    LIQUIDACIONES ||--|{ LIQUIDACION_MESES : "mes a mes"
 
     NOMINA_GRADOS {
         int id PK
@@ -497,11 +505,36 @@ erDiagram
         date fecha_efectiva
         numeric sueldo_basico
     }
+    NOMINA_TASAS_BCV {
+        int id PK
+        char periodo UK
+        numeric tasa_prestaciones
+        numeric tasa_activa
+    }
+    LIQUIDACIONES {
+        int id PK
+        varchar numero UK
+        int id_empleado FK
+        int id_egreso FK
+        date fecha_egreso
+        numeric salario_integral_diario
+        numeric total
+        varchar estado
+    }
+    LIQUIDACION_MESES {
+        int id PK
+        int id_liquidacion FK
+        date mes
+        numeric dias_deposito
+        numeric interes
+        numeric saldo
+    }
 ```
 
 > **Relación implícita (no es FK):** `nomina_detalle.codigo_grado` ↔ `nomina_grados.codigo`, y
 > `nomina_detalle.anios_administracion` se resuelve contra `nomina_antiguedad.anios`. En el ER
-> dibújelas como **relaciones de consulta punteadas**, no como integridad referencial.
+> dibújelas como **relaciones de consulta punteadas**, no como integridad referencial. Igual
+> `liquidacion_meses.mes` ↔ `nomina_tasas_bcv.periodo` (la tasa se busca por mes al recalcular).
 
 ---
 
@@ -909,6 +942,9 @@ erDiagram
 | 30 | `nomina_detalle` | id_empleado | `empleados` | — | N:1 (**UQ** con id_periodo) |
 | 31 | `bono_vacacional_detalle` | id_periodo | `bono_vacacional_periodos` | CASCADE | N:1 |
 | 32 | `bono_vacacional_detalle` | id_empleado | `empleados` | — | N:1 |
+| 32a | `liquidaciones` | id_empleado | `empleados` | — | N:1 |
+| 32b | `liquidaciones` | id_egreso | `empleados_egresos` | — | N:1 opcional |
+| 32c | `liquidacion_meses` | id_liquidacion | `liquidaciones` | CASCADE | N:1 (**UQ** con mes) |
 | 33 | `ubicaciones_formacion` | parroquia | `parroquia` | — | N:1 |
 | 34 | `talleres` | id_ubicacion_formacion | `ubicaciones_formacion` | SET NULL | N:1 |
 | 35 | `talleres` | id_facilitador | `empleados` | RESTRICT | N:1 |
@@ -1048,7 +1084,7 @@ alguien las "descubra" leyendo solo el esquema.
 6. ubicaciones_formacion → talleres → participantes_taller
 7. rutas → puntos_ruta → ruta_ejecuciones → participantes_ruta / ruta_informes / ruta_pagos
 8. nomina_grados / nomina_antiguedad / nomina_parametros_mes → empleado_salarios
-   → nomina_periodos → nomina_detalle
+   → nomina_periodos → nomina_detalle → nomina_tasas_bcv → liquidaciones → liquidacion_meses
 ```
 
 > ⚠️ `municipio.created_by` y `parroquia.create_by` son **NOT NULL** y apuntan a `usuarios(id)`.

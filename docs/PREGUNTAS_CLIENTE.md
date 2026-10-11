@@ -1,6 +1,6 @@
 # Lo que necesitamos para dejar el sistema al 100 % — **todo en un solo documento**
 
-**Para:** IMATUR · **De:** equipo de desarrollo · **Actualizado:** 2026-10-06
+**Para:** IMATUR · **De:** equipo de desarrollo · **Actualizado:** 2026-10-11
 
 El sistema está construido y probado: hoy se puede registrar, calcular e imprimir en todos los
 módulos. Lo que falta para dejarlo al 100 % **ya casi no es programación**: son **documentos
@@ -13,15 +13,14 @@ que entregarnos.
 **Cómo leer las prioridades:** 🔴 sin esto una parte no puede terminarse · 🟡 importante, pero el
 sistema ya funciona · 🟢 menor u opcional.
 
-### Lo más urgente (top 5)
+### Lo más urgente (top 4)
 
 | | Qué | Por qué | Dónde |
 |---|---|---|---|
-| 1 | El **archivo digital del inventario** que lleva la encargada, y desde qué número arranca la codificación propia | Sin él no se pueden cargar los ~142 bienes ni asignar códigos | §2 · B-73 |
+| 1 | El **archivo actual del inventario** de la encargada, **con el departamento** de cada bien | Sin él no se pueden cargar los bienes reales | §2 · pregunta 1 |
 | 2 | Los **datos de cada trabajador** (sueldo, grado, fechas, hijos, cuenta) | Sin ellos no se puede emitir una nómina real | §1 · planilla al final |
-| 3 | **Un mes de bono vacacional ya calculado** | Es lo único que falta para que el total se calcule solo | §1 · Nómina 1 |
-| 4 | De dónde salen los **«días adicionales»** de la hoja de intereses | Es lo único que falta para construir la Liquidación de Prestaciones Sociales | §1 · N-3 |
-| 5 | Los formatos del **Acta de Desincorporación** y del **acta de asignación** | Para que esas actas salgan con su formato oficial | §2 |
+| 3 | Que la **directora de Talento Humano verifique en el sistema un mes de bono vacacional** | Es lo único que falta para que el total se calcule solo | §1 · Nómina 1 |
+| 4 | Los formatos del **Acta de Desincorporación** y del **acta de asignación** | Para que esas actas salgan con su formato oficial | §2 |
 
 ---
 
@@ -30,8 +29,8 @@ sistema ya funciona · 🟢 menor u opcional.
 | Módulo | Estado | Qué le falta |
 |---|---|---|
 | **Personal (RRHH)** | ✅ Completo | Los datos del personal real |
-| **Nómina** | 🟢 Calcula la quincena y el bono vacacional | La Liquidación de Prestaciones Sociales (1 respuesta) y los datos de cada trabajador |
-| **Bienes (Inventario)** | 🟡 Funciona; falta la codificación propia | El archivo de la encargada, 2 formatos y las reglas de la codificación |
+| **Nómina** | ✅ Calcula la quincena, el bono vacacional y **la Liquidación de Prestaciones Sociales** | Los datos de cada trabajador y las tasas del BCV |
+| **Bienes (Inventario)** | 🟡 Funciona; falta la codificación propia | El inventario actual con su departamento, 2 formatos y la última codificación de la Alcaldía |
 | **Turismo (Rutas)** | ✅ Completo | La lista oficial de rutas y dos formatos menores |
 | **Formación** | ✅ Completo | Solo mejoras opcionales |
 | **Recepción (Visitas)** | ✅ Completo | Nada |
@@ -51,6 +50,8 @@ básico, el grado de instrucción, los años en la administración pública y lo
 editan desde la pantalla. El bono vacacional calcula con el mismo motor.
 
 **Novedades de esta semana:**
+- **Ya está la Liquidación de Prestaciones Sociales**, con las mismas tres hojas de su formato (FORMATO, INTERESES e INTERÉS DE MORA). Al egresar un trabajador, el sistema arma su cálculo mes a mes y paga la antigüedad por lo **mayor** entre lo depositado y los 30 días por año (art. 142 de la LOTTT). Se imprime para la firma y se exporta a Excel.
+- **Todo es configurable.** Los días de garantía, los días adicionales y su tope, los 30 días por año, los días de vacaciones y los demás valores de la ley y del contrato se cambian en *Nómina → Parámetros*: si cambia la ley, el sistema sigue calculando sin tocar el programa.
 - La **fecha de ingreso a la administración pública** ahora se registra para **todo** el personal, no
   solo para comisión de servicio. Si un trabajador estuvo antes en la Alcaldía, la Gobernación u otro
   ente, esos años **cuentan** para sus vacaciones y su prima de antigüedad. *(Comisión de servicio es
@@ -62,48 +63,38 @@ editan desde la pantalla. El bono vacacional calcula con el mismo motor.
 
 ### ❓ Preguntas — Nómina
 
-**1. 🔴 Un mes de bono vacacional YA CALCULADO, con números reales**
+*Gracias por las respuestas del 06/10: con ellas quedó cerrado lo de las **4 semanas**. Lo que sigue
+son **repreguntas cortas** sobre lo que quedó a medias.*
+
+**1. 🔴 Verificar en el sistema un mes de bono vacacional** *(lo hace la directora de Talento Humano)*
 
 La plantilla de nómina explica cómo se acumula el bono día a día, pero **no dice cómo se calcula el
 monto final que se paga**. Para no inventar, el sistema muestra un **total estimado** al lado del total
-que ustedes confirman. Con un solo mes real (uno ya pagado sirve) sabremos si la estimación es correcta:
-si coincide, el total se calcula solo; si no, la diferencia nos dice qué corregir.
+que ustedes confirman, y la **diferencia** entre los dos. Ya no hace falta enviarnos nada:
 
-**2. 🔴 Hoja de INTERESES de la Liquidación: ¿de dónde salen los «días adicionales»? (N-3)**
+1. Con los datos del personal cargados y la **cesta ticket del mes** en *Nómina → Parámetros*, generar
+   un período de bono vacacional.
+2. Escribir, para cada trabajador, el **total que ustedes calculan** como siempre.
+3. Mirar la columna **Diferencia**: si da cero, el sistema calcula bien y desde entonces el total sale
+   solo; si no, avisarnos **en qué trabajadores difiere y por cuánto**, y lo corregimos.
 
-*(Adjuntamos un recorte de la hoja con la columna señalada.)* Son los valores que van cambiando:
-**79, 82, 120, 150 sobre 360**. ¿Salen de una tabla oficial, de un boletín, o los calcula Talento
-Humano cada mes? **Es lo único que nos falta para construir la Liquidación de Prestaciones Sociales.**
+**2. 🟡 Una liquidación real ya calculada, y las tasas del BCV** *(para comprobar la Liquidación)*
 
-**3. 🟡 Días base del bono vacacional: ¿75 para todos, o 75 / 85 / 45 según el tipo de personal? (N-1)**
+Ya está claro cómo se calculan los días (gracias por confirmar que 79/82 son del bono vacacional y
+120/150 del aguinaldo). Con eso y con su hoja de Excel **ya construimos la Liquidación**. Para darla por buena necesitamos:
 
-La plantilla de nómina usa **75 días para todos**, incluidos obreros y contratados. Pero del formato del
-bono entendimos **75** para Alto Nivel y Empleados Fijos, **85** para Obreros Fijos y **45** para
-Contratados. Los dos criterios se contradicen: ¿cuál rige?
+- **Una liquidación que ustedes ya hayan calculado** de un trabajador real (la hoja llena, con sus números), para compararla con la del sistema; y
+- **La tasa de interés de prestaciones sociales del BCV de cada mes** (la que ustedes escriben en la columna «INTERESES BCV» de la hoja). Se carga en *Nómina → Parámetros*. Sin ella, los intereses de ese mes quedan en 0 y el sistema lo avisa.
 
-**4. 🟡 En el SSO y demás deducciones, ¿cuándo se usan 4 semanas y cuándo 5? (N-2)**
+**3. 🟢 Bono de responsabilidad y comisión de servicio**
 
-En la plantilla, unas hojas usan 4 y otras 5 **en el mismo mes**. ¿Depende del mes, del tipo de personal,
-o fue un descuido?
-
-**5. 🟡 ¿Qué tasa del dólar aplican, exactamente? (N-4)**
-
-- ¿La **oficial del BCV**, o una que indica la Alcaldía o la Gobernación?
-- Si es la del BCV, **¿de qué día?** (la del pago, la del último día del mes, la del día en que se arma
-  la nómina)
-- **¿Es una sola por mes?** En la plantilla aparecen **36,58 y 36,23 en hojas distintas del mismo
-  período**. Si cada nómina lleva la suya, tenemos que ajustar el sistema, que hoy guarda una por mes.
-
-*Mientras tanto el botón «Consultar BCV» funciona y la tasa también se puede escribir a mano.*
-
-**6. 🟢 Dos detalles del bono de responsabilidad**
-
-- ¿De dónde sale la **cantidad de divisas** que le corresponde a cada trabajador?
-- ¿Ese bono aplica **solo** a Alto Nivel y a Comisión de Servicio?
+Entendimos: **solo Alto Nivel** (fijo o contratado), con las divisas que fija la contratación
+colectiva de la Alcaldía. Pero su plantilla también lo paga en la hoja de **Comisión de Servicio**:
+¿un trabajador en comisión que **no** es de alto nivel lo cobra?
 
 ### ❓ Preguntas — Personal
 
-**7. 🟢 La planilla física de asistencia** *(opcional)*
+**4. 🟢 La planilla física de asistencia** *(opcional)*
 
 Si quieren que el sistema imprima una planilla **igual** a la que usan hoy en papel, necesitamos ver una.
 Sin ella el módulo funciona igual.
@@ -111,10 +102,10 @@ Sin ella el módulo funciona igual.
 ### 📎 Recaudos de este módulo
 
 - **Los datos de cada trabajador activo** — ver la **planilla de datos por trabajador** al final.
-- **El catálogo de cargos** (Manual Descriptivo de Cargos, o al menos los cargos en uso). Hoy hay 5.
-- **Cesta ticket y tasa del dólar** de cada mes que se vaya a pagar, indicando de qué mes es cada monto.
-- **Un mes de bono vacacional ya calculado** (pregunta 1).
-- **El recorte de la hoja de INTERESES** respondido (pregunta 2).
+- **Cada mes, la cesta ticket y la tasa de la maqueta** de nómina: Talento Humano las escribe en
+  *Nómina → Parámetros* antes de generar la quincena. *(El botón «Consultar BCV» es solo de referencia.)*
+- **El resultado de la verificación del bono vacacional** (pregunta 1): si coincidió o en qué trabajadores difirió.
+- **Una liquidación real ya calculada** y **las tasas de interés de prestaciones del BCV** de cada mes (pregunta 2).
 - La **tabla de escala salarial por grado** que Talento Humano ofreció en una nota de voz *(si
   existe)*.
 
@@ -140,72 +131,63 @@ una vez. Quien solo debe consultar ve el módulo **sin botones de modificar**.
 
 ### ❓ Preguntas
 
-**1. 🔴 ¿Desde qué número arranca la codificación propia? (B-73)**
+*Gracias por las respuestas del 06/10 y por la planilla de muestra, que nos sirvió para ver cómo
+llevan su listado. Quedaron cerrados: los códigos **no se reciclan**, el acta la firman **solo** la
+Coordinadora y la Presidencia con correlativo de IMATUR, la Resolución 32 / Gaceta 87, las 11
+categorías, y que la dotación se cuenta **por departamento**.*
 
-Ahora IMATUR asigna sus propios códigos, continuando la secuencia. ¿Esperamos la última revisión de la
-Alcaldía, o partimos del **mayor N° de orden** de su listado interno? *Sin este dato no se puede
-asignar ningún código.*
+**1. 🔴 El inventario actual, con el departamento de cada bien**
 
-**2. 🔴 ¿Cuál es la lista de grupos, subgrupos y secciones que pueden usar? (B-75)**
+La planilla que nos mostraron es antigua y **no dice en qué departamento está cada bien**. Cuando
+nos pasen el archivo vigente, por favor que traiga esa columna (o la sede/oficina): sin ella el
+sistema no puede saber quién responde por cada bien. Pueden usar el mismo formato que ya llevan.
 
-Antes la Alcaldía ponía esos valores y ustedes los copiaban. Si ahora IMATUR clasifica, el sistema
-necesita la lista (o al menos los que usan hoy) para no permitir valores inventados. *El archivo de la
-encargada probablemente la trae.*
+**2. 🔴 Punto de partida y grupos (B-73 y B-75)**: *seguimos esperando con ustedes*
 
-**3. 🔴 Tres detalles del Acta de Desincorporación (B-79)**
+Entendido: esperan la **última codificación de la Alcaldía**. Cuando llegue, la necesitamos **completa**
+(no solo una hoja): el BM-1 que tenemos ya llega al N° **171**.
 
-- ¿**Quién más firma** por IMATUR, además de la Coordinadora de Bienes y la Presidencia?
-- ¿Lleva **número correlativo**? *(hoy el sistema le pone uno propio)*
-- *Ya está resuelto:* el acta sellada por la Alcaldía se carga escaneada y eso marca los bienes como
-  retirados.
+**3. 🟡 Si la Alcaldía sale del circuito, ¿qué pasa con las actas? (B-78-bis)**
 
-**4. 🟡 Reglas de la secuencia (B-74 y B-76)**
+Nos dijeron que, después de la última codificación, **ya nada se envía a la Alcaldía** e IMATUR se
+encarga de desincorporar, registrar y codificar. Entonces:
 
-- ¿Es **una sola secuencia** para todo IMATUR, o una por cada grupo-subgrupo-sección? ¿Sigue siendo de
-  3 dígitos — qué se hace al pasar de 999?
-- El código de un bien desincorporado, ¿**se reutiliza** o nunca se recicla?
+- El **Acta de Desincorporación**, ¿sigue llevando el **sello de la Alcaldía** como aval, o la firman
+  solo ustedes?
+- La **relación de bienes nuevos**, ¿deja de hacerse, o se sigue haciendo para el archivo de IMATUR?
 
-**5. 🟡 La relación de bienes nuevos (B-77, B-78 y B-81)**
+**4. 🟡 «Un acta por cada bien» (B-79-bis)**
 
-- ¿El **monto** va en bolívares a la fecha de compra? ¿**Cada cuánto** se envía (por lote, mensual, al
-  recibir cada bien)?
-- ¿La Alcaldía **les devuelve algo** al recibirla (acuse, sello, un inventario nuevo)?
-- El oficio que nos dieron es de **junio**: le pide a la Alcaldía que codifique y no tiene columna de
-  código. ¿Se sigue usando **así**, o viene un formato nuevo con el código? *(Si es lo segundo, es solo
-  agregar una columna.)*
+Anotamos que IMATUR «debe tener el suyo por cada bien». ¿Quiere decir **un acta por cada bien**
+desincorporado, o **un acta que lista varios bienes** a la vez? *(El sistema hoy hace la segunda, y
+también sirve para un solo bien.)*
 
-**6. 🟡 ¿Tienen por escrito la notificación del procedimiento nuevo? (B-80)**
+**5. 🟡 Reglas de la secuencia (B-74)**
 
-Cambia quién responde por la codificación; conviene tenerla en el expediente y no solo de palabra.
+¿Una sola secuencia para todo IMATUR o una por grupo-subgrupo-sección? ¿Qué pasa después del 999?
+*(Nos dijeron que se verá en el oficio: cuando lo tengan, nos basta con una foto.)*
 
-**7. 🟡 Confirmen la resolución y la gaceta de la Presidenta (B-82)**
+**6. 🟢 El monto de la relación (B-77)**
 
-Con sus documentos firmados corregimos lo que el sistema imprimía: **Resolución N° 32** del 05/09/2025 y
-**Gaceta Municipal Extraordinaria N° 87** del 05/09/2025, cargo **Presidenta**. Aparece en constancias,
-cartas de pasantes y oficios de rutas. **Solo necesitamos su visto bueno.**
+¿Va en bolívares a la fecha de compra?
 
-**8. 🟢 ¿Quién es el abogado que visa el documento de donación? (B-83)**
+**7. 🟢 ¿Quién es el abogado que visa el documento de donación? (B-83)**
 
 Nombre y número de IPSA. Si no lo llenan, ese bloque simplemente no se imprime.
 
-**9. 🟢 ¿Cuántos bienes le corresponden a cada trabajador?**
+**8. 🟢 ¿Cuántos bienes le corresponden a cada departamento?**
 
-El reporte *Suficiencia de Bienes* compara lo que hay contra lo que debería haber, pero hoy usa
-**números de ejemplo**. Aunque sea aproximado: ¿cuántas **sillas**, **escritorios** y **computadoras**
-por empleado? ¿Qué cosas **no** se reparten por persona (un aire acondicionado es del espacio)?
-
-**10. 🟢 Revisen las 11 categorías internas** que propusimos para agrupar los bienes en los reportes, y
-díganos si encajan con cómo quieren verlos.
+Ya sabemos que se cuenta **por departamento** (el aire es del espacio). Aunque sea aproximado: por
+departamento, ¿cuántas sillas, escritorios, computadoras…?
 
 ### 📎 Recaudos de este módulo
 
-- 🔴 **El archivo digital del inventario que lleva la encargada.** Nos permite cargar los ~142 bienes de
-  una vez, trae los códigos en uso (pregunta 2) y el último número (pregunta 1).
+- 🔴 **El archivo actual del inventario** de la encargada, **con el departamento** de cada bien (pregunta 1). *La planilla del 06/10 nos sirvió de muestra del formato, gracias.*
 - 🔴 **Formato del Acta de Desincorporación** (la que firma la Alcaldía como aval). Hoy sale una versión
   provisional.
 - 🔴 **Formato del acta de asignación** («acta de encargado»), la que firma el trabajador al recibir un
   bien.
-- 🟡 La **notificación escrita** del procedimiento nuevo (pregunta 6), si existe.
+- 🟡 **El formato nuevo de la relación de bienes**, con la columna de código, cuando lo tengan.
 - ⚙️ **Una acción interna:** asignar en el sistema al **Coordinador de _Compra de Bienes y Servicios_**.
   Mientras el cargo esté vacante, el sistema **no permite movimientos de bienes** (todo movimiento lo
   autoriza esa coordinación).
@@ -328,23 +310,23 @@ Si tienen información de años anteriores en Excel o papel: ¿de qué módulos,
 
 **Personal y Nómina**
 - [ ] Datos de cada trabajador activo (planilla de abajo)
-- [ ] Catálogo de cargos
-- [ ] Cesta ticket y tasa del dólar de cada mes a pagar
-- [ ] Un mes de bono vacacional ya calculado
-- [ ] Respuesta a la hoja de INTERESES (recorte adjunto) — N-3
-- [ ] Respuestas N-1, N-2, N-4 y detalles del bono de responsabilidad
+- [ ] Cada mes: cargar en el sistema la cesta ticket y la tasa de la maqueta
+- [ ] Verificación de un mes de bono vacacional en el sistema (directora de Talento Humano)
+- [ ] Una liquidación real ya calculada (para comparar)
+- [ ] Tasas de interés de prestaciones sociales del BCV, mes a mes
+- [ ] Respuesta sobre el bono de responsabilidad en comisión
 - [ ] Tabla de escala salarial por grado *(si existe)*
 - [ ] Planilla física de asistencia *(opcional)*
 
 **Bienes**
-- [ ] Archivo digital del inventario de la encargada
+- [ ] Archivo **actual** del inventario de la encargada, con el departamento de cada bien
 - [ ] Formato del Acta de Desincorporación
 - [ ] Formato del acta de asignación («acta de encargado»)
-- [ ] Respuestas B-73, B-75, B-79 (las tres 🔴) y B-74, B-76, B-77, B-78, B-81
-- [ ] Notificación escrita del procedimiento nuevo (B-80), si existe
-- [ ] Visto bueno a Resolución 32 / Gaceta 87 (B-82)
+- [ ] Última codificación de la Alcaldía, completa (B-73, B-75)
+- [ ] Respuestas B-78-bis, B-79-bis, B-74 y B-77
+- [ ] Formato nuevo de la relación de bienes, con código
 - [ ] Nombre e IPSA del abogado visador (B-83)
-- [ ] Dotación de bienes por empleado y revisión de las 11 categorías
+- [ ] Dotación de bienes por departamento
 - [ ] Asignar al Coordinador de Compra de Bienes y Servicios *(acción interna)*
 
 **Rutas**
@@ -417,14 +399,22 @@ datos (no los inventamos nosotros):
 ## Ya respondido — gracias, no hace falta volver a contestarlo
 
 - **Personal:** los cargos son generales para todos los departamentos · las constancias no exigen
-  tiempo mínimo de servicio.
+  tiempo mínimo de servicio · *(06/10)* el catálogo de cargos es el que ya está en el sistema; lo
+  ajustan ustedes desde *Cargos* (agregar, modificar o eliminar).
 - **Nómina:** existe una nómina quincenal aparte de la Liquidación · la cesta ticket la publica la UNAPRE
-  cada mes · la «tasa BCV» es el tipo de cambio del dólar · la gobernación no paga caja de ahorro · los
-  porcentajes por grado académico y la escala de antigüedad con tope de 30 %.
+  cada mes · la «tasa BCV» de la nómina es el tipo de cambio del dólar (la de la hoja INTERESES de la Liquidación es otra: la tasa de interés de prestaciones) · la gobernación no paga caja de ahorro · los
+  porcentajes por grado académico y la escala de antigüedad con tope de 30 % · *(06/10)* la base son
+  **4 semanas** · los días adicionales de prestaciones siguen la ley (15 por trimestre + 2 por año) · en la hoja
+  INTERESES, 79/82 son días del bono vacacional y 120/150 del aguinaldo ·
+  días del bono vacacional: fijos 85 y contratados 45 (el alto nivel según su contrato), + 1 por año a todos · la cesta ticket y la tasa salen de la maqueta que reciben cada mes y se cargan a mano · las divisas del bono de
+  responsabilidad las fija la contratación colectiva de la Alcaldía.
 - **Bienes:** el levantamiento de agosto (59 preguntas) · el procedimiento nuevo de septiembre (IMATUR
   codifica, Acta de Desincorporación por lote, sin oficio de retiro) · existe la versión digital del
   inventario · los saltos en el N° de orden no son bajas · ya recibimos el oficio de relación, el
-  documento de donación y el BM-1.
+  documento de donación y el BM-1 · *(06/10)* los códigos no se reciclan · el acta la firman solo la
+  Coordinadora y la Presidencia, con correlativo de IMATUR · Resolución 32 / Gaceta 87 confirmadas · la
+  notificación del procedimiento fue de palabra · la relación se hace por cada bien nuevo · las 11
+  categorías · la dotación es por departamento.
 - **Rutas:** las 64 preguntas de septiembre, salvo las dos de arriba: catálogo y salidas, los tres
   estados, el cobro (cuenta de IMATUR, pago anticipado con fecha tope, voucher o acta, exoneraciones de
   la Presidenta), las tres modalidades de Cumaná Histórica, Exploradores de 4 a 16 años, 7-8 niños por
@@ -434,4 +424,4 @@ datos (no los inventamos nosotros):
 ---
 
 *Con los **documentos y respuestas** cerramos la programación pendiente. Con los **datos** (personal,
-nómina, los ~142 bienes y las rutas) el sistema deja de estar vacío y queda listo para operar.*
+nómina, los bienes y las rutas) el sistema deja de estar vacío y queda listo para operar.*

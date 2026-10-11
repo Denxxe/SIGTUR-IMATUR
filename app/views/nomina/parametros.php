@@ -12,6 +12,7 @@
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/nomina/quincenal" class="btn-sig btn-sig--ghost"><i class="bi bi-cash-stack"></i> Nómina quincenal</a>
+        <a href="<?php echo URL_ROOT; ?>/nomina/liquidaciones" class="btn-sig btn-sig--ghost"><i class="bi bi-briefcase"></i> Liquidaciones</a>
         <button type="button" class="btn-sig btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalMes" onclick="nuevoMes()">
             <i class="bi bi-plus-lg"></i> Cargar mes
         </button>
@@ -207,9 +208,10 @@
                 'nomina_pct_sso_patronal'        => 'SSO patronal %',
                 'nomina_pct_faov_patronal'       => 'FAOV patronal %',
                 'nomina_pct_rpe_patronal'        => 'RPE patronal %',
-                'nomina_dias_bono_vac_base'      => 'Días base bono vacacional',
                 'nomina_dias_bono_fin_anio'      => 'Días bono fin de año',
                 'nomina_dias_base_anio'          => 'Días base del año',
+                'nomina_dias_mes'                => 'Días del mes (salario diario)',
+                'nomina_pct_bono_50'             => 'Bono 50 % — porcentaje',
             ];
             foreach ($etiquetas as $clave => $label):
                 $val = $data['escalares'][$clave] ?? null;
@@ -239,17 +241,132 @@
             <?php endforeach; ?>
         </div>
 
-        <div class="sig-alert sig-alert--warning" style="margin-top:var(--sp-3);">
-            <i class="bi bi-exclamation-triangle"></i>
-            <div>
-                <strong>Dos valores están pendientes de confirmación del cliente.</strong>
-                Los <em>días base del bono vacacional</em> (la plantilla de nómina usa 75 en todas las hojas,
-                la configuración del bono vacacional tiene 85 y 45) y el criterio de las
-                <em>semanas</em> (la plantilla usa 4 en unas hojas y 5 en otras el mismo mes).
-                Están como parámetros, así que el cálculo funciona, pero el número final no es
-                definitivo hasta que se aclaren.
-            </div>
+        <hr style="margin:var(--sp-4) 0;border:none;border-top:1px solid var(--border-subtle);">
+
+        <div style="font-size:13px;font-weight:700;margin-bottom:var(--sp-2);">
+            <i class="bi bi-briefcase"></i> Liquidación de prestaciones sociales y vacaciones
         </div>
+        <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:var(--sp-3);">
+            Las cifras de la LOTTT (arts. 142 y 190) también son parámetros: si cambia la ley o el contrato,
+            se corrigen aquí y el sistema sigue calculando.
+        </p>
+        <?php
+        $liqP = $data['liq'] ?? [];
+        $num  = fn($v) => rtrim(rtrim(number_format((float)$v, 2, ',', '.'), '0'), ',');
+        $mostrarLiq = [
+            'Días de garantía por trimestre'      => $num($liqP['liq_dias_garantia_trimestre'] ?? 0),
+            'Días adicionales por año'            => $num($liqP['liq_dias_adicionales_anio'] ?? 0)
+                                                     . ' desde el año ' . $num($liqP['liq_dias_adicionales_desde_anio'] ?? 0),
+            'Tope de días adicionales'            => $num($liqP['liq_dias_adicionales_tope'] ?? 0),
+            'Retroactivo: días por año'           => $num($liqP['liq_dias_retroactivo_anio'] ?? 0),
+            'Fracción que cuenta como año'        => 'más de ' . $num($liqP['liq_meses_fraccion_retroactivo'] ?? 0) . ' meses',
+            'Trimestres de la garantía'           => ($liqP['liq_trimestre_modo'] ?? '') === 'ingreso'
+                                                     ? 'Desde el ingreso' : 'Calendario (mar · jun · sep · dic)',
+            'Vacaciones: días del 1.er año'       => (int)($data['vacRegla']['base'] ?? 15) . ' + 1 por año',
+            'Vacaciones: tope'                    => (int)($data['vacRegla']['tope'] ?? 30) . ' días',
+        ];
+        ?>
+        <div class="row">
+            <?php foreach ($mostrarLiq as $label => $valor): ?>
+                <div class="col-md-3 col-sm-6" style="margin-bottom:var(--sp-3);">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);"><?php echo $label; ?></div>
+                    <div style="font-weight:700;font-variant-numeric:tabular-nums;"><?php echo htmlspecialchars($valor); ?></div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
+<!-- Tasas del BCV para la liquidación (mig. 086) -->
+<div class="sig-card anim-slide-up" id="tasas-bcv" style="margin-top:var(--sp-6);">
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-percent"></i> Tasa de interés de prestaciones sociales (BCV) por mes</div>
+        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="nuevaTasaBcv()">
+            <i class="bi bi-plus-lg"></i> Cargar mes
+        </button>
+    </div>
+    <div class="sig-card__body" style="padding:0;">
+        <div style="padding:10px 14px;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle);">
+            <i class="bi bi-info-circle"></i>
+            Es la tasa <strong>anual</strong> que publica el BCV para los intereses de las prestaciones
+            (art. 143 LOTTT) — <strong>no</strong> es el tipo de cambio. La liquidación aplica cada mes la
+            doceava parte, como la hoja INTERESES. La <em>tasa activa</em> es opcional: se usa para el interés
+            de mora; si falta, se usa la de prestaciones.
+        </div>
+        <div class="sig-table-wrap" data-tabla-buscable data-por-pagina="12" data-titulo-export="Tasas de interés de prestaciones sociales (BCV)">
+            <table class="sig-table">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th class="text-end">Prestaciones % anual</th>
+                        <th class="text-end">% mensual</th>
+                        <th class="text-end">Activa % anual (mora)</th>
+                        <th>Observaciones</th>
+                        <th class="col-actions">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($data['tasasBcv'])): ?>
+                        <tr><td colspan="6" class="sig-table-empty">
+                            Ninguna tasa cargada. Sin ellas, los intereses de las liquidaciones quedan en 0 y el sistema lo advierte.
+                        </td></tr>
+                    <?php else: foreach ($data['tasasBcv'] as $t): ?>
+                        <tr>
+                            <td class="cell-strong"><?php echo htmlspecialchars($t->periodo); ?></td>
+                            <td class="text-end u-num"><?php echo number_format((float)$t->tasa_prestaciones, 2, ',', '.'); ?></td>
+                            <td class="text-end u-num"><?php echo number_format((float)$t->tasa_prestaciones / 12, 4, ',', '.'); ?></td>
+                            <td class="text-end u-num"><?php echo $t->tasa_activa === null ? '—' : number_format((float)$t->tasa_activa, 2, ',', '.'); ?></td>
+                            <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($t->observaciones ?? '—'); ?></td>
+                            <td class="col-actions">
+                                <button class="row-action row-action--edit"
+                                        onclick='editarTasaBcv(<?php echo json_encode($t, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <form action="<?php echo URL_ROOT; ?>/nomina/eliminarTasaBcv" method="POST" style="display:inline;"
+                                      onsubmit="return confirm('¿Eliminar la tasa de <?php echo htmlspecialchars($t->periodo); ?>?');">
+                                    <input type="hidden" name="periodo" value="<?php echo htmlspecialchars($t->periodo); ?>">
+                                    <button type="submit" class="row-action row-action--del"><i class="bi bi-trash"></i> Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: tasa del BCV -->
+<div class="modal fade" id="modalTasaBcv" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/nomina/guardarTasaBcv" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTasaBcvLabel">Tasa del BCV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="tb_periodo">Mes <span class="req">*</span></label>
+                    <input type="month" name="periodo" id="tb_periodo" class="sig-input" required>
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="tb_prest">Tasa de prestaciones sociales (% anual) <span class="req">*</span></label>
+                    <input type="number" step="0.0001" min="0" name="tasa_prestaciones" id="tb_prest" class="sig-input" required placeholder="Ej: 58,35">
+                </div>
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="tb_activa">Tasa activa (% anual, para la mora)</label>
+                    <input type="number" step="0.0001" min="0" name="tasa_activa" id="tb_activa" class="sig-input">
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label" for="tb_obs">Observaciones</label>
+                    <input type="text" name="observaciones" id="tb_obs" class="sig-input" maxlength="255" placeholder="Ej: publicación del BCV">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -287,14 +404,25 @@
                             'nomina_pct_sso_patronal'     => 'SSO patronal %',
                             'nomina_pct_faov_patronal'    => 'FAOV patronal %',
                             'nomina_pct_rpe_patronal'     => 'RPE patronal %',
+                            'nomina_pct_bono_50'          => 'Bono 50 % — porcentaje del sueldo base',
                         ]],
                         'dias' => ['paso' => '1', 'campos' => [
                             'nomina_semanas_default'    => 'Semanas (SSO/LRPPF/aportes)',
-                            'nomina_dias_bono_vac_base' => 'Días base bono vacacional',
-                            'nomina_dias_bono_fin_anio' => 'Días bono fin de año',
+                            'nomina_dias_bono_fin_anio' => 'Días bono fin de año (aguinaldo)',
                             'nomina_dias_base_anio'     => 'Días base del año',
+                            'nomina_dias_mes'           => 'Días del mes (salario diario)',
+                        ]],
+                        'liquidacion' => ['paso' => '0.01', 'campos' => [
+                            'liq_dias_garantia_trimestre'     => 'Días de garantía por trimestre (art. 142 a)',
+                            'liq_dias_adicionales_anio'       => 'Días adicionales por año (art. 142 b)',
+                            'liq_dias_adicionales_desde_anio' => 'Días adicionales desde el año',
+                            'liq_dias_adicionales_tope'       => 'Tope de días adicionales',
+                            'liq_dias_retroactivo_anio'       => 'Retroactivo: días por año (art. 142 c)',
+                            'liq_meses_fraccion_retroactivo'  => 'Meses que debe superar la fracción',
                         ]],
                     ];
+                    // Los valores de liquidación vienen de su propio modelo.
+                    $data['escalares'] = ($data['escalares'] ?? []) + ($data['liq'] ?? []);
                     $pintar = function(array $campos, string $paso) use ($data) {
                         foreach ($campos as $clave => $label):
                             $val = $data['escalares'][$clave] ?? '';
@@ -326,11 +454,11 @@
                 </div>
 
                 <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
-                    Días base del bono vacacional, por tipo de personal
+                    Días base del bono vacacional, según la condición del trabajador
                 </div>
                 <div class="row g-3">
                     <?php foreach (BonoVacacional::CONFIG_DIAS as $tipo => $clave): ?>
-                        <div class="col-md-4 col-sm-6">
+                        <div class="col-md-6">
                             <div class="sig-field" style="margin:0;">
                                 <label class="sig-field__label" for="esc_<?php echo $clave; ?>"><?php echo htmlspecialchars($tipo); ?></label>
                                 <input type="number" step="1" min="0"
@@ -340,6 +468,55 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                    A todos se les suma 1 día por año de servicio. El alto nivel y la comisión de servicio
+                    toman los días de su condición (fijo o contratado). Se usan en el bono vacacional, en
+                    la alícuota de la quincena y en el salario integral de la liquidación.
+                </small>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin:var(--sp-4) 0 var(--sp-2);">
+                    Liquidación de prestaciones sociales
+                </div>
+                <div class="row g-3">
+                    <?php $pintar($grupos['liquidacion']['campos'], $grupos['liquidacion']['paso']); ?>
+                    <div class="col-md-4 col-sm-6">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="esc_liq_trimestre_modo">Trimestres de la garantía</label>
+                            <select name="liq_trimestre_modo" id="esc_liq_trimestre_modo" class="sig-input">
+                                <option value="calendario"<?php echo ($data['liq']['liq_trimestre_modo'] ?? '') !== 'ingreso' ? ' selected' : ''; ?>>Calendario (mar · jun · sep · dic)</option>
+                                <option value="ingreso"<?php echo ($data['liq']['liq_trimestre_modo'] ?? '') === 'ingreso' ? ' selected' : ''; ?>>Contados desde el ingreso</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                    Con 2 días desde el año 2 y tope 30: el 2.º aniversario deposita 2 días, el 3.º 4, y así hasta 30.
+                    La hoja INTERESES del cliente deposita en marzo, junio, septiembre y diciembre (modo calendario).
+                </small>
+
+                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin:var(--sp-4) 0 var(--sp-2);">
+                    Vacaciones (art. 190 LOTTT)
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4 col-sm-6">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="esc_vacaciones_dias_base">Días hábiles del primer año</label>
+                            <input type="number" step="1" min="0" name="vacaciones_dias_base" id="esc_vacaciones_dias_base"
+                                   class="sig-input" value="<?php echo (int)($data['vacRegla']['base'] ?? 15); ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4 col-sm-6">
+                        <div class="sig-field" style="margin:0;">
+                            <label class="sig-field__label" for="esc_vacaciones_dias_tope">Tope de días por año</label>
+                            <input type="number" step="1" min="0" name="vacaciones_dias_tope" id="esc_vacaciones_dias_tope"
+                                   class="sig-input" value="<?php echo (int)($data['vacRegla']['tope'] ?? 30); ?>">
+                        </div>
+                    </div>
+                </div>
+                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                    Se suma 1 día por año de servicio hasta el tope. Lo usan el módulo Vacaciones y la fracción de
+                    vacaciones de la liquidación.
+                </small>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -445,7 +622,7 @@
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="pm_cesta">Monto de cesta ticket <span class="req">*</span></label>
                     <input type="number" step="0.01" min="0" name="monto_cesta_ticket" id="pm_cesta" class="sig-input" required>
-                    <small style="color:var(--text-tertiary);font-size:12px;">Lo publica la UNAPRE; cambia todos los meses.</small>
+                    <small style="color:var(--text-tertiary);font-size:12px;">Escriba el monto que trae la <strong>maqueta de nómina</strong> que reciben cada mes.</small>
                 </div>
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="pm_tasa">Tasa del dólar <span class="req">*</span></label>
@@ -462,7 +639,8 @@
                     <input type="hidden" name="tasa_fecha_valor"   id="pm_tasa_fecha_valor">
                     <input type="hidden" name="tasa_consultada_at" id="pm_tasa_consultada_at">
                     <small id="pm_tasa_ayuda" style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:4px;">
-                        Con ella se paga el bono de responsabilidad, que se pacta en divisas.
+                        Escriba la tasa de la <strong>maqueta</strong> del mes. «Consultar BCV» es solo una referencia:
+                        el cálculo usa el valor que quede escrito aquí.
                     </small>
                     <div id="pm_tasa_aviso" style="display:none;font-size:12px;margin-top:6px;"></div>
                 </div>
@@ -491,6 +669,24 @@
 
     function editarEscalares() {
         new bootstrap.Modal(document.getElementById('modalEscalares')).show();
+    }
+
+    // ── Tasas del BCV (liquidación) ──────────────────────────────────────
+    function nuevaTasaBcv() {
+        document.getElementById('modalTasaBcvLabel').innerText = 'Cargar tasa del BCV';
+        document.querySelector('#modalTasaBcv form').reset();
+        document.getElementById('tb_periodo').readOnly = false;
+        new bootstrap.Modal(document.getElementById('modalTasaBcv')).show();
+    }
+
+    function editarTasaBcv(t) {
+        document.getElementById('modalTasaBcvLabel').innerText = 'Editar ' + t.periodo;
+        document.getElementById('tb_periodo').value = t.periodo;
+        document.getElementById('tb_periodo').readOnly = true;   // el mes es la clave
+        document.getElementById('tb_prest').value  = t.tasa_prestaciones;
+        document.getElementById('tb_activa').value = t.tasa_activa || '';
+        document.getElementById('tb_obs').value    = t.observaciones || '';
+        new bootstrap.Modal(document.getElementById('modalTasaBcv')).show();
     }
 
     // ── Grados de instrucción ────────────────────────────────────────────
@@ -575,8 +771,8 @@
                     : 'sin fecha publicada';
                 aviso.style.color = 'var(--success-700, #15803d)';
                 aviso.innerHTML = '<i class="bi bi-check-circle"></i> Tasa oficial del BCV con <strong>fecha valor '
-                    + fecha + '</strong>. Verifique que corresponde al mes que está cargando; '
-                    + 'si la modifica, se guardará como manual.';
+                    + fecha + '</strong>, solo como referencia. Compárela con la de la maqueta del mes y, si difiere, '
+                    + 'escriba la de la maqueta (se guardará como manual).';
                 aviso.style.display = 'block';
             })
             .catch(function (e) {

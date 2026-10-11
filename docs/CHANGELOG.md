@@ -18,6 +18,53 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 — Liquidación de Prestaciones Sociales (fase N-E) · todas las reglas como parámetros (mig. 086)
+
+- **La Liquidación, desde las fórmulas reales.** Se abrió `LIQUIDACION MES JULIO 2026.xls` con Excel
+  (macros desactivadas) para leer las fórmulas celda por celda, no solo los valores. Sus tres hojas
+  quedan digitalizadas: **INTERESES** (`liquidacion_meses`, un renglón por mes: salario integral, días
+  depositados, anticipo, tasa e interés capitalizado), **FORMATO** (`liquidaciones`, el documento que
+  se firma) e **INTERES DE MORA** (`detalle_mora`). `Liquidacion` tiene el cálculo **puro**, como
+  `Nomina::calcular()`: 47 pruebas nuevas reproducen al céntimo los valores que Excel ya calculó
+  (fila 17 columna por columna, saldo encadenado de las filas 15-18).
+- **La «tasa» de INTERESES no era el tipo de cambio** (duda abierta desde N-3): es la tasa de interés
+  de prestaciones del BCV en % **mensual** (4,86 = 58,35 % anual ÷ 12). Se guarda anual en
+  `nomina_tasas_bcv`, un mes por fila, compartida por todas las liquidaciones.
+- **Dos decisiones que la plantilla no trae.** (1) Art. 142 d LOTTT: la hoja solo calcula el
+  retroactivo (literal c); el sistema calcula también la garantía depositada y **paga la mayor**,
+  diciendo cuál aplicó. (2) Días adicionales según la regla escrita del cliente (2 por año desde el
+  segundo, hasta 30), no los 6/8/10 de la hoja de prueba, que no cuadran con sus propios días de bono.
+- **Lo que no sabe, lo dice.** Meses sin sueldo registrado (anteriores al sistema), meses sin tasa del
+  BCV y vacaciones vencidas tomadas del módulo Vacaciones salen como advertencias. Talento Humano corrige
+  cualquier mes o los días de cada fracción; la cadena se recalcula entera. Cerrar asigna `LIQ-NNN/AAAA`
+  y bloquea; anular conserva el documento y libera el egreso.
+- **«Que todo sea configurable»** (pedido del cliente durante la construcción). Las cifras de la ley y
+  del contrato salieron del código a `configuracion_sistema` y se editan en *Nómina → Parámetros*:
+  garantía por trimestre, días adicionales (cantidad, desde qué año, tope), retroactivo (días por año
+  y umbral de la fracción), modo de los trimestres, divisores 30/360 (también en la quincena), el
+  «Bono 50 %» y los 15 días/tope 30 de **Vacaciones** (`Vacacion::regla()`, con los valores de ley como
+  respaldo si falta la clave). Las liquidaciones cerradas no cambian al editar un parámetro.
+- Salidas: pantalla de detalle, imprimible del FORMATO (sin margen en `@page`) y `.xlsx` de 3 hojas.
+  Acceso desde *Nómina → Liquidaciones* y desde el expediente del egresado. Prueba de punta a punta
+  sobre un respaldo de la base, restaurado después; consolidado verificado en una base vacía (72 tablas).
+
+### 2026-10-06 — Respuestas del cliente a Nómina y Bienes · días del bono por condición (mig. 085)
+
+- **N-1 aplicada.** El cliente aclaró que los días base del bono vacacional dependen de si el
+  trabajador es **fijo (85)** o **contratado (45)** —el alto nivel y la comisión según su contrato— y
+  que **a todos** se suma 1 día por año. Antes había 5 valores por tipo de personal (75/75/85/45/75),
+  los obreros no sumaban años y la alícuota de la quincena usaba 75 para todos. La mig. 085 deja dos
+  claves (`bono_vac_dias_fijo`, `bono_vac_dias_contratado`) y elimina las seis anteriores; la quincena
+  y el bono vacacional leen los mismos días (`BonoVacacional::diasBase()`). Las nóminas ya generadas
+  no cambian: guardan sus entradas. 7 pruebas nuevas (88 en total).
+- **N-2, N-3 y N-4 cerradas** con las respuestas del cliente (4 semanas; la columna de INTERESES son
+  los días de bono vacacional y aguinaldo, con lo que se desbloquea la Liquidación; la cesta ticket y
+  la tasa salen de la maqueta mensual y se cargan a mano). Textos de ayuda de *Nómina → Parámetros* y
+  del período de bono vacacional ajustados a eso; el total del bono lo verifica la directora de
+  Talento Humano en el sistema.
+- **Bienes:** registradas las respuestas B-73…B-83 y archivada una planilla **antigua** de la
+  encargada como muestra del formato interno (no es el inventario vigente).
+
 ### 2026-10-06 — Indicadores por rol · documentación y documento único para el cliente
 
 - **Indicadores por rol.** RRHH y Solo Lectura veían en *Indicadores de Gestión* las cifras de Rutas,

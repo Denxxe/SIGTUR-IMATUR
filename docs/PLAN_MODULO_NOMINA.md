@@ -1,16 +1,19 @@
 # PLAN DEL MÓDULO DE NÓMINA — SIGTUR-IMATUR
 
-**Fecha:** 2026-08-07 · **Actualizado:** 2026-08-27
-**Estado:** fases **N‑A, N‑B, N‑C y N‑D construidas** (mig. 072 y 073). Falta solo **N‑E**
-(Liquidación, bloqueada por N‑3). Las 3 preguntas siguen abiertas: N‑1 y N‑2 **ya no bloquean**
-(entraron como parámetros) y la fórmula del **total del bono vacacional** —que no está en
-ninguna fuente— se resolvió dejando la estimación del sistema al lado del total confirmado,
-con la diferencia visible. Ver §6.4 y §6.5.
+**Fecha:** 2026-08-07 · **Actualizado:** 2026-10-11
+**Estado:** ✅ **las cinco fases construidas** — N‑A…N‑D (mig. 072 y 073) y **N‑E, Liquidación de
+Prestaciones Sociales (mig. 086, 2026-10-11)**. N‑1…N‑4 respondidas el 2026-10-06. Lo único que
+sigue abierto del lado del cálculo es el **total del bono vacacional**, que se resolvió dejando la
+estimación del sistema al lado del total confirmado, con la diferencia visible (§6.5).
+**Todas las cifras de la ley y del contrato son parámetros** editables en `/nomina/parametros`
+(§7.4): si cambia la LOTTT o la contratación colectiva, se corrige el valor y el sistema sigue
+calculando.
 **Fuentes:** formato real `INSTITUTO IMATUR JULIO 2026.xlsx` (plantilla de nómina quincenal, **datos de
-prueba** — solo las fórmulas son fuente de verdad) + 4 audios de Talento Humano del 2026-07-23
+prueba** — solo las fórmulas son fuente de verdad) + `LIQUIDACION MES JULIO 2026.xls` (formato de
+liquidación, mismas condiciones) + 4 audios de Talento Humano del 2026-07-23
 (transcripción en `docs/formatos/transcripcion_audios_rrhh_2026-07-23.md`).
 
-> **Leer antes de tocar `NominaController`, `BonoVacacional`, `Sueldo` o `empleado_salarios`.**
+> **Leer antes de tocar `NominaController`, `BonoVacacional`, `Liquidacion`, `Sueldo` o `empleado_salarios`.**
 
 ---
 
@@ -182,13 +185,37 @@ justificación del módulo.
 
 | # | Tema | Por qué importa |
 |---|---|---|
-| **N-1** | Días base del bono vacacional (75 para todos vs. 75/75/85/45) | La plantilla y nuestra configuración **se contradicen**. Define `bono_vac_dias_*` y la alícuota. **No bloquea**: son parámetros editables |
+| **N-1** | Días base del bono vacacional (75 para todos vs. 75/75/85/45) | ✅ **Cerrada y aplicada 2026-10-06 (mig. 085)** — ver abajo |
 | **N-2** | Criterio de las semanas (×4 / ×5) | Cambia toda la línea de deducciones y aportes. **No bloquea**: parámetro |
-| **N-3** | «Días adicionales» de la hoja INTERESES | 🔒 **Único insumo que falta para diseñar la Liquidación (fase N-E).** En el audio no se entendió la pregunta: **reformular con un recorte de pantalla** |
-| **N-4** | ¿Cuál tasa del dólar aplican exactamente? | La plantilla trae 36,58 y 36,23 en hojas del mismo período. Por eso la consulta al BCV es **sugerencia**, no automática (mig. 074) |
+| **N-3** | «Días adicionales» de la hoja INTERESES | ✅ **Respondida 2026-10-06** (ver abajo). La fase N-E queda desbloqueada |
+| **N-4** | ¿Cuál tasa del dólar aplican exactamente? | ✅ **Cerrada 2026-10-06:** la de la **maqueta** de nómina que reciben cada mes, cargada a mano. La consulta al BCV (mig. 074) queda como referencia |
 
 Menores: de dónde sale la **cantidad de divisas** de cada trabajador, y si el **bono de
 responsabilidad** aplica solo a Alto Nivel y Comisión.
+
+> **2026-10-06 — respondidas (notas del equipo, no formato).** Detalle y estado en `BACKLOG.md` §3.1.
+> - **N-2 ✅** 4 semanas. Ya era el default.
+> - **N-3 ✅** Regla del **art. 142 LOTTT**: 15 días por trimestre (60/año) + **2 días adicionales
+>   por año** desde el segundo, acumulativos hasta 30. Y **confirmado por el cliente**: la columna
+>   79/82/120/150 de INTERESES son los **días de las alícuotas** del salario integral — 79/82 del
+>   **bono vacacional** (75 + años) y 120/150 del **aguinaldo**. Con eso se construye la N-E:
+>   salario integral diario = normal + alícuota vacacional + alícuota de fin de año (lo que ya
+>   calcula `Nomina::calcular()`), × días de garantía y adicionales.
+>   ✅ *Resuelto al construir la N-E (2026-10-11):* la «tasa» de INTERESES es la **tasa de
+>   interés** de prestaciones del BCV, no el tipo de cambio — la columna se llama «INTERESES BCV» y
+>   sus valores (4,68…4,94) son el % **mensual** (= 56-59 % anual ÷ 12). Ver §7.
+> - **N-1 ✅ (mig. 085)** Los días base van por **condición**, no por tipo de personal: **fijo 85,
+>   contratado 45**, y **a todos +1 por año** (antes los obreros no sumaban). El alto nivel y la
+>   comisión de servicio toman los días de su contrato. Dos claves, `bono_vac_dias_fijo` y
+>   `bono_vac_dias_contratado`, reemplazan las 5 por tipo y `nomina_dias_bono_vac_base`; la alícuota
+>   de la quincena y el bono vacacional leen los mismos días (`BonoVacacional::diasBase()`). Se
+>   descarta el «75 para todos» de la plantilla quincenal. §6.5 describe el estado anterior.
+> - **N-4 ✅** Al inicio de cada mes llega una **maqueta** para pagar la nómina; de ella salen la
+>   **cesta ticket** (lo único que varía con el dólar) y la tasa. Se cargan **a mano**, una vez por
+>   mes, en `/nomina/parametros` — el modelo actual (`nomina_parametros_mes`, UNIQUE por mes) ya
+>   sirve. *Consultar BCV* es solo referencia: el cálculo usa lo que diga la maqueta.
+> - **Bono de responsabilidad:** solo Alto Nivel (fijo o contratado); las divisas las fija la
+>   contratación colectiva de la Alcaldía. Queda la duda de Comisión de Servicio.
 
 ### 6.2 Insumos operativos
 
@@ -204,7 +231,7 @@ responsabilidad** aplica solo a Alto Nivel y Comisión.
 | **N‑B** | Entradas que faltan: cuenta bancaria, divisas, sueldo de dependencia de origen; mapeo `nivel_academico` → código de grado; histórico mensual de cesta ticket y tasa | ✅ **HECHO** (mig. 072) |
 | **N‑C** | Nómina quincenal: períodos, snapshot por empleado, cierre y **exportación de las 6 hojas** con `XlsxMultiSheet` | ✅ **HECHO** (mig. 072) |
 | **N‑D** | Migrar Bono Vacacional v1 de captura manual a cálculo, reusando el motor de N‑A | ✅ **HECHO** (mig. 073) — con una salvedad: **el total sigue de captura** porque su fórmula no está en ninguna fuente. Ver §6.5 |
-| **N‑E** | Liquidación de Prestaciones Sociales | 🔒 Bloqueada por **N‑3** |
+| **N‑E** | Liquidación de Prestaciones Sociales | ✅ **HECHO** (mig. 086, 2026-10-11). Ver §7 |
 
 ### 6.4 Qué quedó construido (2026-08-27, mig. 072)
 
@@ -266,7 +293,9 @@ estimación en la BD (comentario de columna), en la UI y en el `.xlsx`. `total_b
 siendo la cifra oficial. La UI, el cuadro resumen y el export muestran la **diferencia** entre ambos.
 
 Eso convierte la pregunta pendiente en un instrumento que se responde solo: **en cuanto el cliente
-entregue un mes real, la diferencia dice si el supuesto acierta.** Si acierta, el total pasa a
+entregue un mes real, la diferencia dice si el supuesto acierta.** *(2026-10-06: decidido que la
+verificación la hace la **directora de Talento Humano dentro del sistema** — genera un período,
+captura sus totales y lee la diferencia —, en vez de enviarnos un mes calculado.)* Si acierta, el total pasa a
 calcularse y `aceptarCalculados()` se vuelve el flujo normal; si no, la diferencia muestra por dónde
 corregir. Mientras tanto el sistema no afirma un número que no puede sostener.
 
@@ -279,3 +308,115 @@ cesta ticket entra en el diario; y al cerrar se bloquean las tres vías de edici
 colectivo: 75/75/85/45/75) y la alícuota se recalcula con esos mismos días, no con
 `nomina_dias_bono_vac_base`. Las dos fuentes se contradicen — es exactamente N‑1 — y por eso conviven
 como parámetros hasta que el cliente aclare cuál manda.
+
+---
+
+## 7. Liquidación de Prestaciones Sociales (fase N-E, mig. 086 — 2026-10-11)
+
+**Fuente:** las fórmulas de `LIQUIDACION MES JULIO 2026.xls` (datos de prueba, fórmulas reales;
+extraídas abriendo el libro con Excel y leyendo cada celda) + la respuesta N-3 del 2026-10-06.
+Código: `app/models/Liquidacion.php` (cálculo puro + BD) y
+`app/controllers/nomina/NominaLiquidacionTrait.php` (acciones de `NominaController`, URLs `/nomina/...`).
+
+### 7.1 Las tres hojas del formato y su equivalente
+
+| Hoja del cliente | En el sistema | Qué es |
+|---|---|---|
+| `INTERESES` | `liquidacion_meses` + `Liquidacion::calcularMeses()` | Un renglón por mes de servicio: salario, salario integral, días depositados, anticipos, tasa del BCV e intereses capitalizados |
+| `FORMATO` | `liquidaciones` + `Liquidacion::calcularResumen()` | El documento que se firma: último salario (mensual y diario), salario integral y los conceptos |
+| `INTERES DE MORA` | `liquidaciones.detalle_mora` + `Liquidacion::calcularMora()` | Interés por cada mes entre el egreso y el pago |
+
+### 7.2 Fórmulas (verificadas contra los valores ya calculados por Excel)
+
+**INTERESES**, columna por columna:
+
+| Col. | Concepto | Fórmula |
+|---|---|---|
+| G | Total mensual | salario base + prima profesional + prima antigüedad + transporte + hijos |
+| H | Salario diario | G / 30 |
+| I | Alíc. bono vacacional | H × días del bono vacacional / 360 (79→82 en la plantilla = 75 + años) |
+| J | Alíc. fin de año | H × días del aguinaldo / 360 (120 hasta 2022, 150 desde 2023) |
+| K | Salario integral | H + I + J |
+| L | Días depositados | 15 por trimestre + adicionales del aniversario (§7.3) |
+| M | Depósito | K × L |
+| N | Saldo antes de interés | saldo anterior + M − anticipo (R) |
+| O | Tasa BCV | **% mensual** = tasa anual de prestaciones ÷ 12 (4,86 = 58,35 ÷ 12) |
+| P | Interés | N × O % |
+| Q | Saldo | N + P (el interés se **capitaliza** cada mes) |
+
+**FORMATO:** `H11 = subtotal mensual / 30` · `H12 = H11 × días bono vac / 360` ·
+`H13 = H11 × días aguinaldo / 360` · `H14 = TRUNC(H11 + H12 + H13; 2)`. Los conceptos:
+
+| Concepto | Días | Alícuota |
+|---|---|---|
+| Antigüedad | la **mayor** entre la garantía (Σ días depositados) y el retroactivo (30 por año, +1 año si la fracción supera 6 meses) — art. 142 d | integral (retroactivo) o promedio depositado (garantía) |
+| Fracción de vacaciones (art. 190) | vencidas no disfrutadas según el módulo Vacaciones + (15 + años, tope 30) × meses del año en curso / 12 | salario normal diario |
+| Fracción bono vacacional (art. 192) | (días base + años) × meses del año en curso / 12 | salario normal diario |
+| Fracción fin de año | días del aguinaldo × meses del año civil / 12 | salario normal diario |
+| Intereses (art. 143) | — | Σ P |
+| Descuento de anticipos (art. 144) | — | − Σ R |
+
+**INTERES DE MORA:** interés simple sobre el subtotal, desde el mes siguiente al egreso hasta el mes
+del pago, a `TRUNC(tasa anual / 12; 2)` (la tasa activa si está cargada; si no, la de prestaciones).
+
+### 7.3 Decisiones que no salen de la plantilla
+
+1. **Art. 142 d.** La plantilla solo trae la línea del literal c (retroactivo). La ley manda pagar lo
+   **mayor** entre ese cálculo y la garantía depositada; el sistema calcula los dos, paga el mayor y
+   dice cuál aplicó.
+2. **Días adicionales.** Se sigue la regla **escrita** del cliente (N-3): 2 días por año desde el
+   segundo, acumulativos hasta 30 — el 2.º aniversario deposita 2, el 3.º 4… Los 6/8/10 de la hoja de
+   prueba no cuadran con ninguna fecha de ingreso coherente con sus 79/80/81/82 días de bono.
+3. **Trimestres.** La hoja deposita los 15 días en marzo, junio, septiembre y diciembre (modo
+   «calendario», el que viene por defecto); el modo «ingreso» los cuenta desde la fecha de ingreso. El
+   primer trimestre incompleto da 5 días por mes («5 DÍAS PREST. SOCIALES», encabezado de la hoja). En
+   el mes del egreso se deposita lo que falte del trimestre en curso.
+4. **El salario integral de la hoja INTERESES no lleva cesta ticket ni prima de responsabilidad**
+   (sus columnas B…F); el del FORMATO sí lleva la prima de responsabilidad. Se respetan los dos.
+5. **Período liquidado.** Desde la última fecha de reingreso anterior al egreso (un reingreso abre una
+   relación nueva) o, si no hubo, desde el ingreso.
+6. **Lo que el sistema no sabe, lo dice.** Los meses anteriores al primer sueldo registrado quedan en 0
+   con advertencia; un mes sin tasa del BCV deja su interés en 0 con advertencia; las vacaciones
+   vencidas se toman del módulo Vacaciones y se piden verificar. Talento Humano corrige cualquier
+   renglón (queda marcado) o los días de cada fracción, y la cadena se recalcula entera.
+
+### 7.4 Todo es parámetro (pedido del cliente, 2026-10-11)
+
+Ninguna cifra de la ley ni del contrato está escrita en el código. Se editan en `/nomina/parametros`:
+
+| Clave | Default | Regla |
+|---|---|---|
+| `liq_dias_garantia_trimestre` | 15 | art. 142 a |
+| `liq_dias_adicionales_anio` · `_desde_anio` · `_tope` | 2 · 2 · 30 | art. 142 b |
+| `liq_dias_retroactivo_anio` · `liq_meses_fraccion_retroactivo` | 30 · 6 | art. 142 c |
+| `liq_trimestre_modo` | calendario | §7.3-3 |
+| `nomina_dias_mes` · `nomina_dias_base_anio` | 30 · 360 | divisores del diario y de las alícuotas (también en la quincena) |
+| `nomina_dias_bono_fin_anio` | 150 | días del aguinaldo |
+| `bono_vac_dias_fijo` · `_contratado` | 85 · 45 | días base del bono vacacional (N-1) |
+| `vacaciones_dias_base` · `vacaciones_dias_tope` | 15 · 30 | art. 190 (también el módulo Vacaciones) |
+| `nomina_pct_bono_50` | 50 | el «Bono 50 %» de la quincena |
+
+Y la **tasa de interés de prestaciones del BCV** se carga por mes en `nomina_tasas_bcv` (misma
+pantalla), con una tasa activa opcional para la mora. Cambiar cualquier valor **no** altera una
+liquidación cerrada (guarda sus resultados); una en borrador lo toma al recalcularla.
+
+### 7.5 Ciclo de vida
+
+Borrador → **Cerrada** (recibe `LIQ-NNN/AAAA`, inmutable) · cualquiera → **Anulada** (con motivo; el
+número no se recicla y el egreso queda libre para liquidarse de nuevo). Una sola liquidación viva por
+egreso (índice único parcial). Se crea desde *Nómina → Liquidaciones* o desde el expediente del
+egresado. Salidas: pantalla, imprimible del FORMATO (con el trabajador y Talento Humano para firmar)
+y `.xlsx` de 3 hojas con el mismo orden del formato del cliente.
+
+### 7.6 Pruebas
+
+47 casos en `tests/run.php` (135 en total): la fila 17 de INTERESES columna por columna, el saldo
+encadenado de las filas 15-18 igual a Excel, los cambios de 79→80 días y de 120→150, los depósitos
+trimestrales y adicionales, el retroactivo y su umbral, el art. 142 d en los dos sentidos, la mora y
+la configurabilidad de cada regla. Prueba de punta a punta sobre un respaldo de la base (restaurado
+después): 67 meses sembrados, adicionales de 2/4/6/8 días en los aniversarios, garantía 355 días
+contra retroactivo 180, mora de 2 meses, recálculo con 20 días por trimestre, cierre, bloqueo,
+anulación y re-liquidación.
+
+**Pendiente del cliente (no bloquea):** una liquidación **real ya calculada** para comparar
+número a número, y las **tasas del BCV** de los meses que abarquen las liquidaciones reales.
