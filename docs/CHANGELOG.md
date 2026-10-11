@@ -18,6 +18,21 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 (d) — Bienes: cargados los 23 bienes que traían los documentos del cliente (sin migración)
+
+- **De dónde salen.** Las imágenes ya archivadas en `docs/formatos/` traían bienes reales: el BM-1
+  sellado (26/04/2025) con **18 bienes codificados** en tres departamentos, el Oficio N° 179/2026 con
+  **4 bienes comprados sin código** (ONU + router V.SOL, computador Admiral, 2 banderines) y el
+  documento de donación con **la cafetera**. Se cargaron con `database/datos/2026-10-11_bienes_desde_formatos.sql`,
+  idempotente, junto con el registro del BM-1 y del oficio para que cada bien sepa de qué documento vino.
+- **Lo que no dicen los documentos** quedó por defecto y marcado **[por confirmar]** en observaciones:
+  condición «Bueno», categoría interna aproximada, origen «Compra» en los del BM-1 y Depósito General
+  como ubicación de los 5 que no la traen. La ONU y el router van en un solo bien porque el oficio los
+  declara en un renglón con un solo monto; los banderines, uno por unidad (mitad del monto cada uno).
+- **Es una muestra, no el inventario:** la foto del BM-1 es una hoja (los N° de orden llegan a 171 y se
+  ven 18). Con estos datos, la codificación propia propondría el **172**.
+- Corregido de paso el serial del aire acondicionado en el plan: `540K517990137080160608` (faltaba un dígito).
+
 ### 2026-10-11 (c) — Deuda técnica: accesibilidad, estilos inline, lista blanca y pruebas (sin migración)
 
 - **`label[for]` completos.** Quedaban 93 sin `for` (no 76). 76 se asociaron con su control

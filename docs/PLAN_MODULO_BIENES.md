@@ -116,7 +116,7 @@ El formato, con datos verdaderos de IMATUR:
 
 > **Conclusión de diseño:** hacen falta **dos ejes independientes** — el *código oficial* (para el formulario BM-1 y la Alcaldía) y una *categoría interna* (para los reportes de la Presidencia, §6 y §8). No son lo mismo y no deben mezclarse en una sola columna.
 
-**2. Marca, modelo y serial van dentro de la descripción.** El formulario no tiene columnas propias: el aire acondicionado aparece como *"AIRE ACONDICIONADO MARCA HYUNDAI DE 36 MIL BTU COLOR BEIGE MODELO: PISO TECHO SERIAL: 540K51799013708016068"*. Conviene **seguir capturando `marca`/`modelo`/`serial` por separado** y que el sistema **componga** ese texto al exportar — se gana poder filtrar y buscar sin perder fidelidad al formato. Matiza B-13: el serial no es el identificador, pero sí se registra.
+**2. Marca, modelo y serial van dentro de la descripción.** El formulario no tiene columnas propias: el aire acondicionado aparece como *"AIRE ACONDICIONADO MARCA HYUNDAI DE 36 MIL BTU COLOR BEIGE MODELO: PISO TECHO SERIAL: 540K517990137080160608"* *(corregido el 2026-10-11 ampliando la foto: faltaba un dígito)*. Conviene **seguir capturando `marca`/`modelo`/`serial` por separado** y que el sistema **componga** ese texto al exportar — se gana poder filtrar y buscar sin perder fidelidad al formato. Matiza B-13: el serial no es el identificador, pero sí se registra.
 
 **3. Los valores van en "S/P" (sin precio).** Las columnas *Valor unitario* y *Valor total* aparecen en `S/P` en **todas** las filas, aunque B-17 dijo que sí registran costo y factura. El costo se lleva internamente pero no se declara en este formulario → nueva pregunta **B-69**.
 

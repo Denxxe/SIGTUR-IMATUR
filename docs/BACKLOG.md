@@ -80,28 +80,26 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
-| 🔴 1 | **Inventario digital VIGENTE de la encargada** (la planilla del 2026-10-06 era una muestra antigua) **con el departamento de cada bien** + **B-73/B-75**, que esperan la última codificación de la Alcaldía | Carga de los bienes reales y **encender** la codificación propia (R-12, ya construida: solo hay que escribir el punto de partida y el catálogo en *Bienes → Codificación*) |
-| 🔴 2 | **Formato del Acta de Desincorporación** y **formato del acta de asignación** (B-79 ✅ respondida) | R-2 (imprimible definitivo; el flujo ya funciona) y R-3 |
-| 🔴 3 | **Verificación del total del bono vacacional por la directora de Talento Humano**, dentro del sistema (decidido 2026-10-06) | Confirma o corrige el supuesto del total (mig. 073). Requiere antes los datos de nómina del personal (0.3) y la cesta ticket del mes |
-| 🟡 4 | ✅ ~~Construir la N-E~~ **hecha 2026-10-11 (mig. 086)**. Falta: una **liquidación real ya calculada** por Talento Humano para compararla número a número, y las **tasas de interés de prestaciones del BCV** de cada mes (se cargan en *Nómina → Parámetros*; sin ellas los intereses quedan en 0 con aviso) | Confirma la Liquidación con datos reales |
-| 🔴 5 | **Datos de nómina por trabajador** (ver 0.3) y, cada mes, **cargar a mano la cesta ticket y la tasa de la maqueta** que reciben | Emitir una nómina real |
-| 🟡 6 | **B-74** (secuencia: «se verá en el oficio») · **B-77/B-78-bis** (¿la relación a la Alcaldía desaparece tras la última codificación?) · nuevo formato de relación con código (B-81 ✅) | Detalles del procedimiento nuevo de Bienes |
-| 🟡 7 | **B-83** abogado visador (B-82 ✅ confirmada) | Documento de donación |
-| 🟡 8 | Bono de responsabilidad en **Comisión** (N-2 ✅) | Montos **definitivos** (no bloquean: son parámetros) |
-| 🟡 9 | **R-72** lista oficial de recorridos · **R-71** cuadro de visitantes del custodio · **formato del oficio de permiso** (T-H) · **visto bueno al acta de pago** (R-39) | Cargar el catálogo de Rutas y fijar dos imprimibles provisionales |
-| 🟡 10 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
-| 🟢 11 | **D-FO05** metas anuales · **D-FO08-bis** varios facilitadores · **D-NEW01** oficio de formación · planilla física de asistencia · cifras de dotación **por departamento** (Suficiencia, B-63 ✅ criterio) · **D-OF03** libro de correspondencia · **D-TX03** históricos | Mejoras y reportes puntuales |
+| 🔴 1 | **Inventario digital VIGENTE de la encargada** con el **departamento de cada bien** (hoy hay **23 de ~142**, transcritos de los documentos ya entregados — ver 0.3) + **B-73/B-75**, que esperan la última codificación de la Alcaldía | Carga completa de los bienes y **encender** la codificación propia (R-12, ya construida: solo hay que escribir el punto de partida y el catálogo en *Bienes → Codificación*) |
+| 🔴 2 | **Prueba general de Nómina con Talento Humano** (decidido 2026-10-06: verifica **la directora, dentro del sistema**, en vez de mandarnos cálculos hechos). En la misma sesión ella: **carga los datos de nómina** de algunos trabajadores de distinto tipo · carga la **cesta ticket y la tasa** del mes (de la maqueta) · genera la **quincena** y la compara con su Excel · genera el **bono vacacional** y escribe sus totales (la columna *Diferencia* dice si el sistema acierta) · carga las **tasas de interés del BCV** y **liquida un egresado real** comparando con su cálculo. Lo que no coincida se nos devuelve con trabajador y monto. ⏳ Falta preparar la **guía paso a paso** de la prueba (pospuesta 2026-10-11) | Confirmar quincena, bono vacacional y Liquidación con datos reales, y dejar cargado al personal |
+| 🔴 3 | **Formato del Acta de Desincorporación** y **formato del acta de asignación** (B-79 ✅ respondida) | R-2 (imprimible definitivo; el flujo ya funciona) y R-3 |
+| 🟡 4 | **B-74** (secuencia: «se verá en el oficio») · **B-77/B-78-bis** (¿la relación a la Alcaldía desaparece tras la última codificación?) · nuevo formato de relación con código (B-81 ✅) | Detalles del procedimiento nuevo de Bienes |
+| 🟡 5 | **B-83** abogado visador (B-82 ✅ confirmada) | Documento de donación |
+| 🟡 6 | Bono de responsabilidad en **Comisión** (N-2 ✅) | Montos **definitivos** (no bloquean: son parámetros) |
+| 🟡 7 | **R-72** lista oficial de recorridos · **R-71** cuadro de visitantes del custodio · **formato del oficio de permiso** (T-H) · **visto bueno al acta de pago** (R-39) | Cargar el catálogo de Rutas y fijar dos imprimibles provisionales |
+| 🟡 8 | **Credenciales SMTP** | Recuperación de contraseña por correo (ya construida) |
+| 🟢 9 | **D-FO05** metas anuales · **D-FO08-bis** varios facilitadores · **D-NEW01** oficio de formación · planilla física de asistencia · cifras de dotación **por departamento** (Suficiencia, B-63 ✅ criterio) · **D-OF03** libro de correspondencia · **D-TX03** históricos | Mejoras y reportes puntuales |
 
 ### 0.3 Carga de datos — sin esto el sistema está correcto pero vacío
 
 | Qué | Estado hoy |
 |---|---|
 | Personal real | **3 empleados** de prueba |
-| Datos de nómina por trabajador: sueldo básico, grado de instrucción, **ingreso a la administración pública** (desde 2026-10-04 para **todo** el personal, no solo comisión), carga familiar/hijos, cuenta y banco, tipo de personal | **1 fila** de prueba en `empleado_salarios` |
+| Datos de nómina por trabajador: sueldo básico, grado de instrucción, **ingreso a la administración pública** (desde 2026-10-04 para **todo** el personal, no solo comisión), carga familiar/hijos, cuenta y banco, tipo de personal | **1 fila** de prueba en `empleado_salarios`. **Los carga Talento Humano** en la prueba general (0.2 · 2), no se nos envían |
 | Cesta ticket y tasa del dólar por mes | 1 mes cargado (2026-07, valores de la plantilla) |
-| Tasa de interés de prestaciones del BCV por mes (Liquidación) | **0 meses.** Hacen falta todos los meses que abarquen las liquidaciones reales (desde el ingreso del trabajador) |
+| Tasa de interés de prestaciones del BCV por mes (Liquidación) | **0 meses.** Hacen falta todos los meses que abarquen las liquidaciones reales (desde el ingreso del trabajador). Se cargan en la prueba general (0.2 · 2) |
 | Catálogo de cargos | ✅ **Cerrado (2026-10-06):** se usan los que ya están en el sistema; IMATUR los agrega, modifica o elimina desde *Cargos* si lo necesita. No se pide documento |
-| Los bienes reales | **0**. Se recibió una planilla **antigua** solo como muestra del formato interno (2026-10-06); el inventario vigente sigue pendiente |
+| Los bienes reales | **23 de ~142 (2026-10-11)**, transcritos de los documentos ya entregados: 18 del BM-1 (codificados), 4 del Oficio 179/2026 y la cafetera donada (`database/datos/2026-10-11_bienes_desde_formatos.sql`). Condición, categoría y ubicación de varios quedaron **[por confirmar]**. El inventario vigente completo **sigue pendiente** |
 | Catálogo de rutas real | Pendiente de **R-72** |
 | Coordinador de *Compra de Bienes y Servicios* | **Vacante** → los movimientos de bienes están bloqueados por diseño (B-32) |
 | Datos institucionales de configuración | ✅ Corregidos en la mig. 075 (Presidenta, Resolución 32, Gaceta 87). Falta el visto bueno (**B-82**) y el abogado visador (**B-83**) |
