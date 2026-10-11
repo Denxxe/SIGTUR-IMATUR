@@ -166,13 +166,16 @@ El **Acta de Desincorporación agrupa varios bienes** (así está hecha). Lo de 
 
 **4-bis. 🟡 El acta de incorporación de bien (B-84)**
 
-¿Nos pueden pasar una (foto o escaneado)? Y para no duplicar trabajo: ¿es la **misma** que el acta de
-asignación («acta de encargado») o es **otro** documento?
+Hoy el sistema **no la tiene**: cuando entra un bien se registra su ficha, se adjunta la factura y se
+emite la relación de bienes nuevos (que agrupa varios bienes), pero no un acta por bien. ¿Nos pueden
+pasar una (foto o escaneado)? Y para no duplicar trabajo: ¿es la **misma** que el acta de asignación
+(«acta de encargado») o es **otro** documento? ¿Es la que **reemplaza a la relación** cuando ya no se
+envíe nada a la Alcaldía?
 
-**5. 🟡 Reglas de la secuencia (B-74)**
+**5. ✅ Reglas de la secuencia (B-74)** — *resuelta*
 
-¿Una sola secuencia para todo IMATUR o una por grupo-subgrupo-sección? ¿Qué pasa después del 999?
-*(Nos dijeron que se verá en el oficio: cuando lo tengan, nos basta con una foto.)*
+**Una sola numeración** para todo IMATUR. Si algún día se pasa del 999, el sistema permite subir a 4
+dígitos desde la pantalla de Codificación.
 
 **6. ✅ El monto de la relación (B-77)** — *resuelta*
 

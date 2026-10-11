@@ -18,6 +18,15 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 (g) — Bienes: B-74 cerrada · B-84 precisada (sin código)
+
+- **B-74: una sola numeración** para todo IMATUR. Ya era el valor por defecto de la codificación propia
+  (`bienes_secuencia_por_clasificacion = 0`); el parámetro se conserva.
+- **B-84 (acta de incorporación, una por bien): el sistema no la tiene.** Al entrar un bien hoy hay
+  alta, factura adjunta y la relación de bienes nuevos, que agrupa varios. Hipótesis a confirmar con
+  IMATUR: es el documento interno que reemplaza a la relación cuando ya no se envíe nada a la Alcaldía
+  (B-78-bis). Se construye cuando llegue su formato.
+
 ### 2026-10-11 (f) — Oficio de formación numerado (mig. 088) · acta de pago aprobada · B-77
 
 - **D-NEW01: sí quieren el oficio de formación numerado.** Construido con su correlativo
