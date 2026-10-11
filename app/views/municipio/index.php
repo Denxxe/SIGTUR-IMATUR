@@ -39,11 +39,11 @@
                             <?php if (!empty($mun->creado_por)): ?>
                                 <span class="sig-badge sig-badge--neutral"><i class="bi bi-person"></i> <?php echo htmlspecialchars($mun->creado_por); ?></span>
                             <?php else: ?>
-                                <span style="color:var(--text-tertiary);font-style:italic;">Sistema</span>
+                                <span class="u-c-text-tertiary u-fst-italic">Sistema</span>
                             <?php endif; ?>
                         </td>
                         <td class="col-actions">
-                            <button class="row-action row-action--edit" onclick='editarMunicipio(<?php echo json_encode($mun); ?>)'>
+                            <button class="row-action row-action--edit" onclick='editarMunicipio(<?php echo json_encode($mun, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <a href="<?php echo URL_ROOT; ?>/municipio/delete/<?php echo $mun->id; ?>" class="row-action row-action--del delete-btn">

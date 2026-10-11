@@ -1,7 +1,7 @@
 <?php require_once '../app/views/inc/header.php'; ?>
 
 <div class="page__head anim-slide-up" style="justify-content:center; text-align:center; padding-top:var(--sp-12);">
-    <div class="page__title-block" style="align-items:center;">
+    <div class="page__title-block u-ai-center">
         <div class="display-1" style="font-size:80px; margin-bottom:var(--sp-4);">🚫</div>
         <h1 class="page__title text-danger" style="font-size:32px;"><?php echo $data['titulo'] ?? 'Acceso Restringido'; ?></h1>
         <p class="page__subtitle" style="max-width:500px; margin:0 auto;"><?php echo $data['mensaje'] ?? 'No posee los permisos necesarios para visualizar este módulo. Si cree que esto es un error, contacte al administrador del sistema.'; ?></p>

@@ -44,10 +44,10 @@ function asisUrl(array $f, int $p): string {
     foreach ($tiles as $t): ?>
         <div class="col">
             <div class="sig-card" style="border-top:3px solid <?php echo $t[2]; ?>;">
-                <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
+                <div class="sig-card__body u-p-sp-4 u-ta-center">
                     <i class="bi <?php echo $t[3]; ?>" style="font-size:1.3rem;color:<?php echo $t[2]; ?>"></i>
-                    <div style="font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1.1;margin-top:4px;"><?php echo (int)$t[1]; ?></div>
-                    <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;"><?php echo $t[0]; ?></div>
+                    <div class="u-fs-1_8rem u-fw-800 u-c-text-primary u-lh-1_1 u-mt-4px"><?php echo (int)$t[1]; ?></div>
+                    <div class="u-fs-11px u-c-text-secondary u-tt-uppercase u-ls-_04em"><?php echo $t[0]; ?></div>
                 </div>
             </div>
         </div>
@@ -66,9 +66,9 @@ function asisUrl(array $f, int $p): string {
             </select>
             <button type="submit" class="btn-sig btn-sig--primary" style="height:40px"><i class="bi bi-check2-circle"></i> MARCAR</button>
             <span class="sig-badge sig-badge--neutral" id="clock" style="font-size:14px;padding:6px 14px">--:--:--</span>
-            <span style="font-size:11px;color:var(--text-tertiary)">Tolerancia de puntualidad: <?php echo $tol; ?> min</span>
+            <span class="u-fs-11px u-c-text-tertiary">Tolerancia de puntualidad: <?php echo $tol; ?> min</span>
             <div id="motivoTempranoWrap" style="display:none;flex:1 1 100%;">
-                <label class="sig-field__label" style="color:var(--danger-600)" for="motivo_temprano">
+                <label class="sig-field__label u-c-danger-600" for="motivo_temprano">
                     <i class="bi bi-exclamation-triangle-fill"></i> Sale antes de su horario (<span id="motivoHoraProgramada"></span>) — indique el motivo:
                 </label>
                 <textarea name="motivo_temprano" id="motivo_temprano" class="sig-input" rows="2" placeholder="Motivo de la salida anticipada..."></textarea>
@@ -81,16 +81,16 @@ function asisUrl(array $f, int $p): string {
 <div class="row g-3 anim-slide-up" style="margin-bottom:var(--sp-5)">
     <div class="col-md-6">
         <div class="sig-table-wrap">
-            <div style="padding:var(--sp-3) var(--sp-5);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted)">
-                <strong><i class="bi bi-person-dash" style="color:#D97706"></i> Ausentes hoy (<?php echo count($data['ausentes'] ?? []); ?>)</strong>
+            <div class="u-p-sp-3-sp-5 u-bdb-1px-solid-border-subtle u-bg-bg-muted">
+                <strong><i class="bi bi-person-dash u-c-xD97706"></i> Ausentes hoy (<?php echo count($data['ausentes'] ?? []); ?>)</strong>
             </div>
-            <div style="max-height:220px;overflow:auto;padding:var(--sp-2) var(--sp-4)">
+            <div class="u-maxhei-220px u-ov-auto" style="padding:var(--sp-2) var(--sp-4);">
                 <?php if (empty($data['ausentes'])): ?>
-                    <p style="color:var(--text-secondary);font-size:13px;margin:var(--sp-3) 0">Sin ausentes registrados.</p>
+                    <p class="u-c-text-secondary u-fs-13px u-m-sp-3-0">Sin ausentes registrados.</p>
                 <?php else: foreach ($data['ausentes'] as $e): ?>
-                    <div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
+                    <div class="u-bdb-1px-solid-border-subtle u-fs-13px" style="padding:6px 0;">
                         <?php echo htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')); ?>
-                        <span style="color:var(--text-tertiary)">· <?php echo htmlspecialchars($e->departamento ?? ''); ?></span>
+                        <span class="u-c-text-tertiary">· <?php echo htmlspecialchars($e->departamento ?? ''); ?></span>
                     </div>
                 <?php endforeach; endif; ?>
             </div>
@@ -98,15 +98,15 @@ function asisUrl(array $f, int $p): string {
     </div>
     <div class="col-md-6">
         <div class="sig-table-wrap">
-            <div style="padding:var(--sp-3) var(--sp-5);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted)">
-                <strong><i class="bi bi-geo-alt" style="color:#7C3AED"></i> En actividad hoy (<?php echo count($data['actividadDetalle'] ?? []); ?>)</strong>
+            <div class="u-p-sp-3-sp-5 u-bdb-1px-solid-border-subtle u-bg-bg-muted">
+                <strong><i class="bi bi-geo-alt u-c-x7C3AED"></i> En actividad hoy (<?php echo count($data['actividadDetalle'] ?? []); ?>)</strong>
             </div>
-            <div style="max-height:220px;overflow:auto;padding:var(--sp-2) var(--sp-4)">
+            <div class="u-maxhei-220px u-ov-auto" style="padding:var(--sp-2) var(--sp-4);">
                 <?php if (empty($data['actividadDetalle'])): ?>
-                    <p style="color:var(--text-secondary);font-size:13px;margin:var(--sp-3) 0">Nadie en ruta o formación externa hoy.</p>
+                    <p class="u-c-text-secondary u-fs-13px u-m-sp-3-0">Nadie en ruta o formación externa hoy.</p>
                 <?php else: foreach ($data['actividadDetalle'] as $e): ?>
-                    <div style="padding:6px 0;border-bottom:1px solid var(--border-subtle);font-size:13px">
-                        <i class="bi bi-airplane" style="color:#7C3AED"></i>
+                    <div class="u-bdb-1px-solid-border-subtle u-fs-13px" style="padding:6px 0;">
+                        <i class="bi bi-airplane u-c-x7C3AED"></i>
                         <?php echo htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')); ?>
                     </div>
                 <?php endforeach; endif; ?>
@@ -117,8 +117,8 @@ function asisUrl(array $f, int $p): string {
 
 <!-- Historial de marcajes (paginado en servidor) -->
 <div class="sig-table-wrap anim-slide-up">
-    <div style="padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--border-subtle);background:var(--bg-muted);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;">
-        <strong style="font-size:var(--fs-md);color:var(--text-primary)">Historial de marcajes</strong>
+    <div class="u-p-sp-3-sp-4 u-bdb-1px-solid-border-subtle u-bg-bg-muted u-ai-center u-jc-space-between u-gap-sp-3 u-fwr-wrap" style="display:flex;">
+        <strong class="u-c-text-primary" style="font-size:var(--fs-md);">Historial de marcajes</strong>
         <form method="GET" action="<?php echo URL_ROOT; ?>/asistencias/index" style="display:flex;gap:var(--sp-2);align-items:flex-end;flex-wrap:wrap;">
             <div class="tabla-search" style="flex:0 0 auto;">
                 <i class="bi bi-search"></i>
@@ -162,7 +162,7 @@ function asisUrl(array $f, int $p): string {
                     </td>
                     <td><?php echo $puntualidad($as->minutos_tarde ?? null); ?></td>
                     <td><?php echo isset($as->horas) && $as->horas !== null ? number_format((float)$as->horas, 2) . ' h' : '—'; ?></td>
-                    <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo htmlspecialchars($as->observacion ?? ''); ?></td>
+                    <td class="u-fs-12_5px u-c-text-secondary"><?php echo htmlspecialchars($as->observacion ?? ''); ?></td>
                     <td class="col-actions">
                         <button type="button" class="row-action row-action--view" data-bs-toggle="modal" data-bs-target="#detAsis<?php echo $as->id; ?>" title="Ver detalles">
                             <i class="bi bi-eye"></i>
@@ -173,10 +173,10 @@ function asisUrl(array $f, int $p): string {
         </tbody>
     </table>
     <?php if ($totalReg > 0): ?>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:12px 16px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;">
+    <div class="u-ai-center u-jc-space-between u-gap-sp-3 u-p-12px-16px u-bdt-1px-solid-border-subtle u-fwr-wrap" style="display:flex;">
         <span class="tabla-count">Mostrando <?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($totalReg, $pagina*$porPagina); ?> de <?php echo number_format($totalReg); ?></span>
         <?php if ($totalPaginas > 1): ?>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="u-ai-center u-gap-8px" style="display:flex;">
             <a class="tabla-pager__btn" href="<?php echo asisUrl($flt, max(1,$pagina-1)); ?>" <?php echo $pagina<=1?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-left"></i></a>
             <span class="tabla-pager__info">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
             <a class="tabla-pager__btn" href="<?php echo asisUrl($flt, min($totalPaginas,$pagina+1)); ?>" <?php echo $pagina>=$totalPaginas?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-right"></i></a>
@@ -196,7 +196,7 @@ function asisUrl(array $f, int $p): string {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <table class="audit-kv" style="width:100%">
+                <table class="audit-kv u-w-100pct">
                     <tr><th>Empleado</th><td><?php echo htmlspecialchars($as->nombre . ' ' . $as->apellido); ?></td></tr>
                     <tr><th>Cédula</th><td><?php echo htmlspecialchars($as->cedula ?? '—'); ?></td></tr>
                     <tr><th>Expediente</th><td><?php echo htmlspecialchars($as->nro_expediente ?? '—'); ?></td></tr>

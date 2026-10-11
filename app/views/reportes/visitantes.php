@@ -19,7 +19,7 @@
             'buscar'       => $data['filtro_buscar'] ?? '',
         ]));
         ?>
-        <div style="display:flex;gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarVisitantesCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -35,7 +35,7 @@
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/visitantes" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
@@ -52,8 +52,8 @@
             <div class="col-md-3">
                 <div class="sig-field">
                     <label class="sig-field__label" for="buscar">Buscar visitante</label>
-                    <div style="position:relative;">
-                        <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;pointer-events:none;"></i>
+                    <div class="u-positi-relative">
+                        <i class="bi bi-search u-positi-absolute u-top-50pct u-transf-translateY--50pct u-c-text-tertiary u-fs-13px u-pointe-none" style="left:10px;"></i>
                         <input id="buscar" type="text" name="buscar" class="sig-input" style="padding-left:32px;" placeholder="Nombre, apellido o cédula..." value="<?php echo htmlspecialchars($data['filtro_buscar'] ?? ''); ?>">
                     </div>
                 </div>
@@ -75,8 +75,8 @@
                 </div>
             </div>
             <div class="col-md-2">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                     <?php
@@ -107,39 +107,39 @@ foreach ($data['registros'] ?? [] as $r) {
 <div class="row g-3 mb-5 anim-slide-up">
     <div class="col-6 col-md-3">
         <div class="sig-card" style="border-bottom:3px solid var(--brand-600);">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Total Visitas</div>
-                <div style="font-size:2rem;font-weight:900;color:var(--brand-600);"><?php echo number_format($totalV); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">en el período seleccionado</div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-0_67rem u-fw-700 u-tt-uppercase u-ls-_05em u-c-text-tertiary u-mb-4px">Total Visitas</div>
+                <div class="u-fs-2rem u-fw-900 u-c-brand-600"><?php echo number_format($totalV); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">en el período seleccionado</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="sig-card" style="border-bottom:3px solid #059669;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Visitantes Únicos</div>
-                <div style="font-size:2rem;font-weight:900;color:#059669;"><?php echo number_format($unicosV); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">personas distintas</div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-0_67rem u-fw-700 u-tt-uppercase u-ls-_05em u-c-text-tertiary u-mb-4px">Visitantes Únicos</div>
+                <div class="u-fs-2rem u-fw-900 u-c-x059669"><?php echo number_format($unicosV); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">personas distintas</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="sig-card" style="border-bottom:3px solid #3B82F6;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Distribución Género</div>
-                <div style="display:flex;justify-content:center;gap:var(--sp-4);margin-top:4px;">
-                    <div><span style="font-size:1.4rem;font-weight:900;color:#3B82F6;"><?php echo $masc; ?></span><br><span style="font-size:10px;color:var(--text-tertiary);">Masc.</span></div>
-                    <div><span style="font-size:1.4rem;font-weight:900;color:#EC4899;"><?php echo $fem; ?></span><br><span style="font-size:10px;color:var(--text-tertiary);">Fem.</span></div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-0_67rem u-fw-700 u-tt-uppercase u-ls-_05em u-c-text-tertiary u-mb-4px">Distribución Género</div>
+                <div class="u-jc-center u-gap-sp-4 u-mt-4px" style="display:flex;">
+                    <div><span class="u-fs-1_4rem u-fw-900 u-c-x3B82F6"><?php echo $masc; ?></span><br><span class="u-fs-10px u-c-text-tertiary">Masc.</span></div>
+                    <div><span class="u-fs-1_4rem u-fw-900" style="color:#EC4899;"><?php echo $fem; ?></span><br><span class="u-fs-10px u-c-text-tertiary">Fem.</span></div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="sig-card" style="border-bottom:3px solid #7C3AED;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Con Datos de Contacto</div>
-                <div style="font-size:2rem;font-weight:900;color:#7C3AED;"><?php echo $conContacto; ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">tienen teléfono o correo</div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-0_67rem u-fw-700 u-tt-uppercase u-ls-_05em u-c-text-tertiary u-mb-4px">Con Datos de Contacto</div>
+                <div class="u-fs-2rem u-fw-900 u-c-x7C3AED"><?php echo $conContacto; ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">tienen teléfono o correo</div>
             </div>
         </div>
     </div>
@@ -164,7 +164,7 @@ foreach ($data['registros'] ?? [] as $r) {
             <?php if (empty($data['registros'])): ?>
                 <tr>
                     <td colspan="8" class="sig-table-empty">
-                        <i class="bi bi-search" style="opacity:.5;margin-right:6px;"></i>
+                        <i class="bi bi-search u-mr-6px" style="opacity:.5;"></i>
                         Sin registros en el rango y filtros seleccionados.
                     </td>
                 </tr>
@@ -173,23 +173,23 @@ foreach ($data['registros'] ?? [] as $r) {
                     $generoLabel = match($r->genero ?? '') { 'M' => ['Masc.','#3B82F6'], 'F' => ['Fem.','#EC4899'], default => null };
                 ?>
                     <tr>
-                        <td style="white-space:nowrap;">
-                            <div style="font-weight:700;font-size:13px;"><?php echo date('d/m/Y', strtotime($r->fecha ?? $r->hora_entrada)); ?></div>
-                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);font-size:10px;margin-top:3px;display:inline-block;">
+                        <td class="u-ws-nowrap">
+                            <div class="u-fw-700 u-fs-13px"><?php echo date('d/m/Y', strtotime($r->fecha ?? $r->hora_entrada)); ?></div>
+                            <span class="sig-badge sig-badge--success u-ff-font-mono u-fs-10px u-mt-3px" style="display:inline-block;">
                                 <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_entrada)); ?>
                             </span>
                         </td>
-                        <td style="white-space:nowrap;">
+                        <td class="u-ws-nowrap">
                             <?php if (!empty($r->hora_salida)): ?>
-                                <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono);font-size:10px;display:inline-block;">
+                                <span class="sig-badge sig-badge--danger u-ff-font-mono u-fs-10px" style="display:inline-block;">
                                     <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_salida)); ?>
                                 </span>
                             <?php else: ?>
-                                <span class="sig-badge sig-badge--warning" style="font-size:10px;">EN CURSO</span>
+                                <span class="sig-badge sig-badge--warning u-fs-10px">EN CURSO</span>
                             <?php endif; ?>
                         </td>
                         <td>
-                            <div style="display:flex;flex-direction:column;gap:2px;">
+                            <div class="u-fd-column u-gap-2px" style="display:flex;">
                                 <span class="cell-strong"><?php echo htmlspecialchars(trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')) ?: 'Sin nombre'); ?></span>
                                 <span class="cell-id"><?php echo htmlspecialchars($r->cedula ?? 'S/C'); ?></span>
                                 <?php if ($generoLabel): ?>
@@ -197,23 +197,23 @@ foreach ($data['registros'] ?? [] as $r) {
                                 <?php endif; ?>
                             </div>
                         </td>
-                        <td style="font-size:12px;">
-                            <div style="display:flex;flex-direction:column;gap:3px;">
+                        <td class="u-fs-12px">
+                            <div class="u-fd-column" style="display:flex; gap:3px;">
                                 <?php if (!empty($r->telefono)): ?>
-                                <span><i class="bi bi-telephone" style="color:var(--text-tertiary);margin-right:4px;"></i><?php echo htmlspecialchars($r->telefono); ?></span>
+                                <span><i class="bi bi-telephone u-c-text-tertiary u-mr-4px"></i><?php echo htmlspecialchars($r->telefono); ?></span>
                                 <?php endif; ?>
                                 <?php if (!empty($r->correo)): ?>
-                                <span style="word-break:break-all;"><i class="bi bi-envelope" style="color:var(--text-tertiary);margin-right:4px;"></i><?php echo htmlspecialchars($r->correo); ?></span>
+                                <span class="u-wb-break-all"><i class="bi bi-envelope u-c-text-tertiary u-mr-4px"></i><?php echo htmlspecialchars($r->correo); ?></span>
                                 <?php endif; ?>
                                 <?php if (empty($r->telefono) && empty($r->correo)): ?>
-                                <span style="color:var(--text-tertiary);font-style:italic;">—</span>
+                                <span class="u-c-text-tertiary u-fst-italic">—</span>
                                 <?php endif; ?>
                             </div>
                         </td>
-                        <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->procedencia ?? '—'); ?></td>
-                        <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars(trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '—'); ?></td>
-                        <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->motivo ?? '—'); ?></td>
-                        <td style="font-size:11px;color:var(--text-tertiary);"><?php echo htmlspecialchars($r->observaciones ?? '—'); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($r->procedencia ?? '—'); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars(trim(($r->emp_nombre ?? '') . ' ' . ($r->emp_apellido ?? '')) ?: '—'); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($r->motivo ?? '—'); ?></td>
+                        <td class="u-fs-11px u-c-text-tertiary"><?php echo htmlspecialchars($r->observaciones ?? '—'); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

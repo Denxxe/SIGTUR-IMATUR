@@ -43,10 +43,10 @@ $tipoBadge = function ($t) {
                 <tr>
                     <td><?php echo $tipoBadge($dpto->tipo_unidad); ?></td>
                     <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
-                        <?php echo ($pad > 0 ? '<span data-no-export style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($dpto->nombre); ?>
+                        <?php echo ($pad > 0 ? '<span class="u-c-text-secondary" data-no-export>└ </span>' : ''); ?><?php echo htmlspecialchars($dpto->nombre); ?>
                     </td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($dpto->padre ?? '—'); ?></td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($dpto->descripcion ?? ''); ?></td>
+                    <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($dpto->padre ?? '—'); ?></td>
+                    <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($dpto->descripcion ?? ''); ?></td>
                     <td class="col-actions">
                         <button class="row-action row-action--edit" onclick='editarDpto(<?php echo htmlspecialchars(json_encode($dpto), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                         <a href="<?php echo URL_ROOT; ?>/departamentos/delete/<?php echo $dpto->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>

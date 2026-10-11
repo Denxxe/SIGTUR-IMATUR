@@ -17,14 +17,14 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
 
 <!-- Filtros -->
 <form method="GET" action="<?php echo URL_ROOT; ?>/permisos/index" class="anim-slide-up" style="display:flex;gap:var(--sp-3);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap">
-    <div class="sig-field" style="margin:0"><label class="sig-field__label" for="categoria">Categoría</label>
+    <div class="sig-field u-m-0"><label class="sig-field__label" for="categoria">Categoría</label>
         <select id="categoria" name="categoria" class="sig-select">
             <option value="">Todas</option>
             <?php foreach (PermisoLaboral::CATEGORIAS as $c): ?>
                 <option value="<?php echo $c; ?>" <?php echo $flt['categoria']===$c?'selected':''; ?>><?php echo $c; ?></option>
             <?php endforeach; ?>
         </select></div>
-    <div class="sig-field" style="margin:0"><label class="sig-field__label" for="estado">Estado</label>
+    <div class="sig-field u-m-0"><label class="sig-field__label" for="estado">Estado</label>
         <select id="estado" name="estado" class="sig-select">
             <option value="">Todos</option>
             <?php foreach (PermisoLaboral::ESTADOS as $es): ?>
@@ -50,10 +50,10 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($pl->nombre . ' ' . $pl->apellido); ?></td>
                     <td><span class="sig-badge <?php echo $pl->categoria==='Reposo'?'sig-badge--danger':'sig-badge--info'; ?>"><?php echo htmlspecialchars($pl->categoria ?? '—'); ?></span></td>
-                    <td style="font-size:13px"><?php echo htmlspecialchars($pl->tipo_permiso); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($pl->tipo_permiso); ?></td>
                     <td><?php echo $ff($pl->fecha_inicio); ?></td>
                     <td><?php echo $ff($pl->fecha_fin); ?></td>
-                    <td style="font-size:13px"><?php echo htmlspecialchars($pl->duracion ?? ($pl->dias_solicitados . ' días')); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($pl->duracion ?? ($pl->dias_solicitados . ' días')); ?></td>
                     <td><span class="sig-badge <?php echo $pl->estatus_periodo==='En curso'?'sig-badge--info':'sig-badge--neutral'; ?>"><?php echo $pl->estatus_periodo; ?></span></td>
                     <td><span class="sig-badge <?php echo $estadoBadge[$pl->estado] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($pl->estado); ?></span></td>
                     <td class="col-actions">
@@ -98,7 +98,7 @@ $flt = $data['filtros'] ?? ['estado'=>'','categoria'=>''];
                     <div class="col-6"><div class="sig-field"><label class="sig-field__label" for="pl_fecha_fin">Hasta <span class="req">*</span></label>
                         <input type="date" name="fecha_fin" id="pl_fecha_fin" class="sig-input" required value="<?php echo date('Y-m-d'); ?>" onchange="plCalcularDuracion()"></div></div>
                 </div>
-                <div class="sig-field mb-3"><label class="sig-field__label" for="pl_duracion">Duración <small style="color:var(--text-secondary)">(calculada automáticamente; puede ajustarla, ej. "72 horas", "6 meses")</small></label>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="pl_duracion">Duración <small class="u-c-text-secondary">(calculada automáticamente; puede ajustarla, ej. "72 horas", "6 meses")</small></label>
                     <input type="text" name="duracion" id="pl_duracion" class="sig-input" oninput="pl_duracionManual = true"></div>
                 <div class="sig-field"><label class="sig-field__label" for="motivo">Motivo / observación</label>
                     <textarea id="motivo" name="motivo" class="sig-textarea" rows="2"></textarea></div>

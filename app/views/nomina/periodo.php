@@ -30,7 +30,7 @@ $delta = $totConf - $totCalc;
         <p class="page__subtitle">
             Corte <?php echo date('d/m/Y', strtotime($periodo->fecha_corte)); ?> ·
             cesta ticket <?php echo $fmt($periodo->monto_cesta_ticket ?? 0); ?>
-            <br><span style="font-size:12px;">
+            <br><span class="u-fs-12px">
                 Las primas, el sueldo diario y la alícuota los <strong>calcula</strong> el sistema con el
                 mismo motor de la nómina quincenal. El <strong>total</strong> sigue siendo el que
                 confirma Talento Humano.
@@ -62,7 +62,7 @@ $delta = $totConf - $totCalc;
     </div>
 </div>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
     <i class="bi bi-question-circle"></i>
     <div>
         <strong>La fórmula del total todavía no está confirmada.</strong>
@@ -76,14 +76,14 @@ $delta = $totConf - $totCalc;
 </div>
 
 <?php if (!empty($avisos)): ?>
-<div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
         <strong><?php echo count($avisos); ?> trabajador(es) con datos sin resolver.</strong>
         Corrija la ficha y use <em>Recalcular</em> antes de cerrar.
-        <ul style="margin:8px 0 0;padding-left:18px;">
+        <ul class="u-m-8px-0-0 u-pl-18px">
             <?php foreach ($avisos as $a): ?>
-                <li style="margin-bottom:4px;">
+                <li class="u-mb-4px">
                     <strong><?php echo htmlspecialchars(trim($a->apellido . ' ' . $a->nombre)); ?></strong>
                     (<?php echo htmlspecialchars($a->cedula); ?>) — <?php echo htmlspecialchars($a->advertencias); ?>
                 </li>
@@ -101,7 +101,7 @@ $delta = $totConf - $totCalc;
             <span class="sig-badge sig-badge--warning"><?php echo $sinConfirmar; ?> sin confirmar</span>
         <?php endif; ?>
     </div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export>
             <table class="sig-table">
                 <thead>
@@ -121,7 +121,7 @@ $delta = $totConf - $totCalc;
                         <td class="cell-strong"><?php echo htmlspecialchars($tipo); ?></td>
                         <td class="text-center"><?php echo (int)$r['cantidad']; ?></td>
                         <td class="text-end u-num"><?php echo $fmt($r['total_calculado']); ?></td>
-                        <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
+                        <td class="u-ta-right u-fvn-tabular-nums u-fw-700">
                             <?php echo $r['sin_confirmar'] === $r['cantidad'] && $r['cantidad'] > 0 ? '—' : $fmt($r['total']); ?>
                         </td>
                         <td style="text-align:right;font-variant-numeric:tabular-nums;<?php echo abs($d) > 0.01 ? 'color:var(--warning-600);' : ''; ?>">
@@ -129,7 +129,7 @@ $delta = $totConf - $totCalc;
                         </td>
                     </tr>
                     <?php endforeach; ?>
-                    <tr style="border-top:2px solid var(--border-subtle);font-weight:700;">
+                    <tr class="u-bdt-2px-solid-border-subtle u-fw-700">
                         <td>TOTAL</td>
                         <td class="text-center"><?php echo $cantidad; ?></td>
                         <td class="text-end u-num"><?php echo $fmt($totCalc); ?></td>
@@ -147,9 +147,9 @@ $delta = $totConf - $totCalc;
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">
         <div class="sig-card__title"><i class="bi bi-people"></i> <?php echo htmlspecialchars($tipo); ?></div>
-        <div style="font-size:12px;color:var(--text-tertiary);"><?php echo count($filas); ?> trabajador(es)</div>
+        <div class="u-fs-12px u-c-text-tertiary"><?php echo count($filas); ?> trabajador(es)</div>
     </div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export style="overflow-x:auto;">
             <table class="sig-table" style="min-width:1150px;">
                 <thead>
@@ -184,37 +184,37 @@ $delta = $totConf - $totCalc;
                                     <i class="bi bi-exclamation-triangle" style="color:var(--warning-600);"
                                        title="<?php echo htmlspecialchars($f->advertencias); ?>"></i>
                                 <?php endif; ?>
-                                <br><small style="color:var(--text-tertiary);"><?php echo htmlspecialchars($f->cargo ?? ''); ?></small>
+                                <br><small class="u-c-text-tertiary"><?php echo htmlspecialchars($f->cargo ?? ''); ?></small>
                             </td>
-                            <td style="text-align:center;font-weight:600;"><?php echo (int)$f->dias_vacaciones; ?></td>
+                            <td class="u-ta-center u-fw-600"><?php echo (int)$f->dias_vacaciones; ?></td>
                             <td>
                                 <?php if (!empty($f->codigo_grado)): ?>
                                     <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($f->codigo_grado); ?></span>
-                                    <small style="color:var(--text-tertiary);"><?php echo number_format((float)$f->pct_profesionalizacion, 0); ?>%</small>
+                                    <small class="u-c-text-tertiary"><?php echo number_format((float)$f->pct_profesionalizacion, 0); ?>%</small>
                                 <?php else: ?>
-                                    <span style="color:var(--text-tertiary);font-style:italic;">sin grado</span>
+                                    <span class="u-c-text-tertiary u-fst-italic">sin grado</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-end u-num"><?php echo $fmt($f->sueldo_base_quincenal); ?></td>
                             <td class="text-end u-num"><?php echo $fmt($f->prima_profesional); ?></td>
                             <td class="text-end u-num">
                                 <?php echo $fmt($f->prima_antiguedad); ?>
-                                <br><small style="color:var(--text-tertiary);"><?php echo (int)$f->anios_administracion; ?>a · <?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
+                                <br><small class="u-c-text-tertiary"><?php echo (int)$f->anios_administracion; ?>a · <?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
                             </td>
                             <td class="text-end u-num"><?php echo $fmt($f->bono_transporte); ?></td>
                             <td class="text-end u-num">
                                 <?php echo $fmt($f->prima_por_hijo); ?>
-                                <?php if ((int)$f->n_hijos > 0): ?><br><small style="color:var(--text-tertiary);"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
+                                <?php if ((int)$f->n_hijos > 0): ?><br><small class="u-c-text-tertiary"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
                             </td>
                             <td class="text-end u-num"><?php echo $fmt($f->sueldo_normal_diario); ?></td>
                             <td class="text-end u-num"><?php echo $fmt($f->alicuotas); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-secondary);"><?php echo $tCalc !== null ? $fmt($tCalc) : '—'; ?></td>
+                            <td class="u-ta-right u-fvn-tabular-nums u-c-text-secondary"><?php echo $tCalc !== null ? $fmt($tCalc) : '—'; ?></td>
 
                             <?php if ($cerrado): ?>
-                                <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
+                                <td class="u-ta-right u-fvn-tabular-nums u-fw-700">
                                     <?php echo $tConf !== null ? $fmt($tConf) : '—'; ?>
                                     <?php if ($dif !== null && abs($dif) > 0.01): ?>
-                                        <br><small style="color:var(--warning-600);">dif. <?php echo $fmt($dif); ?></small>
+                                        <br><small class="u-c-warning-600">dif. <?php echo $fmt($dif); ?></small>
                                     <?php endif; ?>
                                 </td>
                             <?php else: ?>
@@ -233,7 +233,7 @@ $delta = $totConf - $totCalc;
                                                placeholder="<?php echo $tCalc !== null ? $fmt($tCalc) : 'Capturar'; ?>">
                                     </form>
                                     <?php if ($dif !== null && abs($dif) > 0.01): ?>
-                                        <small style="color:var(--warning-600);">dif. <?php echo $fmt($dif); ?></small>
+                                        <small class="u-c-warning-600">dif. <?php echo $fmt($dif); ?></small>
                                     <?php endif; ?>
                                 </td>
                                 <td class="col-actions">

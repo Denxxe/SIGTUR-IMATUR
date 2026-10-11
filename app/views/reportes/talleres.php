@@ -20,7 +20,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
         <p class="page__subtitle">Estadísticas de actividades formativas, demografía de participantes y ocupación.</p>
     </div>
     <div class="page__actions">
-        <div style="display:flex;gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarTalleresCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -34,7 +34,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/talleres" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
@@ -77,8 +77,8 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
                 </div>
             </div>
             <div class="col-md-2">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;background:var(--accent-600);">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px" style="background:var(--accent-600);">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                     <?php if ($hayFiltro): ?>
@@ -106,8 +106,8 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
     foreach ($kpisDef as $k): ?>
     <div class="col-md-2 col-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $k['color']; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
-                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;"><?php echo $k['label']; ?></div>
+            <div class="sig-card__body u-ta-center u-p-sp-4-sp-3">
+                <div class="u-fs-9px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-2px"><?php echo $k['label']; ?></div>
                 <div style="font-size:26px;font-weight:900;color:<?php echo $k['txt']; ?>;"><?php echo number_format($k['val']); ?></div>
             </div>
         </div>
@@ -122,15 +122,15 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-pie-chart" style="color:var(--accent-500);"></i> Distribución por Estado</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresEstado"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartTalleresEstado"></div></div>
         </div>
     </div>
     <div class="col-md-7">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-bar-chart" style="color:var(--brand-500);"></i> Inscritos vs Cupo (primeros 8)</div>
+                <div class="sig-card__title"><i class="bi bi-bar-chart u-c-brand-500"></i> Inscritos vs Cupo (primeros 8)</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresCupo"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartTalleresCupo"></div></div>
         </div>
     </div>
 </div>
@@ -164,37 +164,37 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
                 ?>
                 <tr>
                     <td>
-                        <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div class="u-fd-column u-gap-2px" style="display:flex;">
                             <span class="cell-strong"><?php echo htmlspecialchars($t->nombre ?? ''); ?></span>
-                            <span style="font-size:11px;color:var(--text-tertiary);"><i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($t->sede ?: 'Sin sede'); ?></span>
+                            <span class="u-fs-11px u-c-text-tertiary"><i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($t->sede ?: 'Sin sede'); ?></span>
                         </div>
                     </td>
                     <td>
-                        <div style="display:flex;flex-direction:column;gap:2px;">
+                        <div class="u-fd-column u-gap-2px" style="display:flex;">
                             <span class="sig-badge sig-badge--sm sig-badge--neutral"><?php echo htmlspecialchars($t->tipo_actividad ?? 'Taller'); ?></span>
-                            <span style="font-size:10px;color:var(--text-tertiary);"><?php echo ($t->es_interna ?? false) ? '🏛 Interna' : '🌐 Externa'; ?></span>
+                            <span class="u-fs-10px u-c-text-tertiary"><?php echo ($t->es_interna ?? false) ? '🏛 Interna' : '🌐 Externa'; ?></span>
                         </div>
                     </td>
-                    <td style="font-size:13px;font-weight:600;color:var(--text-secondary);"><?php echo htmlspecialchars(($t->facilitador_nombre ?? '') . ' ' . ($t->facilitador_apellido ?? '')); ?></td>
-                    <td style="font-size:12px;color:var(--text-tertiary);white-space:nowrap;"><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'now')); ?></td>
+                    <td class="u-fs-13px u-fw-600 u-c-text-secondary"><?php echo htmlspecialchars(($t->facilitador_nombre ?? '') . ' ' . ($t->facilitador_apellido ?? '')); ?></td>
+                    <td class="u-fs-12px u-c-text-tertiary u-ws-nowrap"><?php echo date('d/m/Y', strtotime($t->fecha_inicio ?? 'now')); ?></td>
                     <td class="text-center">
                         <?php if (isset($t->total_atendidas) && $t->total_atendidas > 0): ?>
-                            <div style="display:flex;justify-content:center;gap:var(--sp-3);">
-                                <span title="Mujeres"  style="font-size:11px;font-weight:700;color:var(--brand-500);">♀ <?php echo (int)($t->mujeres ?? 0); ?></span>
-                                <span title="Hombres"  style="font-size:11px;font-weight:700;color:var(--text-secondary);">♂ <?php echo (int)($t->hombres ?? 0); ?></span>
-                                <span title="Niños/as" style="font-size:11px;font-weight:700;color:var(--success-500);">👶 <?php echo (int)($t->ninas ?? 0) + (int)($t->ninos ?? 0); ?></span>
+                            <div class="u-jc-center u-gap-sp-3" style="display:flex;">
+                                <span class="u-fs-11px u-fw-700 u-c-brand-500" title="Mujeres" >♀ <?php echo (int)($t->mujeres ?? 0); ?></span>
+                                <span class="u-fs-11px u-fw-700 u-c-text-secondary" title="Hombres" >♂ <?php echo (int)($t->hombres ?? 0); ?></span>
+                                <span class="u-fs-11px u-fw-700" title="Niños/as" style="color:var(--success-500);">👶 <?php echo (int)($t->ninas ?? 0) + (int)($t->ninos ?? 0); ?></span>
                             </div>
-                            <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);margin-top:2px;">Total: <?php echo (int)($t->total_atendidas ?? 0); ?></div>
+                            <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-mt-2px">Total: <?php echo (int)($t->total_atendidas ?? 0); ?></div>
                         <?php else: ?>
-                            <span style="font-size:11px;color:var(--text-tertiary);font-style:italic;">Sin informe</span>
+                            <span class="u-fs-11px u-c-text-tertiary u-fst-italic">Sin informe</span>
                         <?php endif; ?>
                     </td>
                     <td class="text-center">
-                        <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:4px;"><?php echo $inscritos; ?> / <?php echo $cupoMax; ?></div>
-                        <div style="height:5px;width:80px;background:var(--bg-muted);border-radius:3px;margin:0 auto;overflow:hidden;">
+                        <div class="u-fs-12px u-fw-700 u-c-text-primary u-mb-4px"><?php echo $inscritos; ?> / <?php echo $cupoMax; ?></div>
+                        <div class="u-bg-bg-muted u-ov-hidden" style="height:5px; width:80px; border-radius:3px; margin:0 auto;">
                             <div style="height:100%;width:<?php echo $pct; ?>%;background:<?php echo $pctColor; ?>;border-radius:3px;"></div>
                         </div>
-                        <div style="font-size:10px;color:var(--text-tertiary);margin-top:2px;"><?php echo $pct; ?>%</div>
+                        <div class="u-fs-10px u-c-text-tertiary u-mt-2px"><?php echo $pct; ?>%</div>
                     </td>
                     <td><span class="sig-badge <?php echo $estadoBadge[$estado] ?? 'sig-badge--neutral'; ?>"><?php echo $estado; ?></span></td>
                     <td class="col-actions">
@@ -209,7 +209,7 @@ $hayFiltro = !empty($data['estado_filtro']) || !empty($data['tipo_filtro']) || !
     </table>
 </div>
 <?php if (!empty($data['talleres'])): ?>
-    <div style="text-align:right;font-size:12px;color:var(--text-tertiary);margin-top:var(--sp-2);">
+    <div class="u-ta-right u-fs-12px u-c-text-tertiary u-mt-sp-2">
         <?php echo count($data['talleres']); ?> actividad(es) mostradas
     </div>
 <?php endif; ?>

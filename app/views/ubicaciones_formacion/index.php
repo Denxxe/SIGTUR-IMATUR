@@ -35,9 +35,9 @@
                         <td class="cell-strong"><?php echo htmlspecialchars($u->nombre ?? ''); ?></td>
                         <td><span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($u->tipo ?? ''); ?></span></td>
                         <td><?php echo htmlspecialchars($u->nombre_parroquia ?? ''); ?></td>
-                        <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo htmlspecialchars($u->direccion ?? ''); ?></td>
+                        <td class="u-fs-12_5px u-c-text-secondary"><?php echo htmlspecialchars($u->direccion ?? ''); ?></td>
                         <td class="col-actions">
-                            <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($u); ?>)'>
+                            <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($u, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <a href="<?php echo URL_ROOT; ?>/ubicacionesformacion/delete/<?php echo $u->id; ?>" class="row-action row-action--del delete-btn">

@@ -21,9 +21,8 @@
             <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
                 <div class="modal-content" style="border:none; overflow:hidden;">
                     <div class="modal-header" style="background:var(--danger-50,#fef2f2); border-bottom:1px solid var(--danger-100,#fecaca); padding:16px 20px;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div style="width:38px; height:38px; border-radius:50%; background:var(--danger-100,#fecaca);
-                                        display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <div class="u-ai-center u-gap-12px" style="display:flex;">
+                            <div class="u-br-50pct u-ai-center u-jc-center u-fsh-0" style="width:38px; height:38px; background:var(--danger-100,#fecaca); display:flex;">
                                 <i class="bi bi-trash3" style="color:var(--danger-600,#dc2626); font-size:17px;"></i>
                             </div>
                             <h5 class="modal-title" id="modalDeleteTitle"

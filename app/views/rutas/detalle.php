@@ -1355,8 +1355,8 @@ $idEjec = (int)$data['ejecucion']->id;
 
                 <!-- Selector tipo de participante -->
                 <div>
-                    <label class="sig-field__label" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
-                    <div id="seg_tipo_part_ruta" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <label class="sig-field__label" id="seg_tipo_part_ruta_lbl" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
+                    <div id="seg_tipo_part_ruta" role="group" aria-labelledby="seg_tipo_part_ruta_lbl" style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" class="seg-tipo" data-libre="0" style="flex:1; min-width:170px; padding:12px; border-radius:8px; border:2px solid var(--border-subtle); background:var(--bg-muted); color:var(--text-secondary); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                             <i class="bi bi-person-vcard"></i> Adulto (con cédula)
                         </button>

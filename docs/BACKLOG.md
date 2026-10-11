@@ -1,7 +1,13 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-11 · **Migraciones aplicadas:** hasta **086** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-11 · **Migraciones aplicadas:** hasta **087** · **Rama:** `development_stage`
 
+> ✅ **2026-10-11 (b) — Bienes: motor de codificación propia construido y APAGADO (mig. 087).**
+> IMATUR ya puede asignar el código de sus bienes con secuencia propia, catálogo de clasificaciones y
+> la distinción *codificado por IMATUR* / *reconocido por la Alcaldía*. Se enciende en
+> *Bienes → Codificación* cuando lleguen **B-73** (punto de partida) y **B-75** (catálogo); B-74 quedó
+> como parámetro. Ver `PLAN_MODULO_BIENES.md` §2-sexies.
+>
 > ✅ **2026-10-11 — Nómina completa: construida la Liquidación de Prestaciones Sociales (fase N-E,
 > mig. 086).** Digitaliza las tres hojas de `LIQUIDACION MES JULIO 2026.xls` (FORMATO, INTERESES,
 > INTERÉS DE MORA) con sus fórmulas reales, paga lo mayor entre garantía y retroactivo (art. 142 d) y
@@ -58,14 +64,14 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
-| 1 | **Motor de codificación propia de Bienes** (R-12 / C-1…C-4), con el punto de partida como clave de configuración | Mediano | Queda listo para cuando lleguen B-73 y B-75; sin ellos no se activa |
-| 2 | Deuda técnica de §5.2: `label[for]` en los formularios restantes (quedan 76, dentro de bucles) · whitelist en `Taller::actualizarPersona` · estilos inline → clases (quedan ~2.199) · más pruebas | Gradual | No bloquea entrega |
+| 1 | ✅ ~~Deuda técnica de §5.2~~ **hecha (2026-10-11)**: `label[for]` completos, lista blanca en `Taller::actualizarPersona`, estilos inline 2.724 → 1.581, pruebas 145 → 179. Lo que queda inline es deliberado (ver `CLAUDE.md` → Design System) | — | — |
 
 **Hecho y retirado de esta lista** (detalle en `CHANGELOG.md`): verificación en navegador (2026-10-03)
 y **prueba de formularios guardando** (2026-10-04, B1 cerrado) · tareas programadas y feriados movibles
 (08-28) · H-16 y Acta de Desincorporación a nivel de datos (09-17) · Rutas T-A…T-I (09-17/18) ·
 Bienes en solo consulta (10-04) · **Indicadores por rol** (10-06): cada rol ve en Indicadores solo las áreas de sus módulos ·
-**Liquidación de Prestaciones Sociales (10-11, mig. 086)** con todas las reglas como parámetros.
+**Liquidación de Prestaciones Sociales (10-11, mig. 086)** con todas las reglas como parámetros ·
+**motor de codificación propia de Bienes (10-11, mig. 087)**, apagado hasta B-73/B-75.
 
 ### 0.2 Espera al cliente (sección 3)
 
@@ -74,7 +80,7 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 
 | Prioridad | Qué pedir | Desbloquea |
 |---|---|---|
-| 🔴 1 | **Inventario digital VIGENTE de la encargada** (la planilla del 2026-10-06 era una muestra antigua) **con el departamento de cada bien** + **B-73/B-75**, que esperan la última codificación de la Alcaldía | Carga de los bienes reales y la codificación propia (R-12) |
+| 🔴 1 | **Inventario digital VIGENTE de la encargada** (la planilla del 2026-10-06 era una muestra antigua) **con el departamento de cada bien** + **B-73/B-75**, que esperan la última codificación de la Alcaldía | Carga de los bienes reales y **encender** la codificación propia (R-12, ya construida: solo hay que escribir el punto de partida y el catálogo en *Bienes → Codificación*) |
 | 🔴 2 | **Formato del Acta de Desincorporación** y **formato del acta de asignación** (B-79 ✅ respondida) | R-2 (imprimible definitivo; el flujo ya funciona) y R-3 |
 | 🔴 3 | **Verificación del total del bono vacacional por la directora de Talento Humano**, dentro del sistema (decidido 2026-10-06) | Confirma o corrige el supuesto del total (mig. 073). Requiere antes los datos de nómina del personal (0.3) y la cesta ticket del mes |
 | 🟡 4 | ✅ ~~Construir la N-E~~ **hecha 2026-10-11 (mig. 086)**. Falta: una **liquidación real ya calculada** por Talento Humano para compararla número a número, y las **tasas de interés de prestaciones del BCV** de cada mes (se cargan en *Nómina → Parámetros*; sin ellas los intereses quedan en 0 con aviso) | Confirma la Liquidación con datos reales |
@@ -102,6 +108,10 @@ Ordenado por lo que desbloquea. **Este es el cuello de botella real de la entreg
 | Configuración de producción | `URL_ROOT`, credenciales de BD (hoy de desarrollo), clave del admin, SMTP. **Quién los define** se pregunta en `PREGUNTAS_CLIENTE.md` |
 
 ### 0.4 Lo que ya NO falta
+
+**Ciclo 2026-10-11 (mig. 087):** **codificación propia de Bienes** (R-12 · C-1…C-4, C-7) — siguiente
+N° de orden sin reciclar, catálogo de clasificaciones, *codificado por IMATUR* ≠ *reconocido por la
+Alcaldía*, interruptor que no enciende sin B-73/B-75.
 
 **Ciclo 2026-10-11 (mig. 086):** **Liquidación de Prestaciones Sociales** — las 3 hojas del formato
 del cliente, art. 142 d, mora, cierre con número `LIQ-`, anulación, imprimible y Excel · **toda regla
@@ -141,6 +151,7 @@ auditoría H-12…H-15, feriados movibles, Nómina N-A…N-D. Detalle en la secc
 
 | Fecha | Qué se hizo | Mig. |
 |---|---|---|
+| 2026-10-11 | **Bienes: motor de codificación propia** (R-12), construido y apagado hasta B-73/B-75; secuencia, dígitos y modo de secuencia configurables | 087 |
 | 2026-10-11 | **Liquidación de Prestaciones Sociales** (N-E): hojas FORMATO, INTERESES e INTERÉS DE MORA del cliente, art. 142 d, tasa del BCV por mes, cierre `LIQ-`, imprimible y Excel. **Toda regla de la LOTTT y del contrato pasó a parámetro** | 086 |
 | 2026-10-04 | **Roles por módulo**: un rol creado desde la pantalla funciona sin tocar código; cerrada la escalada de RRHH a Administrador; escritura de bienes como permiso propio | 084 |
 | 2026-09-18 | **Rutas: fases T-D, T-E, T-H, T-F y T-C** — cierre/reprogramación, solicitud y aprobación, permisos a custodios, itinerario y personal, cobro completo. **H-14 cerrado** | 081 – 083 |
@@ -262,9 +273,9 @@ aquí y los demás documentos lo referencian.
 >
 > | ID | Lo que respondieron | Estado |
 > |----|---------------------|--------|
-> | **B-73** | Siguen esperando la **última codificación de la Alcaldía**; el sistema debe arrancar de ahí | 🔒 Sigue abierta (no depende de ellos) |
+> | **B-73** | Siguen esperando la **última codificación de la Alcaldía**; el sistema debe arrancar de ahí | 🔒 Sigue abierta (no depende de ellos). El motor ya está construido (mig. 087): el dato se escribe en *Bienes → Codificación* |
 > | **B-75** | Igual: esperan la última codificación para tomar los códigos de ahí | 🔒 Sigue abierta. Hoy todo lo conocido es `2-01-108` |
-> | **B-74** | «Se verá en el oficio pasado» | 🔒 Sin respuesta útil todavía |
+> | **B-74** | «Se verá en el oficio pasado» | 🔒 Sin respuesta útil todavía. Ya no bloquea: dígitos y «una o varias secuencias» son parámetros (mig. 087) |
 > | **B-76** | **No se recicla**: el código es del bien aunque esté dañado | ✅ **Cerrada.** El código ya lo cumple: `findByNroOrden()` cuenta los desincorporados (siguen `is_active = TRUE`) |
 > | **B-79** | Firman **solo dos** (Coordinadora de Bienes + Presidencia). **Sí** lleva correlativo de IMATUR. Sobre el acta sellada por la Alcaldía: «no lo han hecho; IMATUR sí debe tener el suyo **por cada bien**» | ✅ Firmas y correlativo **cerrados** (ya es así). ⚠️ «por cada bien» → **B-79-bis** |
 > | **B-77** | La relación se hace **cada vez que llega un bien nuevo** | ✅ Disparador: por bien, no por lote mensual. El monto en Bs quedó sin contestar |
@@ -500,7 +511,7 @@ Aclaración clave del cliente: el BM-1 **NO lo produce IMATUR**, es el registro 
 | ~~Bienes~~ | ✅ ~~Corregir H-16~~ — **hecho (2026-09-17, mig. 076)**, y eran cuatro consultas: el KPI del Dashboard tenía el mismo error | §4 H-16 |
 | ~~Bienes~~ | ✅ ~~Acta de Desincorporación a nivel de datos (R-13/C-5)~~ — **hecho (2026-09-17, mig. 077)**. Emisión por lote, retiro en bloque al registrarla firmada, y anulación que revierte el retiro. El imprimible es provisional hasta que llegue el formato | §3.4 · plan §2-ter |
 | ~~Bienes~~ | ✅ ~~Renombrar «Dado de baja» → «Desincorporación»~~ — **hecho (2026-09-17, mig. 076)**. Se renombró el **valor**, no solo el rótulo: `inventario` estaba en 0 filas, así que era el momento más barato. Obligó a desclavar el literal de 14 consultas | §3.4 · plan §2-ter |
-| **Bienes** | **Codificación interna con secuencia propia** (R-12/C-1…C-4, C-7) — 🔒 espera **B-73** (punto de partida) y **B-75** (catálogo de clasificación). El motor se puede construir antes si el punto de partida queda como clave de configuración | §3.4 · plan §2-ter |
+| ~~Bienes~~ | ✅ ~~Codificación interna con secuencia propia (R-12/C-1…C-4, C-7)~~ — **construida (2026-10-11, mig. 087), apagada**. Para encenderla: **B-73** y **B-75** | §3.4 · plan §2-sexies |
 | ~~**Rutas**~~ | ✅ ~~T-A — separar catálogo de ejecución (H-18)~~ **HECHA (mig. 078)** | §3.5 · plan §7 |
 | ~~**Rutas**~~ | ✅ ~~T-B — edad por catálogo (H-17)~~ **HECHA (mig. 079).** Junto con **T-I** (restricciones por ruta y cupo diario de 60, configurable en `rutas_cupo_diario`) | §3.5 · plan §2 |
 | ~~**Rutas**~~ | ✅ ~~T-C — tarifa y cobro~~ **HECHA (mig. 083)**: tarifa en USD por recorrido, tasa congelada por salida, pagos con abonos y comprobante, exoneración, acta de pago. 🔒 El **acta de pago** es propuesta nuestra (R-39): falta el visto bueno del cliente | §3.5 · plan §5 |
@@ -518,18 +529,23 @@ Propuestas del equipo técnico, no solicitadas aún por el cliente. Priorizació
 
 | Prioridad | Mejora | Notas de implementación |
 |-----------|--------|-------------------------|
-| ⚠️ **a11y en formularios restantes** | **2026-08-28: de 88 a 393 `label[for]`** (de 469). Automatizado con verificación de unicidad. **Quedan 76**, deliberadamente: 59 dentro de bucles `foreach` (un `id` estático se repetiría en cada iteración) y 17 sin control asociable. Requieren `id` generado por PHP, caso por caso. |
-| 🟢 **Endurecer `Taller::actualizarPersona`** | Whitelist de columnas dentro del método (defensa, no urgente: hoy las claves son fijas). |
+| ✅ ~~**a11y en formularios restantes**~~ | **Hecho (2026-10-11).** De 559 `label`: 545 con `for`, 6 envuelven su control y 8 rótulos de grupo con `aria-labelledby`. En bucles el `id` lo genera `sigtur_uid()`. Se encontró y corrigió que pulsar el texto «Bienes a desincorporar/relacionar» marcaba todos (el `label` contenía el botón «Todos»). |
+| ✅ ~~**Endurecer `Taller::actualizarPersona`**~~ | **Hecho (2026-10-11):** `Taller::COLUMNAS_PERSONA_EDITABLES`; cualquier otra clave lanza `InvalidArgumentException` antes de llegar al SQL (la cédula no se cambia por esta vía). Con prueba. |
 | ✅ ~~**Dividir `ReportesController`**~~ | **Hecho (2026-08-28): 3.405 → 101 líneas.** Repartido en 8 traits bajo `app/controllers/reportes/`. API y cuerpos **byte-idénticos** (verificado por reflexión y por hash). Ver `CHANGELOG.md`. |
-| ⚠️ **Migrar estilos inline a clases** | **2026-08-28: 2.361 → 2.199** (162 sustituidos por utilidades de Bootstrap ya cargadas). Solo se migró la parte **demostrablemente fiel**; el resto **no es mecánico** y hay dos trampas documentadas en `CLAUDE.md` (Design System) que conviene leer antes de continuar. |
+| ✅ ~~**Migrar estilos inline a clases**~~ | **Hecho lo migrable (2026-10-11): 2.724 → 1.581 `style=""`.** 3.348 declaraciones repetidas pasaron a 175 utilidades `u-*` (`!important`, equivalentes a un inline); verificado etiqueta por etiqueta sin diferencias. Lo que queda inline es deliberado: `display` (JS), standalone/impresión, PHP dentro, elementos que toca el JS, casos sueltos. Ver `CLAUDE.md` → Design System. |
 | ✅ ~~**Programar la tarea de respaldo en el servidor**~~ | **Hecho (2026-08-28)** con `cron/instalar_tareas.ps1`, que crea las **dos** tareas y es idempotente. Reejecutar en el servidor de producción. |
 | 🟢 **Rango de fechas fino en Indicadores** | Ya hay selector de **año**; rango libre mes-a-mes solo si el cliente lo pide (refactor amplio, bajo valor). |
-| 🟢 **Ampliar la suite de pruebas** | **81 pruebas al 2026-08-28** (67 → 81 con las de `Feriado`). Sumar casos (p. ej. `Asistencia::calcularMinutosTarde`). |
+| ✅ ~~**Ampliar la suite de pruebas**~~ | **179 pruebas al 2026-10-11** (81 en agosto). Nuevas: liquidación contra Excel, codificación de bienes, montos y fechas en letras (destapó «veintiun mil» sin tilde en documentos jurídicos, corregido), validadores de correo/teléfono/RIF, código y descripción oficial de bienes, elegible a fijo, lista blanca de `Taller` y `sigtur_uid`. `Asistencia::calcularMinutosTarde` sigue sin prueba: lee el horario de la BD. |
 
 ---
 
 ## 6. VERIFICACIÓN MANUAL PENDIENTE (probar en navegador)
 
+> 🟡 **2026-10-11 — Codificación propia (mig. 087): falta verla en el navegador.** Probada con 10 casos
+> automáticos y 13 comprobaciones de punta a punta (sobre un respaldo, restaurado), y renderizando
+> listado, hoja de vida y `/inventario/codificacion` con el motor encendido y apagado. Falta el vistazo
+> en navegador del modal *Codificar* encendido (selector de clasificación, número propuesto).
+>
 > 🟡 **2026-10-11 — Liquidación (mig. 086): falta verla en el navegador.** Probada con 47 casos
 > automáticos contra los valores de Excel, de punta a punta contra la base (sobre un respaldo,
 > restaurado después) y renderizando las 8 pantallas sin errores de PHP. Lo que falta es **un vistazo
@@ -593,7 +609,7 @@ automatizadas pero NO abierto en el navegador. Es el riesgo más alto que queda:
 - **RRHH:** ✅ organigrama jerárquico, ficha técnica + wizard, expediente/recaudos, horarios/grupos A-B/OAC, asistencia/puntualidad, permisos/reposos, amonestaciones+faltas (con tipo y escalado), constancias multi-tipo, egreso/reingreso, traslados, **vacaciones (días)**, badge elegible a fijo, **Bono Vacacional v1** (datos salariales + `/nomina`). **nómina quincenal calculada (mig. 072)**: motor puro con 45 pruebas, porcentajes en tablas, parámetros mensuales con vigencia, 5 tipos de personal, advertencias por empleado, recálculo y cierre, export de 6 hojas. ✅ Bono Vacacional en el motor (N‑D) y ✅ **Liquidación de Prestaciones Sociales** (N‑E, mig. 086): garantía mes a mes con intereses del BCV, art. 142 d, fracciones, mora, imprimible y Excel de 3 hojas; todas las reglas como parámetros — ver §3.1 y `docs/PLAN_MODULO_NOMINA.md` §7.
 - **Formación:** ✅ talleres/charlas/inducciones, participantes (adulto/niño, alta sin botón buscar), informe demográfico auto, evidencias, estados con auto-transición, lista de asistencia, reportes. 🔒 Falta: oficios base (D-FO06).
 - **Turismo (Rutas):** ✅ puntos + mapa Leaflet offline, participantes (con modo libre y representante), oficios con correlativo, demografía e informe. ✅ **Catálogo y salidas ya están separados** (T-A, mig. 078): `ruta_ejecuciones` + `ruta_ejecucion_empleados`, dos pantallas, los tres estados de R-14 y la reprogramación enlazada. ✅ **Restricciones por recorrido y cupo diario** (T-B + T-I, mig. 079) — **H-17 cerrado**: la edad ya no está cableada, y un niño de 4 se inscribe donde el recorrido lo admite. ✅ **Ficha Institucional** (T-G, mig. 080): nace sola al cerrar la salida, se captura por institución y se imprime en el formato oficial. ✅ **Estados y reprogramación** (T-D): la salida se cierra desde su pantalla, con motivo obligatorio, y se reprograma creando una salida nueva enlazada. ✅ **Solicitud y aprobación** (T-E): el oficio que envía la institución se archiva y se descarga con control de rol; la aprobación de la Presidencia queda con fecha y autor. ✅ **Permisos de acceso** (T-H, mig. 081): oficio por semana a cada institución custodia, con su estado y el pase recibido; el sistema dice **a quién falta pedirle** a partir del custodio de cada parada. ✅ **Itinerario por salida y personal** (T-F, mig. 082). ✅ **Cobro completo** (T-C, mig. 083) — **H-14 cerrado**: tarifa en USD por recorrido, tasa congelada por salida (sugerida desde el BCV), registro de pagos con abonos y comprobante, exoneración con motivo, y acta de pago numerada para el efectivo. 🎉 **Las nueve fases del módulo están construidas.** ⏳ Del cliente: el **formato del oficio de permiso** (T-H, el imprimible es provisional) y su **visto bueno al acta de pago** que propusimos (T-C, R-39). Fases en `docs/PLAN_MODULO_RUTAS.md` §7.
-- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **2 documentos imprimibles** bloqueados por sus formatos (**Acta de Desincorporación** y acta de asignación; la relación de bienes nuevos y el oficio de donación ✅ **construidos**, mig. 075) y **cargar los bienes reales** — sigue faltando el inventario vigente de la encargada (lo del 2026-10-06 fue una planilla antigua de muestra, ver `docs/PLAN_MODULO_BIENES.md` §2-quinquies). ⚠️ **Y adaptar el módulo al procedimiento nuevo del 2026-09-02** (IMATUR codifica: C-1…C-7 en §2-ter; bloqueado por B-73 y B-75). *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
+- **Inventario:** ✅ expediente administrativo por bien (fases 1-4, mig. 062-067): **codificación propia construida y apagada (mig. 087, R-12)** · estatus vs condición, codificación contra el BM-1, adquisición/garantía, responsable **derivado** del departamento, movimientos con origen/destino y autorización, mantenimiento correctivo y preventivo, documentos y hoja de vida, etiquetas QR, conteo por cambio de gestión, análisis de suficiencia y RBAC del módulo. 🔒 Falta: **2 documentos imprimibles** bloqueados por sus formatos (**Acta de Desincorporación** y acta de asignación; la relación de bienes nuevos y el oficio de donación ✅ **construidos**, mig. 075) y **cargar los bienes reales** — sigue faltando el inventario vigente de la encargada (lo del 2026-10-06 fue una planilla antigua de muestra, ver `docs/PLAN_MODULO_BIENES.md` §2-quinquies). ⚠️ **Y adaptar el módulo al procedimiento nuevo del 2026-09-02** (IMATUR codifica: C-1…C-7 en §2-ter; bloqueado por B-73 y B-75). *(D-IN06, D-IN09 y D-IN10 quedaron cerradas por el levantamiento del 2026-08-04.)*
 - **Recepción (Visitantes):** ✅ visitantes + visitas (bitácora inmutable), reportes. 🛠️ Backlog: visitas activas del día.
 - **Sistema:** ✅ RBAC dinámico, usuarios/roles, auditoría humanizada + papelera, configuración institucional, idempotencia (token), export transversal, login endurecido (mig.051) + acepta usuario o correo, respaldos automáticos, búsqueda global, campana de alertas (ahora con "vistas" por usuario, mig.057), **carnetización** (mig.053), **recuperación de contraseña por correo** (mig.058, 🔒 falta SMTP real), egreso desactiva acceso automáticamente.
 

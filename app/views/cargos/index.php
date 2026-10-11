@@ -41,11 +41,11 @@
                         <td><span class="cell-id"><?php echo $cargo->id; ?></span></td>
                         <td><span class="sig-badge <?php echo $nivelBadge[$cargo->nivel_jerarquico] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($cargo->nivel_jerarquico ?? '—'); ?></span></td>
                         <td class="cell-strong" style="padding-left:<?php echo (8 + $pad); ?>px">
-                            <?php echo ($pad > 0 ? '<span data-no-export style="color:var(--text-secondary)">└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
+                            <?php echo ($pad > 0 ? '<span class="u-c-text-secondary" data-no-export>└ </span>' : ''); ?><?php echo htmlspecialchars($cargo->nombre); ?>
                         </td>
-                        <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($cargo->descripcion ?? ''); ?></td>
+                        <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($cargo->descripcion ?? ''); ?></td>
                         <td class="col-actions">
-                            <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo); ?>)'>
+                            <button class="row-action row-action--edit" onclick='editarCargo(<?php echo json_encode($cargo, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                 <i class="bi bi-pencil"></i> Editar
                             </button>
                             <a href="<?php echo URL_ROOT; ?>/cargos/delete/<?php echo $cargo->id; ?>" class="row-action row-action--del delete-btn">
@@ -85,7 +85,7 @@
                                 <option value="<?php echo $nv; ?>"<?php echo $nv === Cargo::NIVEL_DEFAULT ? ' selected' : ''; ?>><?php echo $nv; ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small style="color:var(--text-tertiary)">Sucesión de responsabilidad según el organigrama.</small>
+                        <small class="u-c-text-tertiary">Sucesión de responsabilidad según el organigrama.</small>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -6,11 +6,13 @@
  * El módulo dejó de ser un CRUD de bienes: ahora modela el ciclo de vida
  * administrativo que gobierna la Alcaldía.
  *
- * Flujo de codificación (§4.1 del plan):
+ * Flujo de codificación (§4.1 y §2-ter del plan):
  *   1. Alta interna     → estatus "En espera de codificación", sin código.
- *   2. Informe/oficio a la Alcaldía (Fase 3).
- *   3. La Alcaldía devuelve el BM-1 con grupo-subgrupo-sección + N° de orden.
- *   4. `codificar()` transcribe esos datos → estatus "Activo".
+ *   2a. Codificación propia APAGADA (hasta B-73/B-75): informe a la Alcaldía,
+ *       que devuelve el BM-1; `codificar()` transcribe el código → "Activo".
+ *   2b. Codificación propia ENCENDIDA (mig. 087, `/inventario/codificacion`):
+ *       `codificar()` asigna el código de IMATUR con el N° de orden que propone
+ *       `CodificacionBienes::siguienteNroOrden()` → "Activo".
  */
 class InventarioController extends Controller {
 
@@ -65,6 +67,10 @@ class InventarioController extends Controller {
 
         $data = [
             'titulo'      => 'Gestión de Bienes e Inventario',
+            // Codificación propia (mig. 087): el modal de codificar cambia según esté encendida.
+            'codif'       => CodificacionBienes::params(),
+            'codifSiguiente'  => CodificacionBienes::activa() ? CodificacionBienes::siguienteNroOrden() : null,
+            'clasificaciones' => CodificacionBienes::clasificaciones(true),
             'items'       => $items,
             'categorias'  => $categorias,
             'ubicaciones' => $ubicaciones,
@@ -188,7 +194,9 @@ class InventarioController extends Controller {
             }
             flash('global_msg', $esEdicion
                 ? 'Bien actualizado correctamente.'
-                : 'Bien registrado. Queda "En espera de codificación" hasta que la Alcaldía asigne su N° de orden.');
+                : (CodificacionBienes::activa()
+                    ? 'Bien registrado. Asígnale su código con el botón «Codificar»: el sistema propone el siguiente N° de orden.'
+                    : 'Bien registrado. Queda "En espera de codificación" hasta que la Alcaldía asigne su N° de orden.'));
         } catch (Exception $e) {
             flash('global_msg', 'Fallo en inventario: ' . $e->getMessage(), 'danger');
         }
@@ -221,13 +229,15 @@ class InventarioController extends Controller {
             // Si la codificación se hace desde una recepción de BM-1, se deja
             // la trazabilidad de en qué formulario vino ese código.
             $idBM1 = (int)($_POST['id_consolidado_bm1'] ?? 0) ?: null;
+            // Procedencia (C-3): lo que viene del BM-1 es siempre de la Alcaldía;
+            // lo demás, de IMATUR si la codificación propia está encendida.
+            $por = (!$idBM1 && CodificacionBienes::activa())
+                ? CodificacionBienes::QUIEN_IMATUR : CodificacionBienes::QUIEN_ALCALDIA;
             Inventario::codificar($id, $partes, trim($_POST['fecha_verificacion'] ?? '') ?: null,
-                                  $this->getUserId(), $idBM1);
-            $codigo = Inventario::componerCodigo(
-                $partes['codigo_grupo'], $partes['codigo_subgrupo'],
-                $partes['codigo_seccion'], $partes['nro_orden']
-            );
-            flash('global_msg', 'Bien codificado como ' . htmlspecialchars($codigo) . '. Pasa a estatus Activo.');
+                                  $this->getUserId(), $idBM1, $por);
+            $codigo = Inventario::find($id)->codigo_bn ?? '';
+            flash('global_msg', 'Bien codificado como ' . htmlspecialchars($codigo)
+                . ($por === CodificacionBienes::QUIEN_IMATUR ? ' por IMATUR' : '') . '. Pasa a estatus Activo.');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
@@ -236,6 +246,79 @@ class InventarioController extends Controller {
         $volver = !empty($_POST['id_consolidado_bm1'])
             ? '/inventario/consolidados' : '/inventario/index';
         header('Location: ' . URL_ROOT . $volver);
+    }
+
+    // =====================================================================
+    // Codificación propia (R-12 · C-1…C-4, mig. 087)
+    // =====================================================================
+
+    /** Parámetros de la secuencia + catálogo de grupo-subgrupo-sección. */
+    public function codificacion() {
+        $this->view('inventario/codificacion', [
+            'titulo'          => 'Codificación de bienes',
+            'params'          => CodificacionBienes::params(),
+            'faltantes'       => CodificacionBienes::faltantes(),
+            'siguiente'       => CodificacionBienes::siguienteNroOrden(),
+            'clasificaciones' => CodificacionBienes::clasificaciones(),
+            'puedeEscribir'   => self::puedeEscribir(),
+        ]);
+    }
+
+    public function guardarCodificacion() {
+        if (!$this->requireEscritura('/inventario/codificacion')) return;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/inventario/codificacion'); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            CodificacionBienes::guardarParams($_POST, $this->getUserId());
+            flash('global_msg', CodificacionBienes::activa()
+                ? 'Codificación propia ENCENDIDA: IMATUR asigna desde ahora el código de sus bienes.'
+                : 'Parámetros guardados. La codificación propia sigue apagada: se transcribe el código del BM-1.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'warning');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/codificacion');
+    }
+
+    public function guardarClasificacion() {
+        if (!$this->requireEscritura('/inventario/codificacion')) return;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/inventario/codificacion'); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            CodificacionBienes::guardarClasificacion($_POST, $this->getUserId());
+            flash('global_msg', 'Clasificación guardada.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/codificacion#catalogo');
+    }
+
+    public function vigenciaClasificacion() {
+        if (!$this->requireEscritura('/inventario/codificacion')) return;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/inventario/codificacion'); return; }
+        $_POST = $this->sanitizePost();
+        try {
+            $vigente = ($_POST['vigente'] ?? '') === '1';
+            CodificacionBienes::cambiarVigencia((int)($_POST['id'] ?? 0), $vigente, $this->getUserId());
+            flash('global_msg', $vigente ? 'Clasificación reactivada.'
+                : 'Clasificación dada de baja: ya no se ofrece al codificar. Los bienes que la tienen la conservan.', $vigente ? 'success' : 'warning');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/codificacion#catalogo');
+    }
+
+    /** JSON: N° de orden propuesto (con secuencia por clasificación depende de la elegida). */
+    public function siguienteNroOrden() {
+        header('Content-Type: application/json; charset=utf-8');
+        $g   = isset($_GET['g'])   ? trim((string)$_GET['g'])   : null;
+        $sg  = isset($_GET['sg'])  ? trim((string)$_GET['sg'])  : null;
+        $sec = isset($_GET['sec']) ? trim((string)$_GET['sec']) : null;
+        try {
+            echo json_encode(['ok' => true, 'siguiente' => CodificacionBienes::siguienteNroOrden($g, $sg, $sec)]);
+        } catch (Exception $e) {
+            echo json_encode(['ok' => false, 'error' => 'No se pudo calcular el siguiente número.']);
+        }
+        exit;
     }
 
     public function delete($id) {

@@ -37,17 +37,17 @@
                             <br><span class="sig-badge sig-badge--warning"><i class="bi bi-archive"></i> Depósito</span>
                         <?php endif; ?>
                     </td>
-                    <td style="font-size:13px"><?php echo htmlspecialchars($ubi->sede ?? '—'); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($ubi->sede ?? '—'); ?></td>
                     <td>
                         <?php if (!empty($ubi->departamento_nombre)): ?>
                             <span class="sig-badge sig-badge--info"><i class="bi bi-building"></i> <?php echo htmlspecialchars($ubi->departamento_nombre); ?></span>
                         <?php else: ?>
-                            <span style="color:var(--text-tertiary);font-style:italic;">Sin departamento</span>
+                            <span class="u-c-text-tertiary u-fst-italic">Sin departamento</span>
                         <?php endif; ?>
                     </td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($ubi->descripcion ?? ''); ?></td>
+                    <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($ubi->descripcion ?? ''); ?></td>
                     <td class="col-actions">
-                        <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($ubi); ?>)'><i class="bi bi-pencil"></i> Editar</button>
+                        <button class="row-action row-action--edit" onclick='editarUbi(<?php echo json_encode($ubi, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                         <a href="<?php echo URL_ROOT; ?>/ubicaciones/delete/<?php echo $ubi->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
                     </td>
                 </tr>
@@ -84,11 +84,11 @@
                 </div>
                 <div class="sig-field mb-3"><label class="sig-field__label" for="ubi_descripcion">Referencia</label><textarea name="descripcion" id="ubi_descripcion" class="sig-textarea" rows="3"></textarea></div>
                 <div class="sig-field">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer" for="ubi_es_deposito">
+                    <label class="u-ai-center u-gap-8px u-fs-13px u-cur-pointer" style="display:flex;" for="ubi_es_deposito">
                         <input type="checkbox" name="es_deposito" id="ubi_es_deposito" value="1">
                         Es el <strong>depósito</strong> de bienes sin asignar
                     </label>
-                    <small style="display:block;color:var(--text-tertiary);font-size:12px;margin-top:4px;">
+                    <small class="u-c-text-tertiary u-fs-12px u-mt-4px" style="display:block;">
                         Todo bien que no esté asignado a un departamento debe estar en un depósito.
                         Su responsable no sale de este departamento, sino del que autoriza los bienes
                         (configurable en <em>Configuración</em>).

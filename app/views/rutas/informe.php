@@ -61,13 +61,13 @@ $v = fn($x) => htmlspecialchars((string)$x);
 
 <?php if ($cerrada): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5);border-left:3px solid var(--success-500);">
-    <div class="sig-card__body" style="padding:var(--sp-4);display:flex;align-items:center;gap:var(--sp-4);flex-wrap:wrap;">
-        <div style="flex:1;min-width:280px;">
-            <strong><i class="bi bi-check2-circle" style="color:var(--success-600);"></i> Ficha cerrada</strong>
+    <div class="sig-card__body u-p-sp-4 u-ai-center u-gap-sp-4 u-fwr-wrap" style="display:flex;">
+        <div class="u-flex-1" style="min-width:280px;">
+            <strong><i class="bi bi-check2-circle u-c-success-600"></i> Ficha cerrada</strong>
             <?php if (!empty($ficha->fecha_cierre)): ?>
                 el <?php echo date('d/m/Y \a \l\a\s H:i', strtotime($ficha->fecha_cierre)); ?>.
             <?php endif; ?>
-            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            <div class="u-fs-12px u-c-text-secondary u-mt-2px">
                 Ya no se edita. Si hay que corregir un conteo, reábrala: queda registrado en la bitácora.
             </div>
         </div>
@@ -87,36 +87,36 @@ $v = fn($x) => htmlspecialchars((string)$x);
 <!-- ── Cabecera: lo que el sistema ya sabe ───────────────────────────────── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5);">
     <div class="sig-card__head">
-        <div class="sig-card__title"><i class="bi bi-card-heading" style="color:var(--teal-500);"></i> Encabezado</div>
-        <span style="font-size:11px;color:var(--text-tertiary);">Se toma de la salida — no hay que reescribirlo</span>
+        <div class="sig-card__title"><i class="bi bi-card-heading u-c-teal-500"></i> Encabezado</div>
+        <span class="u-fs-11px u-c-text-tertiary">Se toma de la salida — no hay que reescribirlo</span>
     </div>
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <div class="row g-3">
             <div class="col-md-3">
-                <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Recorrido</label>
-                    <input type="text" class="sig-input" value="<?php echo $v($ruta->nombre); ?>" readonly
+                <div class="sig-field u-m-0">
+                    <label for="rutainfo_recorrido" class="sig-field__label">Recorrido</label>
+                    <input id="rutainfo_recorrido" type="text" class="sig-input" value="<?php echo $v($ruta->nombre); ?>" readonly
                            style="background:var(--bg-muted-subtle);cursor:not-allowed;">
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Fecha</label>
-                    <input type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($ejec->fecha)); ?>" readonly
+                <div class="sig-field u-m-0">
+                    <label for="rutainfo_fecha" class="sig-field__label">Fecha</label>
+                    <input id="rutainfo_fecha" type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($ejec->fecha)); ?>" readonly
                            style="background:var(--bg-muted-subtle);cursor:not-allowed;">
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label">Encargado (IMATUR)</label>
-                    <input type="text" class="sig-input"
+                <div class="sig-field u-m-0">
+                    <label for="rutainfo_encargado" class="sig-field__label">Encargado (IMATUR)</label>
+                    <input id="rutainfo_encargado" type="text" class="sig-input"
                            value="<?php echo $v($data['encargado'] ?? ''); ?>"
                            placeholder="sin encargado asignado" readonly
                            style="background:var(--bg-muted-subtle);cursor:not-allowed;">
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="sig-field" style="margin:0;">
+                <div class="sig-field u-m-0">
                     <label class="sig-field__label" for="responsable_nombre">Responsable del grupo</label>
                     <input type="text" name="responsable_nombre" id="responsable_nombre" class="sig-input"
                            value="<?php echo $v($ficha->responsable_nombre ?? ''); ?>"
@@ -126,7 +126,7 @@ $v = fn($x) => htmlspecialchars((string)$x);
             </div>
         </div>
         <?php if (empty($data['encargado'])): ?>
-        <div style="font-size:12px;color:var(--warning-600);margin-top:var(--sp-3);">
+        <div class="u-fs-12px u-c-warning-600 u-mt-sp-3">
             <i class="bi bi-exclamation-triangle"></i>
             Esta salida no tiene personal de IMATUR asignado, así que la casilla «Encargado» de la ficha
             saldrá en blanco. Se asigna en el detalle de la salida.
@@ -138,8 +138,8 @@ $v = fn($x) => htmlspecialchars((string)$x);
 <!-- ── Renglones por institución (bloque NIÑOS) ──────────────────────────── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5);border-top:3px solid var(--teal-500);">
     <div class="sig-card__head">
-        <div class="sig-card__title"><i class="bi bi-people" style="color:var(--teal-500);"></i> Grupo atendido</div>
-        <span style="font-size:11px;color:var(--text-tertiary);">Una línea por institución · el desglose es por sexo</span>
+        <div class="sig-card__title"><i class="bi bi-people u-c-teal-500"></i> Grupo atendido</div>
+        <span class="u-fs-11px u-c-text-tertiary">Una línea por institución · el desglose es por sexo</span>
     </div>
     <div class="sig-table-wrap" data-no-export>
         <table class="sig-table" id="tblInstituciones">
@@ -165,10 +165,10 @@ $v = fn($x) => htmlspecialchars((string)$x);
                     <td><input type="number" name="grp_masculino[]" class="sig-input text-center js-conteo" min="0" max="999"
                                value="<?php echo (int)$g->masculino; ?>" <?php echo $cerrada ? 'readonly' : ''; ?>></td>
                     <td>
-                        <div style="display:flex;align-items:center;gap:4px;">
+                        <div class="u-ai-center u-gap-4px" style="display:flex;">
                             <input type="number" name="grp_edad_min[]" class="sig-input text-center" min="0" max="120" placeholder="de"
                                    value="<?php echo $g->edad_min !== null ? (int)$g->edad_min : ''; ?>" <?php echo $cerrada ? 'readonly' : ''; ?>>
-                            <span style="font-size:11px;color:var(--text-tertiary);">a</span>
+                            <span class="u-fs-11px u-c-text-tertiary">a</span>
                             <input type="number" name="grp_edad_max[]" class="sig-input text-center" min="0" max="120" placeholder="a"
                                    value="<?php echo $g->edad_max !== null ? (int)$g->edad_max : ''; ?>" <?php echo $cerrada ? 'readonly' : ''; ?>>
                         </div>
@@ -187,7 +187,7 @@ $v = fn($x) => htmlspecialchars((string)$x);
         </table>
     </div>
     <?php if (!$cerrada): ?>
-    <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-4);">
+    <div class="sig-card__body u-p-sp-3-sp-4">
         <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" id="btnAgregarInst">
             <i class="bi bi-plus-lg"></i> Agregar institución
         </button>
@@ -200,9 +200,9 @@ $v = fn($x) => htmlspecialchars((string)$x);
     <div class="col-lg-5">
         <div class="sig-card h-100" style="border-top:3px solid #6366F1;">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-person-badge" style="color:#6366F1;"></i> Acompañantes</div>
+                <div class="sig-card__title"><i class="bi bi-person-badge u-c-x6366F1"></i> Acompañantes</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <table class="sig-table" style="margin:0;">
                     <thead>
                         <tr><th></th><th class="text-center" style="width:90px;">F</th>
@@ -237,7 +237,7 @@ $v = fn($x) => htmlspecialchars((string)$x);
         <div class="sig-card h-100" style="border-top:3px solid #16A34A;">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-shield-check" style="color:#16A34A;"></i> Instituciones de apoyo</div>
-                <span style="font-size:11px;color:var(--text-tertiary);">Protección Civil, PNB, bomberos…</span>
+                <span class="u-fs-11px u-c-text-tertiary">Protección Civil, PNB, bomberos…</span>
             </div>
             <div class="sig-table-wrap" data-no-export>
                 <table class="sig-table" id="tblApoyo">
@@ -275,7 +275,7 @@ $v = fn($x) => htmlspecialchars((string)$x);
                 </table>
             </div>
             <?php if (!$cerrada): ?>
-            <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-4);">
+            <div class="sig-card__body u-p-sp-3-sp-4">
                 <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" id="btnAgregarApoyo">
                     <i class="bi bi-plus-lg"></i> Agregar institución de apoyo
                 </button>
@@ -287,23 +287,23 @@ $v = fn($x) => htmlspecialchars((string)$x);
 
 <!-- ── Total y notas ─────────────────────────────────────────────────────── -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-5);border-top:3px solid #D97706;">
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <div class="row g-4 align-items-center">
             <div class="col-md-7">
-                <div style="display:flex;gap:var(--sp-5);flex-wrap:wrap;">
-                    <div><span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Niños</span>
+                <div class="u-fwr-wrap" style="display:flex; gap:var(--sp-5);">
+                    <div><span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase">Niños</span>
                         <div style="font-size:22px;font-weight:800;" id="kpiNinos">0</div></div>
-                    <div><span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Acompañantes</span>
+                    <div><span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase">Acompañantes</span>
                         <div style="font-size:22px;font-weight:800;" id="kpiAcomp">0</div></div>
-                    <div><span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Apoyo</span>
+                    <div><span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase">Apoyo</span>
                         <div style="font-size:22px;font-weight:800;" id="kpiApoyo">0</div></div>
-                    <div style="border-left:2px solid var(--border-subtle);padding-left:var(--sp-5);">
-                        <span style="font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;">Total general</span>
+                    <div class="u-pl-sp-5" style="border-left:2px solid var(--border-subtle);">
+                        <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase">Total general</span>
                         <div style="font-size:26px;font-weight:800;color:var(--success-600);" id="kpiTotal">0</div></div>
                 </div>
             </div>
             <div class="col-md-5">
-                <div class="sig-field" style="margin:0;">
+                <div class="sig-field u-m-0">
                     <label class="sig-field__label" for="lugar_exacto">Lugar exacto</label>
                     <input type="text" name="lugar_exacto" id="lugar_exacto" class="sig-input" data-nombre-libre
                            value="<?php echo $v($ficha->lugar_exacto ?? ($ruta->nombre ?? '')); ?>"
@@ -313,15 +313,15 @@ $v = fn($x) => htmlspecialchars((string)$x);
         </div>
         <div class="row g-4" style="margin-top:var(--sp-2);">
             <div class="col-md-6">
-                <div class="sig-field" style="margin:0;">
+                <div class="sig-field u-m-0">
                     <label class="sig-field__label" for="resumen_visita">Reseña de la visita</label>
                     <textarea name="resumen_visita" id="resumen_visita" class="sig-input" rows="3"
                               placeholder="Qué se hizo, cómo salió…" <?php echo $cerrada ? 'readonly' : ''; ?>><?php echo $v($ficha->resumen_visita ?? ''); ?></textarea>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label" for="observaciones">Observaciones <span style="color:var(--text-tertiary);font-weight:400;">(opcional)</span></label>
+                <div class="sig-field u-m-0">
+                    <label class="sig-field__label" for="observaciones">Observaciones <span class="u-c-text-tertiary u-fw-400">(opcional)</span></label>
                     <textarea name="observaciones" id="observaciones" class="sig-input" rows="3"
                               <?php echo $cerrada ? 'readonly' : ''; ?>><?php echo $v($ficha->observaciones ?? ''); ?></textarea>
                 </div>
@@ -331,8 +331,8 @@ $v = fn($x) => htmlspecialchars((string)$x);
 </div>
 
 <?php if (!$cerrada): ?>
-<div style="display:flex;justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-2);border-top:1px solid var(--border-subtle);"
-     class="anim-slide-up">
+<div style="display:flex; padding-top:var(--sp-2);"
+     class="anim-slide-up u-jc-flex-end u-gap-sp-3 u-bdt-1px-solid-border-subtle">
     <button type="submit" class="btn-sig btn-sig--ghost"><i class="bi bi-save"></i> Guardar borrador</button>
     <button type="button" class="btn-sig btn-sig--primary" id="btnCerrarFicha" style="padding:0 var(--sp-6);">
         <i class="bi bi-check-lg"></i> Guardar y cerrar

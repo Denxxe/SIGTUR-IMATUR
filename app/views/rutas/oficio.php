@@ -30,22 +30,22 @@ $oficiosPrevios = $data['oficiosPrevios'] ?? [];
 if (!empty($oficiosPrevios)):
 ?>
 <div class="sig-card anim-slide-up" style="border-left:4px solid #6366F1; margin-bottom:var(--sp-5);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
-        <p style="font-weight:600; color:#4338CA; margin-bottom:var(--sp-3);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
+        <p class="u-fw-600 u-mb-sp-3" style="color:#4338CA;">
             <i class="bi bi-info-circle-fill"></i>
             Ya se ha(n) generado <?php echo count($oficiosPrevios); ?> oficio(s) para esta ruta:
         </p>
-        <div style="display:flex; flex-wrap:wrap; gap:var(--sp-2);">
+        <div class="u-fwr-wrap u-gap-sp-2" style="display:flex;">
             <?php foreach ($oficiosPrevios as $op): ?>
-            <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 12px; background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.2); border-radius:20px; font-size:12px; font-weight:600; color:#4338CA;">
+            <span class="u-ai-center u-gap-6px u-fs-12px u-fw-600" style="display:inline-flex; padding:4px 12px; background:rgba(99,102,241,.08); border:1px solid rgba(99,102,241,.2); border-radius:20px; color:#4338CA;">
                 <i class="bi bi-envelope-paper"></i>
                 <?php echo htmlspecialchars($op->numero); ?>
-                <span style="font-weight:400; color:#6366F1;">— <?php echo htmlspecialchars($op->destinatario_nombre); ?></span>
+                <span class="u-fw-400 u-c-x6366F1">— <?php echo htmlspecialchars($op->destinatario_nombre); ?></span>
                 <span style="color:#a5b4fc;">(<?php echo $op->fecha ? date('d/m/Y', strtotime($op->fecha)) : ''; ?>)</span>
             </span>
             <?php endforeach; ?>
         </div>
-        <p style="font-size:12px; color:var(--text-secondary); margin-top:var(--sp-2); margin-bottom:0;">
+        <p class="u-fs-12px u-c-text-secondary u-mt-sp-2" style="margin-bottom:0;">
             Puede generar uno nuevo si la ruta se ejecutará en otra fecha o si el destinatario es diferente.
         </p>
     </div>
@@ -54,11 +54,11 @@ if (!empty($oficiosPrevios)):
 
 <?php if ($faltaConfig || $faltaRuta): ?>
 <div class="sig-card anim-slide-up" style="border-left:4px solid var(--warning-500); margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
-        <p style="font-weight:600; color:var(--warning-700); margin-bottom:var(--sp-2);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
+        <p class="u-fw-600 u-mb-sp-2" style="color:var(--warning-700);">
             <i class="bi bi-exclamation-triangle"></i> Datos incompletos para generar el oficio
         </p>
-        <ul style="font-size:13px; color:var(--text-secondary); padding-left:var(--sp-5); margin:0; line-height:2;">
+        <ul class="u-fs-13px u-c-text-secondary u-pl-sp-5 u-m-0" style="line-height:2;">
             <?php if ($faltaConfig): ?>
             <li>La configuración institucional (director, resolución) está incompleta.
                 <a href="<?php echo URL_ROOT; ?>/config/index" style="color:var(--brand-500);">Completar configuración →</a>
@@ -80,43 +80,43 @@ if (!empty($oficiosPrevios)):
     <div class="col-lg-4">
         <div class="sig-card" style="margin-bottom:var(--sp-4);">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-database" style="color:var(--teal-500);"></i> Datos del Sistema</div>
+                <div class="sig-card__title"><i class="bi bi-database u-c-teal-500"></i> Datos del Sistema</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
-                <div style="display:grid; gap:var(--sp-3); font-size:13px;">
+            <div class="sig-card__body u-p-sp-4-sp-5">
+                <div class="u-gap-sp-3 u-fs-13px" style="display:grid;">
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Ruta</span>
-                        <div style="font-weight:600; color:var(--text-primary);"><?php echo htmlspecialchars($ruta->nombre ?? '—'); ?></div>
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Ruta</span>
+                        <div class="u-fw-600 u-c-text-primary"><?php echo htmlspecialchars($ruta->nombre ?? '—'); ?></div>
                     </div>
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Fecha de visita</span>
-                        <div style="font-weight:600; color:var(--text-primary);">
-                            <?php echo $ejecucion->fecha ? date('d/m/Y', strtotime($ejecucion->fecha)) : '<span style="color:var(--danger-500);">No registrada</span>'; ?>
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Fecha de visita</span>
+                        <div class="u-fw-600 u-c-text-primary">
+                            <?php echo $ejecucion->fecha ? date('d/m/Y', strtotime($ejecucion->fecha)) : '<span class="u-c-danger-500">No registrada</span>'; ?>
                         </div>
                     </div>
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Hora</span>
-                        <div style="font-weight:600; color:var(--text-primary);">
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Hora</span>
+                        <div class="u-fw-600 u-c-text-primary">
                             <?php echo !empty($ejecucion->hora) ? substr($ejecucion->hora, 0, 5) : '—'; ?>
                         </div>
                     </div>
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Departamento</span>
-                        <div style="font-weight:600; color:var(--text-primary);"><?php echo htmlspecialchars($ruta->departamento_nombre ?? '—'); ?></div>
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Departamento</span>
+                        <div class="u-fw-600 u-c-text-primary"><?php echo htmlspecialchars($ruta->departamento_nombre ?? '—'); ?></div>
                     </div>
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Participantes inscritos</span>
-                        <div style="font-weight:600; color:var(--text-primary);"><?php echo (int)$data['total_participantes']; ?></div>
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Participantes inscritos</span>
+                        <div class="u-fw-600 u-c-text-primary"><?php echo (int)$data['total_participantes']; ?></div>
                     </div>
                     <div>
-                        <span style="color:var(--text-tertiary); font-size:11px; font-weight:700; text-transform:uppercase;">Firmante</span>
-                        <div style="font-weight:600; color:var(--text-primary);">
-                            <?php echo $v('director_nombre') . ' ' . $v('director_apellido') ?: '<span style="color:var(--danger-500);">Sin configurar</span>'; ?>
+                        <span class="u-c-text-tertiary u-fs-11px u-fw-700 u-tt-uppercase">Firmante</span>
+                        <div class="u-fw-600 u-c-text-primary">
+                            <?php echo $v('director_nombre') . ' ' . $v('director_apellido') ?: '<span class="u-c-danger-500">Sin configurar</span>'; ?>
                         </div>
                     </div>
                 </div>
-                <hr style="margin:var(--sp-4) 0; border-color:var(--border-subtle);">
-                <p style="font-size:11px; color:var(--text-tertiary);">
+                <hr class="u-m-sp-4-0" style="border-color:var(--border-subtle);">
+                <p class="u-fs-11px u-c-text-tertiary">
                     <i class="bi bi-info-circle"></i>
                     El N° de oficio se asigna al generar. Para cambiar datos del director:
                     <a href="<?php echo URL_ROOT; ?>/config/index">Configuración institucional</a>
@@ -128,9 +128,9 @@ if (!empty($oficiosPrevios)):
         <form action="<?php echo URL_ROOT; ?>/rutas/oficio/<?php echo $ruta->id; ?>" method="POST">
             <div class="sig-card">
                 <div class="sig-card__head">
-                    <div class="sig-card__title"><i class="bi bi-pencil-square" style="color:var(--brand-500);"></i> Datos del Destinatario</div>
+                    <div class="sig-card__title"><i class="bi bi-pencil-square u-c-brand-500"></i> Datos del Destinatario</div>
                 </div>
-                <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+                <div class="sig-card__body u-p-sp-4-sp-5">
                     <div class="sig-field">
                         <label class="sig-field__label" for="of_dest_nombre">Nombre completo <span class="req">*</span></label>
                         <input type="text" name="destinatario_nombre" id="of_dest_nombre" class="sig-input"
@@ -170,7 +170,7 @@ if (!empty($oficiosPrevios)):
                         </div>
                     </div>
                 </div>
-                <div class="sig-card__footer" style="padding:var(--sp-4);">
+                <div class="sig-card__footer u-p-sp-4">
                     <button type="submit" class="btn-sig btn-sig--primary w-100"
                             <?php if ($faltaConfig || $faltaRuta) echo 'disabled'; ?>>
                         <i class="bi bi-file-earmark-arrow-down"></i>
@@ -183,39 +183,37 @@ if (!empty($oficiosPrevios)):
 
     <!-- Vista previa -->
     <div class="col-lg-8">
-        <div style="font-size:11px; color:var(--text-tertiary); margin-bottom:var(--sp-3); text-align:center;">
+        <div class="u-fs-11px u-c-text-tertiary u-mb-sp-3 u-ta-center">
             <i class="bi bi-eye"></i> Vista previa — el N° de oficio se asigna al generar
         </div>
-        <div style="background:#fff; border:1px solid #d1d5db; border-radius:4px; box-shadow:0 2px 14px rgba(0,0,0,.08);
-                    padding:40px 48px 36px;
-                    font-family:'Times New Roman',Times,Georgia,serif; font-size:11pt; color:#111; line-height:1.7;">
+        <div class="u-br-4px" style="background:#fff; border:1px solid #d1d5db; box-shadow:0 2px 14px rgba(0,0,0,.08); padding:40px 48px 36px; font-family:'Times New Roman',Times,Georgia,serif; font-size:11pt; color:#111; line-height:1.7;">
 
             <?php require '../app/views/inc/membrete.php'; ?>
 
-            <p style="text-align:right; margin-bottom:20px;">Cumaná, <?php echo $data['fecha_hoy']; ?></p>
+            <p class="u-ta-right u-mb-20px">Cumaná, <?php echo $data['fecha_hoy']; ?></p>
 
             <div style="margin-bottom:16px;">
-                Oficio: <span style="font-style:italic; color:#9ca3af;">[Se asigna al generar]</span>
+                Oficio: <span class="u-fst-italic u-c-x9ca3af">[Se asigna al generar]</span>
             </div>
 
-            <div style="margin-bottom:20px; line-height:1.5;">
+            <div class="u-mb-20px u-lh-1_5">
                 Ciudadano:<br>
-                <strong id="prev_dest_nombre"><span style="color:#9ca3af; font-style:italic;">Nombre del destinatario</span></strong><br>
-                <span id="prev_dest_cargo"><span style="color:#9ca3af; font-style:italic;">Cargo o institución</span></span><br>
+                <strong id="prev_dest_nombre"><span class="u-c-x9ca3af u-fst-italic">Nombre del destinatario</span></strong><br>
+                <span id="prev_dest_cargo"><span class="u-c-x9ca3af u-fst-italic">Cargo o institución</span></span><br>
                 Su Despacho. &ndash;
             </div>
 
             <div>
-                <p style="text-align:justify; text-indent:2em; margin-bottom:14px;">
+                <p class="u-ta-justify u-textin-2em u-mb-14px">
                     Reciba un cordial saludo de parte de quienes conformamos el equipo de
                     trabajo de <strong>(<?php echo htmlspecialchars($ruta->departamento_nombre ?? 'Turismo'); ?> de IMATUR)</strong>.
                 </p>
-                <p style="text-align:justify; text-indent:2em; margin-bottom:14px;">
+                <p class="u-ta-justify u-textin-2em u-mb-14px">
                     Por medio del presente, se le informa que en el marco del impulso y
                     desarrollo de la <strong><?php echo htmlspecialchars($ruta->nombre ?? ''); ?></strong>,
-                    el día <strong><?php echo $data['fecha_ruta_esp'] ?? '<span style="color:#9ca3af; font-style:italic;">fecha de visita</span>'; ?></strong>
+                    el día <strong><?php echo $data['fecha_ruta_esp'] ?? '<span class="u-c-x9ca3af u-fst-italic">fecha de visita</span>'; ?></strong>
                     del presente año, a las
-                    <strong><?php echo !empty($ejecucion->hora) ? substr($ejecucion->hora, 0, 5) : '<span style="color:#9ca3af; font-style:italic;">hora</span>'; ?></strong>,
+                    <strong><?php echo !empty($ejecucion->hora) ? substr($ejecucion->hora, 0, 5) : '<span class="u-c-x9ca3af u-fst-italic">hora</span>'; ?></strong>,
                     se estará visitando
                     <strong><span id="prev_espacio"><?php echo htmlspecialchars($ruta->nombre ?? ''); ?></span></strong>
                     con un grupo aproximado de
@@ -226,28 +224,27 @@ if (!empty($oficiosPrevios)):
                     adscrito a su institución para los visitantes a este importante patrimonio
                     de la ciudad.
                 </p>
-                <p style="text-align:justify; text-indent:2em; margin-bottom:28px;">
+                <p class="u-ta-justify u-textin-2em" style="margin-bottom:28px;">
                     Sin más que hacer referencia y agradeciendo de antemano la atención que
                     sirva brindarle a la presente, se despide.
                 </p>
             </div>
 
-            <div style="text-align:center; margin-top:28px;">
+            <div class="u-ta-center" style="margin-top:28px;">
                 <p style="margin-bottom:50px;">Atentamente</p>
-                <p style="font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:11pt;">
-                    <?php echo $v('director_nombre') . ' ' . $v('director_apellido') ?: '<span style="color:#9ca3af; font-style:italic;">[Nombre del director]</span>'; ?>
+                <p class="u-fw-700 u-tt-uppercase u-ls-_04em" style="font-size:11pt;">
+                    <?php echo $v('director_nombre') . ' ' . $v('director_apellido') ?: '<span class="u-c-x9ca3af u-fst-italic">[Nombre del director]</span>'; ?>
                 </p>
-                <p style="font-size:9.5pt; font-family:Arial,sans-serif; line-height:1.5; margin-top:3px;">
-                    Resolución N&ordm; <?php echo $v('resolucion_numero') ?: '<span style="color:#9ca3af; font-style:italic;">XX</span>'; ?>
-                    de fecha <?php echo $v('resolucion_fecha') ?: '<span style="color:#9ca3af; font-style:italic;">xxxxxx</span>'; ?>, publicada en<br>
+                <p class="u-lh-1_5 u-mt-3px" style="font-size:9.5pt; font-family:Arial,sans-serif;">
+                    Resolución N&ordm; <?php echo $v('resolucion_numero') ?: '<span class="u-c-x9ca3af u-fst-italic">XX</span>'; ?>
+                    de fecha <?php echo $v('resolucion_fecha') ?: '<span class="u-c-x9ca3af u-fst-italic">xxxxxx</span>'; ?>, publicada en<br>
                     Gaceta Municipal Extraordinaria N&ordm;
-                    <?php echo $v('gaceta_numero') ?: '<span style="color:#9ca3af; font-style:italic;">XX</span>'; ?>
-                    de fecha <?php echo $v('gaceta_fecha') ?: '<span style="color:#9ca3af; font-style:italic;">xxxxxx</span>'; ?>
+                    <?php echo $v('gaceta_numero') ?: '<span class="u-c-x9ca3af u-fst-italic">XX</span>'; ?>
+                    de fecha <?php echo $v('gaceta_fecha') ?: '<span class="u-c-x9ca3af u-fst-italic">xxxxxx</span>'; ?>
                 </p>
             </div>
 
-            <div style="margin-top:36px; padding-top:8px; border-top:1px solid #555;
-                        text-align:center; font-family:Arial,sans-serif; font-size:8pt; color:#444; line-height:1.5;">
+            <div class="u-pt-8px u-ta-center u-lh-1_5" style="margin-top:36px; border-top:1px solid #555; font-family:Arial,sans-serif; font-size:8pt; color:#444;">
                 Calle Sucre N° 11, San Francísco, Parroquia Santa Inés, Municipio Sucre &mdash; Edo. Sucre<br>
                 Telf.: <?php echo $v('telf_institucion') ?: '(0293) 431-4073'; ?>
                 &nbsp;&nbsp; Correo: <?php echo $v('correo_institucion') ?: 'imatur.cumana@gmail.com'; ?>

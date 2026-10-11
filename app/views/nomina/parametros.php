@@ -19,7 +19,7 @@
     </div>
 </div>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-5);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-5">
     <i class="bi bi-shield-check"></i>
     <div>
         <strong>Cambiar un parámetro no altera una nómina ya calculada.</strong>
@@ -32,7 +32,7 @@
 
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-calendar-month"></i> Cesta ticket y tasa del dólar por mes</div></div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-tabla-buscable data-por-pagina="12">
             <table class="sig-table">
                 <thead>
@@ -55,11 +55,11 @@
                             <td class="cell-strong"><?php echo htmlspecialchars($m->periodo); ?></td>
                             <td class="text-end u-num"><?php echo number_format((float)$m->monto_cesta_ticket, 2, ',', '.'); ?></td>
                             <td class="text-end u-num"><?php echo number_format((float)$m->tasa_dolar, 4, ',', '.'); ?></td>
-                            <td style="font-size:12px;">
+                            <td class="u-fs-12px">
                                 <?php if (($m->tasa_fuente ?? '') === 'BCV'): ?>
                                     <span class="sig-badge sig-badge--info"><i class="bi bi-bank"></i> BCV</span>
                                     <?php if (!empty($m->tasa_fecha_valor)): ?>
-                                        <div style="color:var(--text-tertiary);margin-top:2px;">
+                                        <div class="u-c-text-tertiary u-mt-2px">
                                             Fecha valor <?php echo date('d/m/Y', strtotime($m->tasa_fecha_valor)); ?>
                                         </div>
                                     <?php endif; ?>
@@ -67,10 +67,10 @@
                                     <span class="sig-badge sig-badge--neutral"><i class="bi bi-pencil"></i> Manual</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($m->observaciones ?? '—'); ?></td>
+                            <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($m->observaciones ?? '—'); ?></td>
                             <td class="col-actions">
                                 <button class="row-action row-action--edit"
-                                        onclick='editarMes(<?php echo json_encode($m, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                        onclick='editarMes(<?php echo json_encode($m, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                     <i class="bi bi-pencil"></i> Editar
                                 </button>
                             </td>
@@ -87,14 +87,14 @@
         <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-mortarboard"></i> Prima de profesionalización</div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:12px;color:var(--text-tertiary);">% sobre el sueldo base quincenal</span>
+                <div class="u-ai-center u-gap-10px" style="display:flex;">
+                    <span class="u-fs-12px u-c-text-tertiary">% sobre el sueldo base quincenal</span>
                     <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="nuevoGrado()">
                         <i class="bi bi-plus-lg"></i> Agregar
                     </button>
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:0;">
+            <div class="sig-card__body u-p-0">
                 <div class="sig-table-wrap" data-no-export>
                     <table class="sig-table">
                         <thead><tr><th>Código</th><th>Grado de instrucción</th><th class="text-end">%</th><th class="col-actions">Acciones</th></tr></thead>
@@ -111,7 +111,7 @@
                                     <td class="text-end u-num"><?php echo number_format((float)$g->porcentaje, 2, ',', '.'); ?></td>
                                     <td class="col-actions">
                                         <button class="row-action row-action--edit"
-                                                onclick='editarGrado(<?php echo json_encode($g, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                                onclick='editarGrado(<?php echo json_encode($g, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                             <i class="bi bi-pencil"></i> Editar
                                         </button>
                                         <?php if ($g->is_active): ?>
@@ -137,14 +137,14 @@
         <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-graph-up-arrow"></i> Prima de antigüedad</div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:12px;color:var(--text-tertiary);">Años en la administración pública</span>
+                <div class="u-ai-center u-gap-10px" style="display:flex;">
+                    <span class="u-fs-12px u-c-text-tertiary">Años en la administración pública</span>
                     <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="nuevoTramo()">
                         <i class="bi bi-plus-lg"></i> Agregar
                     </button>
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:0;">
+            <div class="sig-card__body u-p-0">
                 <div class="sig-table-wrap" data-no-export style="max-height:340px;overflow-y:auto;">
                     <table class="sig-table">
                         <thead><tr><th>Años</th><th class="text-end">%</th><th class="col-actions">Acciones</th></tr></thead>
@@ -174,7 +174,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div style="padding:10px 14px;border-top:1px solid var(--border-subtle);font-size:12px;color:var(--text-tertiary);">
+                <div class="u-p-10px-14px u-bdt-1px-solid-border-subtle u-fs-12px u-c-text-tertiary">
                     <i class="bi bi-info-circle"></i>
                     El <strong>último tramo rige para todos los años siguientes</strong>: por eso el tope
                     no se marca a mano, se calcula solo al guardar.
@@ -192,7 +192,7 @@
         </button>
     </div>
     <div class="sig-card__body">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--sp-3);">
+        <p class="u-fs-13px u-c-text-secondary u-mb-sp-3">
             Ninguno está escrito en el código: son parámetros de contratación colectiva y se editan aquí.
         </p>
         <div class="row">
@@ -216,37 +216,37 @@
             foreach ($etiquetas as $clave => $label):
                 $val = $data['escalares'][$clave] ?? null;
             ?>
-                <div class="col-md-3 col-sm-6" style="margin-bottom:var(--sp-3);">
-                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);"><?php echo $label; ?></div>
-                    <div style="font-weight:700;font-variant-numeric:tabular-nums;"><?php echo $val === null ? '—' : rtrim(rtrim(number_format((float)$val, 2, ',', '.'), '0'), ','); ?></div>
+                <div class="col-md-3 col-sm-6 u-mb-sp-3">
+                    <div class="u-fs-11px u-tt-uppercase u-ls-_06em u-c-text-tertiary"><?php echo $label; ?></div>
+                    <div class="u-fw-700 u-fvn-tabular-nums"><?php echo $val === null ? '—' : rtrim(rtrim(number_format((float)$val, 2, ',', '.'), '0'), ','); ?></div>
                 </div>
             <?php endforeach; ?>
         </div>
-        <hr style="margin:var(--sp-4) 0;border:none;border-top:1px solid var(--border-subtle);">
+        <hr class="u-m-sp-4-0 u-bdt-1px-solid-border-subtle" style="border:none;">
 
-        <div style="font-size:13px;font-weight:700;margin-bottom:var(--sp-2);">
+        <div class="u-fs-13px u-fw-700 u-mb-sp-2">
             <i class="bi bi-calendar2-check"></i> Días base del bono vacacional, por tipo de personal
         </div>
-        <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:var(--sp-3);">
+        <p class="u-fs-12px u-c-text-tertiary u-mb-sp-3">
             Beneficio de <strong>contrato colectivo</strong>, superior al mínimo de la LOTTT (15 + 1 por año, tope 30).
         </p>
         <div class="row">
             <?php foreach (($data['diasBono'] ?? []) as $tipo => $dias): ?>
-                <div class="col-md-3 col-sm-6" style="margin-bottom:var(--sp-3);">
-                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);"><?php echo htmlspecialchars($tipo); ?></div>
-                    <div style="font-weight:700;font-variant-numeric:tabular-nums;">
+                <div class="col-md-3 col-sm-6 u-mb-sp-3">
+                    <div class="u-fs-11px u-tt-uppercase u-ls-_06em u-c-text-tertiary"><?php echo htmlspecialchars($tipo); ?></div>
+                    <div class="u-fw-700 u-fvn-tabular-nums">
                         <?php echo ($dias === null || $dias === '') ? '—' : (int)$dias . ' días'; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
 
-        <hr style="margin:var(--sp-4) 0;border:none;border-top:1px solid var(--border-subtle);">
+        <hr class="u-m-sp-4-0 u-bdt-1px-solid-border-subtle" style="border:none;">
 
-        <div style="font-size:13px;font-weight:700;margin-bottom:var(--sp-2);">
+        <div class="u-fs-13px u-fw-700 u-mb-sp-2">
             <i class="bi bi-briefcase"></i> Liquidación de prestaciones sociales y vacaciones
         </div>
-        <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:var(--sp-3);">
+        <p class="u-fs-12px u-c-text-tertiary u-mb-sp-3">
             Las cifras de la LOTTT (arts. 142 y 190) también son parámetros: si cambia la ley o el contrato,
             se corrigen aquí y el sistema sigue calculando.
         </p>
@@ -268,9 +268,9 @@
         ?>
         <div class="row">
             <?php foreach ($mostrarLiq as $label => $valor): ?>
-                <div class="col-md-3 col-sm-6" style="margin-bottom:var(--sp-3);">
-                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);"><?php echo $label; ?></div>
-                    <div style="font-weight:700;font-variant-numeric:tabular-nums;"><?php echo htmlspecialchars($valor); ?></div>
+                <div class="col-md-3 col-sm-6 u-mb-sp-3">
+                    <div class="u-fs-11px u-tt-uppercase u-ls-_06em u-c-text-tertiary"><?php echo $label; ?></div>
+                    <div class="u-fw-700 u-fvn-tabular-nums"><?php echo htmlspecialchars($valor); ?></div>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -285,8 +285,8 @@
             <i class="bi bi-plus-lg"></i> Cargar mes
         </button>
     </div>
-    <div class="sig-card__body" style="padding:0;">
-        <div style="padding:10px 14px;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle);">
+    <div class="sig-card__body u-p-0">
+        <div class="u-p-10px-14px u-fs-12_5px u-c-text-secondary u-bdb-1px-solid-border-subtle">
             <i class="bi bi-info-circle"></i>
             Es la tasa <strong>anual</strong> que publica el BCV para los intereses de las prestaciones
             (art. 143 LOTTT) — <strong>no</strong> es el tipo de cambio. La liquidación aplica cada mes la
@@ -316,10 +316,10 @@
                             <td class="text-end u-num"><?php echo number_format((float)$t->tasa_prestaciones, 2, ',', '.'); ?></td>
                             <td class="text-end u-num"><?php echo number_format((float)$t->tasa_prestaciones / 12, 4, ',', '.'); ?></td>
                             <td class="text-end u-num"><?php echo $t->tasa_activa === null ? '—' : number_format((float)$t->tasa_activa, 2, ',', '.'); ?></td>
-                            <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($t->observaciones ?? '—'); ?></td>
+                            <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($t->observaciones ?? '—'); ?></td>
                             <td class="col-actions">
                                 <button class="row-action row-action--edit"
-                                        onclick='editarTasaBcv(<?php echo json_encode($t, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                        onclick='editarTasaBcv(<?php echo json_encode($t, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                     <i class="bi bi-pencil"></i> Editar
                                 </button>
                                 <form action="<?php echo URL_ROOT; ?>/nomina/eliminarTasaBcv" method="POST" style="display:inline;"
@@ -379,11 +379,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--sp-3);">
+                <p class="u-fs-12_5px u-c-text-secondary u-mb-sp-3">
                     Cambiarlos no altera una quincena ya cerrada. Una en borrador los toma al recalcularla.
                 </p>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-mb-sp-2">
                     Montos
                 </div>
                 <div class="row g-3" style="margin-bottom:var(--sp-4);">
@@ -428,7 +428,7 @@
                             $val = $data['escalares'][$clave] ?? '';
                     ?>
                         <div class="col-md-4 col-sm-6">
-                            <div class="sig-field" style="margin:0;">
+                            <div class="sig-field u-m-0">
                                 <label class="sig-field__label" for="esc_<?php echo $clave; ?>"><?php echo $label; ?></label>
                                 <input type="number" step="<?php echo $paso; ?>" min="0"
                                        name="<?php echo $clave; ?>" id="esc_<?php echo $clave; ?>"
@@ -439,27 +439,27 @@
                     $pintar($grupos['montos']['campos'], $grupos['montos']['paso']); ?>
                 </div>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-mb-sp-2">
                     Deducciones y aportes
                 </div>
                 <div class="row g-3" style="margin-bottom:var(--sp-4);">
                     <?php $pintar($grupos['porcentajes']['campos'], $grupos['porcentajes']['paso']); ?>
                 </div>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-mb-sp-2">
                     Días y semanas
                 </div>
                 <div class="row g-3" style="margin-bottom:var(--sp-4);">
                     <?php $pintar($grupos['dias']['campos'], $grupos['dias']['paso']); ?>
                 </div>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-mb-sp-2">
                     Días base del bono vacacional, según la condición del trabajador
                 </div>
                 <div class="row g-3">
                     <?php foreach (BonoVacacional::CONFIG_DIAS as $tipo => $clave): ?>
                         <div class="col-md-6">
-                            <div class="sig-field" style="margin:0;">
+                            <div class="sig-field u-m-0">
                                 <label class="sig-field__label" for="esc_<?php echo $clave; ?>"><?php echo htmlspecialchars($tipo); ?></label>
                                 <input type="number" step="1" min="0"
                                        name="<?php echo $clave; ?>" id="esc_<?php echo $clave; ?>"
@@ -468,19 +468,19 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                <small class="u-c-text-tertiary u-fs-12px u-mt-6px" style="display:block;">
                     A todos se les suma 1 día por año de servicio. El alto nivel y la comisión de servicio
                     toman los días de su condición (fijo o contratado). Se usan en el bono vacacional, en
                     la alícuota de la quincena y en el salario integral de la liquidación.
                 </small>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin:var(--sp-4) 0 var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-m-sp-4-0-sp-2">
                     Liquidación de prestaciones sociales
                 </div>
                 <div class="row g-3">
                     <?php $pintar($grupos['liquidacion']['campos'], $grupos['liquidacion']['paso']); ?>
                     <div class="col-md-4 col-sm-6">
-                        <div class="sig-field" style="margin:0;">
+                        <div class="sig-field u-m-0">
                             <label class="sig-field__label" for="esc_liq_trimestre_modo">Trimestres de la garantía</label>
                             <select name="liq_trimestre_modo" id="esc_liq_trimestre_modo" class="sig-input">
                                 <option value="calendario"<?php echo ($data['liq']['liq_trimestre_modo'] ?? '') !== 'ingreso' ? ' selected' : ''; ?>>Calendario (mar · jun · sep · dic)</option>
@@ -489,31 +489,31 @@
                         </div>
                     </div>
                 </div>
-                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                <small class="u-c-text-tertiary u-fs-12px u-mt-6px" style="display:block;">
                     Con 2 días desde el año 2 y tope 30: el 2.º aniversario deposita 2 días, el 3.º 4, y así hasta 30.
                     La hoja INTERESES del cliente deposita en marzo, junio, septiembre y diciembre (modo calendario).
                 </small>
 
-                <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin:var(--sp-4) 0 var(--sp-2);">
+                <div class="u-fs-12px u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-tertiary u-m-sp-4-0-sp-2">
                     Vacaciones (art. 190 LOTTT)
                 </div>
                 <div class="row g-3">
                     <div class="col-md-4 col-sm-6">
-                        <div class="sig-field" style="margin:0;">
+                        <div class="sig-field u-m-0">
                             <label class="sig-field__label" for="esc_vacaciones_dias_base">Días hábiles del primer año</label>
                             <input type="number" step="1" min="0" name="vacaciones_dias_base" id="esc_vacaciones_dias_base"
                                    class="sig-input" value="<?php echo (int)($data['vacRegla']['base'] ?? 15); ?>">
                         </div>
                     </div>
                     <div class="col-md-4 col-sm-6">
-                        <div class="sig-field" style="margin:0;">
+                        <div class="sig-field u-m-0">
                             <label class="sig-field__label" for="esc_vacaciones_dias_tope">Tope de días por año</label>
                             <input type="number" step="1" min="0" name="vacaciones_dias_tope" id="esc_vacaciones_dias_tope"
                                    class="sig-input" value="<?php echo (int)($data['vacRegla']['tope'] ?? 30); ?>">
                         </div>
                     </div>
                 </div>
-                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:6px;">
+                <small class="u-c-text-tertiary u-fs-12px u-mt-6px" style="display:block;">
                     Se suma 1 día por año de servicio hasta el tope. Lo usan el módulo Vacaciones y la fracción de
                     vacaciones de la liquidación.
                 </small>
@@ -562,8 +562,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="sig-field" style="margin-top:var(--sp-3);">
-                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;">
+                <div class="sig-field u-mt-sp-3">
+                    <label class="u-ai-center u-gap-8px u-fs-13px" style="display:flex;">
                         <input type="checkbox" name="is_active" id="gr_activo" value="1" checked>
                         Vigente (se usa para calcular la prima)
                     </label>
@@ -589,7 +589,7 @@
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="tr_anios">Años de servicio <span class="req">*</span></label>
                     <input type="number" step="1" min="1" max="60" name="anios" id="tr_anios" class="sig-input" required>
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Si el año ya existe en la escala, se actualiza su porcentaje.
                     </small>
                 </div>
@@ -622,11 +622,11 @@
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="pm_cesta">Monto de cesta ticket <span class="req">*</span></label>
                     <input type="number" step="0.01" min="0" name="monto_cesta_ticket" id="pm_cesta" class="sig-input" required>
-                    <small style="color:var(--text-tertiary);font-size:12px;">Escriba el monto que trae la <strong>maqueta de nómina</strong> que reciben cada mes.</small>
+                    <small class="u-c-text-tertiary u-fs-12px">Escriba el monto que trae la <strong>maqueta de nómina</strong> que reciben cada mes.</small>
                 </div>
                 <div class="sig-field mb-3">
                     <label class="sig-field__label" for="pm_tasa">Tasa del dólar <span class="req">*</span></label>
-                    <div style="display:flex;gap:8px;align-items:flex-start;">
+                    <div class="u-gap-8px u-ai-flex-start" style="display:flex;">
                         <input type="number" step="0.0001" min="0" name="tasa_dolar" id="pm_tasa" class="sig-input" required style="flex:1;">
                         <button type="button" class="btn-sig btn-sig--ghost" id="btnConsultarBcv"
                                 onclick="consultarBcv()" style="white-space:nowrap;">

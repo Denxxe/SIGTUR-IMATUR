@@ -66,7 +66,7 @@ $rif   = ConfigSistema::rif();
     <a class="btn btn--ghost" href="<?php echo URL_ROOT; ?>/inventario/index">Volver al inventario</a>
     <div class="hint">
       <?php echo count($items); ?> etiqueta(s) · 62 × 30 mm.
-      El QR abre la hoja de vida del bien. Solo se listan bienes ya codificados por la Alcaldía.
+      El QR abre la hoja de vida del bien. Solo se listan bienes que ya tienen código (asignado por la Alcaldía o por IMATUR).
     </div>
   </div>
 

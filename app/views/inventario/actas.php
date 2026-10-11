@@ -33,7 +33,7 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
     </div>
 </div>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
     <i class="bi bi-info-circle"></i>
     <div>
         <strong>El formato oficial del acta todavía no lo ha entregado el cliente.</strong>
@@ -49,9 +49,9 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             <i class="bi bi-archive"></i> Desincorporados sin acta (<?php echo count($cands); ?>)
         </div>
     </div>
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <?php if (empty($cands)): ?>
-            <p style="color:var(--text-tertiary);margin:0;">
+            <p class="u-c-text-tertiary u-m-0">
                 No hay bienes desincorporados esperando acta.
             </p>
         <?php else: ?>
@@ -64,12 +64,12 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                     <tbody>
                     <?php foreach ($cands as $c): ?>
                         <tr>
-                            <td style="font-family:var(--font-mono);color:var(--brand-600);"><?php echo htmlspecialchars($c->codigo_bn ?? 'S/N'); ?></td>
+                            <td class="u-ff-font-mono u-c-brand-600"><?php echo htmlspecialchars($c->codigo_bn ?? 'S/N'); ?></td>
                             <td><span class="cell-strong"><?php echo htmlspecialchars($c->nombre); ?></span></td>
                             <td><?php echo htmlspecialchars($c->categoria ?? '—'); ?></td>
                             <td><span class="sig-badge <?php echo Inventario::CONDICION_BADGES[$c->condicion] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($c->condicion ?? '—'); ?></span></td>
-                            <td style="font-size:12px;"><?php echo $f($c->fecha_baja); ?></td>
-                            <td style="font-size:12px;color:var(--text-secondary);max-width:260px;white-space:normal;"><?php echo htmlspecialchars($c->motivo_baja ?? '—'); ?></td>
+                            <td class="u-fs-12px"><?php echo $f($c->fecha_baja); ?></td>
+                            <td class="u-fs-12px u-c-text-secondary u-ws-normal" style="max-width:260px;"><?php echo htmlspecialchars($c->motivo_baja ?? '—'); ?></td>
                         </tr>
                     <?php endforeach; ?>
                     </tbody>
@@ -101,7 +101,7 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                                 Firmada · <?php echo $f($a->fecha_firma); ?>
                             </span>
                             <?php if (!empty($a->recibido_por)): ?>
-                                <div style="font-size:11px;color:var(--text-tertiary);">
+                                <div class="u-fs-11px u-c-text-tertiary">
                                     Recibió: <?php echo htmlspecialchars($a->recibido_por); ?>
                                 </div>
                             <?php endif; ?>
@@ -109,7 +109,7 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                             <span class="sig-badge sig-badge--warning" title="Emitida: falta llevarla a la Alcaldía y registrarla firmada">Esperando firma</span>
                         <?php endif; ?>
                     </td>
-                    <td style="font-size:12px;color:var(--text-secondary);max-width:240px;white-space:normal;">
+                    <td class="u-fs-12px u-c-text-secondary u-ws-normal" style="max-width:240px;">
                         <?php echo htmlspecialchars($a->motivo ?? '—'); ?>
                     </td>
                     <td class="col-actions">
@@ -161,37 +161,37 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                     el acta firmada y sellada por la Alcaldía.
                 </p>
 
-                <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--sp-3);">
+                <div class="u-gap-sp-3" style="display:grid; grid-template-columns:1fr 2fr;">
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Fecha del acta <span class="req">*</span></label>
-                        <input type="date" name="fecha" class="sig-input" required
+                        <label for="inveacta_fecha" class="sig-field__label">Fecha del acta <span class="req">*</span></label>
+                        <input id="inveacta_fecha" type="date" name="fecha" class="sig-input" required
                                value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                     </div>
                     <div class="sig-field mb-3">
-                        <label class="sig-field__label">Motivo del lote</label>
-                        <input type="text" name="motivo" class="sig-input"
+                        <label for="inveacta_motivo" class="sig-field__label">Motivo del lote</label>
+                        <input id="inveacta_motivo" type="text" name="motivo" class="sig-input"
                                placeholder="Ej.: Deterioro irreparable · Obsolescencia tecnológica">
                     </div>
                 </div>
 
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">
+                    <div class="sig-field__label" id="acta_bienes_lbl">
                         Bienes a desincorporar <span class="req">*</span>
                         <button type="button" id="btnTodosActa" class="row-action" style="margin-left:8px;">
                             <i class="bi bi-check-all"></i> Todos
                         </button>
-                    </label>
-                    <div style="max-height:260px;overflow:auto;border:1px solid var(--border-subtle,#e5e7eb);border-radius:6px;padding:8px;">
+                    </div>
+                    <div class="u-ov-auto u-br-6px" role="group" aria-labelledby="acta_bienes_lbl" style="max-height:260px; border:1px solid var(--border-subtle,#e5e7eb); padding:8px;">
                         <?php foreach ($cands as $c): ?>
-                            <label style="display:flex;gap:8px;align-items:flex-start;padding:5px 3px;border-bottom:1px solid var(--border-subtle,#f1f5f9);">
+                            <label class="u-gap-8px u-ai-flex-start" style="display:flex; padding:5px 3px; border-bottom:1px solid var(--border-subtle,#f1f5f9);">
                                 <input type="checkbox" name="bienes[]" value="<?php echo $c->id; ?>" class="js-bien-acta">
-                                <span style="font-size:13px;line-height:1.4;">
+                                <span class="u-fs-13px" style="line-height:1.4;">
                                     <strong><?php echo htmlspecialchars($c->nombre); ?></strong>
                                     <?php if (!empty($c->codigo_bn)): ?>
-                                        <span style="font-family:var(--font-mono);color:var(--brand-600);">· <?php echo htmlspecialchars($c->codigo_bn); ?></span>
+                                        <span class="u-ff-font-mono u-c-brand-600">· <?php echo htmlspecialchars($c->codigo_bn); ?></span>
                                     <?php endif; ?>
                                     <br>
-                                    <span style="color:var(--text-tertiary);font-size:12px;">
+                                    <span class="u-c-text-tertiary u-fs-12px">
                                         <?php echo htmlspecialchars($c->categoria ?? '—'); ?>
                                         · <?php echo htmlspecialchars($c->condicion ?? '—'); ?>
                                         · baja del <?php echo $f($c->fecha_baja); ?>
@@ -206,8 +206,8 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                 </div>
 
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación (opcional)</label>
-                    <textarea name="observacion" class="sig-input" rows="2"></textarea>
+                    <label for="inveacta_observacion" class="sig-field__label">Observación (opcional)</label>
+                    <textarea id="inveacta_observacion" name="observacion" class="sig-input" rows="2"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -228,7 +228,7 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="fi_id">
-                <div class="sig-alert sig-alert--warning" style="margin-bottom:var(--sp-3);">
+                <div class="sig-alert sig-alert--warning u-mb-sp-3">
                     <i class="bi bi-exclamation-triangle"></i>
                     <div>
                         Al registrar el acta <strong id="fi_numero"></strong>, sus
@@ -237,18 +237,18 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                     </div>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Fecha de la firma <span class="req">*</span></label>
+                    <label for="fi_fecha" class="sig-field__label">Fecha de la firma <span class="req">*</span></label>
                     <input type="date" name="fecha_firma" id="fi_fecha" class="sig-input" required
                            value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Quién recibió por la Alcaldía</label>
-                    <input type="text" name="recibido_por" class="sig-input" placeholder="Nombre y cargo">
+                    <label for="inveacta_recibido_por" class="sig-field__label">Quién recibió por la Alcaldía</label>
+                    <input id="inveacta_recibido_por" type="text" name="recibido_por" class="sig-input" placeholder="Nombre y cargo">
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Escaneado del acta sellada (opcional)</label>
-                    <input type="file" name="documento" class="sig-input" accept=".pdf,.jpg,.jpeg,.png">
-                    <small style="color:var(--text-tertiary);font-size:11px;">
+                    <label for="inveacta_documento" class="sig-field__label">Escaneado del acta sellada (opcional)</label>
+                    <input id="inveacta_documento" type="file" name="documento" class="sig-input" accept=".pdf,.jpg,.jpeg,.png">
+                    <small class="u-c-text-tertiary u-fs-11px">
                         PDF o imagen, máx. 5 MB. Puedes adjuntarlo después si todavía está en papel.
                     </small>
                 </div>
@@ -280,8 +280,8 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                     <div>Esta acta ya estaba firmada: al anularla, a sus bienes se les <strong>revierte el retiro</strong>, porque el aval que lo respaldaba deja de existir.</div>
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Motivo <span class="req">*</span></label>
-                    <textarea name="motivo" class="sig-input" rows="2" required></textarea>
+                    <label for="inveacta_motivo2" class="sig-field__label">Motivo <span class="req">*</span></label>
+                    <textarea id="inveacta_motivo2" name="motivo" class="sig-input" rows="2" required></textarea>
                 </div>
             </div>
             <div class="modal-footer">

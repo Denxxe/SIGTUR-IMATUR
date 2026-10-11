@@ -17,7 +17,7 @@
             'fecha_hasta' => $data['fecha_hasta']   ?? '',
         ]));
         ?>
-        <div style="display:flex; gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarRutasCsv?<?php echo $qsR; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -35,52 +35,52 @@
 <div class="row g-4 mb-8 anim-slide-up">
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--teal-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Total Rutas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--text-primary);"><?php echo $data['stats']->total_rutas ?? 0; ?></span>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-2px" style="display:block;">Total Rutas</span>
+                <span class="u-fs-28px u-fw-800 u-c-text-primary"><?php echo $data['stats']->total_rutas ?? 0; ?></span>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--success-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Activas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--success-600);"><?php echo $data['stats']->activas ?? 0; ?></span>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-2px" style="display:block;">Activas</span>
+                <span class="u-fs-28px u-fw-800 u-c-success-600"><?php echo $data['stats']->activas ?? 0; ?></span>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--brand-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Salidas ejecutadas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--brand-600);"><?php echo $data['stats']->salidas_ejecutadas ?? 0; ?></span>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-2px" style="display:block;">Salidas ejecutadas</span>
+                <span class="u-fs-28px u-fw-800 u-c-brand-600"><?php echo $data['stats']->salidas_ejecutadas ?? 0; ?></span>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--warning-500);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">En Mantenimiento</span>
-                <span style="font-size:28px; font-weight:800; color:var(--warning-600);"><?php echo $data['stats']->mantenimiento ?? 0; ?></span>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-2px" style="display:block;">En Mantenimiento</span>
+                <span class="u-fs-28px u-fw-800 u-c-warning-600"><?php echo $data['stats']->mantenimiento ?? 0; ?></span>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="sig-card" style="border-bottom: 3px solid var(--slate-400);">
-            <div class="sig-card__body" style="text-align:center; padding:var(--sp-5);">
-                <span style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:2px;">Inactivas</span>
-                <span style="font-size:28px; font-weight:800; color:var(--text-secondary);"><?php echo $data['stats']->inactivas ?? 0; ?></span>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <span class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-2px" style="display:block;">Inactivas</span>
+                <span class="u-fs-28px u-fw-800 u-c-text-secondary"><?php echo $data['stats']->inactivas ?? 0; ?></span>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Filtros -->
-<form method="GET" action="" class="anim-slide-up" style="margin-bottom:var(--sp-6);">
+<form method="GET" action="" class="anim-slide-up u-mb-sp-6">
     <div class="sig-card">
-        <div class="sig-card__body" style="padding:var(--sp-3) var(--sp-5);">
-            <div style="display:flex; flex-wrap:wrap; gap:var(--sp-3); align-items:flex-end;">
-                <div class="sig-field" style="margin:0; min-width:170px;">
+        <div class="sig-card__body u-p-sp-3-sp-5">
+            <div class="u-fwr-wrap u-gap-sp-3 u-ai-flex-end" style="display:flex;">
+                <div class="sig-field u-m-0" style="min-width:170px;">
                     <label class="sig-field__label" for="estado">Estado</label>
                     <select id="estado" name="estado" class="sig-select">
                         <option value="">Todos los estados</option>
@@ -91,7 +91,7 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="sig-field" style="margin:0; min-width:190px;">
+                <div class="sig-field u-m-0" style="min-width:190px;">
                     <label class="sig-field__label" for="tipo_ruta">Tipo de Ruta</label>
                     <select id="tipo_ruta" name="tipo_ruta" class="sig-select">
                         <option value="">Todos los tipos</option>
@@ -102,11 +102,11 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="sig-field" style="margin:0;">
+                <div class="sig-field u-m-0">
                     <label class="sig-field__label" for="fecha_desde">Con salidas desde</label>
                     <input id="fecha_desde" type="date" name="fecha_desde" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_desde'] ?? ''); ?>">
                 </div>
-                <div class="sig-field" style="margin:0;">
+                <div class="sig-field u-m-0">
                     <label class="sig-field__label" for="fecha_hasta">Hasta</label>
                     <input id="fecha_hasta" type="date" name="fecha_hasta" class="sig-input" value="<?php echo htmlspecialchars($data['fecha_hasta'] ?? ''); ?>">
                 </div>
@@ -118,7 +118,7 @@
                     <i class="bi bi-x-circle"></i> Limpiar
                 </a>
                 <?php endif; ?>
-                <span style="font-size:12px; color:var(--text-tertiary); margin-left:auto;">
+                <span class="u-fs-12px u-c-text-tertiary" style="margin-left:auto;">
                     <?php echo count($data['rutas']); ?> resultado(s)
                 </span>
             </div>
@@ -131,9 +131,9 @@
     <div class="col-md-5">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-pie-chart" style="color:var(--teal-500);"></i> Estado de Operatividad</div>
+                <div class="sig-card__title"><i class="bi bi-pie-chart u-c-teal-500"></i> Estado de Operatividad</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartRutasEstado"></div>
             </div>
         </div>
@@ -141,9 +141,9 @@
     <div class="col-md-7">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-bar-chart" style="color:var(--brand-500);"></i> Métricas por Ruta (Infraestructura y Uso)</div>
+                <div class="sig-card__title"><i class="bi bi-bar-chart u-c-brand-500"></i> Métricas por Ruta (Infraestructura y Uso)</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartRutasMetricas"></div>
             </div>
         </div>
@@ -154,8 +154,8 @@
 <?php if (!empty($data['statsPorTipo'])): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6); border-top:3px solid #D97706;">
     <div class="sig-card__head">
-        <div class="sig-card__title"><i class="bi bi-diagram-3-fill" style="color:#D97706;"></i> Demografía Consolidada por Tipo de Ruta</div>
-        <span style="font-size:11px; color:var(--text-tertiary);">Suma de las fichas de las salidas de cada recorrido</span>
+        <div class="sig-card__title"><i class="bi bi-diagram-3-fill u-c-xD97706"></i> Demografía Consolidada por Tipo de Ruta</div>
+        <span class="u-fs-11px u-c-text-tertiary">Suma de las fichas de las salidas de cada recorrido</span>
     </div>
     <div class="sig-table-wrap">
         <table class="sig-table">
@@ -182,23 +182,23 @@
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($st->tipo_ruta); ?></td>
                     <td class="text-center"><?php echo (int)$st->rutas; ?></td>
-                    <td style="text-align:center; color:#7C3AED; font-weight:700;"><?php echo (int)$st->ejecutadas; ?></td>
+                    <td class="u-ta-center u-c-x7C3AED u-fw-700"><?php echo (int)$st->ejecutadas; ?></td>
                     <td class="text-center"><?php echo (int)$st->mujeres; ?></td>
                     <td class="text-center"><?php echo (int)$st->hombres; ?></td>
                     <td class="text-center"><?php echo (int)$st->ninas; ?></td>
                     <td class="text-center"><?php echo (int)$st->ninos; ?></td>
-                    <td style="text-align:center; font-weight:800; color:var(--success-600);"><?php echo (int)$st->total_atendidos; ?></td>
+                    <td class="u-ta-center u-fw-800 u-c-success-600"><?php echo (int)$st->total_atendidos; ?></td>
                 </tr>
                 <?php endforeach; ?>
-                <tr style="background:var(--bg-muted-subtle); font-weight:800;">
+                <tr class="u-bg-bg-muted-subtle u-fw-800">
                     <td>TOTAL</td>
                     <td class="text-center"><?php echo $gR; ?></td>
-                    <td style="text-align:center; color:#7C3AED;"><?php echo $gF; ?></td>
+                    <td class="u-ta-center u-c-x7C3AED"><?php echo $gF; ?></td>
                     <td class="text-center"><?php echo $gM; ?></td>
                     <td class="text-center"><?php echo $gH; ?></td>
                     <td class="text-center"><?php echo $gNa; ?></td>
                     <td class="text-center"><?php echo $gNo; ?></td>
-                    <td style="text-align:center; color:var(--success-600);"><?php echo $gT; ?></td>
+                    <td class="u-ta-center u-c-success-600"><?php echo $gT; ?></td>
                 </tr>
             </tbody>
         </table>
@@ -233,33 +233,33 @@
                 <?php foreach ($data['rutas'] as $r): ?>
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($r->nombre); ?></td>
-                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->tipo_ruta ?? 'General'); ?></td>
-                        <td style="font-size:12px; font-weight:600;"><?php echo htmlspecialchars(Ruta::textoTarifa($r)); ?></td>
-                        <td style="font-size:12px; color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($r->tipo_ruta ?? 'General'); ?></td>
+                        <td class="u-fs-12px u-fw-600"><?php echo htmlspecialchars(Ruta::textoTarifa($r)); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($r->departamento_nombre ?? '—'); ?></td>
                         <td>
                             <span class="sig-badge sig-badge--sm <?php echo Ruta::ESTADO_BADGES[$r->estado] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estado); ?></span>
                         </td>
-                        <td style="font-size:12px; color:var(--text-secondary);">
+                        <td class="u-fs-12px u-c-text-secondary">
                             <?php
                             // mig. 079 — la restricción es del recorrido (edad + condiciones)
                             $restr = [];
                             if (($r->edad_min ?? null) !== null || ($r->edad_max ?? null) !== null) $restr[] = Ruta::textoEdades($r);
                             if (!empty($r->restricciones)) $restr[] = $r->restricciones;
-                            echo $restr ? htmlspecialchars(implode(' · ', $restr)) : '<span style="color:var(--text-tertiary);">—</span>';
+                            echo $restr ? htmlspecialchars(implode(' · ', $restr)) : '<span class="u-c-text-tertiary">—</span>';
                             ?>
                         </td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_puntos; ?></td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);">
+                        <td class="u-ta-center u-fw-700 u-c-text-primary"><?php echo (int)$r->total_puntos; ?></td>
+                        <td class="u-ta-center u-fw-700 u-c-text-primary">
                             <?php echo (int)$r->total_salidas; ?>
                             <?php if ((int)$r->salidas_ejecutadas > 0): ?>
-                                <br><span style="font-size:10px; font-weight:600; color:var(--success-600);"><?php echo (int)$r->salidas_ejecutadas; ?> ejec.</span>
+                                <br><span class="u-fs-10px u-fw-600 u-c-success-600"><?php echo (int)$r->salidas_ejecutadas; ?> ejec.</span>
                             <?php endif; ?>
                         </td>
-                        <td style="font-size:12px; color:var(--text-secondary);">
-                            <?php echo $r->ultima_salida ? date('d/m/Y', strtotime($r->ultima_salida)) : '<span style="color:var(--text-tertiary);">—</span>'; ?>
+                        <td class="u-fs-12px u-c-text-secondary">
+                            <?php echo $r->ultima_salida ? date('d/m/Y', strtotime($r->ultima_salida)) : '<span class="u-c-text-tertiary">—</span>'; ?>
                         </td>
-                        <td style="text-align:center; font-weight:700; color:var(--text-primary);"><?php echo (int)$r->total_participantes; ?></td>
-                        <td style="text-align:center; font-weight:700; color:var(--success-600);"><?php echo (int)($r->total_atendidos ?? 0); ?></td>
+                        <td class="u-ta-center u-fw-700 u-c-text-primary"><?php echo (int)$r->total_participantes; ?></td>
+                        <td class="u-ta-center u-fw-700 u-c-success-600"><?php echo (int)($r->total_atendidos ?? 0); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

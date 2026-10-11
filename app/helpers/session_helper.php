@@ -5,6 +5,17 @@
  */
 
 /**
+ * Id único por página para asociar un <label for> con su control cuando el
+ * formulario se repite dentro de un bucle (un id fijo se duplicaría en cada
+ * fila). Uso: `<label for="<?php echo $__lbl = sigtur_uid('x'); ?>">` y en el
+ * control `id="<?php echo $__lbl; ?>"`. Ver CLAUDE.md → Accesibilidad.
+ */
+function sigtur_uid(string $prefijo = 'fld'): string {
+    static $n = 0;
+    return preg_replace('/[^A-Za-z0-9_-]/', '', $prefijo) . '_u' . (++$n);
+}
+
+/**
  * Idempotencia / anti doble-envío (B10): pool de tokens de un solo uso por sesión.
  * Cada render de página emite un token y el primer POST que lo presenta lo consume.
  * Un segundo envío con el mismo token (doble clic, refrescar el POST, reintento de

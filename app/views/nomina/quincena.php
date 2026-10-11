@@ -22,7 +22,7 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
             cesta ticket <?php echo $m($per->monto_cesta_ticket); ?> ·
             tasa del dólar <?php echo number_format((float)$per->tasa_dolar, 4, ',', '.'); ?> ·
             <?php echo (int)$per->semanas; ?> semanas.
-            <br><span style="font-size:12px;">Estos parámetros quedaron congelados al generar, para que la quincena se pueda reconstruir tal como se pagó.</span>
+            <br><span class="u-fs-12px">Estos parámetros quedaron congelados al generar, para que la quincena se pueda reconstruir tal como se pagó.</span>
         </p>
     </div>
     <div class="page__actions">
@@ -42,15 +42,15 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
 </div>
 
 <?php if (!empty($data['advertencias'])): ?>
-<div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
         <strong><?php echo count($data['advertencias']); ?> trabajador(es) con datos sin resolver.</strong>
         El cálculo se hizo con lo que había, pero estos casos no están completos. Corrija la ficha
         y use <em>Recalcular</em> antes de cerrar — el sistema avisa en vez de pagar 0 en silencio.
-        <ul style="margin:8px 0 0;padding-left:18px;">
+        <ul class="u-m-8px-0-0 u-pl-18px">
             <?php foreach ($data['advertencias'] as $a): ?>
-                <li style="margin-bottom:4px;">
+                <li class="u-mb-4px">
                     <strong><?php echo htmlspecialchars(trim($a->apellido . ' ' . $a->nombre)); ?></strong>
                     (<?php echo htmlspecialchars($a->cedula); ?>) — <?php echo htmlspecialchars($a->advertencias); ?>
                 </li>
@@ -63,7 +63,7 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
 <!-- Resumen consolidado -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-table"></i> Resumen consolidado</div></div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export>
             <table class="sig-table">
                 <thead>
@@ -93,11 +93,11 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                             <td class="text-end u-num"><?php echo $m($r['faov']); ?></td>
                             <td class="text-end u-num"><?php echo $m($r['lrppf']); ?></td>
                             <td class="text-end u-num"><?php echo $m($r['total_deducciones']); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;"><?php echo $m($r['total_neto']); ?></td>
+                            <td class="u-ta-right u-fvn-tabular-nums u-fw-700"><?php echo $m($r['total_neto']); ?></td>
                             <td class="text-end u-num"><?php echo $m($r['total_aportes']); ?></td>
                         </tr>
                     <?php endforeach; ?>
-                    <tr style="border-top:2px solid var(--border-strong,var(--border-subtle));font-weight:700;">
+                    <tr class="u-fw-700" style="border-top:2px solid var(--border-strong,var(--border-subtle));">
                         <td>TOTAL GENERAL</td>
                         <td class="text-center"><?php echo $tot['cantidad']; ?></td>
                         <td class="text-end u-num"><?php echo $m($tot['total_sueldo']); ?></td>
@@ -119,9 +119,9 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">
         <div class="sig-card__title"><i class="bi bi-people"></i> <?php echo htmlspecialchars($tipo); ?></div>
-        <div style="font-size:12px;color:var(--text-tertiary);"><?php echo count($filas); ?> trabajador(es)</div>
+        <div class="u-fs-12px u-c-text-tertiary"><?php echo count($filas); ?> trabajador(es)</div>
     </div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export style="overflow-x:auto;">
             <table class="sig-table" style="min-width:1200px;">
                 <thead>
@@ -152,19 +152,19 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                                     <i class="bi bi-exclamation-triangle" style="color:var(--warning-600);"
                                        title="<?php echo htmlspecialchars($f->advertencias); ?>"></i>
                                 <?php endif; ?>
-                                <br><small style="color:var(--text-tertiary);"><?php echo htmlspecialchars($f->cargo); ?></small>
+                                <br><small class="u-c-text-tertiary"><?php echo htmlspecialchars($f->cargo); ?></small>
                             </td>
                             <td>
                                 <?php if ($f->codigo_grado): ?>
                                     <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($f->codigo_grado); ?></span>
-                                    <small style="color:var(--text-tertiary);"><?php echo number_format((float)$f->pct_profesionalizacion, 0); ?>%</small>
+                                    <small class="u-c-text-tertiary"><?php echo number_format((float)$f->pct_profesionalizacion, 0); ?>%</small>
                                 <?php else: ?>
-                                    <span style="color:var(--text-tertiary);font-style:italic;">sin grado</span>
+                                    <span class="u-c-text-tertiary u-fst-italic">sin grado</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
                                 <?php echo (int)$f->anios_administracion; ?>
-                                <br><small style="color:var(--text-tertiary);"><?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
+                                <br><small class="u-c-text-tertiary"><?php echo number_format((float)$f->pct_antiguedad, 1, ',', '.'); ?>%</small>
                             </td>
                             <td class="text-end u-num"><?php echo $m($f->sueldo_base_quincenal); ?></td>
                             <td class="text-end u-num"><?php echo $m($f->prima_profesionalizacion); ?></td>
@@ -172,15 +172,15 @@ $m  = fn($v) => number_format((float)$v, 2, ',', '.');
                             <td class="text-end u-num"><?php echo $m($f->bono_transporte); ?></td>
                             <td class="text-end u-num">
                                 <?php echo $m($f->prima_por_hijos); ?>
-                                <?php if ((int)$f->n_hijos > 0): ?><br><small style="color:var(--text-tertiary);"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
+                                <?php if ((int)$f->n_hijos > 0): ?><br><small class="u-c-text-tertiary"><?php echo (int)$f->n_hijos; ?> hijo(s)</small><?php endif; ?>
                             </td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:600;"><?php echo $m($f->total_sueldo_normal); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--danger-600);">−<?php echo $m($f->total_deducciones); ?></td>
-                            <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;"><?php echo $m($f->neto_a_cobrar); ?></td>
+                            <td class="u-ta-right u-fvn-tabular-nums u-fw-600"><?php echo $m($f->total_sueldo_normal); ?></td>
+                            <td class="u-ta-right u-fvn-tabular-nums u-c-danger-600">−<?php echo $m($f->total_deducciones); ?></td>
+                            <td class="u-ta-right u-fvn-tabular-nums u-fw-700"><?php echo $m($f->neto_a_cobrar); ?></td>
                             <?php if ($esComision): ?>
-                                <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
+                                <td class="u-ta-right u-fvn-tabular-nums u-fw-700">
                                     <?php echo $m($f->diferencia_comision); ?>
-                                    <br><small style="color:var(--text-tertiary);">origen <?php echo $m($f->sueldo_dependencia_origen); ?></small>
+                                    <br><small class="u-c-text-tertiary">origen <?php echo $m($f->sueldo_dependencia_origen); ?></small>
                                 </td>
                             <?php endif; ?>
                             <td class="text-end u-num"><?php echo $m($f->bono_responsabilidad); ?></td>

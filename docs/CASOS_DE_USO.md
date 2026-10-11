@@ -779,7 +779,7 @@ congelados. El cálculo **no consulta internet** en ningún momento.
 | Campo | Contenido |
 |---|---|
 | **Actor principal** | A4 Encargada de Bienes |
-| **Precondición** | El bien está registrado en estatus *En espera de codificación* y se recibió el **BM-1** correspondiente (CU-58) |
+| **Precondición** | El bien está registrado en estatus *En espera de codificación* y: se recibió el **BM-1** correspondiente (CU-58) — **o** la **codificación propia** está encendida (mig. 087) |
 
 **Flujo principal**
 1. A4 abre la pestaña **"Sin codificar"** del inventario.
@@ -795,7 +795,13 @@ congelados. El cálculo **no consulta internet** en ningún momento.
 - **5a. N° de orden duplicado:** el sistema lo rechaza indicando qué bien lo usa.
 - **3a. No hay BM-1 registrado:** A4 debe registrarlo primero (CU-58).
 
-**Postcondición:** bien codificado, activo y trazable hasta el BM-1 que aportó su código.
+**Flujo alternativo — codificación propia encendida (mig. 087)**
+- 3b. A4 elige la **clasificación** (grupo-subgrupo-sección) del catálogo vigente.
+- 4b. El sistema **propone el siguiente N° de orden** de la secuencia de IMATUR; A4 lo confirma o lo corrige.
+- 5b. El sistema rechaza un número ya usado (aunque se escriba con o sin ceros) o una clasificación fuera del catálogo.
+- 6b. El bien queda **Activo** y «codificado por IMATUR»; no queda «reconocido por la Alcaldía» hasta que un BM-1 lo traiga.
+
+**Postcondición:** bien codificado, activo y trazable hasta el BM-1 que aportó su código (o marcado como codificado por IMATUR).
 
 **Reglas asociadas:** RN-BIE04, RN-BIE05, RF-BIE-03, RF-BIE-04.
 

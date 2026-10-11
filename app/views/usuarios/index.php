@@ -38,7 +38,7 @@
             <?php foreach ($data['usuarios'] ?? [] as $user): ?>
                 <tr>
                     <td class="cell-strong" style="color:var(--brand-600)">
-                        <i class="bi bi-person-circle" style="margin-right:4px;"></i><?php echo htmlspecialchars($user->username ?? ''); ?>
+                        <i class="bi bi-person-circle u-mr-4px"></i><?php echo htmlspecialchars($user->username ?? ''); ?>
                     </td>
                     <td><?php echo htmlspecialchars(($user->nombre ?? 'N/A') . ' ' . ($user->apellido ?? '')); ?></td>
                     <td>
@@ -54,7 +54,7 @@
                         ?>
                         <span class="sig-badge <?php echo $rolClase; ?>"><?php echo htmlspecialchars($user->rol ?? 'Sin rol'); ?></span>
                     </td>
-                    <td style="font-size:12px; color:var(--text-secondary);">
+                    <td class="u-fs-12px u-c-text-secondary">
                         <?php echo !empty($user->last_login) ? date('d/m/Y H:i', strtotime($user->last_login)) : '—'; ?>
                     </td>
                     <td class="col-actions">
@@ -122,7 +122,7 @@
                         <?php endforeach; ?>
                     </select>
                     <?php if (empty($data['empleados_sin_cuenta'])): ?>
-                    <small style="color:var(--text-secondary); font-size:11px;">
+                    <small class="u-c-text-secondary u-fs-11px">
                         <i class="bi bi-info-circle"></i> Todos los empleados activos ya tienen cuenta.
                     </small>
                     <?php endif; ?>

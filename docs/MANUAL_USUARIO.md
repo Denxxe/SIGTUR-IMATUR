@@ -196,7 +196,11 @@ El listado tiene pestaña **"Sin codificar"** con su contador. El N° de orden n
 
 > **Solo consulta:** si tu rol tiene el módulo de Bienes pero no el permiso *Bienes: registrar y modificar*, verás el distintivo **«Solo consulta»** y no aparecerán los botones de registrar, editar, codificar, mover ni eliminar.
 
-> **Cambio en curso (2026-09):** la Alcaldía notificó que **IMATUR pasará a codificar sus propios bienes**, continuando la secuencia desde su última revisión. Mientras eso no se active en el sistema, el circuito sigue siendo el descrito arriba.
+**Codificación propia (*Inventario → Codificación*).** La Alcaldía notificó que **IMATUR pasará a codificar sus propios bienes**, continuando la secuencia desde su última revisión. El sistema ya está preparado:
+- Cuando la Alcaldía entregue su última codificación, se escribe aquí el **punto de partida** (el último N° de orden que asignó) y se cargan en el **catálogo** los grupos-subgrupos-secciones válidos. También se elige cuántos **dígitos** tiene el N° de orden y si hay **una sola secuencia** o una por clasificación.
+- Al marcar **Encender la codificación propia**, el botón *Codificar* pide la **clasificación** y **propone el siguiente N° de orden**; el bien queda **«codificado por IMATUR»** (ícono de edificio). Lo que llegue en un BM-1 se sigue transcribiendo como antes y queda **«reconocido por la Alcaldía»** (ícono verde).
+- El sistema **no deja encenderla** sin punto de partida y catálogo, y **nunca reutiliza** un número, aunque el bien esté desincorporado.
+- Mientras esté apagada, el circuito sigue siendo el descrito arriba.
 
 ### 4.6 Sistema (Administrador)
 

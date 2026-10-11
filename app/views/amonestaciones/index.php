@@ -43,7 +43,7 @@ $estado = function ($r) use ($limite) {
             <?php else: foreach ($data['roster'] as $r): [$txt, $cls] = $estado($r); ?>
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($r->nombre . ' ' . $r->apellido); ?></td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($r->departamento ?? '—'); ?></td>
+                    <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($r->departamento ?? '—'); ?></td>
                     <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->tipo_contrato ?? '—'); ?></span></td>
                     <td><strong><?php echo (int)$r->faltas; ?></strong></td>
                     <td><strong style="color:<?php echo ((int)$r->amonestaciones >= $limite) ? 'var(--danger, #EF4444)' : 'inherit'; ?>"><?php echo (int)$r->amonestaciones; ?>/<?php echo $limite; ?></strong></td>
@@ -60,7 +60,7 @@ $estado = function ($r) use ($limite) {
 <?php
 // Modales de registro (selección de empleado)
 $selectEmpleados = function ($id = 'id_empleado') use ($data) {
-    $html = '<select name="id_empleado" class="sig-select js-search" required><option value="">Seleccione empleado...</option>';
+    $html = '<select name="id_empleado" id="' . htmlspecialchars($id) . '" class="sig-select js-search" required><option value="">Seleccione empleado...</option>';
     foreach ($data['empleados'] ?? [] as $e) {
         $html .= '<option value="' . $e->id . '">' . htmlspecialchars(($e->nombre ?? '') . ' ' . ($e->apellido ?? '')) . ' (' . htmlspecialchars($e->cedula ?? '') . ')</option>';
     }
@@ -75,11 +75,11 @@ $selectEmpleados = function ($id = 'id_empleado') use ($data) {
             <div class="modal-header"><h5 class="modal-title">Registrar falta</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="sig-field mb-3"><label class="sig-field__label">Empleado <span class="req">*</span></label><?php echo $selectEmpleados(); ?></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
-                    <input type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
-                <div class="sig-field"><label class="sig-field__label">Motivo / observación</label>
-                    <textarea name="motivo" class="sig-textarea" rows="2"></textarea></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="am_falta_empleado">Empleado <span class="req">*</span></label><?php echo $selectEmpleados('am_falta_empleado'); ?></div>
+                <div class="sig-field mb-3"><label for="amoninde_fecha" class="sig-field__label">Fecha <span class="req">*</span></label>
+                    <input id="amoninde_fecha" type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
+                <div class="sig-field"><label for="amoninde_motivo" class="sig-field__label">Motivo / observación</label>
+                    <textarea id="amoninde_motivo" name="motivo" class="sig-textarea" rows="2"></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -96,11 +96,11 @@ $selectEmpleados = function ($id = 'id_empleado') use ($data) {
             <div class="modal-header"><h5 class="modal-title">Registrar amonestación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="sig-field mb-3"><label class="sig-field__label">Empleado <span class="req">*</span></label><?php echo $selectEmpleados(); ?></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Fecha <span class="req">*</span></label>
-                    <input type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
-                <div class="sig-field"><label class="sig-field__label">Motivo <span class="req">*</span></label>
-                    <textarea name="motivo" class="sig-textarea" rows="3" required></textarea></div>
+                <div class="sig-field mb-3"><label class="sig-field__label" for="am_amon_empleado">Empleado <span class="req">*</span></label><?php echo $selectEmpleados('am_amon_empleado'); ?></div>
+                <div class="sig-field mb-3"><label for="amoninde_fecha2" class="sig-field__label">Fecha <span class="req">*</span></label>
+                    <input id="amoninde_fecha2" type="date" name="fecha" class="sig-input" required value="<?php echo date('Y-m-d'); ?>"></div>
+                <div class="sig-field"><label for="amoninde_motivo2" class="sig-field__label">Motivo <span class="req">*</span></label>
+                    <textarea id="amoninde_motivo2" name="motivo" class="sig-textarea" rows="3" required></textarea></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>

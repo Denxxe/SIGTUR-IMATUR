@@ -25,7 +25,7 @@ $ve = fn(string $area): bool => !empty($pu[$area]);
     </div>
     <div class="page__actions">
         <form method="get" action="<?php echo URL_ROOT; ?>/reportes/indicadores" class="no-print" style="display:flex;align-items:center;gap:6px;">
-            <label for="filtroAnio" style="font-size:12px;font-weight:600;color:var(--text-secondary);"><i class="bi bi-calendar3"></i> Año</label>
+            <label class="u-fs-12px u-fw-600 u-c-text-secondary" for="filtroAnio"><i class="bi bi-calendar3"></i> Año</label>
             <select id="filtroAnio" name="anio" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
                 <?php foreach (($data['aniosDisponibles'] ?? []) as $a): ?>
                     <option value="<?php echo $a; ?>" <?php echo ((int)$a === (int)$data['anioActual']) ? 'selected' : ''; ?>><?php echo $a; ?></option>
@@ -51,25 +51,25 @@ function kpiCard(array $k): void {
     $valColor = $isAlert ? '#DC2626' : 'var(--text-primary)';
     $border   = $isAlert ? 'border-left:3px solid #DC2626;' : '';
     echo '<div class="sig-card" style="' . $border . '">';
-    echo '<div class="sig-card__body" style="padding:var(--sp-4);">';
-    echo '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);">';
-    echo '<div style="min-width:0;flex:1;">';
-    echo '<div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;">' . htmlspecialchars($k['label']) . '</div>';
-    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $valColor . ';line-height:1;margin-bottom:4px;">' . number_format($k['value']) . '</div>';
-    echo '<div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' . htmlspecialchars($k['sub']) . '</div>';
+    echo '<div class="sig-card__body u-p-sp-4">';
+    echo '<div class="u-ai-flex-start u-jc-space-between u-gap-sp-3" style="display:flex;">';
+    echo '<div class="u-minw-0 u-flex-1">';
+    echo '<div class="u-fs-0_67rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-ws-nowrap u-ov-hidden u-textov-ellipsis u-mb-4px">' . htmlspecialchars($k['label']) . '</div>';
+    echo '<div class="u-fw-800 u-lh-1 u-mb-4px" style="font-size:1.875rem; color:' . $valColor . ';">' . number_format($k['value']) . '</div>';
+    echo '<div class="u-c-text-tertiary u-ws-nowrap u-ov-hidden u-textov-ellipsis" style="font-size:0.69rem;">' . htmlspecialchars($k['sub']) . '</div>';
     echo '</div>';
-    echo '<div style="flex-shrink:0;width:42px;height:42px;border-radius:10px;background:' . $k['bg'] . ';display:flex;align-items:center;justify-content:center;">';
+    echo '<div class="u-fsh-0 u-h-42px u-ai-center u-jc-center" style="width:42px; border-radius:10px; background:' . $k['bg'] . '; display:flex;">';
     echo '<i class="bi ' . $k['icon'] . '" style="font-size:1.15rem;color:white;"></i></div>';
     echo '</div></div></div>';
 }
 
 // Helper separador de área (mini-versión)
 function areaSep(string $label, string $color, string $icon): void {
-    echo '<div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);" class="anim-slide-up">';
-    echo '<div style="width:3px;height:16px;border-radius:2px;background:' . $color . ';flex-shrink:0;"></div>';
-    echo '<span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">';
-    echo '<i class="bi ' . $icon . '" style="color:' . $color . ';margin-right:3px;"></i>' . htmlspecialchars($label);
-    echo '</span><div style="flex:1;height:1px;background:var(--border-subtle);"></div></div>';
+    echo '<div style="display:flex;" class="anim-slide-up u-ai-center u-gap-sp-3 u-mb-sp-3">';
+    echo '<div class="u-br-2px u-fsh-0" style="width:3px; height:16px; background:' . $color . ';"></div>';
+    echo '<span class="u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary" style="font-size:0.68rem;">';
+    echo '<i class="bi ' . $icon . ' u-c--_-color-_-" style="margin-right:3px;"></i>' . htmlspecialchars($label);
+    echo '</span><div class="u-flex-1 u-h-1px u-bg-border-subtle"></div></div>';
 }
 ?>
 
@@ -141,28 +141,28 @@ function verdictPill(string $color): string {
     if ($color === '#059669') { $txt = 'Óptimo';   $ico = 'bi-check-circle-fill'; }
     elseif ($color === '#D97706') { $txt = 'Aceptable'; $ico = 'bi-exclamation-triangle-fill'; }
     else { $txt = 'Crítico'; $ico = 'bi-x-octagon-fill'; }
-    return '<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:800;'
-         . 'text-transform:uppercase;letter-spacing:.03em;color:' . $color . ';background:' . $color . '18;'
-         . 'padding:2px 7px;border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
+    return '<span class="u-ai-center u-fs-9px u-fw-800 u-c--_-color-_-" style="display:inline-flex; gap:3px; '
+         . 'text-transform:uppercase; letter-spacing:.03em; background:' . $color . '18; '
+         . 'padding:2px 7px; border-radius:20px;"><i class="bi ' . $ico . '"></i>' . $txt . '</span>';
 }
 
 // ── Helper: tarjeta de métrica con valor grande, sub, veredicto y barra ───
 function metricCard(string $label, string $valueDisplay, string $color, string $sub, string $icon, string $meta = '', ?int $barPct = null, bool $verdict = true): void {
     echo '<div class="col-6 col-md-4">';
     echo '<div class="sig-card h-100" style="border-bottom:3px solid ' . $color . ';">';
-    echo '<div class="sig-card__body" style="padding:var(--sp-4);">';
-    echo '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">';
-    echo '<div style="min-width:0;flex:1;">';
-    echo '<div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">' . htmlspecialchars($label) . '</div>';
-    echo '<div style="font-size:1.875rem;font-weight:800;color:' . $color . ';line-height:1;margin-bottom:4px;">' . $valueDisplay . '</div>';
-    echo '<div style="font-size:0.65rem;color:var(--text-tertiary);">' . htmlspecialchars($sub) . '</div>';
-    if ($verdict) echo '<div style="margin-top:5px;">' . verdictPill($color) . '</div>';
+    echo '<div class="sig-card__body u-p-sp-4">';
+    echo '<div class="u-ai-flex-start u-jc-space-between u-gap-sp-2" style="display:flex;">';
+    echo '<div class="u-minw-0 u-flex-1">';
+    echo '<div class="u-fs-0_65rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-mb-4px">' . htmlspecialchars($label) . '</div>';
+    echo '<div class="u-fw-800 u-c--_-color-_- u-lh-1 u-mb-4px" style="font-size:1.875rem;">' . $valueDisplay . '</div>';
+    echo '<div class="u-fs-0_65rem u-c-text-tertiary">' . htmlspecialchars($sub) . '</div>';
+    if ($verdict) echo '<div class="u-mt-5px">' . verdictPill($color) . '</div>';
     echo '</div>';
-    echo '<div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:' . $color . '22;display:flex;align-items:center;justify-content:center;"><i class="bi ' . $icon . '" style="font-size:1rem;color:' . $color . ';"></i></div>';
+    echo '<div class="u-fsh-0 u-br-8px u-ai-center u-jc-center" style="width:38px; height:38px; background:' . $color . '22; display:flex;"><i class="bi ' . $icon . ' u-fs-1rem u-c--_-color-_-"></i></div>';
     echo '</div>';
     if ($barPct !== null) {
-        echo '<div style="margin-top:var(--sp-3);"><div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;"><div style="height:100%;width:' . min(100, max(0, $barPct)) . '%;background:' . $color . ';border-radius:2px;"></div></div>';
-        if ($meta !== '') echo '<div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">' . htmlspecialchars($meta) . '</span></div>';
+        echo '<div class="u-mt-sp-3"><div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden"><div class="u-h-100pct u-br-2px" style="width:' . min(100, max(0, $barPct)) . '%; background:' . $color . ';"></div></div>';
+        if ($meta !== '') echo '<div class="u-ta-right u-mt-2px"><span class="u-fs-9px u-c-text-tertiary">' . htmlspecialchars($meta) . '</span></div>';
         echo '</div>';
     }
     echo '</div></div></div>';
@@ -272,14 +272,14 @@ foreach ($semTiles as $st) {
 <!-- ══════════════════════════════════════════════════════════════════════
      SEMÁFORO DE GESTIÓN INSTITUCIONAL — lectura ejecutiva de un vistazo
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;flex-wrap:wrap;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Semáforo de Gestión Institucional — <?php echo $data['anioActual']; ?></span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);min-width:20px;"></div>
-    <div style="display:flex;gap:var(--sp-2);flex-shrink:0;">
-        <span class="sig-badge" style="background:#05966922;color:#059669;font-weight:700;"><i class="bi bi-check-circle-fill"></i> <?php echo $semOk; ?> óptimo</span>
-        <span class="sig-badge" style="background:#D9770622;color:#D97706;font-weight:700;"><i class="bi bi-exclamation-triangle-fill"></i> <?php echo $semWarn; ?> atención</span>
-        <span class="sig-badge" style="background:#DC262622;color:#DC2626;font-weight:700;"><i class="bi bi-x-octagon-fill"></i> <?php echo $semCrit; ?> crítico</span>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0 u-fwr-wrap" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#0F172A;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Semáforo de Gestión Institucional — <?php echo $data['anioActual']; ?></span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle" style="min-width:20px;"></div>
+    <div class="u-gap-sp-2 u-fsh-0" style="display:flex;">
+        <span class="sig-badge u-c-x059669 u-fw-700" style="background:#05966922;"><i class="bi bi-check-circle-fill"></i> <?php echo $semOk; ?> óptimo</span>
+        <span class="sig-badge u-c-xD97706 u-fw-700" style="background:#D9770622;"><i class="bi bi-exclamation-triangle-fill"></i> <?php echo $semWarn; ?> atención</span>
+        <span class="sig-badge u-fw-700" style="background:#DC262622; color:#DC2626;"><i class="bi bi-x-octagon-fill"></i> <?php echo $semCrit; ?> crítico</span>
     </div>
 </div>
 
@@ -289,22 +289,22 @@ foreach ($semTiles as $st) {
     ?>
     <div class="col-6 col-md-4 col-xl-2">
         <div class="sig-card h-100" style="border-top:3px solid <?php echo $sColor; ?>;position:relative;overflow:hidden;">
-            <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-3);">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2);">
+            <div class="sig-card__body u-p-sp-4-sp-3">
+                <div class="u-ai-center u-jc-space-between u-mb-sp-2" style="display:flex;">
                     <i class="bi <?php echo $st['icon']; ?>" style="font-size:1.05rem;color:<?php echo $sColor; ?>;"></i>
-                    <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;">
+                    <span class="u-positi-relative u-ai-center u-jc-center" style="display:inline-flex; width:14px; height:14px;">
                         <span style="width:10px;height:10px;border-radius:50%;background:<?php echo $sColor; ?>;box-shadow:0 0 0 3px <?php echo $sColor; ?>33;"></span>
                     </span>
                 </div>
-                <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-secondary);line-height:1.25;min-height:2.3em;">
+                <div class="u-fw-700 u-tt-uppercase u-c-text-secondary" style="font-size:0.66rem; letter-spacing:0.04em; line-height:1.25; min-height:2.3em;">
                     <?php echo htmlspecialchars($st['area']); ?>
                 </div>
-                <div style="display:flex;align-items:center;gap:5px;margin:6px 0 2px 0;">
+                <div class="u-ai-center u-gap-5px" style="display:flex; margin:6px 0 2px 0;">
                     <i class="bi <?php echo $sIcon; ?>" style="color:<?php echo $sColor; ?>;font-size:0.9rem;"></i>
                     <span style="font-size:0.95rem;font-weight:800;color:<?php echo $sColor; ?>;"><?php echo $sLabel; ?></span>
                 </div>
-                <div style="font-size:0.7rem;color:var(--text-primary);font-weight:600;"><?php echo htmlspecialchars($st['metric']); ?></div>
-                <div style="font-size:0.62rem;color:var(--text-tertiary);margin-top:2px;"><?php echo htmlspecialchars($st['hint']); ?></div>
+                <div class="u-fs-0_7rem u-c-text-primary u-fw-600"><?php echo htmlspecialchars($st['metric']); ?></div>
+                <div class="u-c-text-tertiary u-mt-2px" style="font-size:0.62rem;"><?php echo htmlspecialchars($st['hint']); ?></div>
             </div>
         </div>
     </div>
@@ -323,69 +323,69 @@ foreach ($semTiles as $st) {
 <div class="row g-3 mb-4 anim-slide-up">
     <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colOcup; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Ocupación de Actividades</div>
+            <div class="sig-card__body u-p-sp-4">
+                <div class="u-ai-flex-start u-jc-space-between u-gap-sp-2" style="display:flex;">
+                    <div class="u-minw-0 u-flex-1">
+                        <div class="u-fs-0_65rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-mb-4px">Ocupación de Actividades</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colOcup; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaOcupacion; ?>%</div>
-                        <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $totalInscritos; ?> inscritos / <?php echo $totalCupos; ?> cupos</div>
-                        <div style="margin-top:5px;"><?php echo verdictPill($colOcup); ?></div>
+                        <div class="u-fs-0_65rem u-c-text-tertiary"><?php echo $totalInscritos; ?> inscritos / <?php echo $totalCupos; ?> cupos</div>
+                        <div class="u-mt-5px"><?php echo verdictPill($colOcup); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colOcup; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-people-fill" style="font-size:1rem;color:<?php echo $colOcup; ?>;"></i>
                     </div>
                 </div>
-                <div style="margin-top:var(--sp-3);">
-                    <div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
+                <div class="u-mt-sp-3">
+                    <div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden">
                         <div style="height:100%;width:<?php echo min(100,$tasaOcupacion); ?>%;background:<?php echo $colOcup; ?>;border-radius:2px;"></div>
                     </div>
-                    <div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">Meta: ≥ 75%</span></div>
+                    <div class="u-ta-right u-mt-2px"><span class="u-fs-9px u-c-text-tertiary">Meta: ≥ 75%</span></div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colFinaliz; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Finalización de Actividades</div>
+            <div class="sig-card__body u-p-sp-4">
+                <div class="u-ai-flex-start u-jc-space-between u-gap-sp-2" style="display:flex;">
+                    <div class="u-minw-0 u-flex-1">
+                        <div class="u-fs-0_65rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-mb-4px">Finalización de Actividades</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colFinaliz; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaFinaliz; ?>%</div>
-                        <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $finalizadas; ?> finalizadas de <?php echo $totalActs; ?></div>
-                        <div style="margin-top:5px;"><?php echo verdictPill($colFinaliz); ?></div>
+                        <div class="u-fs-0_65rem u-c-text-tertiary"><?php echo $finalizadas; ?> finalizadas de <?php echo $totalActs; ?></div>
+                        <div class="u-mt-5px"><?php echo verdictPill($colFinaliz); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colFinaliz; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-check-circle-fill" style="font-size:1rem;color:<?php echo $colFinaliz; ?>;"></i>
                     </div>
                 </div>
-                <div style="margin-top:var(--sp-3);">
-                    <div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
+                <div class="u-mt-sp-3">
+                    <div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden">
                         <div style="height:100%;width:<?php echo min(100,$tasaFinaliz); ?>%;background:<?php echo $colFinaliz; ?>;border-radius:2px;"></div>
                     </div>
-                    <div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">Meta: ≥ 85%</span></div>
+                    <div class="u-ta-right u-mt-2px"><span class="u-fs-9px u-c-text-tertiary">Meta: ≥ 85%</span></div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $colCancel; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:4px;">Tasa de Cancelación</div>
+            <div class="sig-card__body u-p-sp-4">
+                <div class="u-ai-flex-start u-jc-space-between u-gap-sp-2" style="display:flex;">
+                    <div class="u-minw-0 u-flex-1">
+                        <div class="u-fs-0_65rem u-fw-600 u-tt-uppercase u-ls-0_07em u-c-text-secondary u-mb-4px">Tasa de Cancelación</div>
                         <div style="font-size:1.875rem;font-weight:800;color:<?php echo $colCancel; ?>;line-height:1;margin-bottom:4px;"><?php echo $tasaCancel; ?>%</div>
-                        <div style="font-size:0.65rem;color:var(--text-tertiary);"><?php echo $canceladas; ?> canceladas de <?php echo $totalActs; ?></div>
-                        <div style="margin-top:5px;"><?php echo verdictPill($colCancel); ?></div>
+                        <div class="u-fs-0_65rem u-c-text-tertiary"><?php echo $canceladas; ?> canceladas de <?php echo $totalActs; ?></div>
+                        <div class="u-mt-5px"><?php echo verdictPill($colCancel); ?></div>
                     </div>
                     <div style="flex-shrink:0;width:38px;height:38px;border-radius:8px;background:<?php echo $colCancel; ?>22;display:flex;align-items:center;justify-content:center;">
                         <i class="bi bi-x-circle-fill" style="font-size:1rem;color:<?php echo $colCancel; ?>;"></i>
                     </div>
                 </div>
-                <div style="margin-top:var(--sp-3);">
-                    <div style="height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
+                <div class="u-mt-sp-3">
+                    <div class="u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden">
                         <div style="height:100%;width:<?php echo min(100,$tasaCancel); ?>%;background:<?php echo $colCancel; ?>;border-radius:2px;"></div>
                     </div>
-                    <div style="text-align:right;margin-top:2px;"><span style="font-size:9px;color:var(--text-tertiary);">Umbral: &lt; 10%</span></div>
+                    <div class="u-ta-right u-mt-2px"><span class="u-fs-9px u-c-text-tertiary">Umbral: &lt; 10%</span></div>
                 </div>
             </div>
         </div>
@@ -446,23 +446,23 @@ $derivados = array_values(array_filter([
 ]));
 ?>
 <?php if (!empty($derivados)): ?>
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0F172A;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Indicadores Derivados de Productividad — <?php echo $data['anioActual']; ?></span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#0F172A;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Indicadores Derivados de Productividad — <?php echo $data['anioActual']; ?></span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 <div class="row g-3 mb-6 anim-slide-up">
     <?php foreach ($derivados as [$lbl, $val, $sub, $ico, $col]): ?>
     <div class="col-6 col-md-3">
         <div class="sig-card h-100">
-            <div class="sig-card__body" style="padding:var(--sp-4);display:flex;align-items:center;gap:var(--sp-3);">
+            <div class="sig-card__body u-p-sp-4 u-ai-center u-gap-sp-3" style="display:flex;">
                 <div style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:<?php echo $col; ?>18;display:flex;align-items:center;justify-content:center;">
                     <i class="bi <?php echo $ico; ?>" style="font-size:1.25rem;color:<?php echo $col; ?>;"></i>
                 </div>
-                <div style="min-width:0;">
+                <div class="u-minw-0">
                     <div style="font-size:1.5rem;font-weight:900;color:<?php echo $col; ?>;line-height:1;"><?php echo $val; ?></div>
-                    <div style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:3px 0 1px;"><?php echo htmlspecialchars($lbl); ?></div>
-                    <div style="font-size:0.62rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($sub); ?></div>
+                    <div class="u-fw-700 u-tt-uppercase u-ls-_04em u-c-text-secondary" style="font-size:0.66rem; margin:3px 0 1px;"><?php echo htmlspecialchars($lbl); ?></div>
+                    <div class="u-c-text-tertiary u-ws-nowrap u-ov-hidden u-textov-ellipsis" style="font-size:0.62rem;"><?php echo htmlspecialchars($sub); ?></div>
                 </div>
             </div>
         </div>
@@ -480,10 +480,10 @@ $derivados = array_values(array_filter([
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-file-earmark-person-fill" style="color:#3B82F6;"></i> Distribución por Tipo de Contrato
+                    <i class="bi bi-file-earmark-person-fill u-c-x3B82F6"></i> Distribución por Tipo de Contrato
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartContratoTipo"></div>
             </div>
         </div>
@@ -492,7 +492,7 @@ $derivados = array_values(array_filter([
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-table" style="color:#3B82F6;"></i> Composición Contractual del Personal
+                    <i class="bi bi-table u-c-x3B82F6"></i> Composición Contractual del Personal
                 </div>
             </div>
             <div class="sig-table-wrap">
@@ -509,20 +509,20 @@ $derivados = array_values(array_filter([
                         $totalEmpsContrato = 0;
                         foreach ($data['empPorContrato'] ?? [] as $ec) $totalEmpsContrato += (int)($ec->total ?? 0);
                         if (empty($data['empPorContrato'])): ?>
-                            <tr><td colspan="3" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin datos registrados</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="3">Sin datos registrados</td></tr>
                         <?php else:
                             foreach ($data['empPorContrato'] as $ec):
                                 $pctEc = $totalEmpsContrato > 0 ? round(((int)($ec->total ?? 0) / $totalEmpsContrato) * 100, 1) : 0;
                         ?>
                         <tr>
                             <td class="cell-strong"><?php echo htmlspecialchars($ec->tipo_contrato ?? '—'); ?></td>
-                            <td style="text-align:center;font-weight:700;color:#3B82F6;"><?php echo (int)($ec->total ?? 0); ?></td>
+                            <td class="u-ta-center u-fw-700 u-c-x3B82F6"><?php echo (int)($ec->total ?? 0); ?></td>
                             <td class="text-center">
-                                <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                                    <div style="flex:1;height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
+                                <div class="u-ai-center u-gap-sp-2" style="display:flex;">
+                                    <div class="u-flex-1 u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden">
                                         <div style="height:100%;width:<?php echo $pctEc; ?>%;background:#3B82F6;"></div>
                                     </div>
-                                    <span style="font-size:11px;font-weight:700;color:#3B82F6;min-width:36px;"><?php echo $pctEc; ?>%</span>
+                                    <span class="u-fs-11px u-fw-700 u-c-x3B82F6" style="min-width:36px;"><?php echo $pctEc; ?>%</span>
                                 </div>
                             </td>
                         </tr>
@@ -537,10 +537,10 @@ $derivados = array_values(array_filter([
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: PERSONAL Y ASISTENCIA
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#3B82F6;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Personal y Asistencia</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#3B82F6;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Personal y Asistencia</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <!-- RRHH: clasificación, permisos/reposos, amonestaciones, puntualidad (módulos 025-034) -->
@@ -556,36 +556,36 @@ $amDesp = (int)($data['amonDespido'] ?? 0);
 <div class="row g-3 mb-4 anim-slide-up">
     <div class="col-md-3 col-6">
         <div class="sig-card h-100" style="border-top:3px solid #3B82F6;">
-            <div class="sig-card__body" style="padding:var(--sp-4);">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-people-fill" style="color:#3B82F6;"></i> Clasificación</div>
-                <div style="font-size:13px;font-weight:600;margin-top:6px;line-height:1.6;"><?php echo $clasifTxt ? htmlspecialchars(implode(' · ', $clasifTxt)) : '—'; ?></div>
+            <div class="sig-card__body u-p-sp-4">
+                <div class="u-fs-11px u-fw-700 u-tt-uppercase u-c-text-tertiary"><i class="bi bi-people-fill u-c-x3B82F6"></i> Clasificación</div>
+                <div class="u-fs-13px u-fw-600 u-mt-6px" style="line-height:1.6;"><?php echo $clasifTxt ? htmlspecialchars(implode(' · ', $clasifTxt)) : '—'; ?></div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card h-100" style="border-top:3px solid #059669;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-calendar2-week" style="color:#059669;"></i> Permisos/Reposos hoy</div>
-                <div style="font-size:26px;font-weight:900;color:#059669;"><?php echo $permVig; ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);"><?php echo (int)($data['permisosPendientes'] ?? 0); ?> pendiente(s) de aprobar</div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-11px u-fw-700 u-tt-uppercase u-c-text-tertiary"><i class="bi bi-calendar2-week u-c-x059669"></i> Permisos/Reposos hoy</div>
+                <div class="u-fs-26px u-fw-900 u-c-x059669"><?php echo $permVig; ?></div>
+                <div class="u-fs-11px u-c-text-tertiary"><?php echo (int)($data['permisosPendientes'] ?? 0); ?> pendiente(s) de aprobar</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card h-100" style="border-top:3px solid <?php echo $amDesp > 0 ? '#EF4444' : '#D97706'; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-flag-fill" style="color:#D97706;"></i> Amonestaciones</div>
-                <div style="font-size:26px;font-weight:900;color:var(--text-primary);"><?php echo (int)($data['amonResumen']->empleados ?? 0); ?></div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-11px u-fw-700 u-tt-uppercase u-c-text-tertiary"><i class="bi bi-flag-fill u-c-xD97706"></i> Amonestaciones</div>
+                <div class="u-fs-26px u-fw-900 u-c-text-primary"><?php echo (int)($data['amonResumen']->empleados ?? 0); ?></div>
                 <div style="font-size:11px;color:<?php echo $amDesp > 0 ? '#EF4444' : 'var(--text-tertiary)'; ?>;font-weight:<?php echo $amDesp > 0 ? '700' : '400'; ?>;"><?php echo $amDesp; ?> en causa de despido</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card h-100" style="border-top:3px solid <?php echo $pmPct >= 25 ? '#EF4444' : ($pmPct >= 10 ? '#D97706' : '#059669'); ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-tertiary);"><i class="bi bi-alarm" style="color:#EF4444;"></i> Impuntualidad (mes)</div>
-                <div style="font-size:26px;font-weight:900;color:var(--text-primary);"><?php echo $pmPct; ?>%</div>
-                <div style="font-size:11px;color:var(--text-tertiary);"><?php echo $pmImp; ?> de <?php echo $pmCon; ?> marcajes</div>
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-11px u-fw-700 u-tt-uppercase u-c-text-tertiary"><i class="bi bi-alarm u-c-xEF4444"></i> Impuntualidad (mes)</div>
+                <div class="u-fs-26px u-fw-900 u-c-text-primary"><?php echo $pmPct; ?>%</div>
+                <div class="u-fs-11px u-c-text-tertiary"><?php echo $pmImp; ?> de <?php echo $pmCon; ?> marcajes</div>
             </div>
         </div>
     </div>
@@ -596,10 +596,10 @@ $amDesp = (int)($data['amonDespido'] ?? 0);
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-bar-chart-horizontal-fill" style="color:#3B82F6;"></i> Empleados por Departamento
+                    <i class="bi bi-bar-chart-horizontal-fill u-c-x3B82F6"></i> Empleados por Departamento
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartEmpDepto"></div>
             </div>
         </div>
@@ -608,10 +608,10 @@ $amDesp = (int)($data['amonDespido'] ?? 0);
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-calendar-check-fill" style="color:#F59E0B;"></i> Asistencia — Últimos 4 meses
+                    <i class="bi bi-calendar-check-fill u-c-xF59E0B"></i> Asistencia — Últimos 4 meses
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartAsistMes"></div>
             </div>
         </div>
@@ -624,10 +624,10 @@ $amDesp = (int)($data['amonDespido'] ?? 0);
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#7C3AED;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Formación</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#7C3AED;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Formación</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <?php
@@ -638,29 +638,29 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
 ?>
 <?php if ($metaTall > 0): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4); border-left:3px solid <?php echo $colTall; ?>;">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
+    <div class="sig-card__body u-p-sp-4-sp-5">
+        <div class="u-ai-center u-jc-space-between u-gap-sp-4 u-fwr-wrap" style="display:flex;">
             <div>
-                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;">
+                <div class="u-fs-0_7rem u-fw-700 u-tt-uppercase u-ls-_07em u-c-text-secondary u-mb-4px">
                     <i class="bi bi-flag-fill" style="color:<?php echo $colTall; ?>;"></i> Meta Anual de Actividades Formativas — <?php echo $data['anioActual']; ?>
                 </div>
                 <div style="font-size:1.5rem;font-weight:800;color:<?php echo $colTall; ?>;line-height:1;">
-                    <?php echo $tallAnio; ?> <span style="font-size:1rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $metaTall; ?></span>
+                    <?php echo $tallAnio; ?> <span class="u-fs-1rem u-c-text-tertiary u-fw-500">de <?php echo $metaTall; ?></span>
                 </div>
-                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">actividades finalizadas en el año</div>
+                <div class="u-fs-12px u-c-text-tertiary u-mt-2px">actividades finalizadas en el año</div>
             </div>
             <div class="text-end">
                 <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colTall; ?>;line-height:1;"><?php echo $pctTall; ?>%</div>
-                <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
+                <div class="u-fs-11px u-c-text-tertiary">cumplimiento</div>
             </div>
         </div>
-        <div style="margin-top:var(--sp-3);height:8px;background:var(--bg-muted);border-radius:4px;overflow:hidden;">
+        <div class="u-mt-sp-3 u-h-8px u-bg-bg-muted u-br-4px u-ov-hidden">
             <div style="height:100%;width:<?php echo $pctTall; ?>%;background:<?php echo $colTall; ?>;border-radius:4px;transition:width 1s;"></div>
         </div>
         <?php if ($pctTall >= 100): ?>
-            <div style="margin-top:var(--sp-2);font-size:12px;color:#059669;font-weight:600;"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
+            <div class="u-mt-sp-2 u-fs-12px u-c-x059669 u-fw-600"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
         <?php else: $faltan = $metaTall - $tallAnio; ?>
-            <div style="margin-top:var(--sp-2);font-size:12px;color:var(--text-tertiary);">Faltan <?php echo $faltan; ?> actividad(es) para cumplir la meta</div>
+            <div class="u-mt-sp-2 u-fs-12px u-c-text-tertiary">Faltan <?php echo $faltan; ?> actividad(es) para cumplir la meta</div>
         <?php endif; ?>
     </div>
 </div>
@@ -671,10 +671,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades — Tendencia 6 meses
+                    <i class="bi bi-graph-up-arrow u-c-x7C3AED"></i> Actividades — Tendencia 6 meses
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartTallMes"></div>
             </div>
         </div>
@@ -686,7 +686,7 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
                     <i class="bi bi-pie-chart-fill" style="color:#8B5CF6;"></i> Tipo de Actividad
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartTallTipo"></div>
             </div>
         </div>
@@ -695,10 +695,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-people-fill" style="color:#059669;"></i> Participantes
+                    <i class="bi bi-people-fill u-c-x059669"></i> Participantes
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartPartTipo"></div>
             </div>
         </div>
@@ -711,10 +711,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: RECEPCIÓN DE VISITANTES
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0891B2;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Recepción de Visitantes</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#0891B2;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Recepción de Visitantes</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <div class="row g-4 mb-6 anim-slide-up">
@@ -722,10 +722,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Visitas — Últimos 14 días
+                    <i class="bi bi-door-open-fill u-c-x0891B2"></i> Visitas — Últimos 14 días
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartVisitasDia"></div>
             </div>
         </div>
@@ -734,10 +734,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-tags-fill" style="color:#0891B2;"></i> Visitas por Motivo
+                    <i class="bi bi-tags-fill u-c-x0891B2"></i> Visitas por Motivo
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartVisitasMotivo"></div>
             </div>
         </div>
@@ -750,10 +750,10 @@ $colTall   = $pctTall === null ? '#7C3AED' : ($pctTall >= 100 ? '#059669' : ($pc
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN — DEMOGRAFÍA Y GÉNERO (F-3)
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#7C3AED;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Formación — Demografía <?php echo $data['anioActual']; ?></span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#7C3AED;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Formación — Demografía <?php echo $data['anioActual']; ?></span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <?php
@@ -775,10 +775,10 @@ function pctDem($v, $t) { return $t > 0 ? round(($v/$t)*100, 1) : 0; }
     ] as [$lbl, $val, $color, $icon]): ?>
     <div class="col-md col-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $color; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
+            <div class="sig-card__body u-ta-center u-p-sp-4-sp-3">
                 <i class="bi <?php echo $icon; ?>" style="color:<?php echo $color; ?>;font-size:1.2rem;"></i>
-                <div style="font-size:1.5rem;font-weight:900;color:var(--text-primary);margin:4px 0;"><?php echo number_format($val); ?></div>
-                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;"><?php echo $lbl; ?></div>
+                <div class="u-fs-1_5rem u-fw-900 u-c-text-primary u-m-4px-0"><?php echo number_format($val); ?></div>
+                <div class="u-fs-9px u-fw-700 u-c-text-tertiary u-tt-uppercase"><?php echo $lbl; ?></div>
                 <?php if ($lbl !== 'Total formados' && $demTotal > 0): ?>
                     <div style="font-size:10px;color:<?php echo $color; ?>;font-weight:700;"><?php echo pctDem($val, $demTotal); ?>%</div>
                 <?php endif; ?>
@@ -793,7 +793,7 @@ function pctDem($v, $t) { return $t > 0 ? round(($v/$t)*100, 1) : 0; }
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-pie-chart-fill" style="color:#EC4899;"></i> Distribución por Género y Edad</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartDemografia"></div>
             </div>
         </div>
@@ -801,9 +801,9 @@ function pctDem($v, $t) { return $t > 0 ? round(($v/$t)*100, 1) : 0; }
     <div class="col-md-7">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill" style="color:#7C3AED;"></i> Tipo de Entidad Atendida</div>
+                <div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill u-c-x7C3AED"></i> Tipo de Entidad Atendida</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartTipoEntidad"></div>
             </div>
         </div>
@@ -816,10 +816,10 @@ function pctDem($v, $t) { return $t > 0 ? round(($v/$t)*100, 1) : 0; }
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: FORMACIÓN — COBERTURA TERRITORIAL Y CAPACITADORES (F-4, F-5)
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#0891B2;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Formación — Cobertura Territorial y Capacitadores</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#0891B2;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Formación — Cobertura Territorial y Capacitadores</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <?php
@@ -832,32 +832,32 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
     <div class="col-md-4">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-geo-alt-fill" style="color:#0891B2;"></i> Cobertura Municipal</div>
+                <div class="sig-card__title"><i class="bi bi-geo-alt-fill u-c-x0891B2"></i> Cobertura Municipal</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-5);text-align:center;">
-                <div style="font-size:3rem;font-weight:900;color:#0891B2;line-height:1;"><?php echo $mCubiertos; ?></div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);margin:4px 0;">de <?php echo $mTotal; ?> municipios del estado</div>
-                <div style="height:8px;background:var(--bg-muted);border-radius:4px;margin:var(--sp-3) 0;overflow:hidden;">
+            <div class="sig-card__body u-p-sp-5 u-ta-center">
+                <div class="u-fw-900 u-c-x0891B2 u-lh-1" style="font-size:3rem;"><?php echo $mCubiertos; ?></div>
+                <div class="u-c-text-secondary u-m-4px-0" style="font-size:0.85rem;">de <?php echo $mTotal; ?> municipios del estado</div>
+                <div class="u-h-8px u-bg-bg-muted u-br-4px u-m-sp-3-0 u-ov-hidden">
                     <div style="height:100%;width:<?php echo $pctCob; ?>%;background:#0891B2;border-radius:4px;transition:width 1s;"></div>
                 </div>
-                <div style="font-size:1.25rem;font-weight:800;color:#0891B2;"><?php echo $pctCob; ?>%</div>
-                <div style="font-size:10px;color:var(--text-tertiary);margin-top:var(--sp-2);">Municipios cubiertos por sedes de actividades</div>
+                <div class="u-fw-800 u-c-x0891B2" style="font-size:1.25rem;"><?php echo $pctCob; ?>%</div>
+                <div class="u-fs-10px u-c-text-tertiary u-mt-sp-2">Municipios cubiertos por sedes de actividades</div>
                 <?php if (!empty($data['municipiosCubiertos'])): ?>
-                <div style="margin-top:var(--sp-3);display:flex;flex-wrap:wrap;gap:var(--sp-1);justify-content:center;">
+                <div class="u-mt-sp-3 u-fwr-wrap u-jc-center" style="display:flex; gap:var(--sp-1);">
                     <?php foreach ($data['municipiosCubiertos'] as $mc): ?>
                         <span class="sig-badge sig-badge--sm sig-badge--info"><?php echo htmlspecialchars($mc->municipio); ?></span>
                     <?php endforeach; ?>
                 </div>
                 <?php else: ?>
-                <div style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-2);font-style:italic;">Sin actividades con sede registrada este año</div>
+                <div class="u-fs-11px u-c-text-tertiary u-mt-sp-2 u-fst-italic">Sin actividades con sede registrada este año</div>
                 <?php endif; ?>
-                <div style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--border-subtle);">
-                    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-tertiary);margin-bottom:4px;">Cobertura por parroquia</div>
-                    <div style="font-size:1.5rem;font-weight:800;color:#7C3AED;line-height:1;"><?php echo $parrCub; ?> <span style="font-size:0.8rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $parrTot; ?> parroquias</span></div>
-                    <div style="height:6px;background:var(--bg-muted);border-radius:3px;margin:var(--sp-2) 0;overflow:hidden;">
+                <div class="u-mt-sp-4 u-pt-sp-3 u-bdt-1px-solid-border-subtle">
+                    <div class="u-fs-10px u-fw-700 u-tt-uppercase u-ls-_05em u-c-text-tertiary u-mb-4px">Cobertura por parroquia</div>
+                    <div class="u-fs-1_5rem u-fw-800 u-c-x7C3AED u-lh-1"><?php echo $parrCub; ?> <span class="u-c-text-tertiary u-fw-500" style="font-size:0.8rem;">de <?php echo $parrTot; ?> parroquias</span></div>
+                    <div class="u-bg-bg-muted u-ov-hidden" style="height:6px; border-radius:3px; margin:var(--sp-2) 0;">
                         <div style="height:100%;width:<?php echo $pctParr; ?>%;background:#7C3AED;border-radius:3px;transition:width 1s;"></div>
                     </div>
-                    <div style="font-size:1rem;font-weight:800;color:#7C3AED;"><?php echo $pctParr; ?>%</div>
+                    <div class="u-fs-1rem u-fw-800 u-c-x7C3AED"><?php echo $pctParr; ?>%</div>
                 </div>
             </div>
         </div>
@@ -865,7 +865,7 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
     <div class="col-md-8">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-person-badge-fill" style="color:#059669;"></i> Capacitadores — Actividades <?php echo $data['anioActual']; ?></div>
+                <div class="sig-card__title"><i class="bi bi-person-badge-fill u-c-x059669"></i> Capacitadores — Actividades <?php echo $data['anioActual']; ?></div>
             </div>
             <div class="sig-table-wrap">
                 <table class="sig-table">
@@ -879,14 +879,14 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
                     </thead>
                     <tbody>
                         <?php if (empty($data['capacitadores'])): ?>
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin actividades este año</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="4">Sin actividades este año</td></tr>
                         <?php else: ?>
                             <?php foreach ($data['capacitadores'] as $cap): ?>
                             <tr>
                                 <td class="cell-strong"><?php echo htmlspecialchars($cap->facilitador ?? '—'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#7C3AED;"><?php echo (int)($cap->actividades ?? 0); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#059669;"><?php echo number_format((int)($cap->formados ?? 0)); ?></td>
-                                <td style="text-align:center;color:var(--text-secondary);">
+                                <td class="u-ta-center u-fw-700 u-c-x7C3AED"><?php echo (int)($cap->actividades ?? 0); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-x059669"><?php echo number_format((int)($cap->formados ?? 0)); ?></td>
+                                <td class="u-ta-center u-c-text-secondary">
                                     <?php echo (int)($cap->actividades ?? 0) > 0 ? round((int)($cap->formados ?? 0) / (int)$cap->actividades, 1) : '—'; ?>
                                 </td>
                             </tr>
@@ -905,10 +905,10 @@ $pctCob     = $mTotal > 0 ? round(($mCubiertos / $mTotal) * 100) : 0;
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: TURISMO — RUTAS POR TIPO Y META (T-1, T-2)
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#D97706;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Turismo — Tipo de Ruta y Cobertura</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#D97706;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Turismo — Tipo de Ruta y Cobertura</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <?php
@@ -919,29 +919,29 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
 ?>
 <?php if ($metaR > 0): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4); border-left:3px solid <?php echo $colR; ?>;">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;">
+    <div class="sig-card__body u-p-sp-4-sp-5">
+        <div class="u-ai-center u-jc-space-between u-gap-sp-4 u-fwr-wrap" style="display:flex;">
             <div>
-                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;">
+                <div class="u-fs-0_7rem u-fw-700 u-tt-uppercase u-ls-_07em u-c-text-secondary u-mb-4px">
                     <i class="bi bi-flag-fill" style="color:<?php echo $colR; ?>;"></i> Meta Anual de Rutas Turísticas — <?php echo $data['anioActual']; ?>
                 </div>
                 <div style="font-size:1.5rem;font-weight:800;color:<?php echo $colR; ?>;line-height:1;">
-                    <?php echo $rutasA; ?> <span style="font-size:1rem;color:var(--text-tertiary);font-weight:500;">de <?php echo $metaR; ?></span>
+                    <?php echo $rutasA; ?> <span class="u-fs-1rem u-c-text-tertiary u-fw-500">de <?php echo $metaR; ?></span>
                 </div>
-                <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">rutas finalizadas (ejecutadas) este año</div>
+                <div class="u-fs-12px u-c-text-tertiary u-mt-2px">rutas finalizadas (ejecutadas) este año</div>
             </div>
             <div class="text-end">
                 <div style="font-size:2.5rem;font-weight:900;color:<?php echo $colR; ?>;line-height:1;"><?php echo $pctR; ?>%</div>
-                <div style="font-size:11px;color:var(--text-tertiary);">cumplimiento</div>
+                <div class="u-fs-11px u-c-text-tertiary">cumplimiento</div>
             </div>
         </div>
-        <div style="margin-top:var(--sp-3);height:8px;background:var(--bg-muted);border-radius:4px;overflow:hidden;">
+        <div class="u-mt-sp-3 u-h-8px u-bg-bg-muted u-br-4px u-ov-hidden">
             <div style="height:100%;width:<?php echo $pctR; ?>%;background:<?php echo $colR; ?>;border-radius:4px;transition:width 1s;"></div>
         </div>
         <?php if ($pctR >= 100): ?>
-            <div style="margin-top:var(--sp-2);font-size:12px;color:#059669;font-weight:600;"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
+            <div class="u-mt-sp-2 u-fs-12px u-c-x059669 u-fw-600"><i class="bi bi-check-circle-fill"></i> ¡Meta alcanzada!</div>
         <?php else: $faltanR = $metaR - $rutasA; ?>
-            <div style="margin-top:var(--sp-2);font-size:12px;color:var(--text-tertiary);">Faltan <?php echo $faltanR; ?> ruta(s) para cumplir la meta</div>
+            <div class="u-mt-sp-2 u-fs-12px u-c-text-tertiary">Faltan <?php echo $faltanR; ?> ruta(s) para cumplir la meta</div>
         <?php endif; ?>
     </div>
 </div>
@@ -951,12 +951,12 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
     <div class="col-md-5">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-pie-chart-fill" style="color:#D97706;"></i> Participantes por Tipo de Ruta</div>
+                <div class="sig-card__title"><i class="bi bi-pie-chart-fill u-c-xD97706"></i> Participantes por Tipo de Ruta</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <?php if (empty($data['rutasPorTipo'])): ?>
-                    <div style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);font-size:12px;">
-                        <i class="bi bi-info-circle" style="font-size:1.5rem;display:block;margin-bottom:var(--sp-2);"></i>
+                    <div class="u-ta-center u-p-sp-6 u-c-text-tertiary u-fs-12px">
+                        <i class="bi bi-info-circle u-fs-1_5rem u-mb-sp-2" style="display:block;"></i>
                         Aún no hay rutas con participantes registrados.
                     </div>
                 <?php else: ?>
@@ -968,7 +968,7 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
     <div class="col-md-7">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-trophy-fill" style="color:#D97706;"></i> Resumen por Tipo de Ruta</div>
+                <div class="sig-card__title"><i class="bi bi-trophy-fill u-c-xD97706"></i> Resumen por Tipo de Ruta</div>
             </div>
             <div class="sig-table-wrap">
                 <table class="sig-table">
@@ -984,21 +984,21 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
                         <?php
                         $totalPartRutas = array_sum(array_column((array)$data['rutasPorTipo'], 'participantes'));
                         if (empty($data['rutasPorTipo'])): ?>
-                            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Aún no hay rutas con participantes registrados</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="4">Aún no hay rutas con participantes registrados</td></tr>
                         <?php else:
                             foreach ($data['rutasPorTipo'] as $rt):
                                 $pctRt = $totalPartRutas > 0 ? round(($rt->participantes / $totalPartRutas) * 100) : 0;
                         ?>
                             <tr>
                                 <td class="cell-strong"><?php echo htmlspecialchars($rt->tipo_ruta ?? '—'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#D97706;"><?php echo (int)($rt->rutas ?? 0); ?></td>
-                                <td style="text-align:center;font-weight:700;color:var(--text-primary);"><?php echo number_format((int)($rt->participantes ?? 0)); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-xD97706"><?php echo (int)($rt->rutas ?? 0); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-text-primary"><?php echo number_format((int)($rt->participantes ?? 0)); ?></td>
                                 <td class="text-center">
-                                    <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                                        <div style="flex:1;height:4px;background:var(--bg-muted);border-radius:2px;overflow:hidden;">
+                                    <div class="u-ai-center u-gap-sp-2" style="display:flex;">
+                                        <div class="u-flex-1 u-h-4px u-bg-bg-muted u-br-2px u-ov-hidden">
                                             <div style="height:100%;width:<?php echo $pctRt; ?>%;background:#D97706;"></div>
                                         </div>
-                                        <span style="font-size:11px;font-weight:700;color:#D97706;min-width:28px;"><?php echo $pctRt; ?>%</span>
+                                        <span class="u-fs-11px u-fw-700 u-c-xD97706" style="min-width:28px;"><?php echo $pctRt; ?>%</span>
                                     </div>
                                 </td>
                             </tr>
@@ -1014,9 +1014,9 @@ $colR   = $pctR === null ? '#D97706' : ($pctR >= 100 ? '#059669' : ($pctR >= 70 
     <div class="col-12">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-calendar-range-fill" style="color:#D97706;"></i> Frecuencia de Rutas Ejecutadas — Últimos 6 meses</div>
+                <div class="sig-card__title"><i class="bi bi-calendar-range-fill u-c-xD97706"></i> Frecuencia de Rutas Ejecutadas — Últimos 6 meses</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartRutasMes"></div>
             </div>
         </div>
@@ -1039,10 +1039,10 @@ $drNio  = (int)($dr->ninos   ?? 0);
 function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
 ?>
 <?php if ($drTot > 0): ?>
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#D97706;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Turismo — Demografía de Participantes <?php echo $data['anioActual']; ?></span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#D97706;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Turismo — Demografía de Participantes <?php echo $data['anioActual']; ?></span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 <div class="row g-3 mb-4 anim-slide-up">
     <?php foreach ([
@@ -1054,10 +1054,10 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
     ] as [$lbl,$val,$color,$ico]): ?>
     <div class="col-md col-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $color; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
+            <div class="sig-card__body u-ta-center u-p-sp-4-sp-3">
                 <i class="bi <?php echo $ico; ?>" style="color:<?php echo $color; ?>;font-size:1.2rem;"></i>
-                <div style="font-size:1.5rem;font-weight:900;color:var(--text-primary);margin:4px 0;"><?php echo number_format($val); ?></div>
-                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;"><?php echo $lbl; ?></div>
+                <div class="u-fs-1_5rem u-fw-900 u-c-text-primary u-m-4px-0"><?php echo number_format($val); ?></div>
+                <div class="u-fs-9px u-fw-700 u-c-text-tertiary u-tt-uppercase"><?php echo $lbl; ?></div>
                 <?php if ($lbl !== 'Total' && $drTot > 0): ?>
                     <div style="font-size:10px;color:<?php echo $color; ?>;font-weight:700;"><?php echo pctDR($val,$drTot); ?>%</div>
                 <?php endif; ?>
@@ -1069,17 +1069,17 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-5">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-pie-chart-fill" style="color:#D97706;"></i> Distribución por Género y Grupo</div></div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartDemografiaRutas"></div></div>
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-pie-chart-fill u-c-xD97706"></i> Distribución por Género y Grupo</div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartDemografiaRutas"></div></div>
         </div>
     </div>
     <div class="col-md-7">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-info-circle" style="color:#D97706;"></i> Notas sobre los datos</div></div>
-            <div class="sig-card__body" style="padding:var(--sp-5);font-size:13px;color:var(--text-secondary);line-height:1.8;">
-                <p><i class="bi bi-check-circle" style="color:#059669;"></i> <strong>Mujeres y Hombres</strong>: adultos con cédula registrados en el sistema (género del perfil de personas).</p>
-                <p><i class="bi bi-check-circle" style="color:#059669;"></i> <strong>Niñas y Niños (5-11)</strong>: participantes libres con género y fecha de nacimiento capturados al inscribirse.</p>
-                <p><i class="bi bi-exclamation-circle" style="color:#D97706;"></i> Participantes sin género registrado o sin fecha de nacimiento no se contabilizan en esta gráfica.</p>
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-info-circle u-c-xD97706"></i> Notas sobre los datos</div></div>
+            <div class="sig-card__body u-p-sp-5 u-fs-13px u-c-text-secondary" style="line-height:1.8;">
+                <p><i class="bi bi-check-circle u-c-x059669"></i> <strong>Mujeres y Hombres</strong>: adultos con cédula registrados en el sistema (género del perfil de personas).</p>
+                <p><i class="bi bi-check-circle u-c-x059669"></i> <strong>Niñas y Niños (5-11)</strong>: participantes libres con género y fecha de nacimiento capturados al inscribirse.</p>
+                <p><i class="bi bi-exclamation-circle u-c-xD97706"></i> Participantes sin género registrado o sin fecha de nacimiento no se contabilizan en esta gráfica.</p>
             </div>
         </div>
     </div>
@@ -1092,10 +1092,10 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: INVENTARIO DE BIENES
 ════════════════════════════════════════════════════════════════════════ -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin:var(--sp-6) 0 var(--sp-4) 0;">
-    <div style="width:4px;height:20px;border-radius:2px;background:#059669;flex-shrink:0;"></div>
-    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">Inventario de Bienes</span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+<div class="u-ai-center u-gap-sp-3 u-m-sp-6-0-sp-4-0" style="display:flex;">
+    <div class="u-w-4px u-h-20px u-br-2px u-fsh-0" style="background:#059669;"></div>
+    <span class="u-fs-0_72rem u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary">Inventario de Bienes</span>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 
 <div class="row g-4 mb-8 anim-slide-up">
@@ -1103,10 +1103,10 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-clipboard-check-fill" style="color:#D97706;"></i> Estado Físico
+                    <i class="bi bi-clipboard-check-fill u-c-xD97706"></i> Estado Físico
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartInvCond"></div>
             </div>
         </div>
@@ -1115,10 +1115,10 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
         <div class="sig-card h-100">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-box-seam-fill" style="color:#059669;"></i> Distribución por Categoría
+                    <i class="bi bi-box-seam-fill u-c-x059669"></i> Distribución por Categoría
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <div id="chartInvCat"></div>
             </div>
         </div>
@@ -1129,12 +1129,12 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
     <div class="col-md-6">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-arrow-left-right" style="color:#0891B2;"></i> Movimientos de Bienes — <?php echo $data['anioActual']; ?></div>
+                <div class="sig-card__title"><i class="bi bi-arrow-left-right u-c-x0891B2"></i> Movimientos de Bienes — <?php echo $data['anioActual']; ?></div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <?php if (empty($data['movInventario'])): ?>
-                    <div style="text-align:center;padding:var(--sp-6);color:var(--text-tertiary);font-size:12px;">
-                        <i class="bi bi-info-circle" style="font-size:1.5rem;display:block;margin-bottom:var(--sp-2);"></i>
+                    <div class="u-ta-center u-p-sp-6 u-c-text-tertiary u-fs-12px">
+                        <i class="bi bi-info-circle u-fs-1_5rem u-mb-sp-2" style="display:block;"></i>
                         Sin movimientos (asignaciones, traslados, bajas) registrados este año.
                     </div>
                 <?php else: ?>
@@ -1146,7 +1146,7 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
     <div class="col-md-6">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-list-ol" style="color:#0891B2;"></i> Detalle de Movimientos</div>
+                <div class="sig-card__title"><i class="bi bi-list-ol u-c-x0891B2"></i> Detalle de Movimientos</div>
             </div>
             <div class="sig-table-wrap">
                 <table class="sig-table">
@@ -1158,11 +1158,11 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                     </thead>
                     <tbody>
                         <?php if (empty($data['movInventario'])): ?>
-                            <tr><td colspan="2" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin movimientos este año</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="2">Sin movimientos este año</td></tr>
                         <?php else: foreach ($data['movInventario'] as $mv): ?>
                             <tr>
                                 <td class="cell-strong"><?php echo htmlspecialchars($mv->tipo_movimiento ?? '—'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#0891B2;"><?php echo (int)($mv->total ?? 0); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-x0891B2"><?php echo (int)($mv->total ?? 0); ?></td>
                             </tr>
                         <?php endforeach; endif; ?>
                     </tbody>
@@ -1197,11 +1197,11 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                         <?php foreach ($data['empPorDepto'] ?? [] as $e): ?>
                             <tr>
                                 <td class="cell-strong"><?php echo htmlspecialchars($e->departamento ?? 'Sin Dpto'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#3B82F6;"><?php echo (int)($e->total ?? 0); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-x3B82F6"><?php echo (int)($e->total ?? 0); ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if (empty($data['empPorDepto'])): ?>
-                            <tr><td colspan="2" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin datos registrados</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="2">Sin datos registrados</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -1227,11 +1227,11 @@ function pctDR($v,$t){return $t>0?round(($v/$t)*100,1):0;}
                         <?php foreach ($data['invPorCat'] ?? [] as $i): ?>
                             <tr>
                                 <td class="cell-strong"><?php echo htmlspecialchars($i->categoria ?? 'Sin Cat'); ?></td>
-                                <td style="text-align:center;font-weight:700;color:#059669;"><?php echo (int)($i->total ?? 0); ?></td>
+                                <td class="u-ta-center u-fw-700 u-c-x059669"><?php echo (int)($i->total ?? 0); ?></td>
                             </tr>
                         <?php endforeach; ?>
                         <?php if (empty($data['invPorCat'])): ?>
-                            <tr><td colspan="2" style="text-align:center;color:var(--text-tertiary);padding:var(--sp-4);">Sin datos registrados</td></tr>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="2">Sin datos registrados</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

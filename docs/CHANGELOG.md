@@ -18,6 +18,56 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-11 (c) — Deuda técnica: accesibilidad, estilos inline, lista blanca y pruebas (sin migración)
+
+- **`label[for]` completos.** Quedaban 93 sin `for` (no 76). 76 se asociaron con su control
+  automáticamente; en bucles el `id` lo da el helper nuevo `sigtur_uid()`. Los 11 restantes eran
+  rótulos de grupo o de un dato calculado: llevan `id` y el grupo los cita con `aria-labelledby`.
+  **Bug encontrado:** en actas de desincorporación y relaciones, el rótulo «Bienes a…» era un
+  `<label>` que contenía el botón «Todos», y un `label` sin `for` se asocia al primer control que
+  contiene: pulsar el texto marcaba todos los bienes. Ahora es un `div` con el mismo estilo.
+- **Estilos inline: 2.724 → 1.581 `style=""`.** Las 3.348 declaraciones repetidas (≥ 3 usos) pasaron a
+  175 utilidades `u-*` con `!important` (equivalentes a un inline frente a toda regla normal). Se
+  excluyó todo lo que podía comportarse distinto: `display` (lo cambia el JS), vistas standalone o con
+  reglas `!important` propias, PHP dentro de la etiqueta, elementos con `id` o con clases que usa un
+  selector de JS, HTML dentro de `<script>`, y elementos con utilitarias de Bootstrap. Verificado
+  etiqueta por etiqueta (8.388, 0 diferencias de estilo efectivo) y renderizando 33 pantallas.
+- **`Taller::actualizarPersona`** solo acepta las columnas de `COLUMNAS_PERSONA_EDITABLES`: los
+  nombres de columna iban interpolados en el SQL.
+- **XSS en manejadores `onclick` (revisión de seguridad automática).** 12 vistas pasaban un registro a
+  `onclick='editar(<?php echo json_encode(...) ?>)'` sin `JSON_HEX_AMP`: el navegador decodifica `&quot;`
+  dentro del atributo antes de ejecutar el JS, así que un texto guardado por un usuario podía cerrar la
+  cadena e inyectar código; siete además no llevaban ningún flag y un apóstrofo rompía el atributo.
+  Ahora todas usan los cuatro `JSON_HEX_*` (verificado con una carga maliciosa: llega intacta como texto).
+- **Pruebas 145 → 179.** La de montos en letras destapó un error en documentos jurídicos:
+  `numeroALetras(21000)` daba «veintiun mil» (sin tilde); corregido en `Util`.
+
+### 2026-10-11 (b) — Bienes: motor de codificación propia, construido y apagado (mig. 087)
+
+- **Por qué ahora, sin los datos del cliente.** El procedimiento del 2026-09-02 (IMATUR codifica sus
+  bienes) dependía de dos insumos que la institución sigue esperando de la Alcaldía: el punto de
+  partida (B-73) y el catálogo de grupos/subgrupos/secciones (B-75). Se construyó todo lo demás y
+  esos dos datos —más las dos dudas de B-74— quedaron como **parámetros** en *Bienes → Codificación*.
+  El día que lleguen, se escriben y se enciende: sin tocar código.
+- **Arranca apagado** (`bienes_codificacion_propia = 0`): hasta entonces `codificar()` transcribe el
+  BM-1 exactamente como antes. **No deja encenderlo** sin punto de partida ni catálogo vigente (sin
+  punto de partida propondría el 001 y chocaría con la numeración de la Alcaldía) y **se apaga solo**
+  si se da de baja la última clasificación vigente.
+- **El siguiente N° de orden** = el mayor entre el punto de partida y el mayor ya registrado, más uno.
+  Se compara **como entero** (`084` = 84) y sobre **todos** los bienes —desincorporados y papelera
+  incluidos— porque un código no se recicla (B-76) y el listado de la Alcaldía va ordenado por
+  departamento, no por código (B-72). Los repetidos se detectan aunque se escriban distinto
+  (`0172` = `172`). Dígitos y «una secuencia o una por clasificación» (B-74) son parámetros.
+- **C-3: «codificado» ≠ «reconocido por la Alcaldía».** Nueva columna `codificado_por`
+  (Alcaldía/IMATUR). Lo que entra por un BM-1 sigue siendo de la Alcaldía y pone
+  `verificado_alcaldia`; lo que codifica IMATUR no. Lo ya codificado se marcó `Alcaldía`.
+- **C-4: catálogo** `inventario_clasificaciones`, sembrado con `2-01-108` (el único conocido) y los
+  códigos en uso. El código de una clasificación con bienes no se puede cambiar.
+- **C-7:** el texto de las etiquetas ya no dice «codificados por la Alcaldía». La columna de código en
+  la relación de bienes nuevos espera el formato nuevo (B-81).
+- 10 pruebas del cálculo (145 en total) y 13 comprobaciones de punta a punta sobre un respaldo de la
+  base, restaurado después. Consolidado verificado en una base vacía (73 tablas).
+
 ### 2026-10-11 — Liquidación de Prestaciones Sociales (fase N-E) · todas las reglas como parámetros (mig. 086)
 
 - **La Liquidación, desde las fórmulas reales.** Se abrió `LIQUIDACION MES JULIO 2026.xls` con Excel

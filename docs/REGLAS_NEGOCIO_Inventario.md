@@ -64,12 +64,13 @@ unidad es un registro con su propio código (B-09). No existe el concepto de
 > ejes (código oficial + categoría interna), la propiedad patrimonial de la
 > Alcaldía y todo el expediente por bien. La base del sistema sirve igual.
 >
-> **Estado: regla vigente, código NO adaptado todavía.** Hoy `Inventario::codificar()`
-> transcribe el código contra un BM-1 recibido y `verificado_alcaldia` significa
-> "la Alcaldía lo verificó". Lo que falta construir está en
-> `docs/PLAN_MODULO_BIENES.md` §2-ter, y depende de dos insumos: el **punto de
-> partida de la secuencia** (esa última revisión pendiente) y el **catálogo de
-> grupos/subgrupos/secciones** (B-60, reabierta).
+> **Estado (2026-10-11): código ADAPTADO y APAGADO (mig. 087).** El motor de
+> codificación propia está construido (`CodificacionBienes`, pantalla
+> *Bienes → Codificación*) pero no se enciende hasta tener sus dos insumos: el
+> **punto de partida de la secuencia** (B-73, esa última revisión pendiente) y el
+> **catálogo de grupos/subgrupos/secciones** (B-75, B-60 reabierta). Mientras esté
+> apagado, `Inventario::codificar()` transcribe el BM-1 como siempre. Detalle en
+> `docs/PLAN_MODULO_BIENES.md` §2-sexies.
 
 Formato del **Formulario BM-1** (sin cambios):
 
@@ -107,14 +108,24 @@ El circuito pierde la espera: la codificación deja de depender de una visita.
    Alta con descripción, marca/modelo/serial, departamento, costo, factura,
    origen
                     ↓
-② CODIFICACIÓN INTERNA (el sistema)   ⏳ por construir
-   IMATUR asigna grupo-subgrupo-sección + el siguiente N° de orden de su
-   secuencia → estatus "Activo". Ya no se espera a nadie
+② CODIFICACIÓN INTERNA (el sistema)   ✅ construida (mig. 087), se enciende con B-73/B-75
+   IMATUR elige grupo-subgrupo-sección del catálogo y el sistema propone el
+   siguiente N° de orden de su secuencia → estatus "Activo", «codificado por
+   IMATUR». Ya no se espera a nadie
                     ↓
 ③ RELACIÓN A LA ALCALDÍA (el sistema)   ⏳ pendiente del formato nuevo
    Lote de bienes nuevos YA codificados, con su monto, para que la Alcaldía
    mantenga su registro patrimonial. Es informativa: no pide inspección
 ```
+
+**Reglas de la secuencia (todas configurables):** el siguiente N° de orden es el
+mayor entre el punto de partida y el mayor ya registrado, más uno; se compara
+como entero (`084` = 84) y sobre **todos** los bienes, incluidos desincorporados
+y papelera, porque **un código no se recicla** (B-76). Los dígitos (3) y si la
+secuencia es una sola o una por clasificación (B-74) son parámetros. Un bien
+codificado por IMATUR **no** queda «reconocido por la Alcaldía»
+(`verificado_alcaldia`): eso solo lo da el BM-1 (`codificado_por` distingue
+quién puso el código).
 
 La **conciliación del BM-1 se conserva** (`inventario_consolidados_bm1`) por dos
 razones: la última revisión de la Alcaldía todavía está pendiente y hay que

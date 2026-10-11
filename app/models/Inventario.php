@@ -12,9 +12,11 @@
  *
  * Y dos ejes de clasificación, también independientes:
  *
- *   · CÓDIGO OFICIAL (grupo-subgrupo-sección + N° de orden) lo asigna la
- *     Alcaldía; IMATUR solo lo transcribe del Formulario BM-1. No sirve
- *     para clasificar: sillas, mesas y aires comparten `2-01-108`.
+ *   · CÓDIGO OFICIAL (grupo-subgrupo-sección + N° de orden). Hasta ahora lo
+ *     asignaba la Alcaldía y IMATUR lo transcribía del BM-1; con el
+ *     procedimiento del 2026-09-02 lo asigna IMATUR (`CodificacionBienes`,
+ *     mig. 087, apagado hasta B-73/B-75). No sirve para clasificar: sillas,
+ *     mesas y aires comparten `2-01-108`.
  *   · CATEGORÍA interna, para los reportes de la Presidencia.
  */
 class Inventario extends Model {
@@ -453,22 +455,43 @@ class Inventario extends Model {
     }
 
     /**
-     * Registra el código que la Alcaldía asignó al recibir el BM-1 y pasa el
-     * bien a Activo (§2-bis y §4.1 del plan). Es el paso de conciliación.
+     * Asigna el código del bien y lo pasa a Activo (§4.1 y §2-ter del plan).
+     *
+     * Dos procedencias (C-3, mig. 087), que dejan de ser lo mismo:
+     *   · `Alcaldía` — se transcribe el código del BM-1 (conciliación). El bien
+     *     queda además **reconocido por la Alcaldía** (`verificado_alcaldia`).
+     *   · `IMATUR`  — codificación propia: el código lo pone IMATUR. Aún no está
+     *     reconocido por la Alcaldía, así que `verificado_alcaldia` no se toca.
+     *     Exige una clasificación del catálogo y normaliza el N° de orden a los
+     *     dígitos configurados.
+     * Quién decide la procedencia es el controlador (BM-1 → Alcaldía; si no,
+     * según esté encendida la codificación propia).
      */
     public static function codificar(int $id, array $partes, ?string $fecha, $user_id = null,
-                                     ?int $idConsolidado = null): bool {
-        $codigo = self::componerCodigo(
-            $partes['codigo_grupo'] ?? null, $partes['codigo_subgrupo'] ?? null,
-            $partes['codigo_seccion'] ?? null, $partes['nro_orden'] ?? null
-        );
+                                     ?int $idConsolidado = null,
+                                     string $codificadoPor = CodificacionBienes::QUIEN_ALCALDIA): bool {
+        $esPropia = ($codificadoPor === CodificacionBienes::QUIEN_IMATUR);
+        $g   = trim((string)($partes['codigo_grupo'] ?? ''));
+        $sg  = trim((string)($partes['codigo_subgrupo'] ?? ''));
+        $sec = trim((string)($partes['codigo_seccion'] ?? ''));
+        $ord = trim((string)($partes['nro_orden'] ?? ''));
+
+        if ($esPropia) {
+            if (!CodificacionBienes::existeClasificacion($g, $sg, $sec)) {
+                throw new Exception("La clasificación $g-$sg-$sec no está en el catálogo vigente. Agréguela en Bienes → Codificación o elija otra.");
+            }
+            if (!ctype_digit($ord)) throw new Exception('El N° de orden debe ser numérico.');
+            $ord = CodificacionBienes::formatear((int)$ord, CodificacionBienes::params()['digitos']);
+        }
+
+        $codigo = self::componerCodigo($g, $sg, $sec, $ord);
         if ($codigo === null) {
             throw new Exception('Faltan partes del código: se requieren grupo, sub-grupo, sección y N° de orden.');
         }
-        $dup = self::findByNroOrden((string)$partes['nro_orden'], $id);
+        $dup = CodificacionBienes::nroOrdenOcupado($ord, $id, $g, $sg, $sec);
         if ($dup) {
-            throw new Exception('El N° de orden ' . htmlspecialchars((string)$partes['nro_orden'])
-                . ' ya está asignado a otro bien (ID #' . $dup . ').');
+            throw new Exception('El N° de orden ' . htmlspecialchars($ord)
+                . ' ya está asignado a otro bien (ID #' . $dup . '). Los códigos no se reciclan.');
         }
 
         $previos = self::find($id);
@@ -476,24 +499,31 @@ class Inventario extends Model {
         $db->query("UPDATE inventario
                        SET codigo_grupo=:g, codigo_subgrupo=:sg, codigo_seccion=:sec,
                            nro_orden=:orden, codigo_bn=:codigo,
-                           verificado_alcaldia=TRUE, fecha_verificacion=:fecha,
+                           codificado_por=:por, fecha_codificacion=:fecha,
+                           verificado_alcaldia = CASE WHEN :reconoce THEN TRUE ELSE verificado_alcaldia END,
+                           fecha_verificacion  = CASE WHEN :reconoce2 THEN CAST(:fecha2 AS DATE) ELSE fecha_verificacion END,
                            id_consolidado_bm1=:bm1,
                            estatus=:activo, updated_at=CURRENT_TIMESTAMP, updated_by=:u
                      WHERE id=:id AND is_active = TRUE");
-        $db->bind(':g',      trim((string)$partes['codigo_grupo']));
-        $db->bind(':sg',     trim((string)$partes['codigo_subgrupo']));
-        $db->bind(':sec',    trim((string)$partes['codigo_seccion']));
-        $db->bind(':orden',  trim((string)$partes['nro_orden']));
+        $db->bind(':g',      $g);
+        $db->bind(':sg',     $sg);
+        $db->bind(':sec',    $sec);
+        $db->bind(':orden',  $ord);
         $db->bind(':codigo', $codigo);
+        $db->bind(':por',    $esPropia ? CodificacionBienes::QUIEN_IMATUR : CodificacionBienes::QUIEN_ALCALDIA);
         $db->bind(':fecha',  $fecha ?: date('Y-m-d'));
+        $db->bind(':reconoce',  !$esPropia, PDO::PARAM_BOOL);
+        $db->bind(':reconoce2', !$esPropia, PDO::PARAM_BOOL);
+        $db->bind(':fecha2', $fecha ?: date('Y-m-d'));
         $db->bind(':bm1',    $idConsolidado ?: null);
         $db->bind(':activo', self::EST_ACTIVO);
         $db->bind(':u',      $user_id);
         $db->bind(':id',     $id);
         $ok = $db->execute();
         self::auditStatic('inventario', 'UPDATE', $id, $previos,
-            ['codigo_bn' => $codigo, 'estatus' => self::EST_ACTIVO,
-             'verificado_alcaldia' => true, 'id_consolidado_bm1' => $idConsolidado], $user_id);
+            ['codigo_bn' => $codigo, 'estatus' => self::EST_ACTIVO, 'codificado_por' => $codificadoPor,
+             'verificado_alcaldia' => !$esPropia ?: ($previos->verificado_alcaldia ?? false),
+             'id_consolidado_bm1' => $idConsolidado], $user_id);
         return $ok;
     }
 

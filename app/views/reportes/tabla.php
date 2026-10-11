@@ -46,9 +46,9 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
 <div class="row g-3 anim-slide-up" style="margin-bottom:var(--sp-4);">
     <?php foreach ($resumen as $lbl => $val): ?>
         <div class="col">
-            <div class="sig-card"><div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:1.7rem;font-weight:800;color:var(--text-primary);line-height:1.1;"><?php echo htmlspecialchars((string)$val); ?></div>
-                <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;"><?php echo htmlspecialchars((string)$lbl); ?></div>
+            <div class="sig-card"><div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fw-800 u-c-text-primary u-lh-1_1" style="font-size:1.7rem;"><?php echo htmlspecialchars((string)$val); ?></div>
+                <div class="u-fs-11px u-c-text-secondary u-tt-uppercase u-ls-_04em"><?php echo htmlspecialchars((string)$lbl); ?></div>
             </div></div>
         </div>
     <?php endforeach; ?>
@@ -57,12 +57,12 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
 
 <?php if ($filtros): ?>
 <form method="GET" action="<?php echo $accion; ?>" class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);display:flex;align-items:flex-end;gap:var(--sp-3);flex-wrap:wrap;">
+    <div class="sig-card__body u-p-sp-4-sp-5 u-ai-flex-end u-gap-sp-3 u-fwr-wrap" style="display:flex;">
         <?php foreach ($filtros as $f): $tipo = $f['type'] ?? 'text'; $val = $f['value'] ?? ''; ?>
             <div<?php echo $tipo === 'text' ? ' style="flex:1;min-width:200px;"' : ''; ?>>
-                <label class="sig-field__label" style="font-size:11px;"><?php echo htmlspecialchars($f['label']); ?></label>
+                <label for="<?php echo $__lbl = sigtur_uid('repotabl_filtro'); ?>" class="sig-field__label" style="font-size:11px;"><?php echo htmlspecialchars($f['label']); ?></label>
                 <?php if ($tipo === 'select'): ?>
-                    <select name="<?php echo $f['name']; ?>" class="sig-input" style="min-width:150px;">
+                    <select id="<?php echo $__lbl; ?>" name="<?php echo $f['name']; ?>" class="sig-input" style="min-width:150px;">
                         <?php foreach (($f['options'] ?? []) as $ov => $ol): ?>
                             <option value="<?php echo htmlspecialchars((string)$ov); ?>" <?php echo (string)$val === (string)$ov ? 'selected' : ''; ?>><?php echo htmlspecialchars((string)$ol); ?></option>
                         <?php endforeach; ?>
@@ -78,7 +78,7 @@ $vacio     = $data['vacio']     ?? 'Sin registros para mostrar.';
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
-        <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
+        <button type="submit" class="btn-sig btn-sig--primary u-h-42px"><i class="bi bi-funnel"></i> Filtrar</button>
     </div>
 </form>
 <?php endif; ?>

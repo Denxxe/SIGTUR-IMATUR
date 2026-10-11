@@ -27,7 +27,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
 </div>
 
 <?php if ($abierto): ?>
-    <div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
         <i class="bi bi-clipboard-pulse"></i>
         Hay un <strong>conteo abierto</strong> desde el <?php echo htmlspecialchars($abierto->fecha_inicio); ?>
         (<?php echo htmlspecialchars($abierto->motivo); ?>).
@@ -35,7 +35,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
         No se puede iniciar otro hasta cerrarlo.
     </div>
 <?php else: ?>
-    <div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
         <i class="bi bi-info-circle"></i>
         Al iniciar un conteo, el sistema <strong>congela</strong> lo que cree tener de cada bien
         (ubicación, estatus y condición). Después se registra lo hallado físicamente y se comparan.
@@ -60,14 +60,14 @@ $puedeEscribir = InventarioController::puedeEscribir();
                     <tr>
                         <td class="cell-strong"><?php echo htmlspecialchars($c->fecha_inicio); ?></td>
                         <td><?php echo htmlspecialchars($c->motivo); ?></td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($c->responsable ?: '—'); ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($c->responsable ?: '—'); ?></td>
                         <td>
-                            <span style="font-size:12.5px;"><?php echo $ver; ?> / <?php echo $tot; ?></span>
-                            <div style="height:4px;background:var(--border-subtle);border-radius:2px;margin-top:3px;">
+                            <span class="u-fs-12_5px"><?php echo $ver; ?> / <?php echo $tot; ?></span>
+                            <div class="u-h-4px u-bg-border-subtle u-br-2px u-mt-3px">
                                 <div style="height:4px;width:<?php echo $pct; ?>%;background:var(--brand-500);border-radius:2px;"></div>
                             </div>
                         </td>
-                        <td><?php echo (int)$c->faltantes > 0 ? '<span class="sig-badge sig-badge--danger">' . (int)$c->faltantes . '</span>' : '<span style="color:var(--text-tertiary)">0</span>'; ?></td>
+                        <td><?php echo (int)$c->faltantes > 0 ? '<span class="sig-badge sig-badge--danger">' . (int)$c->faltantes . '</span>' : '<span class="u-c-text-tertiary">0</span>'; ?></td>
                         <td><span class="sig-badge <?php echo $c->estado === 'Abierto' ? 'sig-badge--warning' : 'sig-badge--success'; ?>"><?php echo htmlspecialchars($c->estado); ?></span></td>
                         <td class="col-actions">
                             <a href="<?php echo URL_ROOT; ?>/inventario/verConteo/<?php echo (int)$c->id; ?>" class="row-action row-action--view"><i class="bi bi-list-check"></i> Ver</a>
@@ -105,7 +105,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
                         </select></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="ct_obs">Observaciones</label>
                         <textarea name="observaciones" id="ct_obs" class="sig-textarea" rows="2"></textarea></div></div>
-                    <div class="col-12"><div class="sig-alert sig-alert--warning" style="margin:0;">
+                    <div class="col-12"><div class="sig-alert sig-alert--warning u-m-0">
                         Se creará una línea por cada bien del inventario activo con su estado actual congelado.
                     </div></div>
                 </div>

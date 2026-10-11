@@ -126,7 +126,7 @@
         <!-- Header -->
         <header class="sig-header">
             <button class="sig-header__icon-btn sidebar-toggle" onclick="toggleSidebar()" aria-label="Menú">
-                <i class="bi bi-list" style="font-size:20px;"></i>
+                <i class="bi bi-list u-fs-20px"></i>
             </button>
             <?php
             /**
@@ -195,11 +195,11 @@
             ?>
             <div class="sig-header__breadcrumb">
                 <a href="<?php echo URL_ROOT; ?>" title="Inicio" style="display:inline-flex;align-items:center;text-decoration:none;">
-                    <i class="bi bi-house-door" style="font-size:14px; color:var(--brand-500);"></i>
+                    <i class="bi bi-house-door u-fs-14px u-c-brand-500"></i>
                 </a>
                 <?php if ($___bcGrupo !== ''): ?>
                     <span class="sig-header__breadcrumb-sep">/</span>
-                    <span class="sig-header__breadcrumb-group" style="color:var(--text-tertiary);"><?php echo htmlspecialchars($___bcGrupo); ?></span>
+                    <span class="sig-header__breadcrumb-group u-c-text-tertiary"><?php echo htmlspecialchars($___bcGrupo); ?></span>
                 <?php endif; ?>
                 <span class="sig-header__breadcrumb-sep">/</span>
                 <?php if ($___bcHoja !== ''): ?>
@@ -214,8 +214,8 @@
             <!-- Búsqueda global -->
             <form method="get" action="<?php echo URL_ROOT; ?>/buscar/index" class="sig-header__search" role="search"
                   style="margin-left:auto;display:flex;align-items:center;gap:6px;max-width:340px;flex:1;">
-                <div style="position:relative;flex:1;">
-                    <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-tertiary);"></i>
+                <div class="u-positi-relative u-flex-1">
+                    <i class="bi bi-search u-positi-absolute u-top-50pct u-transf-translateY--50pct u-fs-13px u-c-text-tertiary" style="left:10px;"></i>
                     <input type="text" name="q" placeholder="Buscar…" aria-label="Buscar"
                            value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>"
                            style="width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border-subtle);border-radius:8px;background:var(--bg-surface);color:var(--text-primary);font-size:13px;">
@@ -236,7 +236,7 @@
                 $___sevColor = ['info' => '#0891B2', 'warning' => '#D97706', 'danger' => '#DC2626'];
                 ?>
                 <div class="dropdown" id="notifDropdown">
-                    <button class="sig-header__icon-btn" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones" title="Notificaciones" style="position:relative;">
+                    <button class="sig-header__icon-btn u-positi-relative" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones" title="Notificaciones">
                         <i class="bi bi-bell" style="font-size:17px;"></i>
                         <?php if ($___total > 0): ?>
                             <span id="notifBadge" style="position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;">
@@ -245,14 +245,14 @@
                         <?php endif; ?>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end shadow" style="width:330px;max-width:90vw;padding:0;overflow:hidden;">
-                        <div style="padding:10px 14px;border-bottom:1px solid var(--border-subtle);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;">
+                        <div class="u-p-10px-14px u-bdb-1px-solid-border-subtle u-fw-700 u-fs-13px u-ai-center u-jc-space-between" style="display:flex;">
                             <span><i class="bi bi-bell"></i> Notificaciones</span>
-                            <span style="font-size:11px;color:var(--text-tertiary);font-weight:500;"><?php echo count($___visibles); ?> aviso(s)</span>
+                            <span class="u-fs-11px u-c-text-tertiary u-fw-500"><?php echo count($___visibles); ?> aviso(s)</span>
                         </div>
                         <div style="max-height:360px;overflow-y:auto;">
                             <?php if (empty($___visibles)): ?>
-                                <div style="padding:22px 14px;text-align:center;color:var(--text-tertiary);font-size:13px;">
-                                    <i class="bi bi-check2-circle" style="font-size:1.4rem;display:block;margin-bottom:6px;color:#059669;"></i>
+                                <div class="u-ta-center u-c-text-tertiary u-fs-13px" style="padding:22px 14px;">
+                                    <i class="bi bi-check2-circle u-fs-1_4rem u-c-x059669" style="display:block; margin-bottom:6px;"></i>
                                     Sin alertas pendientes.
                                 </div>
                             <?php else: foreach ($___visibles as $___a):
@@ -261,12 +261,12 @@
                                     <span style="flex-shrink:0;width:30px;height:30px;border-radius:8px;background:<?php echo $___c; ?>1f;display:flex;align-items:center;justify-content:center;">
                                         <i class="bi <?php echo $___a['icono']; ?>" style="color:<?php echo $___c; ?>;font-size:15px;"></i>
                                     </span>
-                                    <span style="min-width:0;flex:1;">
-                                        <span style="display:flex;align-items:center;gap:6px;">
-                                            <span style="font-weight:700;font-size:12.5px;color:var(--text-primary);"><?php echo htmlspecialchars($___a['titulo']); ?></span>
+                                    <span class="u-minw-0 u-flex-1">
+                                        <span class="u-ai-center u-gap-6px" style="display:flex;">
+                                            <span class="u-fw-700 u-fs-12_5px u-c-text-primary"><?php echo htmlspecialchars($___a['titulo']); ?></span>
                                             <span style="margin-left:auto;background:<?php echo $___c; ?>;color:#fff;border-radius:10px;padding:0 7px;font-size:11px;font-weight:700;"><?php echo (int)$___a['n']; ?></span>
                                         </span>
-                                        <span style="display:block;font-size:11.5px;color:var(--text-tertiary);"><?php echo htmlspecialchars($___a['desc']); ?></span>
+                                        <span class="u-fs-11_5px u-c-text-tertiary" style="display:block;"><?php echo htmlspecialchars($___a['desc']); ?></span>
                                     </span>
                                 </a>
                             <?php endforeach; endif; ?>

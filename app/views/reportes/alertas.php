@@ -21,8 +21,8 @@ $totalPend = array_sum(array_map(fn($a) => (int)$a['n'], $alertas));
 
 <?php if ($totalPend === 0): ?>
 <div class="sig-card anim-slide-up" style="border-left:4px solid var(--success-500,#059669);">
-    <div class="sig-card__body" style="display:flex;align-items:center;gap:14px;">
-        <i class="bi bi-check2-circle" style="font-size:1.8rem;color:var(--success-600,#059669);"></i>
+    <div class="sig-card__body u-ai-center u-gap-14px" style="display:flex;">
+        <i class="bi bi-check2-circle u-fs-1_8rem" style="color:var(--success-600,#059669);"></i>
         <div><strong>Todo al día.</strong> No hay pendientes que atender en este momento.</div>
     </div>
 </div>
@@ -39,7 +39,7 @@ $totalPend = array_sum(array_map(fn($a) => (int)$a['n'], $alertas));
                 <i class="bi <?php echo $ok ? 'bi-check2' : $a['icono']; ?>"></i>
             </span>
             <span class="rep-card__body">
-                <span class="rep-card__title" style="display:flex;align-items:center;gap:8px;">
+                <span class="rep-card__title u-ai-center u-gap-8px" style="display:flex;">
                     <?php echo htmlspecialchars($a['titulo']); ?>
                     <span class="sig-badge <?php echo $ok ? 'sig-badge--success' : ('sig-badge--' . $a['sev']); ?>"><?php echo $n; ?></span>
                 </span>

@@ -59,7 +59,7 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
                         <td class="cell-strong"><?php echo htmlspecialchars($f['departamento']); ?></td>
                         <td><?php echo htmlspecialchars($f['categoria']); ?></td>
                         <td class="text-center"><?php echo $f['empleados']; ?></td>
-                        <td style="text-align:center;color:var(--text-tertiary);"><?php echo rtrim(rtrim(number_format($f['ratio'], 2, ',', ''), '0'), ','); ?></td>
+                        <td class="u-ta-center u-c-text-tertiary"><?php echo rtrim(rtrim(number_format($f['ratio'], 2, ',', ''), '0'), ','); ?></td>
                         <td class="text-center"><?php echo $f['deberia']; ?></td>
                         <td class="text-center"><?php echo $f['hay']; ?></td>
                         <td class="text-center">
@@ -79,9 +79,9 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
 <!-- Dotaciones definidas -->
 <div class="sig-card anim-slide-up" style="margin-top:var(--sp-4);margin-bottom:var(--sp-5);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-sliders"></i> Dotación esperada por empleado</div></div>
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <?php if (empty($data['dotaciones'])): ?>
-            <p style="color:var(--text-tertiary);margin:0;">Sin dotaciones definidas. Mientras no haya ninguna, no hay nada que evaluar.</p>
+            <p class="u-c-text-tertiary u-m-0">Sin dotaciones definidas. Mientras no haya ninguna, no hay nada que evaluar.</p>
         <?php else: ?>
             <div class="sig-table-wrap">
                 <table class="sig-table">
@@ -91,7 +91,7 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
                         <tr>
                             <td class="cell-strong"><?php echo htmlspecialchars($d->categoria); ?></td>
                             <td class="text-center"><?php echo rtrim(rtrim(number_format((float)$d->unidades_por_empleado, 2, ',', ''), '0'), ','); ?></td>
-                            <td style="font-size:12.5px;color:var(--text-secondary);"><?php echo htmlspecialchars($d->observaciones ?: '—'); ?></td>
+                            <td class="u-fs-12_5px u-c-text-secondary"><?php echo htmlspecialchars($d->observaciones ?: '—'); ?></td>
                             <td class="col-actions">
                                 <?php if ($puedeEscribir): ?>
                                     <a href="<?php echo URL_ROOT; ?>/inventario/eliminarDotacion/<?php echo (int)$d->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Quitar</a>
@@ -128,7 +128,7 @@ $conDeficit = array_filter($filas, fn($f) => $f['deficit'] > 0);
                         </select></div></div>
                     <div class="col-md-5"><div class="sig-field"><label class="sig-field__label" for="dot_u">Unidades por empleado <span class="req">*</span></label>
                         <input type="number" step="0.01" min="0.01" max="99" name="unidades_por_empleado" id="dot_u" class="sig-input" required value="1">
-                        <small style="color:var(--text-tertiary)">Ej. 2 = silla + escritorio. 0,5 = uno por cada dos personas.</small></div></div>
+                        <small class="u-c-text-tertiary">Ej. 2 = silla + escritorio. 0,5 = uno por cada dos personas.</small></div></div>
                     <div class="col-md-7"><div class="sig-field"><label class="sig-field__label" for="dot_obs">Criterio</label>
                         <input type="text" name="observaciones" id="dot_obs" class="sig-input" placeholder="Un equipo por empleado"></div></div>
                 </div>

@@ -440,8 +440,25 @@ class Taller extends Model {
         return (int)$row->id;
     }
 
+    /**
+     * Columnas de `personas` que los flujos de inscripción (talleres y rutas)
+     * pueden completar o corregir. Los nombres de columna van interpolados en
+     * el SQL, así que **solo** se aceptan estos: cualquier otra clave se
+     * rechaza en vez de llegar a la consulta (defensa en profundidad — hoy los
+     * llamadores pasan claves fijas, pero el método no debe depender de eso).
+     * La cédula NO está: identifica a la persona y no se cambia por esta vía.
+     */
+    const COLUMNAS_PERSONA_EDITABLES = [
+        'nombre', 'apellido', 'telefono', 'correo', 'genero',
+        'fecha_nacimiento', 'parroquia_id', 'direccion',
+    ];
+
     public static function actualizarPersona(int $id, array $campos, $userId): void {
         if (empty($campos)) return;
+        $ajenas = array_diff(array_keys($campos), self::COLUMNAS_PERSONA_EDITABLES);
+        if ($ajenas) {
+            throw new InvalidArgumentException('Campos de persona no permitidos: ' . implode(', ', $ajenas));
+        }
         $db = new Database();
         $sets = implode(', ', array_map(fn($k) => "$k = :$k", array_keys($campos)));
         $db->query("UPDATE personas SET $sets, updated_at = NOW(), updated_by = :uid WHERE id = :id");

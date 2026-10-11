@@ -153,25 +153,25 @@ function auditUrl(array $filtros, int $p): string {
 
 <!-- Barra de filtros (server-side) -->
 <form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/auditoria/index" style="margin-bottom:var(--sp-4);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);display:flex;align-items:flex-end;gap:var(--sp-3);flex-wrap:wrap;">
-        <div style="flex:1;min-width:200px;">
-            <label class="sig-field__label" style="font-size:11px;">Buscar</label>
-            <div style="position:relative;">
-                <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:13px;"></i>
-                <input type="text" name="buscar" class="sig-input" placeholder="Responsable o módulo…" style="padding-left:34px;" value="<?php echo htmlspecialchars($filtros['buscar']); ?>">
+    <div class="sig-card__body u-p-sp-4-sp-5 u-ai-flex-end u-gap-sp-3 u-fwr-wrap" style="display:flex;">
+        <div class="u-flex-1 u-minw-200px">
+            <label for="audiinde_buscar" class="sig-field__label u-fs-11px">Buscar</label>
+            <div class="u-positi-relative">
+                <i class="bi bi-search u-positi-absolute u-top-50pct u-transf-translateY--50pct u-c-text-tertiary u-fs-13px" style="left:12px;"></i>
+                <input id="audiinde_buscar" type="text" name="buscar" class="sig-input" placeholder="Responsable o módulo…" style="padding-left:34px;" value="<?php echo htmlspecialchars($filtros['buscar']); ?>">
             </div>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Desde</label>
-            <input type="date" name="fecha_inicio" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio']); ?>">
+            <label for="audiinde_fecha_inicio" class="sig-field__label u-fs-11px">Desde</label>
+            <input id="audiinde_fecha_inicio" type="date" name="fecha_inicio" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_inicio']); ?>">
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Hasta</label>
-            <input type="date" name="fecha_fin" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_fin']); ?>">
+            <label for="audiinde_fecha_fin" class="sig-field__label u-fs-11px">Hasta</label>
+            <input id="audiinde_fecha_fin" type="date" name="fecha_fin" class="sig-input" style="max-width:160px;" value="<?php echo htmlspecialchars($filtros['fecha_fin']); ?>">
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Módulo</label>
-            <select name="modulo" class="sig-input" style="max-width:200px;">
+            <label for="audiinde_modulo" class="sig-field__label u-fs-11px">Módulo</label>
+            <select id="audiinde_modulo" name="modulo" class="sig-input" style="max-width:200px;">
                 <option value="">Todos</option>
                 <?php foreach ($modulosF as $m): ?>
                     <option value="<?php echo htmlspecialchars($m->tabla_afectada); ?>" <?php echo $filtros['modulo'] === $m->tabla_afectada ? 'selected' : ''; ?>>
@@ -181,15 +181,15 @@ function auditUrl(array $filtros, int $p): string {
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;">Acción</label>
-            <select name="operacion" class="sig-input" style="max-width:170px;">
+            <label for="audiinde_operacion" class="sig-field__label u-fs-11px">Acción</label>
+            <select id="audiinde_operacion" name="operacion" class="sig-input" style="max-width:170px;">
                 <option value="">Todas</option>
                 <?php foreach ($opMeta as $opKey => $opInfo): ?>
                     <option value="<?php echo $opKey; ?>" <?php echo $filtros['operacion'] === $opKey ? 'selected' : ''; ?>><?php echo $opInfo[0]; ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
-        <div style="display:flex;gap:8px;">
+        <div class="u-gap-8px" style="display:flex;">
             <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
             <?php if ($hayFiltro): ?>
             <a href="<?php echo URL_ROOT; ?>/auditoria/index" class="btn-sig btn-sig--ghost" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
@@ -199,15 +199,15 @@ function auditUrl(array $filtros, int $p): string {
 </form>
 
 <!-- Resumen de resultados -->
-<div class="anim-slide-up" style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);margin-bottom:var(--sp-3);flex-wrap:wrap;">
-    <span style="font-size:13px;color:var(--text-secondary);">
+<div class="anim-slide-up u-ai-center u-jc-space-between u-gap-sp-3 u-mb-sp-3 u-fwr-wrap" style="display:flex;">
+    <span class="u-fs-13px u-c-text-secondary">
         <?php if ($total > 0): ?>
             Mostrando <strong><?php echo $desde; ?>–<?php echo $hasta; ?></strong> de <strong><?php echo number_format($total); ?></strong> registros<?php echo $hayFiltro ? ' (filtrados)' : ''; ?>
         <?php else: ?>
             Sin registros<?php echo $hayFiltro ? ' para el filtro aplicado' : ''; ?>
         <?php endif; ?>
     </span>
-    <span class="sig-badge sig-badge--neutral" style="font-weight:700;">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
+    <span class="sig-badge sig-badge--neutral u-fw-700">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
 </div>
 
 <div class="sig-table-wrap anim-slide-up">
@@ -226,7 +226,7 @@ function auditUrl(array $filtros, int $p): string {
             <?php if (empty($logs)): ?>
                 <tr>
                     <td colspan="6" class="sig-table-empty">
-                        <i class="bi bi-search" style="opacity:.5;margin-right:6px;"></i>
+                        <i class="bi bi-search u-mr-6px" style="opacity:.5;"></i>
                         <?php echo $hayFiltro ? 'No hay registros que coincidan con el filtro.' : 'No se han registrado acciones de auditoría.'; ?>
                     </td>
                 </tr>
@@ -251,7 +251,7 @@ function auditUrl(array $filtros, int $p): string {
                                 <?php echo htmlspecialchars($actor); ?>
                             </span>
                         </td>
-                        <td style="font-size:12px;font-weight:700;color:var(--brand-600)"><?php echo htmlspecialchars(auditModulo($log->tabla_afectada)); ?></td>
+                        <td class="u-fs-12px u-fw-700 u-c-brand-600"><?php echo htmlspecialchars(auditModulo($log->tabla_afectada)); ?></td>
                         <td>
                             <span class="sig-badge <?php echo $opCls; ?>"><i class="bi <?php echo $opIco; ?>"></i> <?php echo $opLbl; ?></span>
                         </td>
@@ -259,7 +259,7 @@ function auditUrl(array $filtros, int $p): string {
                             <?php if ($log->record_id !== null && $log->record_id !== ''): ?>
                                 <span class="cell-id">#<?php echo (int)$log->record_id; ?></span>
                             <?php else: ?>
-                                <span style="color:var(--text-tertiary);font-size:12px;" title="Operación sin un único registro asociado">—</span>
+                                <span class="u-c-text-tertiary u-fs-12px" title="Operación sin un único registro asociado">—</span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -273,7 +273,7 @@ function auditUrl(array $filtros, int $p): string {
                                     $filas = array_filter($new, fn($k) => !in_array($k, $ocultar), ARRAY_FILTER_USE_KEY);
                                 ?>
                                     <div class="audit-detail audit-detail--new">
-                                        <div class="audit-detail__title" style="color:#059669;"><i class="bi bi-plus-circle-fill"></i> Datos registrados</div>
+                                        <div class="audit-detail__title u-c-x059669"><i class="bi bi-plus-circle-fill"></i> Datos registrados</div>
                                         <?php if (empty($filas)): ?>
                                             <div class="audit-detail__empty">Sin datos visibles.</div>
                                         <?php else: ?>
@@ -344,23 +344,23 @@ function auditUrl(array $filtros, int $p): string {
                                                     <th><?php echo htmlspecialchars(auditCampo($k)); ?></th>
                                                     <td colspan="3">
                                                         <?php if ($agregados): ?>
-                                                            <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
-                                                                <span style="font-size:11px;font-weight:700;color:#047857;">Agregados:</span>
+                                                            <div class="u-mb-4px u-fwr-wrap u-gap-4px u-ai-center" style="display:flex;">
+                                                                <span class="u-fs-11px u-fw-700" style="color:#047857;">Agregados:</span>
                                                                 <?php foreach ($agregados as $c): ?>
                                                                     <span class="sig-badge sig-badge--success"><i class="bi bi-plus-lg"></i> <?php echo htmlspecialchars(auditCtrlLabel($c)); ?></span>
                                                                 <?php endforeach; ?>
                                                             </div>
                                                         <?php endif; ?>
                                                         <?php if ($quitados): ?>
-                                                            <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
-                                                                <span style="font-size:11px;font-weight:700;color:#b91c1c;">Quitados:</span>
+                                                            <div class="u-fwr-wrap u-gap-4px u-ai-center" style="display:flex;">
+                                                                <span class="u-fs-11px u-fw-700" style="color:#b91c1c;">Quitados:</span>
                                                                 <?php foreach ($quitados as $c): ?>
                                                                     <span class="sig-badge sig-badge--danger"><i class="bi bi-dash-lg"></i> <?php echo htmlspecialchars(auditCtrlLabel($c)); ?></span>
                                                                 <?php endforeach; ?>
                                                             </div>
                                                         <?php endif; ?>
                                                         <?php if (!$agregados && !$quitados): ?>
-                                                            <span style="color:var(--text-tertiary);">Sin cambios en la lista.</span>
+                                                            <span class="u-c-text-tertiary">Sin cambios en la lista.</span>
                                                         <?php endif; ?>
                                                     </td>
                                                 </tr>
@@ -368,7 +368,7 @@ function auditUrl(array $filtros, int $p): string {
                                                 <tr>
                                                     <th><?php echo htmlspecialchars(auditCampo($k)); ?></th>
                                                     <td class="audit-kv__before"><?php echo htmlspecialchars(auditValor($par[0])); ?></td>
-                                                    <td style="text-align:center;color:var(--text-tertiary);"><i class="bi bi-arrow-right"></i></td>
+                                                    <td class="u-ta-center u-c-text-tertiary"><i class="bi bi-arrow-right"></i></td>
                                                     <td class="audit-kv__after"><?php echo htmlspecialchars(auditValor($par[1])); ?></td>
                                                 </tr>
                                                 <?php endif; ?>
@@ -393,20 +393,20 @@ function auditUrl(array $filtros, int $p): string {
     $ini = max(1, $pagina - $win);
     $fin = min($totalPaginas, $pagina + $win);
 ?>
-<nav class="anim-slide-up" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:var(--sp-4);flex-wrap:wrap;">
+<nav class="anim-slide-up u-ai-center u-jc-center u-gap-6px u-mt-sp-4 u-fwr-wrap" style="display:flex;">
     <?php if ($pagina > 1): ?>
         <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, 1); ?>" title="Primera"><i class="bi bi-chevron-double-left"></i></a>
         <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $pagina - 1); ?>"><i class="bi bi-chevron-left"></i> Anterior</a>
     <?php endif; ?>
-    <?php if ($ini > 1): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php if ($ini > 1): ?><span class="u-c-text-tertiary u-p-0-4px">…</span><?php endif; ?>
     <?php for ($n = $ini; $n <= $fin; $n++): ?>
         <?php if ($n === $pagina): ?>
-            <span class="btn-sig btn-sig--primary btn-sig--sm" style="pointer-events:none;min-width:38px;justify-content:center;"><?php echo $n; ?></span>
+            <span class="btn-sig btn-sig--primary btn-sig--sm u-pointe-none u-jc-center" style="min-width:38px;"><?php echo $n; ?></span>
         <?php else: ?>
             <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $n); ?>" style="min-width:38px;justify-content:center;"><?php echo $n; ?></a>
         <?php endif; ?>
     <?php endfor; ?>
-    <?php if ($fin < $totalPaginas): ?><span style="color:var(--text-tertiary);padding:0 4px;">…</span><?php endif; ?>
+    <?php if ($fin < $totalPaginas): ?><span class="u-c-text-tertiary u-p-0-4px">…</span><?php endif; ?>
     <?php if ($pagina < $totalPaginas): ?>
         <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $pagina + 1); ?>">Siguiente <i class="bi bi-chevron-right"></i></a>
         <a class="btn-sig btn-sig--ghost btn-sig--sm" href="<?php echo auditUrl($filtros, $totalPaginas); ?>" title="Última"><i class="bi bi-chevron-double-right"></i></a>

@@ -63,7 +63,7 @@ function visUrl(array $f, int $p): string {
                 <?php foreach ($data['movimientos'] as $v): ?>
                     <tr>
                         <td class="text-center">
-                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono); font-size:11px; font-weight:700;">
+                            <span class="sig-badge sig-badge--success u-ff-font-mono u-fs-11px u-fw-700">
                                 <?php echo date('d/m H:i', strtotime($v->hora_entrada)); ?>
                             </span>
                         </td>
@@ -71,19 +71,19 @@ function visUrl(array $f, int $p): string {
                         <td>
                             <span class="cell-strong"><?php echo htmlspecialchars($v->vis_nombre . ' ' . $v->vis_apellido); ?></span>
                         </td>
-                        <td style="font-size:13px; color:var(--text-secondary);">
+                        <td class="u-fs-13px u-c-text-secondary">
                             <?php echo htmlspecialchars($v->vis_telefono ?? '—'); ?>
                         </td>
-                        <td style="font-size:13px; color:var(--text-secondary);">
+                        <td class="u-fs-13px u-c-text-secondary">
                             <?php echo htmlspecialchars($v->procedencia ?? '—'); ?>
                         </td>
-                        <td style="font-size:13px; color:var(--text-secondary);">
+                        <td class="u-fs-13px u-c-text-secondary">
                             <?php echo htmlspecialchars($v->vis_correo ?? '—'); ?>
                         </td>
-                        <td style="font-size:13px; color:var(--text-secondary);">
+                        <td class="u-fs-13px u-c-text-secondary">
                             <?php echo htmlspecialchars($v->motivo ?? '—'); ?>
                             <?php if (!empty($v->emp_nombre)): ?>
-                                <div style="font-size:11px; color:var(--text-tertiary);">
+                                <div class="u-fs-11px u-c-text-tertiary">
                                     → <?php echo htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido); ?>
                                 </div>
                             <?php endif; ?>
@@ -99,10 +99,10 @@ function visUrl(array $f, int $p): string {
         </tbody>
     </table>
     <?php if ($totalReg > 0): ?>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:12px 16px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;">
+    <div class="u-ai-center u-jc-space-between u-gap-sp-3 u-p-12px-16px u-bdt-1px-solid-border-subtle u-fwr-wrap" style="display:flex;">
         <span class="tabla-count">Mostrando <?php echo (($pagina-1)*$porPagina)+1; ?>–<?php echo min($totalReg, $pagina*$porPagina); ?> de <?php echo number_format($totalReg); ?></span>
         <?php if ($totalPaginas > 1): ?>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="u-ai-center u-gap-8px" style="display:flex;">
             <a class="tabla-pager__btn" href="<?php echo visUrl($flt, max(1,$pagina-1)); ?>" <?php echo $pagina<=1?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-left"></i></a>
             <span class="tabla-pager__info">Página <?php echo $pagina; ?> de <?php echo $totalPaginas; ?></span>
             <a class="tabla-pager__btn" href="<?php echo visUrl($flt, min($totalPaginas,$pagina+1)); ?>" <?php echo $pagina>=$totalPaginas?'style="pointer-events:none;opacity:.45;"':''; ?>><i class="bi bi-chevron-right"></i></a>
@@ -124,7 +124,7 @@ function visUrl(array $f, int $p): string {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <table class="audit-kv" style="width:100%">
+                <table class="audit-kv u-w-100pct">
                     <tr><th>Visitante</th><td><?php echo htmlspecialchars($v->vis_nombre . ' ' . $v->vis_apellido); ?></td></tr>
                     <tr><th>Cédula</th><td><?php echo htmlspecialchars($v->vis_cedula ?? '—'); ?></td></tr>
                     <tr><th>Género</th><td><?php echo $generoLabel; ?></td></tr>
@@ -168,24 +168,24 @@ function visUrl(array $f, int $p): string {
                     <div class="col-md-8">
                         <div class="sig-field">
                             <label class="sig-field__label" for="m_cedula">Cédula del visitante</label>
-                            <div style="display:flex; gap:8px;">
+                            <div class="u-gap-8px" style="display:flex;">
                                 <input type="text" id="m_cedula" name="cedula"
                                        class="sig-input" placeholder="Ingrese la cédula y presione Buscar"
                                        autocomplete="off" inputmode="numeric" style="flex:1;">
-                                <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm"
-                                        style="white-space:nowrap;" onclick="buscarVisitanteModal()">
+                                <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm u-ws-nowrap"
+                                        onclick="buscarVisitanteModal()">
                                     <i class="bi bi-search"></i> Buscar
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4" style="display:flex; align-items:flex-end;">
+                    <div class="col-md-4 u-ai-flex-end" style="display:flex;">
                         <div id="m_status" style="font-size:12px; padding-bottom:6px;"></div>
                     </div>
                 </div>
 
                 <!-- Datos personales del visitante -->
-                <div style="border-top:1px solid var(--border-subtle); padding-top:var(--sp-4); margin-bottom:var(--sp-4);">
+                <div class="u-bdt-1px-solid-border-subtle u-pt-sp-4 u-mb-sp-4">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field">
@@ -231,7 +231,7 @@ function visUrl(array $f, int $p): string {
                 </div>
 
                 <!-- Motivo de la visita -->
-                <div style="border-top:1px solid var(--border-subtle); padding-top:var(--sp-4);">
+                <div class="u-bdt-1px-solid-border-subtle u-pt-sp-4">
                     <div class="sig-field">
                         <label class="sig-field__label" for="motivo">Motivo de la visita</label>
                         <select id="motivo" name="motivo" class="sig-select">

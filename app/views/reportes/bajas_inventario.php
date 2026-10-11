@@ -18,7 +18,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
         <p class="page__subtitle">Historial completo de bienes desincorporados del inventario activo.</p>
     </div>
     <div class="page__actions">
-        <div style="display:flex;gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarBajasInventarioCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -34,28 +34,28 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
 <div class="row g-3 mb-6 anim-slide-up">
     <div class="col-md-4 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--danger-500);">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total histórico</div>
-                <div style="font-size:28px;font-weight:900;color:var(--danger-600);"><?php echo number_format($data['total_hist'] ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">desde el inicio del sistema</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Total histórico</div>
+                <div class="u-fs-28px u-fw-900 u-c-danger-600"><?php echo number_format($data['total_hist'] ?? 0); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">desde el inicio del sistema</div>
             </div>
         </div>
     </div>
     <div class="col-md-4 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--warning-500);">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Desincorporados <?php echo date('Y'); ?></div>
-                <div style="font-size:28px;font-weight:900;color:var(--warning-600);"><?php echo number_format($data['bajas_anio'] ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">en el año en curso</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Desincorporados <?php echo date('Y'); ?></div>
+                <div class="u-fs-28px u-fw-900 u-c-warning-600"><?php echo number_format($data['bajas_anio'] ?? 0); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">en el año en curso</div>
             </div>
         </div>
     </div>
     <div class="col-md-4 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--brand-500);">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Resultados del Filtro</div>
-                <div style="font-size:28px;font-weight:900;color:var(--brand-600);"><?php echo number_format(count($data['bajas'] ?? [])); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">bienes mostrados</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Resultados del Filtro</div>
+                <div class="u-fs-28px u-fw-900 u-c-brand-600"><?php echo number_format(count($data['bajas'] ?? [])); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">bienes mostrados</div>
             </div>
         </div>
     </div>
@@ -63,7 +63,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/bajasInventario" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <div class="sig-field">
@@ -84,8 +84,8 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                 </div>
             </div>
             <div class="col-md-2">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                     <?php if ($hayFiltro): ?>
@@ -129,18 +129,18 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                     elseif ($b->condicion === 'Dañado') $condCls = 'sig-badge--danger';
                 ?>
                 <tr>
-                    <td><span class="cell-id" style="font-family:var(--font-mono);color:var(--brand-600);"><?php echo htmlspecialchars($b->codigo_bn ?? 'S/N'); ?></span></td>
+                    <td><span class="cell-id u-ff-font-mono u-c-brand-600"><?php echo htmlspecialchars($b->codigo_bn ?? 'S/N'); ?></span></td>
                     <td><span class="cell-strong"><?php echo htmlspecialchars($b->nombre ?? '—'); ?></span></td>
                     <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($b->categoria ?? '—'); ?></span></td>
-                    <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->ubicacion ?? '—'); ?></td>
-                    <td style="font-size:12px;color:var(--text-secondary);">
+                    <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($b->ubicacion ?? '—'); ?></td>
+                    <td class="u-fs-12px u-c-text-secondary">
                         <?php echo htmlspecialchars($b->marca ?? '—'); ?>
-                        <?php if (!empty($b->modelo)): ?><br><span style="color:var(--text-tertiary);"><?php echo htmlspecialchars($b->modelo); ?></span><?php endif; ?>
+                        <?php if (!empty($b->modelo)): ?><br><span class="u-c-text-tertiary"><?php echo htmlspecialchars($b->modelo); ?></span><?php endif; ?>
                     </td>
-                    <td style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);"><?php echo htmlspecialchars($b->serial ?? '—'); ?></td>
+                    <td class="u-fs-11px u-ff-font-mono u-c-text-tertiary"><?php echo htmlspecialchars($b->serial ?? '—'); ?></td>
                     <td class="text-center"><span class="sig-badge <?php echo $condCls; ?>"><?php echo htmlspecialchars($b->condicion ?? '—'); ?></span></td>
-                    <td style="font-size:12px;white-space:nowrap;"><?php echo $b->fecha_baja ? date('d/m/Y', strtotime($b->fecha_baja)) : '—'; ?></td>
-                    <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($b->dado_baja_por ?? '—'); ?></td>
+                    <td class="u-fs-12px u-ws-nowrap"><?php echo $b->fecha_baja ? date('d/m/Y', strtotime($b->fecha_baja)) : '—'; ?></td>
+                    <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($b->dado_baja_por ?? '—'); ?></td>
                     <td class="text-center">
                         <?php if (!empty($b->retirado_alcaldia)): ?>
                             <span class="sig-badge sig-badge--success" title="La Alcaldía ya se llevó el bien">
@@ -150,7 +150,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
                             <span class="sig-badge sig-badge--warning" title="Desincorporado, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
                         <?php endif; ?>
                     </td>
-                    <td style="font-size:12px;color:var(--text-secondary);max-width:220px;white-space:normal;"><?php echo htmlspecialchars($b->motivo_baja ?? '—'); ?></td>
+                    <td class="u-fs-12px u-c-text-secondary u-ws-normal" style="max-width:220px;"><?php echo htmlspecialchars($b->motivo_baja ?? '—'); ?></td>
                 </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -158,7 +158,7 @@ $hayFiltro = !empty($data['fecha_inicio']) || !empty($data['fecha_fin']) || !emp
     </table>
 </div>
 <?php if (!empty($data['bajas'])): ?>
-    <div style="text-align:right;font-size:12px;color:var(--text-tertiary);margin-top:var(--sp-2);">
+    <div class="u-ta-right u-fs-12px u-c-text-tertiary u-mt-sp-2">
         <?php echo count($data['bajas']); ?> registro(s) mostrados
     </div>
 <?php endif; ?>

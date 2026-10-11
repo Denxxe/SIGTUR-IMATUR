@@ -18,7 +18,7 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 </div>
 
 <div class="sig-card anim-slide-up" style="margin-bottom:20px;border-left:4px solid var(--brand-500,#2563eb);">
-    <div class="sig-card__body" style="font-size:13px;color:var(--text-secondary);">
+    <div class="sig-card__body u-fs-13px u-c-text-secondary">
         <strong>Cómo leer este reporte.</strong> El identificador único de una persona es la <strong>cédula</strong>.
         Los participantes <strong>sin cédula</strong> (menores) no tienen una clave única, por lo que el
         sistema <em>no puede</em> decidir con certeza si dos registros son la misma persona: solo señala
@@ -32,9 +32,9 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 
 <!-- 1) Cédulas duplicadas -->
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-fingerprint"></i> Personas con cédula repetida
+    <div class="u-p-12px-16px"><h5 class="u-m-0"><i class="bi bi-fingerprint"></i> Personas con cédula repetida
         <span class="sig-badge sig-badge--<?php echo empty($dupCedula) ? 'success' : 'danger'; ?>"><?php echo count($dupCedula); ?></span></h5>
-        <small style="color:var(--text-tertiary);">Misma cédula (normalizada) en más de un registro de personas. Casi siempre son duplicados a unificar.</small>
+        <small class="u-c-text-tertiary">Misma cédula (normalizada) en más de un registro de personas. Casi siempre son duplicados a unificar.</small>
     </div>
     <table class="sig-table">
         <thead><tr><th>Cédula</th><th>N°</th><th>Registros</th></tr></thead>
@@ -45,7 +45,7 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($g->cedula_norm); ?></td>
                     <td><span class="sig-badge sig-badge--danger"><?php echo $g->total; ?></span></td>
-                    <td style="font-size:13px;"><?php echo htmlspecialchars($g->detalle); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($g->detalle); ?></td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>
@@ -54,9 +54,9 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 
 <!-- 2) Personas con mismo nombre + fecha de nacimiento -->
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-people"></i> Personas con mismo nombre y fecha de nacimiento
+    <div class="u-p-12px-16px"><h5 class="u-m-0"><i class="bi bi-people"></i> Personas con mismo nombre y fecha de nacimiento
         <span class="sig-badge sig-badge--<?php echo empty($dupPersona) ? 'success' : 'warning'; ?>"><?php echo count($dupPersona); ?></span></h5>
-        <small style="color:var(--text-tertiary);">Coinciden en nombre + apellido + fecha de nacimiento. Revisar: puede ser la misma persona (con/ sin cédula) o un homónimo real.</small>
+        <small class="u-c-text-tertiary">Coinciden en nombre + apellido + fecha de nacimiento. Revisar: puede ser la misma persona (con/ sin cédula) o un homónimo real.</small>
     </div>
     <table class="sig-table">
         <thead><tr><th>F. Nacimiento</th><th>N°</th><th>Registros</th></tr></thead>
@@ -67,7 +67,7 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
                 <tr>
                     <td><?php echo $ffecha($g->fnac); ?></td>
                     <td><span class="sig-badge sig-badge--warning"><?php echo $g->total; ?></span></td>
-                    <td style="font-size:13px;"><?php echo htmlspecialchars($g->detalle); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($g->detalle); ?></td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>
@@ -76,9 +76,9 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
 
 <!-- 3) Participantes sin cédula repetidos -->
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-person-badge"></i> Participantes sin cédula repetidos (Formación / Turismo)
+    <div class="u-p-12px-16px"><h5 class="u-m-0"><i class="bi bi-person-badge"></i> Participantes sin cédula repetidos (Formación / Turismo)
         <span class="sig-badge sig-badge--<?php echo empty($dupLibre) ? 'success' : 'warning'; ?>"><?php echo count($dupLibre); ?></span></h5>
-        <small style="color:var(--text-tertiary);">Mismo nombre + apellido + fecha de nacimiento <strong>y mismo representante</strong>, entre participantes libre de talleres y rutas. La cédula del representante distingue homónimos: misma persona en varias actividades.</small>
+        <small class="u-c-text-tertiary">Mismo nombre + apellido + fecha de nacimiento <strong>y mismo representante</strong>, entre participantes libre de talleres y rutas. La cédula del representante distingue homónimos: misma persona en varias actividades.</small>
     </div>
     <table class="sig-table">
         <thead><tr><th>F. Nacimiento</th><th>C.I. Representante</th><th>N°</th><th>Apariciones (actividad)</th></tr></thead>
@@ -90,7 +90,7 @@ $totalGrupos = count($dupCedula) + count($dupPersona) + count($dupLibre);
                     <td><?php echo $ffecha($g->fnac); ?></td>
                     <td><?php echo !empty($g->ced_rep) ? htmlspecialchars($g->ced_rep) : '<span class="text-muted">—</span>'; ?></td>
                     <td><span class="sig-badge sig-badge--warning"><?php echo $g->total; ?></span></td>
-                    <td style="font-size:13px;"><?php echo htmlspecialchars($g->detalle); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars($g->detalle); ?></td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>

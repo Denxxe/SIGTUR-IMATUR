@@ -1,7 +1,7 @@
 # Modelo de Datos — Diagrama Entidad-Relación (ER)
 
-**SIGTUR-IMATUR** · PostgreSQL 17 · **72 tablas** · esquema `public`
-**Estado:** migraciones **001–086** aplicadas · **Última actualización:** 2026-10-11 (la 086 agrega las 3 tablas de la Liquidación de Prestaciones Sociales; la 085 no cambia el esquema)
+**SIGTUR-IMATUR** · PostgreSQL 17 · **73 tablas** · esquema `public`
+**Estado:** migraciones **001–087** aplicadas · **Última actualización:** 2026-10-11 (la 087 agrega `inventario_clasificaciones` y la procedencia del código; la 086, las 3 tablas de la Liquidación)
 
 > **Para qué sirve este documento.** Es el insumo para dibujar el **ER** del sistema (en
 > draw.io, ERDPlus, MySQL Workbench, dbdiagram.io o el que se use). Contiene: las entidades
@@ -9,7 +9,7 @@
 > cardinalidad, y los diagramas Mermaid ya listos por subsistema.
 >
 > **Fuente de verdad del esquema:** `database/schema_consolidado.sql` (base + migraciones
-> 001–086, 72 tablas, autosuficiente). Si algo aquí discrepa del SQL, **manda el SQL**.
+> 001–087, 73 tablas, autosuficiente). Si algo aquí discrepa del SQL, **manda el SQL**.
 
 ---
 
@@ -24,7 +24,7 @@
 7. [Formación](#7-formación-7-tablas)
 8. [Turismo / Rutas](#8-turismo--rutas-12-tablas)
 9. [Recepción](#9-recepción-2-tablas)
-10. [Bienes / Inventario](#10-bienes--inventario-13-tablas)
+10. [Bienes / Inventario](#10-bienes--inventario-14-tablas)
 11. [Catálogo completo de relaciones (FK)](#11-catálogo-completo-de-relaciones-fk)
 12. [Reglas de integridad que NO están en el ER](#12-reglas-de-integridad-que-no-están-en-el-er)
 13. [Trampas del modelo — leer antes de dibujar](#13-trampas-del-modelo--leer-antes-de-dibujar)
@@ -798,13 +798,14 @@ erDiagram
 
 ---
 
-## 10. Bienes / Inventario (13 tablas)
+## 10. Bienes / Inventario (14 tablas)
 
 ### 10.1 Catálogos
 
 - **`categorias`** — `id · nombre NN · descripcion`.
 - **`ubicaciones`** — `id · nombre NN · descripcion · "departamento _d" INTEGER FK→departamentos(id) NN` ⚠️ **(nombre de columna con espacio, entre comillas)** `· sede VARCHAR(80) · es_deposito BOOLEAN NN`.
   > Sin filas aquí **es imposible registrar un bien** (sembradas en la mig. 069).
+- **`inventario_clasificaciones`** *(087)* — grupo-subgrupo-sección válidos para la codificación propia (C-4, B-75). `id · grupo VARCHAR(4) NN · subgrupo VARCHAR(4) NN · seccion VARCHAR(6) NN` (**CK** solo dígitos) `· descripcion · is_active`. **UQ (grupo, subgrupo, seccion)**. Sin FK hacia `inventario`: la relación es por valor (dibújela punteada).
 
 ### 10.2 `inventario` — el bien
 
@@ -819,7 +820,8 @@ erDiagram
 | codigo_grupo · codigo_subgrupo · codigo_seccion · nro_orden | VARCHAR | Partes del código oficial |
 | codigo_bn | VARCHAR(50) | **D** — compuesto de las 4 partes (`2-01-108-084`) |
 | id_consolidado_bm1 | INTEGER | **FK** → `inventario_consolidados_bm1(id)` SET NULL — en qué BM-1 vino el código |
-| verificado_alcaldia · fecha_verificacion | | |
+| codificado_por · fecha_codificacion | VARCHAR(10) · DATE | *(087)* **CK** ∈ {Alcaldía, IMATUR} — quién puso el código |
+| verificado_alcaldia · fecha_verificacion | | **Reconocido** por la Alcaldía (solo lo da el BM-1); ≠ codificado |
 | retirado_alcaldia · fecha_retiro | | Confirmación del retiro físico |
 | origen | VARCHAR(20) | **CK** ∈ {Compra, Donación} |
 | donante · donante_cedula · donante_estado_civil · donante_domicilio · donacion_procedencia · donacion_valor_usd · donacion_fecha | | Bloque de donación (mig. 075) |

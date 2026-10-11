@@ -32,7 +32,7 @@ $fmt    = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
 
 <?php if (!empty($r->descripcion)): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);">
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <?php echo nl2br(htmlspecialchars($r->descripcion)); ?>
     </div>
 </div>
@@ -45,11 +45,11 @@ $tieneRestr = $r->edad_min !== null || $r->edad_max !== null
 ?>
 <?php if ($tieneRestr): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:3px solid var(--warning);">
-    <div class="sig-card__body" style="padding:var(--sp-4);">
-        <div style="font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:var(--sp-2);">
+    <div class="sig-card__body u-p-sp-4">
+        <div class="u-fs-12px u-fw-700 u-c-text-secondary u-mb-sp-2">
             <i class="bi bi-shield-exclamation"></i> Condiciones para participar
         </div>
-        <ul style="margin:0;padding-left:var(--sp-5);font-size:13px;">
+        <ul class="u-m-0 u-pl-sp-5 u-fs-13px">
             <?php if ($r->edad_min !== null || $r->edad_max !== null): ?>
             <li><strong><?php echo htmlspecialchars(Ruta::textoEdades($r)); ?></strong></li>
             <?php endif; ?>
@@ -71,25 +71,25 @@ $tieneRestr = $r->edad_min !== null || $r->edad_max !== null
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-pin-map"></i> Paradas del recorrido (<?php echo count($puntos); ?>)</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <?php if (empty($puntos)): ?>
-                    <p style="color:var(--text-tertiary);margin:0;">
+                    <p class="u-c-text-tertiary u-m-0">
                         Este recorrido todavía no tiene paradas cargadas.
                     </p>
                 <?php else: ?>
-                    <ol style="margin:0;padding-left:var(--sp-5);">
+                    <ol class="u-m-0 u-pl-sp-5">
                         <?php foreach ($puntos as $p): ?>
-                        <li style="margin-bottom:var(--sp-3);">
+                        <li class="u-mb-sp-3">
                             <strong><?php echo htmlspecialchars($p->nombre); ?></strong>
                             <?php if (!empty($p->descripcion)): ?>
-                                <div style="font-size:12px;color:var(--text-secondary);">
+                                <div class="u-fs-12px u-c-text-secondary">
                                     <?php echo htmlspecialchars($p->descripcion); ?>
                                 </div>
                             <?php endif; ?>
                         </li>
                         <?php endforeach; ?>
                     </ol>
-                    <p style="font-size:11px;color:var(--text-tertiary);margin-top:var(--sp-3);margin-bottom:0;">
+                    <p class="u-fs-11px u-c-text-tertiary u-mt-sp-3" style="margin-bottom:0;">
                         El orden es el <strong>sugerido</strong>: el guía puede variarlo según convenga,
                         sobre todo si hay dos grupos a la vez en la misma ruta.
                     </p>
@@ -104,9 +104,9 @@ $tieneRestr = $r->edad_min !== null || $r->edad_max !== null
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-calendar-event"></i> Salidas (<?php echo count($salidas); ?>)</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-4">
                 <?php if (empty($salidas)): ?>
-                    <p style="color:var(--text-tertiary);margin:0;">Este recorrido no se ha ejecutado todavía.</p>
+                    <p class="u-c-text-tertiary u-m-0">Este recorrido no se ha ejecutado todavía.</p>
                 <?php else: ?>
                     <div class="sig-table-wrap">
                         <table class="sig-table">
@@ -114,7 +114,7 @@ $tieneRestr = $r->edad_min !== null || $r->edad_max !== null
                             <tbody>
                             <?php foreach ($salidas as $s): ?>
                                 <tr>
-                                    <td style="white-space:nowrap;"><?php echo $fmt($s->fecha); ?></td>
+                                    <td class="u-ws-nowrap"><?php echo $fmt($s->fecha); ?></td>
                                     <td>
                                         <span class="sig-badge <?php echo RutaEjecucion::ESTADO_BADGES[$s->estado] ?? 'sig-badge--neutral'; ?>">
                                             <?php echo htmlspecialchars($s->estado); ?>

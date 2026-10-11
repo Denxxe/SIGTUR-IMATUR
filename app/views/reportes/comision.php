@@ -32,16 +32,16 @@ function comUrl(string $org): string {
     foreach ($resumen as $k => $v) $tiles[$k] = $v;
     foreach ($tiles as $lbl => $val): ?>
         <div class="col">
-            <div class="sig-card"><div class="sig-card__body" style="padding:var(--sp-4);text-align:center;">
-                <div style="font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1.1;"><?php echo (int)$val; ?></div>
-                <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;"><?php echo htmlspecialchars($lbl); ?></div>
+            <div class="sig-card"><div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-1_8rem u-fw-800 u-c-text-primary u-lh-1_1"><?php echo (int)$val; ?></div>
+                <div class="u-fs-11px u-c-text-secondary u-tt-uppercase u-ls-_04em"><?php echo htmlspecialchars($lbl); ?></div>
             </div></div>
         </div>
     <?php endforeach; ?>
 </div>
 
 <!-- Filtro por institución de origen -->
-<div class="anim-slide-up" style="display:flex;gap:8px;margin-bottom:var(--sp-4);flex-wrap:wrap;">
+<div class="anim-slide-up u-gap-8px u-mb-sp-4 u-fwr-wrap" style="display:flex;">
     <a href="<?php echo comUrl(''); ?>" class="btn-sig btn-sig--sm <?php echo $org === '' ? 'btn-sig--primary' : 'btn-sig--ghost'; ?>">Todas</a>
     <a href="<?php echo comUrl('Alcaldía'); ?>" class="btn-sig btn-sig--sm <?php echo $org === 'Alcaldía' ? 'btn-sig--primary' : 'btn-sig--ghost'; ?>">Alcaldía</a>
     <a href="<?php echo comUrl('Gobernación'); ?>" class="btn-sig btn-sig--sm <?php echo $org === 'Gobernación' ? 'btn-sig--primary' : 'btn-sig--ghost'; ?>">Gobernación</a>
@@ -70,7 +70,7 @@ function comUrl(string $org): string {
                     <td><?php echo htmlspecialchars($r->cedula ?? '—'); ?></td>
                     <td><?php echo htmlspecialchars($r->nro_expediente ?? '—'); ?></td>
                     <td><span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($r->cargo ?? '—'); ?></span></td>
-                    <td style="font-size:13px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->departamento ?? '—'); ?></td>
+                    <td class="u-fs-13px u-c-text-secondary"><?php echo htmlspecialchars($r->departamento ?? '—'); ?></td>
                     <td><span class="sig-badge sig-badge--warning"><i class="bi bi-arrow-left-right"></i> <?php echo htmlspecialchars($r->institucion_origen ?? '—'); ?></span></td>
                     <td><?php echo $ff($r->fecha_ingreso); ?></td>
                     <td><?php echo htmlspecialchars(Empleado::tiempoServicio($r->fecha_ingreso ?? null)); ?></td>

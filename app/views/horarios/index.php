@@ -36,7 +36,7 @@ $hm = fn($t) => !empty($t) ? substr($t, 0, 5) : '—';
                     <td><?php echo $hm($h->hora_entrada); ?></td>
                     <td><?php echo $hm($h->hora_salida); ?></td>
                     <td><span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($h->dias_laborales ?? 'L-V'); ?></span></td>
-                    <td style="color:var(--text-secondary);font-size:13px"><?php echo htmlspecialchars($h->descripcion ?? ''); ?></td>
+                    <td class="u-c-text-secondary u-fs-13px"><?php echo htmlspecialchars($h->descripcion ?? ''); ?></td>
                     <td class="col-actions">
                         <button class="row-action row-action--edit" onclick='editarHorario(<?php echo htmlspecialchars(json_encode($h), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                         <a href="<?php echo URL_ROOT; ?>/horarios/delete/<?php echo $h->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>

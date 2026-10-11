@@ -23,12 +23,12 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
      silencio y parecía que el formulario "venía con datos de otro". -->
 <div id="wzAvisoBorrador" class="sig-card anim-slide-up"
      style="display:none;margin-bottom:var(--sp-4);border-left:3px solid var(--warning-500,#f59e0b);">
-    <div class="sig-card__body"
-         style="padding:var(--sp-3) var(--sp-4);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <i class="bi bi-file-earmark-text" style="font-size:1.4rem;color:var(--warning-600,#d97706);"></i>
-        <div style="flex:1;min-width:240px;">
+    <div class="sig-card__body u-p-sp-3-sp-4 u-ai-center u-gap-14px u-fwr-wrap"
+         style="display:flex;">
+        <i class="bi bi-file-earmark-text u-fs-1_4rem u-c-warning-600xd97706"></i>
+        <div class="u-flex-1 u-minw-240px">
             <strong>Recuperamos un registro sin terminar</strong><br>
-            <span style="font-size:13px;color:var(--text-secondary);">
+            <span class="u-fs-13px u-c-text-secondary">
                 Quedó a medias <span id="wzBorradorFecha"></span> &middot; puedes continuarlo o empezar de cero.
             </span>
         </div>
@@ -76,7 +76,7 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                        data-edad-min="18" data-edad-max="65" data-edad-target="emp_edad_badge"
                        value="<?php echo $val('fecha_nacimiento'); ?>">
                 <small id="emp_edad_badge" style="display:block;margin-top:4px;font-weight:600;"></small>
-                <small style="color:var(--text-tertiary)">18–65 años · comisión de servicio: 18–70.</small></div></div>
+                <small class="u-c-text-tertiary">18–65 años · comisión de servicio: 18–70.</small></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="telefono">Teléfono <span class="req">*</span></label>
                 <input id="telefono" type="text" name="telefono" class="sig-input" required value="<?php echo $val('telefono'); ?>"></div></div>
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="correo">Correo electrónico</label>
@@ -100,7 +100,7 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                     <?php endforeach; ?>
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="wz_disc">¿Discapacidad?</label>
-                <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="discapacidad" id="wz_disc" value="1" <?php echo $chk('discapacidad'); ?> onchange="wzToggleDisc()">
+                <div class="form-check u-pt-8px"><input class="form-check-input" type="checkbox" name="discapacidad" id="wz_disc" value="1" <?php echo $chk('discapacidad'); ?> onchange="wzToggleDisc()">
                     <label class="form-check-label" for="wz_disc">Sí, posee discapacidad</label></div></div></div>
             <div class="col-md-12" id="wz_disc_wrap" style="display:none"><div class="sig-field"><label class="sig-field__label" for="discapacidad_detalle">Detalle de la discapacidad / ajuste de horario</label>
                 <input id="discapacidad_detalle" type="text" name="discapacidad_detalle" class="sig-input" value="<?php echo $val('discapacidad_detalle'); ?>"></div></div>
@@ -135,7 +135,7 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="institucion_academica">Institución académica</label>
                 <input id="institucion_academica" type="text" name="institucion_academica" class="sig-input" value="<?php echo $val('institucion_academica'); ?>"></div></div>
         </div>
-        <p style="color:var(--text-tertiary);font-size:12px;margin-top:var(--sp-3)"><i class="bi bi-info-circle"></i> Los cursos realizados se gestionan en el expediente tras crear el empleado.</p>
+        <p class="u-c-text-tertiary u-fs-12px u-mt-sp-3"><i class="bi bi-info-circle"></i> Los cursos realizados se gestionan en el expediente tras crear el empleado.</p>
     </div>
 
     <!-- ───────── PASO 3: Datos institucionales ───────── -->
@@ -159,11 +159,11 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="nro_expediente">Nro. Expediente</label>
                 <?php if ($isEdit): ?>
                     <input id="nro_expediente" type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo $val('nro_expediente'); ?>">
-                    <small style="color:var(--text-tertiary)">Folio permanente del expediente.</small>
+                    <small class="u-c-text-tertiary">Folio permanente del expediente.</small>
                 <?php else: ?>
                     <input type="text" name="nro_expediente" class="sig-input" readonly value="<?php echo htmlspecialchars($data['proximo_expediente'] ?? ''); ?>"
                            style="background:var(--bg-muted);color:var(--text-secondary)">
-                    <small style="color:var(--text-tertiary)"><i class="bi bi-magic"></i> Asignado automáticamente por el sistema al registrar.</small>
+                    <small class="u-c-text-tertiary"><i class="bi bi-magic"></i> Asignado automáticamente por el sistema al registrar.</small>
                 <?php endif; ?></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="clasificacion">Clasificación <span class="req">*</span></label>
                 <select id="clasificacion" name="clasificacion" class="sig-select" required>
@@ -184,9 +184,9 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                         <option value="<?php echo $io; ?>" <?php echo $isEdit ? $sel('institucion_origen',$io) : ($io === Empleado::INSTITUCION_ORIGEN_DEFAULT ? 'selected' : ''); ?>><?php echo $io; ?></option>
                     <?php endforeach; ?>
                 </select></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label">Comisión de servicio</label>
-                <div style="padding-top:8px"><span id="wz_comision_info" class="sig-badge sig-badge--neutral">—</span>
-                    <small style="display:block;color:var(--text-tertiary);margin-top:2px">Se determina por la institución de origen.</small></div></div></div>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" id="wz_comision_lbl">Comisión de servicio</label>
+                <div class="u-pt-8px"><span id="wz_comision_info" class="sig-badge sig-badge--neutral" aria-labelledby="wz_comision_lbl">—</span>
+                    <small class="u-c-text-tertiary u-mt-2px" style="display:block;">Se determina por la institución de origen.</small></div></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="id_horario">Horario asignado</label>
                 <select id="id_horario" name="id_horario" class="sig-select">
                     <option value="">— Sin horario —</option>
@@ -213,12 +213,12 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
             <div class="col-md-4" id="wz_ingadm_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_ingadm">Ingreso a la administración pública</label>
                 <input type="date" name="fecha_ingreso_administracion" id="wz_fecha_ingadm" class="sig-input" value="<?php echo htmlspecialchars($ingAdm); ?>"
                        data-auto="<?php echo $val('fecha_ingreso_administracion') ? '0' : '1'; ?>" oninput="this.dataset.auto='0'">
-                <small style="color:var(--text-tertiary)">Base de la antigüedad (vacaciones y prima de antigüedad). Cámbiela si trabajó antes en otro ente público (Alcaldía, Gobernación, ministerio…).</small></div></div>
-            <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_venc">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small style="color:var(--text-secondary)">(contratados)</small></label>
+                <small class="u-c-text-tertiary">Base de la antigüedad (vacaciones y prima de antigüedad). Cámbiela si trabajó antes en otro ente público (Alcaldía, Gobernación, ministerio…).</small></div></div>
+            <div class="col-md-4" id="wz_venc_wrap"><div class="sig-field"><label class="sig-field__label" for="wz_fecha_venc">Vencimiento del contrato <span class="req" id="wz_venc_req">*</span> <small class="u-c-text-secondary">(contratados)</small></label>
                 <input type="date" name="fecha_vencimiento_contrato" id="wz_fecha_venc" class="sig-input" value="<?php echo $val('fecha_vencimiento_contrato'); ?>" oninput="wzVencCalc()">
                 <small id="wz_venc_info" style="display:block;margin-top:4px;color:var(--text-tertiary)">Mínimo 3 meses desde el ingreso.</small></div></div>
             <div class="col-md-12"><div class="sig-field"><label class="sig-field__label" for="wz_uniforme">¿Usa uniforme?</label>
-                <div class="form-check" style="padding-top:8px"><input class="form-check-input" type="checkbox" name="uniforme" id="wz_uniforme" value="1" <?php echo $chk('uniforme'); ?> onchange="wzToggleUniforme()">
+                <div class="form-check u-pt-8px"><input class="form-check-input" type="checkbox" name="uniforme" id="wz_uniforme" value="1" <?php echo $chk('uniforme'); ?> onchange="wzToggleUniforme()">
                     <label class="form-check-label" for="wz_uniforme">Sí, registrar tallas</label></div></div></div>
             <div class="col-12" id="wz_tallas_wrap" style="display:none"><div class="row g-3">
                 <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="talla_camisa">Talla camisa</label>
@@ -249,7 +249,7 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
             </div>
             <a href="<?php echo URL_ROOT; ?>/empleados/detalle/<?php echo (int)$e->id; ?>" class="btn-sig btn-sig--ghost"><i class="bi bi-folder2-open"></i> Gestionar en el expediente</a>
         <?php else: ?>
-            <p style="color:var(--text-secondary);font-size:13px">Agregue los familiares del empleado (opcional). Podrá añadir más en el expediente luego.</p>
+            <p class="u-c-text-secondary u-fs-13px">Agregue los familiares del empleado (opcional). Podrá añadir más en el expediente luego.</p>
             <div id="cfRows"></div>
             <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="cfAddRow()"><i class="bi bi-plus-lg"></i> Agregar familiar</button>
         <?php endif; ?>
@@ -262,9 +262,9 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
     </div>
 
     <!-- Navegación -->
-    <div style="display:flex;justify-content:space-between;margin-top:var(--sp-5);padding-top:var(--sp-4);border-top:1px solid var(--border-subtle)">
+    <div class="u-jc-space-between u-pt-sp-4 u-bdt-1px-solid-border-subtle" style="display:flex; margin-top:var(--sp-5);">
         <button type="button" class="btn-sig btn-sig--ghost" id="wzPrev" onclick="wzGo(-1)" style="visibility:hidden"><i class="bi bi-chevron-left"></i> Anterior</button>
-        <div style="display:flex;gap:var(--sp-2)">
+        <div class="u-gap-sp-2" style="display:flex;">
             <button type="button" class="btn-sig btn-sig--primary" id="wzNext" onclick="wzGo(1)">Siguiente <i class="bi bi-chevron-right"></i></button>
             <button type="submit" class="btn-sig btn-sig--primary" id="wzSubmit" style="display:none"><i class="bi bi-check-lg"></i> <?php echo $isEdit ? 'Guardar cambios' : 'Crear empleado'; ?></button>
         </div>

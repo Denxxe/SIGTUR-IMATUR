@@ -24,7 +24,7 @@ $vencBadge = function ($e) {
 $discBadge = function ($e) {
     $am = (int)($e->amonestaciones ?? 0);
     $fa = (int)($e->faltas ?? 0);
-    if ($am === 0 && $fa === 0) return '<span style="color:var(--text-tertiary)">—</span>';
+    if ($am === 0 && $fa === 0) return '<span class="u-c-text-tertiary">—</span>';
     $cls = $am >= 3 ? 'sig-badge--danger' : ($am > 0 ? 'sig-badge--warning' : 'sig-badge--neutral');
     $out = '<span class="sig-badge ' . $cls . '" title="Amonestaciones"><i class="bi bi-flag"></i> ' . $am . '</span>';
     if ($fa > 0) $out .= ' <span class="sig-badge sig-badge--neutral" title="Faltas injustificadas"><i class="bi bi-exclamation-circle"></i> ' . $fa . '</span>';
@@ -72,7 +72,7 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
 </div>
 
 <!-- Pestañas Activos / Egresados -->
-<div class="anim-slide-up" style="display:flex;gap:8px;margin-bottom:16px;">
+<div class="anim-slide-up u-gap-8px" style="display:flex; margin-bottom:16px;">
     <a href="<?php echo URL_ROOT; ?>/empleados/index" class="btn-sig btn-sig--sm <?php echo $egView ? 'btn-sig--ghost' : 'btn-sig--primary'; ?>">
         <i class="bi bi-people"></i> Activos
     </a>
@@ -84,27 +84,27 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
 <!-- Filtro por origen / comisión de servicio -->
 <form method="GET" action="<?php echo URL_ROOT; ?>/empleados/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
     <?php if ($egView): ?><input type="hidden" name="ver" value="egresados"><?php endif; ?>
-    <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label" style="font-size:11px;">Departamento</label>
-        <select name="departamento" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
+    <div class="sig-field u-m-0">
+        <label for="emplinde_departamento" class="sig-field__label u-fs-11px">Departamento</label>
+        <select id="emplinde_departamento" name="departamento" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
             <option value="0">Todos los departamentos</option>
             <?php foreach ($departamentos as $d): ?>
                 <option value="<?php echo $d->id; ?>" <?php echo $departamento === (int)$d->id ? 'selected' : ''; ?>><?php echo htmlspecialchars($d->nombre); ?></option>
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label" style="font-size:11px;">Cargo</label>
-        <select name="cargo" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
+    <div class="sig-field u-m-0">
+        <label for="emplinde_cargo" class="sig-field__label u-fs-11px">Cargo</label>
+        <select id="emplinde_cargo" name="cargo" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
             <option value="0">Todos los cargos</option>
             <?php foreach ($cargosOpts as $c): ?>
                 <option value="<?php echo $c->id; ?>" <?php echo $cargoSel === (int)$c->id ? 'selected' : ''; ?>><?php echo htmlspecialchars($c->nombre); ?></option>
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="sig-field" style="margin:0;">
-        <label class="sig-field__label" style="font-size:11px;">Origen / Comisión de servicio</label>
-        <select name="origen" class="sig-select" style="min-width:220px;" onchange="this.form.submit()">
+    <div class="sig-field u-m-0">
+        <label for="emplinde_origen" class="sig-field__label u-fs-11px">Origen / Comisión de servicio</label>
+        <select id="emplinde_origen" name="origen" class="sig-select" style="min-width:220px;" onchange="this.form.submit()">
             <?php foreach ($origenOpciones as $val => $lbl): ?>
                 <option value="<?php echo $val; ?>" <?php echo $origen === $val ? 'selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
             <?php endforeach; ?>
@@ -152,9 +152,9 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
                         <td class="cell-strong"><?php echo $emp->nro_expediente ?? 'N/A'; ?></td>
                         <td><?php echo $emp->cedula ?? 'N/A'; ?></td>
                         <td><?php echo ($emp->nombre ?? 'N/A') . ' ' . ($emp->apellido ?? ''); echo $fijoBadge($emp); ?></td>
-                        <td style="font-size:12px;color:var(--text-secondary);">
-                            <?php if (!empty($emp->telefono)): ?><div><i class="bi bi-telephone" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($emp->telefono); ?></div><?php endif; ?>
-                            <?php if (!empty($emp->correo)): ?><div style="word-break:break-all;"><i class="bi bi-envelope" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($emp->correo); ?></div><?php endif; ?>
+                        <td class="u-fs-12px u-c-text-secondary">
+                            <?php if (!empty($emp->telefono)): ?><div><i class="bi bi-telephone u-c-text-tertiary"></i> <?php echo htmlspecialchars($emp->telefono); ?></div><?php endif; ?>
+                            <?php if (!empty($emp->correo)): ?><div class="u-wb-break-all"><i class="bi bi-envelope u-c-text-tertiary"></i> <?php echo htmlspecialchars($emp->correo); ?></div><?php endif; ?>
                             <?php if (empty($emp->telefono) && empty($emp->correo)): ?>—<?php endif; ?>
                         </td>
                         <td><span class="sig-badge sig-badge--info"><?php echo $emp->cargo ?? 'Sin cargo'; ?></span></td>
@@ -231,12 +231,12 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
                     de egresados (no se elimina) y seguirá disponible para constancias.
                 </p>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Fecha de egreso <span class="req">*</span></label>
+                    <label for="eg_fecha" class="sig-field__label">Fecha de egreso <span class="req">*</span></label>
                     <input type="date" name="fecha_egreso" id="eg_fecha" class="sig-input" required max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Motivo <span class="req">*</span></label>
-                    <select name="motivo_egreso" class="sig-input" required>
+                    <label for="emplinde_motivo_egreso" class="sig-field__label">Motivo <span class="req">*</span></label>
+                    <select id="emplinde_motivo_egreso" name="motivo_egreso" class="sig-input" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach ($motivos as $m): ?>
                             <option value="<?php echo htmlspecialchars($m); ?>"><?php echo htmlspecialchars($m); ?></option>
@@ -244,8 +244,8 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
                     </select>
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación</label>
-                    <textarea name="observacion_egreso" class="sig-input" rows="2" placeholder="N° de oficio, detalle del motivo, etc. (opcional)"></textarea>
+                    <label for="emplinde_observacion_egreso" class="sig-field__label">Observación</label>
+                    <textarea id="emplinde_observacion_egreso" name="observacion_egreso" class="sig-input" rows="2" placeholder="N° de oficio, detalle del motivo, etc. (opcional)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -271,8 +271,8 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
                     El egreso anterior queda guardado en su historial.
                 </p>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación</label>
-                    <textarea name="reingreso_observacion" class="sig-input" rows="2" placeholder="Motivo del reingreso (opcional)"></textarea>
+                    <label for="emplinde_reingreso_observacion" class="sig-field__label">Observación</label>
+                    <textarea id="emplinde_reingreso_observacion" name="reingreso_observacion" class="sig-input" rows="2" placeholder="Motivo del reingreso (opcional)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

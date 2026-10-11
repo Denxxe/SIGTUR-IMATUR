@@ -26,7 +26,7 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
 
 <?php if ($nAmones >= $limite): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:4px solid var(--danger,#EF4444)">
-        <div class="sig-card__body" style="padding:var(--sp-4);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="sig-card__body u-p-sp-4 u-jc-space-between u-ai-center u-gap-12px u-fwr-wrap" style="display:flex;">
             <div>
                 <strong style="color:var(--danger,#EF4444)"><i class="bi bi-exclamation-octagon"></i> Causa de despido:</strong>
                 este empleado acumula <?php echo $nAmones; ?> amonestaciones (límite <?php echo $limite; ?>).
@@ -41,7 +41,7 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
     </div>
 <?php elseif ($nAmones === $limite - 1): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:4px solid var(--warning,#F59E0B)">
-        <div class="sig-card__body" style="padding:var(--sp-4)">
+        <div class="sig-card__body u-p-sp-4">
             <strong style="color:var(--warning,#D97706)"><i class="bi bi-exclamation-triangle"></i> En riesgo:</strong>
             una amonestación más alcanza el límite de <?php echo $limite; ?>.
         </div>
@@ -52,8 +52,8 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
     <!-- Faltas -->
     <div class="col-md-6">
         <div class="sig-table-wrap">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
-                <h5 style="margin:0"><i class="bi bi-exclamation-circle"></i> Faltas (<?php echo $nFaltas; ?>)</h5>
+            <div class="u-jc-space-between u-ai-center u-p-12px-16px" style="display:flex;">
+                <h5 class="u-m-0"><i class="bi bi-exclamation-circle"></i> Faltas (<?php echo $nFaltas; ?>)</h5>
                 <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFalta"><i class="bi bi-plus-lg"></i> Agregar</button>
             </div>
             <table class="sig-table">
@@ -66,10 +66,10 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
                             <td class="cell-strong"><?php echo $ffecha($f->fecha); ?></td>
                             <td><?php $ti = $f->tipo ?? Falta::TIPO_DEFAULT; $tc = $ti === 'Incumplimiento de reglas' ? 'sig-badge--warning' : 'sig-badge--neutral'; ?>
                                 <span class="sig-badge <?php echo $tc; ?>" style="font-size:10px"><?php echo htmlspecialchars($ti); ?></span></td>
-                            <td style="font-size:13px"><?php echo htmlspecialchars($f->motivo ?? '—'); ?></td>
+                            <td class="u-fs-13px"><?php echo htmlspecialchars($f->motivo ?? '—'); ?></td>
                             <td class="col-actions">
                                 <?php if (isset($faltasEscaladas[(int)$f->id])): ?>
-                                <span class="sig-badge sig-badge--neutral" style="font-size:10px" title="Ya generó una amonestación. Si se anula, podrá escalarse de nuevo."><i class="bi bi-flag-fill"></i> Amonestada</span>
+                                <span class="sig-badge sig-badge--neutral u-fs-10px" title="Ya generó una amonestación. Si se anula, podrá escalarse de nuevo."><i class="bi bi-flag-fill"></i> Amonestada</span>
                                 <?php elseif (!$egresado): ?>
                                 <button type="button" class="row-action js-escalar" title="Generar amonestación a partir de esta falta"
                                         data-falta="<?php echo (int)$f->id; ?>"
@@ -86,8 +86,8 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
     <!-- Amonestaciones -->
     <div class="col-md-6">
         <div class="sig-table-wrap">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px">
-                <h5 style="margin:0"><i class="bi bi-flag"></i> Amonestaciones (<?php echo $nAmones; ?>/<?php echo $limite; ?>)</h5>
+            <div class="u-jc-space-between u-ai-center u-p-12px-16px" style="display:flex;">
+                <h5 class="u-m-0"><i class="bi bi-flag"></i> Amonestaciones (<?php echo $nAmones; ?>/<?php echo $limite; ?>)</h5>
                 <button type="button" class="btn-sig btn-sig--primary btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalAmonestacion"><i class="bi bi-plus-lg"></i> Agregar</button>
             </div>
             <table class="sig-table">
@@ -98,8 +98,8 @@ foreach ($data['amonestaciones'] ?? [] as $a) {
                     <?php else: foreach ($data['amonestaciones'] as $a): ?>
                         <tr>
                             <td class="cell-strong"><?php echo $ffecha($a->fecha); ?></td>
-                            <td style="font-size:13px">
-                                <?php if (!empty($a->id_falta_origen)): ?><span class="sig-badge sig-badge--neutral" style="font-size:10px" title="Generada a partir de una falta"><i class="bi bi-arrow-up-right"></i> desde falta</span> <?php endif; ?>
+                            <td class="u-fs-13px">
+                                <?php if (!empty($a->id_falta_origen)): ?><span class="sig-badge sig-badge--neutral u-fs-10px" title="Generada a partir de una falta"><i class="bi bi-arrow-up-right"></i> desde falta</span> <?php endif; ?>
                                 <?php echo htmlspecialchars($a->motivo ?? ''); ?>
                             </td>
                             <td class="col-actions"><button type="button" class="row-action row-action--del js-anular" title="Anular amonestación" data-action="<?php echo URL_ROOT; ?>/amonestaciones/eliminarAmonestacion/<?php echo $a->id; ?>/<?php echo $eid; ?>" data-tipo="amonestación"><i class="bi bi-trash"></i></button></td>
@@ -174,7 +174,7 @@ $amonTras    = $amonActivas + 1;
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
                 <input type="hidden" name="id_falta" id="escalarFalta" value="">
-                <p style="font-size:13px;margin-bottom:8px">Se registrará una amonestación a partir de esta falta:</p>
+                <p class="u-fs-13px" style="margin-bottom:8px;">Se registrará una amonestación a partir de esta falta:</p>
                 <p id="escalarDesc" style="font-size:13px;font-weight:600;margin-bottom:12px"></p>
                 <p style="font-size:13px;margin:0;color:<?php echo $amonTras >= Amonestacion::LIMITE_DESPIDO ? 'var(--danger-600)' : 'var(--text-secondary)'; ?>">
                     El empleado quedará con <strong><?php echo $amonTras; ?>/<?php echo Amonestacion::LIMITE_DESPIDO; ?></strong> amonestaciones activas<?php
@@ -199,7 +199,7 @@ $amonTras    = $amonActivas + 1;
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p style="font-size:13px;color:var(--text-secondary)">Indique el motivo por el cual se anula este registro. Quedará en el histórico y la auditoría.</p>
+                <p class="u-fs-13px u-c-text-secondary">Indique el motivo por el cual se anula este registro. Quedará en el histórico y la auditoría.</p>
                 <div class="sig-field">
                     <label class="sig-field__label" for="motivo_anulacion">Motivo de la anulación <span class="req">*</span></label>
                     <textarea id="motivo_anulacion" name="motivo_anulacion" class="sig-textarea" rows="3" required></textarea>

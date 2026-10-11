@@ -22,6 +22,11 @@ require_once APP_ROOT . '/app/models/Nomina.php';
 require_once APP_ROOT . '/app/models/BonoVacacional.php';
 require_once APP_ROOT . '/app/models/Feriado.php';
 require_once APP_ROOT . '/app/models/Liquidacion.php';
+require_once APP_ROOT . '/app/models/CodificacionBienes.php';
+require_once APP_ROOT . '/app/models/Inventario.php';
+require_once APP_ROOT . '/app/models/Taller.php';
+require_once APP_ROOT . '/app/core/Controller.php';
+require_once APP_ROOT . '/app/helpers/session_helper.php';
 
 $tests = 0; $fails = 0;
 
@@ -390,6 +395,97 @@ echo "\n== Liquidacion::mesesCompletos / tiempoServicio ==\n";
 eq(Liquidacion::mesesCompletos('2026-01-01', '2026-06-30'), 6, 'enero a fin de junio = 6 meses completos');
 eq(Liquidacion::mesesCompletos('2026-01-01', '2026-06-29'), 5, 'un día antes de cerrar junio = 5');
 eq(Liquidacion::tiempoServicio('2020-01-10', '2023-08-25'), ['anios' => 3, 'meses' => 7, 'dias' => 15], 'tiempo laboral: años, meses y días');
+
+// =====================================================================
+// Bienes — codificación propia (mig. 087, R-12 · C-1)
+// =====================================================================
+echo "\n== CodificacionBienes::calcularSiguiente ==\n";
+eq(CodificacionBienes::calcularSiguiente([], 171, 3), '172', 'sin bienes: el punto de partida + 1');
+eq(CodificacionBienes::calcularSiguiente(['084', '171', '131'], 150, 3), '172', 'el mayor registrado manda si supera al punto de partida');
+eq(CodificacionBienes::calcularSiguiente(['084', '131'], 171, 3), '172', 'el punto de partida manda si supera a lo registrado');
+eq(CodificacionBienes::calcularSiguiente(['084', '131', '141'], null, 3), '142', 'compara como entero, no por el orden de la lista (B-72)');
+eq(CodificacionBienes::calcularSiguiente(['007'], null, 3), '008', 'rellena con ceros a 3 dígitos');
+eq(CodificacionBienes::calcularSiguiente(['S/C', '', ' 090 '], null, 3), '091', 'ignora lo no numérico («S/C») y los espacios');
+eq(CodificacionBienes::calcularSiguiente(['999'], null, 3), '1000', 'al pasar de 999 escribe el número completo');
+eq(CodificacionBienes::calcularSiguiente(['999'], null, 4), '1000', 'con 4 dígitos configurados');
+eq(CodificacionBienes::calcularSiguiente(['5'], null, 4), '0006', 'los dígitos son configurables (B-74)');
+eq(CodificacionBienes::formatear(84, 3), '084', 'formatear 84 → 084');
+
+// =====================================================================
+// Documentos jurídicos: montos y fechas en letras (mig. 075)
+// =====================================================================
+// Las dos frases de referencia están copiadas del documento de donación
+// firmado (2026-02-18): el sistema debe escribirlas IGUAL que el papel.
+echo "\n== Util::numeroALetras / montoALetras / fechaEnLetras ==\n";
+eq(Util::numeroALetras(0), 'cero', '0 → cero');
+eq(Util::numeroALetras(16), 'dieciséis', '16 → dieciséis (con tilde)');
+eq(Util::numeroALetras(100), 'cien', '100 → cien (no «ciento»)');
+eq(Util::numeroALetras(101), 'ciento uno', '101 → ciento uno');
+eq(Util::numeroALetras(1000), 'mil', '1000 → mil (no «un mil»)');
+eq(Util::numeroALetras(21000), 'veintiún mil', '21000 → veintiún mil (con tilde; antes «veintiun»)');
+eq(Util::numeroALetras(31000), 'treinta y un mil', '31000 → treinta y un mil');
+eq(Util::numeroALetras(1000000), 'un millón', '1.000.000 → un millón');
+eq(Util::numeroALetras(21000000), 'veintiún millones', '21.000.000 → veintiún millones');
+eq(Util::montoALetras(19025.28), 'DIECINUEVE MIL VEINTICINCO BOLÍVARES CON VEINTIOCHO CÉNTIMOS', 'monto del documento de donación, igual al papel');
+eq(Util::montoALetras(1000), 'MIL BOLÍVARES', 'sin céntimos, los omite');
+eq(Util::fechaEnLetras('2026-02-18'), 'a los Dieciocho (18) días del mes de Febrero de Dos Mil Veintiséis (2026)', 'fecha del documento de donación');
+
+// =====================================================================
+// Validaciones del servidor (Controller)
+// =====================================================================
+echo "\n== Controller::emailValido / telefonoValido / rifValido / normalizarRif ==\n";
+$ctl = new class extends Controller {
+    public function __construct() {}
+    public function email($x) { return $this->emailValido($x); }
+    public function tel($x)   { return $this->telefonoValido($x); }
+    public function rif($x)   { return $this->rifValido($x); }
+    public function nrif($x)  { return $this->normalizarRif($x); }
+};
+check($ctl->email('nombre@dominio.com'), 'correo válido');
+check(!$ctl->email('nombre apellido@dominio.com'), 'correo con espacio → inválido');
+check(!$ctl->email('ñandú@dominio.com'), 'correo con símbolos especiales → inválido');
+check(!$ctl->email(''), 'correo vacío → inválido');
+check($ctl->tel('0414-1234567'), 'teléfono VE con guion → válido');
+check(!$ctl->tel('0414123'), 'teléfono corto → inválido');
+check($ctl->rif('G-20008498-7'), 'RIF institucional → válido');
+check(!$ctl->rif('X-12345678-9'), 'RIF con letra no venezolana → inválido');
+eq($ctl->nrif('g200084987'), 'G-20008498-7', 'normaliza el RIF a L-NNNNNNNN-N');
+
+// =====================================================================
+// Bienes: código compuesto y descripción oficial (mig. 062, 075)
+// =====================================================================
+echo "\n== Inventario::componerCodigo / descripcionOficial ==\n";
+eq(Inventario::componerCodigo('2', '01', '108', '084'), '2-01-108-084', 'compone el código como el BM-1');
+check(Inventario::componerCodigo('2', '01', '', '084') === null, 'si falta una parte, no hay código');
+eq(Inventario::descripcionOficial((object)['nombre' => 'Aire acondicionado', 'descripcion' => 'color beige',
+        'marca' => 'Hyundai', 'modelo' => 'Piso techo', 'serial' => 'SN1']),
+   'AIRE ACONDICIONADO, COLOR BEIGE, MARCA HYUNDAI, MODELO PISO TECHO, SERIAL SN1',
+   'marca, modelo y serial van dentro de la descripción, en mayúsculas');
+
+// =====================================================================
+// RRHH: elegible a fijo (3C) y anti-inyección de columnas (deuda técnica §5.2)
+// =====================================================================
+echo "\n== Empleado::elegibleParaFijo ==\n";
+$cont = fn(array $x) => (object)($x + ['tipo_contrato' => 'Contratado', 'institucion_origen' => 'IMATUR',
+                                        'fecha_ingreso' => diasAtras('-6 years'), 'fecha_ingreso_administracion' => null, 'fecha_egreso' => null]);
+check(Empleado::elegibleParaFijo($cont([])), 'contratado de IMATUR con 6 años → elegible (umbral 5)');
+check(!Empleado::elegibleParaFijo($cont(['fecha_ingreso' => diasAtras('-4 years')])), 'IMATUR con 4 años → no');
+check(Empleado::elegibleParaFijo($cont(['institucion_origen' => 'Gobernación', 'fecha_ingreso' => diasAtras('-3 years -1 day')])), 'Gobernación con 3 años → elegible (umbral 3)');
+check(!Empleado::elegibleParaFijo($cont(['tipo_contrato' => 'Fijo'])), 'un fijo no es «elegible a fijo»');
+check(!Empleado::elegibleParaFijo($cont(['fecha_egreso' => '2026-01-01'])), 'un egresado no');
+
+echo "\n== Taller::actualizarPersona — lista blanca de columnas ==\n";
+try { Taller::actualizarPersona(1, ['cedula' => '123'], 1); check(false, 'debió rechazar «cedula»'); }
+catch (InvalidArgumentException $e) { check(true, 'rechaza «cedula» (la identidad no se cambia por esta vía)'); }
+try { Taller::actualizarPersona(1, ['nombre = nombre; --' => 'x'], 1); check(false, 'debió rechazar una clave inyectada'); }
+catch (InvalidArgumentException $e) { check(true, 'rechaza una clave que intenta inyectar SQL'); }
+check(Taller::COLUMNAS_PERSONA_EDITABLES === ['nombre', 'apellido', 'telefono', 'correo', 'genero', 'fecha_nacimiento', 'parroquia_id', 'direccion'],
+      'las columnas permitidas son exactamente las que usan talleres y rutas');
+
+echo "\n== sigtur_uid (ids únicos para label[for] en bucles) ==\n";
+$u1 = sigtur_uid('am fecha'); $u2 = sigtur_uid('am fecha');
+check($u1 !== $u2, 'dos llamadas dan ids distintos');
+check((bool)preg_match('/^[A-Za-z0-9_-]+$/', $u1), 'el id solo lleva caracteres válidos (quita espacios)');
 
 echo "\n" . str_repeat('-', 48) . "\n";
 echo "$tests pruebas ejecutadas, $fails fallo(s).\n";

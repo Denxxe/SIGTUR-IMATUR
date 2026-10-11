@@ -56,7 +56,7 @@
         <form action="<?php echo URL_ROOT; ?>/vacaciones/generarFeriados" method="POST" class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Generar feriados movibles</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <p style="font-size:13px;margin-bottom:14px">
+                <p class="u-fs-13px u-mb-14px">
                     Calcula el <strong>Lunes y Martes de Carnaval</strong> y el <strong>Jueves y Viernes Santo</strong>
                     del año indicado a partir del Domingo de Resurrección, y los carga como feriados puntuales.
                 </p>
@@ -65,7 +65,7 @@
                     <input type="number" id="anio_generar" name="anio" class="sig-input" required
                            min="2000" max="2100" value="<?php echo (int)date('Y') + 1; ?>">
                 </div>
-                <p style="font-size:12px;color:var(--text-muted,#6b7280);margin:0">
+                <p class="u-fs-12px u-m-0" style="color:var(--text-muted,#6b7280);">
                     Se puede repetir sin riesgo: si una fecha ya está registrada, se omite. Tampoco vuelve a crear
                     un feriado que se haya eliminado a propósito.
                 </p>
@@ -87,7 +87,7 @@
                     <input id="fecha" type="date" name="fecha" class="sig-input" required></div>
                 <div class="sig-field mb-3"><label class="sig-field__label" for="nombre">Nombre <span class="req">*</span></label>
                     <input id="nombre" type="text" name="nombre" class="sig-input" required data-nombre-libre placeholder="Ej: Lunes de Carnaval"></div>
-                <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer" for="recurrente">
+                <label class="u-ai-center u-gap-8px u-fs-13px u-cur-pointer" style="display:flex;" for="recurrente">
                     <input id="recurrente" type="checkbox" name="recurrente" value="1">
                     Se repite cada año (mismo mes/día) — desmarca para feriados movibles
                 </label>

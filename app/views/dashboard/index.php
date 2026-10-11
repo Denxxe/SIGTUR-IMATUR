@@ -120,14 +120,14 @@ if ($ve('inventario')) {
 </div>
 
 <?php if (!empty($data['dash_error'])): ?>
-<div style="background:rgba(239,68,68,.08); border:1px solid var(--danger-300); border-radius:8px; padding:var(--sp-4); margin-bottom:var(--sp-4); font-size:13px; color:var(--danger-700);">
+<div class="u-br-8px u-p-sp-4 u-mb-sp-4 u-fs-13px" style="background:rgba(239,68,68,.08); border:1px solid var(--danger-300); color:var(--danger-700);">
     <i class="bi bi-exclamation-circle"></i> Algunos datos no pudieron cargarse: <?php echo htmlspecialchars($data['dash_error']); ?>
 </div>
 <?php endif; ?>
 
 <?php if (!empty($data['alertas'])): ?>
 <!-- Alertas ─────────────────────────────────────────────────────────────── -->
-<div style="display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-5);" class="anim-slide-up">
+<div style="display:flex;" class="anim-slide-up u-fwr-wrap u-gap-sp-2 u-mb-sp-5">
     <?php
     $aC = ['warning'=>['rgba(245,158,11,.1)','#D97706','#92400E'],'danger'=>['rgba(239,68,68,.1)','#DC2626','#7F1D1D'],'brand'=>['rgba(124,58,237,.08)','#7C3AED','#4C1D95'],'info'=>['rgba(8,145,178,.08)','#0891B2','#164E63']];
     foreach ($data['alertas'] as $a):
@@ -147,12 +147,12 @@ foreach ($kpiSections as $sec):
     if (empty($sec['cards'])) continue;
 ?>
 <!-- Separador de área -->
-<div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-3);" class="anim-slide-up">
+<div style="display:flex;" class="anim-slide-up u-ai-center u-gap-sp-3 u-mb-sp-3">
     <div style="width:3px;height:16px;border-radius:2px;background:<?php echo $sec['color']; ?>;flex-shrink:0;"></div>
-    <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-secondary);">
+    <span class="u-fw-700 u-tt-uppercase u-ls-0_08em u-c-text-secondary" style="font-size:0.68rem;">
         <i class="bi <?php echo $sec['icon']; ?>" style="color:<?php echo $sec['color']; ?>;margin-right:3px;"></i><?php echo htmlspecialchars($sec['label']); ?>
     </span>
-    <div style="flex:1;height:1px;background:var(--border-subtle);"></div>
+    <div class="u-flex-1 u-h-1px u-bg-border-subtle"></div>
 </div>
 <div class="row g-3 mb-5 anim-slide-up">
     <?php foreach ($sec['cards'] as $k):
@@ -163,15 +163,15 @@ foreach ($kpiSections as $sec):
     ?>
     <div class="col-6 col-md-3">
         <div class="sig-card<?php echo $hasHref?' sig-card--hover':''; ?>" style="<?php echo $border; ?>">
-            <?php if ($hasHref): ?><a href="<?php echo $k['href']; ?>" style="display:block;text-decoration:none;color:inherit;padding:var(--sp-4);"><?php else: ?><div style="padding:var(--sp-4);"><?php endif; ?>
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);">
-                    <div style="min-width:0;flex:1;">
-                        <div style="font-size:0.67rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-secondary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['label']); ?></div>
+            <?php if ($hasHref): ?><a href="<?php echo $k['href']; ?>" style="display:block;text-decoration:none;color:inherit;padding:var(--sp-4);"><?php else: ?><div class="u-p-sp-4"><?php endif; ?>
+                <div class="u-ai-flex-start u-jc-space-between u-gap-sp-3" style="display:flex;">
+                    <div class="u-minw-0 u-flex-1">
+                        <div class="u-fs-0_67rem u-fw-600 u-tt-uppercase u-ls-_07em u-c-text-secondary u-mb-4px u-ws-nowrap u-ov-hidden u-textov-ellipsis"><?php echo htmlspecialchars($k['label']); ?></div>
                         <div style="font-size:1.75rem;font-weight:800;color:<?php echo $vColor;?>;line-height:1;margin-bottom:4px;"><?php echo $k['value']; ?></div>
-                        <div style="font-size:0.69rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><?php echo htmlspecialchars($k['sub']); ?></div>
+                        <div class="u-c-text-tertiary u-ws-nowrap u-ov-hidden u-textov-ellipsis" style="font-size:0.69rem;"><?php echo htmlspecialchars($k['sub']); ?></div>
                         <?php if (!empty($k['delta'])): $d=$k['delta']; ?>
                         <div style="font-size:10px;font-weight:700;color:<?php echo $d['color'];?>;margin-top:3px;white-space:nowrap;">
-                            <?php echo $d['arrow']; ?> <?php echo $d['pct']; ?>% <span style="font-weight:400;color:var(--text-tertiary);"><?php echo htmlspecialchars($d['label']); ?></span>
+                            <?php echo $d['arrow']; ?> <?php echo $d['pct']; ?>% <span class="u-fw-400 u-c-text-tertiary"><?php echo htmlspecialchars($d['label']); ?></span>
                         </div>
                         <?php elseif (!empty($k['status']) && $k['status'] !== 'neutral'):
                             [$sCol,$sIco,$sTxt] = $sMap[$k['status']] ?? ['#64748B','bi-dash','—'];
@@ -208,10 +208,10 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     <div class="<?php echo $hasInv ? 'col-md-8' : 'col-12'; ?>">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-graph-up-arrow" style="color:#7C3AED;"></i> Actividades de Formación — últimos 6 meses</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiActividadesActivas']??0); ?> activas ahora</span>
+                <div class="sig-card__title"><i class="bi bi-graph-up-arrow u-c-x7C3AED"></i> Actividades de Formación — últimos 6 meses</div>
+                <span class="u-fs-11px u-c-text-tertiary"><?php echo ($data['kpiActividadesActivas']??0); ?> activas ahora</span>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartTalleresMes"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartTalleresMes"></div></div>
         </div>
     </div>
     <?php endif; ?>
@@ -219,10 +219,10 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     <div class="<?php echo $hasActividades ? 'col-md-4' : 'col-md-6 offset-md-3'; ?>">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-clipboard-check-fill" style="color:#D97706;"></i> Estado Físico del Patrimonio</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiBienes']??0); ?> bienes</span>
+                <div class="sig-card__title"><i class="bi bi-clipboard-check-fill u-c-xD97706"></i> Estado Físico del Patrimonio</div>
+                <span class="u-fs-11px u-c-text-tertiary"><?php echo ($data['kpiBienes']??0); ?> bienes</span>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartInvCondicion"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartInvCondicion"></div></div>
         </div>
     </div>
     <?php endif; ?>
@@ -236,10 +236,10 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     <div class="col-md-6">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-calendar-check-fill" style="color:#F59E0B;"></i> Asistencia del Personal — últimos 4 meses</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiAsistenciaMes']??0); ?> registros este mes</span>
+                <div class="sig-card__title"><i class="bi bi-calendar-check-fill u-c-xF59E0B"></i> Asistencia del Personal — últimos 4 meses</div>
+                <span class="u-fs-11px u-c-text-tertiary"><?php echo ($data['kpiAsistenciaMes']??0); ?> registros este mes</span>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartAsistencia"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartAsistencia"></div></div>
         </div>
     </div>
     <?php endif; ?>
@@ -247,10 +247,10 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     <div class="col-md-6">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill" style="color:#3B82F6;"></i> Empleados por Departamento</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiEmpleados']??0); ?> empleados activos</span>
+                <div class="sig-card__title"><i class="bi bi-bar-chart-horizontal-fill u-c-x3B82F6"></i> Empleados por Departamento</div>
+                <span class="u-fs-11px u-c-text-tertiary"><?php echo ($data['kpiEmpleados']??0); ?> empleados activos</span>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartEmpDepto"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartEmpDepto"></div></div>
         </div>
     </div>
     <?php endif; ?>
@@ -263,10 +263,10 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     <div class="col-12">
         <div class="sig-card">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-door-open-fill" style="color:#0891B2;"></i> Flujo de Visitas — últimos 14 días</div>
-                <span style="font-size:11px;color:var(--text-tertiary);"><?php echo ($data['kpiVisitasSemana']??0); ?> únicos esta semana</span>
+                <div class="sig-card__title"><i class="bi bi-door-open-fill u-c-x0891B2"></i> Flujo de Visitas — últimos 14 días</div>
+                <span class="u-fs-11px u-c-text-tertiary"><?php echo ($data['kpiVisitasSemana']??0); ?> únicos esta semana</span>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-4);"><div id="chartVisitas"></div></div>
+            <div class="sig-card__body u-p-sp-4"><div id="chartVisitas"></div></div>
         </div>
     </div>
 </div>
@@ -276,9 +276,9 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
 <div class="row g-4 mb-6 anim-slide-up">
     <div class="col-md-8">
         <div class="sig-card h-100">
-            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-lightning-charge-fill" style="color:var(--brand-500);"></i> Acciones Rápidas</div></div>
-            <div class="sig-card__body" style="padding:var(--sp-5);">
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:var(--sp-3);">
+            <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-lightning-charge-fill u-c-brand-500"></i> Acciones Rápidas</div></div>
+            <div class="sig-card__body u-p-sp-5">
+                <div class="u-gap-sp-3" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));">
                     <?php
                     $acciones = [];
                     if ($ve('asistencias'))      $acciones[] = ['Registrar Asistencia','bi-calendar-plus',          URL_ROOT.'/asistencias/index'];
@@ -305,11 +305,11 @@ $hasVisitas     = $ve('visitas') && !empty($data['visitasPorDia']);
     </div>
     <div class="col-md-4">
         <div class="sig-card h-100" style="background:linear-gradient(135deg,var(--brand-600) 0%,var(--brand-800) 100%);border:none;">
-            <div class="sig-card__body" style="padding:var(--sp-8);display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+            <div class="sig-card__body u-p-sp-8 u-fd-column u-jc-space-between u-h-100pct" style="display:flex;">
                 <div>
-                    <i class="bi bi-graph-up-arrow" style="font-size:2.5rem;color:rgba(255,255,255,.7);display:block;margin-bottom:var(--sp-4);"></i>
-                    <h3 style="font-size:1.1rem;font-weight:700;color:white;margin:0 0 var(--sp-2);">Indicadores Completos</h3>
-                    <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0 0 var(--sp-6);line-height:1.6;">
+                    <i class="bi bi-graph-up-arrow u-mb-sp-4" style="font-size:2.5rem; color:rgba(255,255,255,.7); display:block;"></i>
+                    <h3 class="u-fw-700" style="font-size:1.1rem; color:white; margin:0 0 var(--sp-2);">Indicadores Completos</h3>
+                    <p class="u-fs-13px" style="color:rgba(255,255,255,.75); margin:0 0 var(--sp-6); line-height:1.6;">
                         Análisis profundo con demografía, cobertura territorial, tendencias históricas y KPIs de eficiencia operativa.
                     </p>
                 </div>
@@ -356,11 +356,11 @@ $opConfig = [
 <div class="sig-card mb-6 anim-slide-up">
     <div class="sig-card__head">
         <div class="sig-card__title">
-            <i class="bi bi-activity" style="color:var(--brand-500);"></i> Actividad Reciente del Sistema
+            <i class="bi bi-activity u-c-brand-500"></i> Actividad Reciente del Sistema
         </div>
-        <span style="font-size:12px;color:var(--text-tertiary);">Últimos <?php echo count($data['feedActividad']); ?> registros</span>
+        <span class="u-fs-12px u-c-text-tertiary">Últimos <?php echo count($data['feedActividad']); ?> registros</span>
     </div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <?php foreach ($data['feedActividad'] as $i => $f):
             $tablaNombre = $tablaNames[$f->tabla_afectada] ?? str_replace('_', ' ', $f->tabla_afectada);
             $op = $opConfig[$f->operacion] ?? ['ico'=>'bi-dot','color'=>'var(--text-tertiary)','verb'=>'modificó'];
@@ -374,15 +374,15 @@ $opConfig = [
             <div style="width:30px;height:30px;border-radius:50%;background:<?php echo $op['color'];?>1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <i class="bi <?php echo $op['ico']; ?>" style="font-size:0.75rem;color:<?php echo $op['color']; ?>;"></i>
             </div>
-            <div style="flex:1;min-width:0;font-size:13px;color:var(--text-primary);">
+            <div class="u-flex-1 u-minw-0 u-fs-13px u-c-text-primary">
                 <strong><?php echo htmlspecialchars($f->username ?? 'Sistema'); ?></strong>
-                <span style="color:var(--text-secondary);"> <?php echo $op['verb']; ?> </span>
-                <em style="color:var(--text-secondary);font-style:normal;"><?php echo htmlspecialchars($tablaNombre); ?></em>
+                <span class="u-c-text-secondary"> <?php echo $op['verb']; ?> </span>
+                <em class="u-c-text-secondary" style="font-style:normal;"><?php echo htmlspecialchars($tablaNombre); ?></em>
                 <?php if ($f->record_id): ?>
-                    <span style="color:var(--text-tertiary);font-size:11px;"> #<?php echo $f->record_id; ?></span>
+                    <span class="u-c-text-tertiary u-fs-11px"> #<?php echo $f->record_id; ?></span>
                 <?php endif; ?>
             </div>
-            <span style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;flex-shrink:0;"><?php echo $timeAgo; ?></span>
+            <span class="u-fs-11px u-c-text-tertiary u-ws-nowrap u-fsh-0"><?php echo $timeAgo; ?></span>
         </div>
         <?php endforeach; ?>
     </div>

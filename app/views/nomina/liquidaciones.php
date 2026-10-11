@@ -26,7 +26,7 @@ $m = fn($v) => number_format((float)$v, 2, ',', '.');
         <div class="sig-card__title"><i class="bi bi-hourglass-split"></i> Egresados sin liquidación</div>
         <span class="sig-badge sig-badge--warning"><?php echo count($data['pendientes']); ?></span>
     </div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export>
             <table class="sig-table">
                 <thead>

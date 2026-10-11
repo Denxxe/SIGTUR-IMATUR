@@ -32,7 +32,7 @@ $enCurso     = $data['enCurso'] ?? [];
 </div>
 
 <?php if (!$autorizador): ?>
-    <div class="sig-alert sig-alert--danger anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--danger anim-slide-up u-mb-sp-4">
         <i class="bi bi-exclamation-triangle"></i>
         <strong>No se pueden registrar movimientos.</strong>
         Todo movimiento de bienes debe autorizarlo la Coordinación de Bienes, y no hay ningún
@@ -41,7 +41,7 @@ $enCurso     = $data['enCurso'] ?? [];
         o revisa <a href="<?php echo URL_ROOT; ?>/config/index">Configuración</a>.
     </div>
 <?php else: ?>
-    <div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
         <i class="bi bi-person-check"></i>
         Los movimientos se registran con la autorización de
         <strong><?php echo htmlspecialchars($autorizador->nombre); ?></strong>
@@ -52,12 +52,12 @@ $enCurso     = $data['enCurso'] ?? [];
 
 <?php if (!empty($enCurso)): ?>
     <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-4);border-left:3px solid var(--warning-500);">
-        <div class="sig-card__body" style="padding:var(--sp-4);">
-            <div style="font-weight:700;margin-bottom:var(--sp-2);">
-                <i class="bi bi-tools" style="color:var(--warning-600)"></i>
+        <div class="sig-card__body u-p-sp-4">
+            <div class="u-fw-700 u-mb-sp-2">
+                <i class="bi bi-tools u-c-warning-600"></i>
                 Mantenimientos en curso (<?php echo count($enCurso); ?>)
             </div>
-            <ul style="margin:0;padding-left:1.2rem;font-size:13px;">
+            <ul class="u-m-0 u-fs-13px" style="padding-left:1.2rem;">
                 <?php foreach ($enCurso as $m): ?>
                     <li>
                         <strong><?php echo htmlspecialchars($m->bien); ?></strong>
@@ -89,23 +89,23 @@ $enCurso     = $data['enCurso'] ?? [];
                         <td><?php echo htmlspecialchars($a->fecha ?? '—'); ?></td>
                         <td>
                             <span class="cell-strong"><?php echo htmlspecialchars($a->item_nombre ?? '—'); ?></span>
-                            <?php if (!empty($a->codigo_bn)): ?><br><small style="color:var(--text-tertiary);font-family:var(--font-mono);"><?php echo htmlspecialchars($a->codigo_bn); ?></small><?php endif; ?>
+                            <?php if (!empty($a->codigo_bn)): ?><br><small class="u-c-text-tertiary u-ff-font-mono"><?php echo htmlspecialchars($a->codigo_bn); ?></small><?php endif; ?>
                         </td>
                         <td>
                             <span class="sig-badge <?php echo $tcls; ?>"><?php echo htmlspecialchars($a->tipo_movimiento ?? '—'); ?></span>
-                            <?php if (!empty($a->descripcion)): ?><br><small style="color:var(--text-tertiary)"><?php echo htmlspecialchars($a->descripcion); ?></small><?php endif; ?>
+                            <?php if (!empty($a->descripcion)): ?><br><small class="u-c-text-tertiary"><?php echo htmlspecialchars($a->descripcion); ?></small><?php endif; ?>
                         </td>
-                        <td style="font-size:12.5px;">
+                        <td class="u-fs-12_5px">
                             <?php if (!empty($a->ubicacion_origen) || !empty($a->ubicacion_destino)): ?>
                                 <?php echo htmlspecialchars($a->ubicacion_origen ?: '—'); ?>
-                                <i class="bi bi-arrow-right" style="color:var(--text-tertiary)"></i>
+                                <i class="bi bi-arrow-right u-c-text-tertiary"></i>
                                 <?php echo htmlspecialchars($a->ubicacion_destino ?: '—'); ?>
                             <?php else: ?>
-                                <span style="color:var(--text-tertiary)">—</span>
+                                <span class="u-c-text-tertiary">—</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo trim(($a->emp_nombre ?? '') . ' ' . ($a->emp_apellido ?? '')) ?: '<span style="color:var(--text-tertiary)">—</span>'; ?></td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($a->autorizador ?: '—'); ?></td>
+                        <td><?php echo trim(($a->emp_nombre ?? '') . ' ' . ($a->emp_apellido ?? '')) ?: '<span class="u-c-text-tertiary">—</span>'; ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($a->autorizador ?: '—'); ?></td>
                         <td class="col-actions">
                             <?php if ($puedeEscribir): ?>
                             <a href="<?php echo URL_ROOT; ?>/actividadesinventario/delete/<?php echo $a->id; ?>" class="row-action row-action--del delete-btn"><i class="bi bi-trash"></i> Eliminar</a>
@@ -157,7 +157,7 @@ $enCurso     = $data['enCurso'] ?? [];
                                 <option value="<?php echo $u->id; ?>"><?php echo htmlspecialchars($u->nombre); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small style="color:var(--text-tertiary)">El origen se toma de donde está el bien ahora. Al trasladarlo, el <strong>responsable cambia solo</strong> a la jefatura del departamento de destino.</small></div></div>
+                        <small class="u-c-text-tertiary">El origen se toma de donde está el bien ahora. Al trasladarlo, el <strong>responsable cambia solo</strong> a la jefatura del departamento de destino.</small></div></div>
 
                     <!-- Salida a mantenimiento -->
                     <div class="col-12" id="mov_wrap_salida" style="display:none;">
@@ -187,7 +187,7 @@ $enCurso     = $data['enCurso'] ?? [];
                                 <input type="number" step="0.01" min="0" name="costo" id="mov_costo" class="sig-input"></div></div>
                             <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="mov_trabajo">Trabajo realizado</label>
                                 <textarea name="trabajo_realizado" id="mov_trabajo" class="sig-textarea" rows="2"></textarea></div></div>
-                            <div class="col-12"><div class="sig-alert sig-alert--warning" style="margin:0;">
+                            <div class="col-12"><div class="sig-alert sig-alert--warning u-m-0">
                                 Si el resultado es <strong>Irrecuperable</strong>, el bien vuelve a Activo con condición
                                 <em>Dañado</em>, a la espera del acto administrativo de baja.
                             </div></div>
@@ -198,7 +198,7 @@ $enCurso     = $data['enCurso'] ?? [];
                         <textarea name="descripcion" id="mov_desc" class="sig-textarea" rows="2"></textarea></div></div>
 
                     <?php if ($autorizador): ?>
-                    <div class="col-12"><div class="sig-alert sig-alert--info" style="margin:0;">
+                    <div class="col-12"><div class="sig-alert sig-alert--info u-m-0">
                         <i class="bi bi-person-check"></i> Autoriza:
                         <strong><?php echo htmlspecialchars($autorizador->nombre); ?></strong>
                         (<?php echo htmlspecialchars($autorizador->cargo ?? ''); ?>)

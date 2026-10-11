@@ -1,5 +1,5 @@
 # CLAUDE.md — SIGTUR-IMATUR
-**Última actualización:** 2026-10-11 — **Liquidación de Prestaciones Sociales (fase N-E, mig. 086) y todas las reglas de nómina como parámetros.** `Liquidacion` digitaliza las tres hojas del formato del cliente (FORMATO · INTERESES · INTERES DE MORA) con cálculo puro probado contra Excel; las acciones viven en el trait `app/controllers/nomina/NominaLiquidacionTrait.php` (URLs `/nomina/...`). Ninguna cifra de la LOTTT ni del contrato queda en el código: ver «Parámetros de nómina» y la trampa de la mig. 086. Detalle en `PLAN_MODULO_NOMINA.md` §7 y `CHANGELOG.md`.
+**Última actualización:** 2026-10-11 (b) — **Bienes: codificación propia construida y apagada (mig. 087).** `CodificacionBienes` propone el siguiente N° de orden (mayor entre el punto de partida y lo registrado, sin reciclar), mantiene el catálogo `inventario_clasificaciones` y separa `codificado_por` (Alcaldía/IMATUR) de `verificado_alcaldia`. Se enciende en `/inventario/codificacion` cuando lleguen B-73 y B-75. Antes, el mismo día: Liquidación de Prestaciones Sociales y todas las reglas de nómina como parámetros (mig. 086). Detalle en `CHANGELOG.md`.
 
 **Anterior:** 2026-09-17/18 — Bienes: Acta de Desincorporación por lote (mig. 077) y H-16; Rutas: las nueve fases T-A…T-I (mig. 078-083). Ver `CHANGELOG.md`.
 
@@ -48,7 +48,7 @@ app/
 | Módulo | Controladores | Tablas principales |
 |--------|-------------|-------------------|
 | **RRHH** | Empleados, Cargos, Departamentos, Asistencias, Vacaciones, **Nomina** | personas, empleados, cargos, departamentos, asistencias, horarios, permisos_laborales, vacaciones, empleado_salarios, bono_vacacional_periodos/detalle, **nomina_grados, nomina_antiguedad, nomina_parametros_mes, nomina_periodos, nomina_detalle, nomina_tasas_bcv, liquidaciones, liquidacion_meses** |
-| **Inventario** | Inventario, Categorias, Ubicaciones, ActividadesInventario | inventario, categorias, ubicaciones, actividad_inventario |
+| **Inventario** | Inventario, Categorias, Ubicaciones, ActividadesInventario | inventario, categorias, ubicaciones, actividad_inventario, inventario_clasificaciones |
 | **Formación** | Talleres, UbicacionesFormacion, Pasantes | talleres, ubicaciones_formacion, pasantes, pasante_documentos, taller_informes, taller_inventario, participantes_taller |
 | **Turismo** | Rutas, Visitantes, Visitas | rutas, puntos_ruta, participantes_ruta, ruta_informes, oficios_emitidos, visitantes, visitas |
 | **Ubicación** | Municipio, Parroquia | municipio, parroquia |
@@ -249,8 +249,9 @@ Estas son las únicas migraciones que dejaron una **trampa o una convención viv
 | 080 | **La Ficha Institucional VIVE EN `ruta_informes`**, no en una tabla nueva: R-43, R-47 y R-48 eran el mismo documento. Sus renglones están en `ruta_ficha_grupos` (`tipo` = Institucion/Apoyo). **`mujeres`/`hombres`/`ninas`/`ninos`/`total_atendidos` son DERIVADAS** — las recalcula `RutaFicha::recalcular()` desde los renglones en cada guardado, como `taller_informes.total_atendidas`. **No escribirlas a mano.** Hay un índice único por `id_ejecucion`: una ficha por salida. La ficha **nace sola** al pasar la salida a «Ejecutado» (R-50), en `RutaEjecucion::cambiarEstado()`. |
 | 079 | **La edad NO se valida en el código.** El rango vive en el recorrido (`rutas.edad_min`/`edad_max`, NULL = sin tope) y la única regla es `Ruta::motivoEdadNoValida()`, que se aplica en los dos flujos de inscripción. **No reintroducir un 5–11 ni ningún rango literal** — fue el bug H-17. El cupo de 60 es por **día** (`ConfigSistema::get('rutas_cupo_diario')`, 0 = sin tope) y **advierte, no bloquea**. |
 | 086 | **Liquidación: nada de la ley en el código.** Garantía por trimestre, días adicionales (cantidad/desde/tope), retroactivo (días/umbral), modo de trimestres, divisores 30/360, «Bono 50 %» y los 15/30 de Vacaciones son claves de `configuracion_sistema` (`Liquidacion::PARAMS_DEFAULT`, `Vacacion::regla()`), editables en `/nomina/parametros`. Las funciones de cálculo reciben `$params` para poder probarse sin BD. **La tasa de `nomina_tasas_bcv` es la de interés de prestaciones (ANUAL), no el tipo de cambio** — no confundir con `nomina_parametros_mes.tasa_dolar`. Los meses de `liquidacion_meses` guardan las ENTRADAS (editables, `editado`) y las derivadas se recalculan en cadena con `Liquidacion::recalcular()`; *reconstruir* resiembra desde la ficha y descarta correcciones. Una liquidación viva por egreso; el número `LIQ-` se asigna al **cerrar**, no al crear. |
+| 087 | **Codificación propia de bienes: apagada por defecto.** `bienes_codificacion_propia = 0` → `codificar()` transcribe el BM-1 («de la Alcaldía», `verificado_alcaldia = TRUE`); `= 1` → codifica IMATUR (`codificado_por = IMATUR`, **sin** tocar `verificado_alcaldia`). Quién decide es el controlador: lo que viene de un BM-1 es siempre de la Alcaldía. El siguiente número sale **solo** de `CodificacionBienes::siguienteNroOrden()` (compara como entero y mira **todos** los bienes, papelera incluida: los códigos no se reciclan, B-76). Los repetidos se comprueban con `CodificacionBienes::nroOrdenOcupado()` (`084` = `84`), no con `findByNroOrden()`. No enciende sin `bienes_nro_orden_inicio` (B-73) ni sin una clasificación vigente (B-75), y se apaga sola si se da de baja la última. |
 
-> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 086 el 2026-10-11):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–086** (**72 tablas**; la 084 solo agrega un permiso) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
+> **Fuente única de verdad (regenerado 2026-08-04, ampliado hasta la mig. 087 el 2026-10-11):** `database/schema_consolidado.sql` es **autosuficiente**: contiene el esquema base + **todas** las migraciones **001–087** (**73 tablas**; la 084 solo agrega un permiso) + los catálogos institucionales sembrados + un usuario administrador de arranque. Generado desde la BD viva con `pg_dump --no-owner --no-privileges` excluyendo los datos operativos, y **verificado cargándolo en una base vacía** (2026-08-27: 60 tablas, 25 ubicaciones, 24 feriados, catálogos de nómina, 0 errores).
 >
 > 🔴 **Toda migración nueva se añade TAMBIÉN al final del consolidado, en el mismo commit.** Se
 > olvidó dos veces (075–083 quedaron fuera hasta el 2026-10-03) y una instalación nueva habría
@@ -342,6 +343,8 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 
 **Utilidades CSS (2026-08-28):** para presentación suelta, usar primero las de **Bootstrap 5**, que ya está cargado en local (`assets/libs/bootstrap.min.css`) y las genera con `!important`: `text-center`, `text-end`, `d-none`, `mb-3`… Lo propio va en el bloque *UTILIDADES* al final de `sigtur-components.css` (hoy solo `.u-num`, cifras tabulares). **Llevan `!important` a propósito:** sustituyen `style=""` inline, y un inline gana a toda regla sin la marca — sin ella, `.sig-table th { text-align: left }` se impondría donde antes mandaba el inline.
 
+**Utilidades `u-*` generadas (2026-10-11).** Al final de `sigtur-components.css` hay un bloque *«u-\* MIGRADAS DESDE style=""»* con **175 clases de una sola declaración** (`.u-c-text-tertiary`, `.u-fs-11px`, `.u-mb-sp-4`…), con `!important`, que sustituyeron **3.348 declaraciones** repetidas (≥ 3 usos): `style=""` bajó de **2.724 a 1.581** atributos (1.143 eliminados, 387 reducidos). La migración se verificó etiqueta por etiqueta (8.388 comparadas, 0 diferencias de estilo efectivo). **Lo que sigue inline está a propósito:** `display` (la cambia el JS), vistas standalone o con reglas `!important` propias (impresión, papelera), estilos con PHP dentro, elementos con `id` o con una clase que use un selector de JS, HTML armado dentro de `<script>`, y declaraciones sueltas. Para estilo nuevo: preferir una clase de componente; si es una utilidad, reutilizar una `u-*` existente antes de crear otra.
+
 > **Dos trampas al migrar `style=""` a clases** (documentadas tras el barrido del 2026-08-28):
 > 1. **Nunca cambiar `style="display:none"` por `.d-none`.** Hay **143** sitios que hacen
 >    `el.style.display = '…'` por JS; el `!important` de la clase le gana al inline del toggle y el
@@ -352,7 +355,7 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 > Solo es fiel migrar una familia si no existe ninguna regla `!important` que compita por esa
 > propiedad. `color`, `padding` y `margin` **sí** chocan (overrides del modal, tema oscuro, `@media print`).
 
-**Accesibilidad de formularios:** todo control con etiqueta debe llevar `<label for="…">` + `id` en el control (393 de 469 al 2026-08-28). Los `id` han de ser únicos en la **página**, no en el archivo: toda vista incluye el layout, así que no pueden chocar con los de `inc/header.php`/`inc/footer.php`. Dentro de un `foreach`, el `id` **tiene que generarlo PHP** (p. ej. `id="motivo_<?php echo $x->id; ?>"`) — uno estático se repetiría en cada fila.
+**Accesibilidad de formularios:** todo control con etiqueta debe llevar `<label for="…">` + `id` en el control. **Al 2026-10-11 no queda ninguno sin asociar:** de 559 `label`, 545 llevan `for`, 6 envuelven su control y 8 son rótulos de un **grupo** (radios, listas de casillas, un dato calculado) que llevan `id` y el grupo los cita con `aria-labelledby` (+ `role="group"`/`radiogroup`). Los `id` han de ser únicos en la **página**, no en el archivo: toda vista incluye el layout, así que no pueden chocar con los de `inc/header.php`/`inc/footer.php`. **Dentro de un bucle**, el `id` lo genera `sigtur_uid()` (`session_helper.php`): `<label for="<?php echo $__lbl = sigtur_uid('x'); ?>">` y en el control `id="<?php echo $__lbl; ?>"`. ⚠️ Un `<label>` sin `for` que **contenga un botón** se asocia a ese botón: pulsar el texto lo dispara (pasaba con «Bienes a…» + «Todos» en actas y relaciones; ahora son `<div class="sig-field__label">`, que se ve igual porque la clase fija `display:flex`).
 
 **Dark mode:** `data-theme="dark"` en `<html>`. Persiste en `localStorage['sigtur-theme']`.  
 **Cache-busting JS/CSS:** `sigtur-validations.js` y los CSS del sistema (`sigtur-tokens.css`, `sigtur-components.css`) usan `?v=<?php echo filemtime(...); ?>` — se actualizan automáticamente al editarlos.
@@ -513,6 +516,15 @@ Mecanismo de **token de un solo uso** para que un POST repetido del mismo client
 - No hay que tocar cada formulario/controlador: la protección es transversal. Para un POST que deba permitir reenvíos legítimos, marcar el form con `data-no-token` (servidor) y/o `data-allow-multi-submit` (cliente).
 - **Anti-duplicado de contenido (empleados):** además del token, `Empleado::existeCedula($ced, $excluirId)` impide registrar dos veces la misma cédula como empleado (activo o egresado). `EmpleadosController::store()` normaliza la cédula a dígitos y bloquea con aviso (sugiere usar «Reingreso» si ya egresó). La cédula se compara solo por dígitos (`regexp_replace … '[^0-9]'`).
 
+### Datos PHP dentro de un manejador `onclick='…'` (XSS, 2026-10-11)
+
+Siempre `json_encode($x, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)`. El navegador
+**decodifica las entidades del atributo antes de ejecutar el JS**: con solo `JSON_HEX_APOS | JSON_HEX_QUOT`
+(o sin flags), una descripción con `&quot;` se convertía en `"`, cerraba la cadena JSON e inyectaba código;
+y sin flags, un apóstrofo (`D'Agostino`) rompía el atributo. Con los cuatro, la salida no tiene `& ' " < >`.
+Corregidos 12 manejadores (cargos, categorías, municipios, parroquias, roles, ubicaciones, ubicaciones de
+formación, nómina, liquidación y codificación).
+
 ### Protección de reportes y acciones
 
 ```php
@@ -614,7 +626,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 20. **`inventario.condicion` CHECK** — ahora incluye `'En Reparación'`. Actualizar whitelist en todos los controladores que validen este campo: `['Nuevo','Bueno','Regular','Dañado','En Reparación']`.
 
-21. **`inventario.codigo_bn` nullable** — puede ser NULL para bienes pendientes de código BN oficial. Mostrar "—" en vistas cuando sea NULL. El código vive **por partes** y `codigo_bn` es el compuesto que arma `Inventario::componerCodigo()`; escribirlo siempre por ahí, nunca a mano. ⚠️ **2026-09-02:** con el procedimiento nuevo el código lo asigna **IMATUR** (secuencia propia) y `verificado_alcaldia` deja de ser sinónimo de «codificado» — leer `docs/PLAN_MODULO_BIENES.md` §2-ter antes de tocar `codificar()`.
+21. **`inventario.codigo_bn` nullable** — puede ser NULL para bienes pendientes de código BN oficial. Mostrar "—" en vistas cuando sea NULL. El código vive **por partes** y `codigo_bn` es el compuesto que arma `Inventario::componerCodigo()`; escribirlo siempre por ahí, nunca a mano. ⚠️ **2026-09-02:** con el procedimiento nuevo el código lo asigna **IMATUR** (secuencia propia) y `verificado_alcaldia` deja de ser sinónimo de «codificado». **Construido en la mig. 087** (`CodificacionBienes`, apagado hasta B-73/B-75; quién codificó vive en `codificado_por`) — leer `docs/PLAN_MODULO_BIENES.md` §2-sexies antes de tocar `codificar()`.
 
 21b. **Desincorporar un bien ≠ borrarlo** — desincorporar pone `estatus = 'Desincorporado'` (`Inventario::EST_BAJA`, mig. 076) **conservando `is_active = TRUE`**: el bien sale del inventario activo (`Inventario::fueraDeInventario()`, `ESTATUS_FUERA_DE_INVENTARIO`) pero su registro se preserva como aval (B-38). **`is_active = FALSE` es la papelera**, para registros creados por error. Para listar desincorporados usar **`Inventario::desincorporados()`**, nunca `is_active = FALSE` — confundirlos fue el bug **H-16** (el reporte de bajas medía la papelera: las desincorporaciones reales no salían y los borrados por error sí). Todas las consultas de inventario activo deben excluir ese estatus; **nunca escribirlo literal en SQL**, usar `EST_BAJA` como parámetro o `Inventario::sqlEstatusBaja()`.
 
@@ -638,7 +650,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 createdb -U postgres "SIGTUR-IMATUR"
 
 # 3. Importar el esquema consolidado — UN SOLO ARCHIVO, esto es toda la BD
-#    (esquema base + migraciones 001-086 + catálogos + admin de arranque):
+#    (esquema base + migraciones 001-087 + catálogos + admin de arranque):
 PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 
 # 4. NO HAY PASO 4. No se aplica ninguna migración encima del consolidado.
@@ -651,7 +663,7 @@ PGPASSWORD=1234 psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolida
 #    Login de arranque: admin / Sigtur2026  <-- CAMBIAR EN EL PRIMER INGRESO
 ```
 
-> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–086). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
+> **Nota:** `database/schema_consolidado.sql` es autosuficiente (001–087). `database/migrations/` solo sirve como historial y para **actualizar** instalaciones antiguas, no para instalar desde cero. (`schema_completo.sql` y `schema.sql` fueron **eliminados** en 2026-08-04: cubrían hasta la 011 y el base original, y solo generaban confusión sobre cuál importar. Recuperables desde el historial de git si hicieran falta.)
 
 ---
 
@@ -691,7 +703,7 @@ correspondiente:
 | **`docs/BACKLOG.md`** | **BACKLOG ÚNICO** — qué falta por hacer y decidir: estado por módulo, decisiones/insumos del cliente, preguntas abiertas, auditoría H-xx abierta, programación faltante. Consolida (y reemplaza) los antiguos REGISTRO_NEGOCIO/DECISIONES_PENDIENTES/preguntas/AUDITORIA_SENIOR/Notas/PLAN_ENTREGA |
 | `docs/INDICADORES_GESTION.md` | **Todos los indicadores de gestión**: propósito, fórmula y fuente de datos (Dashboard + página RF30 + stats por reporte) |
 | `docs/MANUAL_USUARIO.md` | **Manual de usuario por rol** (acceso/seguridad, interfaz, módulos, reportes, campana, búsqueda, perfil, FAQ) |
-| `tests/run.php` | **Suite mínima de pruebas** sin dependencias (`php tests/run.php`): lógica pura sin BD (contraseñas, vacaciones, edad, tiempo de servicio, feriados, motor de nómina y **liquidación contra los valores de Excel** — 135 pruebas al 2026-10-11) |
+| `tests/run.php` | **Suite mínima de pruebas** sin dependencias (`php tests/run.php`): lógica pura sin BD (contraseñas, vacaciones, edad, tiempo de servicio, feriados, motor de nómina y **liquidación contra los valores de Excel** y codificación de bienes — 145 pruebas al 2026-10-11) |
 
 > **El número de migración aplicado no se anota aquí** — quedaba desactualizado en cada ciclo. Está en
 > la cabecera de `BACKLOG.md` y, sin margen de error, en `database/migrations/`.
@@ -712,6 +724,6 @@ correspondiente:
 | Scripts + toasts + modal eliminación | `app/views/inc/footer.php` |
 | Validaciones JS (nombres, cédulas) | `public/assets/js/sigtur-validations.js` |
 | Config institucional (correlativo) | `app/models/ConfigSistema.php` |
-| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-086 + catálogos + admin de arranque; no aplicar migraciones encima** |
+| Schema consolidado (instalar desde cero) | `database/schema_consolidado.sql` — **autosuficiente, 001-087 + catálogos + admin de arranque; no aplicar migraciones encima** |
 | Backlog único / pendientes / decisiones | `docs/BACKLOG.md` |
 | Historial de migraciones | `database/migrations/` — una por archivo; **no** se aplican sobre el consolidado |

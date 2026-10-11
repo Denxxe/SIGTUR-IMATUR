@@ -23,7 +23,7 @@
 </div>
 
 <?php if (empty($data['meses'])): ?>
-    <div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
         <i class="bi bi-exclamation-triangle"></i>
         <div>
             <strong>Falta cargar los parámetros del mes.</strong>
@@ -60,8 +60,8 @@
                         </span>
                     </td>
                     <td><?php echo date('d/m/Y', strtotime($p->fecha_corte)); ?></td>
-                    <td style="text-align:center;font-weight:700;"><?php echo (int)$p->total_empleados; ?></td>
-                    <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
+                    <td class="u-ta-center u-fw-700"><?php echo (int)$p->total_empleados; ?></td>
+                    <td class="u-ta-right u-fvn-tabular-nums u-fw-700">
                         <?php echo number_format((float)$p->total_neto, 2, ',', '.'); ?>
                     </td>
                     <td>
@@ -93,7 +93,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p style="font-size:13px;color:var(--text-secondary);">
+                <p class="u-fs-13px u-c-text-secondary">
                     Calcula y congela la nómina de todo el personal activo. Se puede recalcular
                     mientras esté en Borrador; al cerrarla queda inmutable.
                 </p>
@@ -109,7 +109,7 @@
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Solo aparecen los meses con parámetros cargados.
                     </small>
                 </div>
@@ -126,7 +126,7 @@
                         <option value="4"<?php echo (int)($data['semanas'] ?? 4) === 4 ? ' selected' : ''; ?>>4 semanas</option>
                         <option value="5"<?php echo (int)($data['semanas'] ?? 4) === 5 ? ' selected' : ''; ?>>5 semanas</option>
                     </select>
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         La plantilla del cliente usa 4 en unas hojas y 5 en otras el mismo mes, sin
                         criterio explicado (pregunta pendiente). Queda visible por período en vez de
                         escondido en el código.

@@ -12,10 +12,13 @@ $puedeEscribir = InventarioController::puedeEscribir();
  * (B-38) y se consultan en su propia pestaña; los que están en mantenimiento
  * SÍ aparecen, marcados por su estatus (B-34).
  *
- * El código oficial no se teclea al dar de alta: lo asigna la Alcaldía y se
- * transcribe con el botón "Codificar" al recibir el BM-1.
+ * El código oficial no se teclea al dar de alta: se asigna con el botón
+ * "Codificar". Con la codificación propia apagada se transcribe del BM-1; con
+ * ella encendida (mig. 087) lo asigna IMATUR y el sistema propone el N° de orden.
  */
 $ver     = $data['ver'] ?? '';
+$codif   = $data['codif'] ?? ['activa' => false];
+$propia  = !empty($codif['activa']);
 $resumen = $data['resumen'] ?? [];
 $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
           || ($data['f_condicion'] ?? '') !== '' || ($data['f_estatus'] ?? '') !== ''
@@ -26,7 +29,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
     <div class="page__title-block">
         <div class="page__eyebrow">Inventario · Bienes Nacionales</div>
         <h1 class="page__title"><?php echo $data['titulo'] ?? 'Inventario Institucional'; ?></h1>
-        <p class="page__subtitle">Registro y control de los bienes de la institución. El código oficial lo asigna la Alcaldía.</p>
+        <p class="page__subtitle">Registro y control de los bienes de la institución.
+            <?php echo $propia ? 'El código lo asigna <strong>IMATUR</strong> (codificación propia).' : 'El código oficial lo asigna la Alcaldía.'; ?></p>
     </div>
     <div class="page__actions">
         <a href="<?php echo URL_ROOT; ?>/inventario/relaciones" class="btn-sig btn-sig--ghost">
@@ -34,6 +38,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         </a>
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados" class="btn-sig btn-sig--ghost">
             <i class="bi bi-inbox"></i> BM-1 recibidos
+        </a>
+        <a href="<?php echo URL_ROOT; ?>/inventario/codificacion" class="btn-sig btn-sig--ghost">
+            <i class="bi bi-123"></i> Codificación
         </a>
         <a href="<?php echo URL_ROOT; ?>/inventario/actas" class="btn-sig btn-sig--ghost">
             <i class="bi bi-file-earmark-check"></i> Actas de desincorporación
@@ -64,7 +71,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
 </div>
 
 <!-- Pestañas: activo · pendientes de codificación · desincorporados -->
-<div class="anim-slide-up" style="display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-4);">
+<div class="anim-slide-up u-gap-sp-2 u-fwr-wrap u-mb-sp-4" style="display:flex;">
     <?php
     $pend = (int)($resumen[Inventario::EST_SIN_CODIFICAR] ?? 0);
     $baja = (int)($resumen[Inventario::EST_BAJA] ?? 0);
@@ -85,20 +92,28 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
 </div>
 
 <?php if ($ver === 'pendientes' && !empty($data['items'])): ?>
-    <div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
         <i class="bi bi-info-circle"></i>
+        <?php if ($propia): ?>
+        Estos bienes ya están registrados pero <strong>aún no tienen código</strong>. Con la
+        codificación propia encendida, asígnaselo con <strong>Codificar</strong>: el sistema propone el
+        siguiente N° de orden<?php echo !empty($data['codifSiguiente']) ? ' (<strong>' . htmlspecialchars($data['codifSiguiente']) . '</strong>)' : ''; ?>.
+        Si alguno lo trae ya la Alcaldía en un BM-1, transcríbelo desde
+        <a href="<?php echo URL_ROOT; ?>/inventario/consolidados">BM-1 recibidos</a>.
+        <?php else: ?>
         Estos bienes ya están registrados pero <strong>aún no tienen código de la Alcaldía</strong>.
         Se le envía un informe para que vengan a inspeccionarlos; cuando devuelvan el
         <strong>Formulario BM-1</strong>, regístralo en
         <a href="<?php echo URL_ROOT; ?>/inventario/consolidados">BM-1 recibidos</a>
         y transcribe desde ahí los códigos asignados.
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 
 <!-- Filtros -->
 <form method="GET" action="<?php echo URL_ROOT; ?>/inventario/index" class="anim-slide-up" style="display:flex;gap:var(--sp-2);align-items:flex-end;margin-bottom:var(--sp-4);flex-wrap:wrap;">
     <?php if ($ver !== ''): ?><input type="hidden" name="ver" value="<?php echo htmlspecialchars($ver); ?>"><?php endif; ?>
-    <div class="sig-field" style="margin:0;">
+    <div class="sig-field u-m-0">
         <label class="sig-field__label" for="categoria">Categoría</label>
         <select id="categoria" name="categoria" class="sig-select js-search" style="min-width:190px;" onchange="this.form.submit()">
             <option value="">Todas</option>
@@ -107,7 +122,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="sig-field" style="margin:0;">
+    <div class="sig-field u-m-0">
         <label class="sig-field__label" for="ubicacion">Ubicación</label>
         <select id="ubicacion" name="ubicacion" class="sig-select js-search" style="min-width:180px;" onchange="this.form.submit()">
             <option value="">Todas</option>
@@ -117,7 +132,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         </select>
     </div>
     <?php if ($ver === ''): ?>
-    <div class="sig-field" style="margin:0;">
+    <div class="sig-field u-m-0">
         <label class="sig-field__label" for="estatus">Estatus</label>
         <select id="estatus" name="estatus" class="sig-select" style="min-width:170px;" onchange="this.form.submit()">
             <option value="">Todos</option>
@@ -127,7 +142,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
         </select>
     </div>
     <?php endif; ?>
-    <div class="sig-field" style="margin:0;">
+    <div class="sig-field u-m-0">
         <label class="sig-field__label" for="condicion">Condición</label>
         <select id="condicion" name="condicion" class="sig-select" style="min-width:150px;" onchange="this.form.submit()">
             <option value="">Todas</option>
@@ -136,7 +151,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
             <?php endforeach; ?>
         </select>
     </div>
-    <div class="sig-field" style="margin:0;">
+    <div class="sig-field u-m-0">
         <label class="sig-field__label" for="origen">Origen</label>
         <select id="origen" name="origen" class="sig-select" style="min-width:140px;" onchange="this.form.submit()">
             <option value="">Todos</option>
@@ -179,16 +194,18 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php if (!empty($item->codigo_bn)): ?>
                                 <?php echo htmlspecialchars($item->codigo_bn); ?>
                                 <?php if (!empty($item->verificado_alcaldia)): ?>
-                                    <i class="bi bi-patch-check-fill" style="color:var(--success-600)" title="Verificado por la Alcaldía"></i>
+                                    <i class="bi bi-patch-check-fill u-c-success-600" title="Reconocido por la Alcaldía (BM-1)"></i>
+                                <?php elseif (($item->codificado_por ?? '') === CodificacionBienes::QUIEN_IMATUR): ?>
+                                    <i class="bi bi-building u-c-brand-600" title="Codificado por IMATUR (codificación propia)"></i>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <span style="color:var(--text-tertiary)">Sin asignar</span>
+                                <span class="u-c-text-tertiary">Sin asignar</span>
                             <?php endif; ?>
                         </td>
                         <td>
                             <?php echo htmlspecialchars($item->nombre ?? 'Sin nombre'); ?>
                             <?php if ($item->marca || $item->modelo || $item->serial): ?>
-                                <br><small style="color:var(--text-tertiary)">
+                                <br><small class="u-c-text-tertiary">
                                     <?php echo htmlspecialchars(trim(($item->marca ?: '') . ' ' . ($item->modelo ?: ''))) ?: 'S/M'; ?>
                                     <?php if ($item->serial): ?> · S/N: <?php echo htmlspecialchars($item->serial); ?><?php endif; ?>
                                 </small>
@@ -197,16 +214,16 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                         <td><?php echo htmlspecialchars($item->categoria ?? '—'); ?></td>
                         <td>
                             <?php echo htmlspecialchars($item->ubicacion ?? '—'); ?>
-                            <?php if (!empty($item->sede)): ?><br><small style="color:var(--text-tertiary)"><?php echo htmlspecialchars($item->sede); ?></small><?php endif; ?>
+                            <?php if (!empty($item->sede)): ?><br><small class="u-c-text-tertiary"><?php echo htmlspecialchars($item->sede); ?></small><?php endif; ?>
                         </td>
-                        <td><?php echo !empty($item->responsable) ? htmlspecialchars($item->responsable) : '<span style="color:var(--text-tertiary)">Sin asignar</span>'; ?></td>
+                        <td><?php echo !empty($item->responsable) ? htmlspecialchars($item->responsable) : '<span class="u-c-text-tertiary">Sin asignar</span>'; ?></td>
                         <td>
                             <span class="sig-badge <?php echo $ecls; ?>"><?php echo htmlspecialchars($est); ?></span>
                             <?php if ($est === Inventario::EST_BAJA): ?>
                                 <?php if (empty($item->retirado_alcaldia)): ?>
                                     <br><span class="sig-badge sig-badge--warning" title="Desincorporado, pero la Alcaldía todavía no vino a retirarlo">Por retirar</span>
                                 <?php else: ?>
-                                    <br><small style="color:var(--text-tertiary)">Retirado <?php echo htmlspecialchars($item->fecha_retiro ?: ''); ?></small>
+                                    <br><small class="u-c-text-tertiary">Retirado <?php echo htmlspecialchars($item->fecha_retiro ?: ''); ?></small>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </td>
@@ -246,12 +263,17 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
 
                 <div class="sig-alert sig-alert--info" id="inv_aviso_codigo" style="margin-bottom:var(--sp-3);">
                     <i class="bi bi-info-circle"></i>
+                    <?php if ($propia): ?>
+                    El <strong>código</strong> no se registra aquí: después de guardar, asígnalo con el botón
+                    <em>Codificar</em> (el sistema propone el siguiente N° de orden).
+                    <?php else: ?>
                     El <strong>código oficial</strong> no se registra aquí: lo asigna la Alcaldía tras su inspección.
                     El bien queda <em>En espera de codificación</em> hasta que devuelvan el Formulario BM-1.
+                    <?php endif; ?>
                 </div>
 
                 <!-- Identificación -->
-                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin:0 0 var(--sp-2);">Identificación</div>
+                <div class="u-fs-_72rem u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-secondary" style="margin:0 0 var(--sp-2);">Identificación</div>
                 <div class="row g-3">
                     <div class="col-md-12"><div class="sig-field"><label class="sig-field__label" for="inv_nombre">Nombre del bien <span class="req">*</span></label>
                         <input type="text" name="nombre" id="inv_nombre" class="sig-input" required placeholder="Silla visitante en semicuero color negro"></div></div>
@@ -263,11 +285,11 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                         <input type="text" name="serial" id="inv_serial" class="sig-input"></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="inv_descripcion">Descripción</label>
                         <textarea name="descripcion" id="inv_descripcion" class="sig-textarea" rows="2"></textarea>
-                        <small style="color:var(--text-tertiary)">Marca, modelo y serial se combinan con esta descripción al exportar en el formato de la Alcaldía.</small></div></div>
+                        <small class="u-c-text-tertiary">Marca, modelo y serial se combinan con esta descripción al exportar en el formato de la Alcaldía.</small></div></div>
                 </div>
 
                 <!-- Clasificación y ubicación -->
-                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin:var(--sp-4) 0 var(--sp-2);">Clasificación y ubicación</div>
+                <div class="u-fs-_72rem u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-secondary u-m-sp-4-0-sp-2">Clasificación y ubicación</div>
                 <div class="row g-3">
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_id_cat">Categoría interna <span class="req">*</span></label>
                         <select name="id_categoria" id="inv_id_cat" class="sig-select js-search" required>
@@ -280,11 +302,11 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php foreach ($data['ubicaciones'] ?? [] as $u): ?><option value="<?php echo $u->id; ?>"><?php echo htmlspecialchars($u->nombre); ?></option><?php endforeach; ?>
                         </select></div></div>
                     <div class="col-md-4"><div class="sig-field">
-                        <label class="sig-field__label">Responsable</label>
-                        <div class="sig-input" style="background:var(--surface-2);color:var(--text-secondary);display:flex;align-items:center;">
-                            <i class="bi bi-magic" style="margin-right:6px;"></i> Automático según la ubicación
+                        <label class="sig-field__label" id="inv_responsable_lbl">Responsable</label>
+                        <div class="sig-input u-c-text-secondary u-ai-center" aria-labelledby="inv_responsable_lbl" style="background:var(--surface-2); display:flex;">
+                            <i class="bi bi-magic u-mr-6px"></i> Automático según la ubicación
                         </div>
-                        <small style="color:var(--text-tertiary)">Es el director del departamento donde esté el bien (o su coordinador). Cambia solo si cambia la jefatura.</small>
+                        <small class="u-c-text-tertiary">Es el director del departamento donde esté el bien (o su coordinador). Cambia solo si cambia la jefatura.</small>
                     </div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_condicion">Condición física</label>
                         <select name="condicion" id="inv_condicion" class="sig-select">
@@ -299,7 +321,7 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                 </div>
 
                 <!-- Adquisición -->
-                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);margin:var(--sp-4) 0 var(--sp-2);">Adquisición</div>
+                <div class="u-fs-_72rem u-fw-700 u-tt-uppercase u-ls-_06em u-c-text-secondary u-m-sp-4-0-sp-2">Adquisición</div>
                 <div class="row g-3">
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_origen">Origen</label>
                         <select name="origen" id="inv_origen" class="sig-select" onchange="invToggleOrigen()">
@@ -313,8 +335,8 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                         <input type="date" name="fecha_adquisicion" id="inv_fecha_adq" class="sig-input"></div></div>
                     <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="inv_proveedor">Proveedor</label>
                         <input type="text" name="proveedor" id="inv_proveedor" class="sig-input"></div></div>
-                    <div class="col-md-4"><div class="sig-field" style="margin:0;">
-                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;" for="inv_tiene_gar">
+                    <div class="col-md-4"><div class="sig-field u-m-0">
+                        <label class="sig-field__label u-ai-center u-gap-8px" style="display:flex;" for="inv_tiene_gar">
                             <input type="checkbox" name="tiene_garantia" id="inv_tiene_gar" value="1" onchange="invToggleGarantia()"> Tiene garantía
                         </label></div></div>
                     <div class="col-md-4" id="inv_wrap_gar" style="display:none;"><div class="sig-field"><label class="sig-field__label" for="inv_gar_vence">Vence el <span class="req">*</span></label>
@@ -341,11 +363,29 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="cod_id">
-                <p style="margin-bottom:var(--sp-3);">
+                <p class="u-mb-sp-3">
+                    <?php if ($propia): ?>
+                    Asigna el código de <strong id="cod_nombre"></strong>: elige su clasificación y confirma el
+                    N° de orden que propone el sistema (el siguiente de la secuencia de IMATUR).
+                    <?php else: ?>
                     Transcribe el código que la Alcaldía asignó a
                     <strong id="cod_nombre"></strong> en el <strong>Formulario BM-1</strong>.
+                    <?php endif; ?>
                 </p>
                 <div class="row g-3">
+                    <?php if ($propia): ?>
+                    <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="cod_clasif">Clasificación <span class="req">*</span></label>
+                        <select id="cod_clasif" class="sig-select" required onchange="codElegirClasif()">
+                            <option value="">— Seleccione —</option>
+                            <?php foreach ($data['clasificaciones'] ?? [] as $c): ?>
+                                <option value="<?php echo htmlspecialchars($c->grupo . '|' . $c->subgrupo . '|' . $c->seccion); ?>">
+                                    <?php echo htmlspecialchars($c->grupo . '-' . $c->subgrupo . '-' . $c->seccion . ($c->descripcion ? ' · ' . $c->descripcion : '')); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="u-c-text-tertiary u-fs-12px">¿No está? Agrégala en <a href="<?php echo URL_ROOT; ?>/inventario/codificacion#catalogo">Codificación</a>.</small>
+                    </div></div>
+                    <?php endif; ?>
                     <div class="col-3"><div class="sig-field"><label class="sig-field__label" for="cod_g">Grupo <span class="req">*</span></label>
                         <input type="text" name="codigo_grupo" id="cod_g" class="sig-input" required maxlength="4" placeholder="2"></div></div>
                     <div class="col-3"><div class="sig-field"><label class="sig-field__label" for="cod_sg">Sub-grupo <span class="req">*</span></label>
@@ -354,10 +394,10 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                         <input type="text" name="codigo_seccion" id="cod_sec" class="sig-input" required maxlength="6" placeholder="108"></div></div>
                     <div class="col-3"><div class="sig-field"><label class="sig-field__label" for="cod_ord">N° orden <span class="req">*</span></label>
                         <input type="text" name="nro_orden" id="cod_ord" class="sig-input" required maxlength="10" placeholder="084"></div></div>
-                    <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="cod_fecha">Fecha de verificación</label>
+                    <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="cod_fecha"><?php echo $propia ? 'Fecha de codificación' : 'Fecha de verificación'; ?></label>
                         <input type="date" name="fecha_verificacion" id="cod_fecha" class="sig-input" value="<?php echo date('Y-m-d'); ?>"></div></div>
                     <div class="col-12">
-                        <div class="sig-alert sig-alert--info" style="margin:0;">
+                        <div class="sig-alert sig-alert--info u-m-0">
                             Quedará como <strong><span id="cod_preview">2-01-108-084</span></strong> y el bien pasará a estatus <strong>Activo</strong>.
                         </div>
                     </div>
@@ -434,12 +474,39 @@ function editarInv(item) {
     new bootstrap.Modal(document.getElementById('modalInv')).show();
 }
 
+// Codificación propia (mig. 087): la clasificación sale del catálogo y el N° de
+// orden lo propone el servidor (con secuencia por clasificación, según la elegida).
+var COD_PROPIA = <?php echo $propia ? 'true' : 'false'; ?>;
+var COD_SIGUIENTE = <?php echo json_encode($data['codifSiguiente'] ?? ''); ?>;
+var COD_POR_CLASE = <?php echo !empty($codif['por_clasificacion']) ? 'true' : 'false'; ?>;
+
 function codificarInv(item) {
     document.getElementById('cod_id').value = item.id;
     document.getElementById('cod_nombre').innerText = item.nombre || '';
-    ['cod_g', 'cod_sg', 'cod_sec', 'cod_ord'].forEach(function (id) { document.getElementById(id).value = ''; });
+    ['cod_g', 'cod_sg', 'cod_sec', 'cod_ord'].forEach(function (id) {
+        var el = document.getElementById(id);
+        el.value = ''; el.readOnly = COD_PROPIA && id !== 'cod_ord';
+    });
+    if (COD_PROPIA) {
+        document.getElementById('cod_clasif').value = '';
+        if (!COD_POR_CLASE) document.getElementById('cod_ord').value = COD_SIGUIENTE;
+    }
     codPreview();
     new bootstrap.Modal(document.getElementById('modalCod')).show();
+}
+
+function codElegirClasif() {
+    var v = document.getElementById('cod_clasif').value.split('|');
+    document.getElementById('cod_g').value   = v[0] || '';
+    document.getElementById('cod_sg').value  = v[1] || '';
+    document.getElementById('cod_sec').value = v[2] || '';
+    codPreview();
+    if (!COD_POR_CLASE || v.length < 3) return;
+    fetch('<?php echo URL_ROOT; ?>/inventario/siguienteNroOrden?g=' + encodeURIComponent(v[0])
+          + '&sg=' + encodeURIComponent(v[1]) + '&sec=' + encodeURIComponent(v[2]),
+          { headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d.ok) { document.getElementById('cod_ord').value = d.siguiente; codPreview(); } });
 }
 
 function codPreview() {
@@ -466,7 +533,7 @@ function codPreview() {
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="ret_id">
-                <p style="margin-bottom:var(--sp-3);">
+                <p class="u-mb-sp-3">
                     Confirma que la Alcaldía ya se llevó <strong id="ret_nombre"></strong>.
                     Hasta ahora figuraba como <em>Por retirar</em>: dado de baja pero todavía en las instalaciones.
                 </p>

@@ -407,7 +407,7 @@ flowchart LR
 | RF-BIE-15 | Debe registrar la **donación** de un bien (donante, cédula, estado civil, domicilio, procedencia, valor en USD) y emitir su documento | M | ✅ |
 | RF-BIE-16 | Debe emitir el **Acta de Desincorporación por lote**, con dos estados (emitida → firmada). Al registrarla firmada, **todos sus bienes pasan a Retirado**; anularla **revierte el retiro** | A | 🟡 Datos y flujo ✅ · imprimible **provisional** 🔒 falta el formato oficial |
 | RF-BIE-17 | Debe distinguir claramente la **desincorporación** (movimiento de negocio) de la **eliminación** (papelera) en listados y reportes | A | ✅ |
-| RF-BIE-18 | Debe adaptarse al **procedimiento nuevo** en el que IMATUR asigna sus propios códigos continuando la secuencia | A | 🔒 Bloqueado por B-73 (punto de partida) y B-75 (catálogo de clasificación) |
+| RF-BIE-18 | Debe adaptarse al **procedimiento nuevo** en el que IMATUR asigna sus propios códigos continuando la secuencia | A | ✅ **Construido (mig. 087), apagado**: se enciende al cargar B-73 (punto de partida) y B-75 (catálogo) en *Bienes → Codificación* |
 
 ### 4.7 Recepción (RF-REC)
 
@@ -658,7 +658,7 @@ HTTP/HTTPS en red local. **No se expone a internet**; no hay API pública ni int
 |---|---|---|
 | ~~**N-1…N-4**~~ | ✅ Respondidas 2026-10-06; RF-NOM-14 construido el 2026-10-11 | — |
 | **Tasas BCV** | Tasa de interés de prestaciones de cada mes | No bloquea: sin ella los intereses de la liquidación quedan en 0, con aviso |
-| **B-73 / B-75** | Punto de partida de la secuencia de códigos y catálogo de clasificación | RF-BIE-18 (codificación propia de IMATUR) |
+| **B-73 / B-75** | Punto de partida de la secuencia de códigos y catálogo de clasificación | **Encender** RF-BIE-18 (ya construido) |
 | **R-2 / R-3** | Formato del **Acta de Desincorporación** y del **acta de asignación** | RF-BIE-16 (imprimible definitivo) |
 | **B-81** | Confirmación de vigencia del oficio de relación recibido | Ajuste menor de RF-BIE-14 |
 | **Bono calculado** | Un mes de bono vacacional ya calculado por el cliente | Calibración del total de RF-NOM-13 |
@@ -730,7 +730,7 @@ Explícitamente **no** forma parte del sistema (decisiones registradas con el cl
 | RF | Estado | Motivo |
 |---|---|---|
 | RF-NOM-14 | 🛠️ No implementado | Desbloqueado: N-3 respondida el 2026-10-06 |
-| RF-BIE-18 | 🔒 No implementado | Faltan B-73 y B-75 |
+| RF-BIE-18 | ✅ Construido, apagado | Para encenderlo faltan B-73 y B-75 |
 | RF-BIE-16 | 🟡 Imprimible provisional | Falta el formato oficial (R-2) |
 | RF-TUR-28 | 🟡 Imprimible provisional | Falta el formato oficial |
 | RF-FOR-16 | 🔒 No implementado | Falta contenido y destinatario |

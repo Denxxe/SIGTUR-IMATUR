@@ -6,7 +6,7 @@
             <a href="<?php echo URL_ROOT; ?>/talleres/index" style="color:inherit; text-decoration:none;">Formación</a> · Detalle de Actividad
         </div>
         <h1 class="page__title"><?php echo htmlspecialchars($data['taller']->nombre ?? ''); ?></h1>
-        <div style="display:flex; gap:var(--sp-4); margin-top:var(--sp-2); font-size:13px; color:var(--text-secondary); flex-wrap:wrap; align-items:center;">
+        <div class="u-gap-sp-4 u-mt-sp-2 u-fs-13px u-c-text-secondary u-fwr-wrap u-ai-center" style="display:flex;">
             <span><strong>Tipo:</strong> <?php echo $data['taller']->tipo_actividad ?? 'Taller'; ?></span>
             <?php if (!empty($data['taller']->es_interna)): ?>
                 <span class="sig-badge sig-badge--brand">Interna</span>
@@ -58,17 +58,17 @@ $cupo           = $data['taller']->cupo_maximo ?? 0;
 $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
 ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--sp-3);">
-        <div style="display:flex; align-items:center; gap:var(--sp-3);">
+    <div class="sig-card__head u-jc-space-between u-ai-center u-fwr-wrap u-gap-sp-3" style="display:flex;">
+        <div class="u-ai-center u-gap-sp-3" style="display:flex;">
             <div class="sig-card__title">Participantes</div>
             <?php if ($puedeModificar): ?>
-            <div style="position:relative;">
+            <div class="u-positi-relative">
                 <input type="text" id="filtro_participantes" placeholder="Buscar por nombre o cédula…"
                        class="sig-input" style="font-size:12px; padding:4px 10px; min-width:220px;">
             </div>
             <?php endif; ?>
         </div>
-        <div style="display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap;">
+        <div class="u-ai-center u-gap-sp-3 u-fwr-wrap" style="display:flex;">
             <?php if ($puedeModificar && $inscritos > 0): ?>
             <button type="button" id="btn_asistencia_masiva" class="btn-sig btn-sig--ghost btn-sig--sm"
                     data-taller="<?php echo $data['taller']->id; ?>">
@@ -79,10 +79,10 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                 <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
             </a>
             <div class="text-end">
-                <div style="font-size:12px; font-weight:700; color:var(--text-primary);">
-                    <?php echo $inscritos; ?> / <?php echo $cupo; ?> <span style="color:var(--text-tertiary); font-weight:500;">(<?php echo $porcentaje; ?>%)</span>
+                <div class="u-fs-12px u-fw-700 u-c-text-primary">
+                    <?php echo $inscritos; ?> / <?php echo $cupo; ?> <span class="u-c-text-tertiary u-fw-500">(<?php echo $porcentaje; ?>%)</span>
                 </div>
-                <div style="height:4px; width:100px; background:var(--bg-muted); border-radius:2px; margin-top:4px; overflow:hidden;">
+                <div class="u-h-4px u-bg-bg-muted u-br-2px u-mt-4px u-ov-hidden" style="width:100px;">
                     <div style="height:100%; width:<?php echo $porcentaje; ?>%; background:var(--brand-500);"></div>
                 </div>
             </div>
@@ -125,7 +125,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <tr id="fila-pt-<?php echo $p->id; ?>" class="fila-participante">
                             <td class="cell-id" data-buscar="<?php echo htmlspecialchars($esLibre ? ($p->cedula_libre ?? '') : ($p->cedula ?? '')); ?>">
                                 <?php if ($esLibre): ?>
-                                    <?php echo $p->cedula_libre ? htmlspecialchars($p->cedula_libre) : '<em style="color:var(--text-tertiary);">Sin cédula</em>'; ?>
+                                    <?php echo $p->cedula_libre ? htmlspecialchars($p->cedula_libre) : '<em class="u-c-text-tertiary">Sin cédula</em>'; ?>
                                 <?php else: ?>
                                     <?php echo htmlspecialchars($p->cedula ?? '—'); ?>
                                 <?php endif; ?>
@@ -133,7 +133,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                             <td class="cell-strong" data-buscar="<?php echo $nombreCompleto; ?>">
                                 <?php if ($esLibre): ?>
                                     <?php echo $nombreCompleto; ?>
-                                    <span class="sig-badge sig-badge--neutral" style="font-size:10px; margin-left:4px;"><?php echo ($edad !== null && $edad >= 12) ? 'Adolesc.' : 'Niño/a'; ?></span>
+                                    <span class="sig-badge sig-badge--neutral u-fs-10px u-ml-4px"><?php echo ($edad !== null && $edad >= 12) ? 'Adolesc.' : 'Niño/a'; ?></span>
                                 <?php else: ?>
                                     <span style="cursor:pointer; text-decoration:underline dotted; color:inherit;"
                                           class="link-historial"
@@ -143,29 +143,29 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                         <?php echo $nombreCompleto; ?>
                                     </span>
                                     <?php if (!empty($p->telefono)): ?>
-                                        <span style="display:block; font-size:11px; color:var(--text-tertiary); margin-top:1px;">
-                                            <i class="bi bi-telephone" style="font-size:10px;"></i> <?php echo htmlspecialchars($p->telefono); ?>
+                                        <span class="u-fs-11px u-c-text-tertiary" style="display:block; margin-top:1px;">
+                                            <i class="bi bi-telephone u-fs-10px"></i> <?php echo htmlspecialchars($p->telefono); ?>
                                         </span>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
-                            <td style="font-size:12px; white-space:nowrap;">
+                            <td class="u-fs-12px u-ws-nowrap">
                                 <span><?php echo $generoLabel; ?></span>
                                 <?php if ($edad !== null): ?>
-                                    <span style="color:var(--text-tertiary); margin-left:4px;"><?php echo $edad; ?> años</span>
+                                    <span class="u-c-text-tertiary u-ml-4px"><?php echo $edad; ?> años</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="font-size:12px; color:var(--text-secondary);">
+                            <td class="u-fs-12px u-c-text-secondary">
                                 <?php if (!empty($parroquiaNombre)): ?>
                                     <?php echo htmlspecialchars($parroquiaNombre); ?>
                                     <?php if (!empty($municipioNombre)): ?>
-                                        <span style="color:var(--text-tertiary); display:block; font-size:11px;"><?php echo htmlspecialchars($municipioNombre); ?></span>
+                                        <span class="u-c-text-tertiary u-fs-11px" style="display:block;"><?php echo htmlspecialchars($municipioNombre); ?></span>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
                                 <?php if ($esLibre && !empty($p->direccion_libre)): ?>
-                                    <span style="color:var(--text-tertiary); display:block; font-size:11px; font-style:italic; white-space:normal;"><?php echo htmlspecialchars($p->direccion_libre); ?></span>
+                                    <span class="u-c-text-tertiary u-fs-11px u-fst-italic u-ws-normal" style="display:block;"><?php echo htmlspecialchars($p->direccion_libre); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
@@ -184,13 +184,13 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                                     <span class="sig-badge sig-badge--neutral">Pendiente</span>
                                 <?php endif; ?>
                             </td>
-                            <td style="font-size:12px; color:var(--text-secondary);">
+                            <td class="u-fs-12px u-c-text-secondary">
                                 <?php if ($esLibre && !empty($p->nombre_docente)): ?>
-                                    <span style="display:flex; align-items:center; gap:4px;">
+                                    <span class="u-ai-center u-gap-4px" style="display:flex;">
                                         <i class="bi bi-person-badge" style="color:var(--brand-400);"></i>
                                         <?php echo htmlspecialchars($p->nombre_docente); ?>
                                         <?php if (!empty($p->cedula_docente)): ?>
-                                            <span style="color:var(--text-tertiary);">(<?php echo htmlspecialchars($p->cedula_docente); ?>)</span>
+                                            <span class="u-c-text-tertiary">(<?php echo htmlspecialchars($p->cedula_docente); ?>)</span>
                                         <?php endif; ?>
                                     </span>
                                 <?php else: ?>
@@ -222,7 +222,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
     <!-- Controles de paginación (50 por página) -->
     <div id="part_paginacion" style="display:none; align-items:center; justify-content:space-between; gap:var(--sp-3); padding:var(--sp-3) var(--sp-4); border-top:1px solid var(--border-subtle); flex-wrap:wrap;">
         <span id="part_pag_info" style="font-size:12px; color:var(--text-secondary);"></span>
-        <div style="display:flex; gap:var(--sp-2); align-items:center;">
+        <div class="u-gap-sp-2 u-ai-center" style="display:flex;">
             <button type="button" id="part_pag_prev" class="btn-sig btn-sig--ghost btn-sig--sm"><i class="bi bi-chevron-left"></i> Anterior</button>
             <span id="part_pag_actual" style="font-size:12px; font-weight:700; color:var(--text-primary); min-width:80px; text-align:center;"></span>
             <button type="button" id="part_pag_next" class="btn-sig btn-sig--ghost btn-sig--sm">Siguiente <i class="bi bi-chevron-right"></i></button>
@@ -238,7 +238,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
         </div>
     </div>
     <div class="sig-card__body">
-        <p style="font-size:14px; color:var(--text-primary); white-space:pre-wrap; margin:0;">
+        <p class="u-fs-14px u-c-text-primary u-m-0" style="white-space:pre-wrap;">
             <?php echo htmlspecialchars($data['taller']->motivo_cancelacion); ?>
         </p>
     </div>
@@ -249,10 +249,10 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head">
         <div class="sig-card__title"><i class="bi bi-images"></i> Evidencias</div>
-        <div style="font-size:12px; color:var(--text-tertiary);"><?php echo count($data['evidencias']); ?> archivo(s)</div>
+        <div class="u-fs-12px u-c-text-tertiary"><?php echo count($data['evidencias']); ?> archivo(s)</div>
     </div>
     <div class="sig-card__body">
-        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:var(--sp-3);">
+        <div class="u-gap-sp-3" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr));">
             <?php foreach ($data['evidencias'] as $ev): ?>
                 <?php
                 // Los archivos viven fuera del web root; se sirven por rol.
@@ -266,15 +266,15 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                           background:var(--bg-muted-subtle); border-radius:8px; border:1px solid var(--border-subtle);
                           text-decoration:none; transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow=''">
                     <?php if ($esPdf): ?>
-                        <i class="bi bi-file-earmark-pdf" style="font-size:40px; color:var(--danger-500);"></i>
+                        <i class="bi bi-file-earmark-pdf u-c-danger-500" style="font-size:40px;"></i>
                     <?php else: ?>
                         <img src="<?php echo $url; ?>" alt="<?php echo $nombre; ?>"
                              style="width:100%; height:80px; object-fit:cover; border-radius:4px;">
                     <?php endif; ?>
-                    <span style="font-size:10px; color:var(--text-secondary); text-align:center; word-break:break-all; max-width:100%;">
+                    <span class="u-fs-10px u-c-text-secondary u-ta-center u-wb-break-all" style="max-width:100%;">
                         <?php echo mb_strimwidth($ev->nombre_original, 0, 28, '…'); ?>
                     </span>
-                    <span style="font-size:9px; color:var(--text-tertiary);"><?php echo $fecha; ?></span>
+                    <span class="u-fs-9px u-c-text-tertiary"><?php echo $fecha; ?></span>
                 </a>
             <?php endforeach; ?>
         </div>
@@ -301,7 +301,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
 
                 <?php if ($esInterna): ?>
                 <!-- ── BLOQUE INTERNO: selección de empleado ─────────────── -->
-                <div style="padding:var(--sp-3); background:rgba(var(--brand-rgb,.22,.48,.86),.06); border-left:3px solid var(--brand-500); border-radius:6px; font-size:13px; color:var(--text-secondary);">
+                <div class="u-p-sp-3 u-br-6px u-fs-13px u-c-text-secondary" style="background:rgba(var(--brand-rgb,.22,.48,.86),.06); border-left:3px solid var(--brand-500);">
                     <i class="bi bi-info-circle"></i> Las actividades internas se inscriben directamente desde el registro de empleados.
                 </div>
                 <div class="sig-field">
@@ -323,8 +323,8 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
 
                 <!-- Selector tipo de participante (RN-F16) -->
                 <div>
-                    <label class="sig-field__label" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
-                    <div id="seg_tipo_part" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <label class="sig-field__label" id="seg_tipo_part_lbl" style="margin-bottom:6px;">Tipo de participante <span class="req">*</span></label>
+                    <div id="seg_tipo_part" role="group" aria-labelledby="seg_tipo_part_lbl" style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" class="seg-tipo" data-libre="0" style="flex:1; min-width:170px; padding:12px; border-radius:8px; border:2px solid var(--border-subtle); background:var(--bg-muted); color:var(--text-secondary); font-weight:600; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
                             <i class="bi bi-person-vcard"></i> Adulto (con cédula)
                         </button>
@@ -341,7 +341,7 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         <label class="sig-field__label" for="insc_cedula_busqueda">
                             Cédula del participante
                             <i class="bi bi-search" id="ico_buscar" style="margin-left:4px; color:var(--text-tertiary);" title="Búsqueda automática"></i>
-                            <span style="font-size:11px; color:var(--text-tertiary); font-weight:400; margin-left:4px;">— si ya está registrado, sus datos se completan solos</span>
+                            <span class="u-fs-11px u-c-text-tertiary u-fw-400 u-ml-4px">— si ya está registrado, sus datos se completan solos</span>
                         </label>
                         <input type="text" id="insc_cedula_busqueda" name="cedula_participante"
                                class="sig-input" placeholder="Ej: 12345678 (solo números)" autocomplete="off" inputmode="numeric">
@@ -476,9 +476,9 @@ $porcentaje     = ($cupo > 0) ? round(($inscritos / $cupo) * 100) : 0;
                         </div>
                         <div class="col-12">
                             <hr style="margin:var(--sp-1) 0;">
-                            <p style="font-size:12px; font-weight:600; color:var(--brand-500); margin-bottom:var(--sp-2);">
+                            <p class="u-fs-12px u-fw-600 u-c-brand-500 u-mb-sp-2">
                                 <i class="bi bi-person-badge"></i> Representante / Docente <span class="req">*</span>
-                                <span style="font-weight:400; color:var(--text-tertiary);">— adulto responsable; ancla la identidad del menor</span>
+                                <span class="u-fw-400 u-c-text-tertiary">— adulto responsable; ancla la identidad del menor</span>
                             </p>
                         </div>
                         <div class="col-md-7">
@@ -1031,7 +1031,7 @@ document.getElementById('sel_empleado').addEventListener('change', function() {
                                 <input type="text" name="direccion" id="ep_direccion" class="sig-input"></div>
                         </div>
                     </div>
-                    <p style="font-size:11px; color:var(--text-tertiary); margin-top:var(--sp-2);">
+                    <p class="u-fs-11px u-c-text-tertiary u-mt-sp-2">
                         <i class="bi bi-info-circle"></i> Estos datos pertenecen al registro global de la persona; los cambios se reflejan en todo el sistema.
                     </p>
                 </div>

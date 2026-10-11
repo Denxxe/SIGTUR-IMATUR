@@ -43,8 +43,8 @@
                 </div>
                 <div class="col-md-4">
                     <div class="sig-field">
-                        <label class="sig-field__label">Fecha y Hora</label>
-                        <input type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio ?? 'now')) . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly style="background:var(--bg-muted-subtle); cursor:not-allowed;">
+                        <label for="tallinfo_fecha_hora" class="sig-field__label">Fecha y Hora</label>
+                        <input id="tallinfo_fecha_hora" type="text" class="sig-input" value="<?php echo date('d/m/Y', strtotime($data['taller']->fecha_inicio ?? 'now')) . ' | ' . ($data['taller']->hora_inicio ?? 'N/A'); ?>" readonly style="background:var(--bg-muted-subtle); cursor:not-allowed;">
                     </div>
                 </div>
                 <div class="col-md-4">

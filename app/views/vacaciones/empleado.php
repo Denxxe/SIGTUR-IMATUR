@@ -20,7 +20,7 @@ $baseServ = Vacacion::fechaBaseServicio($e);
 </div>
 
 <!-- Resumen de saldo -->
-<div class="anim-slide-up" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--sp-3); margin-bottom:var(--sp-4);">
+<div class="anim-slide-up u-gap-sp-3 u-mb-sp-4" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
     <?php
     $tiles = [
         ['Años de servicio', (int)$data['anios'], 'bi-hourglass-split', '#0891B2'],
@@ -31,16 +31,16 @@ $baseServ = Vacacion::fechaBaseServicio($e);
     ];
     foreach ($tiles as [$lbl, $val, $ico, $col]): ?>
         <div class="sig-card" style="border-top:3px solid <?php echo $col; ?>;">
-            <div class="sig-card__body" style="padding:var(--sp-3);">
-                <div style="font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:.5px"><i class="bi <?php echo $ico; ?>"></i> <?php echo $lbl; ?></div>
-                <div style="font-size:20px;font-weight:700;color:var(--text-primary);margin-top:4px"><?php echo $val; ?></div>
+            <div class="sig-card__body u-p-sp-3">
+                <div class="u-fs-11px u-tt-uppercase u-c-text-tertiary" style="letter-spacing:.5px;"><i class="bi <?php echo $ico; ?>"></i> <?php echo $lbl; ?></div>
+                <div class="u-fs-20px u-fw-700 u-c-text-primary u-mt-4px"><?php echo $val; ?></div>
             </div>
         </div>
     <?php endforeach; ?>
     <?php $s = (int)$data['saldo']; $sc = $s <= 0 ? '#64748b' : ($s > 30 ? '#d97706' : '#059669'); ?>
     <div class="sig-card" style="border-top:3px solid <?php echo $sc; ?>; background:<?php echo $sc; ?>0f;">
-        <div class="sig-card__body" style="padding:var(--sp-3);">
-            <div style="font-size:11px;text-transform:uppercase;color:var(--text-tertiary);letter-spacing:.5px"><i class="bi bi-wallet2"></i> Saldo disponible</div>
+        <div class="sig-card__body u-p-sp-3">
+            <div class="u-fs-11px u-tt-uppercase u-c-text-tertiary" style="letter-spacing:.5px;"><i class="bi bi-wallet2"></i> Saldo disponible</div>
             <div style="font-size:24px;font-weight:800;color:<?php echo $sc; ?>;margin-top:4px"><?php echo $s; ?> días</div>
         </div>
     </div>
@@ -63,7 +63,7 @@ $baseServ = Vacacion::fechaBaseServicio($e);
                         <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="observaciones">Observaciones</label>
                             <input id="observaciones" type="text" name="observaciones" class="sig-input" placeholder="Opcional"></div></div>
                     </div>
-                    <small style="color:var(--text-tertiary)"><i class="bi bi-info-circle"></i> Se cuentan solo días hábiles (sin fines de semana ni feriados).</small>
+                    <small class="u-c-text-tertiary"><i class="bi bi-info-circle"></i> Se cuentan solo días hábiles (sin fines de semana ni feriados).</small>
                 </form>
             </div>
         </div>
@@ -77,7 +77,7 @@ $baseServ = Vacacion::fechaBaseServicio($e);
                     <input type="hidden" name="id_empleado" value="<?php echo (int)$e->id; ?>">
                     <div class="sig-field"><label class="sig-field__label" for="ajuste">Días ya disfrutados antes del sistema</label>
                         <input id="ajuste" type="number" name="ajuste" class="sig-input" min="0" value="<?php echo (int)$data['ajuste']; ?>"></div>
-                    <small style="color:var(--text-tertiary);display:block;margin:6px 0">Se resta del saldo. Cárgalo una sola vez al poner el módulo en marcha.</small>
+                    <small class="u-c-text-tertiary" style="display:block; margin:6px 0;">Se resta del saldo. Cárgalo una sola vez al poner el módulo en marcha.</small>
                     <button type="submit" class="btn-sig btn-sig--ghost"><i class="bi bi-floppy"></i> Guardar ajuste</button>
                 </form>
             </div>
@@ -99,7 +99,7 @@ $baseServ = Vacacion::fechaBaseServicio($e);
                     <td class="cell-strong"><?php echo (int)$p->dias_tomados; ?></td>
                     <td><?php echo (int)$p->anio; ?></td>
                     <td><span class="sig-badge <?php echo $badges[$p->estado] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($p->estado); ?></span></td>
-                    <td style="font-size:12.5px;color:var(--text-secondary)"><?php echo htmlspecialchars($p->observaciones ?? '—'); ?></td>
+                    <td class="u-fs-12_5px u-c-text-secondary"><?php echo htmlspecialchars($p->observaciones ?? '—'); ?></td>
                     <td class="col-actions">
                         <?php foreach (Vacacion::ESTADOS as $est): if ($est === $p->estado) continue; ?>
                             <form action="<?php echo URL_ROOT; ?>/vacaciones/cambiarEstado" method="POST" style="display:inline">

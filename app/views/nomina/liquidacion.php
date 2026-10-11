@@ -49,20 +49,20 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
 </div>
 
 <?php if ($l->estado === 'Anulada'): ?>
-<div class="sig-alert sig-alert--danger anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--danger anim-slide-up u-mb-sp-4">
     <i class="bi bi-x-octagon"></i>
     <div><strong>Anulada el <?php echo $fecha($l->anulada_at); ?>.</strong> Motivo: <?php echo htmlspecialchars($l->motivo_anulacion ?? '—'); ?></div>
 </div>
 <?php endif; ?>
 
 <?php if (!empty($l->advertencias) && $esBorrador): ?>
-<div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
         <strong>Antes de cerrar, revise esto.</strong> El sistema calculó con lo que sabe y avisa de lo que no sabe, en vez de inventarlo.
-        <ul style="margin:8px 0 0;padding-left:18px;">
+        <ul class="u-m-8px-0-0 u-pl-18px">
             <?php foreach (explode(' · ', $l->advertencias) as $a): ?>
-                <li style="margin-bottom:4px;"><?php echo htmlspecialchars($a); ?></li>
+                <li class="u-mb-4px"><?php echo htmlspecialchars($a); ?></li>
             <?php endforeach; ?>
         </ul>
     </div>
@@ -74,7 +74,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
     <div class="col-lg-5">
         <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
             <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-wallet2"></i> Último salario</div></div>
-            <div class="sig-card__body" style="padding:0;">
+            <div class="sig-card__body u-p-0">
                 <div class="sig-table-wrap" data-no-export>
                     <table class="sig-table">
                         <thead><tr><th>Concepto</th><th class="text-end">Mensual</th><th class="text-end">Diario</th></tr></thead>
@@ -88,10 +88,10 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                             ] as $c => $v): if ((float)$v == 0 && in_array($c, ['Prima FOND', 'Prima discapacidad', 'Caja de ahorro', 'Prima responsabilidad'], true)) continue; ?>
                                 <tr><td><?php echo $c; ?></td><td class="text-end u-num"><?php echo $m($v); ?></td><td class="text-end u-num"><?php echo $m((float)$v / $diasMes); ?></td></tr>
                             <?php endforeach; ?>
-                            <tr style="font-weight:700;"><td>Sub-total salario</td><td class="text-end u-num"><?php echo $m($l->subtotal_mensual); ?></td><td class="text-end u-num"><?php echo $m($l->salario_normal_diario); ?></td></tr>
+                            <tr class="u-fw-700"><td>Sub-total salario</td><td class="text-end u-num"><?php echo $m($l->subtotal_mensual); ?></td><td class="text-end u-num"><?php echo $m($l->salario_normal_diario); ?></td></tr>
                             <tr><td>Alíc. bono vacacional (<?php echo $d($l->dias_alic_vac); ?> días)</td><td></td><td class="text-end u-num"><?php echo $m($l->alic_vac_diaria); ?></td></tr>
                             <tr><td>Alíc. bonif. fin de año (<?php echo $d($l->dias_alic_fin); ?> días)</td><td></td><td class="text-end u-num"><?php echo $m($l->alic_fin_diaria); ?></td></tr>
-                            <tr style="font-weight:700;border-top:2px solid var(--border-subtle);"><td>Salario integral diario</td><td></td><td class="text-end u-num"><?php echo $m($l->salario_integral_diario); ?></td></tr>
+                            <tr class="u-fw-700 u-bdt-2px-solid-border-subtle"><td>Salario integral diario</td><td></td><td class="text-end u-num"><?php echo $m($l->salario_integral_diario); ?></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -103,7 +103,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
     <div class="col-lg-7">
         <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
             <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-receipt"></i> Liquidación</div></div>
-            <div class="sig-card__body" style="padding:0;">
+            <div class="sig-card__body u-p-0">
                 <div class="sig-table-wrap" data-no-export>
                     <table class="sig-table">
                         <thead><tr><th>Concepto</th><th class="text-end">Días</th><th class="text-end">Alícuota</th><th class="text-end">Total</th></tr></thead>
@@ -116,13 +116,13 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                                     <td class="text-end u-num"><?php echo $m($c['total']); ?></td>
                                 </tr>
                             <?php endforeach; ?>
-                            <tr style="font-weight:700;"><td colspan="3">Sub-total prestaciones sociales</td><td class="text-end u-num"><?php echo $m($l->subtotal); ?></td></tr>
+                            <tr class="u-fw-700"><td colspan="3">Sub-total prestaciones sociales</td><td class="text-end u-num"><?php echo $m($l->subtotal); ?></td></tr>
                             <tr><td colspan="3">Interés de mora<?php echo $l->fecha_pago ? ' (pago el ' . $fecha($l->fecha_pago) . ')' : ' — sin fecha de pago'; ?></td><td class="text-end u-num"><?php echo $m($l->interes_mora); ?></td></tr>
-                            <tr style="font-weight:800;font-size:15px;border-top:2px solid var(--border-subtle);"><td colspan="3">TOTAL DE PRESTACIONES SOCIALES</td><td class="text-end u-num"><?php echo $m($l->total); ?></td></tr>
+                            <tr class="u-fw-800 u-fs-15px u-bdt-2px-solid-border-subtle"><td colspan="3">TOTAL DE PRESTACIONES SOCIALES</td><td class="text-end u-num"><?php echo $m($l->total); ?></td></tr>
                         </tbody>
                     </table>
                 </div>
-                <div style="padding:10px 14px;border-top:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-secondary);">
+                <div class="u-p-10px-14px u-bdt-1px-solid-border-subtle u-fs-12_5px u-c-text-secondary">
                     <i class="bi bi-scale"></i> <strong>Art. 142 d LOTTT — se paga la mayor:</strong>
                     garantía depositada <strong><?php echo $m($l->monto_garantia); ?></strong> (<?php echo $d($l->dias_garantia); ?> días, literales a y b)
                     vs. retroactivo <strong><?php echo $m($l->monto_retroactivo); ?></strong> (<?php echo $d($l->dias_retroactivo); ?> días × <?php echo $m($l->salario_integral_diario); ?>, literal c).
@@ -138,16 +138,16 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-pencil-square"></i> Ajustes</div></div>
     <div class="sig-card__body">
         <form action="<?php echo URL_ROOT; ?>/nomina/guardarLiquidacion/<?php echo $l->id; ?>" method="POST">
-            <p style="font-size:12.5px;color:var(--text-secondary);margin-bottom:var(--sp-3);">
+            <p class="u-fs-12_5px u-c-text-secondary u-mb-sp-3">
                 Los días de las fracciones los propone el sistema; si Talento Humano llega a otro número
                 (por ejemplo, años de bono vacacional sin pagar), escríbalo aquí. Vacío = usar el cálculo del sistema.
             </p>
             <div class="row g-3">
                 <div class="col-md-3">
-                    <div class="sig-field" style="margin:0;">
+                    <div class="sig-field u-m-0">
                         <label class="sig-field__label" for="lq_pago">Fecha de pago</label>
                         <input type="date" name="fecha_pago" id="lq_pago" class="sig-input" min="<?php echo htmlspecialchars($l->fecha_egreso); ?>" value="<?php echo htmlspecialchars($l->fecha_pago ?? ''); ?>">
-                        <small style="color:var(--text-tertiary);font-size:11.5px;">Para el interés de mora.</small>
+                        <small class="u-c-text-tertiary u-fs-11_5px">Para el interés de mora.</small>
                     </div>
                 </div>
                 <?php foreach ([
@@ -156,23 +156,23 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                     'dias_fin_anio_manual'   => ['Días de fin de año', $l->dias_fin_anio],
                 ] as $campo => [$lbl, $actual]): ?>
                     <div class="col-md-3">
-                        <div class="sig-field" style="margin:0;">
+                        <div class="sig-field u-m-0">
                             <label class="sig-field__label" for="lq_<?php echo $campo; ?>"><?php echo $lbl; ?></label>
                             <input type="number" step="0.01" min="0" name="<?php echo $campo; ?>" id="lq_<?php echo $campo; ?>" class="sig-input"
                                    value="<?php echo $l->{$campo} === null ? '' : htmlspecialchars((string)$l->{$campo}); ?>"
                                    placeholder="Sistema: <?php echo $d($actual); ?>">
-                            <?php if ($l->{$campo} !== null): ?><small style="color:var(--warning-700,#b45309);font-size:11.5px;">Corregido a mano</small><?php endif; ?>
+                            <?php if ($l->{$campo} !== null): ?><small class="u-fs-11_5px" style="color:var(--warning-700,#b45309);">Corregido a mano</small><?php endif; ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
                 <div class="col-12">
-                    <div class="sig-field" style="margin:0;">
+                    <div class="sig-field u-m-0">
                         <label class="sig-field__label" for="lq_obs">Observaciones</label>
                         <input type="text" name="observaciones" id="lq_obs" class="sig-input" maxlength="500" value="<?php echo htmlspecialchars($l->observaciones ?? ''); ?>">
                     </div>
                 </div>
             </div>
-            <div style="margin-top:var(--sp-3);text-align:right;">
+            <div class="u-mt-sp-3 u-ta-right">
                 <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar y recalcular</button>
             </div>
         </form>
@@ -183,7 +183,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
 <?php if ($mora): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
     <div class="sig-card__head"><div class="sig-card__title"><i class="bi bi-clock-history"></i> Interés de mora</div></div>
-    <div class="sig-card__body" style="padding:0;">
+    <div class="sig-card__body u-p-0">
         <div class="sig-table-wrap" data-no-export>
             <table class="sig-table">
                 <thead><tr><th>Mes</th><th class="text-end">Tasa mensual %</th><th class="text-end">Interés sobre <?php echo $m($l->subtotal); ?></th></tr></thead>
@@ -191,7 +191,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                     <?php foreach ($mora as $r): ?>
                         <tr><td><?php echo htmlspecialchars($r['periodo']); ?></td><td class="text-end u-num"><?php echo $m($r['tasa_mensual']); ?></td><td class="text-end u-num"><?php echo $m($r['interes']); ?></td></tr>
                     <?php endforeach; ?>
-                    <tr style="font-weight:700;"><td colspan="2">Total</td><td class="text-end u-num"><?php echo $m($l->interes_mora); ?></td></tr>
+                    <tr class="u-fw-700"><td colspan="2">Total</td><td class="text-end u-num"><?php echo $m($l->interes_mora); ?></td></tr>
                 </tbody>
             </table>
         </div>
@@ -210,8 +210,8 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
             </form>
         <?php endif; ?>
     </div>
-    <div class="sig-card__body" style="padding:0;">
-        <div style="padding:10px 14px;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border-subtle);">
+    <div class="sig-card__body u-p-0">
+        <div class="u-p-10px-14px u-fs-12_5px u-c-text-secondary u-bdb-1px-solid-border-subtle">
             Depósitos <strong><?php echo $m($l->monto_garantia); ?></strong> · intereses <strong><?php echo $m($l->intereses); ?></strong>
             · anticipos <strong><?php echo $m($l->anticipos); ?></strong>.
             <?php if ($esBorrador): ?>Corrija un mes con el lápiz (un sueldo anterior al sistema, un anticipo): la cadena se recalcula entera.<?php endif; ?>
@@ -234,7 +234,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                         <tr<?php echo (float)$r->salario_base <= 0 ? ' style="background:var(--warning-50,#fffbeb);"' : ''; ?>>
                             <td class="cell-strong">
                                 <?php echo date('m/Y', strtotime($r->mes)); ?>
-                                <?php if ($r->editado === true || $r->editado === 't' || $r->editado === 1): ?><i class="bi bi-pencil-fill" title="Corregido a mano" style="color:var(--text-tertiary);font-size:10px;"></i><?php endif; ?>
+                                <?php if ($r->editado === true || $r->editado === 't' || $r->editado === 1): ?><i class="bi bi-pencil-fill u-c-text-tertiary u-fs-10px" title="Corregido a mano"></i><?php endif; ?>
                             </td>
                             <td class="text-end u-num"><?php echo $m($r->salario_base); ?></td>
                             <td class="text-end u-num"><?php echo $m($primas); ?></td>
@@ -249,7 +249,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                             <?php if ($esBorrador): ?>
                                 <td class="col-actions">
                                     <button type="button" class="row-action row-action--edit"
-                                            onclick='editarMesLiq(<?php echo json_encode($r, JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
+                                            onclick='editarMesLiq(<?php echo json_encode($r, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                                         <i class="bi bi-pencil"></i> Corregir mes
                                     </button>
                                 </td>
@@ -286,14 +286,14 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                         'dias_alic_fin'     => ['Días alíc. fin de año', '0.01'],
                     ] as $campo => [$lbl, $paso]): ?>
                         <div class="col-md-4 col-sm-6">
-                            <div class="sig-field" style="margin:0;">
+                            <div class="sig-field u-m-0">
                                 <label class="sig-field__label" for="ml_<?php echo $campo; ?>"><?php echo $lbl; ?></label>
                                 <input type="number" step="<?php echo $paso; ?>" min="0" name="<?php echo $campo; ?>" id="ml_<?php echo $campo; ?>" class="sig-input" required>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <small style="color:var(--text-tertiary);font-size:12px;display:block;margin-top:8px;">
+                <small class="u-c-text-tertiary u-fs-12px" style="display:block; margin-top:8px;">
                     La tasa del BCV no se corrige aquí: se carga por mes en Nómina → Parámetros y vale para todas las liquidaciones.
                 </small>
             </div>
@@ -327,7 +327,7 @@ $mora = json_decode($l->detalle_mora ?: '[]', true) ?: [];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p style="font-size:13px;color:var(--text-secondary);">
+                <p class="u-fs-13px u-c-text-secondary">
                     No se borra: queda registrada como anulada<?php echo $l->numero ? ' y su número no se reutiliza' : ''; ?>.
                     El egreso queda libre para liquidarse de nuevo.
                 </p>

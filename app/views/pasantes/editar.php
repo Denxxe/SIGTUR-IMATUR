@@ -16,14 +16,14 @@
 </div>
 
 <div class="sig-card anim-slide-up" style="max-width:900px; margin:0 auto var(--sp-8);">
-    <div class="sig-card__body" style="padding:var(--sp-8);">
+    <div class="sig-card__body u-p-sp-8">
         <form action="<?php echo URL_ROOT; ?>/pasantes/editar/<?php echo $data['pasante']->id; ?>" method="POST">
             <input type="hidden" name="id_persona" value="<?php echo $data['pasante']->id_persona; ?>">
 
             <!-- Datos Personales -->
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
-                <i class="bi bi-person-bounding-box" style="font-size:20px; color:var(--brand-500);"></i>
-                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Datos Personales</h3>
+            <div class="u-ai-center u-gap-sp-3 u-mb-sp-6 u-bdb-1px-solid-border-subtle u-pb-sp-3" style="display:flex;">
+                <i class="bi bi-person-bounding-box u-fs-20px u-c-brand-500"></i>
+                <h3 class="u-fs-18px u-fw-700 u-c-text-primary u-m-0">Datos Personales</h3>
             </div>
 
             <div class="row g-4 mb-4">
@@ -51,9 +51,9 @@
             </div>
 
             <!-- Datos Académicos -->
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3); margin-top:var(--sp-6);">
-                <i class="bi bi-building" style="font-size:20px; color:var(--brand-500);"></i>
-                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Datos Académicos e Institucionales</h3>
+            <div class="u-ai-center u-gap-sp-3 u-mb-sp-6 u-bdb-1px-solid-border-subtle u-pb-sp-3" style="display:flex; margin-top:var(--sp-6);">
+                <i class="bi bi-building u-fs-20px u-c-brand-500"></i>
+                <h3 class="u-fs-18px u-fw-700 u-c-text-primary u-m-0">Datos Académicos e Institucionales</h3>
             </div>
 
             <div class="row g-4 mb-4">
@@ -89,7 +89,7 @@
                     <div class="sig-field">
                         <label class="sig-field__label" for="tutor_externo">
                             Responsable externo
-                            <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Persona en la institución a quien se dirige la carta de aceptación</span>
+                            <span class="u-fw-400 u-c-text-tertiary u-fs-11px"> — Persona en la institución a quien se dirige la carta de aceptación</span>
                         </label>
                         <input id="tutor_externo" type="text" name="tutor_externo" class="sig-input"
                                value="<?php echo htmlspecialchars($data['pasante']->tutor_externo ?? ''); ?>"
@@ -99,11 +99,11 @@
                 <?php if (!empty($data['pasante']->oficio_aceptacion)): ?>
                 <div class="col-md-6">
                     <div class="sig-field">
-                        <label class="sig-field__label">N° Carta de aceptación</label>
-                        <input type="text" class="sig-input" readonly
+                        <label for="pasaedit_nro_carta" class="sig-field__label">N° Carta de aceptación</label>
+                        <input id="pasaedit_nro_carta" type="text" class="sig-input" readonly
                                value="<?php echo htmlspecialchars($data['pasante']->oficio_aceptacion ?? ''); ?>"
                                style="font-family:var(--font-mono);background:var(--bg-muted);cursor:default;">
-                        <small style="color:var(--text-tertiary);font-size:11px;">
+                        <small class="u-c-text-tertiary u-fs-11px">
                             <i class="bi bi-lock"></i> El agrupamiento se gestiona desde el botón "Aprobar" en el detalle.
                         </small>
                     </div>
@@ -126,9 +126,9 @@
             </div>
 
             <!-- Estado y Evaluación -->
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3); margin-top:var(--sp-6);">
-                <i class="bi bi-clipboard2-check" style="font-size:20px; color:var(--brand-500);"></i>
-                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Estado y Evaluación</h3>
+            <div class="u-ai-center u-gap-sp-3 u-mb-sp-6 u-bdb-1px-solid-border-subtle u-pb-sp-3" style="display:flex; margin-top:var(--sp-6);">
+                <i class="bi bi-clipboard2-check u-fs-20px u-c-brand-500"></i>
+                <h3 class="u-fs-18px u-fw-700 u-c-text-primary u-m-0">Estado y Evaluación</h3>
             </div>
 
             <div class="row g-4 mb-4">
@@ -169,7 +169,7 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:var(--sp-3); padding-top:var(--sp-6); border-top:1px solid var(--border-subtle);">
+            <div class="u-jc-flex-end u-gap-sp-3 u-bdt-1px-solid-border-subtle" style="display:flex; padding-top:var(--sp-6);">
                 <a href="<?php echo URL_ROOT; ?>/pasantes/eliminar/<?php echo $data['pasante']->id; ?>"
                    class="btn-sig btn-sig--danger"
                    onclick="return confirm('¿Desactivar este pasante? Podrá recuperarlo desde la Papelera.')">

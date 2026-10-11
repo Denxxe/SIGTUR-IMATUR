@@ -42,7 +42,7 @@ $__sinLinea    = !empty($__mb['sin_linea']);
 $__margenInf   = $__mb['margen_inf'] ?? '28px';
 $__dependencia = trim((string)($__mb['dependencia'] ?? ''));
 ?>
-<div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+<div class="u-ai-center u-gap-12px" style="display:flex; margin-bottom:6px;">
     <img src="<?php echo ConfigSistema::urlLogoAlcaldia(); ?>" alt="Alcaldía de Cumaná"
          style="height:<?php echo $__altoLogo; ?>px; width:auto; object-fit:contain; flex-shrink:0;"
          onerror="this.style.visibility='hidden'">

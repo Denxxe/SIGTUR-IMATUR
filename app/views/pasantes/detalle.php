@@ -43,35 +43,35 @@
         <div class="sig-card mb-4">
             <div class="sig-card__head">
                 <div class="sig-card__title">
-                    <i class="bi bi-info-circle" style="color:var(--brand-500);"></i> Datos Generales
+                    <i class="bi bi-info-circle u-c-brand-500"></i> Datos Generales
                 </div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-6);">
-                <div style="margin-bottom:var(--sp-4); display:flex; gap:12px; align-items:center;">
-                    <div style="width:64px; height:80px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden; background:var(--bg-muted-subtle); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+            <div class="sig-card__body u-p-sp-6">
+                <div class="u-mb-sp-4 u-gap-12px u-ai-center" style="display:flex;">
+                    <div class="u-w-64px u-bd-1px-solid-border-subtle u-br-6px u-ov-hidden u-bg-bg-muted-subtle u-fsh-0 u-ai-center u-jc-center" style="height:80px; display:flex;">
                         <img src="<?php echo URL_ROOT; ?>/descarga/foto/<?php echo (int)$data['pasante']->id_persona; ?>?v=<?php echo time(); ?>"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                              style="width:100%; height:100%; object-fit:cover;" alt="Foto">
-                        <span style="display:none; align-items:center; justify-content:center; width:100%; height:100%; font-size:32px; color:var(--text-tertiary);"><i class="bi bi-person"></i></span>
+                        <span class="u-ai-center u-jc-center u-w-100pct u-h-100pct u-fs-32px u-c-text-tertiary" style="display:none;"><i class="bi bi-person"></i></span>
                     </div>
-                    <div style="min-width:0;">
-                        <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Pasante</small>
-                        <div style="font-size:18px; font-weight:800; color:var(--text-primary);"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
-                        <div class="cell-id" style="margin-top:2px;"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
-                        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFoto" style="margin-top:6px;">
+                    <div class="u-minw-0">
+                        <small class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-4px" style="display:block;">Pasante</small>
+                        <div class="u-fs-18px u-fw-800 u-c-text-primary"><?php echo (isset($data['pasante']->nombre) ? $data['pasante']->nombre : 'N/A') . ' ' . (isset($data['pasante']->apellido) ? $data['pasante']->apellido : ''); ?></div>
+                        <div class="cell-id u-mt-2px"><?php echo isset($data['pasante']->cedula) ? $data['pasante']->cedula : 'N/A'; ?></div>
+                        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm u-mt-6px" data-bs-toggle="modal" data-bs-target="#modalFoto">
                             <i class="bi bi-camera"></i> Foto
                         </button>
                     </div>
                 </div>
 
-                <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
-                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Institución / Carrera</small>
-                    <div style="font-weight:700; color:var(--text-secondary);"><?php echo isset($data['pasante']->institucion) ? $data['pasante']->institucion : 'No especificada'; ?></div>
-                    <div style="font-size:13px; color:var(--text-tertiary);"><?php echo isset($data['pasante']->carrera) ? $data['pasante']->carrera : 'No especificada'; ?></div>
+                <div class="u-mb-sp-4 u-pt-sp-4 u-bdt-1px-solid-border-subtle">
+                    <small class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-4px" style="display:block;">Institución / Carrera</small>
+                    <div class="u-fw-700 u-c-text-secondary"><?php echo isset($data['pasante']->institucion) ? $data['pasante']->institucion : 'No especificada'; ?></div>
+                    <div class="u-fs-13px u-c-text-tertiary"><?php echo isset($data['pasante']->carrera) ? $data['pasante']->carrera : 'No especificada'; ?></div>
                 </div>
 
-                <div style="margin-bottom:var(--sp-4); padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
-                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Estado Institucional</small>
+                <div class="u-mb-sp-4 u-pt-sp-4 u-bdt-1px-solid-border-subtle">
+                    <small class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-4px" style="display:block;">Estado Institucional</small>
                     <?php 
                         $badgeClass = 'sig-badge--neutral';
                         $e = $data['pasante']->estado ?? 'Desconocido';
@@ -84,15 +84,15 @@
                     <span class="sig-badge <?php echo $badgeClass; ?>" style="font-size:14px; padding:6px 12px;"><?php echo $e; ?></span>
                 </div>
 
-                <div style="padding-top:var(--sp-4); border-top:1px solid var(--border-subtle);">
-                    <small style="display:block; font-size:11px; font-weight:700; color:var(--text-tertiary); text-transform:uppercase; margin-bottom:4px;">Tutor Institucional</small>
+                <div class="u-pt-sp-4 u-bdt-1px-solid-border-subtle">
+                    <small class="u-fs-11px u-fw-700 u-c-text-tertiary u-tt-uppercase u-mb-4px" style="display:block;">Tutor Institucional</small>
                     <?php if(isset($data['pasante']->id_tutor_institucional) && $data['pasante']->id_tutor_institucional): ?>
-                        <div style="display:flex; align-items:center; gap:var(--sp-2); font-weight:700; color:var(--brand-600);">
+                        <div class="u-ai-center u-gap-sp-2 u-fw-700 u-c-brand-600" style="display:flex;">
                             <i class="bi bi-person-check-fill"></i>
                             <span><?php echo (isset($data['pasante']->tutor_nombre) ? $data['pasante']->tutor_nombre : 'Tutor') . ' ' . (isset($data['pasante']->tutor_apellido) ? $data['pasante']->tutor_apellido : ''); ?></span>
                         </div>
                     <?php else: ?>
-                        <span style="font-size:13px; color:var(--text-tertiary); font-style:italic;">No asignado</span>
+                        <span class="u-fs-13px u-c-text-tertiary u-fst-italic">No asignado</span>
                     <?php endif; ?>
                 </div>
             </div>
@@ -100,16 +100,16 @@
         
         <?php if(isset($data['pasante']->estado) && $data['pasante']->estado == 'Culminado'): ?>
             <div class="sig-card" style="border-top: 4px solid var(--success-500);">
-                <div class="sig-card__body" style="padding:var(--sp-6);">
-                    <h5 style="color:var(--success-600); font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:var(--sp-4);">
+                <div class="sig-card__body u-p-sp-6">
+                    <h5 class="u-c-success-600 u-fw-800 u-ai-center u-gap-8px u-mb-sp-4" style="display:flex;">
                         <i class="bi bi-award-fill"></i> Evaluación Final
                     </h5>
-                    <p style="font-size:13px; font-style:italic; color:var(--text-secondary); margin-bottom:var(--sp-4);">
+                    <p class="u-fs-13px u-fst-italic u-c-text-secondary u-mb-sp-4">
                         "<?php echo $data['pasante']->evaluacion ?? ''; ?>"
                     </p>
-                    <div style="background:var(--success-50); border:1px solid var(--success-200); border-radius:var(--r-lg); padding:var(--sp-4); text-align:center;">
-                        <span style="display:block; font-size:11px; font-weight:700; color:var(--success-600); text-transform:uppercase; letter-spacing:0.05em;">Nota Final</span>
-                        <span style="font-size:32px; font-weight:900; color:var(--success-700);"><?php echo $data['pasante']->nota ?? 0; ?> <small style="font-size:14px; font-weight:500;">/ 20</small></span>
+                    <div class="u-p-sp-4 u-ta-center" style="background:var(--success-50); border:1px solid var(--success-200); border-radius:var(--r-lg);">
+                        <span class="u-fs-11px u-fw-700 u-c-success-600 u-tt-uppercase" style="display:block; letter-spacing:0.05em;">Nota Final</span>
+                        <span class="u-fs-32px u-fw-900" style="color:var(--success-700);"><?php echo $data['pasante']->nota ?? 0; ?> <small class="u-fs-14px u-fw-500">/ 20</small></span>
                     </div>
                 </div>
             </div>
@@ -119,9 +119,9 @@
     <!-- DOCUMENTOS Y CHECKLIST -->
     <div class="col-md-8">
         <div class="sig-card h-100">
-            <div class="sig-card__head" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="sig-card__head u-jc-space-between u-ai-center" style="display:flex;">
                 <div class="sig-card__title">
-                    <i class="bi bi-folder-check" style="color:var(--brand-500);"></i> Checklist de Documentación
+                    <i class="bi bi-folder-check u-c-brand-500"></i> Checklist de Documentación
                 </div>
             </div>
             <div class="sig-table-wrap">
@@ -141,8 +141,8 @@
                             <?php foreach($data['documentos'] ?? [] as $doc): ?>
                             <tr>
                                 <td>
-                                    <div style="display:flex; align-items:center; gap:var(--sp-3);">
-                                        <div style="width:32px; height:32px; background:var(--bg-muted); border-radius:var(--r-md); display:grid; place-items:center; color:var(--text-secondary);">
+                                    <div class="u-ai-center u-gap-sp-3" style="display:flex;">
+                                        <div class="u-bg-bg-muted u-c-text-secondary" style="width:32px; height:32px; border-radius:var(--r-md); display:grid; place-items:center;">
                                             <i class="bi bi-file-earmark-text"></i>
                                         </div>
                                         <span class="cell-strong"><?php echo isset($doc->tipo_documento) ? $doc->tipo_documento : 'Documento'; ?></span>
@@ -161,18 +161,18 @@
                                             <i class="bi bi-file-pdf"></i> Ver PDF
                                         </a>
                                     <?php else: ?>
-                                        <span style="font-size:11px; color:var(--text-tertiary);">N/A</span>
+                                        <span class="u-fs-11px u-c-text-tertiary">N/A</span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="font-size:12px; color:var(--text-secondary);"><?php echo (isset($doc->observaciones) && $doc->observaciones) ? $doc->observaciones : '—'; ?></td>
+                                <td class="u-fs-12px u-c-text-secondary"><?php echo (isset($doc->observaciones) && $doc->observaciones) ? $doc->observaciones : '—'; ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            <div class="sig-card__footer" style="background:var(--bg-muted-subtle); padding:var(--sp-4) var(--sp-6); border-top:1px solid var(--border-subtle);">
-                <p style="margin:0; font-size:12px; color:var(--text-tertiary); line-height:1.5;">
+            <div class="sig-card__footer u-bg-bg-muted-subtle u-bdt-1px-solid-border-subtle" style="padding:var(--sp-4) var(--sp-6);">
+                <p class="u-m-0 u-fs-12px u-c-text-tertiary u-lh-1_5">
                     <i class="bi bi-info-circle"></i> Nota: Para validar el estatus <strong>"En Curso"</strong>, es requisito obligatorio la entrega de la Carta de Postulación y la respectiva Carta de Aceptación.
                 </p>
             </div>
@@ -188,7 +188,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
       <div class="modal-body">
         <input type="hidden" name="id_pasante" value="<?php echo (int)$data['pasante']->id; ?>">
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
+        <p class="u-fs-13px u-c-text-secondary" style="margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
         <div class="sig-field"><label class="sig-field__label" for="foto">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
           <input id="foto" type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
       </div>
@@ -210,7 +210,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-              <div style="background:var(--brand-50); border:1px solid var(--brand-200); border-radius:var(--r-md); padding:var(--sp-3) var(--sp-4); color:var(--brand-700); font-size:13px; margin-bottom:var(--sp-6);">
+              <div class="u-p-sp-3-sp-4 u-fs-13px u-mb-sp-6" style="background:var(--brand-50); border:1px solid var(--brand-200); border-radius:var(--r-md); color:var(--brand-700);">
                   <i class="bi bi-info-circle-fill"></i> Al registrar el documento, se marcará automáticamente como <strong>Entregado</strong> en el expediente físico.
               </div>
               <div class="sig-field mb-4">
@@ -248,26 +248,26 @@
         <form action="<?php echo URL_ROOT; ?>/pasantes/aprobar/<?php echo $data['pasante']->id; ?>" method="POST" id="formAprobar" onsubmit="return validarGrupo()">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-check-fill" style="color:var(--brand-600);"></i> Aprobar Pasante</h5>
+                    <h5 class="modal-title"><i class="bi bi-person-check-fill u-c-brand-600"></i> Aprobar Pasante</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
 
-                    <div style="background:var(--bg-muted-subtle);border-radius:8px;padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-4);font-size:13px;">
+                    <div class="u-bg-bg-muted-subtle u-br-8px u-p-sp-3-sp-4 u-mb-sp-4 u-fs-13px">
                         <strong><?php echo htmlspecialchars(($data['pasante']->nombre ?? '') . ' ' . ($data['pasante']->apellido ?? '')); ?></strong><br>
-                        <span style="color:var(--text-secondary);"><?php echo htmlspecialchars($data['pasante']->institucion ?? ''); ?> · <?php echo htmlspecialchars($data['pasante']->carrera ?? ''); ?></span>
+                        <span class="u-c-text-secondary"><?php echo htmlspecialchars($data['pasante']->institucion ?? ''); ?> · <?php echo htmlspecialchars($data['pasante']->carrera ?? ''); ?></span>
                     </div>
 
-                    <div class="sig-field mb-4">
-                        <label class="sig-field__label">Tipo de aceptación</label>
-                        <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;" for="tipo">
+                    <div class="sig-field mb-4" role="radiogroup" aria-labelledby="pas_tipo_lbl">
+                        <label class="sig-field__label" id="pas_tipo_lbl">Tipo de aceptación</label>
+                        <div class="u-gap-sp-4 u-mt-sp-2" style="display:flex;">
+                            <label class="u-ai-center u-gap-8px u-cur-pointer u-fs-14px" style="display:flex;" for="tipo">
                                 <input id="tipo" type="radio" name="tipo" value="individual" checked onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
                                 <span><strong>Individual</strong> — carta solo para este pasante</span>
                             </label>
                         </div>
-                        <div style="display:flex;gap:var(--sp-4);margin-top:var(--sp-2);">
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;" for="tipo_2">
+                        <div class="u-gap-sp-4 u-mt-sp-2" style="display:flex;">
+                            <label class="u-ai-center u-gap-8px u-cur-pointer u-fs-14px" style="display:flex;" for="tipo_2">
                                 <input id="tipo_2" type="radio" name="tipo" value="grupo" onchange="toggleGrupo(this.value)" style="accent-color:var(--brand-600);">
                                 <span><strong>En grupo</strong> — compartirá la carta con otros pasantes (máx. 4 total)</span>
                             </label>
@@ -275,19 +275,19 @@
                     </div>
 
                     <div id="seccionGrupo" style="display:none;">
-                        <div class="sig-field">
-                            <label class="sig-field__label">
+                        <div class="sig-field" role="group" aria-labelledby="pas_grupo_lbl">
+                            <label class="sig-field__label" id="pas_grupo_lbl">
                                 Selecciona los demás pasantes del grupo
-                                <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — máximo 3 adicionales (4 en total)</span>
+                                <span class="u-fw-400 u-c-text-tertiary u-fs-11px"> — máximo 3 adicionales (4 en total)</span>
                             </label>
                             <?php if (empty($data['postulados'])): ?>
-                                <div style="padding:var(--sp-3);background:var(--bg-muted);border-radius:6px;font-size:13px;color:var(--text-secondary);">
+                                <div class="u-p-sp-3 u-bg-bg-muted u-br-6px u-fs-13px u-c-text-secondary">
                                     <i class="bi bi-info-circle"></i> No hay otros pasantes en estado Postulado disponibles.
                                 </div>
                             <?php else: ?>
-                            <div style="border:1px solid var(--border-default);border-radius:8px;max-height:200px;overflow-y:auto;padding:var(--sp-2);">
+                            <div class="u-br-8px" style="border:1px solid var(--border-default); max-height:200px; overflow-y:auto; padding:var(--sp-2);">
                                 <?php foreach ($data['postulados'] as $p): ?>
-                                <label style="display:flex;align-items:flex-start;gap:10px;padding:var(--sp-2) var(--sp-3);border-radius:6px;cursor:pointer;font-size:13px;"
+                                <label class="u-ai-flex-start u-gap-10px u-br-6px u-cur-pointer u-fs-13px" style="display:flex; padding:var(--sp-2) var(--sp-3);"
                                        onmouseover="this.style.background='var(--bg-muted-subtle)'" onmouseout="this.style.background=''">
                                     <input type="checkbox" name="grupo_ids[]"
                                            value="<?php echo $p->id; ?>"
@@ -295,7 +295,7 @@
                                            style="accent-color:var(--brand-600);margin-top:2px;flex-shrink:0;">
                                     <span>
                                         <strong><?php echo htmlspecialchars($p->apellido . ', ' . $p->nombre); ?></strong><br>
-                                        <span style="color:var(--text-tertiary);font-size:11px;"><?php echo htmlspecialchars($p->institucion . ' · ' . $p->carrera); ?></span>
+                                        <span class="u-c-text-tertiary u-fs-11px"><?php echo htmlspecialchars($p->institucion . ' · ' . $p->carrera); ?></span>
                                     </span>
                                 </label>
                                 <?php endforeach; ?>
@@ -307,7 +307,7 @@
                         </div>
                     </div>
 
-                    <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:#fefce8;border:1px solid #fde68a;border-radius:6px;font-size:12px;color:#92400e;">
+                    <div class="u-mt-sp-4 u-p-sp-3 u-br-6px u-fs-12px" style="background:#fefce8; border:1px solid #fde68a; color:#92400e;">
                         <i class="bi bi-exclamation-triangle"></i>
                         Al aprobar se generará automáticamente la <strong>Carta de Aceptación</strong> con correlativo único. Esta acción cambia el estado a <strong>Aceptado</strong>.
                     </div>

@@ -16,30 +16,30 @@
     <div class="col-md-4">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-person-badge" style="color:var(--brand-600);"></i> Datos del empleado</div>
+                <div class="sig-card__title"><i class="bi bi-person-badge u-c-brand-600"></i> Datos del empleado</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-5);">
-                <div style="text-align:center;margin-bottom:var(--sp-5);">
-                    <div style="width:64px;height:64px;border-radius:50%;background:var(--brand-600);display:inline-flex;align-items:center;justify-content:center;font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:var(--sp-3);">
+            <div class="sig-card__body u-p-sp-5">
+                <div class="u-ta-center u-mb-sp-5">
+                    <div class="u-w-64px u-br-50pct u-ai-center u-jc-center u-fw-800 u-mb-sp-3" style="height:64px; background:var(--brand-600); display:inline-flex; font-size:1.75rem; color:#fff;">
                         <?php echo strtoupper(substr($u->nombre ?? $_SESSION['user_username'] ?? 'U', 0, 1)); ?>
                     </div>
-                    <div style="font-size:1.1rem;font-weight:700;color:var(--text-primary);">
+                    <div class="u-fw-700 u-c-text-primary" style="font-size:1.1rem;">
                         <?php echo htmlspecialchars(trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SESSION['user_username'] ?? '')); ?>
                     </div>
-                    <span class="sig-badge sig-badge--brand" style="margin-top:4px;"><?php echo htmlspecialchars($u->rol_nombre ?? ''); ?></span>
+                    <span class="sig-badge sig-badge--brand u-mt-4px"><?php echo htmlspecialchars($u->rol_nombre ?? ''); ?></span>
                 </div>
-                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <table class="u-w-100pct u-fs-13px" style="border-collapse:collapse;">
                     <?php foreach ([
                         ['bi-person','Usuario',   $u->username ?? ''],
                         ['bi-card-text','Cédula',  $u->cedula   ?? '—'],
                         ['bi-envelope','Correo',   $u->correo   ?? '—'],
                         ['bi-telephone','Teléfono',$u->telefono ?? '—'],
                     ] as [$ico,$lbl,$val]): ?>
-                    <tr style="border-top:1px solid var(--border-subtle);">
-                        <td style="padding:8px 8px 8px 0;color:var(--text-secondary);white-space:nowrap;">
+                    <tr class="u-bdt-1px-solid-border-subtle">
+                        <td class="u-c-text-secondary u-ws-nowrap" style="padding:8px 8px 8px 0;">
                             <i class="bi <?php echo $ico; ?>" style="margin-right:5px;"></i><?php echo $lbl; ?>
                         </td>
-                        <td style="padding:8px 0;font-weight:600;color:var(--text-primary);">
+                        <td class="u-fw-600 u-c-text-primary" style="padding:8px 0;">
                             <?php echo htmlspecialchars($val); ?>
                         </td>
                     </tr>
@@ -53,10 +53,10 @@
     <div class="col-md-4">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-at" style="color:#3B82F6;"></i> Nombre de usuario</div>
+                <div class="sig-card__title"><i class="bi bi-at u-c-x3B82F6"></i> Nombre de usuario</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-5);">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-5">
+                <p class="u-fs-13px u-c-text-secondary u-mb-sp-4">
                     Este es el nombre con el que inicias sesión. Debe ser único en el sistema.
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/cambiarUsername" method="POST">
@@ -66,7 +66,7 @@
                                value="<?php echo htmlspecialchars($u->username ?? ''); ?>"
                                autocomplete="off" placeholder="Mínimo 3 caracteres">
                     </div>
-                    <button type="submit" class="btn-sig btn-sig--primary" style="width:100%;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-w-100pct">
                         <i class="bi bi-check-lg"></i> Actualizar usuario
                     </button>
                 </form>
@@ -78,10 +78,10 @@
     <div class="col-md-4">
         <div class="sig-card h-100">
             <div class="sig-card__head">
-                <div class="sig-card__title"><i class="bi bi-key" style="color:#7C3AED;"></i> Contraseña</div>
+                <div class="sig-card__title"><i class="bi bi-key u-c-x7C3AED"></i> Contraseña</div>
             </div>
-            <div class="sig-card__body" style="padding:var(--sp-5);">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:var(--sp-4);">
+            <div class="sig-card__body u-p-sp-5">
+                <p class="u-fs-13px u-c-text-secondary u-mb-sp-4">
                     Mínimo 6 caracteres. Si olvidaste la contraseña actual, el Administrador puede restablecerla.
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/cambiarPassword" method="POST" onsubmit="return validarFormPerfil(this)">
@@ -100,7 +100,7 @@
                             <i class="bi bi-exclamation-triangle"></i> Las contraseñas no coinciden.
                         </small>
                     </div>
-                    <button type="submit" class="btn-sig btn-sig--primary" style="width:100%;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-w-100pct">
                         <i class="bi bi-shield-lock"></i> Cambiar contraseña
                     </button>
                 </form>

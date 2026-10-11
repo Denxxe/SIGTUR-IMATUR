@@ -29,7 +29,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
     </div>
 </div>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
     <i class="bi bi-info-circle"></i>
     El sistema avisa en el Centro de Alertas cuando faltan <strong><?php echo $aviso; ?> días</strong> o menos.
     Ese umbral se cambia en <a href="<?php echo URL_ROOT; ?>/config/index">Configuración</a>.
@@ -55,11 +55,11 @@ $puedeEscribir = InventarioController::puedeEscribir();
                     <tr>
                         <td>
                             <a href="<?php echo URL_ROOT; ?>/inventario/detalle/<?php echo (int)$p->id_inventario; ?>" class="cell-strong"><?php echo htmlspecialchars($p->bien); ?></a>
-                            <?php if ($p->codigo_bn): ?><br><small style="color:var(--text-tertiary);font-family:var(--font-mono);"><?php echo htmlspecialchars($p->codigo_bn); ?></small><?php endif; ?>
+                            <?php if ($p->codigo_bn): ?><br><small class="u-c-text-tertiary u-ff-font-mono"><?php echo htmlspecialchars($p->codigo_bn); ?></small><?php endif; ?>
                         </td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($p->ubicacion ?? '—'); ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($p->ubicacion ?? '—'); ?></td>
                         <td><?php echo PlanMantenimiento::FRECUENCIAS[(int)$p->frecuencia_meses] ?? ((int)$p->frecuencia_meses . ' meses'); ?></td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($p->ultima_fecha ?: '—'); ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($p->ultima_fecha ?: '—'); ?></td>
                         <td class="cell-strong"><?php echo htmlspecialchars($p->proxima_fecha); ?></td>
                         <td><span class="sig-badge <?php echo $cls; ?>"><?php echo $txt; ?></span></td>
                         <td class="col-actions">
@@ -92,7 +92,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
                                 <option value="<?php echo $i->id; ?>"><?php echo htmlspecialchars(($i->codigo_bn ? $i->codigo_bn . ' · ' : '') . $i->nombre); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small style="color:var(--text-tertiary)">Si el bien ya tiene un plan, se actualiza.</small></div></div>
+                        <small class="u-c-text-tertiary">Si el bien ya tiene un plan, se actualiza.</small></div></div>
                     <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="plan_frec">Frecuencia <span class="req">*</span></label>
                         <select name="frecuencia_meses" id="plan_frec" class="sig-select" required>
                             <?php foreach (PlanMantenimiento::FRECUENCIAS as $m => $lbl): ?>

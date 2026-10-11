@@ -104,8 +104,11 @@ class Util
         }
         if ($n > 0) $partes[] = self::tramo($n);
 
-        // "veintiuno mil" no se dice: es "veintiún mil".
-        return str_replace(['uno mil', 'uno millones'], ['un mil', 'un millones'], implode(' ', $partes));
+        // Ante «mil»/«millones» el «uno» se apocopa: «treinta y un mil», «veintiún
+        // mil» — este último con tilde (antes salía «veintiun mil»). Se reemplaza
+        // primero la forma fusionada para que la general no la deje sin acento.
+        return str_replace(['veintiuno mil', 'veintiuno millones', 'uno mil', 'uno millones'],
+                           ['veintiún mil', 'veintiún millones', 'un mil', 'un millones'], implode(' ', $partes));
     }
 
     /**

@@ -29,7 +29,7 @@ $lista      = $data['consolidados'] ?? [];
     </div>
 </div>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
     <i class="bi bi-info-circle"></i>
     El BM-1 <strong>no lo genera el sistema</strong>: lo elabora la Alcaldía y se lo entrega a IMATUR.
     Aquí se deja constancia de la recepción y se transcriben los códigos que trae.
@@ -42,9 +42,9 @@ $lista      = $data['consolidados'] ?? [];
             <i class="bi bi-hourglass-split"></i> Bienes esperando codificación (<?php echo count($pendientes); ?>)
         </div>
     </div>
-    <div class="sig-card__body" style="padding:var(--sp-4);">
+    <div class="sig-card__body u-p-sp-4">
         <?php if (empty($pendientes)): ?>
-            <p style="color:var(--text-tertiary);margin:0;">Todos los bienes registrados ya tienen su código de la Alcaldía.</p>
+            <p class="u-c-text-tertiary u-m-0">Todos los bienes registrados ya tienen su código de la Alcaldía.</p>
         <?php else: ?>
             <div class="sig-table-wrap">
                 <table class="sig-table">
@@ -55,7 +55,7 @@ $lista      = $data['consolidados'] ?? [];
                             <td><span class="cell-strong"><?php echo htmlspecialchars($p->nombre); ?></span></td>
                             <td><?php echo htmlspecialchars($p->categoria ?? '—'); ?></td>
                             <td><?php echo htmlspecialchars($p->ubicacion ?? '—'); ?></td>
-                            <td style="font-size:12px;color:var(--text-tertiary);"><?php echo htmlspecialchars(substr((string)$p->created_at, 0, 10)); ?></td>
+                            <td class="u-fs-12px u-c-text-tertiary"><?php echo htmlspecialchars(substr((string)$p->created_at, 0, 10)); ?></td>
                             <td class="col-actions">
                                 <?php if ($puedeEscribir): ?>
                                 <button class="row-action" onclick='codificarDesdeBM1(<?php echo htmlspecialchars(json_encode(["id"=>$p->id,"nombre"=>$p->nombre]), ENT_QUOTES, "UTF-8"); ?>)'>
@@ -89,7 +89,7 @@ $lista      = $data['consolidados'] ?? [];
                         <td><?php echo htmlspecialchars($c->fecha_documento ?: '—'); ?></td>
                         <td><?php echo htmlspecialchars($c->referencia ?: '—'); ?></td>
                         <td><span class="sig-badge sig-badge--info"><?php echo (int)$c->bienes_codificados; ?></span></td>
-                        <td style="font-size:12.5px;color:var(--text-secondary);"><?php echo htmlspecialchars($c->observaciones ?: '—'); ?></td>
+                        <td class="u-fs-12_5px u-c-text-secondary"><?php echo htmlspecialchars($c->observaciones ?: '—'); ?></td>
                         <td class="col-actions">
                             <?php if (!empty($c->archivo_url)): ?>
                                 <a href="<?php echo URL_ROOT; ?>/descarga/bm1/<?php echo (int)$c->id; ?>" target="_blank" class="row-action row-action--view"><i class="bi bi-eye"></i> Ver</a>
@@ -123,7 +123,7 @@ $lista      = $data['consolidados'] ?? [];
                         <input type="text" name="referencia" id="bm1_ref" class="sig-input" placeholder="Formulario BM-1 · abril 2026"></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="bm1_file">Documento escaneado (PDF o imagen)</label>
                         <input type="file" name="documento" id="bm1_file" class="sig-input" accept=".pdf,.jpg,.jpeg,.png">
-                        <small style="color:var(--text-tertiary)">Opcional: si llegó en papel, puedes registrarlo ahora y adjuntarlo después.</small></div></div>
+                        <small class="u-c-text-tertiary">Opcional: si llegó en papel, puedes registrarlo ahora y adjuntarlo después.</small></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="bm1_obs">Observaciones</label>
                         <textarea name="observaciones" id="bm1_obs" class="sig-textarea" rows="2"></textarea></div></div>
                 </div>
@@ -146,7 +146,7 @@ $lista      = $data['consolidados'] ?? [];
             </div>
             <div class="modal-body">
                 <input type="hidden" name="id" id="cod_id">
-                <p style="margin-bottom:var(--sp-3);">
+                <p class="u-mb-sp-3">
                     Transcribe el código que la Alcaldía asignó a <strong id="cod_nombre"></strong>.
                 </p>
                 <div class="row g-3">
@@ -169,7 +169,7 @@ $lista      = $data['consolidados'] ?? [];
                         <input type="text" name="nro_orden" id="cod_ord" class="sig-input" required maxlength="10" placeholder="084"></div></div>
                     <div class="col-12"><div class="sig-field"><label class="sig-field__label" for="cod_fecha">Fecha de verificación</label>
                         <input type="date" name="fecha_verificacion" id="cod_fecha" class="sig-input" value="<?php echo date('Y-m-d'); ?>"></div></div>
-                    <div class="col-12"><div class="sig-alert sig-alert--info" style="margin:0;">
+                    <div class="col-12"><div class="sig-alert sig-alert--info u-m-0">
                         Quedará como <strong><span id="cod_preview">— incompleto —</span></strong> y el bien pasará a <strong>Activo</strong>.
                     </div></div>
                 </div>

@@ -16,7 +16,7 @@
             'ubicacion' => $data['filtro_ubicacion'] ?? '',
         ]));
         ?>
-        <div style="display:flex; gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarInventarioCsv?<?php echo $qsI; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -32,7 +32,7 @@
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/inventario" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <div class="sig-field">
@@ -88,15 +88,15 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="sig-field" style="margin:0;">
-                    <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;height:42px;" for="deposito">
+                <div class="sig-field u-m-0">
+                    <label class="sig-field__label u-ai-center u-gap-8px u-h-42px" style="display:flex;" for="deposito">
                         <input id="deposito" type="checkbox" name="deposito" value="1" <?php if (!empty($data['filtro_deposito'])) echo 'checked'; ?>> Solo los que están en depósito
                     </label>
                 </div>
             </div>
             <div class="col-md-3">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                     <?php if (!empty($data['filtro_condicion']) || !empty($data['filtro_categoria']) || !empty($data['filtro_ubicacion'])): ?>
@@ -124,8 +124,8 @@
     foreach ($invKpis as $k): ?>
     <div class="col-md-2 col-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $k['color']; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
-                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;"><?php echo $k['label']; ?></div>
+            <div class="sig-card__body u-ta-center u-p-sp-4-sp-3">
+                <div class="u-fs-9px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-2px"><?php echo $k['label']; ?></div>
                 <div style="font-size:26px;font-weight:900;color:<?php echo $k['txt']; ?>;"><?php echo number_format($k['val']); ?></div>
             </div>
         </div>
@@ -164,18 +164,18 @@
                         elseif ($r->condicion === 'Dañado')  $condBadge = 'sig-badge--danger';
                     ?>
                     <tr>
-                        <td><span class="cell-id" style="font-family:var(--font-mono);"><?php echo htmlspecialchars($r->codigo_bn ?: 'Sin asignar'); ?></span></td>
+                        <td><span class="cell-id u-ff-font-mono"><?php echo htmlspecialchars($r->codigo_bn ?: 'Sin asignar'); ?></span></td>
                         <td><span class="cell-strong"><?php echo htmlspecialchars($r->nombre ?? '—'); ?></span></td>
                         <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->categoria ?? 'Sin cat.'); ?></span></td>
-                        <td style="font-size:12px;"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
-                        <td style="font-size:12px;"><?php echo !empty($r->responsable) ? htmlspecialchars($r->responsable) : '<span style="color:var(--text-tertiary);">Sin asignar</span>'; ?></td>
+                        <td class="u-fs-12px"><?php echo htmlspecialchars($r->ubicacion ?? '—'); ?></td>
+                        <td class="u-fs-12px"><?php echo !empty($r->responsable) ? htmlspecialchars($r->responsable) : '<span class="u-c-text-tertiary">Sin asignar</span>'; ?></td>
                         <td class="text-center"><span class="sig-badge <?php echo Inventario::ESTATUS_BADGES[$r->estatus ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($r->estatus ?? '—'); ?></span></td>
                         <td class="text-center"><span class="sig-badge <?php echo $condBadge; ?>"><?php echo htmlspecialchars($r->condicion ?? '—'); ?></span></td>
-                        <td style="font-size:12px;color:var(--text-secondary);">
+                        <td class="u-fs-12px u-c-text-secondary">
                             <?php echo htmlspecialchars($r->marca ?? '—'); ?>
-                            <?php if (!empty($r->modelo)): ?><br><span style="color:var(--text-tertiary);"><?php echo htmlspecialchars($r->modelo); ?></span><?php endif; ?>
+                            <?php if (!empty($r->modelo)): ?><br><span class="u-c-text-tertiary"><?php echo htmlspecialchars($r->modelo); ?></span><?php endif; ?>
                         </td>
-                        <td style="font-size:11px;font-family:var(--font-mono);color:var(--text-tertiary);"><?php echo htmlspecialchars($r->serial ?? '—'); ?></td>
+                        <td class="u-fs-11px u-ff-font-mono u-c-text-tertiary"><?php echo htmlspecialchars($r->serial ?? '—'); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>

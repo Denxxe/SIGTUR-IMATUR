@@ -19,7 +19,7 @@ $qs = http_build_query(array_filter([
         <p class="page__subtitle">Control de asistencia del personal con filtros por fecha, departamento y nombre.</p>
     </div>
     <div class="page__actions">
-        <div style="display:flex;gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarAsistenciaCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -33,7 +33,7 @@ $qs = http_build_query(array_filter([
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/asistencia" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
@@ -67,8 +67,8 @@ $qs = http_build_query(array_filter([
                 </div>
             </div>
             <div class="col-md-2">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px">
                         <i class="bi bi-search"></i> Filtrar
                     </button>
                     <?php if (!empty($data['filtro_depto']) || !empty($data['filtro_busca'])): ?>
@@ -87,37 +87,37 @@ $qs = http_build_query(array_filter([
 <div class="row g-3 mb-6 anim-slide-up">
     <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--brand-500);">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Total Registros</div>
-                <div style="font-size:28px;font-weight:900;color:var(--brand-600);"><?php echo number_format($data['stats']->total ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">en el período</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Total Registros</div>
+                <div class="u-fs-28px u-fw-900 u-c-brand-600"><?php echo number_format($data['stats']->total ?? 0); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">en el período</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid var(--success-500);">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Empleados con Registro</div>
-                <div style="font-size:28px;font-weight:900;color:var(--success-600);"><?php echo number_format($data['stats']->empleados_unicos ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">individuos únicos</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Empleados con Registro</div>
+                <div class="u-fs-28px u-fw-900 u-c-success-600"><?php echo number_format($data['stats']->empleados_unicos ?? 0); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">individuos únicos</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid #EF4444;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Impuntuales</div>
-                <div style="font-size:28px;font-weight:900;color:#EF4444;"><?php echo number_format($data['stats']->impuntuales ?? 0); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">tolerancia <?php echo $tol; ?> min</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Impuntuales</div>
+                <div class="u-fs-28px u-fw-900 u-c-xEF4444"><?php echo number_format($data['stats']->impuntuales ?? 0); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">tolerancia <?php echo $tol; ?> min</div>
             </div>
         </div>
     </div>
     <div class="col-md-3 col-6">
         <div class="sig-card" style="border-bottom:3px solid #7C3AED;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-5);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Horas Totales</div>
-                <div style="font-size:28px;font-weight:900;color:#7C3AED;"><?php echo number_format($data['stats']->horas_totales ?? 0, 1); ?></div>
-                <div style="font-size:11px;color:var(--text-tertiary);">solo reporte (no nómina)</div>
+            <div class="sig-card__body u-ta-center u-p-sp-5">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-4px">Horas Totales</div>
+                <div class="u-fs-28px u-fw-900 u-c-x7C3AED"><?php echo number_format($data['stats']->horas_totales ?? 0, 1); ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">solo reporte (no nómina)</div>
             </div>
         </div>
     </div>
@@ -145,15 +145,15 @@ $qs = http_build_query(array_filter([
             <?php else: ?>
                 <?php foreach ($data['registros'] as $r): ?>
                     <tr>
-                        <td style="white-space:nowrap;font-weight:600;"><?php echo date('d/m/Y', strtotime($r->fecha)); ?></td>
+                        <td class="u-ws-nowrap u-fw-600"><?php echo date('d/m/Y', strtotime($r->fecha)); ?></td>
                         <td>
-                            <div style="display:flex;flex-direction:column;">
+                            <div class="u-fd-column" style="display:flex;">
                                 <span class="cell-strong"><?php echo htmlspecialchars(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')); ?></span>
                                 <span class="cell-id"><?php echo htmlspecialchars($r->cedula ?? 'S/C'); ?></span>
                             </div>
                         </td>
                         <td><span class="sig-badge sig-badge--neutral"><?php echo htmlspecialchars($r->departamento ?? '—'); ?></span></td>
-                        <td style="font-size:12px;color:var(--text-secondary);">
+                        <td class="u-fs-12px u-c-text-secondary">
                             <?php
                             $tc = $r->tipo_contrato ?? 'Fijo';
                             $tcColor = ['Fijo' => 'sig-badge--brand', 'Contratado' => 'sig-badge--info', 'Suplente' => 'sig-badge--warning', 'Comisión de Servicio' => 'sig-badge--neutral'];
@@ -161,16 +161,16 @@ $qs = http_build_query(array_filter([
                             <span class="sig-badge sig-badge--sm <?php echo $tcColor[$tc] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($tc); ?></span>
                         </td>
                         <td class="text-center">
-                            <span class="sig-badge sig-badge--success" style="font-family:var(--font-mono);"><?php echo date('H:i', strtotime($r->hora_entrada ?? 'now')); ?></span>
+                            <span class="sig-badge sig-badge--success u-ff-font-mono"><?php echo date('H:i', strtotime($r->hora_entrada ?? 'now')); ?></span>
                         </td>
                         <td class="text-center">
                             <?php if ($r->hora_salida): ?>
-                                <span class="sig-badge sig-badge--danger" style="font-family:var(--font-mono);"><?php echo date('H:i', strtotime($r->hora_salida)); ?></span>
+                                <span class="sig-badge sig-badge--danger u-ff-font-mono"><?php echo date('H:i', strtotime($r->hora_salida)); ?></span>
                             <?php else: ?>
-                                <span style="color:var(--text-tertiary);font-size:11px;">—</span>
+                                <span class="u-c-text-tertiary u-fs-11px">—</span>
                             <?php endif; ?>
                         </td>
-                        <td style="text-align:center;font-family:var(--font-mono);font-size:12px;"><?php echo $r->horas !== null ? number_format((float)$r->horas, 2) : '—'; ?></td>
+                        <td class="u-ta-center u-ff-font-mono u-fs-12px"><?php echo $r->horas !== null ? number_format((float)$r->horas, 2) : '—'; ?></td>
                         <td class="text-center">
                             <?php
                             $mt = $r->minutos_tarde;
@@ -183,7 +183,7 @@ $qs = http_build_query(array_filter([
                             }
                             ?>
                         </td>
-                        <td style="font-size:12px;color:var(--text-secondary);"><?php echo htmlspecialchars($r->observacion ?? '—'); ?></td>
+                        <td class="u-fs-12px u-c-text-secondary"><?php echo htmlspecialchars($r->observacion ?? '—'); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -191,7 +191,7 @@ $qs = http_build_query(array_filter([
     </table>
 </div>
 <?php if (!empty($data['registros'])): ?>
-    <div style="text-align:right;font-size:12px;color:var(--text-tertiary);margin-top:var(--sp-2);">
+    <div class="u-ta-right u-fs-12px u-c-text-tertiary u-mt-sp-2">
         <?php echo count($data['registros']); ?> registro(s) mostrados
     </div>
 <?php endif; ?>

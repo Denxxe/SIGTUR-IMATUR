@@ -19,7 +19,7 @@
 </div>
 
 <?php if (empty($data['meses'])): ?>
-    <div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+    <div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
         <i class="bi bi-exclamation-triangle"></i>
         <div>
             <strong>Falta cargar los parámetros del mes.</strong>
@@ -30,7 +30,7 @@
     </div>
 <?php endif; ?>
 
-<div class="sig-alert sig-alert--info anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--info anim-slide-up u-mb-sp-4">
     <i class="bi bi-info-circle"></i>
     <div>
         <strong>Este módulo lleva tres documentos.</strong>
@@ -62,11 +62,11 @@
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($p->periodo); ?></td>
                     <td><?php echo date('d/m/Y', strtotime($p->fecha_corte)); ?></td>
-                    <td style="text-align:center;font-weight:700;"><?php echo (int)$p->total_empleados; ?></td>
-                    <td style="text-align:right;font-variant-numeric:tabular-nums;color:var(--text-secondary);">
+                    <td class="u-ta-center u-fw-700"><?php echo (int)$p->total_empleados; ?></td>
+                    <td class="u-ta-right u-fvn-tabular-nums u-c-text-secondary">
                         <?php echo number_format((float)($p->total_calculado ?? 0), 2, ',', '.'); ?>
                     </td>
-                    <td style="text-align:right;font-variant-numeric:tabular-nums;font-weight:700;">
+                    <td class="u-ta-right u-fvn-tabular-nums u-fw-700">
                         <?php echo number_format((float)($p->total_confirmado ?? 0), 2, ',', '.'); ?>
                     </td>
                     <td>
@@ -118,7 +118,7 @@
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Solo los meses con parámetros cargados.
                     </small>
                 </div>

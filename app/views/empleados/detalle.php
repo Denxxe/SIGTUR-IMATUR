@@ -27,7 +27,7 @@ if ($egresado) {
         <div class="page__eyebrow">RRHH · Expediente del Trabajador</div>
         <h1 class="page__title"><?php echo htmlspecialchars($e->nombre . ' ' . $e->apellido); ?></h1>
         <p class="page__subtitle">C.I. <?php echo $val($e->cedula); ?> · Expediente <?php echo $val($e->nro_expediente); ?></p>
-        <div style="margin-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="u-mt-6px u-gap-8px u-ai-center u-fwr-wrap" style="display:flex;">
             <span class="sig-badge <?php echo $estatusCls; ?>" title="Estatus actual del trabajador">
                 <i class="bi bi-circle-fill" style="font-size:7px; vertical-align:middle;"></i> <?php echo htmlspecialchars($estatusTxt); ?>
             </span>
@@ -65,11 +65,11 @@ if ($egresado) {
 
 <?php if ($egresado): ?>
 <div class="sig-card anim-slide-up" style="margin-bottom:20px;border-left:4px solid var(--warning-500,#f59e0b);">
-    <div class="sig-card__body" style="display:flex;align-items:center;gap:14px;">
-        <i class="bi bi-archive" style="font-size:1.6rem;color:var(--warning-600,#d97706);"></i>
+    <div class="sig-card__body u-ai-center u-gap-14px" style="display:flex;">
+        <i class="bi bi-archive u-c-warning-600xd97706" style="font-size:1.6rem;"></i>
         <div>
             <strong>Empleado egresado</strong> — registro histórico (no aparece en la nómina activa).<br>
-            <span style="font-size:13px;color:var(--text-secondary);">
+            <span class="u-fs-13px u-c-text-secondary">
                 Egresó el <strong><?php echo $ffecha($e->fecha_egreso); ?></strong>
                 por <strong><?php echo $val($e->motivo_egreso); ?></strong>.
                 Tiempo de servicio: <strong><?php echo htmlspecialchars($tiempoServicio); ?></strong>.
@@ -102,12 +102,12 @@ if ($egresado) {
         <div class="row g-4">
             <div class="col-md-4">
                 <h6 class="text-muted"><i class="bi bi-person-vcard"></i> Datos Personales</h6>
-                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                    <div style="width:64px; height:80px; border:1px solid var(--border-subtle); border-radius:6px; overflow:hidden; background:var(--bg-muted-subtle); flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+                <div class="u-ai-center u-gap-12px" style="display:flex; margin-bottom:12px;">
+                    <div class="u-w-64px u-bd-1px-solid-border-subtle u-br-6px u-ov-hidden u-bg-bg-muted-subtle u-fsh-0 u-ai-center u-jc-center" style="height:80px; display:flex;">
                         <img src="<?php echo URL_ROOT; ?>/descarga/foto/<?php echo (int)$e->id_persona; ?>?v=<?php echo time(); ?>"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                              style="width:100%; height:100%; object-fit:cover;" alt="Foto">
-                        <span style="display:none; align-items:center; justify-content:center; width:100%; height:100%; font-size:32px; color:var(--text-tertiary);"><i class="bi bi-person"></i></span>
+                        <span class="u-ai-center u-jc-center u-w-100pct u-h-100pct u-fs-32px u-c-text-tertiary" style="display:none;"><i class="bi bi-person"></i></span>
                     </div>
                     <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" data-bs-toggle="modal" data-bs-target="#modalFoto">
                         <i class="bi bi-camera"></i> Cargar / cambiar foto
@@ -159,8 +159,8 @@ if ($egresado) {
 function seccionHijo($titulo, $icono, $btnTarget, $cols, $rows, $renderRow) {
     ?>
     <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
-            <h5 style="margin:0;"><i class="bi <?php echo $icono; ?>"></i> <?php echo $titulo; ?></h5>
+        <div class="u-jc-space-between u-ai-center u-p-12px-16px" style="display:flex;">
+            <h5 class="u-m-0"><i class="bi <?php echo $icono; ?>"></i> <?php echo $titulo; ?></h5>
             <button type="button" class="btn-sig btn-sig--primary btn-sig--sm" data-bs-toggle="modal" data-bs-target="#<?php echo $btnTarget; ?>">
                 <i class="bi bi-plus-lg"></i> Agregar
             </button>
@@ -235,9 +235,9 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
 ?>
 
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;">
-        <h5 style="margin:0;"><i class="bi bi-folder-check"></i> Recaudos del Expediente</h5>
-        <div style="display:flex;align-items:center;gap:12px;">
+    <div class="u-jc-space-between u-ai-center u-p-12px-16px" style="display:flex;">
+        <h5 class="u-m-0"><i class="bi bi-folder-check"></i> Recaudos del Expediente</h5>
+        <div class="u-ai-center u-gap-12px" style="display:flex;">
             <?php if ($rec['faltan_obligatorios'] > 0): ?>
                 <span class="sig-badge sig-badge--warning"><i class="bi bi-exclamation-triangle"></i> Faltan <?php echo $rec['faltan_obligatorios']; ?> obligatorio(s)</span>
             <?php else: ?>
@@ -253,7 +253,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                 <tr>
                     <td class="cell-strong">
                         <?php echo htmlspecialchars($it['label']); ?>
-                        <?php echo $it['obligatorio'] ? '<span class="req">*</span>' : '<small style="color:var(--text-tertiary)"> (opcional)</small>'; ?>
+                        <?php echo $it['obligatorio'] ? '<span class="req">*</span>' : '<small class="u-c-text-tertiary"> (opcional)</small>'; ?>
                     </td>
                     <td>
                         <?php if ($it['entregado']): ?>
@@ -266,14 +266,14 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                     </td>
                     <td>
                         <?php foreach ($it['documentos'] as $doc): ?>
-                            <div style="display:flex;align-items:center;gap:8px;margin:2px 0;">
+                            <div class="u-ai-center u-gap-8px" style="display:flex; margin:2px 0;">
                                 <a href="<?php echo URL_ROOT; ?>/descarga/expediente/<?php echo (int)$doc->id; ?>" target="_blank" style="font-size:13px;">
                                     <i class="bi bi-file-earmark-arrow-down"></i> <?php echo htmlspecialchars($doc->nombre_original ?? 'documento'); ?>
                                 </a>
                                 <a href="<?php echo URL_ROOT; ?>/empleados/eliminarDocumento/<?php echo $doc->id; ?>/<?php echo $eid; ?>" class="row-action row-action--del" onclick="return confirm('¿Eliminar este recaudo?')"><i class="bi bi-trash"></i></a>
                             </div>
                         <?php endforeach; ?>
-                        <?php if (empty($it['documentos'])): ?><span style="color:var(--text-tertiary)">—</span><?php endif; ?>
+                        <?php if (empty($it['documentos'])): ?><span class="u-c-text-tertiary">—</span><?php endif; ?>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -289,9 +289,9 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
-                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
-                <div class="sig-field"><label class="sig-field__label">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
-                    <input type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
+                <p class="u-fs-13px u-c-text-secondary" style="margin-bottom:10px;">Se usará en el carnet. Recomendado: foto tipo carnet, fondo claro.</p>
+                <div class="sig-field"><label for="empldeta_foto" class="sig-field__label">Imagen (JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
+                    <input id="empldeta_foto" type="file" name="foto" class="sig-input" accept=".jpg,.jpeg,.png" required></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -309,17 +309,17 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Tipo de recaudo <span class="req">*</span></label>
-                    <select name="tipo_documento" class="sig-select" required>
+                <div class="sig-field mb-3"><label for="empldeta_tipo_documento" class="sig-field__label">Tipo de recaudo <span class="req">*</span></label>
+                    <select id="empldeta_tipo_documento" name="tipo_documento" class="sig-select" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach (ExpedienteDocumento::RECAUDOS as $clave => [$label, $obl]): ?>
                             <option value="<?php echo $clave; ?>"><?php echo htmlspecialchars($label) . ($obl ? ' *' : ''); ?></option>
                         <?php endforeach; ?>
                     </select></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Archivo (PDF/JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
-                    <input type="file" name="archivo" class="sig-input" accept=".pdf,.jpg,.jpeg,.png" required></div>
-                <div class="sig-field"><label class="sig-field__label">Observación</label>
-                    <input type="text" name="observaciones" class="sig-input"></div>
+                <div class="sig-field mb-3"><label for="empldeta_archivo" class="sig-field__label">Archivo (PDF/JPG/PNG, máx. 5 MB) <span class="req">*</span></label>
+                    <input id="empldeta_archivo" type="file" name="archivo" class="sig-input" accept=".pdf,.jpg,.jpeg,.png" required></div>
+                <div class="sig-field"><label for="empldeta_observaciones" class="sig-field__label">Observación</label>
+                    <input id="empldeta_observaciones" type="text" name="observaciones" class="sig-input"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
@@ -330,9 +330,9 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
 </div>
 
 <!-- Constancias / Documentos generados -->
-<div class="anim-slide-up" style="margin-bottom:20px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 10px;">
-        <h5 style="margin:0;"><i class="bi bi-file-earmark-text"></i> Constancias / Documentos generados</h5>
+<div class="anim-slide-up u-mb-20px">
+    <div class="u-jc-space-between u-ai-center" style="display:flex; padding:4px 4px 10px;">
+        <h5 class="u-m-0"><i class="bi bi-file-earmark-text"></i> Constancias / Documentos generados</h5>
         <?php
         // Tipos disponibles según el estatus: egreso solo para egresados;
         // bancaria/horario solo para activos.
@@ -368,7 +368,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <?php else: foreach ($data['constancias'] as $co): ?>
                 <tr>
                     <td class="cell-strong"><?php echo htmlspecialchars($co->numero); ?></td>
-                    <td style="font-size:13px"><?php echo htmlspecialchars(Constancia::labelTipo($co->tipo)); ?></td>
+                    <td class="u-fs-13px"><?php echo htmlspecialchars(Constancia::labelTipo($co->tipo)); ?></td>
                     <td><?php echo date('d/m/Y H:i', strtotime($co->fecha_emision)); ?></td>
                     <td class="col-actions">
                         <a href="<?php echo URL_ROOT; ?>/empleados/constancia/<?php echo $co->id; ?>" target="_blank" class="row-action"><i class="bi bi-printer"></i> Ver / Imprimir</a>
@@ -390,30 +390,30 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
                 <input type="hidden" name="id_persona" value="<?php echo (int)$e->id_persona; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Nombre y apellido <span class="req">*</span></label>
-                    <input type="text" name="nombre_apellido" class="sig-input" required></div>
+                <div class="sig-field mb-3"><label for="empldeta_nombre_apellido" class="sig-field__label">Nombre y apellido <span class="req">*</span></label>
+                    <input id="empldeta_nombre_apellido" type="text" name="nombre_apellido" class="sig-input" required></div>
                 <div class="row g-3">
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Cédula</label>
-                        <input type="text" name="cedula" class="sig-input"></div></div>
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">F. Nacimiento</label>
+                    <div class="col-6"><div class="sig-field"><label for="empldeta_cedula" class="sig-field__label">Cédula</label>
+                        <input id="empldeta_cedula" type="text" name="cedula" class="sig-input"></div></div>
+                    <div class="col-6"><div class="sig-field"><label for="cf_fnac_modal" class="sig-field__label">F. Nacimiento</label>
                         <input type="date" name="fecha_nacimiento" id="cf_fnac_modal" class="sig-input js-edad"></div></div>
                 </div>
                 <div class="row g-3 mt-0">
-                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Parentesco <span class="req">*</span></label>
-                        <select name="parentesco" class="sig-select" required>
+                    <div class="col-4"><div class="sig-field"><label for="empldeta_parentesco" class="sig-field__label">Parentesco <span class="req">*</span></label>
+                        <select id="empldeta_parentesco" name="parentesco" class="sig-select" required>
                             <option value="">— Seleccione —</option>
                             <?php foreach (CargaFamiliar::PARENTESCOS as $p): ?>
                                 <option value="<?php echo $p; ?>"><?php echo $p; ?></option>
                             <?php endforeach; ?>
                         </select></div></div>
-                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Sexo</label>
-                        <select name="genero" class="sig-select">
+                    <div class="col-4"><div class="sig-field"><label for="empldeta_genero" class="sig-field__label">Sexo</label>
+                        <select id="empldeta_genero" name="genero" class="sig-select">
                             <option value="">—</option>
                             <option value="M">Masculino</option>
                             <option value="F">Femenino</option>
                         </select></div></div>
-                    <div class="col-4"><div class="sig-field"><label class="sig-field__label">Estado</label>
-                        <select name="vive" class="sig-select">
+                    <div class="col-4"><div class="sig-field"><label for="empldeta_vive" class="sig-field__label">Estado</label>
+                        <select id="empldeta_vive" name="vive" class="sig-select">
                             <option value="1">Vivo</option>
                             <option value="0">Fallecido</option>
                         </select></div></div>
@@ -436,15 +436,15 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
                 <input type="hidden" name="id_persona" value="<?php echo (int)$e->id_persona; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Curso <span class="req">*</span></label>
-                    <input type="text" name="curso" class="sig-input" required></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Institución</label>
-                    <input type="text" name="institucion" class="sig-input"></div>
+                <div class="sig-field mb-3"><label for="empldeta_curso" class="sig-field__label">Curso <span class="req">*</span></label>
+                    <input id="empldeta_curso" type="text" name="curso" class="sig-input" required></div>
+                <div class="sig-field mb-3"><label for="empldeta_institucion" class="sig-field__label">Institución</label>
+                    <input id="empldeta_institucion" type="text" name="institucion" class="sig-input"></div>
                 <div class="row g-3">
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Inicio</label>
-                        <input type="date" name="fecha_inicio" class="sig-input"></div></div>
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Culminación</label>
-                        <input type="date" name="fecha_culminacion" class="sig-input"></div></div>
+                    <div class="col-6"><div class="sig-field"><label for="empldeta_fecha_inicio" class="sig-field__label">Inicio</label>
+                        <input id="empldeta_fecha_inicio" type="date" name="fecha_inicio" class="sig-input"></div></div>
+                    <div class="col-6"><div class="sig-field"><label for="empldeta_fecha_culminacion" class="sig-field__label">Culminación</label>
+                        <input id="empldeta_fecha_culminacion" type="date" name="fecha_culminacion" class="sig-input"></div></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -464,15 +464,15 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
             <div class="modal-body">
                 <input type="hidden" name="id_empleado" value="<?php echo $eid; ?>">
                 <input type="hidden" name="id_persona" value="<?php echo (int)$e->id_persona; ?>">
-                <div class="sig-field mb-3"><label class="sig-field__label">Organismo / Empleador <span class="req">*</span></label>
-                    <input type="text" name="organismo" class="sig-input" required></div>
-                <div class="sig-field mb-3"><label class="sig-field__label">Cargo</label>
-                    <input type="text" name="cargo" class="sig-input"></div>
+                <div class="sig-field mb-3"><label for="empldeta_organismo" class="sig-field__label">Organismo / Empleador <span class="req">*</span></label>
+                    <input id="empldeta_organismo" type="text" name="organismo" class="sig-input" required></div>
+                <div class="sig-field mb-3"><label for="empldeta_cargo" class="sig-field__label">Cargo</label>
+                    <input id="empldeta_cargo" type="text" name="cargo" class="sig-input"></div>
                 <div class="row g-3">
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Inicio</label>
-                        <input type="date" name="fecha_inicio" class="sig-input"></div></div>
-                    <div class="col-6"><div class="sig-field"><label class="sig-field__label">Culminación</label>
-                        <input type="date" name="fecha_culminacion" class="sig-input"></div></div>
+                    <div class="col-6"><div class="sig-field"><label for="empldeta_fecha_inicio2" class="sig-field__label">Inicio</label>
+                        <input id="empldeta_fecha_inicio2" type="date" name="fecha_inicio" class="sig-input"></div></div>
+                    <div class="col-6"><div class="sig-field"><label for="empldeta_fecha_culminacion2" class="sig-field__label">Culminación</label>
+                        <input id="empldeta_fecha_culminacion2" type="date" name="fecha_culminacion" class="sig-input"></div></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -488,7 +488,7 @@ $rec = $data['recaudos'] ?? ['items' => [], 'faltan_obligatorios' => 0];
 $hist = $data['historial_egresos'] ?? [];
 if (!empty($hist)): ?>
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;"><h5 style="margin:0;"><i class="bi bi-clock-history"></i> Historial de egresos / reingresos</h5></div>
+    <div class="u-p-12px-16px"><h5 class="u-m-0"><i class="bi bi-clock-history"></i> Historial de egresos / reingresos</h5></div>
     <table class="sig-table">
         <thead><tr><th>F. Egreso</th><th>Motivo</th><th>Observación</th><th>F. Reingreso</th></tr></thead>
         <tbody>
@@ -496,7 +496,7 @@ if (!empty($hist)): ?>
                 <tr>
                     <td><?php echo $ffecha($h->fecha_egreso); ?></td>
                     <td><span class="sig-badge sig-badge--warning"><?php echo htmlspecialchars($h->motivo_egreso); ?></span></td>
-                    <td style="font-size:13px;"><?php echo $val($h->observacion); ?></td>
+                    <td class="u-fs-13px"><?php echo $val($h->observacion); ?></td>
                     <td><?php echo !empty($h->fecha_reingreso) ? $ffecha($h->fecha_reingreso) : '<span class="text-muted">— vigente —</span>'; ?></td>
                 </tr>
             <?php endforeach; ?>
@@ -510,8 +510,8 @@ if (!empty($hist)): ?>
 $traslados = $data['historial_traslados'] ?? [];
 ?>
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <h5 style="margin:0;"><i class="bi bi-arrow-left-right"></i> Traslados de departamento</h5>
+    <div class="u-p-12px-16px u-jc-space-between u-ai-center u-fwr-wrap u-gap-8px" style="display:flex;">
+        <h5 class="u-m-0"><i class="bi bi-arrow-left-right"></i> Traslados de departamento</h5>
         <?php if (!$egresado): ?>
         <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalTraslado">
             <i class="bi bi-arrow-left-right"></i> Trasladar
@@ -526,9 +526,9 @@ $traslados = $data['historial_traslados'] ?? [];
             <?php else: foreach ($traslados as $t): ?>
                 <tr>
                     <td><?php echo $ffecha($t->fecha); ?></td>
-                    <td><?php echo $val($t->depto_origen); ?> <i class="bi bi-arrow-right" style="color:var(--text-tertiary)"></i> <strong><?php echo $val($t->depto_destino); ?></strong></td>
-                    <td><?php echo $val($t->cargo_origen); ?> <i class="bi bi-arrow-right" style="color:var(--text-tertiary)"></i> <?php echo $val($t->cargo_destino); ?></td>
-                    <td style="font-size:13px;"><?php echo $val($t->motivo); ?></td>
+                    <td><?php echo $val($t->depto_origen); ?> <i class="bi bi-arrow-right u-c-text-tertiary"></i> <strong><?php echo $val($t->depto_destino); ?></strong></td>
+                    <td><?php echo $val($t->cargo_origen); ?> <i class="bi bi-arrow-right u-c-text-tertiary"></i> <?php echo $val($t->cargo_destino); ?></td>
+                    <td class="u-fs-13px"><?php echo $val($t->motivo); ?></td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>
@@ -542,8 +542,8 @@ $historialSueldos = $data['historial_sueldos'] ?? [];
 $fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
 ?>
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <h5 style="margin:0;"><i class="bi bi-cash-coin"></i> Datos salariales</h5>
+    <div class="u-p-12px-16px u-jc-space-between u-ai-center u-fwr-wrap u-gap-8px" style="display:flex;">
+        <h5 class="u-m-0"><i class="bi bi-cash-coin"></i> Datos salariales</h5>
         <?php if (!$egresado): ?>
         <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalSueldo">
             <i class="bi bi-cash-coin"></i> Registrar sueldo
@@ -563,14 +563,14 @@ $fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
                 </tr>
             </tbody>
         </table>
-        <p style="padding:0 16px;font-size:12px;color:var(--text-tertiary);margin:6px 0 0;">
+        <p class="u-fs-12px u-c-text-tertiary" style="padding:0 16px; margin:6px 0 0;">
             Las primas de profesionalización, antigüedad, por hijo y el transporte <strong>las calcula Nómina</strong>
             a partir del grado, los años en la administración pública y la carga familiar (ver «Datos de nómina»).
         </p>
     <?php endif; ?>
     <?php if (!empty($historialSueldos)): ?>
     <details style="padding:8px 16px 12px;">
-        <summary style="cursor:pointer;color:var(--text-secondary);font-size:13px;">Historial (<?php echo count($historialSueldos); ?>)</summary>
+        <summary class="u-cur-pointer u-c-text-secondary u-fs-13px">Historial (<?php echo count($historialSueldos); ?>)</summary>
         <table class="sig-table" style="margin-top:8px;">
             <thead><tr><th>Vigente desde</th><th>Sueldo Básico</th><th>Motivo</th></tr></thead>
             <tbody>
@@ -578,7 +578,7 @@ $fmtMonto = fn($v) => number_format((float)$v, 2, ',', '.');
                 <tr>
                     <td><?php echo $ffecha($h->fecha_efectiva); ?></td>
                     <td><?php echo $fmtMonto($h->sueldo_basico); ?></td>
-                    <td style="font-size:13px;"><?php echo $val($h->motivo); ?></td>
+                    <td class="u-fs-13px"><?php echo $val($h->motivo); ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -598,8 +598,8 @@ $esComision    = ($tipoPersonal === 'Comisión de Servicio');
 $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio'], true);
 ?>
 <div class="sig-table-wrap anim-slide-up" style="margin-bottom:20px;">
-    <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <h5 style="margin:0;"><i class="bi bi-bank"></i> Datos de nómina</h5>
+    <div class="u-p-12px-16px u-jc-space-between u-ai-center u-fwr-wrap u-gap-8px" style="display:flex;">
+        <h5 class="u-m-0"><i class="bi bi-bank"></i> Datos de nómina</h5>
         <?php if (!$egresado): ?>
         <button type="button" class="btn-sig btn-sig--sm btn-sig--primary" data-bs-toggle="modal" data-bs-target="#modalDatosNomina">
             <i class="bi bi-pencil"></i> Editar
@@ -612,7 +612,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                 <th style="width:33%;">Tipo de personal</th>
                 <td colspan="2">
                     <span class="sig-badge sig-badge--brand"><?php echo htmlspecialchars($tipoPersonal ?? '—'); ?></span>
-                    <small style="color:var(--text-tertiary);">se deriva del cargo, el contrato y el origen — define su hoja en la nómina</small>
+                    <small class="u-c-text-tertiary">se deriva del cargo, el contrato y el origen — define su hoja en la nómina</small>
                 </td>
             </tr>
             <tr>
@@ -622,16 +622,16 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                         <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars($gradoEfectivo); ?></span>
                         <?php if (isset($gradosNomina[$gradoEfectivo])): ?>
                             <strong><?php echo number_format($gradosNomina[$gradoEfectivo]['porcentaje'], 0); ?>%</strong>
-                            <small style="color:var(--text-tertiary);"><?php echo htmlspecialchars($gradosNomina[$gradoEfectivo]['nombre']); ?></small>
+                            <small class="u-c-text-tertiary"><?php echo htmlspecialchars($gradosNomina[$gradoEfectivo]['nombre']); ?></small>
                         <?php endif; ?>
                         <?php if ($gradoManual): ?>
-                            <small style="color:var(--text-tertiary);">· fijado a mano</small>
+                            <small class="u-c-text-tertiary">· fijado a mano</small>
                         <?php else: ?>
-                            <small style="color:var(--text-tertiary);">· derivado de «<?php echo htmlspecialchars($e->nivel_academico ?? ''); ?>»</small>
+                            <small class="u-c-text-tertiary">· derivado de «<?php echo htmlspecialchars($e->nivel_academico ?? ''); ?>»</small>
                         <?php endif; ?>
                     <?php else: ?>
                         <span class="sig-badge sig-badge--warning">Sin resolver</span>
-                        <small style="color:var(--text-secondary);">
+                        <small class="u-c-text-secondary">
                             <?php if (empty($e->nivel_academico)): ?>
                                 No hay nivel académico registrado.
                             <?php else: ?>
@@ -646,10 +646,10 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                 <th>Años en la administración pública</th>
                 <td colspan="2">
                     <strong><?php echo (int)($data['anios_admin'] ?? 0); ?></strong>
-                    <small style="color:var(--text-tertiary);">
+                    <small class="u-c-text-tertiary">
                         base de la prima de antigüedad
                         <?php if (empty($e->fecha_ingreso_administracion)): ?>
-                            — <span style="color:var(--warning-600);">sin fecha propia, se usa la de ingreso a IMATUR</span>
+                            — <span class="u-c-warning-600">sin fecha propia, se usa la de ingreso a IMATUR</span>
                         <?php endif; ?>
                     </small>
                 </td>
@@ -660,7 +660,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     <?php if (!empty($e->cuenta_nomina)): ?>
                         <?php echo htmlspecialchars($e->cuenta_nomina); ?>
                         <?php if (!empty($e->banco_nomina)): ?>
-                            <small style="color:var(--text-tertiary);">· <?php echo htmlspecialchars($e->banco_nomina); ?></small>
+                            <small class="u-c-text-tertiary">· <?php echo htmlspecialchars($e->banco_nomina); ?></small>
                         <?php endif; ?>
                     <?php else: ?>
                         <span class="sig-badge sig-badge--warning">Falta</span>
@@ -672,7 +672,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                 <th>Bono de responsabilidad (en divisas)</th>
                 <td colspan="2">
                     <?php echo $fmtMonto($e->divisas_bono_responsabilidad ?? 0); ?>
-                    <small style="color:var(--text-tertiary);">se paga en bolívares a la tasa del mes; la quincena paga la mitad</small>
+                    <small class="u-c-text-tertiary">se paga en bolívares a la tasa del mes; la quincena paga la mitad</small>
                 </td>
             </tr>
             <?php endif; ?>
@@ -681,7 +681,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                 <th>Sueldo de su dependencia de origen</th>
                 <td colspan="2">
                     <?php echo $fmtMonto($e->sueldo_dependencia_origen ?? 0); ?>
-                    <small style="color:var(--text-tertiary);">IMATUR le paga la diferencia contra este monto</small>
+                    <small class="u-c-text-tertiary">IMATUR le paga la diferencia contra este monto</small>
                 </td>
             </tr>
             <?php endif; ?>
@@ -710,7 +710,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Déjelo en «Derivar» salvo que el mapeo no acierte con su nivel académico.
                     </small>
                 </div>
@@ -734,7 +734,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     <label class="sig-field__label" for="dn_divisas">Bono de responsabilidad (divisas)</label>
                     <input type="number" step="0.01" min="0" name="divisas_bono_responsabilidad" id="dn_divisas" class="sig-input"
                            value="<?php echo (float)($e->divisas_bono_responsabilidad ?? 0); ?>">
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Solo Alto Nivel y Comisión de Servicio. Se pacta en divisas y se paga al cambio del mes.
                     </small>
                 </div>
@@ -742,7 +742,7 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     <label class="sig-field__label" for="dn_origen">Sueldo de la dependencia de origen</label>
                     <input type="number" step="0.01" min="0" name="sueldo_dependencia_origen" id="dn_origen" class="sig-input"
                            value="<?php echo (float)($e->sueldo_dependencia_origen ?? 0); ?>">
-                    <small style="color:var(--text-tertiary);font-size:12px;">
+                    <small class="u-c-text-tertiary u-fs-12px">
                         Solo comisión de servicio: IMATUR paga la diferencia contra este monto.
                     </small>
                 </div>
@@ -807,8 +807,8 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     El cambio se aplica al expediente y queda registrado en el historial.
                 </p>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Departamento destino <span class="req">*</span></label>
-                    <select name="id_departamento_destino" class="sig-select js-search" required>
+                    <label for="empldeta_id_departamento_destino" class="sig-field__label">Departamento destino <span class="req">*</span></label>
+                    <select id="empldeta_id_departamento_destino" name="id_departamento_destino" class="sig-select js-search" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach ($data['departamentos'] ?? [] as $d): ?>
                             <option value="<?php echo $d->id; ?>" <?php echo ((int)$d->id === (int)$e->id_departamento) ? 'disabled' : ''; ?>><?php echo htmlspecialchars($d->nombre); ?></option>
@@ -816,8 +816,8 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     </select>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Cargo destino <small style="color:var(--text-tertiary)">(opcional; solo si cambia)</small></label>
-                    <select name="id_cargo_destino" class="sig-select js-search">
+                    <label for="empldeta_id_cargo_destino" class="sig-field__label">Cargo destino <small class="u-c-text-tertiary">(opcional; solo si cambia)</small></label>
+                    <select id="empldeta_id_cargo_destino" name="id_cargo_destino" class="sig-select js-search">
                         <option value="">— Mantener cargo actual —</option>
                         <?php foreach ($data['cargos'] ?? [] as $c): ?>
                             <option value="<?php echo $c->id; ?>"><?php echo htmlspecialchars($c->nombre); ?></option>
@@ -825,16 +825,16 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     </select>
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Fecha</label>
-                    <input type="date" name="fecha" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
+                    <label for="empldeta_fecha" class="sig-field__label">Fecha</label>
+                    <input id="empldeta_fecha" type="date" name="fecha" class="sig-input" value="<?php echo date('Y-m-d'); ?>" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Motivo</label>
-                    <input type="text" name="motivo" class="sig-input" placeholder="Ej: necesidad del servicio, decisión de reunión de directores…">
+                    <label for="empldeta_motivo" class="sig-field__label">Motivo</label>
+                    <input id="empldeta_motivo" type="text" name="motivo" class="sig-input" placeholder="Ej: necesidad del servicio, decisión de reunión de directores…">
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación</label>
-                    <textarea name="observacion" class="sig-input" rows="2" placeholder="N° de oficio, aprobación de Directora general / coordinador, etc. (opcional)"></textarea>
+                    <label for="empldeta_observacion" class="sig-field__label">Observación</label>
+                    <textarea id="empldeta_observacion" name="observacion" class="sig-input" rows="2" placeholder="N° de oficio, aprobación de Directora general / coordinador, etc. (opcional)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -862,12 +862,12 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     disponible para constancias y tiempo de servicio.
                 </p>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Fecha de egreso <span class="req">*</span></label>
-                    <input type="date" name="fecha_egreso" class="sig-input" required
+                    <label for="empldeta_fecha_egreso" class="sig-field__label">Fecha de egreso <span class="req">*</span></label>
+                    <input id="empldeta_fecha_egreso" type="date" name="fecha_egreso" class="sig-input" required
                            min="<?php echo htmlspecialchars($e->fecha_ingreso ?? ''); ?>" max="<?php echo date('Y-m-d'); ?>">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Motivo <span class="req">*</span></label>
+                    <label for="eg_motivo" class="sig-field__label">Motivo <span class="req">*</span></label>
                     <select name="motivo_egreso" id="eg_motivo" class="sig-input" required>
                         <option value="">— Seleccione —</option>
                         <?php foreach ($motivos as $m): ?>
@@ -876,8 +876,8 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     </select>
                 </div>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación</label>
-                    <textarea name="observacion_egreso" class="sig-input" rows="2" placeholder="N° de oficio, detalle del motivo, etc. (opcional)"></textarea>
+                    <label for="empldeta_observacion_egreso" class="sig-field__label">Observación</label>
+                    <textarea id="empldeta_observacion_egreso" name="observacion_egreso" class="sig-input" rows="2" placeholder="N° de oficio, detalle del motivo, etc. (opcional)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
@@ -903,8 +903,8 @@ $llevaDivisas  = in_array($tipoPersonal, ['Alto Nivel', 'Comisión de Servicio']
                     queda guardado en su historial.
                 </p>
                 <div class="sig-field mb-2">
-                    <label class="sig-field__label">Observación</label>
-                    <textarea name="reingreso_observacion" class="sig-input" rows="2" placeholder="Motivo del reingreso (opcional)"></textarea>
+                    <label for="empldeta_reingreso_observacion" class="sig-field__label">Observación</label>
+                    <textarea id="empldeta_reingreso_observacion" name="reingreso_observacion" class="sig-input" rows="2" placeholder="Motivo del reingreso (opcional)"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

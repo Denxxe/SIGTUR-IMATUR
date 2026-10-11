@@ -46,9 +46,9 @@ $filtro = $data['filtro'] ?? '';
     foreach ($tiles as [$lbl, $val, $col]): ?>
         <div class="col-md-2 col-4">
             <div class="sig-card" style="border-bottom:3px solid <?php echo $col; ?>;">
-                <div class="sig-card__body" style="text-align:center;padding:var(--sp-3);">
+                <div class="sig-card__body u-ta-center u-p-sp-3">
                     <div style="font-size:1.5rem;font-weight:800;color:<?php echo $col; ?>;"><?php echo $val; ?></div>
-                    <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-secondary);"><?php echo $lbl; ?></div>
+                    <div class="u-tt-uppercase u-ls-_05em u-c-text-secondary" style="font-size:.68rem;"><?php echo $lbl; ?></div>
                 </div>
             </div>
         </div>
@@ -56,7 +56,7 @@ $filtro = $data['filtro'] ?? '';
 </div>
 
 <!-- Filtros -->
-<div class="anim-slide-up" style="display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:var(--sp-4);">
+<div class="anim-slide-up u-gap-sp-2 u-fwr-wrap u-mb-sp-4" style="display:flex;">
     <?php
     $tabs = ['' => 'Todos', 'pendientes' => 'Sin verificar', 'faltantes' => 'No aparecieron', 'diferencias' => 'Con diferencias'];
     foreach ($tabs as $k => $lbl):
@@ -88,10 +88,10 @@ $filtro = $data['filtro'] ?? '';
                     <tr>
                         <td>
                             <a href="<?php echo URL_ROOT; ?>/inventario/detalle/<?php echo (int)$d->id_inventario; ?>" class="cell-strong"><?php echo htmlspecialchars($d->bien); ?></a>
-                            <?php if ($d->codigo_bn): ?><br><small style="color:var(--text-tertiary);font-family:var(--font-mono);"><?php echo htmlspecialchars($d->codigo_bn); ?></small><?php endif; ?>
+                            <?php if ($d->codigo_bn): ?><br><small class="u-c-text-tertiary u-ff-font-mono"><?php echo htmlspecialchars($d->codigo_bn); ?></small><?php endif; ?>
                         </td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($d->ubic_esperada ?? '—'); ?></td>
-                        <td style="font-size:12.5px;"><?php echo htmlspecialchars($d->esperado_condicion ?? '—'); ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($d->ubic_esperada ?? '—'); ?></td>
+                        <td class="u-fs-12_5px"><?php echo htmlspecialchars($d->esperado_condicion ?? '—'); ?></td>
                         <td>
                             <?php if ($d->hallado === null): ?>
                                 <span class="sig-badge sig-badge--neutral">Sin verificar</span>
@@ -101,8 +101,8 @@ $filtro = $data['filtro'] ?? '';
                                 <span class="sig-badge sig-badge--danger">No</span>
                             <?php endif; ?>
                         </td>
-                        <td><?php echo $difs ? implode(' ', $difs) : '<span style="color:var(--text-tertiary)">—</span>'; ?>
-                            <?php if ($d->observaciones): ?><br><small style="color:var(--text-tertiary)"><?php echo htmlspecialchars($d->observaciones); ?></small><?php endif; ?>
+                        <td><?php echo $difs ? implode(' ', $difs) : '<span class="u-c-text-tertiary">—</span>'; ?>
+                            <?php if ($d->observaciones): ?><br><small class="u-c-text-tertiary"><?php echo htmlspecialchars($d->observaciones); ?></small><?php endif; ?>
                         </td>
                         <td class="col-actions">
                             <?php if ($abierto && $puedeEscribir): ?>
@@ -127,10 +127,10 @@ $filtro = $data['filtro'] ?? '';
             <div class="modal-body">
                 <input type="hidden" name="id_conteo" value="<?php echo (int)$c->id; ?>">
                 <input type="hidden" name="id_inventario" id="v_bien">
-                <p style="margin-bottom:var(--sp-3);"><strong id="v_nombre"></strong></p>
+                <p class="u-mb-sp-3"><strong id="v_nombre"></strong></p>
                 <div class="row g-3">
-                    <div class="col-12"><div class="sig-field" style="margin:0;">
-                        <label class="sig-field__label" style="display:flex;align-items:center;gap:8px;" for="v_hallado">
+                    <div class="col-12"><div class="sig-field u-m-0">
+                        <label class="sig-field__label u-ai-center u-gap-8px" style="display:flex;" for="v_hallado">
                             <input type="checkbox" name="hallado" id="v_hallado" value="1" checked onchange="vToggle()"> El bien apareció físicamente
                         </label></div></div>
                     <div class="col-md-7" id="v_wrap_ubi"><div class="sig-field"><label class="sig-field__label" for="v_ubi">¿Dónde está?</label>

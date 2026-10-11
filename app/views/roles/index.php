@@ -39,7 +39,7 @@ foreach ($modulos as $ctrl => $meta) {
 }
 ?>
 
-<div class="anim-slide-up" style="display:flex; flex-direction:column; gap:var(--sp-5);">
+<div class="anim-slide-up u-fd-column" style="display:flex; gap:var(--sp-5);">
 
 <?php foreach ($roles as $rol): ?>
 <?php
@@ -53,29 +53,25 @@ foreach ($modulos as $ctrl => $meta) {
 <div class="sig-card" style="padding:0; overflow:hidden;" id="card-rol-<?php echo $rolId; ?>">
 
     <!-- Cabecera -->
-    <div style="display:flex; align-items:center; justify-content:space-between;
-                padding:var(--sp-4) var(--sp-5);
-                background:var(--bg-muted-subtle); border-bottom:1px solid var(--border-subtle);">
-        <div style="display:flex; align-items:center; gap:var(--sp-3);">
-            <div style="width:36px; height:36px; border-radius:8px; background:var(--brand-600);
-                        display:flex; align-items:center; justify-content:center;
-                        color:#fff; font-weight:700; font-size:15px; flex-shrink:0;">
+    <div class="u-ai-center u-jc-space-between u-p-sp-4-sp-5 u-bg-bg-muted-subtle u-bdb-1px-solid-border-subtle" style="display:flex;">
+        <div class="u-ai-center u-gap-sp-3" style="display:flex;">
+            <div class="u-br-8px u-ai-center u-jc-center u-fw-700 u-fs-15px u-fsh-0" style="width:36px; height:36px; background:var(--brand-600); display:flex; color:#fff;">
                 <?php echo $rolId; ?>
             </div>
             <div>
-                <div style="font-weight:600; font-size:15px; color:var(--text-primary);">
+                <div class="u-fw-600 u-fs-15px u-c-text-primary">
                     <?php echo htmlspecialchars($rol->nombre); ?>
                 </div>
                 <?php if ($rol->descripcion): ?>
-                <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">
+                <div class="u-fs-12px u-c-text-secondary u-mt-2px">
                     <?php echo htmlspecialchars($rol->descripcion); ?>
                 </div>
                 <?php endif; ?>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap; justify-content:flex-end;">
+        <div class="u-ai-center u-gap-sp-3 u-fwr-wrap u-jc-flex-end" style="display:flex;">
             <?php if ($esAdmin): ?>
-            <span class="sig-badge sig-badge--danger" style="font-size:12px;">
+            <span class="sig-badge sig-badge--danger u-fs-12px">
                 <i class="bi bi-infinity"></i> Acceso total — no modificable
             </span>
             <?php else: ?>
@@ -84,7 +80,7 @@ foreach ($modulos as $ctrl => $meta) {
             </span>
             <?php endif; ?>
             <button class="row-action row-action--edit"
-                    onclick='editarRol(<?php echo json_encode($rol); ?>)'>
+                    onclick='editarRol(<?php echo json_encode($rol, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
                 <i class="bi bi-pencil"></i> Editar
             </button>
             <?php if (!$esAdmin): ?>
@@ -101,11 +97,11 @@ foreach ($modulos as $ctrl => $meta) {
     </div>
 
     <!-- Permisos -->
-    <div style="padding:var(--sp-4) var(--sp-5);">
+    <div class="u-p-sp-4-sp-5">
 
         <?php if ($esAdmin): ?>
-        <div style="font-size:13px; color:var(--text-secondary); font-style:italic;">
-            <i class="bi bi-shield-fill-check" style="color:var(--danger-500);"></i>
+        <div class="u-fs-13px u-c-text-secondary u-fst-italic">
+            <i class="bi bi-shield-fill-check u-c-danger-500"></i>
             Acceso sin restricciones a todos los módulos del sistema. No se puede reducir.
         </div>
 
@@ -114,7 +110,7 @@ foreach ($modulos as $ctrl => $meta) {
         <form action="<?php echo URL_ROOT; ?>/roles/storePermisos" method="POST" id="form-permisos-<?php echo $rolId; ?>">
             <input type="hidden" name="id_rol" value="<?php echo $rolId; ?>">
 
-            <div style="display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-bottom:var(--sp-4);">
+            <div class="u-fwr-wrap u-gap-sp-3 u-mb-sp-4" style="display:flex;">
 
                 <?php foreach ($modulosPorGrupo as $grupo => $items): ?>
                 <?php $c = $coloresGrupo[$grupo] ?? ['bg'=>'#f8fafc','color'=>'#475569','border'=>'#e2e8f0','check'=>'#64748b']; ?>
@@ -131,7 +127,7 @@ foreach ($modulos as $ctrl => $meta) {
                             todo
                         </button>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
+                    <div class="u-fd-column u-gap-6px" style="display:flex;">
                         <?php foreach ($items as $item): ?>
                         <?php $checked = in_array($item['ctrl'], $ctrlActivos) ? 'checked' : ''; ?>
                         <label style="display:flex; align-items:center; gap:8px; font-size:12px;
@@ -152,11 +148,11 @@ foreach ($modulos as $ctrl => $meta) {
 
             </div>
 
-            <div style="display:flex; align-items:center; gap:var(--sp-3);">
-                <button type="submit" class="btn-sig btn-sig--primary" style="font-size:13px; padding:6px 16px;">
+            <div class="u-ai-center u-gap-sp-3" style="display:flex;">
+                <button type="submit" class="btn-sig btn-sig--primary u-fs-13px" style="padding:6px 16px;">
                     <i class="bi bi-floppy"></i> Guardar permisos
                 </button>
-                <span style="font-size:12px; color:var(--text-secondary);">
+                <span class="u-fs-12px u-c-text-secondary">
                     <i class="bi bi-info-circle"></i> Dashboard siempre incluido.
                     Los cambios aplican en la próxima sesión.
                 </span>
@@ -182,17 +178,16 @@ foreach ($modulos as $ctrl => $meta) {
             <div class="modal-body">
                 <input type="hidden" name="id" id="rol_id">
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Nombre <span class="req">*</span></label>
+                    <label for="rol_nombre" class="sig-field__label">Nombre <span class="req">*</span></label>
                     <input type="text" name="nombre" id="rol_nombre" class="sig-input" required
                            placeholder="Ej: Supervisor">
                 </div>
                 <div class="sig-field mb-3">
-                    <label class="sig-field__label">Descripción</label>
+                    <label for="rol_descripcion" class="sig-field__label">Descripción</label>
                     <textarea name="descripcion" id="rol_descripcion" class="sig-textarea" rows="3"
                               placeholder="Responsabilidades del rol"></textarea>
                 </div>
-                <div style="padding:var(--sp-3); background:var(--brand-50);
-                            border:1px solid var(--brand-200); border-radius:6px; font-size:12px; color:var(--brand-700);">
+                <div class="u-p-sp-3 u-br-6px u-fs-12px" style="background:var(--brand-50); border:1px solid var(--brand-200); color:var(--brand-700);">
                     <i class="bi bi-lightbulb-fill"></i>
                     Al crear el rol podrás asignarle los módulos directamente desde esta misma pantalla.
                 </div>

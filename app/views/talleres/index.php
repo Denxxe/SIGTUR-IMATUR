@@ -419,8 +419,8 @@ function esAtrasada($t): bool {
                 <input type="hidden" id="ce_estado_actual" name="ce_estado_actual">
 
                 <div class="sig-field">
-                    <label class="sig-field__label">Estado actual</label>
-                    <div id="ce_badge_actual" style="margin-top:4px;"></div>
+                    <label class="sig-field__label" id="ce_estado_actual_lbl">Estado actual</label>
+                    <div id="ce_badge_actual" aria-labelledby="ce_estado_actual_lbl" style="margin-top:4px;"></div>
                 </div>
 
                 <div class="sig-field">

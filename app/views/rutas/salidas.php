@@ -44,7 +44,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
 </div>
 
 <?php if (empty($data['catalogo'])): ?>
-<div class="sig-alert sig-alert--warning anim-slide-up" style="margin-bottom:var(--sp-4);">
+<div class="sig-alert sig-alert--warning anim-slide-up u-mb-sp-4">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
         No hay ninguna ruta <strong>Activa</strong> en el catálogo, así que no se puede programar una
@@ -64,8 +64,8 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
     foreach ($tiles as $est => [$lbl, $col, $ico]): ?>
     <div class="col-md-4 col-12">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $col; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4);">
-                <div style="font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;">
+            <div class="sig-card__body u-ta-center u-p-sp-4">
+                <div class="u-fs-10px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em">
                     <i class="bi <?php echo $ico; ?>"></i> <?php echo $lbl; ?>
                 </div>
                 <div style="font-size:26px;font-weight:900;color:<?php echo $col; ?>;">
@@ -79,9 +79,9 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
 
 <!-- Filtros -->
 <form class="sig-card anim-slide-up" method="GET" action="<?php echo URL_ROOT; ?>/rutas/salidas" style="margin-bottom:var(--sp-4);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);display:flex;align-items:flex-end;gap:var(--sp-3);flex-wrap:wrap;">
-        <div style="flex:1;min-width:190px;">
-            <label class="sig-field__label" style="font-size:11px;" for="buscar">Buscar</label>
+    <div class="sig-card__body u-p-sp-4-sp-5 u-ai-flex-end u-gap-sp-3 u-fwr-wrap" style="display:flex;">
+        <div class="u-flex-1" style="min-width:190px;">
+            <label class="sig-field__label u-fs-11px" for="buscar">Buscar</label>
             <div class="tabla-search">
                 <i class="bi bi-search"></i>
                 <input id="buscar" type="text" name="buscar" class="sig-input" style="padding-left:32px;width:100%;"
@@ -89,7 +89,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             </div>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;" for="f_ruta">Ruta</label>
+            <label class="sig-field__label u-fs-11px" for="f_ruta">Ruta</label>
             <select id="f_ruta" name="ruta" class="sig-input" style="min-width:170px;">
                 <option value="">Todas</option>
                 <?php foreach ($data['catalogo'] ?? [] as $r): ?>
@@ -100,7 +100,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;" for="f_estado">Estado</label>
+            <label class="sig-field__label u-fs-11px" for="f_estado">Estado</label>
             <select id="f_estado" name="estado" class="sig-input" style="min-width:145px;">
                 <option value="">Todos</option>
                 <?php foreach (RutaEjecucion::ESTADOS as $est): ?>
@@ -109,7 +109,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;" for="f_origen">Origen</label>
+            <label class="sig-field__label u-fs-11px" for="f_origen">Origen</label>
             <select id="f_origen" name="origen" class="sig-input" style="min-width:135px;">
                 <option value="">Todos</option>
                 <?php foreach (RutaEjecucion::ORIGENES as $o): ?>
@@ -118,7 +118,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
             </select>
         </div>
         <div>
-            <label class="sig-field__label" style="font-size:11px;" for="f_periodo">Período</label>
+            <label class="sig-field__label u-fs-11px" for="f_periodo">Período</label>
             <?php $periodos = ['' => 'Todos', 'proximos' => 'Próximas', 'hoy' => 'Hoy', 'semana' => 'Esta semana', 'mes' => 'Este mes', 'pasados' => 'Pasadas']; ?>
             <select id="f_periodo" name="periodo" class="sig-input" style="min-width:130px;">
                 <?php foreach ($periodos as $v => $l): ?>
@@ -126,8 +126,8 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div style="display:flex;gap:var(--sp-2);">
-            <button type="submit" class="btn-sig btn-sig--primary" style="height:42px;"><i class="bi bi-funnel"></i> Filtrar</button>
+        <div class="u-gap-sp-2" style="display:flex;">
+            <button type="submit" class="btn-sig btn-sig--primary u-h-42px"><i class="bi bi-funnel"></i> Filtrar</button>
             <?php if ($hayFiltro): ?>
             <a href="<?php echo URL_ROOT; ?>/rutas/salidas" class="btn-sig btn-sig--ghost" style="height:42px;padding:0 var(--sp-3);" title="Limpiar"><i class="bi bi-x-lg"></i></a>
             <?php endif; ?>
@@ -149,26 +149,26 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                 </td></tr>
             <?php else: foreach ($data['salidas'] as $s): ?>
                 <tr>
-                    <td style="white-space:nowrap;">
+                    <td class="u-ws-nowrap">
                         <span class="cell-strong"><?php echo $fmt($s->fecha); ?></span>
                         <?php if ($s->hora): ?>
-                            <div style="font-size:12px;color:var(--text-tertiary);"><?php echo substr($s->hora, 0, 5); ?></div>
+                            <div class="u-fs-12px u-c-text-tertiary"><?php echo substr($s->hora, 0, 5); ?></div>
                         <?php endif; ?>
                     </td>
                     <td>
                         <span class="cell-strong"><?php echo htmlspecialchars($s->ruta_nombre); ?></span>
                         <?php if (!empty($s->fecha_original)): ?>
-                            <div style="font-size:11px;color:var(--warning-600,#d97706);">
+                            <div class="u-fs-11px u-c-warning-600xd97706">
                                 <i class="bi bi-arrow-repeat"></i> reprogramada del <?php echo $fmt($s->fecha_original); ?>
                             </div>
                         <?php endif; ?>
                     </td>
-                    <td style="font-size:12px;">
+                    <td class="u-fs-12px">
                         <span class="sig-badge <?php echo $s->origen === 'Institucional' ? 'sig-badge--info' : 'sig-badge--neutral'; ?>">
                             <?php echo htmlspecialchars($s->origen); ?>
                         </span>
                         <?php if (!empty($s->institucion_nombre)): ?>
-                            <div style="color:var(--text-secondary);max-width:200px;white-space:normal;">
+                            <div class="u-c-text-secondary u-ws-normal" style="max-width:200px;">
                                 <?php echo htmlspecialchars($s->institucion_nombre); ?>
                             </div>
                         <?php endif; ?>
@@ -180,12 +180,12 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                             <?php echo htmlspecialchars($s->estado); ?>
                         </span>
                         <?php if ($s->estado === RutaEjecucion::EST_NO_EJECUTADO && !empty($s->motivo_no_ejecucion)): ?>
-                            <div style="font-size:11px;color:var(--text-tertiary);max-width:210px;white-space:normal;">
+                            <div class="u-fs-11px u-c-text-tertiary u-ws-normal" style="max-width:210px;">
                                 <?php echo htmlspecialchars($s->motivo_no_ejecucion); ?>
                             </div>
                         <?php endif; ?>
                         <?php if (empty($s->fecha_aprobacion) && $s->estado === RutaEjecucion::EST_PROGRAMADO): ?>
-                            <div style="font-size:11px;color:var(--warning-600,#d97706);">
+                            <div class="u-fs-11px u-c-warning-600xd97706">
                                 <i class="bi bi-hourglass"></i> sin aprobar
                             </div>
                         <?php endif; ?>
@@ -208,7 +208,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
 </div>
 
 <?php if ($totalPaginas > 1): ?>
-<nav class="anim-slide-up" style="display:flex;align-items:center;justify-content:center;gap:6px;margin:var(--sp-4) 0 var(--sp-8);flex-wrap:wrap;">
+<nav class="anim-slide-up u-ai-center u-jc-center u-gap-6px u-fwr-wrap" style="display:flex; margin:var(--sp-4) 0 var(--sp-8);">
     <?php for ($i = max(1, $pagina - 2); $i <= min($totalPaginas, $pagina + 2); $i++): ?>
         <a href="<?php echo salidaUrl($flt, $i); ?>"
            class="btn-sig <?php echo $i === $pagina ? 'btn-sig--primary' : 'btn-sig--ghost'; ?> btn-sig--sm"><?php echo $i; ?></a>
@@ -276,7 +276,7 @@ $fmt = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
                     </div>
 
                     <div class="col-12">
-                        <div class="sig-field" style="margin:0;">
+                        <div class="sig-field u-m-0">
                             <label class="sig-field__label" for="sal_obs">Observaciones</label>
                             <textarea name="observaciones" id="sal_obs" class="sig-textarea" rows="2"></textarea>
                         </div>

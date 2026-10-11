@@ -19,7 +19,7 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
         <p class="page__subtitle">Control de practicantes y pasantes con estado académico, fechas de vigencia y tutor asignado.</p>
     </div>
     <div class="page__actions">
-        <div style="display:flex;gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesCsv?<?php echo $qs; ?>" class="btn-sig btn-sig--success btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -45,8 +45,8 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
     foreach ($statsKpis as $k): ?>
     <div class="col-md-2 col-4">
         <div class="sig-card" style="border-bottom:3px solid <?php echo $k['color']; ?>;">
-            <div class="sig-card__body" style="text-align:center;padding:var(--sp-4) var(--sp-3);">
-                <div style="font-size:9px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;"><?php echo $k['label']; ?></div>
+            <div class="sig-card__body u-ta-center u-p-sp-4-sp-3">
+                <div class="u-fs-9px u-fw-700 u-c-text-tertiary u-tt-uppercase u-ls-_05em u-mb-2px"><?php echo $k['label']; ?></div>
                 <div style="font-size:26px;font-weight:900;color:<?php echo $k['txt']; ?>;"><?php echo number_format($k['val']); ?></div>
             </div>
         </div>
@@ -56,7 +56,7 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
 
 <!-- Filtros -->
 <div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
-    <div class="sig-card__body" style="padding:var(--sp-4) var(--sp-5);">
+    <div class="sig-card__body u-p-sp-4-sp-5">
         <form method="GET" action="<?php echo URL_ROOT; ?>/reportes/pasantes" class="row g-3 align-items-end">
             <div class="col-md-2">
                 <div class="sig-field">
@@ -88,8 +88,8 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                 </div>
             </div>
             <div class="col-md-2">
-                <div style="display:flex;gap:var(--sp-2);">
-                    <button type="submit" class="btn-sig btn-sig--primary" style="flex:1;height:42px;">
+                <div class="u-gap-sp-2" style="display:flex;">
+                    <button type="submit" class="btn-sig btn-sig--primary u-flex-1 u-h-42px">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
                     <?php if ($hayFiltro): ?>
@@ -130,41 +130,41 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
                 <tr <?php if ($isVigente) echo 'style="border-left:3px solid var(--accent-500);"'; ?>>
                     <td class="cell-id"><?php echo htmlspecialchars($p->cedula ?? '—'); ?></td>
                     <td class="cell-strong"><?php echo htmlspecialchars(($p->nombre ?? '') . ' ' . ($p->apellido ?? '')); ?></td>
-                    <td style="font-size:12px;color:var(--text-secondary);">
-                        <?php if (!empty($p->telefono)): ?><div><i class="bi bi-telephone" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($p->telefono); ?></div><?php endif; ?>
-                        <?php if (!empty($p->correo)): ?><div style="word-break:break-all;"><i class="bi bi-envelope" style="color:var(--text-tertiary);"></i> <?php echo htmlspecialchars($p->correo); ?></div><?php endif; ?>
+                    <td class="u-fs-12px u-c-text-secondary">
+                        <?php if (!empty($p->telefono)): ?><div><i class="bi bi-telephone u-c-text-tertiary"></i> <?php echo htmlspecialchars($p->telefono); ?></div><?php endif; ?>
+                        <?php if (!empty($p->correo)): ?><div class="u-wb-break-all"><i class="bi bi-envelope u-c-text-tertiary"></i> <?php echo htmlspecialchars($p->correo); ?></div><?php endif; ?>
                         <?php if (empty($p->telefono) && empty($p->correo)): ?>—<?php endif; ?>
                     </td>
                     <td>
-                        <div style="font-weight:600;font-size:13px;color:var(--text-primary);"><?php echo htmlspecialchars($p->institucion ?? '—'); ?></div>
-                        <div style="font-size:11px;color:var(--text-tertiary);"><?php echo htmlspecialchars($p->carrera ?? '—'); ?></div>
+                        <div class="u-fw-600 u-fs-13px u-c-text-primary"><?php echo htmlspecialchars($p->institucion ?? '—'); ?></div>
+                        <div class="u-fs-11px u-c-text-tertiary"><?php echo htmlspecialchars($p->carrera ?? '—'); ?></div>
                     </td>
                     <td>
                         <?php if (!empty($p->tutor_nombre)): ?>
-                            <div style="display:flex;align-items:center;gap:var(--sp-2);font-size:13px;color:var(--text-secondary);">
-                                <i class="bi bi-person-check" style="color:var(--brand-500);"></i>
+                            <div class="u-ai-center u-gap-sp-2 u-fs-13px u-c-text-secondary" style="display:flex;">
+                                <i class="bi bi-person-check u-c-brand-500"></i>
                                 <span><?php echo htmlspecialchars($p->tutor_nombre . ' ' . $p->tutor_apellido); ?></span>
                             </div>
                         <?php else: ?>
-                            <span style="font-size:12px;color:var(--text-tertiary);font-style:italic;">No asignado</span>
+                            <span class="u-fs-12px u-c-text-tertiary u-fst-italic">No asignado</span>
                         <?php endif; ?>
                     </td>
-                    <td style="text-align:center;font-size:12px;white-space:nowrap;">
+                    <td class="u-ta-center u-fs-12px u-ws-nowrap">
                         <?php echo $p->fecha_inicio ? date('d/m/Y', strtotime($p->fecha_inicio)) : '—'; ?>
                     </td>
-                    <td style="text-align:center;font-size:12px;white-space:nowrap;">
-                        <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span style="color:var(--text-tertiary);font-style:italic;">En curso</span>'; ?>
+                    <td class="u-ta-center u-fs-12px u-ws-nowrap">
+                        <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span class="u-c-text-tertiary u-fst-italic">En curso</span>'; ?>
                     </td>
                     <td class="text-center">
                         <span class="sig-badge <?php echo $bdg[$p->estado ?? ''] ?? 'sig-badge--neutral'; ?>"><?php echo htmlspecialchars($p->estado ?? '—'); ?></span>
                     </td>
                     <?php $tieneNota = $p->nota !== null && $p->nota !== ''; $tieneEval = !empty($p->evaluacion); ?>
-                    <td style="text-align:center;font-size:12px;">
+                    <td class="u-ta-center u-fs-12px">
                         <?php if ($tieneNota): ?>
                             <span class="sig-badge sig-badge--info"><?php echo htmlspecialchars((string)$p->nota); ?></span>
                         <?php endif; ?>
                         <?php if ($tieneEval): ?>
-                            <div style="color:var(--text-tertiary);margin-top:2px;max-width:220px;white-space:normal;"><?php echo htmlspecialchars($p->evaluacion); ?></div>
+                            <div class="u-c-text-tertiary u-mt-2px u-ws-normal" style="max-width:220px;"><?php echo htmlspecialchars($p->evaluacion); ?></div>
                         <?php endif; ?>
                         <?php if (!$tieneNota && !$tieneEval): ?>—<?php endif; ?>
                     </td>
@@ -175,7 +175,7 @@ $hayFiltro = !empty($data['filtro_estado']) || !empty($data['fecha_inicio']) || 
     </table>
 </div>
 <?php if (!empty($data['pasantes'])): ?>
-    <div style="text-align:right;font-size:12px;color:var(--text-tertiary);margin-top:var(--sp-2);">
+    <div class="u-ta-right u-fs-12px u-c-text-tertiary u-mt-sp-2">
         <?php echo count($data['pasantes']); ?> resultado(s) mostrados
     </div>
 <?php endif; ?>

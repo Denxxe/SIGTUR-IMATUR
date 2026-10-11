@@ -10,8 +10,9 @@
 > IMATUR pasa a **asignar el código** de sus propios bienes (la Alcaldía ya no viene a codificar,
 > solo recibe la relación) y el acta de baja pasa a ser **Acta de Desincorporación** por lote, sin
 > oficio de retiro. La base construida sigue sirviendo, pero hay 7 consecuencias en el código
-> (C-1…C-7), **B-60 se reabre** y hay 8 preguntas nuevas (B-73…B-80). **Nada de esto está
-> implementado todavía.**
+> (C-1…C-7), **B-60 se reabre** y hay 8 preguntas nuevas (B-73…B-80).
+> **Estado al 2026-10-11:** C-5/C-6 hechos (mig. 076-077) y **C-1…C-4 y C-7 construidos (mig. 087)**:
+> el motor de codificación propia está listo pero **apagado** hasta que lleguen B-73 y B-75 — §2-sexies.
 
 ---
 
@@ -147,13 +148,13 @@ patrimonial de la Alcaldía. **La base es la misma; cambia quién ejecuta la cod
 
 | # | Qué | Detalle |
 |---|---|---|
-| **C-1** | **Secuencia propia de N° de orden** | `Inventario::siguienteNroOrden()` = `MAX(nro_orden)` sobre todos los bienes vs. un **punto de partida configurable** (clave nueva en `configuracion_sistema`), y el modal de codificación lo propone. Hoy el campo es de tecleo libre y el único control es `findByNroOrden()` (anti-repetido), que **se conserva** |
-| **C-2** | **La codificación deja de esperar** | Un bien nuevo puede codificarse en el acto. `EST_SIN_CODIFICAR` **no se elimina**: sigue describiendo el lote histórico que aguarda la última revisión de la Alcaldía, y la alerta `dias_alerta_sin_codificar` sigue teniendo sentido para él |
-| **C-3** | **`verificado_alcaldia` cambia de significado** | Hoy `codificar()` lo pone en `TRUE` porque el código venía del BM-1. Con código propio, «verificado por la Alcaldía» y «codificado» dejan de ser lo mismo: hay que separar *codificado por IMATUR* de *reconocido por la Alcaldía* (o dejar de escribir la bandera al codificar internamente) |
-| **C-4** | **Grupo/subgrupo/sección necesitan catálogo** | ⚠️ **Reabre B-60.** Se cerró con «IMATUR solo transcribe, basta validar el formato». Si ahora IMATUR **clasifica**, hace falta la lista de valores válidos: sin ella, ante un bien que no se parezca a nada ya registrado no hay con qué decidir. Mitigación: **sembrar el catálogo desde el listado digital** de la encargada (los códigos ya en uso) y permitir agregar |
+| ✅ **C-1** | **Secuencia propia de N° de orden** *(mig. 087)* | `Inventario::siguienteNroOrden()` = `MAX(nro_orden)` sobre todos los bienes vs. un **punto de partida configurable** (clave nueva en `configuracion_sistema`), y el modal de codificación lo propone. Hoy el campo es de tecleo libre y el único control es `findByNroOrden()` (anti-repetido), que **se conserva** |
+| ✅ **C-2** | **La codificación deja de esperar** *(mig. 087)* | Un bien nuevo puede codificarse en el acto. `EST_SIN_CODIFICAR` **no se elimina**: sigue describiendo el lote histórico que aguarda la última revisión de la Alcaldía, y la alerta `dias_alerta_sin_codificar` sigue teniendo sentido para él |
+| ✅ **C-3** | **`verificado_alcaldia` cambia de significado** *(mig. 087: `codificado_por`)* | Hoy `codificar()` lo pone en `TRUE` porque el código venía del BM-1. Con código propio, «verificado por la Alcaldía» y «codificado» dejan de ser lo mismo: hay que separar *codificado por IMATUR* de *reconocido por la Alcaldía* (o dejar de escribir la bandera al codificar internamente) |
+| ✅ **C-4** | **Grupo/subgrupo/sección necesitan catálogo** *(mig. 087: `inventario_clasificaciones`)* | ⚠️ **Reabre B-60.** Se cerró con «IMATUR solo transcribe, basta validar el formato». Si ahora IMATUR **clasifica**, hace falta la lista de valores válidos: sin ella, ante un bien que no se parezca a nada ya registrado no hay con qué decidir. Mitigación: **sembrar el catálogo desde el listado digital** de la encargada (los códigos ya en uso) y permitir agregar |
 | **C-5** | **Acta de Desincorporación por lote** | Tabla nueva (cabecera + renglones, mismo patrón que `inventario_consolidados_bm1`): se arma con los bienes a retirar, se imprime, y al **registrar el acta firmada y sellada** (con su escaneado adjunto) se marcan **todos** sus bienes como retirados. Hoy `marcarRetirado()` es **bien por bien** y no existe la entidad acta. La distinción *Por retirar* / *Retirado* (B-67) se conserva y encaja perfecto |
 | **C-6** | **Renombrar en la UI** | El documento debe decir **«Acta de Desincorporación»** (exigencia explícita del cliente). La pestaña del listado ya dice *Desincorporados*; queda por decidir si el estatus `Dado de baja` se renombra a `Desincorporado` en toda la UI (implica migración por el CHECK) |
-| **C-7** | **Etiquetas y relación con monto** | Las etiquetas QR ya no dependen de la Alcaldía (corregir el texto «Solo se listan bienes ya codificados por la Alcaldía»). La relación saliente **sí declara el monto** → matiza **B-69**, que había cerrado el costo como control interno |
+| ✅ **C-7** | **Etiquetas y relación con monto** *(texto de etiquetas, mig. 087; la columna de código de la relación espera B-81)* | Las etiquetas QR ya no dependen de la Alcaldía (corregir el texto «Solo se listan bienes ya codificados por la Alcaldía»). La relación saliente **sí declara el monto** → matiza **B-69**, que había cerrado el costo como control interno |
 
 > **La conciliación del BM-1 se conserva.** La última revisión sigue pendiente y hay que poder cargar
 > los códigos que traiga; además el histórico ya recibido debe quedar trazable. Deja de ser el camino
@@ -287,6 +288,35 @@ la Alcaldía**, no de ninguna hoja suelta.
   lleguen las cifras.
 - **B-76 — los códigos no se reciclan.** Ya era así: un desincorporado conserva `is_active = TRUE`
   y `findByNroOrden()` lo sigue contando.
+
+---
+
+## 2-sexies. Motor de codificación propia — CONSTRUIDO y APAGADO (2026-10-11, mig. 087)
+
+Se construyó antes de que lleguen B-73 y B-75 dejando todo lo que falta como **parámetro**: el día que
+el cliente entregue el punto de partida y su catálogo, se cargan en *Bienes → Codificación*
+(`/inventario/codificacion`) y se enciende, sin tocar código.
+
+| Pieza | Qué hace |
+|---|---|
+| `CodificacionBienes` (modelo) | Parámetros, siguiente N° de orden, verificación de repetidos y catálogo |
+| `bienes_codificacion_propia` | Interruptor. **0** (por defecto) = se transcribe el BM-1 como siempre · **1** = codifica IMATUR. **No enciende** sin punto de partida ni catálogo vigente, y se **apaga sola** si se da de baja la última clasificación vigente |
+| `bienes_nro_orden_inicio` (B-73) | Último N° de orden que deje la Alcaldía. El siguiente = **mayor entre este y el mayor ya registrado** + 1, comparando **como entero** (`084` = 84) y sobre **todos** los bienes —activos, desincorporados y papelera—: un código no se recicla (B-76) y el listado de la Alcaldía no viene ordenado por código (B-72) |
+| `bienes_nro_orden_digitos` (B-74) | Ceros a la izquierda (3 = `084`). Si un número los supera se escribe completo (`1000`) |
+| `bienes_secuencia_por_clasificacion` (B-74) | 0 = una secuencia para todo IMATUR · 1 = una por grupo-subgrupo-sección (el número solo se repite dentro de la misma). ⚠️ El punto de partida es uno solo: si el cliente responde «una por clasificación» con puntos de partida distintos, habrá que pasarlo a una columna del catálogo |
+| `inventario_clasificaciones` (C-4, B-75) | Grupo-subgrupo-sección válidos. Sembrada con **2-01-108** (el único conocido) y los códigos ya en uso. Con la codificación propia, solo se codifica con una clasificación vigente; su código no se puede cambiar si ya hay bienes con ella |
+| `inventario.codificado_por` + `fecha_codificacion` (C-3) | `Alcaldía` (BM-1) o `IMATUR`. `verificado_alcaldia` conserva su sentido: **reconocido por la Alcaldía**, y solo lo pone la transcripción del BM-1. Lo ya codificado se marcó `Alcaldía` |
+
+**Flujo con la codificación encendida:** alta → *Codificar* → elegir clasificación → el sistema
+propone el N° de orden (editable, normalizado a los dígitos configurados, sin repetidos) → Activo,
+«codificado por IMATUR». Lo que llegue en un BM-1 se sigue transcribiendo desde *BM-1 recibidos* y
+queda «de la Alcaldía».
+
+**Pruebas:** 10 casos del cálculo del siguiente número en `tests/run.php`, y 13 comprobaciones de
+punta a punta sobre un respaldo de la base (restaurado después): no enciende sin B-73, propone 172
+con punto de partida 171, rechaza `0172` cuando existe `172`, rechaza una clasificación fuera del
+catálogo, normaliza `5` → `005`, el BM-1 sigue siendo de la Alcaldía, secuencias por clasificación
+independientes, y se apaga sola sin catálogo.
 
 ---
 
@@ -563,7 +593,7 @@ Estado al 2026-08-04, tras las migraciones 062-064.
 | R-2 | **Acta de Desincorporación** (firma Coordinadora + Presidencia; la Alcaldía firma y sella como aval) | B-39. **Reducida y renombrada (§2-ter):** un solo documento **por lote**, ~~sin oficio de retiro~~. El nombre «Acta de Desincorporación» es exigencia del cliente. **El formato NO llegó el 2026-09-17.** |
 | R-3 | **Acta de asignación** de bien a responsable, que firma el empleado ("acta de encargado") | B-29. Sigue vigente. **El formato NO llegó el 2026-09-17.** |
 | ✅ R-11 | ~~**Oficio de donación**~~ **HECHO (2026-09-17, mig. 075)** | Llegó el formato y se construyó: hoja de vida del bien → «Documento de donación». Ver §2-quater. |
-| R-12 | **Codificación interna con secuencia propia** (C-1…C-4, C-7) | 🔒 No es formato: espera el **punto de partida** (B-73) y el **catálogo de grupos/subgrupos/secciones** (B-75, reabre B-60). El resto es programable en cuanto lleguen esos dos datos. |
+| ✅ R-12 | ~~**Codificación interna con secuencia propia**~~ **CONSTRUIDA (2026-10-11, mig. 087), apagada** | Se enciende en *Bienes → Codificación* cuando lleguen el **punto de partida** (B-73) y el **catálogo** (B-75). Ver §2-sexies. |
 | R-13 | **Acta de Desincorporación por lote a nivel de datos** (C-5, C-6) | La tabla y el flujo (registrar el acta sellada → marcar retirados todos sus bienes) **se pueden construir sin el formato**; solo el imprimible depende de él. |
 
 > Mientras tanto **el flujo de baja funciona a nivel de datos** (el bien pasa a *Dado de baja* y sale del inventario activo); lo que falta es el documento imprimible y el agrupamiento por acta.
@@ -589,8 +619,9 @@ y en lenguaje llano en `PREGUNTAS_CLIENTE.md`. Resumen de qué desbloquea cada c
 |---|---|
 | **Acta de Desincorporación** (formato) | R-2 · el imprimible del retiro por lote |
 | **Acta de asignación** (formato) | R-3 · entrega de un bien a un trabajador |
-| **B-73** punto de partida de la secuencia | R-12 · **sin esto IMATUR no puede codificar** |
-| **B-75** catálogo de grupos/subgrupos/secciones (B-60 reabierta) | R-12 · la clasificación del código |
+| **B-73** punto de partida de la secuencia | **Encender** R-12 (ya construido) · sin esto IMATUR no puede codificar |
+| **B-75** catálogo de grupos/subgrupos/secciones (B-60 reabierta) | Cargar el catálogo de R-12 (hoy solo 2-01-108) |
+| **B-74** una secuencia o una por clasificación; qué pasa después de 999 | Solo ajustar dos parámetros de R-12 |
 | **B-81** ¿sigue vigente el oficio de relación entregado? | Solo una columna en el imprimible; lo demás ya está |
 | **Inventario digital de la encargada** | Carga masiva de los ~142 bienes + B-73 + códigos en uso |
 | **B-82** resolución y gaceta de la Presidenta | Visto bueno a lo ya corregido en la mig. 075 |

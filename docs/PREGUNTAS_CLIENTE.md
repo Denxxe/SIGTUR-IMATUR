@@ -30,7 +30,7 @@ sistema ya funciona · 🟢 menor u opcional.
 |---|---|---|
 | **Personal (RRHH)** | ✅ Completo | Los datos del personal real |
 | **Nómina** | ✅ Calcula la quincena, el bono vacacional y **la Liquidación de Prestaciones Sociales** | Los datos de cada trabajador y las tasas del BCV |
-| **Bienes (Inventario)** | 🟡 Funciona; falta la codificación propia | El inventario actual con su departamento, 2 formatos y la última codificación de la Alcaldía |
+| **Bienes (Inventario)** | 🟢 Funciona; la codificación propia **ya está lista**, esperando sus datos | El inventario actual con su departamento, 2 formatos y la última codificación de la Alcaldía |
 | **Turismo (Rutas)** | ✅ Completo | La lista oficial de rutas y dos formatos menores |
 | **Formación** | ✅ Completo | Solo mejoras opcionales |
 | **Recepción (Visitas)** | ✅ Completo | Nada |
@@ -143,6 +143,9 @@ nos pasen el archivo vigente, por favor que traiga esa columna (o la sede/oficin
 sistema no puede saber quién responde por cada bien. Pueden usar el mismo formato que ya llevan.
 
 **2. 🔴 Punto de partida y grupos (B-73 y B-75)**: *seguimos esperando con ustedes*
+
+*Novedad: el sistema **ya está preparado** para que IMATUR codifique. Solo falta escribir estos dos
+datos en *Inventario → Codificación* y encenderlo.*
 
 Entendido: esperan la **última codificación de la Alcaldía**. Cuando llegue, la necesitamos **completa**
 (no solo una hoja): el BM-1 que tenemos ya llega al N° **171**.

@@ -16,12 +16,12 @@
 </div>
 
 <div class="sig-card anim-slide-up" style="max-width:900px; margin:0 auto var(--sp-8);">
-    <div class="sig-card__body" style="padding:var(--sp-8);">
+    <div class="sig-card__body u-p-sp-8">
         <form action="<?php echo URL_ROOT; ?>/pasantes/crear" method="POST">
             
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3);">
-                <i class="bi bi-person-bounding-box" style="font-size:20px; color:var(--brand-500);"></i>
-                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Datos Personales</h3>
+            <div class="u-ai-center u-gap-sp-3 u-mb-sp-6 u-bdb-1px-solid-border-subtle u-pb-sp-3" style="display:flex;">
+                <i class="bi bi-person-bounding-box u-fs-20px u-c-brand-500"></i>
+                <h3 class="u-fs-18px u-fw-700 u-c-text-primary u-m-0">Datos Personales</h3>
             </div>
 
             <div class="row g-4 mb-8">
@@ -45,9 +45,9 @@
                 </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-6); border-bottom:1px solid var(--border-subtle); padding-bottom:var(--sp-3); margin-top:var(--sp-4);">
-                <i class="bi bi-building" style="font-size:20px; color:var(--brand-500);"></i>
-                <h3 style="font-size:18px; font-weight:700; color:var(--text-primary); margin:0;">Datos Académicos e Institucionales</h3>
+            <div class="u-ai-center u-gap-sp-3 u-mb-sp-6 u-bdb-1px-solid-border-subtle u-pb-sp-3 u-mt-sp-4" style="display:flex;">
+                <i class="bi bi-building u-fs-20px u-c-brand-500"></i>
+                <h3 class="u-fs-18px u-fw-700 u-c-text-primary u-m-0">Datos Académicos e Institucionales</h3>
             </div>
 
             <div class="row g-4 mb-8">
@@ -80,7 +80,7 @@
                     <div class="sig-field">
                         <label class="sig-field__label" for="tutor_externo">
                             Responsable externo
-                            <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;"> — Persona en la institución a quien se dirige la carta de aceptación</span>
+                            <span class="u-fw-400 u-c-text-tertiary u-fs-11px"> — Persona en la institución a quien se dirige la carta de aceptación</span>
                         </label>
                         <input id="tutor_externo" type="text" name="tutor_externo" class="sig-input"
                                placeholder="Ej: Prof. Rosa Rincón, Responsable de Gestión de Proyecto">
@@ -100,7 +100,7 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; padding-top:var(--sp-6); border-top:1px solid var(--border-subtle);">
+            <div class="u-jc-flex-end u-bdt-1px-solid-border-subtle" style="display:flex; padding-top:var(--sp-6);">
                 <button type="submit" class="btn-sig btn-sig--primary" style="padding:0 var(--sp-10); height:48px; font-size:16px;">
                     <i class="bi bi-save"></i> Registrar y Abrir Expediente
                 </button>

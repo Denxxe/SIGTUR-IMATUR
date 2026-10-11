@@ -7,7 +7,7 @@
         <p class="page__subtitle">Gestión institucional de practicantes universitarios y pasantes de media técnica.</p>
     </div>
     <div class="page__actions">
-        <div style="display:flex; gap:var(--sp-2);">
+        <div class="u-gap-sp-2" style="display:flex;">
             <a href="<?php echo URL_ROOT; ?>/reportes/exportarPasantesCsv" class="btn-sig btn-sig--ghost btn-sig--sm">
                 <i class="bi bi-file-earmark-spreadsheet"></i> Excel
             </a>
@@ -47,24 +47,24 @@
                         <td class="cell-id"><?php echo htmlspecialchars($p->cedula ?? ''); ?></td>
                         <td class="cell-strong"><?php echo htmlspecialchars(trim(($p->nombre ?? '') . ' ' . ($p->apellido ?? ''))); ?></td>
                         <td>
-                            <div style="font-weight:600; font-size:13px; color:var(--text-primary);"><?php echo htmlspecialchars($p->institucion ?? ''); ?></div>
-                            <div style="font-size:12px; color:var(--text-tertiary);"><?php echo htmlspecialchars($p->carrera ?? ''); ?></div>
+                            <div class="u-fw-600 u-fs-13px u-c-text-primary"><?php echo htmlspecialchars($p->institucion ?? ''); ?></div>
+                            <div class="u-fs-12px u-c-text-tertiary"><?php echo htmlspecialchars($p->carrera ?? ''); ?></div>
                         </td>
                         <td>
                             <?php if ($p->id_tutor_institucional): ?>
-                                <div style="display:flex; align-items:center; gap:var(--sp-2); font-size:13px; color:var(--text-secondary);">
-                                    <i class="bi bi-person-check" style="color:var(--brand-500);"></i>
+                                <div class="u-ai-center u-gap-sp-2 u-fs-13px u-c-text-secondary" style="display:flex;">
+                                    <i class="bi bi-person-check u-c-brand-500"></i>
                                     <span><?php echo $p->tutor_nombre . ' ' . $p->tutor_apellido; ?></span>
                                 </div>
                             <?php else: ?>
-                                <span style="font-size:12px; color:var(--text-tertiary); font-style:italic;">Sin asignar</span>
+                                <span class="u-fs-12px u-c-text-tertiary u-fst-italic">Sin asignar</span>
                             <?php endif; ?>
                         </td>
-                        <td style="text-align:center;font-size:12px;white-space:nowrap;">
+                        <td class="u-ta-center u-fs-12px u-ws-nowrap">
                             <?php echo $p->fecha_inicio ? date('d/m/Y', strtotime($p->fecha_inicio)) : '—'; ?>
                         </td>
-                        <td style="text-align:center;font-size:12px;white-space:nowrap;">
-                            <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span style="color:var(--text-tertiary);font-style:italic;">En curso</span>'; ?>
+                        <td class="u-ta-center u-fs-12px u-ws-nowrap">
+                            <?php echo $p->fecha_fin ? date('d/m/Y', strtotime($p->fecha_fin)) : '<span class="u-c-text-tertiary u-fst-italic">En curso</span>'; ?>
                         </td>
                         <td>
                             <?php
