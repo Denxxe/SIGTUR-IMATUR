@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-27, ampliado el 2026-10-03  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–088.
+-- Cubre: esquema base + TODAS las migraciones 001–089.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -7173,6 +7173,13 @@ SELECT v.clave, v.valor, v.descripcion
        ) AS v(clave, valor, descripcion)
  WHERE NOT EXISTS (SELECT 1 FROM configuracion_sistema c WHERE c.clave = v.clave);
 
+-- >>> 089_audit_user_agent.sql
+-- Migración 089 — Dispositivo en la bitácora: User-Agent de cada evento, para
+-- distinguir teléfono/PC cuando la IP no sirve (Docker Desktop la reemplaza por
+-- la de su puerta de enlace). Ver database/migrations/089_audit_user_agent.sql.
+ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(255);
+COMMENT ON COLUMN audit_logs.user_agent IS 'User-Agent del navegador que originó el evento (mig. 089). Se muestra traducido con Util::dispositivo().';
+
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-088).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-089).
 --

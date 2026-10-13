@@ -132,8 +132,14 @@ class AuditLog extends Model
         // Si no se provee instancia, creamos una nueva.
         $db = $dbInstance ? $dbInstance : new Database();
 
-        $db->query("INSERT INTO audit_logs (tabla_afectada, operacion, record_id, datos_previos, datos_nuevos, id_usuario, ip_direccion) 
-                    VALUES (:tabla, :operacion, :record_id, :previos, :nuevos, :id_usuario, :ip)");
+        // El navegador (mig. 089) distingue teléfono/PC cuando la IP no sirve:
+        // en Docker Desktop todas llegan como la puerta de enlace 172.18.0.x.
+        $ua = isset($_SERVER['HTTP_USER_AGENT']) ? mb_substr((string)$_SERVER['HTTP_USER_AGENT'], 0, 255) : null;
+        $conUa = self::$tieneUserAgent !== false;
+
+        $db->query("INSERT INTO audit_logs (tabla_afectada, operacion, record_id, datos_previos, datos_nuevos, id_usuario, ip_direccion"
+                   . ($conUa ? ', user_agent' : '') . ")
+                    VALUES (:tabla, :operacion, :record_id, :previos, :nuevos, :id_usuario, :ip" . ($conUa ? ', :ua' : '') . ")");
 
         $db->bind(':tabla', $tabla);
         $db->bind(':operacion', $operacion);
@@ -142,7 +148,23 @@ class AuditLog extends Model
         $db->bind(':nuevos', $datos_nuevos ? json_encode($datos_nuevos) : null);
         $db->bind(':id_usuario', $id_usuario);
         $db->bind(':ip', $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        if ($conUa) $db->bind(':ua', $ua);
 
-        return $db->execute();
+        try {
+            return $db->execute();
+        } catch (PDOException $e) {
+            // Código nuevo sobre una BD sin la mig. 089: la bitácora no puede
+            // dejar de registrar por una columna informativa. Fuera de una
+            // transacción se reintenta sin ella; dentro, la transacción ya
+            // quedó abortada y el error tiene que subir.
+            if ($conUa && $e->getCode() === '42703' && !$dbInstance) {
+                self::$tieneUserAgent = false;
+                return self::log($tabla, $operacion, $record_id, $datos_previos, $datos_nuevos, $id_usuario);
+            }
+            throw $e;
+        }
     }
+
+    /** null = no se sabe aún; false = la BD no tiene audit_logs.user_agent (mig. 089 sin aplicar). */
+    private static ?bool $tieneUserAgent = null;
 }

@@ -445,6 +445,21 @@ eq(Util::montoALetras(19025.28), 'DIECINUEVE MIL VEINTICINCO BOLÍVARES CON VEIN
 eq(Util::montoALetras(1000), 'MIL BOLÍVARES', 'sin céntimos, los omite');
 eq(Util::fechaEnLetras('2026-02-18'), 'a los Dieciocho (18) días del mes de Febrero de Dos Mil Veintiséis (2026)', 'fecha del documento de donación');
 
+echo "\n== Util::dispositivo (bitácora de accesos, mig. 089) ==\n";
+// Los dos primeros son los User-Agent reales del 2026-10-13 (teléfono y PC).
+eq(Util::dispositivo('Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36'),
+   'Teléfono · Android · Chrome', 'teléfono Android con Chrome');
+eq(Util::dispositivo('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0'),
+   'Computadora · Windows · Edge', 'Edge dice también «Chrome»: debe ganar Edge');
+eq(Util::dispositivo('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'),
+   'Teléfono · iPhone · Safari', 'iPhone no se confunde con macOS');
+eq(Util::dispositivo('Mozilla/5.0 (Linux; Android 13; SM-X200) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/23.0 Chrome/115.0 Safari/537.36'),
+   'Tableta · Android · Samsung Internet', 'Android sin «Mobile» = tableta');
+eq(Util::dispositivo('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0'),
+   'Computadora · Windows · Firefox', 'Firefox en Windows');
+eq(Util::dispositivo(null), '—', 'sin User-Agent (registros anteriores a la mig. 089)');
+eq(Util::dispositivo('', ''), '', 'vacío con marcador propio (export)');
+
 // =====================================================================
 // Validaciones del servidor (Controller)
 // =====================================================================

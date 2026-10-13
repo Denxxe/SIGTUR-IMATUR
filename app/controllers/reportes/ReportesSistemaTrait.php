@@ -112,14 +112,15 @@ trait ReportesSistemaTrait {
                     !empty($r->fecha) ? date('d/m/Y H:i:s', strtotime($r->fecha)) : '—',
                     ['raw' => '<span class="cell-strong">' . htmlspecialchars($r->actor_name ?? $r->username ?? '—') . '</span>'],
                     ['raw' => $badge],
+                    Util::dispositivo($r->user_agent ?? null),
                     $r->ip_direccion ?? '—',
                 ];
             }
             $this->renderReporte([
                 'eyebrow' => 'Seguridad · Bitácora', 'titulo' => 'Accesos al Sistema',
-                'subtitulo' => 'Inicios de sesión e intentos fallidos: quién entró, cuándo y desde qué IP.',
+                'subtitulo' => 'Inicios de sesión e intentos fallidos: quién entró, cuándo, desde qué dispositivo y qué IP.',
                 'resumen' => ['Registros' => count($regs), 'Accesos' => $ok, 'Intentos fallidos' => $fail],
-                'columnas' => ['Fecha y hora', 'Usuario', 'Tipo', 'IP'],
+                'columnas' => ['Fecha y hora', 'Usuario', 'Tipo', 'Dispositivo', 'IP'],
                 'filas' => $filas,
                 'accion' => URL_ROOT . '/reportes/accesos',
                 'filtros' => [
@@ -145,10 +146,11 @@ trait ReportesSistemaTrait {
                 !empty($r->fecha) ? date('d/m/Y H:i:s', strtotime($r->fecha)) : '',
                 $r->actor_name ?? $r->username ?? '',
                 $r->operacion === 'LOGIN_FALLIDO' ? 'Intento fallido' : 'Acceso',
+                Util::dispositivo($r->user_agent ?? null, ''),
                 $r->ip_direccion ?? '',
             ];
         }
-        $this->exportCsv('accesos_sistema', ['Fecha y hora', 'Usuario', 'Tipo', 'IP'], $rows);
+        $this->exportCsv('accesos_sistema', ['Fecha y hora', 'Usuario', 'Tipo', 'Dispositivo', 'IP'], $rows);
     }
 
     private function queryAccesos() {
@@ -164,7 +166,8 @@ trait ReportesSistemaTrait {
             $where .= " AND (u.username ILIKE :q OR (COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')) ILIKE :q)";
             $binds[':q'] = '%' . trim($_GET['buscar']) . '%';
         }
-        $db->query("SELECT a.fecha, a.operacion, a.ip_direccion, u.username,
+        // user_agent vía to_jsonb: el reporte sigue funcionando en una BD sin la mig. 089.
+        $db->query("SELECT a.fecha, a.operacion, a.ip_direccion, to_jsonb(a)->>'user_agent' AS user_agent, u.username,
                            COALESCE(NULLIF(TRIM(COALESCE(per.nombre,'') || ' ' || COALESCE(per.apellido,'')), ''), u.username) AS actor_name
                     FROM audit_logs a
                     LEFT JOIN usuarios u   ON a.id_usuario  = u.id

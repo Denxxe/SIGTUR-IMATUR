@@ -36,6 +36,49 @@ class Util
         return $e === null ? $vacio : $e . $sufijo;
     }
 
+    /**
+     * Traduce un User-Agent a algo legible: «Teléfono · Android · Chrome»,
+     * «Computadora · Windows · Edge». Sirve para la bitácora de accesos, donde
+     * la IP no siempre identifica al equipo (ver mig. 089). Es orientativo: el
+     * User-Agent lo manda el navegador y se puede falsear.
+     */
+    public static function dispositivo(?string $ua, string $vacio = '—'): string
+    {
+        $ua = trim((string)$ua);
+        if ($ua === '') return $vacio;
+
+        // Sistema. iPadOS 13+ se presenta como Mac: no hay forma fiable de
+        // distinguirlo sin JavaScript, así que sale como Computadora · macOS.
+        $so = 'Otro';
+        if (preg_match('/iPhone|iPod/i', $ua))       $so = 'iPhone';
+        elseif (preg_match('/iPad/i', $ua))          $so = 'iPad';
+        elseif (preg_match('/Android/i', $ua))       $so = 'Android';
+        elseif (preg_match('/Windows/i', $ua))       $so = 'Windows';
+        elseif (preg_match('/Mac OS X|Macintosh/i', $ua)) $so = 'macOS';
+        elseif (preg_match('/CrOS/i', $ua))          $so = 'ChromeOS';
+        elseif (preg_match('/Linux/i', $ua))         $so = 'Linux';
+
+        if ($so === 'iPad' || ($so === 'Android' && !preg_match('/Mobile/i', $ua))) $tipo = 'Tableta';
+        elseif (in_array($so, ['iPhone', 'Android'], true)) $tipo = 'Teléfono';
+        else $tipo = 'Computadora';
+
+        // Navegador. El orden importa: Edge, Opera y Samsung dicen también
+        // «Chrome», y Chrome dice también «Safari».
+        $nav = 'Otro';
+        foreach ([
+            'Edge'     => '/Edg(e|A|iOS)?\//',
+            'Opera'    => '/OPR\/|Opera/',
+            'Samsung Internet' => '/SamsungBrowser/',
+            'Firefox'  => '/Firefox|FxiOS/',
+            'Chrome'   => '/Chrome|CriOS/',
+            'Safari'   => '/Safari/',
+        ] as $nombre => $re) {
+            if (preg_match($re, $ua)) { $nav = $nombre; break; }
+        }
+
+        return $tipo . ' · ' . $so . ' · ' . $nav;
+    }
+
     // ── Números en letras ────────────────────────────────────────────────────
     // Los documentos jurídicos escriben las cantidades dos veces, en letras y
     // en números ("DIECINUEVE MIL VEINTICINCO BOLÍVARES CON VEINTIOCHO
