@@ -83,6 +83,7 @@
     </div>
 
     <script src="<?php echo URL_ROOT; ?>/assets/libs/bootstrap.bundle.min.js"></script>
+    <script src="<?php echo URL_ROOT; ?>/assets/js/sigtur-password.js?v=<?php echo filemtime('../public/assets/js/sigtur-password.js'); ?>"></script>
 </body>
 
 </html>

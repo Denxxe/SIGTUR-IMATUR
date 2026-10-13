@@ -7,12 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initSigturValidations();
     initRowActions();
     initTablasBuscables();
+    initTablasApiladas();
 
     // Listener asíncrono para Modales (Bootstrap) en caso de que los forms se generen dinámicamente
     document.addEventListener('shown.bs.modal', function() {
         initSigturValidations();
         sigturRefreshButtons();
         initRowActions();
+        initTablasApiladas();
     });
 });
 
@@ -377,6 +379,63 @@ function initRowActions(root) {
     });
 }
 window.initRowActions = initRowActions;
+
+/**
+ * Tablas legibles en el teléfono (2026-10-13). En pantallas angostas una tabla
+ * de 6 columnas se aprieta hasta partir las palabras letra por letra. Aquí cada
+ * celda de `table.sig-table` recibe `data-label` con el nombre de su columna, y
+ * el CSS (`@media (max-width: 640px)`, `.is-stack`) convierte cada fila en una
+ * tarjeta «etiqueta · valor». En escritorio no cambia nada.
+ *
+ * Se salta: tablas con `data-no-stack` (en la tabla o en su contenedor), sin
+ * `thead`, o con encabezado de varias filas (columnas agrupadas: las etiquetas
+ * no se podrían asignar bien y conviene más el desplazamiento horizontal).
+ * Las celdas con contenido de bloque (formularios, tablas, detalles) llevan
+ * `td-stack`: la etiqueta va arriba y el contenido debajo, a todo el ancho.
+ * Idempotente; para filas inyectadas por AJAX, llamar `window.initTablasApiladas()`.
+ */
+function initTablasApiladas(root) {
+    (root || document).querySelectorAll('table.sig-table').forEach(table => {
+        if (table.closest('[data-no-stack]')) return;
+        const thead = table.tHead;
+        if (!thead || thead.rows.length !== 1) return;
+
+        const labels = [];
+        Array.from(thead.rows[0].cells).forEach(th => {
+            const span = Math.max(1, th.colSpan || 1);
+            const txt = (th.textContent || '').replace(/\s+/g, ' ').trim();
+            const vacio = th.classList.contains('col-actions') || txt === '';
+            for (let i = 0; i < span; i++) labels.push(vacio ? '' : txt);
+        });
+
+        table.classList.add('is-stack');
+        const wrap = table.closest('.sig-table-wrap');
+        if (wrap) wrap.classList.add('has-stack');
+
+        Array.from(table.tBodies).forEach(tb => Array.from(tb.rows).forEach(tr => {
+            if (tr.dataset.stacked) return;
+            tr.dataset.stacked = '1';
+            let col = 0;
+            Array.from(tr.cells).forEach(td => {
+                const span = Math.max(1, td.colSpan || 1);
+                // Una celda que ocupa toda la fila (estado vacío, separador) no lleva etiqueta.
+                if (span < labels.length && !td.hasAttribute('data-label')) td.setAttribute('data-label', labels[col] || '');
+                if (td.querySelector('table, form, .collapse, ul, ol, textarea')) td.classList.add('td-stack');
+                col += span;
+            });
+        }));
+
+        // Filas que llegan después (AJAX, filtros que repintan el tbody).
+        if (!table.dataset.stackObs && window.MutationObserver) {
+            table.dataset.stackObs = '1';
+            new MutationObserver(() => initTablasApiladas(table.parentNode))
+                .observe(table, { childList: true, subtree: false });
+            Array.from(table.tBodies).forEach(tb =>
+                new MutationObserver(() => initTablasApiladas(table.parentNode)).observe(tb, { childList: true }));
+        }
+    });
+}
+window.initTablasApiladas = initTablasApiladas;
 
 /**
  * Recalcula el estado (habilitado/deshabilitado) de los botones submit de todos

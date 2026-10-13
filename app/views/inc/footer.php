@@ -12,6 +12,7 @@
         <script src="<?php echo URL_ROOT; ?>/assets/libs/apexcharts.min.js"></script>
         <!-- Validador Global de Formularios -->
         <script src="<?php echo URL_ROOT; ?>/assets/js/sigtur-validations.js?v=<?php echo filemtime('../public/assets/js/sigtur-validations.js'); ?>"></script>
+        <script src="<?php echo URL_ROOT; ?>/assets/js/sigtur-password.js?v=<?php echo filemtime('../public/assets/js/sigtur-password.js'); ?>"></script>
 
         <!-- Contenedor de Toasts del nuevo diseño -->
         <div class="sig-toast-region" id="sigToastRegion"></div>

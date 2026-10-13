@@ -476,6 +476,27 @@ function auditUrl(array $filtros, int $p): string {
 .audit-kv--diff tbody th { padding-right:16px; }
 .audit-kv__before { color:#b91c1c; text-decoration:line-through; opacity:.85; padding-right:10px; }
 .audit-kv__after  { color:#047857; font-weight:600; padding-left:10px; }
+
+/* Teléfono: la etiqueta con nowrap + width:1% dejaba al valor una columna de
+   una letra («a / d / m / i / n» en vertical). Se apila: campo arriba, valor
+   debajo, y en ediciones «Antes» y «Después» uno bajo el otro. */
+@media (max-width: 640px) {
+    .audit-detail { max-width:none; padding:var(--sp-3); }
+    .audit-kv, .audit-kv tbody, .audit-kv tr { display:block; width:100%; }
+    /* .audit-detail delante: le gana a `.sig-table tbody td` (padding 14px 18px y borde),
+       que también alcanza a esta sub-tabla. */
+    .audit-detail .audit-kv th, .audit-detail .audit-kv td { display:block; width:auto; white-space:normal; padding:0; border:0; text-align:left; }
+    .audit-kv tr { padding:8px 0; }
+    .audit-kv tr + tr { border-top:1px dashed var(--border-subtle); }
+    .audit-kv tr + tr th, .audit-kv tr + tr td { border-top:none; }
+    .audit-kv th { font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+    .audit-kv--diff thead { display:none; }
+    .audit-kv--diff tbody th { padding-right:0; }
+    .audit-detail .audit-kv--diff td.u-ta-center { display:none; }
+    .audit-kv__before, .audit-kv__after { padding:0; }
+    .audit-kv__before::before { content:'Antes: '; text-decoration:none; display:inline-block; margin-right:4px; color:var(--text-tertiary); font-weight:600; }
+    .audit-kv__after::before  { content:'Después: '; color:var(--text-tertiary); font-weight:600; }
+}
 </style>
 
 <?php require_once '../app/views/inc/footer.php'; ?>

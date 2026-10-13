@@ -676,6 +676,50 @@ form[style*="flex"] > .sig-search-select { flex: 1 1 220px; width: auto; }
   }
 }
 
+/* ===== TABLAS EN EL TELÉFONO: cada fila es una tarjeta (2026-10-13) =====
+   `initTablasApiladas()` (sigtur-validations.js) marca la tabla con .is-stack y
+   pone en cada celda data-label = su encabezado. Sin .is-stack (tablas con
+   encabezado agrupado o data-no-stack) se mantiene el desplazamiento horizontal.
+   Sin !important a propósito: la paginación oculta filas con style.display. */
+@media (max-width: 640px) {
+  .sig-table-wrap.has-stack {
+    background: transparent; border: none; box-shadow: none;
+    margin-left: 0; margin-right: 0; overflow-x: visible;
+  }
+  .sig-table.is-stack { min-width: 0 !important; font-size: 14px; }
+  .sig-table.is-stack > thead { display: none; }
+  .sig-table.is-stack,
+  .sig-table.is-stack > tbody { display: block; width: 100%; }
+  .sig-table.is-stack > tbody > tr {
+    display: block; margin-bottom: var(--sp-3);
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: var(--r-lg); box-shadow: var(--sh-sm); padding: 4px 14px;
+  }
+  .sig-table.is-stack > tbody > tr:hover { background: var(--bg-surface); }
+  .sig-table.is-stack > tbody > tr > td {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 10px 0; border-bottom: 1px dashed var(--border-subtle);
+    text-align: right; white-space: normal !important; word-break: normal; overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .sig-table.is-stack > tbody > tr > td:last-child { border-bottom: none; }
+  .sig-table.is-stack > tbody > tr > td[data-label]:not([data-label=""])::before {
+    content: attr(data-label);
+    flex: 0 0 40%; max-width: 40%;
+    text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--text-secondary); padding-top: 2px;
+  }
+  /* Contenido de bloque (detalles, formularios, sub-tablas): etiqueta arriba. */
+  .sig-table.is-stack > tbody > tr > td.td-stack { display: block; text-align: left; }
+  .sig-table.is-stack > tbody > tr > td.td-stack::before { display: block; max-width: none; margin-bottom: 6px; }
+  /* Acciones: al pie de la tarjeta, alineadas a la derecha. */
+  .sig-table.is-stack > tbody > tr > td.col-actions { justify-content: flex-end; flex-wrap: wrap; gap: 6px; padding-top: 12px; }
+  /* Estado vacío / celdas que ocupan toda la fila. */
+  .sig-table.is-stack > tbody > tr > td:not([data-label]),
+  .sig-table.is-stack > tbody > tr > td[data-label=""]:not(.col-actions) { justify-content: center; text-align: center; }
+  .sig-table.is-stack > tbody > tr > td.sig-table-empty { display: block; border: none; }
+}
+
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
