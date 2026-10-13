@@ -27,7 +27,7 @@ class Model {
             // el subconjunto que cada modelo arma a mano.
             if ($operacion === 'UPDATE' && $record_id && isset($this->db)) {
                 $full = self::fetchFullRow($this->db->getHandler(), $tabla, (int)$record_id);
-                if ($full !== null) $nuevos = $full;
+                if ($full !== null) $nuevos = self::conservarMarcas($full, $nuevos);
             }
             AuditLog::log($tabla, $operacion, $record_id, self::toArray($previos), self::toArray($nuevos), $user_id);
         } catch (\Exception $e) {
@@ -43,7 +43,7 @@ class Model {
             if ($operacion === 'UPDATE' && $record_id) {
                 $tmp  = new Database();
                 $full = self::fetchFullRow($tmp->getHandler(), $tabla, (int)$record_id);
-                if ($full !== null) $nuevos = $full;
+                if ($full !== null) $nuevos = self::conservarMarcas($full, $nuevos);
             }
             AuditLog::log($tabla, $operacion, $record_id, self::toArray($previos), self::toArray($nuevos), $user_id);
         } catch (\Exception $e) {
@@ -68,6 +68,21 @@ class Model {
         } catch (\Throwable $e) {
             return null;
         }
+    }
+
+    /**
+     * La fila releída no trae la contraseña (fetchFullRow la quita), así que un
+     * cambio de contraseña quedaba como «Edición · No hubo cambios visibles».
+     * Las marcas `password_changed`/`password_origen` que pone Usuario se
+     * conservan para que la bitácora diga qué pasó, sin guardar el valor.
+     */
+    private static function conservarMarcas(array $full, $nuevos): array {
+        $n = self::toArray($nuevos) ?? [];
+        if (!empty($n['password_changed'])) {
+            $full['password_changed'] = true;
+            if (!empty($n['password_origen'])) $full['password_origen'] = $n['password_origen'];
+        }
+        return $full;
     }
 
     private static function toArray($val): ?array {

@@ -208,6 +208,7 @@ class Usuario extends Model {
 
         $result = $this->db->execute();
         $nuevos = ['username' => $this->username, 'id_rol' => $this->id_rol, 'id_empleado' => $this->id_empleado, 'password_changed' => !empty($this->password)];
+        if ($this->id && !empty($this->password)) $nuevos['password_origen'] = 'Gestión de usuarios';
         $this->audit('usuarios', $this->id ? 'UPDATE' : 'INSERT', $this->id ?? null, $previos, $nuevos, $user_id);
         return $result;
     }
@@ -271,10 +272,13 @@ class Usuario extends Model {
                         updated_at = CURRENT_TIMESTAMP, updated_by = :user_id
                     WHERE id = :id");
         $db->bind(':password', password_hash($plainPassword, PASSWORD_BCRYPT));
-        $db->bind(':user_id', $userId);
+        $db->bind(':user_id', $userId ?? $id);
         $db->bind(':id', $id);
         $result = $db->execute();
-        self::auditStatic('usuarios', 'UPDATE', $id, $previos, ['password_changed' => true], $userId);
+        // Sin sesión, el responsable es el titular de la cuenta: demostró serlo
+        // con el enlace de un solo uso (antes salía como «Sistema»).
+        self::auditStatic('usuarios', 'UPDATE', $id, $previos,
+            ['password_changed' => true, 'password_origen' => 'Recuperación por correo'], $userId ?? $id);
         return $result;
     }
 

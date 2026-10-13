@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-27, ampliado el 2026-10-03  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–089.
+-- Cubre: esquema base + TODAS las migraciones 001–090.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -7180,6 +7180,13 @@ SELECT v.clave, v.valor, v.descripcion
 ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS user_agent VARCHAR(255);
 COMMENT ON COLUMN audit_logs.user_agent IS 'User-Agent del navegador que originó el evento (mig. 089). Se muestra traducido con Util::dispositivo().';
 
+-- >>> 090_audit_login_inactivo.sql
+-- Migración 090 — La bitácora acepta LOGIN_INACTIVO (intentos de cuentas
+-- suspendidas, que el CHECK de la 054 rechazaba en silencio).
+ALTER TABLE audit_logs DROP CONSTRAINT IF EXISTS audit_logs_operacion_check;
+ALTER TABLE audit_logs ADD CONSTRAINT audit_logs_operacion_check
+    CHECK (operacion IN ('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGIN_FALLIDO', 'LOGIN_INACTIVO'));
+
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-089).
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-090).
 --

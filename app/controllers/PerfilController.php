@@ -87,6 +87,13 @@ class PerfilController extends Controller {
             $db->query("UPDATE usuarios SET password = :p, updated_at = NOW(), updated_by = :uid WHERE id = :id");
             $db->bind(':p', $hash); $db->bind(':uid', $userId); $db->bind(':id', $userId);
             $db->execute();
+            // Antes no quedaba rastro: el cambio desde Mi perfil no se auditaba.
+            try {
+                AuditLog::log('usuarios', 'UPDATE', (int)$userId, null,
+                    ['password_changed' => true, 'password_origen' => 'Desde «Mi perfil»'], (int)$userId);
+            } catch (Exception $e) {
+                error_log('AuditLog cambio de contraseña falló: ' . $e->getMessage());
+            }
             flash('global_msg', 'Contraseña actualizada correctamente.');
         }
         header('Location: ' . URL_ROOT . '/perfil/index');

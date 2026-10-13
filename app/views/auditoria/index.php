@@ -105,8 +105,15 @@ function auditCtrlLabel(string $ctrl): string {
 function auditOcultar(): array {
     return ['id','created_at','updated_at','deleted_at','created_by','updated_by','deleted_by',
             'is_active','password','ip_direccion','create_at','update_at','delete_at',
-            'create_by','update_by','delete_by','id_persona'];
+            'create_by','update_by','delete_by','id_persona',
+            // Marcas de cambio de contraseña: se muestran como una línea propia.
+            'password_changed','password_origen',
+            // Contadores internos del login: cambian solos con cada intento.
+            'failed_attempts','locked_until','last_login','ultimo_login','activo'];
 }
+
+/** Operaciones de acceso (no son cambios de datos: se explican aparte). */
+const AUDIT_OPS_ACCESO = ['LOGIN', 'LOGIN_FALLIDO', 'LOGIN_INACTIVO'];
 ?>
 
 <div class="page__head anim-slide-up">
@@ -141,6 +148,11 @@ $opMeta = [
     'UPDATE'  => ['Edición',      'sig-badge--info',    'bi-pencil-fill',               '#2563EB'],
     'DELETE'  => ['Eliminación',  'sig-badge--danger',  'bi-trash-fill',                '#DC2626'],
     'RESTORE' => ['Restauración', 'sig-badge--brand',   'bi-arrow-counterclockwise',    '#7C3AED'],
+    // Accesos: antes salían crudos («· LOGIN») y con «Datos registrados»,
+    // como si se hubiera creado un usuario.
+    'LOGIN'          => ['Inicio de sesión',  'sig-badge--success', 'bi-box-arrow-in-right',  '#059669'],
+    'LOGIN_FALLIDO'  => ['Intento fallido',   'sig-badge--danger',  'bi-shield-exclamation',  '#DC2626'],
+    'LOGIN_INACTIVO' => ['Acceso denegado',   'sig-badge--warning', 'bi-person-lock',         '#B45309'],
 ];
 
 /** URL de una página preservando los filtros activos. */
@@ -251,7 +263,7 @@ function auditUrl(array $filtros, int $p): string {
                                 <?php echo htmlspecialchars($actor); ?>
                             </span>
                         </td>
-                        <td class="u-fs-12px u-fw-700 u-c-brand-600"><?php echo htmlspecialchars(auditModulo($log->tabla_afectada)); ?></td>
+                        <td class="u-fs-12px u-fw-700 u-c-brand-600"><?php echo htmlspecialchars(in_array($log->operacion, AUDIT_OPS_ACCESO, true) ? 'Acceso al sistema' : auditModulo($log->tabla_afectada)); ?></td>
                         <td>
                             <span class="sig-badge <?php echo $opCls; ?>"><i class="bi <?php echo $opIco; ?>"></i> <?php echo $opLbl; ?></span>
                         </td>
@@ -268,8 +280,40 @@ function auditUrl(array $filtros, int $p): string {
                             </button>
                             <div class="collapse mt-2" id="log_<?php echo $log->id; ?>">
                                 <?php
+                                $cambioClave  = !empty($new['password_changed']) && $log->operacion !== 'INSERT';
+                                $origenClave  = (string)($new['password_origen'] ?? '');
+                                // ── ACCESO (inicio de sesión / intento) ───────
+                                if (in_array($log->operacion, AUDIT_OPS_ACCESO, true)):
+                                    [$accTxt, $accColor, $accIco] = [
+                                        'LOGIN'          => ['Inició sesión en el sistema.', '#059669', 'bi-box-arrow-in-right'],
+                                        'LOGIN_FALLIDO'  => [!empty($new['bloqueada'])
+                                                                ? 'Contraseña incorrecta. Se alcanzó el límite de intentos y la cuenta quedó bloqueada temporalmente.'
+                                                                : 'Contraseña incorrecta: no se permitió el acceso.', '#DC2626', 'bi-shield-exclamation'],
+                                        'LOGIN_INACTIVO' => ['Contraseña correcta, pero la cuenta está inactiva: no se permitió el acceso.', '#B45309', 'bi-person-lock'],
+                                    ][$log->operacion];
+                                ?>
+                                    <div class="audit-detail">
+                                        <div class="audit-detail__title" style="color:<?php echo $accColor; ?>;"><i class="bi <?php echo $accIco; ?>"></i> <?php echo htmlspecialchars($opLbl); ?></div>
+                                        <div class="audit-detail__empty u-mb-4px"><?php echo htmlspecialchars($accTxt); ?></div>
+                                        <table class="audit-kv">
+                                            <tr><th>Cuenta</th><td><?php echo htmlspecialchars((string)($new['username'] ?? $log->username ?? '—')); ?></td></tr>
+                                            <tr><th>Dispositivo</th><td><?php echo htmlspecialchars(Util::dispositivo($log->user_agent ?? null)); ?></td></tr>
+                                            <tr><th>IP</th><td><?php echo htmlspecialchars((string)($log->ip_direccion ?? '—')); ?></td></tr>
+                                        </table>
+                                    </div>
+                                <?php
+                                // ── CAMBIO DE CONTRASEÑA sin más datos (Mi perfil) ─
+                                elseif ($cambioClave && empty($prev)):
+                                ?>
+                                    <div class="audit-detail audit-detail--upd">
+                                        <div class="audit-detail__title" style="color:#2563EB;"><i class="bi bi-key-fill"></i> Cambios realizados</div>
+                                        <table class="audit-kv">
+                                            <tr><th>Contraseña</th><td>Modificada<?php echo $origenClave !== '' ? ' · ' . htmlspecialchars($origenClave) : ''; ?> <span class="u-c-text-tertiary">(por seguridad no se muestra)</span></td></tr>
+                                        </table>
+                                    </div>
+                                <?php
                                 // ── INSERT ────────────────────────────────────
-                                if ($log->operacion === 'INSERT' || (empty($prev) && !empty($new))):
+                                elseif ($log->operacion === 'INSERT' || (empty($prev) && !empty($new))):
                                     $filas = array_filter($new, fn($k) => !in_array($k, $ocultar), ARRAY_FILTER_USE_KEY);
                                 ?>
                                     <div class="audit-detail audit-detail--new">
@@ -324,8 +368,14 @@ function auditUrl(array $filtros, int $p): string {
                                 ?>
                                     <div class="audit-detail audit-detail--upd">
                                         <div class="audit-detail__title" style="color:#2563EB;"><i class="bi bi-pencil-fill"></i> Cambios realizados</div>
+                                        <?php if ($cambioClave): ?>
+                                            <table class="audit-kv u-mb-4px">
+                                                <tr><th><i class="bi bi-key-fill"></i> Contraseña</th><td>Modificada<?php echo $origenClave !== '' ? ' · ' . htmlspecialchars($origenClave) : ''; ?> <span class="u-c-text-tertiary">(por seguridad no se muestra)</span></td></tr>
+                                            </table>
+                                        <?php endif; ?>
                                         <?php if ($soloActivo): ?>
                                             <div class="audit-detail__empty"><?php echo (auditNorm($new['is_active'] ?? null) === '1') ? 'Se reactivó el registro.' : 'Se desactivó el registro.'; ?></div>
+                                        <?php elseif (empty($cambios) && $cambioClave): ?>
                                         <?php elseif (empty($cambios)): ?>
                                             <div class="audit-detail__empty">No hubo cambios visibles.</div>
                                         <?php else: ?>
