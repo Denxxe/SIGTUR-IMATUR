@@ -477,6 +477,9 @@ check(!$ctl->email('ñandú@dominio.com'), 'correo con símbolos especiales → 
 check(!$ctl->email(''), 'correo vacío → inválido');
 check($ctl->tel('0414-1234567'), 'teléfono VE con guion → válido');
 check(!$ctl->tel('0414123'), 'teléfono corto → inválido');
+check(!$ctl->tel('00000000000'), 'relleno de datos de arranque (todo ceros) → inválido');
+check($ctl->tel('02934311234'), 'teléfono fijo (02xx) → válido');
+check(!$ctl->tel('01234567890'), 'código de área inexistente (01xx) → inválido');
 check($ctl->rif('G-20008498-7'), 'RIF institucional → válido');
 check(!$ctl->rif('X-12345678-9'), 'RIF con letra no venezolana → inválido');
 eq($ctl->nrif('g200084987'), 'G-20008498-7', 'normaliza el RIF a L-NNNNNNNN-N');

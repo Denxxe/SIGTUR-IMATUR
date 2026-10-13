@@ -87,7 +87,9 @@ class Controller {
     // (0XXX + 7 = formato que produce el campo del front). Mismo criterio que
     // sigtur-validations.js (prefijo móvil + 7 dígitos).
     protected function telefonoValido(string $tel): bool {
-        return (bool) preg_match('/^0\d{10}$/', preg_replace('/\D/', '', $tel));
+        // 0 + código de área real (2xx fijo, 4xx móvil) + 7 dígitos. Antes bastaba
+        // «0 + 10 dígitos» y pasaba el relleno «00000000000» de los datos de arranque.
+        return (bool) preg_match('/^0[24]\d{9}$/', preg_replace('/\D/', '', $tel));
     }
 
     // Valida un RIF venezolano: una letra de tipo (V/E/J/P/G/C) + 8 dígitos +

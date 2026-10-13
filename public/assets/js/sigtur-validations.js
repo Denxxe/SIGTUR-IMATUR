@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initRowActions();
     initTablasBuscables();
     initTablasApiladas();
+    initAccionesMovil();
 
     // Listener asíncrono para Modales (Bootstrap) en caso de que los forms se generen dinámicamente
     document.addEventListener('shown.bs.modal', function() {
@@ -436,6 +437,52 @@ function initTablasApiladas(root) {
     });
 }
 window.initTablasApiladas = initTablasApiladas;
+
+/**
+ * Encabezado de página en el teléfono (2026-10-13): cuando `.page__actions`
+ * tiene 4 o más botones secundarios, se pliegan en `.page__actions-more`
+ * detrás de un botón «Más opciones (N)». Los principales (primary / success /
+ * danger) quedan siempre a la vista.
+ *
+ * En escritorio no cambia nada: `.page__actions-more` es `display: contents`
+ * (sus botones siguen siendo parte del mismo flex, en el mismo orden) y el
+ * botón «Más opciones» está oculto. El plegado lo aplica solo el CSS móvil.
+ * Opt-out: `data-no-plegar` en `.page__actions`.
+ */
+function initAccionesMovil(root) {
+    (root || document).querySelectorAll('.page__actions:not([data-no-plegar])').forEach(acc => {
+        if (acc.dataset.plegado) return;
+        acc.dataset.plegado = '1';
+        const esPrincipal = el => /\bbtn-sig--(primary|success|danger)\b/.test(el.className);
+        const secundarios = Array.from(acc.children).filter(el =>
+            el.matches('a.btn-sig, button.btn-sig') && !esPrincipal(el));
+        if (secundarios.length < 4) return;
+
+        const more = document.createElement('div');
+        more.className = 'page__actions-more';
+        more.id = 'pam_' + Math.random().toString(36).slice(2, 8);
+        acc.insertBefore(more, secundarios[0]);       // mismo lugar: el orden de escritorio no cambia
+        secundarios.forEach(el => more.appendChild(el));
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-sig btn-sig--ghost page__actions-toggle';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', more.id);
+        const pintar = abierto => {
+            btn.innerHTML = '<i class="bi bi-' + (abierto ? 'chevron-up' : 'three-dots') + '"></i> '
+                + (abierto ? 'Menos opciones' : 'Más opciones (' + secundarios.length + ')');
+        };
+        pintar(false);
+        btn.addEventListener('click', () => {
+            const abierto = more.classList.toggle('is-open');
+            btn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+            pintar(abierto);
+        });
+        acc.insertBefore(btn, more);
+    });
+}
+window.initAccionesMovil = initAccionesMovil;
 
 /**
  * Recalcula el estado (habilitado/deshabilitado) de los botones submit de todos
@@ -979,6 +1026,11 @@ function initTelefonoInput(input) {
     num.setAttribute('inputmode', 'numeric');
     num.setAttribute('maxlength', '7');
     num.setAttribute('placeholder', '7 dígitos');
+    // Sin esto el navegador lo toma por «usuario» cuando el formulario tiene una
+    // contraseña (Mi perfil) y lo autocompleta con el nombre de usuario.
+    num.setAttribute('autocomplete', 'tel-local');
+    num.setAttribute('aria-label', 'Número de teléfono (7 dígitos)');
+    sel.setAttribute('aria-label', 'Prefijo del teléfono');
     if (requerido) num.setAttribute('required', '');
 
     combo.appendChild(sel);
@@ -1006,7 +1058,10 @@ function initTelefonoInput(input) {
 
     // Parsear el valor original (incluye prefijos no listados) hacia el combo
     const sincronizar = () => {
-        const d = (_telValueDesc.get.call(input) || '').replace(/\D/g, '');
+        let d = (_telValueDesc.get.call(input) || '').replace(/\D/g, '');
+        // Relleno de datos de arranque («00000000000»): no es un número, se
+        // muestra vacío en vez de un prefijo «0000» inexistente.
+        if (/^0+$/.test(d)) d = '';
         let pref = TEL_PREFIJO_DEFAULT, resto = '';
         if (d.length === 11 && d[0] === '0') { pref = d.slice(0, 4); resto = d.slice(4, 11); }
         else if (d.length === 10) { pref = '0' + d.slice(0, 3); resto = d.slice(3, 10); }

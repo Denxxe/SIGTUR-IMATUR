@@ -16,9 +16,9 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
 
 <div class="row g-4 anim-slide-up">
 
-    <!-- Identidad (solo lectura: la mantiene Talento Humano) -->
+    <!-- Identidad (solo lectura: la mantiene Talento Humano). Fija al desplazar en escritorio. -->
     <div class="col-lg-4">
-        <div class="sig-card h-100">
+        <div class="sig-card pf-sticky">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-person-badge u-c-brand-600"></i> Mi cuenta</div>
             </div>
@@ -51,9 +51,9 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
         </div>
     </div>
 
-    <!-- Datos de contacto -->
-    <div class="col-lg-8">
-        <div class="sig-card h-100">
+    <!-- Columna derecha: contacto, usuario y contraseña, apilados (sin huecos) -->
+    <div class="col-lg-8 pf-col">
+        <div class="sig-card">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-person-lines-fill u-c-x059669"></i> Datos de contacto</div>
             </div>
@@ -68,6 +68,11 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
                     El correo es el que recibe el enlace para recuperar tu contraseña y con el que también puedes iniciar sesión.
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/actualizarContacto" method="POST" id="pf_contacto">
+                    <!-- Le dice al gestor de contraseñas a qué cuenta pertenece la contraseña de
+                         abajo; sin él, el navegador usaba el teléfono como «usuario» y lo rellenaba. -->
+                    <input type="text" name="_cuenta" autocomplete="username" value="<?php echo htmlspecialchars($u->username ?? ''); ?>"
+                           readonly tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             <div class="sig-field">
@@ -108,39 +113,35 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
                 <?php endif; ?>
             </div>
         </div>
-    </div>
 
-    <!-- Cambiar username -->
-    <div class="col-lg-6">
-        <div class="sig-card h-100">
+        <!-- Cambiar username -->
+        <div class="sig-card">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-at u-c-x3B82F6"></i> Nombre de usuario</div>
             </div>
             <div class="sig-card__body u-p-sp-5">
                 <p class="u-fs-13px u-c-text-secondary u-mb-sp-4">
-                    Es el nombre con el que inicias sesión. Debe ser único: de 3 a 50 caracteres, con letras, números,
-                    punto, guion o guion bajo (sin espacios ni @).
+                    Es el nombre con el que inicias sesión. De 3 a 50 caracteres: letras, números,
+                    punto, guion o guion bajo (sin espacios ni @). No puede repetirse.
                 </p>
-                <form action="<?php echo URL_ROOT; ?>/perfil/cambiarUsername" method="POST">
-                    <div class="sig-field mb-4">
-                        <label class="sig-field__label" for="pf_username">Nuevo nombre de usuario</label>
+                <form action="<?php echo URL_ROOT; ?>/perfil/cambiarUsername" method="POST" class="pf-inline">
+                    <div class="sig-field">
+                        <label class="sig-field__label" for="pf_username">Nombre de usuario</label>
                         <input id="pf_username" type="text" name="username" class="sig-input" required
                                minlength="3" maxlength="50" pattern="[A-Za-z0-9._\-]{3,50}"
                                title="3 a 50 caracteres: letras, números, punto, guion o guion bajo"
                                value="<?php echo htmlspecialchars($u->username ?? ''); ?>"
                                autocomplete="off" autocapitalize="none" spellcheck="false">
                     </div>
-                    <button type="submit" class="btn-sig btn-sig--primary u-w-100pct">
+                    <button type="submit" class="btn-sig btn-sig--primary">
                         <i class="bi bi-check-lg"></i> Actualizar usuario
                     </button>
                 </form>
             </div>
         </div>
-    </div>
 
-    <!-- Cambiar contraseña -->
-    <div class="col-lg-6">
-        <div class="sig-card h-100">
+        <!-- Cambiar contraseña -->
+        <div class="sig-card">
             <div class="sig-card__head">
                 <div class="sig-card__title"><i class="bi bi-key u-c-x7C3AED"></i> Contraseña</div>
             </div>
@@ -150,22 +151,32 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
                     «¿Olvidaste tu contraseña?» en la pantalla de inicio o pídele al Administrador que la restablezca.
                 </p>
                 <form action="<?php echo URL_ROOT; ?>/perfil/cambiarPassword" method="POST" onsubmit="return validarFormPerfil(this)">
-                    <div class="sig-field mb-3">
-                        <label class="sig-field__label" for="password_actual">Contraseña actual <span class="req">*</span></label>
-                        <input id="password_actual" type="password" name="password_actual" class="sig-input" required autocomplete="current-password">
+                    <input type="text" name="_cuenta" autocomplete="username" value="<?php echo htmlspecialchars($u->username ?? ''); ?>"
+                           readonly tabindex="-1" aria-hidden="true" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label" for="password_actual">Contraseña actual <span class="req">*</span></label>
+                                <input id="password_actual" type="password" name="password_actual" class="sig-input" required autocomplete="current-password">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label" for="pf_nuevo">Nueva contraseña <span class="req">*</span></label>
+                                <input type="password" name="password_nuevo" id="pf_nuevo" class="sig-input" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8, letra y número">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="sig-field">
+                                <label class="sig-field__label" for="pf_confirmar">Confirmar nueva <span class="req">*</span></label>
+                                <input type="password" name="password_confirmar" id="pf_confirmar" class="sig-input" required autocomplete="new-password" placeholder="Repite la contraseña">
+                            </div>
+                        </div>
                     </div>
-                    <div class="sig-field mb-3">
-                        <label class="sig-field__label" for="pf_nuevo">Nueva contraseña <span class="req">*</span></label>
-                        <input type="password" name="password_nuevo" id="pf_nuevo" class="sig-input" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8, letra y número">
-                    </div>
-                    <div class="sig-field mb-4">
-                        <label class="sig-field__label" for="pf_confirmar">Confirmar nueva contraseña <span class="req">*</span></label>
-                        <input type="password" name="password_confirmar" id="pf_confirmar" class="sig-input" required autocomplete="new-password" placeholder="Repite la contraseña">
-                        <small id="pf_mismatch" style="display:none;color:var(--danger-500);font-size:11px;">
-                            <i class="bi bi-exclamation-triangle"></i> <span id="pf_mismatch_txt">Las contraseñas no coinciden.</span>
-                        </small>
-                    </div>
-                    <button type="submit" class="btn-sig btn-sig--primary u-w-100pct">
+                    <small id="pf_mismatch" style="display:none;color:var(--danger-500);font-size:12px;" class="u-mt-sp-2">
+                        <i class="bi bi-exclamation-triangle"></i> <span id="pf_mismatch_txt">Las contraseñas no coinciden.</span>
+                    </small>
+                    <button type="submit" class="btn-sig btn-sig--primary u-mt-sp-4">
                         <i class="bi bi-shield-lock"></i> Cambiar contraseña
                     </button>
                 </form>
@@ -174,6 +185,17 @@ $nombreCompleto = trim(($u->nombre ?? '') . ' ' . ($u->apellido ?? '')) ?: ($_SE
     </div>
 
 </div>
+
+<style>
+/* Columna derecha: tarjetas apiladas con aire entre ellas. */
+.pf-col { display: flex; flex-direction: column; gap: var(--sp-5); }
+/* Tarjeta de identidad fija al desplazar (solo cuando hay dos columnas). */
+@media (min-width: 992px) { .pf-sticky { position: sticky; top: 84px; } }
+/* Usuario: campo y botón en una línea; en el teléfono, uno bajo el otro. */
+.pf-inline { display: flex; align-items: flex-end; gap: var(--sp-3); flex-wrap: wrap; }
+.pf-inline .sig-field { flex: 1 1 260px; margin: 0; }
+@media (max-width: 576px) { .pf-inline .btn-sig { width: 100%; } }
+</style>
 
 <script>
 // Misma política que Usuario::passwordPolicyError() (mín. 8, una letra y un número).
