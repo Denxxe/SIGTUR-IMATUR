@@ -63,6 +63,7 @@
             window.SIGTUR_URL_ROOT = <?php echo json_encode(URL_ROOT); ?>;
             window.SIGTUR_LOGO_ALCALDIA = <?php echo json_encode(ConfigSistema::urlLogoAlcaldia()); ?>;
             window.SIGTUR_LOGO_IMATUR = <?php echo json_encode(ConfigSistema::urlLogoImatur()); ?>;
+            window.SIGTUR_ALTO_LOGO = <?php echo (int)ConfigSistema::ALTO_LOGO_MEMBRETE; ?>;
 
             // ==================== BORRADORES DE ASISTENTES ====================
             // El asistente de alta de empleados guarda lo escrito en localStorage para

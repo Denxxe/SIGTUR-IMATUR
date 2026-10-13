@@ -86,7 +86,7 @@ $rango = date('j', strtotime($p->semana_desde)) . ' de ' . $meses[(int)date('n',
 
 <div class="hoja">
 
-    <?php $mb = ['alto_logo' => 66, 'tamano' => 10, 'margen_inf' => 0];
+    <?php $mb = ['tamano' => 10, 'margen_inf' => 0];
           require '../app/views/inc/membrete.php'; ?>
 
     <div class="meta">Oficio N° <strong><?php echo $v($p->numero); ?></strong></div>

@@ -86,7 +86,7 @@ $offset = 0;
     <div class="hoja-lbl">Hoja <?php echo $hojaNum; ?> / <?php echo $totalHojas; ?></div>
     <?php endif; ?>
 
-    <?php $mb = ['alto_logo' => 52, 'tamano' => '8.5pt', 'margen_inf' => '10px']; require '../app/views/inc/membrete.php'; ?>
+    <?php $mb = ['tamano' => '8.5pt', 'margen_inf' => '10px']; require '../app/views/inc/membrete.php'; ?>
 
     <!-- Encabezado -->
     <div class="header-box">
@@ -110,7 +110,7 @@ $offset = 0;
             </tr>
         </table>
         <div class="logo-box">
-            <img src="<?php echo URL_ROOT; ?>/public/assets/images/Logo_imatur-removebg-preview.png" alt="IMATUR"
+            <img src="<?php echo ConfigSistema::urlLogoImatur(); ?>" alt="IMATUR"
                  onerror="this.style.display='none'">
             <div class="logo-label">IMATUR</div>
         </div>

@@ -26,7 +26,7 @@
 <div class="print-area anim-slide-up">
     <!-- MEMBRETE INSTITUCIONAL (solo impresión/PDF) -->
     <div class="d-none d-print-block" style="margin-bottom:20px;">
-        <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '0']; require '../app/views/inc/membrete.php'; ?>
+        <?php $mb = ['tamano' => '9pt', 'margen_inf' => '0']; require '../app/views/inc/membrete.php'; ?>
     </div>
 
     <!-- SECCIÓN 1: FICHA TÉCNICA -->

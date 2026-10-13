@@ -37,7 +37,7 @@ $niveles = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio'];
 <button class="btn-print" onclick="window.print()">&#128438; Imprimir / PDF</button>
 <div class="page">
 
-  <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
+  <?php $mb = ['tamano' => '9pt', 'margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
   <div class="titulo">Ficha Técnica del Trabajador</div>
 
   <!-- DATOS PERSONALES -->

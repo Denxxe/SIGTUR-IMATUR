@@ -285,6 +285,8 @@ async function sigturExportarTabla(table, modo, trs) {
     // para esa franja y desaparece (ver más abajo); el título vacío es el
     // segundo cinturón, para que ni siquiera aparezca si el usuario reactiva
     // los encabezados del navegador.
+    // Mismo alto de logo que el membrete PHP (ConfigSistema::ALTO_LOGO_MEMBRETE).
+    const altoLogo = (window.SIGTUR_ALTO_LOGO || 84) + 'px';
     let h = '<html><head><meta charset="UTF-8"><title></title><style>'
         + 'body{font-family:Arial,Helvetica,sans-serif;color:#222;margin:0;padding:14mm 12mm}'
         // Sello de emisión en la esquina, DIBUJADO POR EL DOCUMENTO.
@@ -295,8 +297,8 @@ async function sigturExportarTabla(table, modo, trs) {
         // justo lo que se quiere en un listado de varias páginas.
         + '.sello{position:fixed;top:5mm;left:12mm;font-size:8px;color:#777;letter-spacing:.02em}'
         + '.mbr{display:flex;align-items:center;gap:14px;margin-bottom:4px}'
-        + '.mbr img{height:62px;width:auto;object-fit:contain;flex-shrink:0}'
-        + '.lg-hueco{width:62px;flex-shrink:0}'
+        + '.mbr img{height:' + altoLogo + ';width:auto;object-fit:contain;flex-shrink:0}'
+        + '.lg-hueco{width:' + altoLogo + ';flex-shrink:0}'
         + '.mb{flex:1;text-align:center;font-size:10px;color:#111;line-height:1.65;'
         + 'text-transform:uppercase;font-weight:700;letter-spacing:.01em}'
         + '.regla{border:none;border-top:1px solid #111;margin:4px 0 14px}'

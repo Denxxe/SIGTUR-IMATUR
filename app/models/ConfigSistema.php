@@ -14,9 +14,17 @@ class ConfigSistema extends Model {
      * salían con el mismo logo repetido a izquierda y derecha.
      *
      * No volver a escribir estas rutas a mano en vistas ni exportadores.
+     *
+     * `membrete_*.png` son copias de esos dos **recortadas al contenido**
+     * (2026-10-13): `NR2.png` traía ~30% de margen blanco y el de IMATUR un
+     * margen transparente distinto, así que a igual alto el de la Alcaldía
+     * salía visiblemente más chico. Si cambia un logo, recortarlo igual.
      */
-    const LOGO_ALCALDIA = 'NR2.png';
-    const LOGO_IMATUR   = 'Logo_imatur-removebg-preview.png';
+    const LOGO_ALCALDIA = 'membrete_alcaldia.png';
+    const LOGO_IMATUR   = 'membrete_imatur.png';
+
+    /** Alto único (px) de los logos en todo membrete impreso — PHP y JS. */
+    const ALTO_LOGO_MEMBRETE = 84;
 
     /** URL pública del logo de la Alcaldía (para <img> y para el JS). */
     public static function urlLogoAlcaldia(): string {

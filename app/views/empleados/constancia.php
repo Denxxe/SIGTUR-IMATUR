@@ -73,7 +73,7 @@ $desemp  = $egresado ? 'desempeñó el cargo' : 'desempeña el cargo';
 <button class="btn-print" onclick="window.print()">&#128438; Imprimir / PDF</button>
 <div class="page">
 
-  <?php $mb = ['alto_logo' => 76, 'margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
+  <?php $mb = ['margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
 
   <div class="doc-nro"><strong>N° <?php echo $v($co->numero); ?></strong></div>
 

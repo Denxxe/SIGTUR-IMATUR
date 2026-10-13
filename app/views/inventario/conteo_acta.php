@@ -70,7 +70,7 @@ $fechaLarga = function ($f) use ($meses) {
   <div class="toolbar"><button class="btn" onclick="window.print()">&#128438; Imprimir / PDF</button></div>
 
   <div class="hoja">
-    <?php $mb = ['alto_logo' => 58, 'tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
+    <?php $mb = ['tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
 
     <h1>Acta de Conteo Físico de Bienes</h1>
     <div class="sub">N° <?php echo str_pad((string)(int)$c->id, 4, '0', STR_PAD_LEFT); ?> · <?php echo $cv($c->motivo); ?></div>

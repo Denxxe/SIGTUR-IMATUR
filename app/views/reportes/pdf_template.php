@@ -245,7 +245,7 @@
     </div>
 
     <!-- ── Cabecera institucional ── -->
-    <?php $mb = ['alto_logo' => 62, 'margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
+    <?php $mb = ['margen_inf' => '18px']; require '../app/views/inc/membrete.php'; ?>
 
     <!-- ── Barra título ── -->
     <div class="report-bar">

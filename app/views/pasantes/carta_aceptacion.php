@@ -63,7 +63,7 @@
 <div class="page">
 
   <!-- ── Encabezado institucional ── -->
-  <?php $mb = ['alto_logo' => 60, 'tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
+  <?php $mb = ['tamano' => '9pt', 'margen_inf' => '16px']; require '../app/views/inc/membrete.php'; ?>
 
   <!-- ── Número de oficio y fecha ── -->
   <?php

@@ -123,7 +123,7 @@ $edades = function ($g): string {
 
 <div class="hoja">
 
-    <?php $mb = ['alto_logo' => 62, 'tamano' => 9.5, 'margen_inf' => 0];
+    <?php $mb = ['tamano' => 9.5, 'margen_inf' => 0];
           require '../app/views/inc/membrete.php'; ?>
 
     <div class="titulo">Ficha Institucional</div>

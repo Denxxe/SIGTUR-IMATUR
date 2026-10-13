@@ -50,7 +50,7 @@ $salario = [
 <button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
 <?php if ($l->estado !== 'Cerrada'): ?><div class="borrador"><?php echo $l->estado === 'Anulada' ? 'ANULADA' : 'BORRADOR'; ?></div><?php endif; ?>
 <div class="page">
-  <?php $mb = ['alto_logo' => 62, 'margen_inf' => '10px', 'dependencia' => 'Dirección de Talento Humano']; require '../app/views/inc/membrete.php'; ?>
+  <?php $mb = ['margen_inf' => '10px', 'dependencia' => 'Dirección de Talento Humano']; require '../app/views/inc/membrete.php'; ?>
 
   <div class="nro"><?php echo $l->numero ? 'N.º ' . $v($l->numero) : ''; ?></div>
 

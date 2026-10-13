@@ -81,7 +81,7 @@ $bs   = fn($n) => number_format((float)$n, 2, ',', '.');
 
 <div class="hoja">
 
-    <?php $mb = ['alto_logo' => 66, 'tamano' => 10, 'margen_inf' => 0];
+    <?php $mb = ['tamano' => 10, 'margen_inf' => 0];
           require '../app/views/inc/membrete.php'; ?>
 
     <div class="titulo">Acta de Pago</div>

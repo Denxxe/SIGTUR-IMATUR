@@ -23,11 +23,14 @@
  * no cargan el CSS del sistema, y además tienen que sobrevivir al
  * `window.print()`):
  *
- *     <?php $mb = ['alto_logo' => 60]; require '../app/views/inc/membrete.php'; ?>
+ *     <?php $mb = ['tamano' => '9pt']; require '../app/views/inc/membrete.php'; ?>
+ *
+ * El alto de los logos NO es opción: es el mismo en todos los documentos
+ * (ConfigSistema::ALTO_LOGO_MEMBRETE). Cada vista tenía el suyo (52-76 px)
+ * y el cliente notó que no coincidían entre un PDF y otro.
  *
  * Opciones de $mb (todas opcionales):
- *   alto_logo   px de alto de los logos           (default 68)
- *   fuente      familia del bloque de texto        (default Arial)
+ *   fuente     familia del bloque de texto        (default Arial)
  *   tamano      tamaño del bloque de texto         (default 9.5pt)
  *   sin_linea   true para omitir el <hr>           (default false)
  *   margen_inf  margen bajo el <hr>                (default 28px)
@@ -35,7 +38,7 @@
  */
 
 $__mb          = isset($mb) && is_array($mb) ? $mb : [];
-$__altoLogo    = (int)($__mb['alto_logo'] ?? 68);
+$__altoLogo    = ConfigSistema::ALTO_LOGO_MEMBRETE;
 $__fuente      = $__mb['fuente']     ?? "Arial,Helvetica,sans-serif";
 $__tamano      = $__mb['tamano']     ?? '9.5pt';
 $__sinLinea    = !empty($__mb['sin_linea']);

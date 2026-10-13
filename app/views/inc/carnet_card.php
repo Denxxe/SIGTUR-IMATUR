@@ -106,7 +106,9 @@ $dorado    = '#D9A441';  // aro de la foto
   .capa { position:absolute; inset:0; z-index:2; }
 
   /* ── Cabecera ──────────────────────────────────────────────────── */
-  .logo-alc { position:absolute; top:2.2mm; left:2.4mm; width:13mm; height:auto; }
+  /* El logo viene recortado al contenido (ConfigSistema::LOGO_ALCALDIA):
+     9.6mm ≈ los 13mm de antes menos el margen blanco que traía NR2.png. */
+  .logo-alc { position:absolute; top:3.2mm; left:4.1mm; width:9.6mm; height:auto; }
 
   .marca { position:absolute; top:3.2mm; right:2.6mm; text-align:right; }
   .marca .imatur {

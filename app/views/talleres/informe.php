@@ -148,7 +148,7 @@
 
 <!-- Plantilla de Impresión Oficial -->
 <div class="print-container">
-    <?php $mb = ['alto_logo' => 58, 'tamano' => '9pt', 'margen_inf' => '12px']; require '../app/views/inc/membrete.php'; ?>
+    <?php $mb = ['tamano' => '9pt', 'margen_inf' => '12px']; require '../app/views/inc/membrete.php'; ?>
     <div style="text-align:center; margin-bottom:24px;">
         <h3 style="margin:0; font-size:16px; color:#333; text-transform:uppercase; letter-spacing:.04em;">Reporte de Actividad</h3>
         <p style="margin:4px 0 0; font-size:11px; color:#888;">Emitido el: <?php echo date('d/m/Y'); ?></p>

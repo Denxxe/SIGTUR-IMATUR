@@ -74,7 +74,7 @@ $fechaFormato  = !empty($taller->fecha_inicio) ? date('d/m/Y', strtotime($taller
 ?>
 <div class="page-wrap">
 
-    <?php $mb = ['alto_logo' => 58, 'margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
+    <?php $mb = ['margen_inf' => '14px']; require '../app/views/inc/membrete.php'; ?>
 
     <?php if ($numHojas > 1): ?>
     <div class="hoja-indicador">Hoja <?php echo $hoja + 1; ?> de <?php echo $numHojas; ?></div>
