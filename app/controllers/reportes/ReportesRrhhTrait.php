@@ -354,6 +354,7 @@ trait ReportesRrhhTrait {
                 ['raw' => '<span class="sig-badge sig-badge--info">' . htmlspecialchars($r->cargo ?? '—') . '</span>'],
                 $r->departamento ?? '—',
                 $r->clasificacion ?? '—',
+                $r->nivel_academico ?: '—',
                 $r->tipo_contrato ?? '—',
                 $vencTxt,
                 ['raw' => $esCom
@@ -368,9 +369,9 @@ trait ReportesRrhhTrait {
         $cargos = []; foreach (Cargo::all() as $c) $cargos[$c->id] = $c->nombre;
         $this->renderReporte([
             'eyebrow' => 'RRHH · Reporte', 'titulo' => 'Directorio de Personal',
-            'subtitulo' => 'Plantilla activa del instituto con filtros por área, cargo, clasificación, contrato y origen.',
+            'subtitulo' => 'Plantilla activa del instituto con filtros por área, cargo, clasificación, nivel académico y origen.',
             'resumen' => ['Total' => count($regs)],
-            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'],
+            'columnas' => ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Nivel académico', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'],
             'filas' => $filas,
             'accion' => URL_ROOT . '/reportes/directorio',
             'filtros' => [
@@ -378,6 +379,7 @@ trait ReportesRrhhTrait {
                 ['name' => 'departamento', 'label' => 'Departamento', 'type' => 'select', 'options' => ['' => 'Todos'] + $deptos, 'value' => $_GET['departamento'] ?? ''],
                 ['name' => 'cargo', 'label' => 'Cargo', 'type' => 'select', 'options' => ['' => 'Todos'] + $cargos, 'value' => $_GET['cargo'] ?? ''],
                 ['name' => 'clasificacion', 'label' => 'Clasificación', 'type' => 'select', 'options' => array_merge(['' => 'Todas'], array_combine(Empleado::CLASIFICACIONES, Empleado::CLASIFICACIONES)), 'value' => $_GET['clasificacion'] ?? ''],
+                ['name' => 'nivel_academico', 'label' => 'Nivel académico', 'type' => 'select', 'options' => ['' => 'Todos'] + Empleado::opcionesNivelAcademico(), 'value' => $_GET['nivel_academico'] ?? ''],
                 ['name' => 'origen', 'label' => 'Origen', 'type' => 'select', 'options' => ['' => 'Todos', 'comision' => 'Comisión de servicio'] + array_combine(Empleado::INSTITUCIONES_ORIGEN, Empleado::INSTITUCIONES_ORIGEN), 'value' => $_GET['origen'] ?? ''],
             ],
             'export_url' => URL_ROOT . '/reportes/exportarDirectorioCsv?' . $this->qsFiltros(),
@@ -391,10 +393,10 @@ trait ReportesRrhhTrait {
         foreach ($regs as $r) {
             $venc = ($r->tipo_contrato ?? '') === 'Fijo' ? 'Indefinido' : ($r->fecha_vencimiento_contrato ?? '—');
             $rows[] = [trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')), $r->cedula, $r->cargo, $r->departamento,
-                       $r->clasificacion, $r->tipo_contrato, $venc, $r->institucion_origen, $r->fecha_ingreso,
+                       $r->clasificacion, $r->nivel_academico, $r->tipo_contrato, $venc, $r->institucion_origen, $r->fecha_ingreso,
                        $r->telefono, $r->correo];
         }
-        $this->exportCsv('directorio_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'], $rows);
+        $this->exportCsv('directorio_personal', ['Empleado', 'Cédula', 'Cargo', 'Departamento', 'Clasificación', 'Nivel académico', 'Contrato', 'Vencimiento', 'Origen', 'F. Ingreso', 'Teléfono', 'Correo'], $rows);
     }
 
     private function queryDirectorio() {
@@ -405,10 +407,13 @@ trait ReportesRrhhTrait {
         if (!empty($_GET['departamento'])) { $where .= " AND e.id_departamento = :dep"; $binds[':dep'] = (int)$_GET['departamento']; }
         if (!empty($_GET['cargo']))        { $where .= " AND e.id_cargo = :car"; $binds[':car'] = (int)$_GET['cargo']; }
         if (!empty($_GET['clasificacion'])){ $where .= " AND e.clasificacion = :cla"; $binds[':cla'] = trim($_GET['clasificacion']); }
+        $niv = trim($_GET['nivel_academico'] ?? '');
+        if ($niv === Empleado::NIVEL_SIN_REGISTRO) $where .= " AND COALESCE(TRIM(p.nivel_academico), '') = ''";
+        elseif ($niv !== '')                       { $where .= " AND TRIM(p.nivel_academico) = :niv"; $binds[':niv'] = $niv; }
         $org = trim($_GET['origen'] ?? '');
         if ($org === 'comision')                                       $where .= " AND e.institucion_origen <> 'IMATUR'";
         elseif (in_array($org, Empleado::INSTITUCIONES_ORIGEN, true)){ $where .= " AND e.institucion_origen = :org"; $binds[':org'] = $org; }
-        $db->query("SELECT p.nombre, p.apellido, p.cedula, p.telefono, p.correo, e.clasificacion, e.tipo_contrato,
+        $db->query("SELECT p.nombre, p.apellido, p.cedula, p.telefono, p.correo, p.nivel_academico, e.clasificacion, e.tipo_contrato,
                            e.institucion_origen, e.fecha_ingreso, e.fecha_vencimiento_contrato,
                            c.nombre AS cargo, d.nombre AS departamento
                     FROM empleados e

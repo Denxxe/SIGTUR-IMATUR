@@ -31,6 +31,8 @@ class Empleado extends Model
         'Magíster',
         'Doctorado',
     ];
+    // Valor del filtro "sin nivel académico registrado" (lista y reporte).
+    const NIVEL_SIN_REGISTRO = 'sin_registro';
     // Grupo de rotación (solo Servicios Generales) — mig.028
     const GRUPOS_ROTACION = ['A', 'B'];
     // Motivos de egreso / desincorporación (mig. 036 — R-12)
@@ -220,6 +222,33 @@ class Empleado extends Model
     }
 
     /**
+     * Opciones para filtrar por nivel académico: los niveles sugeridos más
+     * cualquier otro valor libre ya guardado, y "Sin registrar".
+     */
+    public static function opcionesNivelAcademico(): array
+    {
+        $db = new Database();
+        $db->query("SELECT DISTINCT TRIM(p.nivel_academico) AS nivel
+                    FROM empleados e INNER JOIN personas p ON e.id_persona = p.id
+                    WHERE e.is_active = TRUE AND p.is_active = TRUE
+                      AND COALESCE(TRIM(p.nivel_academico), '') <> ''
+                    ORDER BY 1");
+        $opts = array_combine(self::NIVELES_ACADEMICOS, self::NIVELES_ACADEMICOS);
+        foreach ($db->resultSet() as $r) {
+            if (!isset($opts[$r->nivel])) $opts[$r->nivel] = $r->nivel;
+        }
+        $opts[self::NIVEL_SIN_REGISTRO] = 'Sin registrar';
+        return $opts;
+    }
+
+    /** ¿El nivel académico del empleado coincide con el filtro elegido? */
+    public static function coincideNivelAcademico(?string $nivel, string $filtro): bool
+    {
+        $nivel = trim((string)$nivel);
+        return $filtro === self::NIVEL_SIN_REGISTRO ? $nivel === '' : $nivel === $filtro;
+    }
+
+    /**
      * Empleados egresados (histórico): trabajaron en IMATUR y ya no.
      * Incluye fecha y motivo de egreso para mostrar el tiempo de servicio.
      */
@@ -229,7 +258,7 @@ class Empleado extends Model
         $binds = [];
         $cond = self::filtroOrigen($origen, $binds);
         $db->query("SELECT e.*,
-                           p.cedula, p.nombre, p.apellido, p.telefono, p.correo,
+                           p.cedula, p.nombre, p.apellido, p.telefono, p.correo, p.nivel_academico,
                            c.nombre as cargo, d.nombre as departamento
                     FROM empleados e
                     INNER JOIN personas p ON e.id_persona = p.id

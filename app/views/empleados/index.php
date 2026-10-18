@@ -7,6 +7,8 @@ $departamento  = (int)($data['departamento'] ?? 0);
 $departamentos = $data['departamentos'] ?? [];
 $cargoSel      = (int)($data['cargo'] ?? 0);
 $cargosOpts    = $data['cargos'] ?? [];
+$nivelSel      = $data['nivel_academico'] ?? '';
+$nivelesOpts   = $data['niveles'] ?? [];
 $ts = fn($ing, $eg) => Empleado::tiempoServicio($ing, $eg);
 $esCom = fn($e) => (($e->institucion_origen ?? 'IMATUR') !== 'IMATUR');
 // Badge de vencimiento del contrato (activos): Fijos sin vencimiento; Contratados con semáforo.
@@ -103,6 +105,15 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
         </select>
     </div>
     <div class="sig-field u-m-0">
+        <label for="emplinde_nivel" class="sig-field__label u-fs-11px">Nivel académico</label>
+        <select id="emplinde_nivel" name="nivel_academico" class="sig-select js-search" style="min-width:200px;" onchange="this.form.submit()">
+            <option value="">Todos los niveles</option>
+            <?php foreach ($nivelesOpts as $val => $lbl): ?>
+                <option value="<?php echo htmlspecialchars($val); ?>" <?php echo $nivelSel === (string)$val ? 'selected' : ''; ?>><?php echo htmlspecialchars($lbl); ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="sig-field u-m-0">
         <label for="emplinde_origen" class="sig-field__label u-fs-11px">Origen / Comisión de servicio</label>
         <select id="emplinde_origen" name="origen" class="sig-select" style="min-width:220px;" onchange="this.form.submit()">
             <?php foreach ($origenOpciones as $val => $lbl): ?>
@@ -111,7 +122,7 @@ $colspanBase = ($egView ? 8 : 8) + 3; // +1 Origen, +1 Contrato, +1 Contacto (ac
         </select>
     </div>
     <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-funnel"></i> Filtrar</button>
-    <?php if ($origen !== '' || $departamento > 0 || $cargoSel > 0): ?>
+    <?php if ($origen !== '' || $departamento > 0 || $cargoSel > 0 || $nivelSel !== ''): ?>
         <a href="<?php echo URL_ROOT; ?>/empleados/index<?php echo $egView ? '?ver=egresados' : ''; ?>" class="btn-sig btn-sig--ghost" title="Limpiar filtros"><i class="bi bi-x-lg"></i></a>
     <?php endif; ?>
 </form>

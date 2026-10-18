@@ -23,6 +23,14 @@ class EmpleadosController extends Controller {
             $empleados = array_values(array_filter($empleados, fn($e) => (int)($e->id_cargo ?? 0) === $cargo));
         }
 
+        // Filtro por nivel académico (incluye "Sin registrar").
+        $nivelesOpts = Empleado::opcionesNivelAcademico();
+        $nivel = trim($_GET['nivel_academico'] ?? '');
+        if (!isset($nivelesOpts[$nivel])) $nivel = '';
+        if ($nivel !== '') {
+            $empleados = array_values(array_filter($empleados, fn($e) => Empleado::coincideNivelAcademico($e->nivel_academico ?? null, $nivel)));
+        }
+
         $data = [
             'titulo'        => 'Gestión de Personal (Empleados)',
             'empleados'     => $empleados,
@@ -32,6 +40,8 @@ class EmpleadosController extends Controller {
             'departamentos' => Departamento::all(),
             'cargo'         => $cargo,
             'cargos'        => Cargo::all(),
+            'nivel_academico' => $nivel,
+            'niveles'       => $nivelesOpts,
             'motivos'       => Empleado::MOTIVOS_EGRESO,
             'mi_empleado'   => $this->getEmpleadoId(),
         ];
