@@ -1,6 +1,11 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-11 · **Migraciones aplicadas:** hasta **088** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-18 · **Migraciones aplicadas:** hasta **090** · **Rama:** `development_stage`
+
+> 🧭 **2026-10-18 — Revisión del estado: la programación funcional está completa.** No queda ninguna
+> función por construir que no dependa de un insumo del cliente (§0.2) o de la carga de datos (§0.3).
+> Lo único nuestro: la **guía de la prueba general de Nómina** y tres comprobaciones interactivas en
+> el navegador (§0.1). Pruebas automatizadas: **203, 0 fallos**. Consolidado: **001–090**.
 
 > ✅ **2026-10-11 (b) — Bienes: motor de codificación propia construido y APAGADO (mig. 087).**
 > IMATUR ya puede asignar el código de sus bienes con secuencia propia, catálogo de clasificaciones y
@@ -64,7 +69,9 @@ Documento **único** de seguimiento: **qué falta por hacer y decidir**. Lo ya h
 
 | # | Tarea | Tamaño | Por qué ahora |
 |---|---|---|---|
-| 1 | ✅ ~~Deuda técnica de §5.2~~ **hecha (2026-10-11)**: `label[for]` completos, lista blanca en `Taller::actualizarPersona`, estilos inline 2.724 → 1.581, pruebas 145 → 179. Lo que queda inline es deliberado (ver `CLAUDE.md` → Design System) | — | — |
+| 1 | **Guía paso a paso de la prueba general de Nómina** (0.2 · 2): qué cargar, en qué orden y qué comparar en quincena, bono vacacional y Liquidación | Chica | Es lo que destraba el punto 🔴 2 de la §0.2: sin guía, la directora no puede hacer la prueba sola |
+| 2 | **Comprobación interactiva en navegador** de lo que la revisión visual del 2026-10-11 no pudo abrir: modal *Codificar* con la codificación **encendida** (sobre un respaldo), *Corregir mes* y *Anular* de la Liquidación (§6) | Chica | Último código construido sin probar con clics |
+| ✅ | ~~Deuda técnica de §5.2~~ **hecha (2026-10-11)**: `label[for]` completos, lista blanca en `Taller::actualizarPersona`, estilos inline 2.724 → 1.581, pruebas 145 → 179 (203 al 2026-10-18). Lo que queda inline es deliberado (ver `CLAUDE.md` → Design System) | — | — |
 
 **Hecho y retirado de esta lista** (detalle en `CHANGELOG.md`): verificación en navegador (2026-10-03)
 y **prueba de formularios guardando** (2026-10-04, B1 cerrado) · tareas programadas y feriados movibles
@@ -149,6 +156,10 @@ auditoría H-12…H-15, feriados movibles, Nómina N-A…N-D. Detalle en la secc
 
 | Fecha | Qué se hizo | Mig. |
 |---|---|---|
+| 2026-10-18 | **Filtro por nivel académico** en la lista de empleados (activos y egresados) y en el reporte Directorio de Personal, con opción «Sin registrar»; el Directorio gana la columna en pantalla y en Excel | — |
+| 2026-10-13 | **Interfaz en el teléfono**: tablas como tarjetas (`initTablasApiladas`), botones del encabezado plegados en «Más opciones» (`initAccionesMovil`). **Ver contraseña** en todo campo de clave. **Mi perfil**: correo, teléfono y dirección editables (el correo exige la contraseña actual) | — |
+| 2026-10-13 | **Bitácora**: dispositivo (User-Agent) en el reporte de accesos; accesos y cambios de contraseña legibles; se perdían en silencio los `LOGIN_INACTIVO` (CHECK) y las operaciones de Municipio | 089 · 090 |
+| 2026-10-13 | **Membrete**: logos de Alcaldía e IMATUR del mismo alto (`ConfigSistema::ALTO_LOGO_MEMBRETE`) en todo documento y PDF de listados | — |
 | 2026-10-11 | **Bienes: motor de codificación propia** (R-12), construido y apagado hasta B-73/B-75; secuencia, dígitos y modo de secuencia configurables | 087 |
 | 2026-10-11 | **Liquidación de Prestaciones Sociales** (N-E): hojas FORMATO, INTERESES e INTERÉS DE MORA del cliente, art. 142 d, tasa del BCV por mes, cierre `LIQ-`, imprimible y Excel. **Toda regla de la LOTTT y del contrato pasó a parámetro** | 086 |
 | 2026-10-04 | **Roles por módulo**: un rol creado desde la pantalla funciona sin tocar código; cerrada la escalada de RRHH a Administrador; escritura de bienes como permiso propio | 084 |
