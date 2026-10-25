@@ -47,7 +47,7 @@ Estos son los roles de partida; el menú de cada usuario muestra **solo** los m�
 
 > Si intentas entrar a algo fuera de tu rol, el sistema te redirige con un aviso. Los cambios de permisos los hace el Administrador en *Sistema → Roles y Permisos*.
 
-**Crear un rol nuevo.** En *Sistema → Roles y Permisos* se crea el rol (nombre y descripción) y se **marcan los módulos** que verá. No hace falta nada más: el rol funciona completo con esas casillas. En el grupo *Inventario* hay una casilla especial, **«Bienes: registrar y modificar»**: sin ella, quien tenga el módulo de Bienes solo puede **consultar** (no ve los botones de registrar, editar, codificar ni eliminar).
+**Crear un rol nuevo.** En *Sistema → Roles y Permisos* se crea el rol (nombre y descripción); luego se abre su tarjeta, se **activan los interruptores** de los módulos que verá (o *Todos* en un grupo) y se pulsa **Guardar permisos**. La barra inferior avisa si quedan cambios sin guardar, y *Descartar* los deshace. No hace falta nada más: el rol funciona completo con esos módulos. En el grupo *Inventario* hay una casilla especial, **«Bienes: registrar y modificar»**: sin ella, quien tenga el módulo de Bienes solo puede **consultar** (no ve los botones de registrar, editar, codificar ni eliminar).
 
 ---
 

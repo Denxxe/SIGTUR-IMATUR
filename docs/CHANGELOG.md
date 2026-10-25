@@ -18,6 +18,25 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-25 — Roles y Permisos: pantalla rediseñada (sin migración)
+
+La pantalla era una tira de tarjetas siempre abiertas, con siete fondos pastel cableados (ilegibles
+en tema oscuro) y un contador que mentía: contaba el Panel Principal, que no se muestra, y al marcar
+una casilla el número bajaba de golpe.
+
+- **Cada rol es una tarjeta plegable** (se abre el primero editable; botón *Expandir/Contraer todos*)
+  con barra de progreso «N de M módulos». El Administrador conserva su tarjeta fija, sin cuerpo.
+- **Grupos en rejilla uniforme**, tarjeta blanca con franja e ícono del color del grupo, contador
+  `n/total` y botón *Todos/Ninguno*. El tinte sale de `color-mix()` sobre un solo color por grupo,
+  así sirve en claro y oscuro.
+- **Interruptores**: siguen siendo el checkbox nativo (`modulos[]`), solo cambia la apariencia;
+  `storePermisos()` no se tocó salvo el redirect.
+- **Barra de guardado fija** (`position: sticky`; obliga a `overflow: visible` en la tarjeta, porque
+  el `hidden` de `.sig-card` anula el sticky): «Sin cambios / Cambios sin guardar», *Guardar* y
+  *Descartar* solo activos con cambios, borde ámbar en la tarjeta y aviso del navegador al salir.
+- `RolesController::storePermisos()` redirige a `roles/index#rol-N`: al guardar se vuelve al mismo
+  rol, abierto.
+
 ### 2026-10-11 (h) — Revisión visual con capturas: 5 defectos encontrados y corregidos
 
 Sin la extensión de Chrome, la revisión se hizo renderizando cada pantalla con sesión de administrador

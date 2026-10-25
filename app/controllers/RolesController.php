@@ -238,7 +238,8 @@ class RolesController extends Controller {
             if (isset($db) && $db->inTransaction()) $db->cancelTransaction();
             flash('global_msg', 'Error al guardar permisos: ' . $e->getMessage(), 'danger');
         }
-        header('Location: ' . URL_ROOT . '/roles/index');
+        // El ancla reabre en pantalla el rol que se acaba de guardar.
+        header('Location: ' . URL_ROOT . '/roles/index#rol-' . $id_rol);
     }
 
     public function index() {

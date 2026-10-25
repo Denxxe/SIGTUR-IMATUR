@@ -67,6 +67,7 @@ Implementado en `app/core/Router.php` (nivel de ruta) **y** en `ReportesControll
 - `RolesController::getMapaRbac()` es la fuente única: la llama el Router en cada request y también la vista de roles.  
 - El Administrador (rol 1) usa el marcador `'*'` en `permisos_rol` → acceso total, no modificable desde la UI.  
 - Los demás roles tienen lista explícita de controladores permitidos. Cambios aplican en la próxima sesión del usuario.
+- **Pantalla (`roles/index`, 2026-10-25):** un formulario por rol con los checkbox `modulos[]` (con apariencia de interruptor); el contador excluye `DashboardController`, que va de oficio. Al guardar vuelve a `roles/index#rol-N`. La tarjeta lleva `overflow: visible` para que la barra de guardado pueda ser `sticky`.
 - **Excepción:** la Bitácora general (`AuditoriaController::index`) NO está en `RolesController::getModulos()` — es exclusiva del Administrador por `guardAdmin()` (rol=1 hardcodeado), no delegable desde la UI (mig. 055). La Papelera de Reciclaje (`AuditoriaPapelera`) sí sigue siendo delegable por módulo operativo.
 - **Cuidado con `getModulos()`:** `RolesController::storePermisos()` borra y reinserta TODOS los permisos del rol filtrados contra `array_keys(getModulos())`. Cualquier módulo con fila en `permisos_rol` (por seed de migración) pero ausente de `getModulos()` se pierde silenciosamente en el próximo guardado — pasó con Horarios/Permisos/Vacaciones/Amonestaciones/Visitas hasta la mig. 055. Todo módulo operativo nuevo con RBAC por rol **debe** agregarse a `getModulos()`.
 

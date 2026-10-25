@@ -1,6 +1,6 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-18 · **Migraciones aplicadas:** hasta **090** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-25 · **Migraciones aplicadas:** hasta **090** · **Rama:** `development_stage`
 
 > 🧭 **2026-10-18 — Revisión del estado: la programación funcional está completa.** No queda ninguna
 > función por construir que no dependa de un insumo del cliente (§0.2) o de la carga de datos (§0.3).
@@ -156,6 +156,7 @@ auditoría H-12…H-15, feriados movibles, Nómina N-A…N-D. Detalle en la secc
 
 | Fecha | Qué se hizo | Mig. |
 |---|---|---|
+| 2026-10-25 | **Roles y Permisos rediseñado**: roles plegables con barra de progreso, interruptores por grupo, barra de guardado fija con aviso de cambios sin guardar | — |
 | 2026-10-18 | **Filtro por nivel académico** en la lista de empleados (activos y egresados) y en el reporte Directorio de Personal, con opción «Sin registrar»; el Directorio gana la columna en pantalla y en Excel | — |
 | 2026-10-13 | **Interfaz en el teléfono**: tablas como tarjetas (`initTablasApiladas`), botones del encabezado plegados en «Más opciones» (`initAccionesMovil`). **Ver contraseña** en todo campo de clave. **Mi perfil**: correo, teléfono y dirección editables (el correo exige la contraseña actual) | — |
 | 2026-10-13 | **Bitácora**: dispositivo (User-Agent) en el reporte de accesos; accesos y cambios de contraseña legibles; se perdían en silencio los `LOGIN_INACTIVO` (CHECK) y las operaciones de Municipio | 089 · 090 |
