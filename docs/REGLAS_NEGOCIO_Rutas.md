@@ -1,272 +1,235 @@
 # Módulo de Rutas Turísticas — Reglas de Negocio
 
-**Última actualización:** 2026-09-03 · **Migraciones:** hasta 073
-**Pendientes y preguntas abiertas:** `docs/BACKLOG.md` §3.5 · **Plan de reconstrucción:** `docs/PLAN_MODULO_RUTAS.md`
-
-> ## 🔴 AVISO 2026-09-03 — el levantamiento llegó y **este documento describe un modelo que va a cambiar**
->
-> El cliente respondió **R-01 … R-16** del cuestionario de descubrimiento, y las respuestas
-> **desmienten la premisa sobre la que está construido el módulo**:
->
-> | | Lo que dice el cliente |
-> |---|---|
-> | **R-07** | Dos salidas de Cumaná Histórica son *"la misma ruta ejecutada 2 veces"* |
-> | **R-08** | *"Existe un catálogo"* de rutas: puntos, recorrido, inicio y fin |
-> | **R-09** | **Varios grupos el mismo día**, con **guías rotativos** |
-> | **R-02** | **Sí se cobra** (5 $ / 15 $ / 25 $ por persona) y hay **seis programas**, no cuatro |
-> | **R-11 / R-13** | La salida **nace de una solicitud** (particular o institucional por oficio) y **la aprueba la Presidencia** |
-> | **R-15 / R-16** | Se **cancela con motivo** y se **reprograma conservando la misma salida** |
->
-> **Consecuencia:** `rutas` se parte en **catálogo** (`rutas`) + **salida** (`ruta_ejecuciones`).
-> Mientras eso no se construya, **las reglas de abajo siguen siendo las vigentes en el código**,
-> pero están marcadas 🔴 donde ya se sabe que van a cambiar. **No tomarlas como diseño objetivo.**
->
-> **D-RT01 y D-RT05 quedan desmentidas.** El detalle, el modelo propuesto y las fases están en
-> `docs/PLAN_MODULO_RUTAS.md`.
+**Última actualización:** 2026-10-28 · **Migraciones:** hasta 090
+**Fuente de las reglas:** respuestas del cliente R-01…R-72 (`docs/entregables/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, Parte 2, y `docs/BACKLOG.md` §3.5) + formatos reales en `docs/formatos/rutas_*`
+**Pendientes del cliente:** `docs/BACKLOG.md` §3.5 · **Historial de construcción:** `docs/CHANGELOG.md`
 
 ## Contexto institucional
 
-Las rutas turísticas las gestiona el **Departamento de Rutas Turísticas y Proyectos** bajo la
-Dirección de Planificación y Gestión Turística. **IMATUR ofrece seis programas** (R-02):
+Las rutas las gestiona el **Departamento de Rutas Turísticas y Proyectos** (Dirección de
+Planificación y Gestión Turística). Frecuencia: **2-3 salidas semanales** más las que se piden
+puntualmente (R-04). Grupo típico **15-30 personas**, máximo histórico **120** (R-05). Los tres
+dolores que nombró el cliente (R-06): **logística**, **puntualidad del turista** y **coordinación con
+las instituciones custodias** de los puntos — el módulo de permisos (RN-RT10) atiende el tercero.
+
+Programas declarados (R-02, corregidos por R-41/R-65/R-66/R-67):
 
 | Ruta | Tarifa | Público |
 |------|--------|---------|
-| **Cumaná Histórica** | 5 $ por adulto · **menores de 8 años gratis** · **gratuita** para escuelas e instituciones públicas | Todo público |
-| **Exploradores de Cumaná** | Gratuita | Niños de **4 a 8 años** — mismo recorrido, otro público |
-| **Playa Las Maritas** | 25 $ por persona | — |
-| **Río Brito** | 15 $ por persona | — |
-| **Playa Colorada** | 25 $ por persona | — |
-| **Altos de Cumaná** | *"se cuadra"* — enlace con posadas | — |
+| **Cumaná Histórica** | 5 $ por adulto · menores de 8 gratis · gratuita para instituciones públicas (R-03) | Todo público. **Tres modalidades del mismo recorrido** (R-65): la comercial, *Exploradores de Cumaná* y *«Huellas del Ayer»* (adultos mayores); no se modelan como filas aparte |
+| **Exploradores de Cumaná** | Gratuita | Instituciones educativas, **4 a 16 años** (R-66; R-02 decía 4-8) |
+| **Playa Las Maritas** · **Playa Colorada** | 25 $ por persona | — |
+| **Río Brito** | 15 $ por persona | **12 años o más**; excluye dificultad visual; advertir condición articular (R-57) |
+| **Altos de Sucre** | **A convenir** — *«depende de lo que el cliente solicite»* (R-41/R-67) | Enlace con posadas; todas las rutas trabajan con aliados locales (R-60) |
 
-Frecuencia: **2-3 salidas semanales** más las solicitadas puntualmente (R-04). Tamaño de grupo:
-**15-30 personas** en promedio, **máximo histórico 120** (R-05).
-
-Los tres dolores que el cliente nombró (R-06): **logística**, **puntualidad del turista** y
-**coordinación con fundaciones externas** para conseguir acceso a los puntos.
+> Los folletos traen además **Playa Manare** (full day, 8:00 a. m.-5:00 p. m.) y llaman «Altos de
+> Sucre» a lo que R-02 llamó «Altos de Cumaná». **El catálogo real no se carga hasta R-72** (lista
+> oficial): cargarlo con la lista equivocada es peor que no cargarlo.
 
 ---
 
-## RN-RT01 — Estados de ruta — 🔴 **cambia**
+## RN-RT01 — Catálogo ≠ salida
 
-**Vigente en el código:** valores válidos (`Ruta::ESTADOS`): `'Activa'`, `'Inactiva'`,
-`'En Mantenimiento'`, `'Finalizada'`. `'Finalizada'` es **terminal** (`Ruta::ESTADO_TERMINAL`).
+`rutas` es el **catálogo** reutilizable (qué ofrece IMATUR: recorrido, puntos, duración, tarifa,
+restricciones). `ruta_ejecuciones` es cada **salida** (una fecha, un grupo). El cliente lo dijo tres
+veces: *«existe un catálogo»* (R-08), varias salidas de la misma ruta la misma mañana con guías
+rotativos (R-09), y *«así sean la misma ruta, es considerada 2 salidas»* (R-07).
 
-🔴 **Desmentido por R-07/R-08 (2026-09-03).** Cada registro en `rutas` representa hoy *una ejecución
-independiente*; el cliente confirmó que **existe un catálogo reutilizable** y que dos salidas de la
-misma ruta son *"la misma ruta ejecutada 2 veces"*. **D-RT01 queda desmentida.**
+- Participantes, personal, itinerario, cobro, Ficha Institucional y oficios cuelgan de la **salida**
+  (`id_ejecucion`), nunca del recorrido. `participantes_ruta.id_ruta` / `ruta_informes.id_ruta`
+  son columnas viejas, nulas, solo para filas migradas.
+- `rutas.fecha_visita`, `hora_visita`, `id_facilitador` y `cupo_maximo` siguen en la tabla pero
+  están **obsoletas**: el código ya no las escribe.
 
-Los cuatro estados actuales mezclan dos ciclos de vida: `Activa`/`Inactiva`/`En Mantenimiento`
-describen **una ruta del catálogo** (¿se ofrece?), `Finalizada` describe **una salida**. Con el
-rediseño el catálogo se queda con `is_active` y la salida tiene su propio ciclo (RN-RT10).
+## RN-RT02 — Ruta del catálogo
 
-⛔ **R-14 sin responder**: los nombres exactos de los estados los tiene que dar IMATUR. Ver
-`docs/PLAN_MODULO_RUTAS.md` §4.
+| Campo / regla | Detalle |
+|---|---|
+| Estado (`Ruta::ESTADOS`) | `Activa` · `Inactiva` · `En Mantenimiento` — si se ofrece o no. Se puede cambiar siempre. **`En Mantenimiento` exige motivo** (`motivo_mantenimiento`). `Finalizada` desapareció en la mig. 078: describía una salida |
+| Tipo (`Ruta::$TIPOS_RUTA`) | `Cumaná Histórica` · `Exploradores de Cumaná` · `Comunitaria` · `General` (default) |
+| Duración estimada | Formato `H:MM`. Lo normal es **1:30**, máximo **3:00**; se lleva por punto y total (R-19) |
+| Edad (`edad_min`/`edad_max`) | Opcionales, 0-120; NULL = sin tope. Mínima ≤ máxima. Ver RN-RT06 |
+| Restricciones (`restricciones`) | Texto libre para lo que no es edad (R-57). Se muestra en la ficha del recorrido **y al inscribir** |
+| Prerequisito de formación (`requiere_formacion`) | Ver RN-RT06 |
+| Baja | Bloqueada si la ruta tiene salidas: se deja de ofrecer con `Inactiva`; borrarla se llevaría el histórico |
 
----
+**Tarifa (mig. 083, R-36/R-41).** Se pacta en **USD** y se cobra en Bs a la tasa del día. Tres modos
+(`rutas.tarifa_modo`): *Gratuita* · *Fija* (exige monto > 0) · *A convenir* (el monto se pacta en cada
+salida). `tiene_tarifa` se mantiene **derivada** (modo ≠ Gratuita) solo para consultas viejas.
 
-## RN-RT02 — ~~Niveles de dificultad~~ (eliminado)
+**Exoneraciones del catálogo — son por ruta, no globales** (R-03/R-42):
 
-La columna `nivel_dificultad` se **eliminó en la migración 021**: IMATUR no clasifica
-sus rutas por dificultad. No usar; el reporte de rutas tampoco la ofrece como filtro.
+- `exonera_instituciones`: las instituciones públicas no pagan **este** recorrido. Las instituciones
+  no pagan Cumaná Histórica pero sí Playa Colorada, y **igual deben traer el oficio**.
+- `exonera_menores_de`: edad bajo la cual no se cobra (Cumaná Histórica: 8). Hoy es **informativa**:
+  se captura y se muestra, pero el cálculo del esperado no la descuenta (ver RN-RT07).
 
----
+## RN-RT03 — Puntos del recorrido
 
-## RN-RT03 — Prerequisito de formación (RN-F12)
+- Orden, nombre, descripción y coordenadas opcionales; el mapa usa **Leaflet vendorizado en local**
+  (sin CDN). Cumaná Histórica tiene **7 puntos** (`rutas_itinerario_CumanaHistorica_7puntos*.jpeg`).
+- El orden del catálogo es el **sugerido**: el guía lo varía (R-10/R-18) — ver RN-RT05.
+- `ente_custodio` (R-06/R-20): institución que custodia el punto. Alimenta «a quién hay que pedirle
+  permiso esta semana». Una plaza pública no tiene custodio y no genera trámite.
+- `tiene_guia_externo` (R-31): museos y casas natales ponen su propio guía. Solo se registra **que
+  lo hay**; no se reintroduce un facilitador externo en la ruta.
 
-Las rutas con `requiere_formacion = TRUE` (ej: Exploradores de Cumaná) exigen que el participante haya asistido (`asistio = TRUE`) a al menos una actividad de formación antes de inscribirse.
+## RN-RT04 — Salida: solicitud, aprobación y ciclo de vida
 
-- Participantes con cédula: el sistema verifica en `participantes_taller`.
-- Participantes libres (niños/as sin cédula): **exentos** de esta verificación.
+**Estados (R-14, con las palabras del cliente; CHECK en BD):**
 
----
+```
+Programado ──► Ejecutado                      (terminal)
+     └──────► No ejecutado (+ motivo)         (terminal)
+                   └──► reprogramar: salida NUEVA enlazada (id_reprogramada_de)
+```
 
-## RN-RT04 — Participantes y grupos
+| Regla | Detalle |
+|---|---|
+| Fecha | Una salida nueva no puede programarse en el pasado. Varias salidas el mismo día, de la misma ruta o de otras (R-09) |
+| Origen (R-11) | `Particular` o `Institucional`. La institucional **exige** el nombre de la institución solicitante; la particular no lo guarda |
+| Oficio de solicitud (R-12) | Es **entrante**: lo redacta cada institución (no hay formato único) e IMATUR lo **archiva**. PDF/JPG/PNG ≤ 5 MB, MIME real, fuera del web root, servido por `DescargaController::oficioRuta()`. Quitarlo desvincula pero no borra el archivo |
+| Aprobación (R-13) | La da la **Presidencia**, a toda salida (particular o institucional). Se registra quién la asentó y la fecha; no se aprueba dos veces. Es un **hito**, no un estado |
+| Cancelar | **No es un estado.** Cancele el grupo o IMATUR (clima, agua, gasolina…), el resultado es `No ejecutado` con **motivo obligatorio** (R-15) |
+| Ejecutado | No se marca con fecha futura. Al marcarlo **nace la Ficha Institucional** (RN-RT08) |
+| Terminales | `Ejecutado` y `No ejecutado` no vuelven atrás ni se editan: ni datos, ni cobro, ni itinerario, ni inscripciones |
+| Reprogramar (R-14/R-16) | Solo desde `No ejecutado`, **una sola vez**, fecha no pasada. Crea otra salida que hereda ruta, hora, cupo, origen, institución, oficio y observaciones. **La original queda intacta** como constancia de lo que no ocurrió — así el histórico no se pierde y las ejecutadas no se inflan |
+| Incidencias (R-45) | Texto libre en la salida |
+| Eliminar | Soft delete; una salida `Ejecutado` no se elimina (es histórico) |
 
-- Los participantes pueden ser individuos o grupos escolares.
-- Se admiten participantes sin cédula (niños/as) mediante el modo libre (`nombre_libre`/`apellido_libre`).
-- Un participante puede inscribirse en múltiples rutas.
-- 🔴 La institución educativa **no se registra hoy**: `participantes_ruta.id_institucion` y la tabla
-  `instituciones_externas` se eliminaron en la **migración 060**. **R-11 (2026-09-03) desmiente
-  D-RT05**: las instituciones públicas **solicitan la ruta por oficio**, y de que el solicitante sea
-  una institución pública **depende la gratuidad** (R-03). Hay que **reconstruirlo** — esta vez con
-  el flujo que lo usa, no solo la columna.
-- ✅ **Rango de edad: es del recorrido, no del sistema** (mig. 079, 2026-09-17). `rutas.edad_min` y
-  `rutas.edad_max` — NULL = sin tope — más `rutas.restricciones` en texto para lo que no es edad
-  (R-57: *«dificultad visual, excluidos»*; *«condición en articulaciones: sí debería saberlo»*). La
-  única regla es `Ruta::motivoEdadNoValida()`, aplicada en los **dos** flujos de inscripción y en el
-  formulario. El 5–11 cableado —que dejaba fuera a los niños de 4 de Exploradores— **ya no existe**.
-  Las condiciones se muestran en la ficha del recorrido y **al inscribir**.
-- ✅ **Cupo: 60 personas por día** (R-28), no por salida — `rutas_cupo_diario` en Configuración,
-  0 = sin tope. **Advierte, no bloquea**, igual que en Talleres: es planificación.
-- ✅ **El cierre de una salida es la Ficha Institucional** (mig. 080). R-43, R-47 y R-48 pedían
-  «planilla del día» e «informe de cierre», y resultaron el **mismo** documento. Se genera sola al
-  marcar la salida como Ejecutada (R-50) y lleva **conteos, no nombres**: del grupo visitante IMATUR
-  no registra persona por persona (R-23/R-24/R-29). Lleva un renglón por institución (con su rango
-  de edades), los acompañantes —docentes y representantes— y las **instituciones de apoyo**
-  (Protección Civil, R-55/R-56). El TOTAL es la suma de los tres bloques.
-- ✅ **Una salida se cierra con «Marcar ejecutada» o «No se ejecutó»** (R-14), y en el segundo caso
-  el motivo es obligatorio. Los estados terminales no vuelven atrás.
-- ✅ **Reprogramar (R-16) no edita la salida: crea otra.** Solo desde «No ejecutado», una sola vez, y
-  con fecha no pasada. La nueva hereda grupo, origen, cupo y oficio, y queda enlazada por
-  `id_reprogramada_de`. **La original se conserva intacta**: es la constancia de lo que no ocurrió.
-- ✅ **Una salida no ejecutada no tiene Ficha Institucional** ni admite inscripciones: no hubo grupo.
-- ✅ **El oficio de solicitud es ENTRANTE** (R-12): lo redacta la institución y IMATUR lo **archiva**
-  como respaldo de que la salida se pidió formalmente. No confundir con el oficio **saliente** de
-  IMATUR hacia el punto a visitar, que sí lleva correlativo (`oficios_emitidos`).
-- ✅ **Una salida de origen institucional debe decir quién la pide** (R-11); una particular, no.
-- ✅ **La aprueba la Presidencia** (R-13). El sistema registra el visto bueno con fecha y con quién
-  lo asentó; no se aprueba dos veces.
-- ✅ **Para entrar a un museo, castillo o fundación hace falta un oficio de permiso** (R-20). **Uno
-  cubre todas las salidas de la semana** hacia esa institución, para agilizar el trámite — por eso
-  no cuelga de una salida: un permiso cubre varias, y una salida puede necesitar varios (una ruta
-  con dos custodios distintos). Estados: *En espera · Aceptado · Rechazado*; el rechazo exige motivo.
-  Lo tramita el **Director de Relaciones Inter-Institucionales**.
-- ✅ **Cada parada declara su institución custodia** (R-06). De ahí sale a quién pedirle permiso cada
-  semana: sin eso, coordinar el acceso depende de que alguien lo recuerde — que es justo uno de los
-  tres dolores que señaló el cliente. Una plaza pública no tiene custodio y no genera trámite.
-- ✅ **Anular un permiso no borra nada y no recicla el número**: el oficio ya salió de la institución.
-- ✅ **El orden de las paradas es del CATÁLOGO, pero cada salida puede alterarlo** (R-10/R-18). Si dos
-  grupos coinciden el mismo día se cambia el itinerario de uno para que no se crucen — y eso **no
-  toca el recorrido** ni las demás salidas. Mientras nadie lo altere, la salida sigue el del catálogo,
-  que es el «sugerido». «Restablecer» vuelve a él.
-- ✅ **Una parada se puede marcar «no se hizo»** con su nota, típicamente porque la institución
-  custodia rechazó el permiso (R-20). La parada sigue en el recorrido: lo que cambia es ese día.
-- ✅ **Van varios trabajadores de IMATUR por salida** (R-33: 7-8 participantes por guía) y **uno solo
-  es el encargado** (R-31: «siempre encabeza un empleado de IMATUR»). La sugerencia de cuántos guías
-  hacen falta **no bloquea**: el propio cliente dijo que depende de los disponibles.
-- ✅ **El guía externo es del PUNTO, no de la salida** (R-31): museos y casas natales ponen el suyo.
-  Solo se registra **que lo hay** — R-32 (si se le paga o se guardan sus datos) sigue sin responder.
-  No se reintroduce un «facilitador externo» en la ruta: esa columna se eliminó en la mig. 060.
-- ✅ **La certificación no es requisito para guiar** (R-34): hay 3 certificados y el resto se está
-  formando. No se bloquea ni se alerta por vencimiento.
-- ✅ **La tarifa se pacta en DÓLARES y se cobra en bolívares a la tasa del día** (R-36). El catálogo
-  guarda el monto en USD; **cada salida congela** su tarifa y su tasa, así que cambiar el precio o
-  que suba el dólar **no mueve** lo ya cobrado. La tasa se sugiere desde el BCV, pero un fallo de red
-  nunca bloquea: se carga a mano.
-- ✅ **Tres modos de tarifa** (R-41): *Gratuita* (Exploradores), *Fija* (Cumaná Histórica 5 $, Río
-  Brito 15 $, Playa Colorada y Las Maritas 25 $) y *A convenir* (Altos de Cumaná, «depende de lo que
-  el cliente solicite»).
-- ✅ **La gratuidad NO es automática por ser institución pública** (R-03/R-42): es **por ruta**. Las
-  instituciones no pagan Cumaná Histórica, pero sí Playa Colorada — y **igual deben traer el oficio**.
-- ✅ **El pago es ANTICIPADO, con fecha tope** (R-38): «se les tiene una fecha para cancelar y poder
-  planificar la salida». Pasado el tope y con saldo, la salida queda marcada como vencida.
-- ✅ **El sistema lleva la cuenta, no solo constancia** (R-40): hay abonos, varias transferencias del
-  mismo grupo y pagos de representantes distintos. **Anular un pago no lo borra** —es dinero—: queda
-  con su motivo y deja de sumar.
-- ✅ **Transferencia → comprobante adjunto · Efectivo → acta de pago numerada** (R-39). El acta solo
-  se numera para el efectivo: la transferencia ya trae su propio respaldo.
-- ✅ **Las exoneraciones las autoriza la Presidencia** (R-42). El sistema no decide: exige el motivo
-  y registra quién lo asentó y cuándo.
+## RN-RT05 — Itinerario y personal de la salida
 
----
+**Itinerario (mig. 082, R-10/R-18).** Sin filas en `ruta_ejecucion_itinerario` la salida sigue el
+orden del catálogo (el caso normal); con filas, mandan ellas, **solo para esa salida**. Si dos grupos
+coinciden se altera el de uno para que no se crucen, sin tocar el recorrido ni otras salidas.
 
-## RN-RT05 — Rutas de pago — 🟠 **sí se cobra (confirmado R-02)**
+- Se guarda en bloque: debe incluir **todas** las paradas del recorrido, sin órdenes repetidos.
+- Una parada puede marcarse **omitida** con nota — típicamente porque el custodio rechazó el permiso
+  (R-20). Sigue en el recorrido; cambia ese día.
+- «Restablecer» vuelve al orden del catálogo. No editable en estado terminal.
 
-- **R-02 (2026-09-03) confirma el cobro**, en dólares y por persona: Cumaná Histórica **5 $**,
-  Río Brito **15 $**, Playa Las Maritas y Playa Colorada **25 $**, Exploradores **gratuita**,
-  Altos de Cumaná *"se cuadra"*.
-- **Dos exoneraciones conocidas:** **menores de 8 años** en Cumaná Histórica (R-02) y
-  **escuelas e instituciones públicas** (R-03).
-- **Estado del código:** `tiene_tarifa BOOL` y `tarifa_monto DECIMAL(10,2)` existen (migración 007)
-  pero **nunca se capturan**. El reporte dejó de mostrar la columna Tarifa el 2026-08-27 (**H-14**)
-  porque informaba «Gratuita» siempre. → **Las columnas ya no se eliminan: se capturan**, y la
-  columna del reporte vuelve cuando tenga un dato verdadero detrás.
-- 🔒 **Lo que sigue bloqueado (D-RT02 parcial):** **quién recibe el dinero** (R-37), **cómo se paga**
-  (R-38), **qué comprobante se emite** (R-39), **si el sistema lleva la contabilidad o solo deja
-  constancia** (R-40) y **quién autoriza exoneraciones** (R-42). Hasta responderlas **no se
-  construye registro de pagos**.
+**Personal (`ruta_ejecucion_empleados`, R-31/R-33/R-34):**
 
----
+- La salida la encabeza **siempre un empleado de IMATUR**; **uno solo es el encargado** (marcar otro
+  desmarca al anterior). Un empleado no se asigna dos veces a la misma salida.
+- Número variable según el grupo: el sistema **sugiere** 1 guía por cada **8** personas
+  (`RutaEjecucion::PERSONAS_POR_GUIA`, R-33: «7-8 por guía»). **No bloquea**: depende de los disponibles.
+- La certificación **no es requisito** para guiar (R-34): no se bloquea ni se alerta por vencimiento.
+- La lista nominal firmada (`rutas_lista_asistencia_nominal_IMATUR.jpeg`) es la asistencia de **este
+  personal**, no de los participantes.
 
-## RN-RT06 — Puntos de ruta (paradas)
+## RN-RT06 — Participantes e inscripción
 
-- Los puntos tienen orden, nombre, descripción y coordenadas lat/lon opcionales.
-- El orden no es obligatorio (el guía puede variar el recorrido según el día).
-- La tabla `puntos_ruta` tiene `lat` y `lon`, y el **mapa está construido**: `rutas/detalle.php`
-  renderiza los puntos con **Leaflet vendorizado en local** (`assets/js/leaflet.min.js` +
-  `assets/css/leaflet.min.css`), sin CDN.
+**Del grupo visitante IMATUR lleva el conteo, no los nombres** (R-23/R-24/R-29): eso va en la Ficha
+Institucional. `participantes_ruta` queda para el registro individual — sobre todo el **particular
+de pago**, del que se toma la localidad (R-22/R-62).
 
----
+| Regla | Detalle |
+|---|---|
+| Solo salidas `Programado` | Una salida terminal no admite inscripciones |
+| Con cédula | Solo dígitos, 6-8. Se busca o crea la persona; no se inscribe dos veces en la misma salida |
+| Sin cédula (modo libre) | Nombre + fecha de nacimiento (no futura) obligatorios; ID escolar opcional (3-20 alfanuméricos). **Representante (nombre + cédula 6-8) obligatorio.** Anti-duplicado por nombre+fecha de nacimiento o ID escolar en la misma salida |
+| Edad | Solo `Ruta::motivoEdadNoValida()`, con el rango **del recorrido**, en los dos flujos y en el formulario. Sin rango, no restringe. **No hay rango literal en el código** (el 5-11 cableado era H-17) |
+| Prerequisito de formación (RN-F12) | Si `requiere_formacion`, la persona con cédula debe haber asistido a alguna actividad de formación. Se puede **forzar** («Inscribir sin formación», caso excepcional). Libres exentos |
+| Cupo de la salida | `cupo_maximo` de la salida: **advierte, no bloquea** |
+| Cupo diario (R-28) | **60 personas por DÍA**, sumando todas las salidas de la fecha (excepto las `No ejecutado`). `rutas_cupo_diario` en Configuración, 0 = sin tope. **Advierte, no bloquea**: es planificación y el propio cliente dijo que «es nuevo» |
 
-## RN-RT07 — Facilitador y guía — 🔴 **se queda corto**
+## RN-RT07 — Cobro (mig. 083)
 
-- **Vigente:** la ruta tiene **un** facilitador principal (`id_facilitador` FK a empleados).
-  `rutas.nombre_facilitador_externo` se eliminó en la migración 060 (D-RT04).
-- 🔴 **R-09 habla de "guías rotativos"** y de varios grupos simultáneos → una salida puede llevar
-  **más de un guía**. El `id_facilitador` único no lo representa. Vuelve, pero como **tabla de guías
-  por ejecución**, no como columna de texto.
-- ⏳ **R-31…R-34 sin responder**: si hay guías externos, si se les paga y si necesitan certificación.
+El sistema **lleva la cuenta**, no solo constancia (R-40): abonos, varias transferencias del mismo
+grupo, pagos de representantes distintos. Cobra **IMATUR**, en una cuenta exclusiva para rutas (R-37).
 
----
+| Regla | Detalle |
+|---|---|
+| Condiciones congeladas | Cada salida guarda **su** tarifa USD, tasa y fecha de la tasa. Cambiar el precio del catálogo o que suba el dólar **no mueve** lo ya cobrado (mismo criterio que la nómina, mig. 074). Solo se corrigen mientras la salida esté `Programado` |
+| Sugerencia | Gratuita → 0. Institucional en ruta con `exonera_instituciones` → 0 (recordando el oficio). A convenir → sin monto, se pacta. Fija → monto del catálogo |
+| Tasa | Se sugiere desde el BCV reutilizando `TasaBcv`; un fallo de red **nunca bloquea**, se carga a mano. Tarifa > 0 exige tasa |
+| Pago anticipado (R-38) | La fecha tope no puede ser posterior a la salida. **Vencido** = pasó el tope, no está exonerada y falta por cobrar |
+| Esperado | Tarifa × participantes registrados × tasa. Sin tarifa, a convenir o exonerada no hay saldo: manda lo cobrado |
+| Formas (R-39) | *Transferencia* (exige referencia; captura/voucher adjunto, servido por `DescargaController::comprobantePago()`) · *Efectivo* (**acta de pago numerada** `ACTP-NNN/AAAA`, solo para efectivo) · *Punto de venta*. Monto > 0, fecha no futura |
+| Exoneración (R-42) | La autoriza la **Presidenta**; el sistema no decide: exige motivo y registra quién y cuándo. Una salida exonerada no admite pagos |
+| Anular un pago | **No lo borra** (es dinero): queda con motivo y deja de sumar. El número de acta no se recicla |
 
-## RN-RT08 — ~~Inventario asignado~~ (eliminado)
+## RN-RT08 — Ficha Institucional (cierre de la salida, mig. 080)
 
-La tabla `ruta_inventario` se **eliminó en la migración 019**. No se asignan bienes a rutas.
+R-43, R-47 y R-48 pedían «planilla del día» e «informe de cierre»: son **el mismo documento**
+(`rutas_ficha_institucional_IMATUR.jpeg`), dirigido a la Directora de Promoción Turística.
 
----
+- **Nace sola al marcar la salida `Ejecutado`** (R-50), en Borrador, con recorrido, fecha, encargado
+  e institución ya puestos. Se completa **en la oficina** al volver (R-46). Una ficha por salida.
+- Una salida `No ejecutado` **no tiene ficha**: no hubo grupo.
+- Contenido: renglones por **institución** (niñas/niños, rango de edades), **acompañantes** —docentes
+  y representantes por sexo— e **instituciones de apoyo** (Protección Civil, R-55/R-56).
+- **TOTAL = niños + acompañantes + apoyo**. Verificado contra el ejemplo real: 22 + 9 + 2 = 33.
+  `mujeres`/`hombres` (todos los adultos), `ninas`/`ninos` y `total_atendidos` son **derivados**
+  (`RutaFicha::recalcular()`): no se escriben a mano.
+- Estados *Borrador* / *Cerrada*. No se cierra sin personas atendidas. **Reabrir** devuelve a edición
+  para corregir un conteo; no borra nada y queda en la bitácora.
+- Las actas de ejecutado/no ejecutado que se archivan en la OAC (R-47) se levantan fuera del sistema.
 
-## RN-RT09 — Oficio emitido
+## RN-RT09 — Oficio saliente al punto
 
-Al generar un oficio de visita (`/rutas/oficio/{id}`), el sistema:
-1. Asigna un número correlativo desde `configuracion_sistema.correlativo_oficio_ruta`.
-2. Guarda el registro en `oficios_emitidos` (vinculado a la ruta).
-3. Renderiza una página imprimible standalone (`oficio_imprimible.php`) sin layout del sistema.
+El oficio de visita de IMATUR hacia el espacio a visitar (`/rutas/oficio/{idSalida}`):
 
-Formato del correlativo: `007/2026` — **sin prefijo**. Lo genera
-`ConfigSistema::generarNumeroOficio('ruta')`, que incrementa de forma atómica
-(`UPDATE … RETURNING` dentro de transacción, hallazgo H-06) y **reinicia a `001` al cambiar de año**.
+1. Exige destinatario; asigna correlativo con `ConfigSistema::generarNumeroOficio('ruta')` — formato
+   `007/2026`, **sin prefijo**, atómico y reinicia a `001` cada año.
+2. Lo guarda en `oficios_emitidos` ligado a la salida.
+3. Renderiza `oficio_imprimible.php` (membrete institucional, standalone). Se emite a mano.
 
-🔒 **D-RT03** pendiente: si al pasar la ruta a *Finalizada* debe generarse el informe/oficio
-automáticamente. Hoy se dispara a mano.
+No confundir con el oficio de **solicitud** (entrante, RN-RT04) ni con el de **permiso** (RN-RT10).
 
-⚠️ **Falta el oficio de entrada.** R-11/R-12: las instituciones públicas **solicitan** la ruta con
-un oficio que **queda archivado en IMATUR** (se recibe en físico o digital). El sistema solo emite
-oficios de salida; **no registra el de entrada**. El cliente quedó en enviar el formato.
+## RN-RT10 — Oficios de permiso a instituciones custodias (mig. 081, R-20)
+
+Para entrar a un museo, castillo o fundación, IMATUR envía un oficio de permiso. **Uno cubre todas
+las salidas de la semana** hacia esa institución, para agilizar el trámite. Lo tramita el **Director
+de Relaciones Inter-Institucionales**, que también corrobora la disponibilidad (es el responsable
+sugerido).
+
+- **N:M con las salidas** (`ruta_permiso_salidas`): un permiso cubre varias, y una salida con dos
+  custodios necesita dos. Todas las salidas deben caer dentro de la semana indicada.
+- Correlativo propio `PERM-NNN/AAAA`, pedido después de validar (un intento fallido no quema número).
+- Estados: *En espera* → *Aceptado* | *Rechazado* (el rechazo **exige motivo**; la respuesta no puede
+  ser anterior a la emisión y solo se responde una vez). El pase devuelto se adjunta
+  (`DescargaController::permisoRuta()`).
+- **Anular** conserva el registro con motivo y **no recicla el número**: el oficio ya salió.
+- El sistema lista los custodios de las salidas de la semana (desde `puntos_ruta.ente_custodio`).
 
 ---
 
-## RN-RT10 — Solicitud, aprobación y ciclo de vida de una salida — 🆕 **por construir**
+## Parámetros
 
-Reglas que salen de R-11 a R-16 y que **el sistema hoy no implementa**:
+| Parámetro | Dónde | Valor |
+|---|---|---|
+| Cupo diario | `configuracion_sistema.rutas_cupo_diario` (`/config`) | 60 (0 = sin tope) |
+| Personas por guía (sugerencia) | `RutaEjecucion::PERSONAS_POR_GUIA` | 8 |
+| Edad y restricciones | `rutas.edad_min` / `edad_max` / `restricciones` | Por recorrido |
+| Tarifa y exoneraciones | `rutas.tarifa_modo` / `tarifa_monto` / `exonera_menores_de` / `exonera_instituciones` | Por recorrido, USD |
+| Correlativos | `correlativo_oficio_ruta` · `_permiso` · `_actapago` | Reinician por año, no se reciclan |
+| Meta anual | `configuracion_sistema.meta_rutas_anio` (Indicadores) | 100 rutas (R-51) |
 
-1. **Una salida nace de una solicitud** (R-11), con dos orígenes: **particular** (el turista la pide)
-   o **institucional** (oficio que queda archivado en IMATUR).
-2. **Toda salida requiere aprobación de la Presidencia** — actualmente **María Maza** —
-   **tanto la particular como la institucional** (R-13). Hay que registrar **quién aprobó y cuándo**.
-3. **Cancelación con motivo obligatorio** (R-15). Motivos reales citados: **falta de gasolina**,
-   **clima**, **el grupo cancela**.
-4. **La reprogramación NO es un estado**: es un **cambio de fecha sobre la misma salida** (R-16,
-   literal: *"se reprograma y se considera la misma, solo que con el cambio"*). Se conserva la fecha
-   original y el motivo.
-5. **Varias salidas el mismo día** (R-09), de la misma ruta o de rutas distintas, con guías rotativos.
-6. **El itinerario puede variar por grupo** (R-10): si hay dos grupos en la misma ruta a la vez,
-   **se cambia el orden de los puntos** para no coincidir. → el recorrido del catálogo es una
-   **plantilla**; la salida guarda **su** itinerario.
+## Documentos
 
-⛔ **R-14 sin responder** — los nombres de los estados. Hasta tenerlos, no se fija el `CHECK`.
+| Documento | Formato | Estado |
+|---|---|---|
+| Ficha Institucional | `docs/formatos/rutas_ficha_institucional_IMATUR.jpeg` | Imprimible fiel al formato |
+| Oficio de visita al punto | Referencia del cliente | Imprimible |
+| Oficio de permiso a custodios | — | **Provisional** (`permiso_imprimible.php`): falta el formato oficial |
+| Acta de pago en efectivo | Propuesta nuestra (R-39: «pueden darnos una idea») | Aprobada por IMATUR el 2026-10-11 |
+| Oficio de solicitud | Lo redacta cada institución | Se archiva, no se genera |
+| Cuadro de visitantes del custodio | `rutas_cuadro_visitantes_FundacionCastilloSanAntonio.jpeg` | No se genera; sus casillas no coinciden con la Ficha (R-71 abierta) |
 
----
+## Fuera de alcance (decisiones del cliente)
 
-## Estado de brechas
+| Respuesta | Qué no se construye |
+|---|---|
+| R-46 — el registro se hace al volver a la oficina | Modo campo, app móvil, offline |
+| R-49 / R-63 — las fotos son para prensa | Galería o evidencias por salida |
+| R-27 — la institución educativa responde por los permisos | Autorización de representante |
+| R-58 — el transporte va en el presupuesto | Unidad y conductor |
+| R-59 — el testimonio lo toma prensa | Encuesta de satisfacción |
+| R-61 — solo la temporada escolar mueve la demanda | Temporadas o tarifas estacionales |
+| R-30 — no interesa si alguien repitió | Histórico de rutas por persona |
+| R-67 — no lo quieren | Directorio de posadas/aliados |
+| Mig. 019 / 021 / 060 / 070 | Inventario asignado a rutas, nivel de dificultad, facilitador externo de texto, actividades por punto (eliminados; no revivirlos) |
 
-> Registro de brechas **de este módulo**. El plan de reconstrucción y sus fases T-A…T-G están en
-> `PLAN_MODULO_RUTAS.md`; las **preguntas al cliente** (R-xx), en `BACKLOG.md` §3.5 — aquí solo se
-> referencian por ID.
-
-| ID | Descripción | Estado |
-|----|-------------|--------|
-| BRT-01 | Registro de pagos | 🟠 **Desbloqueado a medias (R-02).** Se confirma que **sí se cobra** y se conocen los montos → la **tarifa declarativa se puede construir ya**. El **registro de pagos** sigue 🔒 por R-37…R-40 |
-| BRT-02 | Guías: hoy uno solo por ruta | 🔴 **Reabierto por R-09**, **precisado por R-31/R-33 (2026-09-17)**: la salida la **encabeza siempre un empleado de IMATUR** y lo acompaña un **número variable** según el tamaño del grupo → **tabla de empleados por ejecución**. El **guía externo lo pone el punto visitado**, no IMATUR: no va como facilitador de la salida |
-| BRT-03 | Mapa visual de puntos de ruta | ✅ Resuelto — Leaflet + OSM vendorizados en local, en `rutas/detalle.php` |
-| BRT-04 | Registro de institución solicitante | 🔴 **Reabierto por R-11.** `instituciones_externas` se eliminó en la mig. 060, pero las instituciones **solicitan por oficio** y de eso depende la gratuidad. **D-RT05 desmentida** |
-| BRT-05 | Catálogo de rutas vs. salidas | 🔴 **Abierto por R-07/R-08.** Lo que se daba por resuelto (cada ruta *es* una ejecución) es justamente lo que el cliente desmiente. **Es el rediseño**: `docs/PLAN_MODULO_RUTAS.md` §3 |
-| BRT-06 | Adultos acompañantes y prerequisito de formación | 🟢 **Resuelto por R-22…R-25 + los formatos (2026-09-17).** Los acompañantes **sí se cuentan**, y con desglose propio: la *Ficha Institucional* separa **Docentes** y **Representantes** por sexo, aparte de los niños. No hay prerequisito de formación |
-| ~~BRT-07~~ | ~~Rango de edad 5–11 cableado en el código~~ | ✅ **RESUELTO (2026-09-17, mig. 079).** La restricción es ahora un atributo del recorrido —edad **y** condiciones— y se advierte al inscribir. Río Brito 12+, Exploradores 4–16 |
-| BRT-08 | **Oficio de solicitud (entrada) no se registra** | 🔴 **Precisado por R-12 (2026-09-17):** llega **en físico** y **lo redacta cada institución** — no hay formato único. El sistema debe **recibir y archivar el escaneado**, no generarlo |
-| BRT-09 | **Aprobación de la Presidencia** | 🔴 **Nuevo (R-13).** No existe en el modelo |
-| BRT-10 | **Cancelación con motivo y reprogramación** | 🔴 **Nuevo (R-15/R-16).** No existen ni el estado ni el histórico de fecha. **R-15 (2026-09-17) lo endurece: el motivo es OBLIGATORIO** — *"si se cancela, el motivo siempre tiene que saberse"* |
-| BRT-11 🆕 | **Ficha Institucional: el conteo demográfico del cierre** | 🔴 **Nuevo (R-43/R-47/R-48/R-50).** La planilla del día y el informe de cierre **son el mismo documento**, va a la Directora de Promoción Turística y **se genera automáticamente**. Formato real en `docs/formatos/rutas_ficha_institucional_IMATUR.jpeg`. Hoy no existe nada de esto |
-| BRT-12 🆕 | **Oficios de permiso a las instituciones custodias** | 🔴 **Nuevo (R-20).** IMATUR pide permiso por oficio a cada museo/castillo/fundación, **agrupando la semana en uno solo**, y controla su estado (*llegó · pase · rechazado*) a través del **Director de Relaciones Inter-Institucionales**. Es la mitad del pedido explícito de R-64. No existe en el modelo |
-| BRT-13 🆕 | **Cupo diario de 60 personas** | 🟡 **Nuevo (R-28).** No hay cupo por salida, pero sí un tope **por DÍA** — con dos salidas el mismo día, se reparte. Es una regla reciente del cliente |
-| BRT-14 🆕 | **Incidencias de la salida** | 🟡 **Nuevo (R-45).** *"Sí se lleva y se reporta la incidencia"*. No hay dónde registrarla |
-| BRT-15 🆕 | **Duración por punto y total** | 🟢 **Nuevo (R-19).** Se calcula **punto a punto** y en total. Referencias reales: **1 h 30 min** lo normal, **3 h** el máximo |
+**Pendiente del cliente:** formato del oficio de permiso (T-H), R-71 y R-72 — ver `docs/BACKLOG.md` §3.5.

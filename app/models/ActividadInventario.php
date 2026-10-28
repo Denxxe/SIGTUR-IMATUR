@@ -2,7 +2,7 @@
 /**
  * ActividadInventario — bitácora de movimientos de bienes.
  *
- * Fase 2 del replanteamiento (mig. 063), ver docs/PLAN_MODULO_BIENES.md §4.2/§4.3.
+ * Fase 2 del replanteamiento (mig. 063), ver docs/REGLAS_NEGOCIO_Inventario.md.
  *
  * Un movimiento NO es solo un apunte: cambia el estado del bien. Por eso
  * `registrarMovimiento()` es transaccional — o se registra el movimiento y

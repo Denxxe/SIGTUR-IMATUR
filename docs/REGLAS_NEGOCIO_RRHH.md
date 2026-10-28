@@ -1,252 +1,310 @@
-# Módulo de RRHH — Reglas de Negocio
+# Módulo de RRHH (Talento Humano) — Reglas de Negocio
 
-**Última actualización:** 2026-06-04
+**Última actualización:** 2026-10-28
 
-> **Revisión del 2026-08-28.** Cuatro secciones seguían marcadas como «UI pendiente» o
-> «lógica pendiente» (permisos, vacaciones, horarios, expediente) cuando ya estaban construidas,
-> y la ruta de subida de expedientes apuntaba a `public/uploads/`, que **se eliminó**. Corregido
-> contra el código. Estado por módulo al día: `docs/BACKLOG.md` §7.
->
-> **Fuente de negocio:** `docs/MODELO_NEGOCIO_RRHH.md` consolida el relevamiento con la institución (modalidades de horario, tipos de empleado, expediente, permisos/reposos/vacaciones, organigrama). Este documento traduce esas reglas a su estado técnico (implementado vs pendiente). Preguntas abiertas: `docs/BACKLOG.md` §3 — **no se reproducen aquí**.
+> Fuente única de las reglas de RRHH: el relevamiento con la institución (sesiones 2026-06-02/04,
+> decisiones D-RH01…D-RH36, todas cerradas) y su estado en el código. Las preguntas abiertas viven en
+> `docs/BACKLOG.md` §3 — **no se reproducen aquí**. Las reglas de cálculo de pago están en
+> [`REGLAS_NEGOCIO_Nomina.md`](REGLAS_NEGOCIO_Nomina.md).
 
-## Contexto institucional
+**Fuentes documentales del cliente** (2026-06-04): Ficha Técnica del Trabajador (formato oficial),
+checklist de recaudos del expediente, hojas físicas de asistencia, `FORMATO DE REGISTRO DE DATOS.xls`
+(hojas LISTADO GENERAL —38 campos— y ORGANIGRAMA) y `REPOSOS, PERMISOS Y VACACIONES.xls` (taxonomía de
+ausencias). Organigrama oficial: Manual Descriptivo de Cargos (abril 2024).
 
-IMATUR se estructura como **Presidencia → Direcciones → Coordinaciones (+ unidades de staff) → personal adscrito**. El módulo de RRHH está a cargo de la **Dirección de Talento Humano**. Los datos de empleados sirven como base para los módulos de Formación (facilitadores), Rutas (guías), y acceso al sistema. **Director** y **Coordinador** son cargos distintos (el liderazgo se deriva del cargo del empleado). La jerarquía está **implementada** (migración 027, `departamentos.id_padre`/`tipo_unidad`) con el organigrama oficial (Manual Descriptivo de Cargos, abril 2024) sembrado.
-
-----
-
-## RN-RH01 — Empleado siempre vinculado a Persona
-
-Todo empleado debe existir previamente en la tabla `personas`. La creación de un empleado es atómica: INSERT en `personas` → INSERT en `empleados` (mismo `beginTransaction`). No puede haber empleado sin persona.
+> Los IDs RN-RH01…RN-RH16 conservan su número histórico (los citan el código y otros documentos);
+> por eso el orden de las secciones no es correlativo. RN-RH17…RN-RH20 son reglas incorporadas del
+> antiguo `MODELO_NEGOCIO_RRHH.md`.
 
 ---
 
-## RN-RH02 — Cargo y Departamento obligatorios
+## 1. Estructura organizativa y autoridad
 
-Un empleado debe tener un cargo y un departamento asignado. Un mismo cargo puede existir en distintos departamentos.
+### RN-RH17 — Organigrama (mig. 027, D-RH30)
 
-**Cargos por jerarquía (migración 035, D-RH11):** IMATUR **no distingue sueldo base por cargo** (todos cobran el mismo base salvo casos notorios) → se eliminó `cargos.sueldo_base`. En su lugar, cada cargo tiene `nivel_jerarquico` ∈ **Presidencia · Dirección · Coordinación · Adscrito** (sucesión de responsabilidad del organigrama; `Cargo::NIVELES`/`ORDEN_NIVEL`). La vista de Cargos los ordena por nivel; al crear uno nuevo se elige su escalón.
+```
+Presidencia (Dirección General — María Maza)
+  └── Direcciones (cada una = un departamento)
+        └── Coordinaciones (+ unidades de staff)
+              └── Personal adscrito
+```
 
----
+- `departamentos` es jerárquico (`id_padre` + `tipo_unidad` ∈ Presidencia/Junta Directiva/Dirección/
+  Coordinación/Oficina/Unidad), con el organigrama oficial sembrado y gestionable en `/departamentos`.
+  Direcciones: Planificación y Gestión Turística, Administración, Talento Humano.
+- Coordinaciones de la fuente: Promoción Turística, Presupuesto, Registro y Selección, Contabilidad,
+  Bienestar Social, Compra/Bienes y Servicios, Nómina, Calidad y Servicio, Formación Turística, entre otras.
+- **Director** y **Coordinador** son cargos distintos. El liderazgo se **deriva del cargo** del empleado
+  (`Director`/`Coordinador`/`Presidenta`); no hay campo «responsable».
+- Los cargos son generales/transversales (O1): un mismo cargo existe en varios departamentos.
 
-## RN-RH03 — Tipos de contrato
+### RN-RH18 — Quién decide qué
 
-**Estado actual (BD, migración 025 — 2026-06-04):** la estabilidad y el origen quedaron separados en 3 campos:
-- `tipo_contrato` ∈ `'Fijo'`/`'Contratado'`, DEFAULT `'Contratado'` (todo nuevo es Contratado).
-- `institucion_origen` ∈ `'Alcaldía'`/`'Gobernación'`/`'IMATUR'`, DEFAULT `'IMATUR'`.
-- `es_comision_servicio` BOOLEAN **derivado** = (`institucion_origen ≠ 'IMATUR'`). Comisión de servicio ⟺ viene de Alcaldía/Gobernación; IMATUR ⇒ no comisión. No es un campo manual.
-- **Edad:** comisión de servicio (Alcaldía/Gobernación) 18–70; personal IMATUR 18–65 (validado en cliente y `EmpleadosController`).
-
-Enums centralizados en `Empleado::TIPOS_CONTRATO` / `Empleado::INSTITUCIONES_ORIGEN` (patrón H-07); el controller y la vista los consumen.
-
-**Reglas de negocio que implementa (confirmadas 2026-06-04):**
-- **Todo empleado nuevo entra como `'Contratado'`** (DEFAULT) (D-RH19/2.1).
-- **`'Suplente'` y `'Comisión de Servicio'` deprecados** como `tipo_contrato` — no existen suplentes; comisión de servicio es designación ortogonal de origen (`es_comision_servicio`).
-- Comisión de servicio **se deriva del origen** (Alcaldía/Gobernación ⇒ Sí; IMATUR ⇒ No); un empleado en comisión puede ser Fijo *o* Contratado (D-RH27/D-RH31).
-- Única forma de ingresar como **Fijo**: venir ya fijo desde Alcaldía/Gobernación (con carta de asignación si aún no cumple el tiempo). Origen IMATUR llega a Fijo solo por tiempo de servicio.
-
-Reglas vigentes de baja:
-- Los empleados **Contratados** pueden tener `fecha_egreso` programada.
-- Empleados dados de baja: `fecha_egreso` registrada + `is_active = FALSE` en `empleados`.
-- **Baja** no elimina al empleado ni a su persona; preserva el historial.
-
----
-
-## RN-RH03b — Clasificación, origen y transición a Fijo (confirmado 2026-06-04)
-
-- **Clasificación** `Empleado` / `Obrero`: campo distinto del tipo de contrato (D-RH26).
-- **Transición Contratado → Fijo** por tiempo de servicio (Alcaldía 5–6 años, Gobernación 3–6, IMATUR 5–6). Los años previos en el ente de origen **se suman**. **No es automática**: el sistema solo **alerta la elegibilidad**; RRHH/Directora la confirman (D-RH20).
-- **Restricción de edad** al registrar: 18–65 años; excepción >65 solo por comisión de servicio; límite absoluto 70.
+| Cargo | Facultades en RRHH |
+|-------|-------------------|
+| Directora General / Presidenta (María Maza) | Aprueba permisos especiales, asigna/modifica empleados, decisión final en traslados, confirma el paso a Fijo |
+| Directora de Talento Humano | Oficializa y firma permisos, registra y gestiona expedientes, emite constancias |
+| Coordinador de departamento | Participa en los traslados de su área (y puede decidirlos, ver RN-RH19) |
+| Jefe inmediato | Recibe la notificación previa de los permisos por diligencia |
 
 ---
 
-## RN-RH03c — Amonestaciones (✅ implementado mig.031 — R-9)
+## 2. Registro del empleado
 
-- El sistema **cuenta** `faltas` injustificadas y `amonestaciones` por empleado y las muestra en un roster con semáforo; **RRHH las registra manualmente** (el sistema solo notifica — D-RH28).
-- **3 amonestaciones activas** (`Amonestacion::LIMITE_DESPIDO`) = **causa de despido** (aplica a Contratado) → alerta en el detalle/roster.
-- Módulo: `AmonestacionesController` (roster `index`, `empleado($id)` detalle, registrar/eliminar falta y amonestación). Las faltas injustificadas son distintas de los permisos/ausencias justificadas (R-8).
-- **Escalado falta → amonestación (2026-10-04):** se hace **con confirmación** (el modal muestra la falta y con cuántas amonestaciones quedará el empleado, p. ej. «3/3 — causa de despido») y **una falta se escala una sola vez** (`Amonestacion::activaDesdeFalta()`): mientras su amonestación esté activa, la falta muestra «Amonestada». Si esa amonestación se anula, la falta puede volver a escalarse. El empleado es siempre el de la falta, no el que envíe el formulario.
+### RN-RH01 — Empleado siempre vinculado a Persona
 
----
+Todo empleado existe en `personas`; el alta es atómica (INSERT `personas` → INSERT `empleados`, una
+transacción). **Cédula = solo dígitos, máx. 8** (mig. 037), y no se repite como empleado activo ni
+egresado (`Empleado::existeCedula`; si ya egresó, se usa *Reingreso*).
 
-## RN-RH04 — Asistencia: patrón toggle
+### RN-RH02 — Cargo, departamento, horario y grupo
 
-La asistencia sigue el mismo patrón que las visitas:
-- Si existe un registro abierto del día (sin `hora_salida`) → UPDATE `hora_salida = NOW()`.
-- Si no existe → INSERT nuevo con `hora_entrada = NOW()`.
-- Un empleado solo puede tener una asistencia abierta por día.
+Los asigna **Talento Humano** al registrar (también la Directora General), según el cargo requerido y el
+origen del empleado. Cargo y departamento son obligatorios.
 
-El marcaje registra el usuario que realizó la acción mediante `$this->getUserId()`. ✅ Bug BRH-04 corregido en Fase 2.5.
+**Cargos por jerarquía (mig. 035, D-RH11):** IMATUR **no distingue sueldo base por cargo** (todos cobran
+el mismo base salvo casos notorios), así que se eliminó `cargos.sueldo_base`. Cada cargo tiene
+`nivel_jerarquico` ∈ Presidencia · Dirección · Coordinación · Adscrito (`Cargo::NIVELES`/`ORDEN_NIVEL`).
 
----
+### RN-RH12 — Asistente de alta y Ficha Técnica (mig. 026/030)
 
-## RN-RH05 — Asistencia manual
+El alta/edición es un **asistente de 5 pasos** (`empleados/form.php`: personales → formación →
+institucionales → carga familiar → resumen) con borrador en `localStorage`. Los campos salen del
+LISTADO GENERAL y de la Ficha Técnica; el sistema **genera** la Ficha Técnica imprimible
+(`EmpleadosController::fichaTecnica`).
 
-Además del marcaje automático, el sistema permite registro manual de asistencias (retroactivo). Esto cubre casos de fallas del sistema o ausencias documentadas.
+| Bloque | Campos |
+|--------|--------|
+| Personales | Nombres y apellidos, cédula, RIF (cuando aplica, validado), sexo M/F, fecha de nacimiento, estado civil, dirección, parroquia, teléfono, correo (cuando aplica), discapacidad Sí/No, foto (carnet) |
+| Comunitarios (opcionales, D-RH25) | Centro de votación, consejo comunal, comuna |
+| Formación | Nivel académico, profesión, nombre del título, **fecha del título** (columna `fecha_graduacion`; el rótulo era «Fecha de graduación»), institución, etapa; cursos realizados (institución · curso · inicio · culminación) |
+| Laborales | Cargo, departamento, institución de origen, tipo de contrato, clasificación, horario/grupo, fecha de ingreso a IMATUR, ingreso a la administración pública, vencimiento de contrato, uniforme Sí/No + tallas (solo se registra, D-RH35). Tiempo de servicio = derivado |
+| Experiencia laboral (D-RH23) | Organismo · cargo · inicio · culminación |
+| Carga familiar | Ver RN-RH11 |
 
----
+- Tablas hijas `carga_familiar`/`cursos_realizados`/`experiencia_laboral`, gestionadas desde el expediente.
+- El **folio** del expediente es automático: `EXP-####` derivado del `id`, no editable (mig. 040).
+- La **Ficha Técnica** es además un recaudo del expediente.
 
-## RN-RH06 — Permisos, Reposos y Ausencias ✅
+### RN-RH03d — Edad permitida
 
-La tabla `permisos_laborales` existe desde migración 002. **Taxonomía confirmada (2026-06-04, ver `MODELO_NEGOCIO_RRHH.md` 4.2):** reposo médico, permiso médico a familiar, diligencia, duelo, maternidad/paternidad (post-parto), personal, estudios; + vacaciones y falta sin justificar.
+Mínimo **18**. Personal IMATUR hasta **65**; comisión de servicio (Alcaldía/Gobernación) hasta **70**,
+límite absoluto. Se valida en el cliente y en `EmpleadosController`; la edad nunca se almacena.
 
-- **Atributos por registro:** empleado, fecha inicio, tipo, tiempo (horas/días/meses), hasta (fecha fin), estatus (En curso/Concluido), observación.
-- **Aprobación (D-RH03):** Talento Humano oficializa todos; los **especiales** los aprueba la Directora General. Firma: Directora de TH o Directora General.
-- **Justificadas e injustificadas se gestionan por separado** (RN-RH13); las injustificadas alimentan amonestaciones (RN-RH03c).
-- **Log con timestamp de solicitud** y correlativo (RN-RH14).
+### RN-RH11 — Carga familiar (mig. 026/039, D-RH21)
 
-**✅ Implementado (migración 032 — R-8):** `PermisosController` + modelo `PermisoLaboral` + `permisos/index.php`. Reposo y Permiso se distinguen por `categoria` (D-RH32); `tipo_permiso` con la taxonomía; `duracion` texto libre; **En curso/Concluido derivado** de `fecha_fin`; flujo Pendiente→Aprobado/Rechazado/Anulado (D-RH03). **Vacaciones se gestionan aparte**, en su
-propio módulo (RN-RH07), porque llevan cálculo de días hábiles y saldo acumulado.
-Reporte de permisos por tipo/empleado/período: `reportes/permisos.php` (**BRH-06 cerrada**).
+- **Tabla dedicada**: nombre y apellido, cédula, fecha de nacimiento, parentesco (padre, madre,
+  cónyuge/concubino, hijo/a), género y si vive. El asistente pide el género del familiar.
+- Usos: expediente; reportes; **justificar permisos médicos a familiar** (el familiar debe estar
+  registrado); base de beneficios. Nómina cuenta los **hijos** desde aquí (prima por hijo).
+- Sub-recaudos: cédula y partida de nacimiento de pareja/cónyuge, acta de matrimonio/concubinato,
+  cédula y partida de padres e hijos. Lo pendiente sobre beneficios específicos (D-RH29) está en BACKLOG §3.
 
----
+### RN-RH10 — Expediente y recaudos (mig. 033, D-RH22)
 
-## RN-RH07 — Vacaciones ✅
+El expediente se organiza **por departamento** (antes, por tipo de empleado). Físicamente es una
+carpeta marrón tipo oficio con ganchos; en el sistema es un **modelo híbrido**: subida de archivos +
+checklist con **detección de faltantes** (`ExpedienteDocumento::RECAUDOS`/`recaudosEstado`).
 
-La tabla `vacaciones` existe desde migración 002.
+| Recaudo | Obligatorio |
+|---------|-------------|
+| Currículum (CV) · cédula ampliada y centrada · partida de nacimiento · título Bachiller/Profesional · fondo negro del título · RIF · referencia bancaria | Sí |
+| Recaudos de carga familiar · Ficha Técnica · documentación de estudiante/discapacidad · otro | No |
 
-**Confirmado (2026-06-04):**
-- Fines de semana = descanso normal (excepto eventos: Carnaval, Semana Santa, Día de Santa Inés, Cruz de Mayo).
-- Vacaciones **no disfrutadas se acumulan** — nunca se pierden; sumatoria automática al período siguiente (D-RH06).
-- Comisión de servicio: vacaciones coordinadas con Alcaldía/Gobernación.
-
-**✅ Implementado (migraciones 045/046 y 071):** módulo `/vacaciones` (`VacacionesController` +
-modelo `Vacacion`), resolviendo D-RH04, D-RH05 y D-NEW05.
-
-- **Fórmula (`Vacacion::diasPorAnios`):** 15 días hábiles + 1 por año de servicio, **tope 30**.
-- **Antigüedad:** cuenta desde `fecha_ingreso_administracion` (ingreso a la administración pública),
-  no desde el ingreso a IMATUR. **Aplica a todo el personal (2026-10-04)**, no solo a la comisión de
-  servicio: quien trabajó antes en la Alcaldía, la Gobernación u otro ente y hoy está en la nómina de
-  IMATUR conserva esos años (no es comisión: comisión es seguir en la nómina del otro ente). En el alta
-  se precarga con la fecha de ingreso (por defecto hoy) y es editable; no puede ser posterior al
-  ingreso a IMATUR. La usan Vacaciones y la prima de antigüedad de Nómina.
-- **Días hábiles (`Vacacion::diasHabiles`):** excluye fines de semana **y feriados** (tabla `feriados`).
-- **Feriados:** los fijos son recurrentes (se comparan por mes-día); Carnaval y Semana Santa son
-  **movibles** y se **calculan** con `Feriado::generarAnio($anio)` desde el Domingo de Resurrección
-  (botón «Generar Carnaval y Semana Santa» en `/vacaciones/feriados`). La mig. 071 cargó 2026-2028.
-  ⚠️ Si un año se queda sin sus 4 movibles, el conteo falla **en silencio**: descuenta días que no
-  corresponden, sin error visible. Por eso la pantalla avisa cuando faltan.
-- **Saldo acumulado** (no se pierde, D-RH06) con **ajuste inicial** para arrancar con el histórico real.
-- Reporte de saldo por empleado: `/reportes/vacacionesSaldo` (**BRH-07 cerrada**).
-
-🔒 Lo único pendiente es el **cobro** del bono vacacional, que vive en Nómina (ver `PLAN_MODULO_NOMINA.md`).
+- Archivos PDF/JPG/PNG ≤ 5 MB (MIME real), nombre `Tipo_Empleado_{id}_{ts}`.
+- **Viven fuera de la raíz web** (`storage/uploads/expedientes/`) y se sirven por `DescargaController`,
+  que valida el rol. `public/uploads/` se eliminó (H-15): allí cualquier documento era legible por URL.
+- Personal **estudiante o con discapacidad**: se le pide la documentación y se le ajusta el horario (RN-RH08).
 
 ---
 
-## RN-RH08 — Horarios y Modalidades ✅
+## 3. Vinculación
 
-La tabla `horarios` existe desde migración 002. Cada empleado tiene `id_horario` FK.
+### RN-RH03 — Tipo de contrato, origen y comisión de servicio (mig. 025)
 
-**Modalidades confirmadas (2026-06-04, ver `MODELO_NEGOCIO_RRHH.md` 1.5):**
-- **Estándar:** 8am–2pm (antes 8am–4pm).
-- **Servicios Generales Grupo A / B:** rotación alterna por día hábil (8am–2pm). Cálculo intercalado simple, sin calendario de feriados por ahora (D-RH16, provisional).
-- **OAC / Recepción:** sub-grupo 1 (7am–12pm) y sub-grupo 2 (10am–2pm), todos los días hábiles.
-- **Horario ajustado:** estudiantes/personas con discapacidad (D-RH36).
-- **En Ruta / Actividad:** el día asignado el empleado no asiste presencial (RN-RH15).
+| Concepto | Valores | Regla |
+|----------|---------|-------|
+| `tipo_contrato` (estabilidad) | Fijo · Contratado | DEFAULT **Contratado**: todo nuevo entra Contratado (D-RH19) |
+| `institucion_origen` (quién paga) | Alcaldía · Gobernación · IMATUR | DEFAULT IMATUR |
+| `es_comision_servicio` | **Derivado** | = origen ≠ IMATUR. No es checkbox; el asistente lo muestra de solo lectura (D-RH27/D-RH31) |
+| `clasificacion` | Empleado · Obrero | Independiente del contrato (D-RH26) |
 
-**✅ Implementado (migración 028 — R-6):** catálogo `horarios` con CRUD (`HorariosController`/`Horario`/`horarios/index.php`) + seed de modalidades (Estándar, OAC Matutino/Vespertino, Servicios Generales). `empleados.grupo_rotacion` (A/B) para la rotación de Servicios Generales. Horario ajustado = horario más del catálogo asignable (D-RH36). Config `minutos_tolerancia_puntualidad` (default **5** en la base actual) usada por R-7, y
-`minutos_tolerancia_salida_temprana` (default 10, mig. 056) — **independiente** de la anterior:
-si un empleado marca salida antes de su hora, más allá de esa tolerancia, el motivo es obligatorio.
+- `'Suplente'` y `'Comisión de Servicio'` ya no son tipos de contrato: no hay suplentes en IMATUR, y la
+  comisión es ortogonal a la estabilidad (un comisionado puede ser Fijo o Contratado).
+- **Comisión ≠ servicio previo:** comisión es **seguir en la nómina** de Alcaldía/Gobernación mientras
+  trabaja en IMATUR. Quien trabajó en otro ente, se desvinculó y hoy cobra por IMATUR es personal IMATUR
+  con servicio previo: no es comisión, pero esos años **cuentan** para la antigüedad.
+- **Ingreso a la administración pública** (`fecha_ingreso_administracion`): se registra para **todo** el
+  personal; se precarga con la fecha de ingreso y se cambia si hubo servicio previo; no puede ser
+  posterior al ingreso a IMATUR. Es la base de la antigüedad (vacaciones y prima de antigüedad).
 
----
+**Cómo ingresa una persona:**
 
-## RN-RH10 — Expediente y Documentos ✅
+| Origen | Documentos mínimos | Contrato inicial |
+|--------|-------------------|------------------|
+| Particular (sin vínculo público) | CV | Contratado |
+| Alcaldía/Gobernación (comisión) | CV + documentos de la dependencia | Contratado, o **Fijo** si ya era fijo en su origen y trae **carta de asignación** cuando aún no cumple el tiempo |
 
-- El expediente se organiza **por departamento**; el sistema asigna un **código interno** al trabajador.
-- Recaudos: CV, cédula ampliada, partida de nacimiento, título Bachiller/Profesional, fondo negro del título, RIF, referencia bancaria, recaudos de carga familiar, Ficha Técnica, documentación de estudiante/discapacidad si aplica.
-- **Modelo híbrido (D-RH22) — ✅ implementado mig.033:** subida de archivos (PDF/JPG/PNG ≤5MB) con
-  convención `Tipo_Empleado_{id}` + checklist con **detección de recaudos faltantes**
-  (`ExpedienteDocumento::recaudosEstado`). Sección "Recaudos del Expediente" en `empleados/detalle.php`.
-  Catálogo en `ExpedienteDocumento::RECAUDOS`.
-- **⚠️ Los archivos NO viven en `public/`.** Van a `storage/uploads/expedientes/`
-  (`EmpleadosController.php`), **fuera de la raíz web**, y se sirven por `DescargaController`, que
-  valida el rol antes de entregarlos. `public/uploads/` se eliminó por completo el 2026-08-27
-  (hallazgo **H-15**): cualquier documento allí era legible por URL, sin control de acceso.
-- **Folio automático (B2, mig. 040):** `EXP-####` derivado del `id`, no editable desde la UI.
+- El **Fijo** conserva el derecho a **retornar a su institución de origen**.
+- El origen IMATUR llega a Fijo **solo por tiempo de servicio**, sin carta de asignación.
 
----
+### RN-RH03b — Transición Contratado → Fijo (D-RH20)
 
-## RN-RH11 — Carga Familiar (✅ implementado mig.026/039)
-
-- **Tabla dedicada** (no campo de texto). Campos: nombre y apellido, cédula, fecha de nacimiento, parentesco (padre/madre/cónyuge-concubino/hijo), **género** y si vive. El asistente de alta pide también el género del familiar (2026-10-04).
-- Nómina cuenta los **hijos** desde aquí (prima por hijo).
-- Usos: expediente, base de bono escolaridad/beneficios (D-RH29), reportes, justificación de faltas médicas de familiar.
+Por años de servicio acumulados; los años previos en el ente de origen **se suman**. Referencia del
+cliente: Alcaldía 5-6 años, Gobernación 3-6, IMATUR 5-6. **No es automática**: el sistema muestra el
+badge «Elegible a fijo» (`Empleado::elegibleParaFijo`, umbral `UMBRAL_FIJO` = el mínimo de cada rango:
+Gobernación 3, Alcaldía e IMATUR 5) y la promoción la confirman RRHH y la Directora a mano.
 
 ---
 
-## RN-RH12 — Ficha Técnica del Trabajador (✅ implementado mig.026/030 — R-2/R-2b)
+## 4. Horarios y asistencia
 
-- **Registro/edición = asistente multi-paso** (`empleados/form.php`, `EmpleadosController::nuevo()`/`editar($id)`): 5 pasos (personales → formación → institucionales → carga familiar → resumen) con `localStorage` y verificación final. Campos completos incluyen uniforme/tallas y datos comunitarios (centro votación/consejo comunal/comuna).
-- El sistema **genera** el documento "Ficha Técnica del Trabajador" en vista imprimible (`EmpleadosController::fichaTecnica($id)` → `empleados/ficha_tecnica.php`).
-- Bloques: Datos Personales · Formación (con Cursos Realizados) · Carga Familiar · Datos Laborales (con Experiencia Laboral = trabajos anteriores).
-- Datos extra en `personas` (RIF, estado civil, discapacidad, nivel académico, profesión, título, fecha del título, institución académica) y `empleados.clasificacion` (Empleado/Obrero).
-- Tablas hijas `carga_familiar`/`cursos_realizados`/`experiencia_laboral` (modelos `CargaFamiliar`/`CursoRealizado`/`ExperienciaLaboral`), gestionadas desde el **expediente** (`EmpleadosController::detalle($id)`).
-- Tallas de uniforme y datos comunitarios ya capturados (mig.030, R-2b). RIF institucional en la ficha = G-20008498-7 (discrepa del de `carta_aceptacion.php`; unificar vía ConfigSistema).
+### RN-RH08 — Modalidades de horario (mig. 028/049)
 
----
+| Modalidad | Quién | Días | Horario |
+|-----------|-------|------|---------|
+| Estándar | Personal general | Todos los hábiles | **8:00 – 14:00** (antes 8–16; se redujo por infraestructura) |
+| Servicios Generales A / B | Servicios Generales | Días alternos | 8:00 – 14:00 |
+| OAC Matutino (sub-grupo 1) | OAC — Oficina de Atención al Ciudadano («Recepción») | Todos los hábiles | 7:00 – 12:00 |
+| OAC Vespertino (sub-grupo 2) | OAC | Todos los hábiles | 10:00 – 14:00 |
+| Horario ajustado (D-RH36) | Estudiantes / personas con discapacidad | Según el caso | Un horario más del catálogo |
+| En Ruta / Actividad | Quien tenga ruta o formación externa ese día | El día de la actividad | Fuera de sede (RN-RH15) |
 
-## RN-RH13 — Asistencia: puntualidad, ausentismo y horas (✅ implementado mig.029 — R-7)
+- `horarios` es un catálogo con CRUD (`/horarios`); los sub-grupos OAC son independientes del A/B.
+- **Grupo A/B:** la secuencia alterna **por día hábil trabajado**, no por semana (L-A, M-B, X-A, J-B,
+  V-A, y el lunes siguiente continúa B). Intercalado simple, **sin saltar feriados** (D-RH16, provisional).
+  `empleados.grupo_rotacion` guarda el grupo; el turno del día no se calcula en el sistema.
+- **Fines de semana = descanso** para todos, salvo eventos turísticos en que se puede convocar personal:
+  Carnaval, Semana Santa, Día de Santa Inés, Cruz de Mayo.
 
-- Patrón toggle vigente (RN-RH04).
-- **Puntualidad:** al marcar entrada se calcula `asistencias.minutos_tarde` = retraso vs hora del horario asignado. Impuntual si supera `minutos_tolerancia_puntualidad` (config, default 15, editable en `/config`). Sin horario → NULL.
-- **Horas trabajadas** derivadas (hora_salida − hora_entrada) **solo para reporte/indicadores** — no para pago (D-RH09/D-RH12).
-- **Ausentismo:** el index de asistencia muestra resumen del día (activos/presentes/impuntuales/en actividad/ausentes) y lista a los ausentes.
-- **Detección En Ruta/Formación externa (RN-RH15):** `Asistencia::empleadosEnActividad($fecha)` excluye del ausentismo a quien está en ruta (`rutas.fecha_visita`) o formación externa (`talleres.es_interna=FALSE`).
-- **No** hay horas extras.
-- Formato físico recibido (hoja semanal por tipo de personal); la vista del sistema ya moderniza ese registro. Pendiente opcional: réplica imprimible del formato.
+### RN-RH04 · RN-RH05 · RN-RH13 — Asistencia: registro, puntualidad y horas (mig. 029/056)
 
----
+- **Patrón toggle** (igual que visitas): sin registro abierto del día → INSERT con `hora_entrada`; con uno
+  abierto → UPDATE `hora_salida`. Una asistencia abierta por día; se guarda el usuario que marcó.
+- Se permite **registro manual retroactivo** (fallas del sistema, ausencias documentadas). Las
+  asistencias son bitácora: **no se eliminan**.
+- **Puntualidad:** `minutos_tarde` = entrada real − hora del horario asignado; impuntual si supera
+  `minutos_tolerancia_puntualidad` (editable en `/config`). Sin horario → NULL.
+- **Salida temprana:** si marca salida antes de su hora, más allá de `minutos_tolerancia_salida_temprana`
+  (default 10, independiente de la anterior), el **motivo es obligatorio**.
+- **Horas trabajadas** = salida − entrada, **solo para reportes e indicadores**: no influyen en el pago
+  (D-RH09/D-RH12). **No hay horas extras.**
+- **Ausentismo:** el índice resume el día (activos/presentes/impuntuales/en actividad/ausentes).
+- Formato físico de origen: hoja semanal por tipo de personal (N° · nombre · cédula · firma y hora por
+  día). La vista del sistema lo moderniza.
 
-## RN-RH14 — Documentos generados y log (✅ constancias implementadas mig.034 — R-10)
+### RN-RH15 — En Ruta / Formación externa (D-RH17)
 
-**Constancias (R-10):** `Constancia::crear()` genera correlativo `CONST-NNN/AAAA` (`ConfigSistema::generarNumeroOficio('constancia')`), vista imprimible (`empleados/constancia.php`, firmante desde ConfigSistema) y **historial por empleado** (`fecha_emision`) en el expediente. `EmpleadosController::generarConstancia/constancia/eliminarConstancia`.
-
-- El sistema genera/registra: constancias de trabajo, permisos laborales, fichas técnicas, formato de asistencia, reportes, y a futuro nómina para Alcaldía/Gobernación (D-RH34).
-- Cada emisión guarda **timestamp de solicitud** y se comporta como **log/historial** por empleado, con **correlativo** (similar al de oficios — `ConfigSistema::generarNumeroOficio()`).
-
----
-
-## RN-RH15 — Integración Asistencia ↔ Rutas/Formación (confirmado 2026-06-04, pendiente R-7)
-
-- Al evaluar la asistencia del día, el sistema **detecta** si el empleado tiene una ruta o actividad de formación externa asignada.
-- Si la tiene, ese día se registra como **"En Ruta / En Actividad"** y no cuenta como ausencia ni presencia normal.
-- A algunos empleados se les puede pedir **apoyo** para estas actividades (detalle fino pendiente).
-
----
-
-## RN-RH09 — Empleado con usuario del sistema
-
-Un empleado puede o no tener usuario en el sistema. Cada usuario pertenece a un empleado (`usuarios.id_empleado`). El egreso del empleado desactiva su cuenta y el reingreso la reactiva.
-
-**Gestión de usuarios delegada (2026-10-04):** un rol distinto de Administrador con acceso a *Usuarios* (p. ej. RRHH) puede crear y mantener cuentas, pero **no** puede asignar el rol Administrador, ni modificar o suspender una cuenta de Administrador, ni cambiar su propio rol. Antes RRHH podía ascenderse a Administrador.
-
-## RN-RH16 — Sueldo: qué se captura y qué deriva Nómina (2026-10-04)
-
-- En *Registrar sueldo* se capturan solo el **sueldo básico** (mensual) y la **prima de discapacidad**. Cada registro es nuevo y conserva el historial (vigente desde una fecha).
-- Las primas de **profesionalización, antigüedad, por hijo** y el **transporte** no se teclean: Nómina las **deriva** del grado de instrucción, los años en la administración pública, la carga familiar y los parámetros (`/nomina/parametros`).
+El día que un empleado participa en una **salida de ruta** (`ruta_ejecuciones.fecha`) o en una
+**formación externa** (`talleres.es_interna = FALSE`, dentro de su rango de fechas) no asiste a la sede,
+y **no es falta**: `Asistencia::empleadosEnActividad()` lo detecta y lo excluye del ausentismo
+(«En actividad»). A otros empleados se les puede pedir apoyo para esas actividades.
 
 ---
 
-## Estado de brechas
+## 5. Ausencias y disciplina
 
-Mapa hacia la hoja de ruta R-1…R-12 (`MODELO_NEGOCIO_RRHH.md` §10, cerrada).
+### RN-RH06 — Permisos y reposos (mig. 032, D-RH32)
 
-| ID | Descripción | Estado | Roadmap |
-|----|-------------|--------|---------|
-| BRH-01 | UI para Permisos/Reposos Laborales | ✅ Hecho (migración 032) | R-8 |
-| BRH-02 | UI para Vacaciones con cálculo de saldo | ✅ Hecho (mig. 045/046) — fórmula 15+1 tope 30, días hábiles sin feriados, saldo acumulado y ajuste inicial | R-8 |
-| BRH-03 | UI para Horarios (modalidades + grupos A/B + sub-grupos OAC) | ✅ Hecho (migración 028) | R-6 |
-| BRH-04 | `marcar()` usaba `$user_id = 1` hardcodeado | ✅ Corregido en Fase 2.5 | — |
-| BRH-05 | Alertas por contratos próximos a vencer | ✅ Implementado en Dashboard | — |
-| BRH-06 | Reporte de permisos por tipo/empleado/período | ✅ Hecho — `reportes/permisos.php` | R-8 |
-| BRH-07 | Reporte de saldo de vacaciones por empleado | ✅ Hecho — `/reportes/vacacionesSaldo` | R-8 |
-| BRH-08 | Fix DEFAULT `tipo_contrato` → 'Contratado'; deprecar 'Suplente' | ✅ Hecho (migración 025) | R-3 |
-| BRH-09 | Separar estabilidad / origen-nómina / comisión de servicio | ✅ Hecho (migración 025) | R-3 |
-| BRH-10 | Ampliar campos de empleado + generador de Ficha Técnica + asistente multi-paso | ✅ Hecho (migraciones 026 y 030) | R-2 / R-2b |
-| BRH-11 | Tabla de Carga Familiar + sub-recaudos | ⚠️ Tabla `carga_familiar` ✅ (mig.026); sub-recaudos/beneficios pendientes (D-RH29) | R-4 |
-| BRH-12 | Expediente: subida de archivos + checklist + detección faltantes | ✅ Hecho (migración 033) | R-5 |
-| BRH-13 | Jerarquía organizativa (Dirección→Coordinación) + Director/Coordinador | ✅ Hecho (migración 027) | R-1 |
-| BRH-14 | Asistencia: puntualidad/ausentismo/horas-reporte + En Ruta | ✅ Hecho (migración 029) | R-7 |
-| BRH-15 | Amonestaciones + conteo faltas injustificadas + alerta despido | ✅ Hecho (migración 031) | R-9 |
-| BRH-16 | Documentos generados (constancias) con correlativo + log | ✅ Hecho (migración 034) | R-10 |
-| BRH-17 | Generación de nómina para Alcaldía/Gobernación | ✅ **Completo (mig. 072/073/086).** El motor **calcula**: nómina quincenal con export de 6 hojas, 5 tipos de personal, primas derivadas, bono vacacional y **Liquidación de Prestaciones Sociales** (garantía art. 142 a/b con intereses del BCV, retroactivo 142 c, pago de la mayor 142 d, fracciones, anticipos, mora). Las cifras de la LOTTT y del contrato son parámetros | R-11 |
+| Categoría | Tipos (`PermisoLaboral::TIPOS`) | Documentación |
+|-----------|--------------------------------|---------------|
+| Reposo | Reposo médico | Reposo (48 h, 72 h, 7/10/21 días…) + diagnóstico |
+| Permiso | Médico familiar | Informe/constancia; familiar en la carga familiar |
+| | Diligencia | Notificación previa al jefe inmediato |
+| | Duelo · Maternidad/Paternidad (post-parto, p. ej. 6 meses) · Personal · Estudios («en clases») · Otro | — |
+
+- Reposo y Permiso se distinguen por `categoria` (select en cascada categoría → tipo).
+- Atributos: empleado, desde, hasta, duración (texto libre, p. ej. «72 horas»; se propone en días al
+  elegir el rango), observación. **En curso/Concluido se deriva** de `fecha_fin`.
+- Flujo: Pendiente → Aprobado / Rechazado / Anulado.
+- **Aprobación (D-RH03):** ordinarios, la Directora de Talento Humano; **especiales**, la Directora
+  General. Firma cualquiera de las dos, y Talento Humano **siempre oficializa**.
+- Vacaciones van en su propio módulo (RN-RH07).
+
+### RN-RH03c — Faltas y amonestaciones (mig. 031/042/048, D-RH13/D-RH28)
+
+- Justificadas (permisos) e injustificadas se gestionan **por separado**; ambas las registra Talento Humano.
+- `faltas.tipo` ∈ Inasistencia injustificada · Incumplimiento de reglas.
+- Una amonestación suele ser la acumulación de cierto número de faltas, **pero varía según el caso**: el
+  sistema cuenta y notifica, RRHH decide.
+- **Escalado falta → amonestación:** desde el detalle del empleado, con confirmación (el modal dice con
+  cuántas quedará, p. ej. «3/3 — causa de despido») y **una sola vez por falta** mientras su amonestación
+  siga activa (`Amonestacion::activaDesdeFalta`). El empleado es siempre el de la falta.
+- **Anular** (no borrar) exige motivo (`motivo_anulacion`); una falta cuya amonestación se anula puede
+  volver a escalarse.
+- **3 amonestaciones activas** (`Amonestacion::LIMITE_DESPIDO`) = **causa de despido** para Contratados:
+  el sistema **solo alerta** (roster con semáforo, columna Disciplina, botón *Procesar despido*). El
+  egreso es siempre manual.
+
+---
+
+## 6. Vacaciones
+
+### RN-RH07 — Días de vacaciones (mig. 045/046/071)
+
+- **Fórmula:** 15 días hábiles + 1 por año de servicio, **tope 30** (`Vacacion::regla()`; base y tope son
+  parámetros `vacaciones_dias_base/tope` en `/nomina/parametros`).
+- **Antigüedad** desde el ingreso a la administración pública (RN-RH03), para todo el personal.
+- **Días hábiles** excluyen fines de semana y **feriados** (tabla `feriados`). Los fijos se repiten por
+  mes-día; Carnaval y Semana Santa son **movibles** y se generan por año en `/vacaciones/feriados`. ⚠️ Si
+  un año queda sin ellos, el conteo falla en silencio; la pantalla avisa cuando faltan.
+- **No se pierden** (D-RH06): lo no disfrutado se acumula al período siguiente y se toma en cualquier
+  momento. **Ajuste inicial** para arrancar con el saldo histórico real.
+- Comisión de servicio: las vacaciones se coordinan con el ente de origen (coordinación operativa, fuera
+  del sistema).
+- El **monto** (bono vacacional) es de Nómina: ver `REGLAS_NEGOCIO_Nomina.md`.
+
+---
+
+## 7. Movimientos del personal
+
+### RN-RH19 — Traslado de departamento (mig. 047)
+
+Se convoca una reunión de directores y coordinadores del área; decide la **Directora General** o la
+**coordinadora del departamento de origen**; Talento Humano lo ejecuta. En el sistema es una
+**reasignación con historial** (`Empleado::trasladar()`, tabla `empleado_traslados`), no una edición.
+
+### RN-RH20 — Egreso y reingreso (mig. 036/041, R-12)
+
+- Motivos: renuncia, despido, jubilación, fin de contrato, fallecimiento, otro (`Empleado::MOTIVOS_EGRESO`).
+- El egreso **no borra**: registra `fecha_egreso` + motivo y el empleado queda `is_active = TRUE` como
+  histórico (constancias, tiempo de servicio). `is_active = FALSE` es solo la papelera (registros por error).
+- **Reingreso** cierra la fila de `empleados_egresos` y conserva el historial; no puede haber dos egresos
+  abiertos. Egreso y reingreso desactivan/reactivan la cuenta de usuario del empleado.
+- El **vencimiento de contrato** es un campo aparte (`fecha_vencimiento_contrato`) que alimenta la alerta
+  de contratos por vencer; no es un egreso.
+
+---
+
+## 8. Documentos y acceso
+
+### RN-RH14 — Documentos generados (mig. 034, B13)
+
+Cada emisión guarda fecha/hora y queda en el **historial del empleado**, con correlativo (mismo mecanismo
+que los oficios, `ConfigSistema::generarNumeroOficio`).
+
+| Documento | Regla |
+|-----------|-------|
+| Constancias | `CONST-NNN/AAAA`. Tipos: trabajo, bancaria (sin monto), horario, funciones, antigüedad, egreso. Egreso solo si egresó; bancaria/horario solo si activo. **Sin antigüedad mínima.** Muestra estatus (Activo/Egresado/En permiso/En reposo) y tiempo de servicio |
+| Ficha Técnica del Trabajador | Generada con los datos registrados (RN-RH12) |
+| Carnet | CR80, empleados y pasantes (foto por persona) |
+| Permisos, asistencia, reportes | Registro con timestamp; reportes de RRHH exportables |
+| Nómina para Alcaldía/Gobernación | Ver `REGLAS_NEGOCIO_Nomina.md` |
+
+El RIF institucional de todo documento sale de `ConfigSistema::rif()` (G-20008498-7), vía el membrete único.
+
+### RN-RH09 — Empleado con usuario del sistema
+
+- Un empleado puede tener o no usuario (`usuarios.id_empleado`).
+- Lo que ve cada usuario lo decide su **rol**, que se arma en *Sistema → Roles y Permisos* marcando
+  módulos; un rol nuevo funciona completo sin programación. Lo exclusivo del Administrador (bitácora,
+  accesos, aprobar pasantes, cuentas de Administrador) no se delega.
+- Talento Humano puede crear cuentas, pero **no** asignar el rol Administrador, tocar ni suspender una
+  cuenta de Administrador, ni cambiarse su propio rol.
+
+### RN-RH16 — Sueldo
+
+En *Registrar sueldo* solo se capturan el **sueldo básico** mensual y la **prima de discapacidad**; cada
+registro es nuevo (vigente desde una fecha) y conserva el historial (`empleado_salarios`). Las primas de
+profesionalización, antigüedad, por hijo y el transporte **no se teclean**: Nómina las deriva del grado de
+instrucción, la antigüedad, la carga familiar y los parámetros. Detalle en `REGLAS_NEGOCIO_Nomina.md`.

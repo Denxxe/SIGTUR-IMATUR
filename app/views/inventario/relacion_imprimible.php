@@ -8,7 +8,7 @@
  *
  * El cuerpo y la tabla son los del papel: tres columnas —cantidad, descripción
  * y monto en Bs—. Si el cliente confirma el formato del procedimiento nuevo
- * (PLAN_MODULO_BIENES.md §2-ter), se agrega una columna de código: el dato ya
+ * (REGLAS_NEGOCIO_Inventario.md), se agrega una columna de código: el dato ya
  * viaja en $items.
  *
  * Estilos en línea a propósito: es una vista standalone que no carga el CSS

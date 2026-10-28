@@ -6,7 +6,7 @@ $puedeEscribir = InventarioController::puedeEscribir();
 ?>
 <?php
 /**
- * Bienes / Inventario — Fase 1 (mig. 062), ver docs/PLAN_MODULO_BIENES.md.
+ * Bienes / Inventario — Fase 1 (mig. 062), ver docs/REGLAS_NEGOCIO_Inventario.md.
  *
  * El listado muestra el inventario ACTIVO. Los dados de baja salen de aquí
  * (B-38) y se consultan en su propia pestaña; los que están en mantenimiento

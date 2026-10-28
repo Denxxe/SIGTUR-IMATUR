@@ -4,7 +4,7 @@
  *
  * Procedimiento notificado el 2026-09-02: IMATUR asigna el código de sus
  * bienes, continuando la secuencia desde la última revisión de la Alcaldía.
- * Ver docs/PLAN_MODULO_BIENES.md §2-ter y §2-sexies.
+ * Ver docs/REGLAS_NEGOCIO_Inventario.md.
  *
  * El motor está construido pero arranca APAGADO. Mientras lo esté, codificar
  * es transcribir el BM-1 (comportamiento de siempre). Para encenderlo hacen

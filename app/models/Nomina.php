@@ -3,7 +3,7 @@
 /**
  * Nomina — motor de cálculo de la nómina quincenal (fase N-A del plan).
  *
- * Fuente de las fórmulas: `docs/PLAN_MODULO_NOMINA.md` §3, extraído de las
+ * Fuente de las fórmulas: `docs/REGLAS_NEGOCIO_Nomina.md`, extraído de las
  * FÓRMULAS de la plantilla real del cliente (`INSTITUTO IMATUR JULIO 2026.xlsx`,
  * datos de prueba pero fórmulas reales). **Leer ese documento antes de tocar
  * este archivo.** Ningún número de aquí salió de un audio.

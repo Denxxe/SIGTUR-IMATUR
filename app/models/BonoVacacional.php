@@ -20,7 +20,7 @@
  *
  * En cuanto llegue un mes real, esa diferencia dice si el supuesto acierta. Es
  * la pregunta pendiente convertida en instrumento, no un número afirmado sin
- * respaldo. Ver `docs/PLAN_MODULO_NOMINA.md` §6.4.
+ * respaldo. Ver `docs/REGLAS_NEGOCIO_Nomina.md`.
  */
 class BonoVacacional extends Model
 {

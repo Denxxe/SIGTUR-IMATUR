@@ -1254,7 +1254,7 @@ class RutasController extends Controller {
             header('Location: ' . URL_ROOT . '/rutas/index');
             exit;
         }
-        $puntos = Ruta::getPuntos($id);
+        $puntos = RutaEjecucion::itinerario((int)$id);   // paradas de ESTA salida, en su orden (mig. 082)
         $config = ConfigSistema::getAll();
         $total  = RutaEjecucion::countParticipantes($id);
 

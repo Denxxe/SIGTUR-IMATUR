@@ -79,7 +79,7 @@ eq(Empleado::tiempoServicio(diasAtras('+10 days')), '—', 'ingreso futuro → �
 // =====================================================================
 // Los porcentajes se inyectan para no depender de la BD: aquí se prueba la
 // FÓRMULA, no el catálogo. Los valores son los de la plantilla real del
-// cliente documentada en docs/PLAN_MODULO_NOMINA.md §3.
+// cliente documentada en docs/REGLAS_NEGOCIO_Nomina.md.
 $PN = [
     'nomina_bono_transporte_mensual' => 12.50,
     'nomina_monto_por_hijo'          => 6.50,

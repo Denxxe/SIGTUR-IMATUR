@@ -3,7 +3,7 @@
 **Sistema Integral de Gestión Turística y Administrativa — IMATUR (Cumaná, Sucre)**
 Aplicación web de uso interno. Última actualización: 2026-09-19.
 
-> Guía práctica para el personal. Para detalle técnico ver `CLAUDE.md`; para reglas de negocio, los `REGLAS_NEGOCIO_*.md` / `MODELO_NEGOCIO_RRHH.md`. Para el modelo de datos y los diagramas: `MODELO_DATOS_ER.md`, `ESPECIFICACION_REQUERIMIENTOS.md`, `CASOS_DE_USO.md`, `DIAGRAMA_CLASES.md`, `DIAGRAMA_COMPONENTES.md`, `DIAGRAMAS_SECUENCIA.md`.
+> Guía práctica para el personal. Para detalle técnico ver `CLAUDE.md`; para reglas de negocio, los `REGLAS_NEGOCIO_*.md` / `REGLAS_NEGOCIO_RRHH.md`. Para el modelo de datos y los diagramas: `MODELO_DATOS_ER.md`, `ESPECIFICACION_REQUERIMIENTOS.md`, `CASOS_DE_USO.md`, `DIAGRAMA_CLASES.md`, `DIAGRAMA_COMPONENTES.md`, `DIAGRAMAS_SECUENCIA.md`.
 
 ---
 

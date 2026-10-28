@@ -63,8 +63,8 @@ Ver §12 (Glosario). Términos críticos: **catálogo de ruta** vs **salida**, *
 - Ley Orgánica del Trabajo, los Trabajadores y las Trabajadoras (LOTTT) y **contrato colectivo**
   vigente — base de vacaciones, bono vacacional y primas.
 - Procedimiento de bienes de la Alcaldía de Sucre (formulario **BM-1**; modificado 2026-09-02).
-- Levantamientos con el cliente: `MODELO_NEGOCIO_RRHH.md`,
-  `PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, `formatos/`.
+- Levantamientos con el cliente: `REGLAS_NEGOCIO_RRHH.md`,
+  `entregables/PREGUNTAS_DESCUBRIMIENTO_Bienes_Rutas.md`, `formatos/`.
 
 ---
 
@@ -519,7 +519,7 @@ flowchart LR
 ## 6. Reglas de negocio (RN)
 
 Las reglas completas por módulo están en los documentos `REGLAS_NEGOCIO_*.md` y
-`MODELO_NEGOCIO_RRHH.md`. Aquí se consolidan las **transversales y las de mayor impacto**.
+`REGLAS_NEGOCIO_RRHH.md`. Aquí se consolidan las **transversales y las de mayor impacto**.
 
 ### 6.1 Transversales
 

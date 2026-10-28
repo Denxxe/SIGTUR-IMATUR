@@ -14,7 +14,7 @@
  * no deben volver a ir— y cómo se veía exactamente el oficio que se envió.
  *
  * ⚠️ El formato recibido es el del procedimiento ANTERIOR al cambio que la
- * Alcaldía notificó el 2026-09-02 (ver PLAN_MODULO_BIENES.md §2-ter): pide que
+ * Alcaldía notificó el 2026-09-02 (ver REGLAS_NEGOCIO_Inventario.md): pide que
  * la Alcaldía asigne los códigos, y su tabla no tiene columna de código. Se
  * construyó fiel a lo entregado. Si el cliente confirma el formato nuevo, el
  * cambio es agregar la columna en la vista imprimible: el modelo ya guarda el

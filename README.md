@@ -9,8 +9,8 @@ Aplicación web **on-premise** (sin acceso a internet). MVC en PHP puro, sin fra
 
 > Documentación en `docs/`: **`BACKLOG.md`** (qué falta) · **`CLAUDE.md`** (cómo funciona) ·
 > **`CHANGELOG.md`** (qué se hizo) · **`PREGUNTAS_CLIENTE.md`** (lo que se le pide al cliente, por
-> módulo) · `MANUAL_USUARIO.md` (uso por rol) · `INDICADORES_GESTION.md` · `REGLAS_NEGOCIO_*.md` ·
-> `PLAN_MODULO_*.md` (reconstrucciones en curso).
+> módulo) · `MANUAL_USUARIO.md` (uso por rol) · `INDICADORES_GESTION.md` · `REGLAS_NEGOCIO_*.md` (uno por
+> módulo).
 >
 > **Documentación de análisis y diseño (UML):** `ESPECIFICACION_REQUERIMIENTOS.md` (DER — requerimientos
 > funcionales y no funcionales) · `MODELO_DATOS_ER.md` (entidad-relación, 73 tablas) ·

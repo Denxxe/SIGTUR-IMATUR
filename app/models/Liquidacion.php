@@ -5,7 +5,7 @@
  *
  * Fuente: las FÓRMULAS del formato del cliente `LIQUIDACION MES JULIO 2026.xls`
  * (datos de prueba, fórmulas reales) + la respuesta N-3 del 2026-10-06. **Leer
- * `docs/PLAN_MODULO_NOMINA.md` §7 antes de tocar este archivo.** Las tres hojas
+ * `docs/REGLAS_NEGOCIO_Nomina.md` antes de tocar este archivo.** Las tres hojas
  * del formato tienen su equivalente aquí:
  *
  *   · INTERESES       → `calcularMes()` / `calcularMeses()`: un renglón por mes

@@ -2,7 +2,7 @@
 /**
  * ActividadesInventarioController — movimientos de bienes.
  *
- * Fase 2 (mig. 063), ver docs/PLAN_MODULO_BIENES.md §4.2/§4.3.
+ * Fase 2 (mig. 063), ver docs/REGLAS_NEGOCIO_Inventario.md.
  *
  * Un movimiento cambia el estado del bien, así que toda la lógica vive en
  * `ActividadInventario::registrarMovimiento()` (transaccional). Aquí solo

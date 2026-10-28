@@ -2,7 +2,7 @@
 /**
  * ActaDesincorporacion — el acta por lote con la que la Alcaldía retira bienes (C-5).
  *
- * Procedimiento nuevo (PLAN_MODULO_BIENES.md §2-ter): el acta de baja pasa a
+ * Procedimiento nuevo (REGLAS_NEGOCIO_Inventario.md): el acta de baja pasa a
  * llamarse **Acta de Desincorporación**, se hace **por lote** y el sello de la
  * Alcaldía sobre ella ES el aval del retiro — ya no hay oficio de retiro.
  *

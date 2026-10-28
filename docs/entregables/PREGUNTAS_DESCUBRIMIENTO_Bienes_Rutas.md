@@ -31,7 +31,7 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 > ## ✅ RESPONDIDO POR EL CLIENTE — 2026-08-04
 > Las 59 preguntas de esta parte están contestadas (respuestas en la 4.ª columna de cada tabla).
 >
-> El análisis y el plan de construcción derivado están en **`docs/PLAN_MODULO_BIENES.md`**.
+> El análisis y el plan de construcción derivado están en **`docs/REGLAS_NEGOCIO_Inventario.md`**.
 >
 > ~~**Quedaron 9 preguntas abiertas o nuevas (B-60 a B-68)**~~ — B-63…B-72 se cerraron entre el
 > 2026-08-05 y el 2026-09-02 (mig. 062-069). Estado al día en §9 y §12 del plan.
@@ -61,7 +61,7 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 > **Preguntas nuevas B-73…B-80** (punto de partida · alcance y longitud de la secuencia · catálogo de
 > clasificación —**reabre B-60**— · reutilización de códigos · contenido y frecuencia de la relación ·
 > acuse de la Alcaldía · firmas y correlativo del acta · notificación por escrito): enunciadas en
-> **`docs/PLAN_MODULO_BIENES.md` §2-ter**, y en lenguaje de cliente en `PREGUNTAS_CLIENTE.md` A7-A9.
+> **`docs/REGLAS_NEGOCIO_Inventario.md`**, y en lenguaje de cliente en `PREGUNTAS_CLIENTE.md` A7-A9.
 
 ## A. Panorama general
 
@@ -208,7 +208,7 @@ Pedimos que las respuestas describan **cómo se hace hoy** (en papel, en Excel o
 > Las cinco preguntas que llevaban meses frenando el rediseño —**R-14** (estados) y **R-37…R-40**
 > (cobro)— están contestadas. **Ya no hay nada que esperar para construir.**
 >
-> El análisis y el plan de reconstrucción están en **`docs/PLAN_MODULO_RUTAS.md`**.
+> El análisis y el plan de reconstrucción están en **`docs/REGLAS_NEGOCIO_Rutas.md`**.
 >
 > ### Lo que cambia con esta segunda tanda
 >
@@ -490,7 +490,7 @@ Esto es lo que más acelera el trabajo. **Un formato real evita semanas de supos
 # PARTE 4 — Uso interno (no imprimir para el cliente)
 
 > 📋 Este documento es **material de origen**: el cuestionario tal como se envió y las respuestas
-> tal como llegaron. El análisis vive en los `PLAN_MODULO_*.md` y lo pendiente en `BACKLOG.md` §3 —
+> tal como llegaron. El análisis vive en los `REGLAS_NEGOCIO_*.md` y lo pendiente en `BACKLOG.md` §3 —
 > si algo de aquí contradice a esos, **mandan ellos**.
 
 ## Puntos donde lo construido podría no coincidir
@@ -505,15 +505,15 @@ derivado del departamento, costo/proveedor/garantía capturados, 11 categorías,
 `estatus` separado de `condicion`. Conservarla como «riesgo» inducía a error.
 
 - **De dónde venía cada decisión:** `CHANGELOG.md` (entradas de 2026-08-04/05).
-- **Estado actual y lo que falta:** `PLAN_MODULO_BIENES.md` §12 y `BACKLOG.md` §3.4.
+- **Estado actual y lo que falta:** `REGLAS_NEGOCIO_Inventario.md` y `BACKLOG.md` §3.4.
 - **El riesgo vivo es otro**, del 2026-09-02 (IMATUR codifica sus propios bienes · Acta de
-  Desincorporación por lote): consecuencias C-1…C-7 en `PLAN_MODULO_BIENES.md` §2-ter.
+  Desincorporación por lote): consecuencias C-1…C-7 en `REGLAS_NEGOCIO_Inventario.md`.
 
 ### Rutas
 
 > ### 🔴 ACTUALIZADO 2026-09-03 — las respuestas llegaron y **confirmaron el peor escenario**
 > Esta tabla ya no es una lista de riesgos hipotéticos: **cuatro de sus filas se materializaron.**
-> El plan de reconstrucción está en **`docs/PLAN_MODULO_RUTAS.md`**.
+> El plan de reconstrucción está en **`docs/REGLAS_NEGOCIO_Rutas.md`**.
 
 | Pregunta | Lo que el sistema asume hoy | Veredicto con la respuesta en la mano |
 |---|---|---|
@@ -535,7 +535,7 @@ derivado del departamento, costo/proveedor/garantía capturados, 11 categorías,
   (2026-09-03):** el cliente confirmó que **existe un catálogo reutilizable** y que dos salidas de la
   misma ruta son *"la misma ruta ejecutada 2 veces"*. Se decidió temprano, sin levantamiento, y era la
   base del módulo. **Segunda decisión temprana que el levantamiento tumba** (la primera fue D-IN01).
-  Plan de reconstrucción: `docs/PLAN_MODULO_RUTAS.md`
+  Reglas vigentes: `docs/REGLAS_NEGOCIO_Rutas.md`
 - ~~**D-RT05:** instituciones participantes — eliminado (mig. 060)~~ — 🟠 **DESMENTIDA por R-11:** la
   institución solicitante **sí importa** (solicita por oficio, y de ella depende la gratuidad)
 - ~~**D-IN01:** la baja solo requiere registro interno, sin acto administrativo imprimible~~ —

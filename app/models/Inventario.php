@@ -2,7 +2,7 @@
 /**
  * Clase Inventario: bienes institucionales.
  *
- * Fase 1 del replanteamiento (mig. 062) — ver docs/PLAN_MODULO_BIENES.md.
+ * Fase 1 del replanteamiento (mig. 062) — ver docs/REGLAS_NEGOCIO_Inventario.md.
  * Dos conceptos que ANTES estaban mezclados y ahora son ejes separados:
  *
  *   · ESTATUS   → situación administrativa (en espera de codificación,
