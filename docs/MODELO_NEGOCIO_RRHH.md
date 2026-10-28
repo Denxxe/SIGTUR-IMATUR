@@ -208,7 +208,7 @@ Los campos a registrar surgen del **`FORMATO DE REGISTRO DE DATOS.xls` (hoja LIS
 | Nivel académico / Grado académico | Bachiller, Profesional, Técnico Medio… |
 | Profesión | Ej. "Lic. en Administración" |
 | Nombre del título | |
-| Fecha de graduación | |
+| Fecha del título | |
 | Institución | |
 | Etapa (Primaria / Media / Diversificada / Técnico Medio) | Checkbox en ficha |
 | Cursos realizados | Tabla: Institución · Curso · Inicio · Culminación |

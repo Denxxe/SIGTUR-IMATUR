@@ -130,7 +130,7 @@ $pasos = ['Datos personales', 'Formación', 'Datos institucionales', 'Carga fami
                 </select></div></div>
             <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="profesion">Profesión</label>
                 <input id="profesion" type="text" name="profesion" class="sig-input" value="<?php echo $val('profesion'); ?>"></div></div>
-            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="fecha_graduacion">Fecha de graduación</label>
+            <div class="col-md-4"><div class="sig-field"><label class="sig-field__label" for="fecha_graduacion">Fecha del título</label>
                 <input id="fecha_graduacion" type="date" name="fecha_graduacion" class="sig-input" value="<?php echo $val('fecha_graduacion'); ?>"></div></div>
             <div class="col-md-6"><div class="sig-field"><label class="sig-field__label" for="institucion_academica">Institución académica</label>
                 <input id="institucion_academica" type="text" name="institucion_academica" class="sig-input" value="<?php echo $val('institucion_academica'); ?>"></div></div>

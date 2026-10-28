@@ -129,7 +129,7 @@ if ($egresado) {
                 <dl class="mb-0">
                     <dt>Nivel académico</dt><dd><?php echo $val($e->nivel_academico); ?></dd>
                     <dt>Profesión</dt><dd><?php echo $val($e->profesion); ?></dd>
-                    <dt>F. Graduación</dt><dd><?php echo $ffecha($e->fecha_graduacion); ?></dd>
+                    <dt>F. del título</dt><dd><?php echo $ffecha($e->fecha_graduacion); ?></dd>
                     <dt>Institución</dt><dd><?php echo $val($e->institucion_academica); ?></dd>
                 </dl>
             </div>

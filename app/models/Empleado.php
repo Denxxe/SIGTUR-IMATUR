@@ -33,6 +33,14 @@ class Empleado extends Model
     ];
     // Valor del filtro "sin nivel académico registrado" (lista y reporte).
     const NIVEL_SIN_REGISTRO = 'sin_registro';
+    // Tramos para los indicadores de formación del personal. Un valor libre que no
+    // esté aquí cae en "Otro"; uno vacío, en "Sin registrar".
+    const TRAMOS_ACADEMICOS = [
+        'Básica'        => ['Primaria', '1er año', '2do año', '3er año', '4to año'],
+        'Media'         => ['Bachiller', 'Técnico Medio'],
+        'Universitaria' => ['TSU', 'Licenciado', 'Ingeniero'],
+        'Posgrado'      => ['Especialización', 'Magíster', 'Doctorado'],
+    ];
     // Grupo de rotación (solo Servicios Generales) — mig.028
     const GRUPOS_ROTACION = ['A', 'B'];
     // Motivos de egreso / desincorporación (mig. 036 — R-12)
@@ -239,6 +247,17 @@ class Empleado extends Model
         }
         $opts[self::NIVEL_SIN_REGISTRO] = 'Sin registrar';
         return $opts;
+    }
+
+    /** Tramo (Básica/Media/Universitaria/Posgrado/Otro/Sin registrar) de un nivel académico. */
+    public static function tramoAcademico(?string $nivel): string
+    {
+        $nivel = trim((string)$nivel);
+        if ($nivel === '') return 'Sin registrar';
+        foreach (self::TRAMOS_ACADEMICOS as $tramo => $niveles) {
+            if (in_array($nivel, $niveles, true)) return $tramo;
+        }
+        return 'Otro';
     }
 
     /** ¿El nivel académico del empleado coincide con el filtro elegido? */

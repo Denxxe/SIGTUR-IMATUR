@@ -67,7 +67,7 @@ $niveles = ['Primaria', 'Media', 'Diversificada', 'Técnico Medio'];
       <td><span class="lbl">Profesión:</span> <?php echo $v($e->profesion); ?></td>
     </tr>
     <tr>
-      <td><span class="lbl">Fecha de graduación:</span> <?php echo $ff($e->fecha_graduacion); ?></td>
+      <td><span class="lbl">Fecha del título:</span> <?php echo $ff($e->fecha_graduacion); ?></td>
       <td><span class="lbl">Institución:</span> <?php echo $v($e->institucion_academica); ?></td>
     </tr>
   </table>

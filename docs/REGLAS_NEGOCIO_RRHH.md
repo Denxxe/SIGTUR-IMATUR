@@ -179,7 +179,7 @@ si un empleado marca salida antes de su hora, más allá de esa tolerancia, el m
 - **Registro/edición = asistente multi-paso** (`empleados/form.php`, `EmpleadosController::nuevo()`/`editar($id)`): 5 pasos (personales → formación → institucionales → carga familiar → resumen) con `localStorage` y verificación final. Campos completos incluyen uniforme/tallas y datos comunitarios (centro votación/consejo comunal/comuna).
 - El sistema **genera** el documento "Ficha Técnica del Trabajador" en vista imprimible (`EmpleadosController::fichaTecnica($id)` → `empleados/ficha_tecnica.php`).
 - Bloques: Datos Personales · Formación (con Cursos Realizados) · Carga Familiar · Datos Laborales (con Experiencia Laboral = trabajos anteriores).
-- Datos extra en `personas` (RIF, estado civil, discapacidad, nivel académico, profesión, título, fecha graduación, institución académica) y `empleados.clasificacion` (Empleado/Obrero).
+- Datos extra en `personas` (RIF, estado civil, discapacidad, nivel académico, profesión, título, fecha del título, institución académica) y `empleados.clasificacion` (Empleado/Obrero).
 - Tablas hijas `carga_familiar`/`cursos_realizados`/`experiencia_laboral` (modelos `CargaFamiliar`/`CursoRealizado`/`ExperienciaLaboral`), gestionadas desde el **expediente** (`EmpleadosController::detalle($id)`).
 - Tallas de uniforme y datos comunitarios ya capturados (mig.030, R-2b). RIF institucional en la ficha = G-20008498-7 (discrepa del de `carta_aceptacion.php`; unificar vía ConfigSistema).
 

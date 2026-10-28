@@ -534,6 +534,85 @@ $derivados = array_values(array_filter([
     </div>
 </div>
 
+<!-- RRHH: nivel académico de la plantilla activa -->
+<?php
+$tramos   = $data['empPorTramo'] ?? [];
+$totNivel = array_sum($tramos);
+$pctN     = fn($n) => $totNivel > 0 ? round($n * 100 / $totNivel) : 0;
+$nUniv    = (int)($tramos['Universitaria'] ?? 0) + (int)($tramos['Posgrado'] ?? 0);
+$nBasica  = (int)($tramos['Básica'] ?? 0);
+$nSinReg  = (int)($tramos['Sin registrar'] ?? 0);
+// "Otro" (valores libres fuera de la lista sugerida) solo aparece si hay alguno.
+$colsTramo = array_keys(array_filter($tramos, fn($n, $t) => $t !== 'Otro' || $n > 0, ARRAY_FILTER_USE_BOTH));
+$urlDir   = URL_ROOT . '/reportes/directorio?nivel_academico=';
+$tarjetasNivel = [
+    ['bi-mortarboard-fill', '#8B5CF6', 'Formación universitaria', $pctN($nUniv) . '%', $nUniv . ' de ' . $totNivel . ' (TSU en adelante)', null],
+    ['bi-award-fill',       '#059669', 'Con posgrado', (int)($tramos['Posgrado'] ?? 0), 'Especialización, maestría o doctorado', null],
+    ['bi-book-half',        '#D97706', 'Sin bachillerato', $nBasica, $pctN($nBasica) . '% del personal', null],
+    ['bi-question-circle',  $nSinReg > 0 ? '#EF4444' : '#64748B', 'Nivel sin registrar', $nSinReg, 'Completar en el expediente', $urlDir . Empleado::NIVEL_SIN_REGISTRO],
+];
+?>
+<div class="row g-3 mb-4 anim-slide-up">
+    <?php foreach ($tarjetasNivel as [$ico, $col, $lbl, $val, $sub, $href]): ?>
+    <div class="col-md-3 col-6">
+        <div class="sig-card h-100" style="border-top:3px solid <?php echo $col; ?>;">
+            <div class="sig-card__body u-p-sp-4 u-ta-center">
+                <div class="u-fs-11px u-fw-700 u-tt-uppercase u-c-text-tertiary"><i class="bi <?php echo $ico; ?>" style="color:<?php echo $col; ?>;"></i> <?php echo $lbl; ?></div>
+                <div class="u-fs-26px u-fw-900" style="color:<?php echo $col; ?>;"><?php echo $val; ?></div>
+                <div class="u-fs-11px u-c-text-tertiary">
+                    <?php if ($href && $val): ?><a href="<?php echo $href; ?>"><?php echo $sub; ?></a><?php else: echo $sub; endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<div class="row g-4 mb-6 anim-slide-up">
+    <div class="col-md-5">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-mortarboard u-c-x3B82F6"></i> Personal por Nivel Académico
+                </div>
+            </div>
+            <div class="sig-card__body u-p-sp-4">
+                <div id="chartNivelAcademico"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="sig-card h-100">
+            <div class="sig-card__head">
+                <div class="sig-card__title">
+                    <i class="bi bi-diagram-3 u-c-x3B82F6"></i> Formación por Departamento
+                </div>
+            </div>
+            <div class="sig-table-wrap">
+                <table class="sig-table">
+                    <thead>
+                        <tr>
+                            <th>Departamento</th>
+                            <th class="text-center">Personal</th>
+                            <?php foreach ($colsTramo as $ct): ?><th class="text-center"><?php echo $ct; ?></th><?php endforeach; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($data['nivelPorDepto'])): ?>
+                            <tr><td class="u-ta-center u-c-text-tertiary u-p-sp-4" colspan="<?php echo count($colsTramo) + 2; ?>">Sin datos registrados</td></tr>
+                        <?php else: foreach ($data['nivelPorDepto'] as $dep => $f): ?>
+                        <tr>
+                            <td class="cell-strong"><?php echo htmlspecialchars($dep); ?></td>
+                            <td class="u-ta-center u-fw-700"><?php echo (int)$f['total']; ?></td>
+                            <?php foreach ($colsTramo as $ct): ?><td class="text-center"><?php echo (int)$f[$ct]; ?></td><?php endforeach; ?>
+                        </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════════════════════
      SECCIÓN: PERSONAL Y ASISTENCIA
 ════════════════════════════════════════════════════════════════════════ -->
@@ -1542,6 +1621,18 @@ document.addEventListener('DOMContentLoaded', function () {
         plotOptions: { pie: { donut: { size: '55%', labels: donutLabelOpts } } },
         dataLabels: { enabled: false },
         theme, noData
+    });
+
+    // ── RRHH: personal por nivel académico (barras horizontales, orden de la lista) ──
+    apex('#chartNivelAcademico', {
+        chart: { type: 'bar', height: 300, background: 'transparent', toolbar: { show: false } },
+        series: [{ name: 'Empleados', data: <?php echo json_encode(array_values($data['empPorNivel'] ?? [])); ?> }],
+        xaxis: { categories: <?php echo json_encode(array_map('strval', array_keys($data['empPorNivel'] ?? []))); ?>, labels: axLbl },
+        yaxis: { labels: { style: { colors: tp, fontSize: '11px' } } },
+        plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '60%' } },
+        colors: ['#8B5CF6'],
+        dataLabels: { enabled: true, style: { fontWeight: '700', fontSize: '11px' } },
+        grid, theme, noData
     });
 
     // ── BLOQUE VERDE: Frecuencia de rutas ejecutadas por mes (barras) ─────────

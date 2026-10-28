@@ -496,7 +496,7 @@ flowchart LR
 3. El sistema **normaliza la cédula** a solo dígitos y **verifica que no exista** otro registro con
    ella.
 4. El sistema **valida la edad**: 18–65 (IMATUR) o 18–70 (comisión de servicio).
-5. **Paso 2 — Formación:** nivel académico, profesión, título, institución, fecha de graduación.
+5. **Paso 2 — Formación:** nivel académico, profesión, título, institución, fecha del título.
 6. **Paso 3 — Datos institucionales:** cargo, departamento, horario, tipo de contrato, institución
    de origen, clasificación, grupo de rotación, fechas de ingreso, vencimiento de contrato,
    uniforme y tallas, datos comunitarios.

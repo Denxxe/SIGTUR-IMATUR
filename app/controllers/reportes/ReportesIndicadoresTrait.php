@@ -22,6 +22,7 @@ trait ReportesIndicadoresTrait {
         return [
             'personal'   => ['modulo' => 'EmpleadosController', 'claves' => [
                 'kpiEmpleados', 'empPorDepto', 'asistenciaPorMes', 'empPorContrato', 'empPorClasificacion',
+                'empPorNivel', 'empPorTramo', 'nivelPorDepto',
                 'permisosVigentes', 'permisosPendientes', 'amonResumen', 'amonDespido', 'puntualidadMes',
                 'jornadaMes', 'precisionAsist', 'empDocTotal', 'empDocCompletos']],
             'visitas'    => ['modulo' => 'VisitantesController', 'claves' => [
@@ -354,6 +355,34 @@ trait ReportesIndicadoresTrait {
                         ORDER BY total DESC");
             $empPorClasificacion = $db->resultSet();
 
+            // ── RRHH: nivel académico de la plantilla activa (mismo universo que el Directorio) ─
+            // Se trae departamento × nivel y se agrega aquí: la distribución por nivel,
+            // por tramo y por departamento salen de la misma consulta.
+            $db->query("SELECT COALESCE(d.nombre, 'Sin departamento') AS departamento,
+                               COALESCE(TRIM(p.nivel_academico), '') AS nivel, COUNT(*) AS total
+                        FROM empleados e
+                        INNER JOIN personas p ON e.id_persona = p.id
+                        LEFT JOIN departamentos d ON d.id = e.id_departamento
+                        WHERE e.is_active = TRUE AND p.is_active = TRUE AND e.fecha_egreso IS NULL
+                        GROUP BY 1, 2");
+            $empPorNivel = []; $empPorTramo = []; $nivelPorDepto = [];
+            foreach (Empleado::NIVELES_ACADEMICOS as $na) $empPorNivel[$na] = 0;
+            foreach (array_keys(Empleado::TRAMOS_ACADEMICOS) as $tr) $empPorTramo[$tr] = 0;
+            $empPorTramo['Otro'] = 0; $empPorTramo['Sin registrar'] = 0;
+            foreach ($db->resultSet() as $r) {
+                $n = (int)$r->total;
+                $lbl = $r->nivel === '' ? 'Sin registrar' : $r->nivel;
+                $empPorNivel[$lbl] = ($empPorNivel[$lbl] ?? 0) + $n;
+                $tramo = Empleado::tramoAcademico($r->nivel);
+                $empPorTramo[$tramo] += $n;
+                $nivelPorDepto[$r->departamento] ??= ['total' => 0] + array_fill_keys(array_keys($empPorTramo), 0);
+                $nivelPorDepto[$r->departamento]['total'] += $n;
+                $nivelPorDepto[$r->departamento][$tramo]  += $n;
+            }
+            $empPorNivel = array_filter($empPorNivel);
+            if (isset($empPorNivel['Sin registrar'])) { $sr = $empPorNivel['Sin registrar']; unset($empPorNivel['Sin registrar']); $empPorNivel['Sin registrar'] = $sr; }
+            uasort($nivelPorDepto, fn($a, $b) => $b['total'] <=> $a['total']);
+
             // ── RRHH: permisos/reposos vigentes hoy (aprobados, en curso) + pendientes ─
             $db->query("SELECT COALESCE(categoria, '—') AS categoria, COUNT(*) AS total
                         FROM permisos_laborales
@@ -515,6 +544,9 @@ trait ReportesIndicadoresTrait {
                 'empPorContrato'        => $empPorContrato,
                 // KPIs nuevos — RRHH (módulos 025-034)
                 'empPorClasificacion'   => $empPorClasificacion,
+                'empPorNivel'           => $empPorNivel,
+                'empPorTramo'           => $empPorTramo,
+                'nivelPorDepto'         => $nivelPorDepto,
                 'permisosVigentes'      => $permisosVigentes,
                 'permisosPendientes'    => $permisosPendientes,
                 'amonResumen'           => $amonResumen,
