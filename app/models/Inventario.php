@@ -491,7 +491,8 @@ class Inventario extends Model {
         $dup = CodificacionBienes::nroOrdenOcupado($ord, $id, $g, $sg, $sec);
         if ($dup) {
             throw new Exception('El N° de orden ' . htmlspecialchars($ord)
-                . ' ya está asignado a otro bien (ID #' . $dup . '). Los códigos no se reciclan.');
+                . ' ya está asignado a otro bien (ID #' . $dup . '), aunque esté desincorporado o en la papelera. '
+                . 'Los códigos no se reciclan.');
         }
 
         $previos = self::find($id);

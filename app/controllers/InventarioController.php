@@ -76,6 +76,8 @@ class InventarioController extends Controller {
             'ubicaciones' => $ubicaciones,
             'empleados'   => Empleado::all(),
             'resumen'     => Inventario::resumenPorEstatus(),
+            // Quién firma la desincorporación (modal «Desincorporar»).
+            'autorizador' => ActividadInventario::autorizador(),
             'ver'         => $ver,
             'f_categoria' => $fCategoria,
             'f_ubicacion' => $fUbicacion,
@@ -736,6 +738,44 @@ class InventarioController extends Controller {
      * figura como "Desincorporado · Por retirar": fuera del inventario
      * activo, pero todavía ocupando espacio en IMATUR.
      */
+    /**
+     * Desincorpora un bien (B-38): lo saca del inventario activo y lo deja
+     * «Por retirar», listo para entrar en un Acta de Desincorporación. Es un
+     * movimiento de tipo Baja, así que pasa por la misma autorización de la
+     * Coordinación de Bienes que cualquier otro movimiento (B-32/B-64).
+     */
+    public function desincorporar() {
+        if (!$this->requireEscritura()) return;
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
+            $_POST = $this->sanitizePost();
+
+            $autorizador = ActividadInventario::autorizador();
+            if (!$autorizador) {
+                throw new Exception('No hay un responsable de la Coordinación de Bienes registrado '
+                    . '(cargo y departamento configurados en Sistema → Configuración). '
+                    . 'Sin ese cargo asignado no se pueden autorizar desincorporaciones.');
+            }
+            $fecha = trim($_POST['fecha'] ?? '') ?: date('Y-m-d');
+            if ($fecha > date('Y-m-d')) throw new Exception('La fecha de la desincorporación no puede ser futura.');
+
+            ActividadInventario::registrarMovimiento([
+                'id_inventario'   => (int)($_POST['id'] ?? 0),
+                'tipo_movimiento' => ActividadInventario::MOV_BAJA,
+                'fecha'           => $fecha,
+                'descripcion'     => trim($_POST['motivo'] ?? ''),
+                'autorizado_por'  => (int)$autorizador->id,
+            ], $this->getUserId());
+            flash('global_msg', 'Bien desincorporado. Queda «Por retirar» hasta que la Alcaldía se lo lleve, '
+                . 'y ya puede incluirse en un Acta de Desincorporación.');
+            header('Location: ' . URL_ROOT . '/inventario/index?ver=baja');
+            return;
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/inventario/index');
+    }
+
     public function marcarRetirado() {
         if (!$this->requireEscritura('/inventario/index?ver=baja')) return;
         try {
@@ -755,13 +795,14 @@ class InventarioController extends Controller {
     //  Suficiencia de bienes por departamento (R-5b · B-63)
     // =====================================================================
 
-    /** Compara los bienes de cada departamento contra su número de empleados. */
+    /** Compara los bienes de cada departamento contra la dotación que le corresponde. */
     public function suficiencia() {
         $this->view('inventario/suficiencia', [
-            'titulo'      => 'Suficiencia de bienes por departamento',
-            'analisis'    => DotacionInventario::analisis(),
-            'dotaciones'  => DotacionInventario::all(),
-            'sinDotacion' => DotacionInventario::categoriasSinDotacion(),
+            'titulo'        => 'Suficiencia de bienes por departamento',
+            'analisis'      => DotacionInventario::analisis(),
+            'dotaciones'    => DotacionInventario::all(),
+            'departamentos' => Departamento::arbol(),
+            'categorias'    => Categoria::all(),
         ]);
     }
 
@@ -771,12 +812,13 @@ class InventarioController extends Controller {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new Exception('Solicitud no válida.');
             $_POST = $this->sanitizePost();
             DotacionInventario::guardar(
+                (int)($_POST['id_departamento'] ?? 0),
                 (int)($_POST['id_categoria'] ?? 0),
-                $_POST['unidades_por_empleado'] ?? 0,
+                $_POST['unidades'] ?? 0,
                 trim($_POST['observaciones'] ?? ''),
                 $this->getUserId()
             );
-            flash('global_msg', 'Dotación por empleado actualizada.');
+            flash('global_msg', 'Dotación del departamento actualizada.');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }
@@ -787,7 +829,7 @@ class InventarioController extends Controller {
         if (!$this->requireEscritura('/inventario/suficiencia')) return;
         try {
             DotacionInventario::eliminar((int)$id, $this->getUserId());
-            flash('global_msg', 'Dotación eliminada. Esa categoría deja de evaluarse.', 'warning');
+            flash('global_msg', 'Dotación eliminada. Ese departamento deja de evaluarse en esa categoría.', 'warning');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }

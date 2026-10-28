@@ -1,65 +1,66 @@
 <?php
 /**
- * DotacionInventario — suficiencia de bienes por departamento (B-63, mig. 067).
+ * DotacionInventario — suficiencia de bienes por departamento (B-63, mig. 067/091).
  *
  * El cliente aclaró que NO es stock de consumibles (no llevan): es saber si
- * **alcanzan** los bienes, medido **por el número de empleados** de cada
- * departamento.
+ * **alcanzan** los bienes. Y el criterio es **por departamento**, no por
+ * empleado: «cada departamento tendrá una cantidad de bienes» — el aire
+ * acondicionado es del espacio, no de la persona (mig. 091; hasta entonces
+ * se guardaba `unidades_por_empleado`).
  *
- * `inventario_dotacion` define cuántas unidades de cada categoría
- * corresponden por empleado. El reporte compara, departamento por
- * departamento, lo que hay contra lo que debería haber.
+ * `inventario_dotacion` define, por cada par departamento + categoría,
+ * cuántas unidades debería haber. El reporte compara eso contra lo que
+ * realmente está ubicado en el departamento.
  *
- * Solo se evalúan las categorías con dotación definida: las que no se
- * reparten por persona (herramientas, material turístico, bienes
- * culturales) simplemente no tienen fila y no aparecen en el análisis.
+ * Solo se evalúan los pares con dotación definida: un departamento o una
+ * categoría sin fila simplemente no aparece en el análisis.
  */
 class DotacionInventario extends Model {
 
-    /** Dotaciones definidas, con el nombre de su categoría. */
+    const UNIDADES_MAX = 9999;
+
+    /** Dotaciones definidas, con el nombre de su departamento y su categoría. */
     public static function all() {
         $db = new Database();
-        $db->query("SELECT d.*, c.nombre AS categoria
-                      FROM inventario_dotacion d
-                      INNER JOIN categorias c ON c.id = d.id_categoria
-                     WHERE d.is_active = TRUE
-                     ORDER BY c.nombre");
+        $db->query("SELECT dot.*, c.nombre AS categoria, d.nombre AS departamento
+                      FROM inventario_dotacion dot
+                      INNER JOIN categorias    c ON c.id = dot.id_categoria
+                      INNER JOIN departamentos d ON d.id = dot.id_departamento
+                     WHERE dot.is_active = TRUE
+                     ORDER BY d.nombre, c.nombre");
         return $db->resultSet();
     }
 
-    /** Categorías que aún no tienen dotación definida (para el selector). */
-    public static function categoriasSinDotacion() {
-        $db = new Database();
-        $db->query("SELECT c.id, c.nombre
-                      FROM categorias c
-                     WHERE c.is_active = TRUE
-                       AND NOT EXISTS (SELECT 1 FROM inventario_dotacion d
-                                        WHERE d.id_categoria = c.id AND d.is_active = TRUE)
-                     ORDER BY c.nombre");
-        return $db->resultSet();
-    }
-
-    public static function guardar(int $idCategoria, $unidades, string $obs = '', $user_id = null): bool {
-        $u = (float)$unidades;
-        if ($u <= 0 || $u > 99) {
-            throw new Exception('Las unidades por empleado deben estar entre 0,01 y 99.');
+    /**
+     * Crea o actualiza la dotación de un departamento para una categoría (una
+     * sola vigente por par: el índice único de la mig. 091 lo garantiza).
+     */
+    public static function guardar(int $idDepto, int $idCategoria, $unidades, string $obs = '', $user_id = null): bool {
+        if ($idDepto <= 0 || $idCategoria <= 0) {
+            throw new Exception('Selecciona el departamento y la categoría.');
+        }
+        $u = filter_var($unidades, FILTER_VALIDATE_INT);
+        if ($u === false || $u < 1 || $u > self::UNIDADES_MAX) {
+            throw new Exception('Las unidades deben ser un número entero entre 1 y ' . self::UNIDADES_MAX . '.');
         }
         $db = new Database();
-        $db->query("SELECT id FROM inventario_dotacion
-                     WHERE id_categoria = :c AND is_active = TRUE LIMIT 1");
+        $db->query("SELECT id, unidades, observaciones FROM inventario_dotacion
+                     WHERE id_departamento = :d AND id_categoria = :c AND is_active = TRUE LIMIT 1");
+        $db->bind(':d', $idDepto);
         $db->bind(':c', $idCategoria);
         $existe = $db->single();
 
         if ($existe) {
             $db->query("UPDATE inventario_dotacion
-                           SET unidades_por_empleado = :u, observaciones = :o,
+                           SET unidades = :u, observaciones = :o,
                                updated_at = CURRENT_TIMESTAMP, updated_by = :uid
                          WHERE id = :id");
             $db->bind(':id', (int)$existe->id);
         } else {
             $db->query("INSERT INTO inventario_dotacion
-                            (id_categoria, unidades_por_empleado, observaciones, created_by)
-                        VALUES (:c, :u, :o, :uid)");
+                            (id_departamento, id_categoria, unidades, observaciones, created_by)
+                        VALUES (:d, :c, :u, :o, :uid)");
+            $db->bind(':d', $idDepto);
             $db->bind(':c', $idCategoria);
         }
         $db->bind(':u',   $u);
@@ -67,7 +68,8 @@ class DotacionInventario extends Model {
         $db->bind(':uid', $user_id);
         $ok = $db->execute();
         self::auditStatic('inventario_dotacion', $existe ? 'UPDATE' : 'INSERT',
-            $existe->id ?? null, $existe, ['id_categoria' => $idCategoria, 'unidades' => $u], $user_id);
+            $existe->id ?? null, $existe,
+            ['id_departamento' => $idDepto, 'id_categoria' => $idCategoria, 'unidades' => $u], $user_id);
         return $ok;
     }
 
@@ -83,13 +85,13 @@ class DotacionInventario extends Model {
     }
 
     /**
-     * Análisis de suficiencia: por cada departamento con personal y cada
-     * categoría con dotación, cuántos bienes hay, cuántos deberían haber
-     * según su número de empleados, y el déficit.
+     * Análisis de suficiencia: por cada dotación definida, cuántos bienes de
+     * esa categoría hay en el departamento contra cuántos debería tener.
      *
      * Los bienes se cuentan por el departamento de su UBICACIÓN (donde
      * están realmente), no por el de su responsable — y se excluye el
-     * depósito, porque lo que está ahí no está en uso.
+     * depósito, porque lo que está ahí no está en uso. El número de
+     * empleados se muestra solo como contexto: ya no entra en el cálculo.
      */
     public static function analisis(): array {
         $db = new Database();
@@ -113,15 +115,14 @@ class DotacionInventario extends Model {
             )
             SELECT d.nombre AS departamento,
                    c.nombre AS categoria,
-                   p.empleados,
-                   dot.unidades_por_empleado,
-                   CEIL(p.empleados * dot.unidades_por_empleado) AS deberia_haber,
+                   COALESCE(p.empleados, 0) AS empleados,
+                   dot.unidades AS deberia_haber,
                    COALESCE(ex.hay, 0) AS hay
-              FROM personal p
-              INNER JOIN departamentos d ON d.id = p.id_depto
-              CROSS JOIN inventario_dotacion dot
-              INNER JOIN categorias c ON c.id = dot.id_categoria
-              LEFT  JOIN existencias ex ON ex.id_depto = p.id_depto
+              FROM inventario_dotacion dot
+              INNER JOIN departamentos d ON d.id = dot.id_departamento
+              INNER JOIN categorias    c ON c.id = dot.id_categoria
+              LEFT  JOIN personal    p  ON p.id_depto = dot.id_departamento
+              LEFT  JOIN existencias ex ON ex.id_depto = dot.id_departamento
                                        AND ex.id_categoria = dot.id_categoria
              WHERE dot.is_active = TRUE AND d.is_active = TRUE
              ORDER BY d.nombre, c.nombre");
@@ -133,7 +134,6 @@ class DotacionInventario extends Model {
                 'departamento' => $r->departamento,
                 'categoria'    => $r->categoria,
                 'empleados'    => (int)$r->empleados,
-                'ratio'        => (float)$r->unidades_por_empleado,
                 'deberia'      => $deberia,
                 'hay'          => $hay,
                 'deficit'      => max(0, $deberia - $hay),

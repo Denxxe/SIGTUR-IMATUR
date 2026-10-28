@@ -4,7 +4,7 @@
 -- =====================================================================
 --
 -- Generado: 2026-08-27, ampliado el 2026-10-03  ·  PostgreSQL 17
--- Cubre: esquema base + TODAS las migraciones 001–090.
+-- Cubre: esquema base + TODAS las migraciones 001–092.
 --
 -- ESTE ARCHIVO ES AUTOSUFICIENTE. Después de importarlo NO hay que
 -- aplicar ninguna migración de database/migrations/ — ya están todas
@@ -17,7 +17,7 @@
 -- ---------------------------------------------------------------------
 -- QUÉ INCLUYE
 -- ---------------------------------------------------------------------
---   · Las 73 tablas, índices, constraints, secuencias y CHECKs.
+--   · Las 74 tablas, índices, constraints, secuencias y CHECKs.
 --   · Catálogos institucionales con datos (listos para operar):
 --       - roles (6) y permisos_rol (35) ... RBAC dinámico
 --       - configuracion_sistema (69) ...... datos del instituto, RIF,
@@ -7187,6 +7187,97 @@ ALTER TABLE audit_logs DROP CONSTRAINT IF EXISTS audit_logs_operacion_check;
 ALTER TABLE audit_logs ADD CONSTRAINT audit_logs_operacion_check
     CHECK (operacion IN ('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGIN_FALLIDO', 'LOGIN_INACTIVO'));
 
+-- >>> 091_dotacion_por_departamento.sql
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 091 — La dotación de bienes es POR DEPARTAMENTO (B-63)
 --
--- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-090).
+-- La mig. 067 modeló la suficiencia como «unidades de cada categoría por
+-- empleado». El cliente cerró el criterio al revés: «cada departamento tendrá
+-- una cantidad de bienes» (el aire acondicionado es del espacio, no de la
+-- persona). Así que `inventario_dotacion` pasa a guardar, por cada par
+-- departamento + categoría, cuántas unidades debería tener ese departamento.
+--
+-- Las filas que sembró la mig. 067 (2 muebles / 1 equipo / 0,5 teléfonos por
+-- empleado) eran un punto de partida supuesto, no cifras del cliente, y no se
+-- pueden traducir a «por departamento» sin inventarlas: se eliminan. La tabla
+-- queda vacía hasta que Bienes cargue las cifras reales desde
+-- Inventario → Suficiencia.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+
+ALTER TABLE inventario_dotacion
+    ADD COLUMN IF NOT EXISTS id_departamento INTEGER REFERENCES departamentos(id) ON DELETE CASCADE;
+ALTER TABLE inventario_dotacion
+    ADD COLUMN IF NOT EXISTS unidades INTEGER;
+
+-- Las dotaciones por empleado no tienen departamento: son las de la mig. 067.
+DELETE FROM inventario_dotacion WHERE id_departamento IS NULL;
+
+ALTER TABLE inventario_dotacion DROP CONSTRAINT IF EXISTS inv_dotacion_unidades_check;
+ALTER TABLE inventario_dotacion DROP COLUMN IF EXISTS unidades_por_empleado;
+ALTER TABLE inventario_dotacion ALTER COLUMN id_departamento SET NOT NULL;
+ALTER TABLE inventario_dotacion ALTER COLUMN unidades SET NOT NULL;
+ALTER TABLE inventario_dotacion ADD CONSTRAINT inv_dotacion_unidades_check
+    CHECK (unidades >= 1 AND unidades <= 9999);
+
+-- Una dotación vigente por departamento y categoría.
+DROP INDEX IF EXISTS uq_inv_dotacion_categoria;
+CREATE UNIQUE INDEX IF NOT EXISTS uq_inv_dotacion_depto_categoria
+    ON inventario_dotacion (id_departamento, id_categoria) WHERE is_active = TRUE;
+
+COMMENT ON TABLE inventario_dotacion IS
+    'B-63: cuántas unidades de cada categoría debería tener cada DEPARTAMENTO. El reporte de suficiencia compara contra los bienes ubicados en ese departamento (sin depósito ni bajas).';
+COMMENT ON COLUMN inventario_dotacion.unidades IS
+    'Unidades esperadas de la categoría en el departamento (mig. 091; antes unidades_por_empleado).';
+
+-- >>> 092_nomina_aguinaldo_por_anio.sql
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migración 092 — Días del aguinaldo por año
+--
+-- Los días del aguinaldo (bonificación de fin de año) eran un escalar sin
+-- histórico, `nomina_dias_bono_fin_anio` = 150. El cliente indicó que fueron
+-- **120 días hasta 2022 y 150 desde 2023**. Con un solo valor, una liquidación
+-- que abarcara meses anteriores a 2023 sembraba 150 en todos y había que
+-- corregir esas filas a mano.
+--
+-- Ahora es una escala por año: cada fila rige desde `desde_anio` hasta el año
+-- anterior a la fila siguiente; la última rige en adelante. La nómina toma los
+-- días del año de su fecha de corte, y la liquidación los del año de cada mes.
+--
+-- El valor vigente se copia del escalar (por si se había cambiado) y el
+-- escalar se elimina, para que no haya dos fuentes del mismo dato.
+--
+-- Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+
+CREATE TABLE IF NOT EXISTS nomina_dias_aguinaldo (
+    desde_anio  SMALLINT     PRIMARY KEY CHECK (desde_anio BETWEEN 1900 AND 2100),
+    dias        NUMERIC(6,2) NOT NULL CHECK (dias > 0 AND dias <= 365),
+    created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP,
+    updated_by  INTEGER
+);
+
+COMMENT ON TABLE nomina_dias_aguinaldo IS
+    'Días del aguinaldo por año (mig. 092). Cada fila rige desde desde_anio hasta el año anterior a la fila siguiente. 1900 = «desde siempre».';
+
+-- 120 días hasta 2022 (según el cliente)…
+INSERT INTO nomina_dias_aguinaldo (desde_anio, dias)
+VALUES (1900, 120)
+ON CONFLICT (desde_anio) DO NOTHING;
+
+-- …y desde 2023 el valor vigente del escalar (150 si no estaba).
+INSERT INTO nomina_dias_aguinaldo (desde_anio, dias)
+SELECT 2023, COALESCE(
+           (SELECT NULLIF(valor, '')::numeric FROM configuracion_sistema
+             WHERE clave = 'nomina_dias_bono_fin_anio'), 150)
+ON CONFLICT (desde_anio) DO NOTHING;
+
+DELETE FROM configuracion_sistema WHERE clave = 'nomina_dias_bono_fin_anio';
+
+--
+-- Fin del esquema consolidado SIGTUR-IMATUR (migraciones 001-092).
 --

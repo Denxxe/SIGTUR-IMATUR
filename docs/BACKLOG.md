@@ -1,11 +1,11 @@
 # BACKLOG ÚNICO — SIGTUR-IMATUR
 
-**Última actualización:** 2026-10-25 · **Migraciones aplicadas:** hasta **090** · **Rama:** `development_stage`
+**Última actualización:** 2026-10-28 · **Migraciones aplicadas:** hasta **092** · **Rama:** `development_stage`
 
 > 🧭 **2026-10-18 — Revisión del estado: la programación funcional está completa.** No queda ninguna
 > función por construir que no dependa de un insumo del cliente (§0.2) o de la carga de datos (§0.3).
 > Lo único nuestro: la **guía de la prueba general de Nómina** y tres comprobaciones interactivas en
-> el navegador (§0.1). Pruebas automatizadas: **203, 0 fallos**. Consolidado: **001–090**.
+> el navegador (§0.1). Pruebas automatizadas: **210, 0 fallos**. Consolidado: **001–092**.
 
 > ✅ **2026-10-11 (b) — Bienes: motor de codificación propia construido y APAGADO (mig. 087).**
 > IMATUR ya puede asignar el código de sus bienes con secuencia propia, catálogo de clasificaciones y
@@ -155,6 +155,8 @@ auditoría H-12…H-15, feriados movibles, Nómina N-A…N-D. Detalle en la secc
 
 | Fecha | Qué se hizo | Mig. |
 |---|---|---|
+| 2026-10-28 | **Bienes**: botón *Desincorporar* (no había pantalla para hacerlo, y el Acta de Desincorporación nunca tenía bienes); suficiencia **por departamento** (B-63); un N° de orden de la papelera ya no se reasigna a mano. **Nómina**: días del aguinaldo **por año** (120 hasta 2022, 150 desde 2023) | 091 · 092 |
+| 2026-10-28 | **RRHH**: «Fecha del título» en la formación académica; indicadores de nivel académico en Indicadores de Gestión | — |
 | 2026-10-25 | **Roles y Permisos rediseñado**: roles plegables con barra de progreso, interruptores por grupo, barra de guardado fija con aviso de cambios sin guardar | — |
 | 2026-10-18 | **Filtro por nivel académico** en la lista de empleados (activos y egresados) y en el reporte Directorio de Personal, con opción «Sin registrar»; el Directorio gana la columna en pantalla y en Excel | — |
 | 2026-10-13 | **Interfaz en el teléfono**: tablas como tarjetas (`initTablasApiladas`), botones del encabezado plegados en «Más opciones» (`initAccionesMovil`). **Ver contraseña** en todo campo de clave. **Mi perfil**: correo, teléfono y dirección editables (el correo exige la contraseña actual) | — |
@@ -293,7 +295,7 @@ aquí y los demás documentos lo referencian.
 > | **B-80** | **No existe por escrito**: fue de palabra | ✅ **Cerrada.** Queda como riesgo: la responsabilidad de codificar se asume sin respaldo documental |
 > | **B-82** | «Sí» | ✅ **Cerrada.** Resolución 32 / Gaceta 87 confirmadas |
 > | **B-83** | «No lo sé» | 🟢 Sigue abierta; el bloque no se imprime mientras no se configure |
-> | **B-63** | El aire es **del espacio**; «**cada departamento** tendrá una cantidad de bienes» | ✅ Criterio cerrado: la dotación es **por departamento**, no por empleado. **Hay que rehacer `inventario_dotacion`** (hoy `unidades_por_empleado`). Faltan las cifras |
+> | **B-63** | El aire es **del espacio**; «**cada departamento** tendrá una cantidad de bienes» | ✅ Criterio cerrado y **construido** (mig. 091, 2026-10-28): la dotación es **por departamento y categoría**. Faltan las cifras |
 > | 11 categorías | «Sí» | ✅ **Cerrada.** Aprobadas |
 >
 > ### 📋 Abiertas al 2026-10-06 (después de las respuestas) — espejo llano en `PREGUNTAS_CLIENTE.md` §2

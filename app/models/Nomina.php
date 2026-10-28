@@ -111,7 +111,8 @@ class Nomina extends Model
             'nomina_pct_sso_patronal'        => 4,
             'nomina_pct_faov_patronal'       => 2,
             'nomina_pct_rpe_patronal'        => 1.7,
-            'nomina_dias_bono_fin_anio'      => 150,
+            // Los días del aguinaldo ya no son un escalar: dependen del año
+            // (mig. 092, `diasAguinaldo()`).
             'nomina_dias_base_anio'          => 360,
             'nomina_dias_mes'                => 30,   // mig. 086: sueldo diario = mensual / 30
             'nomina_pct_bono_50'             => 50,   // mig. 086: el «Bono 50 %» de la plantilla
@@ -352,6 +353,104 @@ class Nomina extends Model
 
         self::sincronizarTope();
         self::auditStatic('nomina_antiguedad', 'DELETE', $anios,
+            self::toArrayStatic($previo), null, $userId);
+    }
+
+    // =====================================================================
+    // Días del aguinaldo por año (mig. 092)
+    // =====================================================================
+
+    /** Caché por request de la escala del aguinaldo: [desde_anio => días]. */
+    private static ?array $cacheAguinaldo = null;
+
+    /** Escala completa, del año más antiguo al más reciente. */
+    public static function escalaAguinaldo(): array
+    {
+        $db = new Database();
+        $db->query("SELECT desde_anio, dias FROM nomina_dias_aguinaldo ORDER BY desde_anio");
+        return $db->resultSet();
+    }
+
+    /**
+     * Días del aguinaldo que rigen en un año: los de la fila con el
+     * `desde_anio` más alto que no lo supere. El cliente pagó 120 hasta 2022
+     * y 150 desde 2023; con un solo valor, una liquidación con meses de 2022
+     * los habría sembrado con 150.
+     */
+    public static function diasAguinaldo(int $anio): float
+    {
+        if (self::$cacheAguinaldo === null) {
+            self::$cacheAguinaldo = [];
+            foreach (self::escalaAguinaldo() as $r) self::$cacheAguinaldo[(int)$r->desde_anio] = (float)$r->dias;
+        }
+        return self::diasAguinaldoEn(self::$cacheAguinaldo, $anio);
+    }
+
+    /**
+     * Resolución pura (sin BD) sobre una escala [desde_anio => días]. Un año
+     * anterior a la primera fila toma la primera; la escala nunca está vacía
+     * (no se deja borrar la última fila), pero si lo estuviera se cae a 150.
+     */
+    public static function diasAguinaldoEn(array $escala, int $anio): float
+    {
+        if (!$escala) return 150.0;
+        ksort($escala);
+        $dias = reset($escala);
+        foreach ($escala as $desde => $d) {
+            if ($desde > $anio) break;
+            $dias = $d;
+        }
+        return (float)$dias;
+    }
+
+    public static function guardarAguinaldo(int $desde, $dias, ?int $userId = null): void
+    {
+        $d = (float) str_replace(',', '.', (string)$dias);
+        if ($desde < 1900 || $desde > 2100) throw new Exception('El año debe estar entre 1900 y 2100.');
+        if ($d <= 0 || $d > 365)            throw new Exception('Los días deben estar entre 1 y 365.');
+
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_dias_aguinaldo WHERE desde_anio = :a");
+        $db->bind(':a', $desde);
+        $previo = $db->single();
+
+        if ($previo) {
+            $db->query("UPDATE nomina_dias_aguinaldo SET dias = :d,
+                               updated_at = CURRENT_TIMESTAMP, updated_by = :u WHERE desde_anio = :a");
+            $db->bind(':u', $userId);
+        } else {
+            $db->query("INSERT INTO nomina_dias_aguinaldo (desde_anio, dias) VALUES (:a, :d)");
+        }
+        $db->bind(':a', $desde);
+        $db->bind(':d', round($d, 2));
+        $db->execute();
+        self::$cacheAguinaldo = null;
+
+        self::auditStatic('nomina_dias_aguinaldo', $previo ? 'UPDATE' : 'INSERT', $desde,
+            $previo ? self::toArrayStatic($previo) : null,
+            ['desde_anio' => $desde, 'dias' => $d], $userId);
+    }
+
+    /** Como la escala de antigüedad: no se deja vaciar, o no habría días que usar. */
+    public static function eliminarAguinaldo(int $desde, ?int $userId = null): void
+    {
+        $db = new Database();
+        $db->query("SELECT * FROM nomina_dias_aguinaldo WHERE desde_anio = :a");
+        $db->bind(':a', $desde);
+        $previo = $db->single();
+        if (!$previo) throw new Exception('El tramo indicado no existe.');
+
+        $db->query("SELECT COUNT(*) AS n FROM nomina_dias_aguinaldo");
+        if ((int)$db->single()->n <= 1) {
+            throw new Exception('No se puede eliminar el único tramo: el aguinaldo se quedaría sin días.');
+        }
+
+        $db->query("DELETE FROM nomina_dias_aguinaldo WHERE desde_anio = :a");
+        $db->bind(':a', $desde);
+        $db->execute();
+        self::$cacheAguinaldo = null;
+
+        self::auditStatic('nomina_dias_aguinaldo', 'DELETE', $desde,
             self::toArrayStatic($previo), null, $userId);
     }
 
@@ -597,6 +696,8 @@ class Nomina extends Model
                 // Días base del bono vacacional según la condición (fijo 85 /
                 // contratado 45, mig. 085): los mismos que paga el bono vacacional.
                 'dias_bono_vac_base'     => (float)BonoVacacional::diasBase($empleado),
+                // Días del aguinaldo del año de la quincena (mig. 092).
+                'dias_bono_fin_anio'     => self::diasAguinaldo((int)substr($fechaCorte, 0, 4)),
             ],
             'advertencias' => $adv,
         ];
@@ -614,7 +715,7 @@ class Nomina extends Model
      *   sueldo_base_mensual · pct_profesionalizacion · pct_antiguedad ·
      *   n_hijos · semanas · monto_cesta_ticket · tasa_dolar · divisas ·
      *   sueldo_dependencia_origen · dias_bono_vac_base · anios_administracion ·
-     *   tipo_personal
+     *   dias_bono_fin_anio · tipo_personal
      *
      * $params permite inyectar los escalares en las pruebas; si se omite se
      * leen de configuración.
@@ -665,7 +766,10 @@ class Nomina extends Model
         $diasHabiles = $diasVacBase + $aniosAdmin;
 
         $alicVac = $diario * ($diasHabiles / $diasAnio);
-        $alicFin = $diario * ((float)$p['nomina_dias_bono_fin_anio'] / $diasAnio);
+        // Días del aguinaldo: los del año de la quincena; las pruebas pueden
+        // inyectarlos por $params.
+        $diasFin = (float)($in['dias_bono_fin_anio'] ?? ($p['nomina_dias_bono_fin_anio'] ?? self::diasAguinaldo((int)date('Y'))));
+        $alicFin = $diario * ($diasFin / $diasAnio);
         $integralDiario = $diario + $alicVac + $alicFin;
 
         $becas  = $nHijos * (float)$p['nomina_becas_por_hijo'];

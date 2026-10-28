@@ -46,6 +46,7 @@ class NominaController extends Controller {
             // hay que poder ver y reactivar un grado dado de baja.
             'grados'    => Nomina::gradosTodos(),
             'escala'    => Nomina::escalaAntiguedad(),
+            'aguinaldo' => Nomina::escalaAguinaldo(),
             // Días base del bono vacacional por tipo de personal: estaban en
             // /config, separados del resto de los parámetros de nómina.
             'diasBono'  => array_map(
@@ -163,6 +164,34 @@ class NominaController extends Controller {
             );
             Nomina::invalidarCache();
             flash('global_msg', 'Tramo de antigüedad guardado.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    /** Días del aguinaldo por año (mig. 092). */
+    public function guardarAguinaldo() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireModulo('NominaController');
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::guardarAguinaldo((int)($_POST['desde_anio'] ?? 0), $_POST['dias'] ?? '0', $this->getUserId());
+            flash('global_msg', 'Días del aguinaldo guardados. Las quincenas en borrador los toman al recalcularlas; '
+                . 'en una liquidación en borrador use «Reconstruir desde la ficha» para que cada mes tome los de su año.');
+        } catch (Exception $e) {
+            flash('global_msg', $e->getMessage(), 'danger');
+        }
+        header('Location: ' . URL_ROOT . '/nomina/parametros');
+    }
+
+    public function eliminarAguinaldo() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: ' . URL_ROOT . '/nomina/parametros'); return; }
+        $this->requireModulo('NominaController');
+        $_POST = $this->sanitizePost();
+        try {
+            Nomina::eliminarAguinaldo((int)($_POST['desde_anio'] ?? 0), $this->getUserId());
+            flash('global_msg', 'Tramo del aguinaldo eliminado.', 'warning');
         } catch (Exception $e) {
             flash('global_msg', $e->getMessage(), 'danger');
         }

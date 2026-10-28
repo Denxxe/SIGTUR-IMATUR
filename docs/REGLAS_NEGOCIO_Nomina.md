@@ -151,7 +151,7 @@ generarlo. La plantilla del cliente mezclaba ×4 y ×5 en el mismo mes.
 | Sueldo normal diario | `((quincenal × 2) + cesta ticket) / días del mes` | `nomina_dias_mes` 30 |
 | Días del bono vacacional | `días base de la condición + años en la administración` (RN-NO09) | |
 | Alícuota de bono vacacional | `diario × días del bono vacacional / días del año` | `nomina_dias_base_anio` 360 |
-| Alícuota de fin de año | `diario × días del aguinaldo / días del año` | `nomina_dias_bono_fin_anio` 150 ¹ |
+| Alícuota de fin de año | `diario × días del aguinaldo / días del año` | `nomina_dias_aguinaldo` por año ¹ |
 | Sueldo integral diario | `diario + alícuota vacacional + alícuota fin de año` | |
 | Becas | `nº de hijos × monto` | `nomina_becas_por_hijo` 12,50 |
 | Bono 50 % | `base × %` | `nomina_pct_bono_50` 50 |
@@ -159,9 +159,11 @@ generarlo. La plantilla del cliente mezclaba ×4 y ×5 en el mismo mes.
 
 Los intermedios no se redondean; solo la salida (como Excel). Redondear en cascada desvía los totales.
 
-¹ Según el cliente, el aguinaldo fue de **120 días hasta 2022 y 150 desde 2023**. El sistema siembra cada
-mes con el valor vigente del parámetro, así que un mes anterior a 2023 (p. ej. en una liquidación que lo
-abarque) hay que corregirlo a mano en su fila.
+¹ Según el cliente, el aguinaldo fue de **120 días hasta 2022 y 150 desde 2023**. Desde la mig. 092 es
+una escala por año (`nomina_dias_aguinaldo`, editable en *Nómina → Parámetros*): cada fila rige desde su
+año hasta el anterior a la fila siguiente. La quincena toma los días del año de su fecha de corte y la
+liquidación los del año de **cada mes**, así que un mes de 2022 sale con 120 sin corregirlo a mano
+(`Nomina::diasAguinaldo()`). Reemplazó al escalar `nomina_dias_bono_fin_anio`.
 
 ---
 

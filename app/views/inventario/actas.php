@@ -52,7 +52,8 @@ $f = fn($d) => $d ? date('d/m/Y', strtotime($d)) : '—';
     <div class="sig-card__body u-p-sp-4">
         <?php if (empty($cands)): ?>
             <p class="u-c-text-tertiary u-m-0">
-                No hay bienes desincorporados esperando acta.
+                No hay bienes desincorporados esperando acta. Para desincorporar uno, usa el botón
+                <em>Desincorporar</em> en el <a href="<?php echo URL_ROOT; ?>/inventario/index">listado de bienes</a>.
             </p>
         <?php else: ?>
             <div class="sig-table-wrap">

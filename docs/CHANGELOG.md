@@ -18,6 +18,27 @@ describe el estado actual del sistema ni lo que falta.
 
 # Parte 1 — Registro por ciclo
 
+### 2026-10-28 — RRHH, docs y cuatro huecos de Bienes y Nómina (migraciones 091–092)
+
+- **RRHH:** la formación académica pide la **fecha del título**, no la de graduación (la columna sigue
+  siendo `personas.fecha_graduacion`). **Indicadores de Gestión** gana el bloque de nivel académico
+  (formación universitaria, posgrado, sin bachillerato, sin registrar; gráfico y tabla por
+  departamento), con los tramos de `Empleado::TRAMOS_ACADEMICOS`.
+- **Docs:** un documento de reglas por módulo. `MODELO_NEGOCIO_RRHH` y los `PLAN_MODULO_*` se fundieron
+  en sus `REGLAS_NEGOCIO_*`; el cuestionario de Bienes y Rutas pasó a `entregables/`.
+- **Rutas:** el oficio de una salida proponía las paradas de **otra** ruta (`Ruta::getPuntos()` con el
+  id de la salida); ahora usa `RutaEjecucion::itinerario()`.
+- **Bienes — no había forma de desincorporar.** El motor existía (movimiento `Baja`), pero ninguna
+  pantalla lo ofrecía, así que el Acta de Desincorporación nunca tenía candidatos. Botón
+  *Desincorporar* en el listado, con fecha y motivo obligatorio (es lo que imprime el acta).
+- **Bienes — suficiencia por departamento (mig. 091).** El cliente cerró B-63 al revés de como se
+  construyó: la dotación es del departamento, no por empleado. Las tres dotaciones sembradas por la
+  mig. 067 eran supuestas y se borraron.
+- **Bienes — códigos de la papelera.** `nroOrdenOcupado()` solo miraba los activos, mientras
+  `siguienteNroOrden()` cuenta todos: el número de un bien borrado podía reasignarse a mano.
+- **Nómina — aguinaldo por año (mig. 092).** 120 días hasta 2022 y 150 desde 2023. Con un escalar
+  único, toda liquidación con meses anteriores a 2023 había que corregirla fila por fila.
+
 ### 2026-10-25 — Roles y Permisos: pantalla rediseñada (sin migración)
 
 La pantalla era una tira de tarjetas siempre abiertas, con siete fondos pastel cableados (ilegibles

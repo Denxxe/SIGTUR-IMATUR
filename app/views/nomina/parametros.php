@@ -184,6 +184,64 @@
     </div>
 </div>
 
+<!-- Días del aguinaldo por año (mig. 092) -->
+<?php
+$escAg = $data['aguinaldo'] ?? [];
+$rangoAg = function (int $i) use ($escAg): string {
+    $desde = (int)$escAg[$i]->desde_anio;
+    $sig   = isset($escAg[$i + 1]) ? (int)$escAg[$i + 1]->desde_anio - 1 : null;
+    if ($desde <= 1900) return $sig === null ? 'Todos los años' : 'Hasta ' . $sig;
+    if ($sig === null)  return 'Desde ' . $desde;
+    return $desde === $sig ? (string)$desde : $desde . ' – ' . $sig;
+};
+?>
+<div class="sig-card anim-slide-up" style="margin-bottom:var(--sp-6);">
+    <div class="sig-card__head">
+        <div class="sig-card__title"><i class="bi bi-gift"></i> Días del aguinaldo (bono de fin de año)</div>
+        <button type="button" class="btn-sig btn-sig--ghost btn-sig--sm" onclick="nuevoAguinaldo()">
+            <i class="bi bi-plus-lg"></i> Agregar
+        </button>
+    </div>
+    <div class="sig-card__body u-p-0">
+        <div class="sig-table-wrap" data-no-export>
+            <table class="sig-table">
+                <thead><tr><th>Años</th><th class="text-end">Días</th><th class="col-actions">Acciones</th></tr></thead>
+                <tbody>
+                    <?php foreach ($escAg as $i => $t): ?>
+                        <tr>
+                            <td class="cell-strong">
+                                <?php echo $rangoAg($i); ?>
+                                <?php if ((int)$t->desde_anio <= (int)date('Y') && (!isset($escAg[$i + 1]) || (int)$escAg[$i + 1]->desde_anio > (int)date('Y'))): ?>
+                                    <span class="sig-badge sig-badge--info">vigente</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-end u-num"><?php echo rtrim(rtrim(number_format((float)$t->dias, 2, ',', '.'), '0'), ','); ?></td>
+                            <td class="col-actions">
+                                <button class="row-action row-action--edit"
+                                        onclick="editarAguinaldo(<?php echo (int)$t->desde_anio; ?>, '<?php echo number_format((float)$t->dias, 2, '.', ''); ?>', '<?php echo htmlspecialchars($rangoAg($i), ENT_QUOTES); ?>')">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                                <?php if (count($escAg) > 1): ?>
+                                <form action="<?php echo URL_ROOT; ?>/nomina/eliminarAguinaldo" method="POST" style="display:inline"
+                                      onsubmit="return confirm('¿Eliminar el tramo «<?php echo htmlspecialchars($rangoAg($i), ENT_QUOTES); ?>»?\n\nEsos años pasarán a tomar los días del tramo anterior.');">
+                                    <input type="hidden" name="desde_anio" value="<?php echo (int)$t->desde_anio; ?>">
+                                    <button type="submit" class="row-action row-action--del"><i class="bi bi-trash"></i> Eliminar</button>
+                                </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="u-p-10px-14px u-bdt-1px-solid-border-subtle u-fs-12px u-c-text-tertiary">
+            <i class="bi bi-info-circle"></i>
+            Cada tramo rige <strong>desde su año hasta el anterior al tramo siguiente</strong>. La quincena usa los
+            días de su año, y la liquidación los del año de cada mes (alícuota de fin de año).
+        </div>
+    </div>
+</div>
+
 <div class="sig-card anim-slide-up">
     <div class="sig-card__head">
         <div class="sig-card__title"><i class="bi bi-sliders"></i> Montos y porcentajes del cálculo</div>
@@ -208,7 +266,6 @@
                 'nomina_pct_sso_patronal'        => 'SSO patronal %',
                 'nomina_pct_faov_patronal'       => 'FAOV patronal %',
                 'nomina_pct_rpe_patronal'        => 'RPE patronal %',
-                'nomina_dias_bono_fin_anio'      => 'Días bono fin de año',
                 'nomina_dias_base_anio'          => 'Días base del año',
                 'nomina_dias_mes'                => 'Días del mes (salario diario)',
                 'nomina_pct_bono_50'             => 'Bono 50 % — porcentaje',
@@ -408,7 +465,6 @@
                         ]],
                         'dias' => ['paso' => '1', 'campos' => [
                             'nomina_semanas_default'    => 'Semanas (SSO/LRPPF/aportes)',
-                            'nomina_dias_bono_fin_anio' => 'Días bono fin de año (aguinaldo)',
                             'nomina_dias_base_anio'     => 'Días base del año',
                             'nomina_dias_mes'           => 'Días del mes (salario diario)',
                         ]],
@@ -577,6 +633,35 @@
     </div>
 </div>
 
+<!-- Modal: días del aguinaldo -->
+<div class="modal fade" id="modalAguinaldo" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/nomina/guardarAguinaldo" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAguinaldoLabel">Días del aguinaldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="sig-field mb-3">
+                    <label class="sig-field__label" for="ag_desde">Desde el año <span class="req">*</span></label>
+                    <input type="number" step="1" min="1900" max="2100" name="desde_anio" id="ag_desde" class="sig-input" required>
+                    <small class="u-c-text-tertiary u-fs-12px">
+                        Rige desde ese año hasta que empiece el tramo siguiente. Si el año ya existe, se actualizan sus días.
+                    </small>
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label" for="ag_dias">Días <span class="req">*</span></label>
+                    <input type="number" step="0.01" min="1" max="365" name="dias" id="ag_dias" class="sig-input" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--primary"><i class="bi bi-check-lg"></i> Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal: tramo de antigüedad -->
 <div class="modal fade" id="modalTramo" tabindex="-1">
     <div class="modal-dialog">
@@ -732,6 +817,22 @@
         document.getElementById('tr_anios').readOnly = true;   // los años son la clave del tramo
         document.getElementById('tr_pct').value = pct;
         new bootstrap.Modal(document.getElementById('modalTramo')).show();
+    }
+
+    function nuevoAguinaldo() {
+        document.getElementById('modalAguinaldoLabel').innerText = 'Agregar tramo del aguinaldo';
+        document.querySelector('#modalAguinaldo form').reset();
+        document.getElementById('ag_desde').readOnly = false;
+        document.getElementById('ag_desde').value = new Date().getFullYear();
+        new bootstrap.Modal(document.getElementById('modalAguinaldo')).show();
+    }
+
+    function editarAguinaldo(desde, dias, rango) {
+        document.getElementById('modalAguinaldoLabel').innerText = 'Editar: ' + rango;
+        document.getElementById('ag_desde').value = desde;
+        document.getElementById('ag_desde').readOnly = true;   // el año es la clave del tramo
+        document.getElementById('ag_dias').value = dias;
+        new bootstrap.Modal(document.getElementById('modalAguinaldo')).show();
     }
 
     function nuevoMes() {

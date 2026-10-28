@@ -238,6 +238,9 @@ $hayFiltro = ($data['f_categoria'] ?? 0) || ($data['f_ubicacion'] ?? 0)
                             <?php if ($puedeEscribir): ?>
                             <button class="row-action row-action--edit" onclick='editarInv(<?php echo htmlspecialchars(json_encode($item), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-pencil"></i> Editar</button>
                             <?php endif; ?>
+                            <?php if ($puedeEscribir && !$sinCodigo && $est !== Inventario::EST_BAJA && $est !== Inventario::EST_MANTENIMIENTO): ?>
+                                <button class="row-action row-action--del" onclick='desincorporarInv(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre,"codigo"=>$item->codigo_bn ?? ""]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-archive"></i> Desincorporar</button>
+                            <?php endif; ?>
                             <?php if ($puedeEscribir && $est === Inventario::EST_BAJA && empty($item->retirado_alcaldia)): ?>
                                 <button class="row-action" onclick='marcarRetirado(<?php echo htmlspecialchars(json_encode(["id"=>$item->id,"nombre"=>$item->nombre]), ENT_QUOTES, "UTF-8"); ?>)'><i class="bi bi-truck"></i> Retirado por la Alcaldía</button>
                             <?php endif; ?>
@@ -557,6 +560,61 @@ function marcarRetirado(item) {
     document.getElementById('ret_id').value = item.id;
     document.getElementById('ret_nombre').innerText = item.nombre || '';
     new bootstrap.Modal(document.getElementById('modalRet')).show();
+}
+</script>
+
+<!-- ══════════ Modal: desincorporar (B-38) ══════════ -->
+<div class="modal fade" id="modalBaja" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="<?php echo URL_ROOT; ?>/inventario/desincorporar" method="POST" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Desincorporar bien</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="id" id="baja_id">
+                <p class="u-mb-sp-3">
+                    <strong id="baja_nombre"></strong> sale del inventario activo y queda
+                    <em>Por retirar</em> hasta que la Alcaldía se lo lleve. Después podrás
+                    incluirlo en un <a href="<?php echo URL_ROOT; ?>/inventario/actas">Acta de Desincorporación</a>.
+                </p>
+                <?php if (!empty($data['autorizador'])): ?>
+                <div class="sig-alert sig-alert--info u-mb-sp-3">
+                    <i class="bi bi-person-check"></i>
+                    Autoriza: <strong><?php echo htmlspecialchars($data['autorizador']->nombre); ?></strong>
+                    (<?php echo htmlspecialchars($data['autorizador']->cargo ?? ''); ?>).
+                </div>
+                <?php else: ?>
+                <div class="sig-alert sig-alert--warning u-mb-sp-3">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    No hay responsable de la Coordinación de Bienes configurado: la desincorporación no podrá registrarse.
+                </div>
+                <?php endif; ?>
+                <div class="sig-field u-mb-sp-3">
+                    <label class="sig-field__label" for="baja_fecha">Fecha <span class="req">*</span></label>
+                    <input type="date" name="fecha" id="baja_fecha" class="sig-input" required max="<?php echo date('Y-m-d'); ?>" value="<?php echo date('Y-m-d'); ?>">
+                </div>
+                <div class="sig-field">
+                    <label class="sig-field__label" for="baja_motivo">Motivo <span class="req">*</span></label>
+                    <textarea name="motivo" id="baja_motivo" class="sig-textarea" rows="3" required minlength="5"
+                              placeholder="Deterioro por uso, sin reparación posible según informe técnico..."></textarea>
+                    <small class="u-c-text-tertiary">Aparece en el Acta de Desincorporación.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn-sig btn-sig--danger"><i class="bi bi-archive"></i> Desincorporar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function desincorporarInv(item) {
+    document.getElementById('baja_id').value = item.id;
+    document.getElementById('baja_nombre').innerText = (item.codigo ? item.codigo + ' · ' : '') + (item.nombre || '');
+    document.getElementById('baja_motivo').value = '';
+    new bootstrap.Modal(document.getElementById('modalBaja')).show();
 }
 </script>
 

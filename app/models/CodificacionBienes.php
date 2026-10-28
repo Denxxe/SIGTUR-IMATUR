@@ -145,6 +145,11 @@ class CodificacionBienes extends Model
     /**
      * ¿Ese N° de orden ya está usado? Compara como entero («84» = «084»). Con
      * secuencia por clasificación, el número solo se repite dentro de la misma.
+     *
+     * Cuenta también los bienes desincorporados y los de la papelera, igual
+     * que `siguienteNroOrden()`: un código no se recicla (B-76). Antes solo
+     * miraba los activos, así que el número de un bien borrado podía volver a
+     * asignarse a mano aunque el sistema nunca lo propusiera.
      */
     public static function nroOrdenOcupado(string $orden, ?int $excluirId, ?string $g, ?string $sg, ?string $sec): ?int
     {
@@ -153,7 +158,7 @@ class CodificacionBienes extends Model
         $porClase = self::params()['por_clasificacion'];
         $db = new Database();
         $sql = "SELECT id FROM inventario
-                 WHERE is_active = TRUE AND nro_orden IS NOT NULL
+                 WHERE nro_orden IS NOT NULL
                    AND LTRIM(nro_orden, '0') = LTRIM(:o, '0')";
         if ($porClase) $sql .= " AND codigo_grupo = :g AND codigo_subgrupo = :sg AND codigo_seccion = :sec";
         if ($excluirId) $sql .= " AND id <> :x";

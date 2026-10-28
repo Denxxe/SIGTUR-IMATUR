@@ -35,7 +35,8 @@ class ActividadInventario extends Model {
 
     /**
      * Tipos que el usuario puede elegir al registrar.
-     * · La baja tiene su propio flujo.
+     * · La baja tiene su propio flujo: botón «Desincorporar» del listado de
+     *   bienes (`InventarioController::desincorporar`).
      * · MOV_RESPONSABLE quedó fuera desde la mig. 066 (B-68): el responsable
      *   ya no se asigna, se DERIVA del departamento donde está el bien. Para
      *   cambiarlo se traslada el bien o se cambia la jefatura del departamento.
@@ -211,6 +212,18 @@ class ActividadInventario extends Model {
         }
         if ($tipo === self::MOV_SALIDA_MANT && $bien->estatus === Inventario::EST_MANTENIMIENTO) {
             throw new Exception('El bien ya está en mantenimiento.');
+        }
+        if ($tipo === self::MOV_BAJA) {
+            // Un bien en el taller primero vuelve (con resultado «Irrecuperable»
+            // si es el caso): así el mantenimiento abierto queda cerrado.
+            if ($bien->estatus === Inventario::EST_MANTENIMIENTO) {
+                throw new Exception('El bien está en mantenimiento: registra primero su retorno '
+                    . '(con resultado «Irrecuperable» si no tiene arreglo) y luego desincorpóralo.');
+            }
+            // El motivo es lo que sale en el Acta de Desincorporación.
+            if (mb_strlen(trim((string)($datos['descripcion'] ?? ''))) < 5) {
+                throw new Exception('Indica el motivo de la desincorporación: es lo que aparece en el acta.');
+            }
         }
         if ($tipo === self::MOV_RETORNO_MANT) {
             if ($bien->estatus !== Inventario::EST_MANTENIMIENTO) {

@@ -274,10 +274,11 @@ lote** (B-79-bis).
 - **Desincorporado · Por retirar** — todavía en las instalaciones.
 - **Desincorporado · Retirado** — la Alcaldía ya se lo llevó (con su fecha).
 
-> ⚠️ **Hueco en el código (2026-10-28):** el paso 1 existe en el modelo
-> (`ActividadInventario::registrarMovimiento()` con tipo `Baja`), pero **ninguna pantalla lo
-> ofrece**: `Baja` no está en `TIPOS_MANUALES` y la edición del bien no permite elegir
-> `Desincorporado`. Hoy no hay forma de desincorporar un bien desde la UI.
+**Cómo se desincorpora (paso 1):** botón **Desincorporar** de cada bien en el listado de Bienes
+(`InventarioController::desincorporar`). Pide fecha y **motivo** (obligatorio: es lo que imprime el
+acta) y registra un movimiento `Baja` con la misma autorización de la Coordinación de Bienes que
+cualquier otro movimiento (B-32). No se ofrece para bienes sin codificar ni en mantenimiento: uno que
+está en el taller primero registra su retorno (con resultado «Irrecuperable» si no tiene arreglo).
 
 ---
 
@@ -343,13 +344,14 @@ movimientos normales, que es lo que deja rastro de quién y cuándo la hizo.
 
 No es stock mínimo de consumibles (no los llevan): es saber si **alcanzan** los bienes (B-63).
 
-**Hoy** `inventario_dotacion` define unidades de cada categoría **por empleado**, y el reporte
-compara, por departamento, lo que hay contra lo que debería haber. Solo se evalúan las categorías con
-dotación definida; los bienes en depósito, desincorporados, extraviados o robados no cuentan.
-
-**Criterio cerrado con el cliente (B-63):** la dotación es **por departamento** («cada departamento
-tendrá una cantidad de bienes»; el aire es del espacio), no por empleado. La tabla y el reporte deben
-rehacerse a *unidades por departamento y categoría* cuando lleguen las cifras.
+**Criterio del cliente (B-63):** la dotación es **por departamento** («cada departamento tendrá una
+cantidad de bienes»; el aire es del espacio), no por empleado. `inventario_dotacion` guarda, por cada
+par **departamento + categoría**, cuántas unidades debería haber (mig. 091; antes
+`unidades_por_empleado`). El reporte compara eso contra los bienes **ubicados** en el departamento;
+los que están en depósito, desincorporados, extraviados o robados no cuentan. El número de empleados
+se muestra solo como contexto. Solo se evalúan los pares con dotación definida: la tabla arrancó
+vacía (las cifras por empleado que sembró la mig. 067 eran supuestas y se borraron) y la llena Bienes
+desde *Inventario → Suficiencia* cuando el cliente pase las cifras.
 
 ---
 

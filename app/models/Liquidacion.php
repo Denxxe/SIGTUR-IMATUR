@@ -642,7 +642,8 @@ class Liquidacion extends Model
             // La prima por hijo de la nómina es quincenal; aquí va el mes completo.
             $db->bind(':bh', $base > 0 ? round($hijos * (float)$params['nomina_monto_por_hijo'] * 2, 2) : 0);
             $db->bind(':dv', $diasBase + $anios);
-            $db->bind(':df', (float)$params['nomina_dias_bono_fin_anio']);
+            // 120 días hasta 2022, 150 desde 2023: los del año de ese mes (mig. 092).
+            $db->bind(':df', Nomina::diasAguinaldo((int)$m->format('Y')));
             $db->bind(':dd', self::diasDeposito($inicio, $mes, $emp->fecha_egreso));
             $db->execute();
 

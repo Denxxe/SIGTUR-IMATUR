@@ -527,6 +527,20 @@ $cOf2 = Taller::cuerpoOficioPropuesto($tOf);
 check(strpos($cOf2, 'el taller «') !== false, 'artículo masculino para «taller»');
 check(strpos($cOf2, 'dirigida a') === false, 'una actividad interna no menciona público externo');
 
+echo "\n== Nomina::diasAguinaldoEn (días del aguinaldo por año, mig. 092) ==\n";
+$escAg = [1900 => 120.0, 2023 => 150.0];
+eq(Nomina::diasAguinaldoEn($escAg, 2015), 120.0, '2015 → 120 (hasta 2022)');
+eq(Nomina::diasAguinaldoEn($escAg, 2022), 120.0, '2022 → 120 (último año del tramo)');
+eq(Nomina::diasAguinaldoEn($escAg, 2023), 150.0, '2023 → 150 (primer año del tramo nuevo)');
+eq(Nomina::diasAguinaldoEn($escAg, 2030), 150.0, 'el último tramo rige en adelante');
+eq(Nomina::diasAguinaldoEn([2023 => 150.0, 2010 => 120.0], 2012), 120.0, 'no depende del orden de la escala');
+eq(Nomina::diasAguinaldoEn([2023 => 150.0], 2000), 150.0, 'un año anterior a la primera fila toma la primera');
+$pAg = $PN; unset($pAg['nomina_dias_bono_fin_anio']);
+$rAg = Nomina::calcular(['sueldo_base_mensual' => 3600, 'dias_bono_fin_anio' => 120], $pAg);
+$rAg150 = Nomina::calcular(['sueldo_base_mensual' => 3600, 'dias_bono_fin_anio' => 150], $pAg);
+check(abs($rAg150['alicuota_bono_fin_anio'] / $rAg['alicuota_bono_fin_anio'] - 150 / 120) < 0.01,
+      'la alícuota de fin de año usa los días del año que recibe');
+
 echo "\n== sigtur_uid (ids únicos para label[for] en bucles) ==\n";
 $u1 = sigtur_uid('am fecha'); $u2 = sigtur_uid('am fecha');
 check($u1 !== $u2, 'dos llamadas dan ids distintos');
