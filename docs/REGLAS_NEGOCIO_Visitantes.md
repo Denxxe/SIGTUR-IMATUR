@@ -25,18 +25,27 @@ El campo `procedencia` representa la **institución que representa** el visitant
 
 ---
 
-## RN-VIS03 — Control de visita: patrón toggle
+## RN-VIS03 — Recepción registra solo la ENTRADA (2026-11-10)
 
-Cada entrada/salida se registra en la tabla `visitas`:
-- Si el visitante tiene una visita activa (sin `hora_salida`) → se registra la salida (UPDATE `hora_salida = NOW()`).
-- Si no hay visita activa → se registra la entrada (INSERT).
-- Un visitante puede tener múltiples visitas el mismo día (entra y sale varias veces).
+Cada registro del formulario es **una visita nueva** en la tabla `visitas` (INSERT con la hora de
+entrada). **No se marca la salida**: decisión del cliente, no es necesario para la operación de
+Recepción. Si la misma persona viene dos veces el mismo día, quedan dos visitas.
+
+- La columna `visitas.hora_salida` sigue en la BD (registros históricos) pero **ya no se escribe ni
+  se muestra**. No reintroducir el antiguo patrón *toggle* (volver a registrar la cédula marcaba la
+  salida) ni indicadores de «visitantes dentro» / «sin salida».
+- Cada visita lleva **motivo**, **a quién visita** (RN-VIS04) y **observaciones**; con motivo
+  «Otro» las observaciones son obligatorias. Sirven, por ejemplo, para anotar en una visita de
+  Pasantías la institución educativa y el tutor o departamento que lo recibe.
 
 ---
 
-## RN-VIS04 — Empleado visitado
+## RN-VIS04 — A quién visita
 
-Cada visita puede vincularse al empleado que atendió al visitante (`id_empleado FK`). Este campo es **opcional** en el formulario actual.
+Cada visita puede vincularse al empleado **al que viene a ver** el visitante (`id_empleado FK`),
+elegido en el formulario de registro («¿A quién visita?», personal activo agrupado por departamento).
+Es **opcional**: «No aplica / dependencia en general» cuando viene a un área y no a una persona. Los
+reportes lo muestran como «Visita a».
 
 ---
 
@@ -73,7 +82,7 @@ Reporte implementado con filtros por: período (fechas), institución/procedenci
 | BVIS-01 | Reporte de visitantes por período/procedencia/motivo | ✅ Resuelto — filtros completos implementados |
 | BVIS-02 | Campo `tipo_documento` para extranjeros | ✅ Resuelto — D-VIS03: no aplica, solo venezolanos |
 | BVIS-03 | Categorías de motivo de visita | ✅ Resuelto — lista de 6 categorías predefinidas |
-| BVIS-04 | Indicador "visitas activas del día" en Dashboard | ✅ Resuelto — `DashboardController` calcula `kpiVisitasHoy`, `kpiVisitasActivas` (entradas de hoy sin salida registrada) y el delta contra ayer, para todo rol que tenga el módulo *Recepción (Visitas)* asignado (desde 2026-10-04 se decide por módulo, no por número de rol) |
+| BVIS-04 | Indicador de visitas del día en Dashboard | ✅ Resuelto — `DashboardController` calcula `kpiVisitasHoy` y el delta contra ayer, para todo rol que tenga el módulo *Recepción (Visitas)* asignado. La tarjeta «Activas ahora» (visitas sin salida) **se retiró el 2026-11-10** al dejar de marcarse la salida (RN-VIS03) |
 | BVIS-05 | Estadísticas de visitas en módulo de Reportes | ✅ Resuelto — `reportes/visitantes.php` |
 
 > **Módulo sin pendientes.** Verificado el 2026-08-28: las seis brechas están cerradas.

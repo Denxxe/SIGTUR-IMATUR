@@ -42,13 +42,12 @@ trait ReportesRecepcionTrait {
         $this->requireModulo('VisitantesController');
         try {
             $registros = $this->queryVisitantes();
-            $headers   = ['Fecha', 'Hora Entrada', 'Hora Salida', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Atendido por', 'Motivo', 'Observaciones'];
+            $headers   = ['Fecha', 'Hora Entrada', 'Cédula', 'Nombre', 'Apellido', 'Género', 'Teléfono', 'Correo', 'Procedencia', 'Visita a', 'Motivo', 'Observaciones'];
             $rows      = [];
             foreach ($registros as $r) {
                 $rows[] = [
                     $r->fecha ?? date('Y-m-d', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
-                    $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En curso',
                     $r->cedula         ?? '',
                     $r->nombre         ?? '',
                     $r->apellido       ?? '',
@@ -76,13 +75,12 @@ trait ReportesRecepcionTrait {
             $fi        = $_GET['fecha_inicio'] ?? date('Y-m-01');
             $ff        = $_GET['fecha_fin']    ?? date('Y-m-d');
 
-            $headers = ['Fecha', 'Entrada', 'Salida', 'Cédula', 'Nombre y Apellido', 'Género', 'Teléfono', 'Procedencia', 'Atendido por', 'Motivo'];
+            $headers = ['Fecha', 'Entrada', 'Cédula', 'Nombre y Apellido', 'Género', 'Teléfono', 'Procedencia', 'Visita a', 'Motivo'];
             $rows    = [];
             foreach ($registros as $r) {
                 $rows[] = [
                     $r->fecha ?? date('d/m/Y', strtotime($r->hora_entrada)),
                     date('H:i', strtotime($r->hora_entrada)),
-                    $r->hora_salida ? date('H:i', strtotime($r->hora_salida)) : 'En curso',
                     $r->cedula ?? '—',
                     trim(($r->nombre ?? '') . ' ' . ($r->apellido ?? '')),
                     match($r->genero ?? '') { 'M' => 'M', 'F' => 'F', default => '—' },
@@ -121,7 +119,7 @@ trait ReportesRecepcionTrait {
                                         OR COALESCE(pe2.apellido, vis.apellido) ILIKE :buscar
                                         OR COALESCE(pe2.cedula, vis.cedula) ILIKE :buscar)";
 
-        $db->query("SELECT v.hora_entrada, v.hora_salida, v.motivo, v.observaciones,
+        $db->query("SELECT v.hora_entrada, v.motivo, v.observaciones,
                            DATE(v.hora_entrada) AS fecha,
                            COALESCE(pe2.cedula,    vis.cedula)    AS cedula,
                            COALESCE(pe2.nombre,    vis.nombre)    AS nombre,
@@ -171,15 +169,14 @@ trait ReportesRecepcionTrait {
             $ff = $_GET['fecha_fin']    ?? date('Y-m-d');
             $db = new Database();
 
-            // Resumen del rango + situación actual
+            // Resumen del rango + visitas de hoy (Recepción solo registra entradas)
             $db->query("SELECT COUNT(*) AS total, COUNT(DISTINCT id_visitante) AS unicos
                         FROM visitas WHERE is_active = TRUE
                           AND DATE(hora_entrada) BETWEEN :fi AND :ff");
             $db->bind(':fi', $fi); $db->bind(':ff', $ff);
             $st = $db->single();
 
-            $db->query("SELECT COUNT(*) AS hoy,
-                               COUNT(*) FILTER (WHERE hora_salida IS NULL) AS activas
+            $db->query("SELECT COUNT(*) AS hoy
                         FROM visitas WHERE is_active = TRUE AND DATE(hora_entrada) = CURRENT_DATE");
             $hoy = $db->single();
 
@@ -194,12 +191,11 @@ trait ReportesRecepcionTrait {
             }
             $this->renderReporte([
                 'eyebrow' => 'Recepción · Estadísticas', 'titulo' => 'Estadísticas de Visitas',
-                'subtitulo' => 'Afluencia por mes, visitantes únicos y situación del día.',
+                'subtitulo' => 'Afluencia por mes, visitantes únicos y visitas de hoy.',
                 'resumen' => [
                     'Visitas (rango)'    => (int)($st->total ?? 0),
                     'Visitantes únicos'  => (int)($st->unicos ?? 0),
                     'Visitas hoy'        => (int)($hoy->hoy ?? 0),
-                    'Activas ahora'      => (int)($hoy->activas ?? 0),
                 ],
                 'columnas' => ['Mes', 'Visitas', 'Visitantes únicos'],
                 'filas' => $filas,

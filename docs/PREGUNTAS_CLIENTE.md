@@ -282,7 +282,7 @@ texto para que salga igual.
 
 ### ✅ Lo que ya funciona
 
-Registro de visitantes y control de entrada y salida, con historial. Las visitas son una **bitácora**:
+Registro de la entrada de los visitantes —motivo, a quién visitan y observaciones—, con historial. Las visitas son una **bitácora**:
 no se borran, solo se consultan.
 
 **Nada pendiente.** Este módulo no necesita nada de ustedes.

@@ -200,7 +200,7 @@ Nota: `horarios`, `permisos_laborales`, `vacaciones` existen desde migración 00
 | `puntos_ruta` | Paradas con lat/lon y orden |
 | `participantes_ruta` | Inscripción a rutas; modo libre para niños/as *(005)*; representante del menor *(038)*. (`id_institucion` eliminado en **060**) |
 | `visitantes` | Personas externas que visitan IMATUR físicamente |
-| `visitas` | Marcaje entrada/salida; `id_empleado` (empleado visitado) |
+| `visitas` | Solo **entrada** (2026-11-10: no se marca salida; `hora_salida` queda sin uso); `id_empleado` (a quién visita), `motivo`, `observaciones` |
 | `ruta_ejecuciones` · `ruta_ejecucion_empleados` | **Cada salida** de un recorrido (mig. 078): fecha, estado (Programado/Ejecutado/No ejecutado), origen, institución solicitante, aprobación y el personal de IMATUR que va |
 | `ruta_permisos` · `ruta_permiso_salidas` | **Oficios de permiso** a las instituciones custodias (mig. 081, R-20). N:M con las salidas |
 | `ruta_ejecucion_itinerario` | **Orden propio de las paradas** de una salida (mig. 082, R-10). Sin filas = el del catálogo |
@@ -395,7 +395,7 @@ Tipografía: `'Inter', system-ui, sans-serif` — Google Fonts eliminado. Sin in
 
 **Transiciones automáticas por fecha/hora (tarea programada):** los talleres pasan de **Programado → En Curso** al llegar su fecha/hora de inicio (con participantes) vía `Taller::autoTransicionarProgramados()`. Se ejecuta de dos formas: (1) **perezosa**, al abrir Talleres o el Dashboard (respaldo, idempotente); (2) **servidor**, con el script CLI `cron/actualizar_estados.php` programado en el Programador de tareas de Windows / cron de Laragon (~cada 10 min) para que corra aunque nadie use el sistema. Un trigger de BD NO sirve (los triggers no reaccionan al paso del tiempo); por eso es tarea programada. El script está fuera de `public/` (no accesible por web) y solo corre en CLI.
 
-**Respaldos automáticos de BD (tarea programada):** `cron/respaldo_bd.php` (solo CLI) genera un volcado `pg_dump` en formato SQL plano en `storage/backups/` con nombre fechado (`sigtur_YYYY-MM-DD_His.sql`) y **rota** conservando los últimos `BACKUP_RETENTION` (config, default 14). La contraseña se pasa por `PGPASSWORD` (entorno), no en la línea de comandos; `PG_DUMP_PATH` (config) apunta a `pg_dump.exe`. Carpeta **fuera de `public/`** (no accesible por web) y con `.gitignore` (los dumps no se versionan). Programar en el Programador de tareas de Windows (p. ej. diario). **Restaurar:** crear BD vacía + `psql -d "SIGTUR-IMATUR" -f <archivo>.sql`. Log en `storage/backups/_backup.log`.
+**Respaldos automáticos de BD (tarea programada):** `cron/respaldo_bd.php` (solo CLI) genera un volcado `pg_dump` en formato SQL plano en `storage/backups/` con nombre fechado (`sigtur_YYYY-MM-DD_His.sql`) **y un `.zip` de `storage/uploads/`** con el mismo sello (`sigtur_archivos_…zip`; los archivos subidos no están en la BD — se apaga con `BACKUP_UPLOADS = false`), y **rota** cada tipo conservando los últimos `BACKUP_RETENTION` (config, default 14). `instalar_tareas.ps1` deja las tareas con *StartWhenAvailable* (si la PC estaba apagada a la hora, corren al encender) y permitidas con batería. La contraseña se pasa por `PGPASSWORD` (entorno), no en la línea de comandos; `PG_DUMP_PATH` (config) apunta a `pg_dump.exe`. Carpeta **fuera de `public/`** (no accesible por web) y con `.gitignore` (los dumps no se versionan). Programar en el Programador de tareas de Windows (p. ej. diario). **Restaurar:** crear BD vacía + `psql -d "SIGTUR-IMATUR" -f <archivo>.sql`. Log en `storage/backups/_backup.log`.
 
 **Parámetros de nómina: UNA sola pantalla (2026-09-14; liquidación y vacaciones desde la mig. 086).** Además de lo de abajo, la pantalla edita las reglas de la Liquidación (`Liquidacion::PARAMS_DEFAULT` + `liq_trimestre_modo`, el único parámetro de texto), `vacaciones_dias_base/tope` y la **tasa de interés de prestaciones del BCV por mes** (`nomina_tasas_bcv`); `guardarEscalares()` amplía su lista blanca con esas claves. Todo lo que interviene en el cálculo se
 administra en `/nomina/parametros`, **nada está fijo en el código**: cesta ticket y tasa del dólar por
@@ -577,7 +577,7 @@ showToast('Título', 'Mensaje', 'success'); // success | danger | warning | info
 
 5. **`municipio.created_at NOT NULL` sin DEFAULT** — pasar `created_at = NOW()` en INSERT.
 
-6. **Visitas — patrón toggle** — `Visita::registrar()` detecta visita abierta; INSERT si no hay, UPDATE si hay. No crear dos registros.
+6. **Visitas — solo entrada (2026-11-10)** — `Visita::registrar()` siempre hace INSERT: cada registro es una visita nueva. **Ya no hay patrón toggle ni se marca salida** (decisión del cliente); no reintroducir indicadores de «visitantes dentro» o «sin salida». Ver `REGLAS_NEGOCIO_Visitantes.md` RN-VIS03.
 
 7. **`taller_informes.total_atendidas`** — dato derivado (`mujeres + hombres + ninas + ninos`). Recalcular antes de guardar.
 

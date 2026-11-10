@@ -151,11 +151,10 @@ foreach ($data['registros'] ?? [] as $r) {
         <thead>
             <tr>
                 <th>Entrada</th>
-                <th>Salida</th>
                 <th>Visitante</th>
                 <th>Contacto</th>
                 <th>Procedencia</th>
-                <th>Atendido por</th>
+                <th>Visita a</th>
                 <th>Motivo</th>
                 <th>Observaciones</th>
             </tr>
@@ -163,7 +162,7 @@ foreach ($data['registros'] ?? [] as $r) {
         <tbody>
             <?php if (empty($data['registros'])): ?>
                 <tr>
-                    <td colspan="8" class="sig-table-empty">
+                    <td colspan="7" class="sig-table-empty">
                         <i class="bi bi-search u-mr-6px" style="opacity:.5;"></i>
                         Sin registros en el rango y filtros seleccionados.
                     </td>
@@ -178,15 +177,6 @@ foreach ($data['registros'] ?? [] as $r) {
                             <span class="sig-badge sig-badge--success u-ff-font-mono u-fs-10px u-mt-3px" style="display:inline-block;">
                                 <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_entrada)); ?>
                             </span>
-                        </td>
-                        <td class="u-ws-nowrap">
-                            <?php if (!empty($r->hora_salida)): ?>
-                                <span class="sig-badge sig-badge--danger u-ff-font-mono u-fs-10px" style="display:inline-block;">
-                                    <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($r->hora_salida)); ?>
-                                </span>
-                            <?php else: ?>
-                                <span class="sig-badge sig-badge--warning u-fs-10px">EN CURSO</span>
-                            <?php endif; ?>
                         </td>
                         <td>
                             <div class="u-fd-column u-gap-2px" style="display:flex;">

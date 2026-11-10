@@ -98,8 +98,8 @@ Cada trabajador tiene un **expediente** con:
 
 ### 4.2 Recepción (Visitas)
 
-- Registrar **entrada y salida** de visitantes (un mismo registro se cierra al marcar salida).
-- En el Dashboard ves **Visitas hoy** y **Activas ahora** (personas dentro sin salida registrada).
+- Registrar la **entrada** de cada visitante: busca la cédula (si ya vino antes, sus datos se llenan solos), elige el **motivo**, **a quién visita** y escribe las **observaciones** (obligatorias si el motivo es «Otro»). No se marca la salida.
+- En el Dashboard ves las **Visitas hoy** y los visitantes únicos de la semana y del mes.
 - Igual que la asistencia, las visitas son **bitácora y no se eliminan**; se consultan con *Ver detalles*.
 
 ### 4.3 Formación
