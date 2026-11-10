@@ -10,6 +10,12 @@ function visUrl(array $f, int $p): string {
     $q['p'] = $p;
     return URL_ROOT . '/visitantes/index?' . http_build_query($q);
 }
+// Empleados agrupados por departamento para el selector "¿A quién visita?".
+$empPorDepto = [];
+foreach ($data['empleados'] ?? [] as $e) {
+    $empPorDepto[$e->departamento ?? 'Sin departamento'][] = $e;
+}
+ksort($empPorDepto);
 ?>
 
 <div class="page__head anim-slide-up">
@@ -50,7 +56,7 @@ function visUrl(array $f, int $p): string {
                 <th>Teléfono</th>
                 <th>Institución / Procedencia</th>
                 <th>Correo</th>
-                <th>Motivo</th>
+                <th>Motivo / Visita a</th>
                 <th class="col-actions">Detalles</th>
             </tr>
         </thead>
@@ -85,6 +91,11 @@ function visUrl(array $f, int $p): string {
                             <?php if (!empty($v->emp_nombre)): ?>
                                 <div class="u-fs-11px u-c-text-tertiary">
                                     → <?php echo htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido); ?>
+                                </div>
+                            <?php endif; ?>
+                            <?php if (!empty($v->observaciones) && $v->observaciones !== 'Registro en recepción'): ?>
+                                <div class="u-fs-11px u-c-text-tertiary" style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="<?php echo htmlspecialchars($v->observaciones); ?>">
+                                    <i class="bi bi-chat-left-text"></i> <?php echo htmlspecialchars($v->observaciones); ?>
                                 </div>
                             <?php endif; ?>
                         </td>
@@ -132,9 +143,8 @@ function visUrl(array $f, int $p): string {
                     <tr><th>Correo</th><td><?php echo htmlspecialchars($v->vis_correo ?? '—'); ?></td></tr>
                     <tr><th>Procedencia</th><td><?php echo htmlspecialchars($v->procedencia ?? '—'); ?></td></tr>
                     <tr><th>Motivo</th><td><?php echo htmlspecialchars($v->motivo ?? '—'); ?></td></tr>
-                    <tr><th>Atendido por</th><td><?php echo !empty($v->emp_nombre) ? htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido) : '—'; ?></td></tr>
+                    <tr><th>Visita a</th><td><?php echo !empty($v->emp_nombre) ? htmlspecialchars($v->emp_nombre . ' ' . $v->emp_apellido) : '—'; ?></td></tr>
                     <tr><th>Entrada</th><td><?php echo date('d/m/Y H:i', strtotime($v->hora_entrada)); ?></td></tr>
-                    <tr><th>Salida</th><td><?php echo $v->hora_salida ? date('d/m/Y H:i', strtotime($v->hora_salida)) : 'Pendiente'; ?></td></tr>
                     <tr><th>Observaciones</th><td><?php echo htmlspecialchars($v->observaciones ?? '—'); ?></td></tr>
                 </table>
             </div>
@@ -158,7 +168,7 @@ function visUrl(array $f, int $p): string {
     <div class="modal-dialog modal-lg">
         <form action="<?php echo URL_ROOT; ?>/visitantes/registrar" method="POST" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Registrar Marcaje</h5>
+                <h5 class="modal-title">Registrar visita</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -232,6 +242,8 @@ function visUrl(array $f, int $p): string {
 
                 <!-- Motivo de la visita -->
                 <div class="u-bdt-1px-solid-border-subtle u-pt-sp-4">
+                  <div class="row g-3">
+                    <div class="col-md-6">
                     <div class="sig-field">
                         <label class="sig-field__label" for="motivo">Motivo de la visita</label>
                         <select id="motivo" name="motivo" class="sig-select">
@@ -244,13 +256,40 @@ function visUrl(array $f, int $p): string {
                             <option value="Otro">Otro</option>
                         </select>
                     </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="sig-field">
+                            <label class="sig-field__label" for="m_id_empleado">¿A quién visita?</label>
+                            <select id="m_id_empleado" name="id_empleado" class="sig-select">
+                                <option value="">No aplica / dependencia en general</option>
+                                <?php foreach ($empPorDepto as $depto => $emps): ?>
+                                    <optgroup label="<?php echo htmlspecialchars($depto); ?>">
+                                        <?php foreach ($emps as $e): ?>
+                                            <option value="<?php echo (int)$e->id; ?>">
+                                                <?php echo htmlspecialchars($e->nombre . ' ' . $e->apellido . (!empty($e->cargo) ? ' — ' . $e->cargo : '')); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="sig-field">
+                            <label class="sig-field__label" for="m_observaciones">Observaciones <span class="req" id="m_obs_req" style="display:none;">*</span></label>
+                            <textarea id="m_observaciones" name="observaciones" class="sig-input" rows="2" maxlength="500"
+                                      placeholder="Detalle de la visita: a qué viene, qué trae, a qué oficina se dirige…"></textarea>
+                            <small id="m_obs_ayuda" class="u-fs-11px u-c-text-tertiary"></small>
+                        </div>
+                    </div>
+                  </div>
                 </div>
 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sig btn-sig--ghost" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" id="btn_guardar_marcaje" class="btn-sig btn-sig--primary" disabled>
-                    <i class="bi bi-check-circle"></i> Procesar Marcaje
+                    <i class="bi bi-box-arrow-in-right"></i> Registrar entrada
                 </button>
             </div>
         </form>
@@ -271,10 +310,30 @@ function resetModal() {
     });
     const gen = document.getElementById('m_genero');
     if (gen) gen.value = '';
+    ['motivo','m_id_empleado','m_observaciones'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
     document.getElementById('m_status').innerHTML = '';
     setModalReadonly(false);
+    actualizarAyudaMotivo();
     checkModalValid();
 }
+
+/** "Otro" exige observaciones; Pasantías orienta a indicar con quién. */
+function actualizarAyudaMotivo() {
+    const motivo   = document.getElementById('motivo').value;
+    const obs      = document.getElementById('m_observaciones');
+    const ayudas = {
+        'Pasantías': 'Indique la institución educativa y el tutor o departamento que lo recibe.',
+        'Otro': 'Obligatorio: especifique a qué viene el visitante.',
+        'Entrega de documentos': 'Indique qué documento entrega y para qué oficina.',
+    };
+    obs.required = (motivo === 'Otro');
+    document.getElementById('m_obs_req').style.display = obs.required ? '' : 'none';
+    document.getElementById('m_obs_ayuda').textContent = ayudas[motivo] || '';
+}
+document.getElementById('motivo').addEventListener('change', actualizarAyudaMotivo);
 
 // Reset form when modal is closed
 document.getElementById('modalMarcaje').addEventListener('hidden.bs.modal', resetModal);

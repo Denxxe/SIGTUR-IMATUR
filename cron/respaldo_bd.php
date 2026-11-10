@@ -3,8 +3,10 @@
  * Tarea programada — Respaldo automático de la base de datos.
  *
  * Genera un volcado completo (pg_dump, formato SQL plano) en
- * storage/backups/ con nombre fechado, y rota los más antiguos conservando
- * los últimos BACKUP_RETENTION. Pensado para correr periódicamente desde el
+ * storage/backups/ con nombre fechado y, junto a él, un .zip con los
+ * ARCHIVOS SUBIDOS (storage/uploads/: fotos de carnet, recaudos, documentos
+ * de bienes y rutas), que no viven en la base de datos. Rota los más antiguos
+ * conservando los últimos BACKUP_RETENTION de cada tipo. Pensado para correr periódicamente desde el
  * Programador de tareas de Windows, de modo que siempre exista una copia
  * reciente aunque nadie use el sistema. La carpeta está FUERA de public/
  * (no accesible por web).
@@ -20,6 +22,11 @@
  * Restaurar un respaldo (en una BD vacía):
  *   1) createdb -U postgres "SIGTUR-IMATUR"
  *   2) psql -U postgres -d "SIGTUR-IMATUR" -f storage/backups/sigtur_YYYY-MM-DD_HHMMSS.sql
+ *   3) descomprimir storage/backups/sigtur_archivos_YYYY-MM-DD_HHMMSS.zip
+ *      dentro de storage/uploads/
+ *
+ * Config (config/config.php): PG_DUMP_PATH, BACKUP_RETENTION y
+ * BACKUP_UPLOADS (false = no respaldar los archivos subidos; por defecto sí).
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -58,6 +65,7 @@ $pgDump = defined('PG_DUMP_PATH') ? PG_DUMP_PATH : 'pg_dump';
 if (defined('PG_DUMP_PATH') && !is_file($pgDump)) {
     // Fallback razonable si la ruta configurada no existe
     foreach ([
+        'C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe',
         'C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump.exe',
         'C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe',
         'pg_dump',
@@ -67,7 +75,8 @@ if (defined('PG_DUMP_PATH') && !is_file($pgDump)) {
 }
 
 // 3. Ejecutar pg_dump (formato SQL plano)
-$outFile = $dir . '/sigtur_' . date('Y-m-d_His') . '.sql';
+$sello   = date('Y-m-d_His');   // mismo sello para el .sql y el .zip del mismo respaldo
+$outFile = $dir . '/sigtur_' . $sello . '.sql';
 putenv('PGPASSWORD=' . DB_PASS);  // pg_dump lee la contraseña del entorno (no en la línea de comandos)
 
 $cmd = escapeshellarg($pgDump)
@@ -91,15 +100,77 @@ if ($code !== 0 || !is_file($outFile) || filesize($outFile) === 0) {
 $tam = round(filesize($outFile) / 1024, 1);
 bk_log($dir, 'OK — respaldo creado: ' . basename($outFile) . ' (' . $tam . ' KB)');
 
-// 4. Rotación: conservar solo los últimos BACKUP_RETENTION
-$retencion = defined('BACKUP_RETENTION') ? max(1, (int)BACKUP_RETENTION) : 14;
-$archivos = glob($dir . '/sigtur_*.sql') ?: [];
-sort($archivos); // nombre fechado → orden cronológico ascendente
-$sobrantes = count($archivos) - $retencion;
-for ($i = 0; $i < $sobrantes; $i++) {
-    if (@unlink($archivos[$i])) {
-        bk_log($dir, 'Rotación — eliminado respaldo antiguo: ' . basename($archivos[$i]));
+// 4. Archivos subidos (storage/uploads/) → .zip con el mismo sello de fecha.
+//    Un fallo aquí no invalida el volcado de la BD, pero sí marca la tarea
+//    como fallida (código 1) para que se note en el Programador de tareas.
+$fallaArchivos = false;
+if (!defined('BACKUP_UPLOADS') || BACKUP_UPLOADS) {
+    $uploads = $base . '/storage/uploads';
+    $zipFile = $dir . '/sigtur_archivos_' . $sello . '.zip';
+    if (!is_dir($uploads)) {
+        bk_log($dir, 'Archivos — no hay carpeta storage/uploads todavía; nada que respaldar.');
+    } elseif (!class_exists('ZipArchive')) {
+        $fallaArchivos = true;
+        bk_log($dir, 'ERROR — no se respaldaron los archivos subidos: falta la extensión zip de PHP (activarla en Laragon → PHP → Extensions).', true);
+    } else {
+        $n = respaldarArchivos($uploads, $zipFile);
+        if ($n === false) {
+            $fallaArchivos = true;
+            @unlink($zipFile);
+            bk_log($dir, 'ERROR — no se pudo crear el .zip de archivos subidos: ' . basename($zipFile), true);
+        } else {
+            $tamZ = is_file($zipFile) ? round(filesize($zipFile) / 1024, 1) : 0;
+            bk_log($dir, 'OK — archivos subidos: ' . basename($zipFile) . " ($n archivos, $tamZ KB)");
+        }
     }
 }
 
-exit(0);
+// 5. Rotación: conservar solo los últimos BACKUP_RETENTION de cada tipo.
+//    'sigtur_2*' distingue los .sql (sigtur_2026-…) de los .zip (sigtur_archivos_…).
+$retencion = defined('BACKUP_RETENTION') ? max(1, (int)BACKUP_RETENTION) : 14;
+foreach (['/sigtur_2*.sql', '/sigtur_archivos_*.zip'] as $patron) {
+    $archivos = glob($dir . $patron) ?: [];
+    sort($archivos); // nombre fechado → orden cronológico ascendente
+    $sobrantes = count($archivos) - $retencion;
+    for ($i = 0; $i < $sobrantes; $i++) {
+        if (@unlink($archivos[$i])) {
+            bk_log($dir, 'Rotación — eliminado respaldo antiguo: ' . basename($archivos[$i]));
+        }
+    }
+}
+
+exit($fallaArchivos ? 1 : 0);
+
+/**
+ * Comprime recursivamente $origen en $zipFile, con rutas relativas a $origen
+ * (al restaurar se descomprime tal cual dentro de storage/uploads/).
+ * Devuelve cuántos archivos agregó, o false si el .zip no se pudo escribir.
+ */
+function respaldarArchivos(string $origen, string $zipFile) {
+    $zip = new ZipArchive();
+    if ($zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) return false;
+
+    $origen = rtrim(str_replace('\\', '/', realpath($origen)), '/');
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($origen, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+    $n = 0;
+    foreach ($it as $f) {
+        if (!$f->isFile()) continue;
+        $ruta = str_replace('\\', '/', $f->getPathname());
+        $rel  = ltrim(substr($ruta, strlen($origen)), '/');
+        if ($zip->addFile($ruta, $rel)) {
+            // Fotos y PDF ya vienen comprimidos: guardarlos sin recomprimir es
+            // igual de pequeño y mucho más rápido.
+            $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'zip', 'docx', 'xlsx'], true)) {
+                $zip->setCompressionName($rel, ZipArchive::CM_STORE);
+            }
+            $n++;
+        }
+    }
+    // Un .zip sin entradas no se escribe: se deja constancia con un archivo vacío.
+    if ($n === 0) $zip->addFromString('LEEME.txt', "storage/uploads estaba vacio al momento del respaldo.\n");
+    return $zip->close() ? $n : false;
+}

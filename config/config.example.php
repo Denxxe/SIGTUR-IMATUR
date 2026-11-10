@@ -34,10 +34,13 @@ define('APP_ROOT', dirname(dirname(__FILE__)));
 define('SESSION_TIMEOUT', 1800);
 
 // Respaldos de BD (tarea programada cron/respaldo_bd.php)
-//   PG_DUMP_PATH: ruta a pg_dump.exe (ajustar a la versión instalada).
+//   PG_DUMP_PATH: ruta a pg_dump.exe (ajustar a la versión instalada: 16, 17, 18…).
 //   BACKUP_RETENTION: cuántos respaldos conservar (rota los más antiguos).
+//   BACKUP_UPLOADS: además de la BD, guardar un .zip de storage/uploads/
+//     (fotos, recaudos, documentos). Solo poner false si se respaldan aparte.
 define('PG_DUMP_PATH', 'C:\\Program Files\\PostgreSQL\\17\\bin\\pg_dump.exe');
 define('BACKUP_RETENTION', 14);
+define('BACKUP_UPLOADS', true);
 
 // Correo saliente (SMTP) — recuperación de contraseña por correo.
 // SMTP_FROM_EMAIL es solo el RESPALDO: el remitente real es

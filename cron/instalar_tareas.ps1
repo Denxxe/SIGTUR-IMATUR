@@ -84,6 +84,25 @@ Write-Host "Creada: SIGTUR-Estados (cada $MinutosEstados min)"
 if ($LASTEXITCODE -ne 0) { Write-Error "Fallo al crear SIGTUR-Respaldo"; exit 1 }
 Write-Host "Creada: SIGTUR-Respaldo (diario $HoraRespaldo)"
 
+# --- Ajustes que schtasks /Create no permite ---------------------------------
+#   StartWhenAvailable: si la PC estaba apagada (o sin sesion) a la hora
+#     programada, la tarea corre apenas vuelva a estar disponible, en vez de
+#     perder ese dia de respaldo.
+#   AllowStartIfOnBatteries / DontStopIfGoingOnBatteries: en una laptop
+#     desconectada de la corriente, Windows por defecto NO las ejecuta.
+try {
+    $ajustes = New-ScheduledTaskSettingsSet -StartWhenAvailable `
+        -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+        -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+    foreach ($t in @("SIGTUR-Estados", "SIGTUR-Respaldo")) {
+        Set-ScheduledTask -TaskName $t -Settings $ajustes | Out-Null
+    }
+    Write-Host "Ajustes: se ejecutan al encender si se perdio la hora, y tambien con bateria."
+} catch {
+    Write-Warning "No se pudieron aplicar los ajustes extra ($($_.Exception.Message))."
+    Write-Warning "Las tareas quedaron creadas, pero un respaldo perdido con la PC apagada no se recupera. Reintentar desde una consola de administrador."
+}
+
 Write-Host ""
 Write-Host "Listo. Verificar con:  schtasks /Query /TN SIGTUR-Estados /V /FO LIST"
 Write-Host "Ejecutar ya una vez:   schtasks /Run /TN SIGTUR-Respaldo"

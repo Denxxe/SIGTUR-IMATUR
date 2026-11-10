@@ -108,15 +108,26 @@ class VisitantesController extends Controller {
                 ], $userId);
             }
 
-            $visitaData = [
-                'id_visitante'  => $idVisitante,
-                'id_empleado'   => !empty($_POST['id_empleado']) ? (int)$_POST['id_empleado'] : null,
-                'motivo'        => trim($_POST['motivo'] ?? ''),
-                'observaciones' => 'Registro en recepción',
-            ];
+            $motivo        = trim($_POST['motivo'] ?? '');
+            $observaciones = trim($_POST['observaciones'] ?? '');
+            $idEmpleado    = !empty($_POST['id_empleado']) ? (int)$_POST['id_empleado'] : null;
 
-            Visita::registrar($visitaData, $userId);
-            flash('global_msg', 'Marcaje procesado correctamente.');
+            if ($motivo === 'Otro' && $observaciones === '') {
+                throw new Exception('Con motivo "Otro" hay que indicar en Observaciones a qué viene el visitante.');
+            }
+            $emp = $idEmpleado ? Empleado::find($idEmpleado) : null;
+            if ($idEmpleado && (!$emp || !empty($emp->fecha_egreso))) {
+                throw new Exception('La persona a visitar no existe o ya no labora en el instituto.');
+            }
+
+            Visita::registrar([
+                'id_visitante'  => $idVisitante,
+                'id_empleado'   => $idEmpleado,
+                'motivo'        => $motivo,
+                'observaciones' => $observaciones,
+            ], $userId);
+
+            flash('global_msg', 'Entrada registrada: ' . $nombre . ' ' . $apellido . '.');
 
         } catch (Exception $e) {
             flash('global_msg', 'Error: ' . $e->getMessage(), 'danger');
@@ -124,4 +135,5 @@ class VisitantesController extends Controller {
 
         header('Location: ' . URL_ROOT . '/visitantes/index');
     }
+
 }

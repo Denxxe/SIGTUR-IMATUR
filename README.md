@@ -41,7 +41,7 @@ psql -U postgres -d "SIGTUR-IMATUR" -f database/schema_consolidado.sql
 ```
 
 **No hay paso 3.** `database/schema_consolidado.sql` incluye el esquema base y
-**todas** las migraciones 001–083. No hay que aplicar nada de
+**todas** las migraciones 001–092. No hay que aplicar nada de
 `database/migrations/`: esa carpeta se conserva como historial y para
 actualizar instalaciones antiguas, no para instalar desde cero.
 
@@ -133,7 +133,20 @@ schtasks /Create /SC DAILY /ST 23:00 /TN "SIGTUR-Respaldo" ^
   /TR "C:\ruta\php.exe C:\laragon\www\SIGTUR-IMATUR\cron\respaldo_bd.php"
 ```
 
-Los respaldos se guardan en `storage/backups/` (no versionados).
+Los respaldos se guardan en `storage/backups/` (no versionados). Cada uno son dos archivos con el
+mismo sello de fecha:
+
+- `sigtur_AAAA-MM-DD_HHMMSS.sql` — la base de datos completa.
+- `sigtur_archivos_AAAA-MM-DD_HHMMSS.zip` — los archivos subidos (`storage/uploads/`: fotos de
+  carnet, recaudos, documentos de bienes y rutas), que **no** están en la base de datos.
+  Se desactiva con `BACKUP_UPLOADS = false`.
+
+Se conservan los últimos `BACKUP_RETENTION` de cada tipo. `instalar_tareas.ps1` deja las tareas
+configuradas para **ejecutarse al encender** si la PC estaba apagada a la hora programada, y para
+correr también con batería.
+
+> Los respaldos viven en el mismo disco que el sistema: copiar `storage/backups/` fuera de la PC
+> (disco externo o nube institucional) al menos una vez por semana.
 
 ### Restaurar un respaldo
 
@@ -141,6 +154,9 @@ Los respaldos se guardan en `storage/backups/` (no versionados).
 createdb -U postgres "SIGTUR-IMATUR"
 psql -U postgres -d "SIGTUR-IMATUR" -f storage/backups/sigtur_AAAA-MM-DD_HHMMSS.sql
 ```
+
+Luego descomprimir `sigtur_archivos_AAAA-MM-DD_HHMMSS.zip` (el del mismo sello) dentro de
+`storage/uploads/`.
 
 ---
 

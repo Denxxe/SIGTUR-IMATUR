@@ -83,39 +83,28 @@ class Visita extends Model {
     }
 
     /**
-     * Toggle marcaje: si hay visita abierta del mismo visitante marca salida; si no, registra entrada.
+     * Registra la ENTRADA de un visitante. Recepción solo lleva entradas: no se
+     * marca salida (decisión del cliente), así que cada registro es una visita
+     * nueva aunque la misma persona venga dos veces el mismo día.
      */
     public static function registrar($data, $userId) {
         $db = new Database();
-        // Solo considera visitas ABIERTAS del día actual para el toggle.
-        // Las visitas de días anteriores son registros inmutables (bitácora).
         $db->query("
-            SELECT id FROM visitas
-            WHERE id_visitante = :id_visitante AND hora_salida IS NULL AND is_active = TRUE
-              AND DATE(hora_entrada) = CURRENT_DATE
-            ORDER BY hora_entrada DESC LIMIT 1
+            INSERT INTO visitas (id_visitante, id_empleado, motivo, observaciones, created_by)
+            VALUES (:id_visitante, :id_empleado, :motivo, :observaciones, :uid)
         ");
-        $db->bind(':id_visitante', $data['id_visitante']);
-        $abierta = $db->single();
-
-        if ($abierta) {
-            $db->query("UPDATE visitas SET hora_salida = CURRENT_TIMESTAMP WHERE id = :id");
-            $db->bind(':id', $abierta->id);
-            $result = $db->execute();
-            self::auditStatic('visitas', 'UPDATE', (int)$abierta->id, ['hora_salida' => null], ['hora_salida' => 'NOW()'], $userId);
-        } else {
-            $db->query("
-                INSERT INTO visitas (id_visitante, id_empleado, motivo, observaciones, created_by)
-                VALUES (:id_visitante, :id_empleado, :motivo, :observaciones, :uid)
-            ");
-            $db->bind(':id_visitante',  $data['id_visitante']);
-            $db->bind(':id_empleado',   $data['id_empleado'] ?: null);
-            $db->bind(':motivo',        $data['motivo'] ?: null);
-            $db->bind(':observaciones', $data['observaciones'] ?: null);
-            $db->bind(':uid',           $userId);
-            $result = $db->execute();
-            self::auditStatic('visitas', 'INSERT', null, null, ['id_visitante' => $data['id_visitante'], 'id_empleado' => $data['id_empleado'] ?: null, 'motivo' => $data['motivo'] ?: null], $userId);
-        }
+        $db->bind(':id_visitante',  $data['id_visitante']);
+        $db->bind(':id_empleado',   $data['id_empleado'] ?: null);
+        $db->bind(':motivo',        $data['motivo'] ?: null);
+        $db->bind(':observaciones', $data['observaciones'] ?: null);
+        $db->bind(':uid',           $userId);
+        $result = $db->execute();
+        self::auditStatic('visitas', 'INSERT', null, null, [
+            'id_visitante'  => $data['id_visitante'],
+            'id_empleado'   => $data['id_empleado'] ?: null,
+            'motivo'        => $data['motivo'] ?: null,
+            'observaciones' => $data['observaciones'] ?: null,
+        ], $userId);
         return $result;
     }
 }
